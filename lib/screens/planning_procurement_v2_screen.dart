@@ -1496,10 +1496,10 @@ class _PlanningProcurementV2ScreenState
  }
 
  final palette = <Color>[
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  const Color(0xFF10B981),
  const Color(0xFFF59E0B),
- const Color(0xFF6D28D9),
+ const Color(0xFFB8860B),
  const Color(0xFFEF4444),
  ];
  final categoryEntries = categoryTotals.entries.toList()
@@ -2396,9 +2396,9 @@ class _ApprovalStatusBadge extends StatelessWidget {
  break;
  case 'pending':
  default:
- background = const Color(0xFFDBEAFE);
- border = const Color(0xFF93C5FD);
- foreground = const Color(0xFF1D4ED8);
+ background = const Color(0xFFFEF3C7);
+ border = const Color(0xFFFFC812);
+ foreground = const Color(0xFFFFC812);
  break;
  }
 

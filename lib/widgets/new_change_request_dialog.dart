@@ -300,7 +300,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                           ? Row(
                               children: [
                                 const Icon(Icons.insert_drive_file,
-                                    size: 18, color: Colors.blue),
+                                    size: 18, color: Color(0xFFFFC812)),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -313,7 +313,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                                 IconButton(
                                   tooltip: 'Download',
                                   icon: const Icon(Icons.download,
-                                      size: 18, color: Colors.blue),
+                                      size: 18, color: Color(0xFFFFC812)),
                                   onPressed: _downloadAttachment,
                                 ),
                                 IconButton(

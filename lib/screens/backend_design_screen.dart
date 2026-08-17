@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -342,9 +343,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildDocumentsSecurityPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: UI/UX Design',
- nextLabel: 'Next: Engineering',
- onBack: () => context.push('/ui-ux-design'),onNext: () => context.push('/engineering-design'),
+ backLabel: PlanningPhaseNavigation.backLabel('backend_design'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('backend_design'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'backend_design'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'backend_design'),
  ),
  ],
  ),
@@ -381,7 +383,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  collapsible: true,
  initiallyExpanded: false,
  headerIcon: Icons.dns_outlined,
- headerIconColor: const Color(0xFF2563EB),
+ headerIconColor: const Color(0xFFFFC812),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -402,7 +404,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Component topology showing services, data stores, integrations, and structural dependencies. '
  'Each node should have a clear owner, type classification, and lifecycle status. Map connections '
  'to reveal data flow paths and integration touchpoints.',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -420,7 +422,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Authentication boundaries, authorization policies, and access control matrices. Define who '
  'can access what, at which level, and through which interface. Document encryption standards, '
  'audit logging, and compliance requirements.',
- const Color(0xFF6366F1),
+ const Color(0xFFB8860B),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -692,7 +694,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(
  flex: 2,
  child: Center(
- child: _buildStatusBadge(_dataFlows[i].protocol, const Color(0xFF6366F1)),
+ child: _buildStatusBadge(_dataFlows[i].protocol, const Color(0xFFB8860B)),
  ),
  ),
  Expanded(
@@ -727,7 +729,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 4),
  IconButton(
  onPressed: () => _openDataFlowDialog(existing: _dataFlows[i]),
- icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFFFFC812)),
  tooltip: 'Edit',
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -872,7 +874,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 4),
  IconButton(
  onPressed: () => _openDesignDocumentDialog(existing: _designDocuments[i]),
- icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFFFFC812)),
  tooltip: 'Edit',
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -1138,7 +1140,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(14),
  borderSide: const BorderSide(
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  width: 1.4,
  ),
  ),
@@ -1195,7 +1197,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(14),
  borderSide: const BorderSide(
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  width: 1.4,
  ),
  ),
@@ -3325,7 +3327,7 @@ class _SectionHeader extends StatelessWidget {
  icon: const Icon(Icons.add, size: 16),
  label: Text(actionLabel),
  style: TextButton.styleFrom(
- foregroundColor: const Color(0xFF2563EB),
+ foregroundColor: const Color(0xFFFFC812),
  padding: EdgeInsets.zero,
  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
  minimumSize: const Size(0, 32),
@@ -3526,7 +3528,7 @@ class _EditCell extends StatelessWidget {
  Widget build(BuildContext context) {
  return IconButton(
  onPressed: onPressed,
- icon: const Icon(Icons.edit_outlined, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.edit_outlined, color: Color(0xFFFFC812)),
  tooltip: 'Edit',
  );
  }

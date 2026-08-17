@@ -2178,6 +2178,129 @@ exports.handleResendWebhook = functions
     res.status(200).json({ received: true });
   });
 
+// ============================================================================
+// CHARTER APPROVAL EMAIL
+// ============================================================================
+exports.sendCharterApprovalEmail = functions
+  .runWith({
+    secrets: ['RESEND_API_KEY'],
+    timeoutSeconds: 30,
+    memory: '256MB'
+  })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'You must be signed in.');
+    }
+
+    const { toEmail, toName, projectName, approverRole, deepLinkUrl, isFallback } = data;
+
+    if (!toEmail || typeof toEmail !== 'string' || !toEmail.includes('@')) {
+      throw new functions.https.HttpsError('invalid-argument', 'A valid approver email is required.');
+    }
+
+    const project = projectName || 'Untitled Project';
+    const role = approverRole || 'Approver';
+    const senderName = context.auth.token.name || context.auth.token.email || 'Project Owner';
+    const link = deepLinkUrl || 'https://nduproject.tech';
+
+    await checkRateLimit(context.auth.uid, 'charter_email', 10);
+
+    const resend = getResendClient();
+
+    const fallbackNote = isFallback
+      ? '<p style="font-size:13px;color:#92400e;background:#fef3c7;border-radius:8px;padding:12px 16px;margin:0 0 24px;">\u26a0\ufe0f You have been identified as the approver because the originally named sponsor/owner is not a registered user. As the highest-role user, you are authorized to approve this charter.</p>'
+      : '';
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:40px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr><td style="background:#051424;padding:32px 40px;text-align:center;">
+          <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:1px;">NDU <span style="color:#f8bd2a;">PROJECT</span></div>
+          <div style="font-size:11px;color:#909096;letter-spacing:3px;margin-top:4px;">NAVIGATE. DELIVER. UPGRADE.</div>
+        </td></tr>
+        <tr><td style="padding:40px;">
+          <h1 style="font-size:22px;font-weight:700;color:#1a1d1f;margin:0 0 16px;">Charter Approval Required</h1>
+          <p style="font-size:15px;color:#495057;line-height:1.6;margin:0 0 24px;"><strong>${senderName}</strong> has submitted the Project Charter for <strong>${project}</strong> and it requires your review and approval.</p>
+          ${fallbackNote}
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:12px;margin:0 0 24px;">
+            <tr><td style="padding:20px;">
+              <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">Project</p>
+              <p style="font-size:15px;font-weight:600;color:#1a1d1f;margin:0 0 16px;">${project}</p>
+              <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">Your Role</p>
+              <p style="font-size:15px;font-weight:600;color:#1a1d1f;margin:0;">${role}</p>
+            </td></tr>
+          </table>
+          <p style="font-size:14px;color:#6b7280;line-height:1.6;margin:0 0 32px;">Please review the Front End Execution Plan and confirm that all applicable subject matter experts have reviewed the relevant sections before approving.</p>
+          <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
+            <tr><td style="background:#ffc107;border-radius:12px;">
+              <a href="${link}" style="display:inline-block;padding:14px 36px;font-size:15px;font-weight:700;color:#1a1d1f;text-decoration:none;">Review &amp; Approve Charter &rarr;</a>
+            </td></tr>
+          </table>
+          <p style="font-size:13px;color:#9ca3af;line-height:1.5;margin:0 0 8px;">Or copy this link into your browser:</p>
+          <p style="font-size:13px;color:#6366f1;word-break:break-all;margin:0 0 32px;">${link}</p>
+          <div style="border-top:1px solid #e4e7ec;padding-top:24px;">
+            <p style="font-size:12px;color:#9ca3af;margin:0;">This approval request was sent by ${senderName} via NDU Project. If you weren't expecting this, you can safely ignore this email.</p>
+          </div>
+        </td></tr>
+      </table>
+      <p style="font-size:11px;color:#9ca3af;margin:24px 0 0;">\u00a9 2026 NDU Project. All rights reserved.</p>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+    try {
+      const { data: emailResult, error } = await resend.emails.send({
+        from: RESEND_FROM_EMAIL,
+        to: toEmail,
+        subject: `Action Required: Approve Project Charter \u2014 ${project}`,
+        html: htmlBody,
+        text: `${senderName} has submitted the Project Charter for ${project} and it requires your review and approval. Visit ${link} to review and approve.`,
+      });
+
+      if (error) {
+        console.error('Resend charter email error:', error);
+        throw new functions.https.HttpsError('internal', `Failed to send charter email: ${error.message}`);
+      }
+
+      console.log(`Charter approval email sent to ${toEmail}: ${emailResult?.id}`);
+
+      // Track in Firestore
+      await db.collection('charter_approval_emails').add({
+        toEmail: toEmail.toLowerCase().trim(),
+        toName: toName || '',
+        toRole: role,
+        subject: `Action Required: Approve Project Charter \u2014 ${project}`,
+        projectId: data.projectId || '',
+        projectName: project,
+        status: 'sent',
+        deliveryStatus: 'pending',
+        messageId: emailResult?.id || null,
+        sentBy: context.auth.uid,
+        isFallbackApprover: isFallback || false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      await logSecurityEvent('charter_approval_email_sent', context.auth.uid, { toEmail, project });
+
+      return { success: true, messageId: emailResult?.id };
+
+    } catch (error) {
+      console.error('Charter approval email error:', error);
+      if (error instanceof functions.https.HttpsError) throw error;
+      throw new functions.https.HttpsError('internal', `Failed to send charter email: ${error.message}`);
+    }
+  });
+
+// ============================================================================
+// SECURITY UTILITIES (shared across all Cloud Functions)
+// ============================================================================
+
 // Export security utilities for use in other functions
 module.exports.security = {
   checkRateLimit,

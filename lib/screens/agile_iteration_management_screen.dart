@@ -29,7 +29,7 @@ class _AgileIterationManagementScreenState
   static const Color _kAccent = Color(0xFFF59E0B);
   static const Color _kAccentLight = Color(0xFFFFC812);
   static const Color _kAccentBg = Color(0xFFFEF3C7);
-  static const Color _kBackground = Color(0xFFF8FAFC);
+  static const Color _kBackground = Colors.white;
   static const Color _kSurface = Colors.white;
   static const Color _kBorder = Color(0xFFE5E7EB);
   static const Color _kHeadline = Color(0xFF111827);
@@ -446,7 +446,7 @@ class _AgileIterationManagementScreenState
     final tabs = [
       _LifecycleTab('Start', Icons.play_arrow, Colors.green),
       _LifecycleTab('During', Icons.loop, _kAccent),
-      _LifecycleTab('End', Icons.flag, Colors.purple),
+      _LifecycleTab('End', Icons.flag, Color(0xFFB8860B)),
     ];
     return Container(
       padding: const EdgeInsets.all(6),

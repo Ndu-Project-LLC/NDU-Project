@@ -1201,7 +1201,7 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
                Row(
                  children: [
                    const Icon(Icons.auto_awesome,
-                       color: Color(0xFF2563EB), size: 18),
+                       color: Color(0xFFFFC812), size: 18),
                    const SizedBox(width: 8),
                    Expanded(
                      child: Text(
@@ -1265,7 +1265,7 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
                      ),
                      const SizedBox(width: 8),
                      const Icon(Icons.insights,
-                         color: Color(0xFF7C3AED), size: 18),
+                         color: Color(0xFFB8860B), size: 18),
                      const SizedBox(width: 8),
                      const Expanded(
                        child: Text(
@@ -1462,12 +1462,12 @@ class _TrackInExecutionBannerState extends State<_TrackInExecutionBanner> {
      decoration: BoxDecoration(
        color: isTracked
            ? const Color(0xFFECFDF5)
-           : const Color(0xFFEFF6FF),
+           : const Color(0xFFFFF8E1),
        borderRadius: BorderRadius.circular(12),
        border: Border.all(
          color: isTracked
              ? const Color(0xFF10B981)
-             : const Color(0xFF2563EB),
+             : const Color(0xFFFFC812),
        ),
      ),
      child: Row(
@@ -1476,7 +1476,7 @@ class _TrackInExecutionBannerState extends State<_TrackInExecutionBanner> {
            isTracked ? Icons.check_circle : Icons.play_circle,
            color: isTracked
                ? const Color(0xFF10B981)
-               : const Color(0xFF2563EB),
+               : const Color(0xFFFFC812),
            size: 22,
          ),
          const SizedBox(width: 12),
@@ -1493,7 +1493,7 @@ class _TrackInExecutionBannerState extends State<_TrackInExecutionBanner> {
                    fontWeight: FontWeight.w700,
                    color: isTracked
                        ? const Color(0xFF047857)
-                       : const Color(0xFF1E40AF),
+                       : const Color(0xFFFFC812),
                  ),
                ),
                const SizedBox(height: 2),
@@ -1755,20 +1755,20 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  padding:
  const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
  decoration: BoxDecoration(
- color: const Color(0xFFE0F2FE),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
  Icon(Icons.auto_awesome,
- size: 10, color: Color(0xFF0284C7)),
+ size: 10, color: Color(0xFFFFC812)),
  SizedBox(width: 3),
  Text('AI',
  style: TextStyle(
  fontSize: 9,
  fontWeight: FontWeight.w700,
- color: Color(0xFF0284C7))),
+ color: Color(0xFFFFC812))),
  ],
  ),
  ),
@@ -2025,8 +2025,8 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
 
  return _PrimaryCard(
  icon: Icons.description_outlined,
- iconBackground: const Color(0xFFEFF6FF),
- iconColor: const Color(0xFF2563EB),
+ iconBackground: const Color(0xFFFFF8E1),
+ iconColor: const Color(0xFFFFC812),
  title: 'Quality Plan',
  subtitle:
  'Define standards, governance cadence, and change/escalation controls for planning quality management',
@@ -2042,7 +2042,7 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  : const Icon(Icons.auto_awesome),
  label: const Text('Generate from Context'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  elevation: 0,
  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
@@ -2134,7 +2134,7 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  },
  icon: const Icon(Icons.upload_file_outlined, size: 16),
  label: const Text('Import CSV'),
- style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), foregroundColor: const Color(0xFF2563EB), side: const BorderSide(color: Color(0xFF93C5FD))),
+ style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), foregroundColor: const Color(0xFFFFC812), side: const BorderSide(color: Color(0xFFFFC812))),
  ),
  const SizedBox(width: 8),
  ElevatedButton.icon(
@@ -2249,7 +2249,7 @@ class _ObjectivesViewState extends State<_ObjectivesView> {
  return _PrimaryCard(
  icon: Icons.flag_outlined,
  iconBackground: const Color(0xFFF3F4FF),
- iconColor: const Color(0xFF7C3AED),
+ iconColor: const Color(0xFFB8860B),
  title: 'Objectives & Targets',
  subtitle:
  'Define measurable objectives, acceptance criteria, and linked requirements/WBS references.',
@@ -2413,7 +2413,7 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
  return _PrimaryCard(
  icon: Icons.verified_outlined,
  iconBackground: const Color(0xFFF3F4FF),
- iconColor: const Color(0xFF7C3AED),
+ iconColor: const Color(0xFFB8860B),
  title: 'QA Tracking',
  subtitle:
  'Track quality assurance controls and task execution with owners, cadence, and completion metrics.',
@@ -2732,7 +2732,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  return _PrimaryCard(
  icon: Icons.fact_check_outlined,
  iconBackground: const Color(0xFFF3F4FF),
- iconColor: const Color(0xFF7C3AED),
+ iconColor: const Color(0xFFB8860B),
  title: 'QC Tracking',
  subtitle:
  'Track inspections, audit outcomes, and corrective actions with full ownership and due dates.',
@@ -3177,7 +3177,7 @@ class _MetricsViewState extends State<_MetricsView> {
  child: _TrendCard(
  title: 'Defect Trend',
  subtitle: 'Failed audits + blocked tasks trend',
- lineColor: const Color(0xFF7C3AED),
+ lineColor: const Color(0xFFB8860B),
  areaColor: const Color(0xFFDAD5FF),
  dataPoints: defectTrendPoints,
  labels: trendLabels,
@@ -3205,7 +3205,7 @@ class _MetricsViewState extends State<_MetricsView> {
  _TrendCard(
  title: 'Defect Trend',
  subtitle: 'Failed audits + blocked tasks trend',
- lineColor: const Color(0xFF7C3AED),
+ lineColor: const Color(0xFFB8860B),
  areaColor: const Color(0xFFDAD5FF),
  dataPoints: defectTrendPoints,
  labels: trendLabels,
@@ -3461,35 +3461,43 @@ class _StandardsTable extends StatelessWidget {
  title: 'Quality Standards',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
+ headingRowHeight: 52,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 56,
+ columnSpacing: 24,
+ horizontalMargin: 16,
  columns: const [
- DataColumn(label: Text('Standard')),
- DataColumn(label: Text('Source')),
- DataColumn(label: Text('Category')),
- DataColumn(label: Text('Applicability')),
- DataColumn(label: Text('Actions')),
+ DataColumn(label: Text('Standard', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Source', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Category', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Applicability', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Actions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
  ],
  rows: [
  for (int i = 0; i < standards.length; i++)
  DataRow(
  cells: [
- DataCell(SizedBox(width: 220, child: Text(standards[i].name))),
+ DataCell(SizedBox(width: 220, child: Text(standards[i].name, style: const TextStyle(fontSize: 13)))),
  DataCell(
- SizedBox(width: 140, child: Text(standards[i].source))),
+ SizedBox(width: 140, child: Text(standards[i].source, style: const TextStyle(fontSize: 13)))),
  DataCell(
- SizedBox(width: 120, child: Text(standards[i].category))),
+ SizedBox(width: 120, child: Text(standards[i].category, style: const TextStyle(fontSize: 13)))),
  DataCell(SizedBox(
- width: 180, child: Text(standards[i].applicability))),
+ width: 180, child: Text(standards[i].applicability, style: const TextStyle(fontSize: 13)))),
  DataCell(
  Row(
+ mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(
  icon: const Icon(Icons.edit_outlined, size: 18),
  onPressed: () => onEdit(i),
+ tooltip: 'Edit',
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, size: 18),
  color: const Color(0xFFDC2626),
  onPressed: () => onRemove(i),
+ tooltip: 'Delete',
  ),
  ],
  ),
@@ -3526,38 +3534,47 @@ class _ObjectivesTable extends StatelessWidget {
  title: 'Quality Objectives',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
+ headingRowHeight: 52,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 56,
+ columnSpacing: 24,
+ horizontalMargin: 16,
  columns: const [
- DataColumn(label: Text('Objective')),
- DataColumn(label: Text('Metric')),
- DataColumn(label: Text('Target')),
- DataColumn(label: Text('Current')),
- DataColumn(label: Text('Owner')),
- DataColumn(label: Text('Status')),
- DataColumn(label: Text('Actions')),
+ DataColumn(label: Text('Objective', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Metric', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Target', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Current', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Owner', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Status', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Actions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
  ],
  rows: [
  for (int i = 0; i < objectives.length; i++)
  DataRow(
  cells: [
  DataCell(
- SizedBox(width: 220, child: Text(objectives[i].title))),
+ SizedBox(width: 220, child: Text(objectives[i].title, style: const TextStyle(fontSize: 13)))),
  DataCell(SizedBox(
- width: 140, child: Text(objectives[i].successMetric))),
- DataCell(Text(objectives[i].targetValue)),
- DataCell(Text(objectives[i].currentValue)),
+ width: 140, child: Text(objectives[i].successMetric, style: const TextStyle(fontSize: 13)))),
+ DataCell(Text(objectives[i].targetValue, style: const TextStyle(fontSize: 13))),
+ DataCell(Text(objectives[i].currentValue, style: const TextStyle(fontSize: 13))),
  DataCell(
- SizedBox(width: 130, child: Text(objectives[i].owner))),
+ SizedBox(width: 130, child: Text(objectives[i].owner, style: const TextStyle(fontSize: 13)))),
  DataCell(_StatusChipText(label: objectives[i].status)),
- DataCell(Row(
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(
  icon: const Icon(Icons.edit_outlined, size: 18),
  onPressed: () => onEdit(i),
+ tooltip: 'Edit',
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, size: 18),
  color: const Color(0xFFDC2626),
  onPressed: () => onRemove(i),
+ tooltip: 'Delete',
  ),
  ],
  )),
@@ -3593,35 +3610,44 @@ class _WorkflowControlsTable extends StatelessWidget {
  title: 'Workflow Controls',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
+ headingRowHeight: 52,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 56,
+ columnSpacing: 24,
+ horizontalMargin: 16,
  columns: const [
- DataColumn(label: Text('Control')),
- DataColumn(label: Text('Method')),
- DataColumn(label: Text('Tools')),
- DataColumn(label: Text('Frequency')),
- DataColumn(label: Text('Owner')),
- DataColumn(label: Text('Standards')),
- DataColumn(label: Text('Actions')),
+ DataColumn(label: Text('Control', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Method', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Tools', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Frequency', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Owner', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Standards', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Actions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
  ],
  rows: [
  for (final control in controls)
  DataRow(cells: [
- DataCell(SizedBox(width: 180, child: Text(control.name))),
- DataCell(SizedBox(width: 220, child: Text(control.method))),
- DataCell(SizedBox(width: 140, child: Text(control.tools))),
- DataCell(Text(control.frequency)),
- DataCell(SizedBox(width: 140, child: Text(control.owner))),
+ DataCell(SizedBox(width: 180, child: Text(control.name, style: const TextStyle(fontSize: 13)))),
+ DataCell(SizedBox(width: 220, child: Text(control.method, style: const TextStyle(fontSize: 13)))),
+ DataCell(SizedBox(width: 140, child: Text(control.tools, style: const TextStyle(fontSize: 13)))),
+ DataCell(Text(control.frequency, style: const TextStyle(fontSize: 13))),
+ DataCell(SizedBox(width: 140, child: Text(control.owner, style: const TextStyle(fontSize: 13)))),
  DataCell(SizedBox(
- width: 180, child: Text(control.standardsReference))),
- DataCell(Row(
+ width: 180, child: Text(control.standardsReference, style: const TextStyle(fontSize: 13)))),
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(
  icon: const Icon(Icons.edit_outlined, size: 18),
  onPressed: () => onEdit(control),
+ tooltip: 'Edit',
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, size: 18),
  color: const Color(0xFFDC2626),
  onPressed: () => onRemove(control),
+ tooltip: 'Delete',
  ),
  ],
  )),
@@ -3909,35 +3935,44 @@ class _QualityChangeLogTable extends StatelessWidget {
  title: 'Quality Change Log',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
+ headingRowHeight: 52,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 56,
+ columnSpacing: 24,
+ horizontalMargin: 16,
  columns: const [
- DataColumn(label: Text('Description')),
- DataColumn(label: Text('Reason')),
- DataColumn(label: Text('Requested By')),
- DataColumn(label: Text('Approved By')),
- DataColumn(label: Text('Date')),
- DataColumn(label: Text('Status')),
- DataColumn(label: Text('Actions')),
+ DataColumn(label: Text('Description', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Reason', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Requested By', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Approved By', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Date', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Status', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Actions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
  ],
  rows: [
  for (int i = 0; i < entries.length; i++)
  DataRow(cells: [
  DataCell(
- SizedBox(width: 220, child: Text(entries[i].description))),
- DataCell(SizedBox(width: 160, child: Text(entries[i].reason))),
- DataCell(Text(entries[i].requestedBy)),
- DataCell(Text(entries[i].approvedBy)),
- DataCell(Text(entries[i].date)),
+ SizedBox(width: 220, child: Text(entries[i].description, style: const TextStyle(fontSize: 13)))),
+ DataCell(SizedBox(width: 160, child: Text(entries[i].reason, style: const TextStyle(fontSize: 13)))),
+ DataCell(Text(entries[i].requestedBy, style: const TextStyle(fontSize: 13))),
+ DataCell(Text(entries[i].approvedBy, style: const TextStyle(fontSize: 13))),
+ DataCell(Text(entries[i].date, style: const TextStyle(fontSize: 13))),
  DataCell(_StatusChipText(label: entries[i].status)),
- DataCell(Row(
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(
  icon: const Icon(Icons.edit_outlined, size: 18),
  onPressed: () => onEdit(i),
+ tooltip: 'Edit',
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, size: 18),
  color: const Color(0xFFDC2626),
  onPressed: () => onRemove(i),
+ tooltip: 'Delete',
  ),
  ],
  )),
@@ -4105,9 +4140,9 @@ class _RoadmapTimeline extends StatelessWidget {
  Color _sourceColor(String source) {
  switch (source) {
  case 'QA Task':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case 'QC Task':
- return const Color(0xFF7C3AED);
+ return const Color(0xFFB8860B);
  case 'Audit':
  return const Color(0xFFCA8A04);
  case 'Corrective Action':

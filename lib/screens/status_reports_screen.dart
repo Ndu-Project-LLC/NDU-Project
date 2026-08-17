@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -406,10 +407,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Recurring Deliverables',
- nextLabel: 'Next: Contracts Tracking',
- onBack: () => RecurringDeliverablesScreen.open(context),
- onNext: () => ContractsTrackingScreen.open(context),
+ backLabel: PlanningPhaseNavigation.backLabel('status_reports'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('status_reports'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'status_reports'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'status_reports'),
  ),
  ],
  const SizedBox(height: 48),
@@ -460,7 +461,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
       collapsible: true,
       initiallyExpanded: false,
       headerIcon: Icons.description_outlined,
-      headerIconColor: const Color(0xFF0EA5E9),
+      headerIconColor: const Color(0xFFFFC812),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -470,7 +471,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
             'Summarize progress against the project baseline for the past week. '
                 'Include schedule variance, cost performance index, and upcoming milestones. '
                 'Target audience: Project Manager, Team Leads, PMO.',
-            const Color(0xFF2563EB),
+            const Color(0xFFFFC812),
           ),
           const SizedBox(height: 14),
           _buildReportSection(
@@ -479,7 +480,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
             'High-level narrative with RAG (Red/Amber/Green) status indicators. '
                 'Focus on strategic risks, budget health, and decisions requiring '
                 'steering committee approval. Target audience: Sponsors, Executives.',
-            const Color(0xFF7C3AED),
+            const Color(0xFFB8860B),
           ),
           _buildReportSection(
             Icons.handshake_outlined,
@@ -487,7 +488,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
             'Track stakeholder sentiment, engagement actions taken, and upcoming '
                 'communication events. Ensure alignment between project deliverables '
                 'and stakeholder expectations. Target audience: Project Board, Key Stakeholders.',
-            const Color(0xFF0D9488),
+            const Color(0xFFD97706),
           ),
           const SizedBox(height: 14),
           _buildReportSection(

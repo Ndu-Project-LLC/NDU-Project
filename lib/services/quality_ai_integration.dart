@@ -254,7 +254,7 @@ class QualityQuickActionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final defaultColor = color ?? const Color(0xFF6366F1);
+    final defaultColor = color ?? const Color(0xFFB8860B);
 
     return Material(
       color: Colors.transparent,

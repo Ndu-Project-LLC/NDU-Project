@@ -426,6 +426,13 @@ class StakeholdersScreen extends StatelessWidget {
     final emailCtrl = TextEditingController();
     final roleCtrl = TextEditingController();
     bool sme = false;
+    try {
+      final estimate = provider.estimate;
+      if (estimate != null) {
+        // Prefill a helpful role hint based on estimate class
+        roleCtrl.text = '${estimate.className.label} SME';
+      }
+    } catch (_) {}
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(

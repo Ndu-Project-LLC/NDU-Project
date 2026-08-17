@@ -26,10 +26,10 @@ const _textPrimary = Color(0xFFF1F5F9);
 const _textSecondary = Color(0xFF94A3B8);
 const _textMuted = Color(0xFF64748B);
 const _border = Color(0xFF1E293B);
-const _blue = Color(0xFF3B82F6);
-const _blueLight = Color(0xFF60A5FA);
-const _purple = Color(0xFF8B5CF6);
-const _purpleLight = Color(0xFFA78BFA);
+const _blue = Color(0xFFFFC812);
+const _blueLight = Color(0xFFFFC812);
+const _purple = Color(0xFFB8860B);
+const _purpleLight = Color(0xFFFFC812);
 const _green = Color(0xFF10B981);
 const _greenLight = Color(0xFF34D399);
 const _gold = Color(0xFFFBBF24);
@@ -37,8 +37,8 @@ const _goldDeep = Color(0xFFD97706);
 const _red = Color(0xFFEF4444);
 
 // Phase-specific unique colors for "How It Works" section
-const _teal = Color(0xFF14B8A6);      // For Design phase
-const _tealLight = Color(0xFF2DD4BF);
+const _teal = Color(0xFFD97706);      // For Design phase
+const _tealLight = Color(0xFFFBBF24);
 const _orange = Color(0xFFF97316);     // For Execution phase
 const _orangeLight = Color(0xFFFB923C);
 

@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/screens/identify_staff_ops_team_screen.dart';
 import 'package:ndu_project/screens/punchlist_actions_screen.dart';
@@ -36,8 +37,8 @@ class _TechnicalDebtManagementScreenState
  static const List<_GovernanceColorOption> _governanceColorOptions = [
  _GovernanceColorOption('Critical red', 0xFFEF4444),
  _GovernanceColorOption('High amber', 0xFFF97316),
- _GovernanceColorOption('Control blue', 0xFF0EA5E9),
- _GovernanceColorOption('Governance indigo', 0xFF6366F1),
+ _GovernanceColorOption('Control blue', 0xFFFFC812),
+ _GovernanceColorOption('Governance indigo', 0xFFB8860B),
  _GovernanceColorOption('On-track green', 0xFF10B981),
  ];
 
@@ -99,10 +100,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildOwnershipPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Punchlist Actions',
- nextLabel: 'Next: Identify & Staff Ops Team',
- onBack: () => PunchlistActionsScreen.open(context),
- onNext: () => IdentifyStaffOpsTeamScreen.open(context),
+ backLabel: PlanningPhaseNavigation.backLabel('technical_debt_management'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('technical_debt_management'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'technical_debt_management'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'technical_debt_management'),
  ),
  ],
  ),
@@ -213,7 +214,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  label: Text(label,
  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF0EA5E9),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -226,10 +227,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _StatCardData(
  'Open debt items', '18', '6 critical', const Color(0xFFEF4444)),
  _StatCardData(
- 'In remediation', '7', '2 sprint owners', const Color(0xFF0EA5E9)),
+ 'In remediation', '7', '2 sprint owners', const Color(0xFFFFC812)),
  _StatCardData(
  'Monthly burn-down', '14%', 'Goal 20%', const Color(0xFF10B981)),
- _StatCardData('Owner coverage', '92%', '2 gaps', const Color(0xFF6366F1)),
+ _StatCardData('Owner coverage', '92%', '2 gaps', const Color(0xFFB8860B)),
  ];
 
  if (isNarrow) {
@@ -624,7 +625,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Readiness review minutes, alert test logs, DR rehearsal result, support acceptance sign-off.',
  ownerCadence: 'Ops Lead + Platform Lead; twice weekly',
  progress: 0.46,
- color: Color(0xFF0EA5E9),
+ color: Color(0xFFFFC812),
  ),
  _RemediationRunwayRow(
  primary: 'P2 maintainability refactor',
@@ -635,7 +636,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Complexity scan, code review approvals, regression pass rate, module ownership records.',
  ownerCadence: 'Tech Lead; weekly sprint review',
  progress: 0.34,
- color: Color(0xFF6366F1),
+ color: Color(0xFFB8860B),
  ),
  _RemediationRunwayRow(
  primary: 'P3 backlog governance',
@@ -711,7 +712,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  control:
  'Add NFR acceptance criteria to backlog items and require time-boxed remediation plans for waivers.',
  tier: 'Medium',
- color: Color(0xFF6366F1),
+ color: Color(0xFFB8860B),
  ),
  _RootCauseSignalRow(
  signal: 'Dependency aging',
@@ -723,7 +724,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  control:
  'Create an upgrade lane with tested compatibility windows and release-owner approval.',
  tier: 'Medium',
- color: Color(0xFF0EA5E9),
+ color: Color(0xFFFFC812),
  ),
  ];
  }
@@ -752,7 +753,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  escalation: owner.escalation.isNotEmpty
  ? owner.escalation
  : (profile?.escalation ?? ''),
- color: profile?.color ?? const Color(0xFF0EA5E9),
+ color: profile?.color ?? const Color(0xFFFFC812),
  );
  }).toList();
  }
@@ -768,7 +769,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  review: 'Sprint review plus weekly debt burndown checkpoint',
  escalation:
  'Critical item blocked longer than five business days or target release moves.',
- color: Color(0xFF0EA5E9),
+ color: Color(0xFFFFC812),
  ),
  _OwnershipCoverageRow(
  workstream: 'Security and compliance',
@@ -804,7 +805,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  review: 'Monthly portfolio governance checkpoint',
  escalation:
  'Deferred risk has no funded remediation path or exceeds approved waiver date.',
- color: Color(0xFF6366F1),
+ color: Color(0xFFB8860B),
  ),
  ];
  }
@@ -887,7 +888,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  evidence: 'SBOM age, end-of-support dates, vulnerability scan.',
  control: 'Create a tested upgrade lane with release-owner approval.',
  tier: 'Medium',
- color: Color(0xFF0EA5E9),
+ color: Color(0xFFFFC812),
  );
  }
  return const _RootCauseProfile(
@@ -897,7 +898,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  evidence: 'Complexity hotspots, change lead time, review comments.',
  control: 'Assign module stewards and reduce coupling in priority areas.',
  tier: 'Medium',
- color: Color(0xFF6366F1),
+ color: Color(0xFFB8860B),
  );
  }
 
@@ -932,7 +933,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  coverage: 'Business rationale and funded follow-up required.',
  review: 'Monthly portfolio checkpoint',
  escalation: 'Deferred risk lacks a funded remediation path.',
- color: Color(0xFF6366F1),
+ color: Color(0xFFB8860B),
  );
  }
  return const _OwnerProfile(
@@ -942,7 +943,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Named lead, module stewards, review approvers, and release owner.',
  review: 'Sprint review plus weekly debt burndown',
  escalation: 'Critical item blocked longer than five business days.',
- color: Color(0xFF0EA5E9),
+ color: Color(0xFFFFC812),
  );
  }
 
@@ -1056,7 +1057,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  .map((entry) => RemediationTrack(
  label: entry.title.trim(),
  progress: _parsePercent('${entry.details} ${entry.status ?? ''}'),
- colorValue: const Color(0xFF0EA5E9).toARGB32(),
+ colorValue: const Color(0xFFFFC812).toARGB32(),
  ))
  .where((item) => item.label.isNotEmpty)
  .toList();
@@ -1287,7 +1288,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  TextEditingController(text: seed?.ownerCadence ?? '');
  var progress = seed?.progress ?? 0.35;
  var selectedColorValue =
- (seed?.color ?? const Color(0xFF0EA5E9)).toARGB32();
+ (seed?.color ?? const Color(0xFFFFC812)).toARGB32();
 
  showDialog<void>(
  context: context,
@@ -1607,7 +1608,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final escalationController =
  TextEditingController(text: seed?.escalation ?? '');
  var selectedColorValue =
- (seed?.color ?? const Color(0xFF0EA5E9)).toARGB32();
+ (seed?.color ?? const Color(0xFFFFC812)).toARGB32();
 
  showDialog<void>(
  context: context,
@@ -1982,7 +1983,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFFF97316);
  break;
  case 'Medium':
- color = const Color(0xFF6366F1);
+ color = const Color(0xFFB8860B);
  break;
  default:
  color = const Color(0xFF94A3B8);
@@ -2001,10 +2002,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _statusChip(String label) {
  final color = label == 'In progress'
- ? const Color(0xFF0EA5E9)
+ ? const Color(0xFFFFC812)
  : label == 'Backlog'
  ? const Color(0xFFF59E0B)
- : const Color(0xFF6366F1);
+ : const Color(0xFFB8860B);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
@@ -2399,13 +2400,13 @@ class _OwnerCoverageCell extends StatelessWidget {
  children: [
  CircleAvatar(
  radius: 15,
- backgroundColor: const Color(0xFF0EA5E9).withOpacity(0.14),
+ backgroundColor: const Color(0xFFFFC812).withOpacity(0.14),
  child: Text(
  initial,
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Color(0xFF0EA5E9),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),

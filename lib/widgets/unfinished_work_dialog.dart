@@ -289,7 +289,7 @@ class _UnfinishedWorkDialog extends StatelessWidget {
 
   Widget _severityDot(UnfinishedSeverity severity) {
     final color = switch (severity) {
-      UnfinishedSeverity.info => const Color(0xFF3B82F6),
+      UnfinishedSeverity.info => const Color(0xFFFFC812),
       UnfinishedSeverity.warning => const Color(0xFFF59E0B),
       UnfinishedSeverity.blocking => const Color(0xFFEF4444),
     };

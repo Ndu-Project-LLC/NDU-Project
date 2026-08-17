@@ -149,7 +149,7 @@ class ReviewScreen extends StatelessWidget {
                       value: '${estimate.stakeholders.length}',
                       sub: 'To be notified',
                       icon: Icons.people_outline_rounded,
-                      tint: const Color(0xFF6366F1),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFEEF0FF),
                     ),
                     TreasuryKpiSpec(
@@ -158,7 +158,7 @@ class ReviewScreen extends StatelessWidget {
                           '${estimate.baseline?.rebaselineRemaining ?? 2} / 2',
                       sub: 'Available after lock',
                       icon: Icons.refresh_rounded,
-                      tint: const Color(0xFF8B5CF6),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFF4EEFF),
                     ),
                   ],

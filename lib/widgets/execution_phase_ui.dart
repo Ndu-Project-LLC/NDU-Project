@@ -65,8 +65,8 @@ class ExecutionActionBar extends StatelessWidget {
               : Icon(action.icon, size: compact ? 16 : 18),
           label: Text(action.label),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF0F172A),
-            foregroundColor: Colors.white,
+            backgroundColor: const Color(0xFFFFC812),
+            foregroundColor: const Color(0xFF111827),
             disabledBackgroundColor: const Color(0xFFE2E8F0),
             disabledForegroundColor: const Color(0xFF94A3B8),
             padding: EdgeInsets.symmetric(
@@ -301,7 +301,7 @@ class ExecutionMetricData {
     required this.value,
     required this.icon,
     this.helper,
-    this.emphasisColor = const Color(0xFF2563EB),
+    this.emphasisColor = const Color(0xFFFFC812),
   });
 
   final String label;
@@ -635,14 +635,14 @@ class _ExecutionPanelShellState extends State<ExecutionPanelShell>
               Container(
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: (widget.headerIconColor ?? const Color(0xFF6366F1))
+                  color: (widget.headerIconColor ?? const Color(0xFFB8860B))
                       .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   widget.headerIcon,
                   size: 18,
-                  color: widget.headerIconColor ?? const Color(0xFF6366F1),
+                  color: widget.headerIconColor ?? const Color(0xFFB8860B),
                 ),
               ),
               const SizedBox(width: 12),
@@ -728,7 +728,7 @@ class _ExecutionPanelShellState extends State<ExecutionPanelShell>
       child: Icon(
         Icons.expand_more_rounded,
         size: 20,
-        color: _isExpanded ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF),
+        color: _isExpanded ? const Color(0xFFB8860B) : const Color(0xFF9CA3AF),
       ),
     );
   }
@@ -893,16 +893,16 @@ class _StatusPalette {
         normalized.contains('scheduled') ||
         normalized.contains('aligned')) {
       return const _StatusPalette(
-        Color(0xFFEFF6FF),
-        Color(0xFFBFDBFE),
-        Color(0xFF1D4ED8),
+        Color(0xFFFFF8E1),
+        Color(0xFFFDE68A),
+        Color(0xFFFFC812),
       );
     }
 
     return const _StatusPalette(
-      Color(0xFFF5F3FF),
-      Color(0xFFDDD6FE),
-      Color(0xFF6D28D9),
+      Color(0xFFFFF8E1),
+      Color(0xFFFEF3C7),
+      Color(0xFFB8860B),
     );
   }
 }

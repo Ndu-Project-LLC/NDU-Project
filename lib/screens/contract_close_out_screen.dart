@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'dart:convert';
@@ -105,11 +106,10 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             _buildSignOffsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel:
-                  'Back: FAT, Mechanical Completion & Commission Solution',
-              nextLabel: 'Next: Scope & Deliverable Reconciliation',
-              onBack: () => FatMechanicalCompletionScreen.open(context),
-              onNext: () => ActualVsPlannedGapAnalysisScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('contract_close_out'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('contract_close_out'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'contract_close_out'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'contract_close_out'),
             ),
             const SizedBox(height: 48),
           ],
@@ -1264,7 +1264,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
       sectionSubtitle:
           'Final invoices, deliverables, sign-offs, and retention releases',
       sectionIcon: Icons.handshake_outlined,
-      sectionColor: const Color(0xFF7C3AED),
+      sectionColor: const Color(0xFFB8860B),
       completionPercent: completionPct,
       completionLabel: 'CLOSED',
       completionCaption:
@@ -1274,7 +1274,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
           label: 'Contractors',
           value: '${projectData.contractors.length}',
           icon: Icons.construction_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'to close out',
         ),
         LaunchKpiTile(

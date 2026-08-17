@@ -352,15 +352,15 @@ class _InterfaceManagementSection extends StatelessWidget {
   Color _typeColor(String type) {
     switch (type) {
       case 'Technical':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Contractual':
         return const Color(0xFFD97706);
       case 'Organizational':
         return const Color(0xFF10B981);
       case 'Physical':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Procedural':
-        return const Color(0xFFEC4899);
+        return const Color(0xFFD97706);
       default:
         return const Color(0xFF6B7280);
     }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -538,10 +539,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildDocumentationPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Engineering Design',
- nextLabel: 'Next: Tools Integration',
- onBack: () => context.go('/${AppRoutes.engineeringDesign}'),
- onNext: () => context.push('/${AppRoutes.toolsIntegration}'),
+ backLabel: PlanningPhaseNavigation.backLabel('technical_development'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('technical_development'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'technical_development'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'technical_development'),
  ),
  ],
  ),
@@ -653,7 +654,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  title: 'Build & Sprint Execution',
  description:
  'Parallel workstreams, sprint sequencing, burndown tracking, and continuous integration.',
- color: Color(0xFF0EA5E9),
+ color: Color(0xFFFFC812),
  ),
  const _FrameworkGuideCard(
  icon: Icons.link_rounded,
@@ -740,7 +741,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ? const Color(0xFF059669)
  : item.progress >= 40
  ? const Color(0xFFF59E0B)
- : const Color(0xFF0EA5E9);
+ : const Color(0xFFFFC812);
  return Container(
  margin: const EdgeInsets.only(bottom: 3),
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1344,7 +1345,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
  color: isAuto
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF8E1)
  : const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(4),
  ),
@@ -1353,7 +1354,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  fontSize: 9,
  fontWeight: FontWeight.w600,
  color: isAuto
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF6B7280))),
  ),
  ),
@@ -1600,7 +1601,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF0EA5E9)),
+ borderSide: const BorderSide(color: Color(0xFFFFC812)),
  ),
  ),
  style: const TextStyle(fontSize: 13, color: Color(0xFF334155)),
@@ -1630,7 +1631,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF0EA5E9)),
+ borderSide: const BorderSide(color: Color(0xFFFFC812)),
  ),
  ),
  style: const TextStyle(fontSize: 13, color: Color(0xFF334155)),
@@ -1703,7 +1704,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildTypeBadge(String type) {
  final isSoftware = type.toLowerCase().contains('software');
  final color =
- isSoftware ? const Color(0xFF2563EB) : const Color(0xFFD97706);
+ isSoftware ? const Color(0xFFFFC812) : const Color(0xFFD97706);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
@@ -1770,7 +1771,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  lower.contains('depends')) {
  return const Color(0xFF64748B);
  }
- return const Color(0xFF0EA5E9);
+ return const Color(0xFFFFC812);
  }
 
  Color _colorForSeverity(String severity) {

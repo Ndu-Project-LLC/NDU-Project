@@ -305,17 +305,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                                 context, 'project_plan'),
                             onExportPdf: _exportPdf),
                         const SizedBox(height: 16),
-                        if (_isAutoPopulating)
-                          const AutoPopulatingIndicator(),
-                        if (_carriedContext != null &&
-                            _carriedContext!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: CarriedContextBanner(
-                              checkpoint: 'project_plan',
-                              contextText: _carriedContext!,
-                            ),
-                          ),
+                       
                         _buildHeader(isMobile),
                         const SizedBox(height: 24),
                         const PlanningAiNotesCard(
@@ -512,12 +502,12 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       child: TabBar(
         controller: _tabController,
         isScrollable: true,
-        labelColor: const Color(0xFF2563EB),
+        labelColor: const Color(0xFFFFC812),
         unselectedLabelColor: const Color(0xFF6B7280),
         labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         unselectedLabelStyle:
             const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        indicatorColor: const Color(0xFF2563EB),
+        indicatorColor: const Color(0xFFFFC812),
         indicatorWeight: 2,
         tabAlignment: TabAlignment.start,
         tabs: const [
@@ -4168,7 +4158,7 @@ class _TabSectionCard extends StatelessWidget {
                   icon: const Icon(Icons.download_outlined, size: 18),
                   label: const Text('Import from prior sections'),
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF2563EB),
+                    foregroundColor: const Color(0xFFFFC812),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     shape: RoundedRectangleBorder(
@@ -4331,6 +4321,8 @@ class _ListEditor extends StatelessWidget {
                       child: VoiceTextFormField(
                         key: ValueKey(item.id),
                         initialValue: item.text,
+                        maxLines: null,
+                        minLines: 1,
                         decoration: InputDecoration(
                           hintText: hintText,
                           isDense: true,

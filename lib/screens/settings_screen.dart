@@ -1504,9 +1504,9 @@ class _SettingsScreenState extends State<SettingsScreen>
         'Low': Colors.orange.withOpacity(0.4)
       },
       'People': {
-        'High': Colors.blue,
-        'Medium': Colors.blueAccent.withOpacity(0.6),
-        'Low': Colors.blueAccent.withOpacity(0.3)
+        'High': Color(0xFFFFC812),
+        'Medium': Color(0xFFFFC812).withOpacity(0.6),
+        'Low': Color(0xFFFFC812).withOpacity(0.3)
       },
     };
 
@@ -1888,14 +1888,14 @@ class _SettingsScreenState extends State<SettingsScreen>
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.08),
+                    color: Color(0xFFFFC812).withOpacity(0.08),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                    border: Border.all(color: Color(0xFFFFC812).withOpacity(0.2)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue, size: 22),
+                      Icon(Icons.info_outline, color: Color(0xFFFFC812), size: 22),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -1905,7 +1905,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                               'Admin Only',
                               style: TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.blue),
+                                  color: Color(0xFFFFC812)),
                             ),
                             const SizedBox(height: 6),
                             const Text(
@@ -2027,10 +2027,10 @@ class _SettingsScreenState extends State<SettingsScreen>
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFFEEF2FF),
+                color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.bolt, color: Colors.blue),
+              child: const Icon(Icons.bolt, color: Color(0xFFFFC812)),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -2221,36 +2221,19 @@ class _TopAppBar extends StatelessWidget {
     return Container(
       height: 56,
       color: Colors.white,
-      child: Row(
+      child: const Row(
         children: [
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: IconButton(
-              onPressed: onBack,
-              icon: const Icon(Icons.arrow_back, size: 22),
-              color: const Color(0xFF005bb3),
-              padding: EdgeInsets.zero,
-              style: IconButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-            ),
-          ),
-          const Expanded(
+          Expanded(
             child: Text(
               'Settings',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF005bb3),
+                color: Color(0xFFFFC812),
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          const SizedBox(width: 48), // balance the back button
         ],
       ),
     );
@@ -2347,12 +2330,12 @@ class _AccountPlanCard extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF005bb3).withOpacity(0.1),
+                      color: const Color(0xFFFFC812).withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.workspace_premium,
-                      color: Color(0xFF005bb3),
+                      color: Color(0xFFFFC812),
                       size: 24,
                     ),
                   ),
@@ -2427,7 +2410,7 @@ class _BillingPaymentCard extends StatelessWidget {
                       context.go('/${AppRoutes.pricing}');
                     },
                     style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF005bb3),
+                      foregroundColor: const Color(0xFFFFC812),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -2699,7 +2682,8 @@ class _AccountActionsSection extends StatelessWidget {
       children: [
         // Change Password
         SizedBox(
-          height: 44,
+          height: 48,
+          width: double.infinity,
           child: OutlinedButton(
             onPressed: () {
               // Navigate to password reset or show dialog
@@ -2718,6 +2702,7 @@ class _AccountActionsSection extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               backgroundColor: Colors.white,
               side: const BorderSide(color: Color(0xFFC0C6D6)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -2726,7 +2711,8 @@ class _AccountActionsSection extends StatelessWidget {
               'Change Password',
               style: TextStyle(
                 color: Color(0xFF191C1E),
-                fontWeight: FontWeight.w500,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -3523,7 +3509,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
     final statusColor = isActive
         ? Colors.green
         : (hasSubscription && subscription!.isTrial
-            ? Colors.blue
+            ? Color(0xFFFFC812)
             : Colors.grey);
     final billingCycle = hasSubscription
         ? (subscription!.isAnnual ? 'Annual' : 'Monthly')

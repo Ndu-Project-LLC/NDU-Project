@@ -36,9 +36,9 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
         LightModeColors.accent),
     ('expand', 'Expand a node', Icons.search,
         'Level 2 children for a selected Level 1 node',
-        const Color(0xFF3B82F6)),
+        const Color(0xFFFFC812)),
     ('validate', 'Validate WBS', Icons.shield,
-        'Review against best practices', const Color(0xFF8B5CF6)),
+        'Review against best practices', const Color(0xFFB8860B)),
   ];
 
   @override
@@ -228,12 +228,12 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+                  color: const Color(0xFFFFC812).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text('KAZ AI',
                     style: TextStyle(
-                        color: Color(0xFF3B82F6),
+                        color: Color(0xFFFFC812),
                         fontSize: 11,
                         fontWeight: FontWeight.bold)),
               ),
@@ -597,13 +597,13 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 1),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF3B82F6)
+                              color: const Color(0xFFFFC812)
                                   .withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(aiSource.toUpperCase(),
                                 style: const TextStyle(
-                                    color: Color(0xFF3B82F6),
+                                    color: Color(0xFFFFC812),
                                     fontSize: 9,
                                     fontWeight: FontWeight.bold)),
                           ),

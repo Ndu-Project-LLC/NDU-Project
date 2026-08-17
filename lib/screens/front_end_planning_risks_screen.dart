@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
 /// Front End Planning – Project Risks page
 /// Matches the provided screenshot with:
@@ -1542,7 +1543,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  borderRadius: BorderRadius.circular(20),
  child: const CircleAvatar(
  radius: 13,
- backgroundColor: Color(0xFF2563EB),
+ backgroundColor: Color(0xFFFFC812),
  child: Text('C',
  style: TextStyle(
  color: Colors.white,
@@ -1640,8 +1641,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  style: TextStyle(fontWeight: FontWeight.w700),
  ),
  style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF2563EB),
- side: const BorderSide(color: Color(0xFFBFDBFE)),
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12)),
  padding: const EdgeInsets.symmetric(vertical: 13),
@@ -1947,7 +1948,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  _buildDistributionTile(
  label: 'High',
  value: distribution['High'] ?? 0,
- background: const Color(0xFFFFE4E6),
+ background: const Color(0xFFFFF8E1),
  foreground: const Color(0xFFDC2626),
  ),
  _buildDistributionTile(
@@ -2009,14 +2010,25 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  }
 
  Widget _buildRiskTable(BuildContext context) {
- return FullScreenTableWrapper(
- title: 'Risks',
- child: _buildRiskTableContent(),
- tableBuilder: (fsContext) => _buildRiskTableContent(),
- );
+		return SearchableTableSection(
+			title: 'Risks',
+			items: _rows,
+			searchFilter: (item, query) {
+				final r = item as _RiskItem;
+				final q = query.trim().toLowerCase();
+				if (q.isEmpty) return true;
+				return r.risk.toLowerCase().contains(q) ||
+						r.description.toLowerCase().contains(q) ||
+						r.category.toLowerCase().contains(q) ||
+						r.owner.toLowerCase().contains(q);
+			},
+			tableBuilder: (fsContext, query) => _buildRiskTableContent(query.isEmpty ? null : _rows.where((r) => r.risk.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.category.toLowerCase().contains(query.trim().toLowerCase()) || r.owner.toLowerCase().contains(query.trim().toLowerCase())).toList()),
+			cardBuilder: (fsContext, query) => Column(children: _rows.where((r) => r.risk.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.category.toLowerCase().contains(query.trim().toLowerCase()) || r.owner.toLowerCase().contains(query.trim().toLowerCase())).map((r) => Card(child: ListTile(title: Text(r.risk), subtitle: Text(r.description)))).toList()),
+		);
  }
 
- Widget _buildRiskTableContent() {
+	Widget _buildRiskTableContent([List<_RiskItem>? rowsOverride]) {
+		final rowsSource = rowsOverride ?? _rows;
  final border = const BorderSide(color: Color(0xFFE5E7EB));
  final headerStyle = const TextStyle(
  fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));
@@ -2114,8 +2126,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  _td(
  r.category.isEmpty
  ? const SizedBox.shrink()
- : _chip(r.category, const Color(0xFFF3E8FF),
- const Color(0xFF7C3AED)),
+ : _chip(r.category, const Color(0xFFFFF8E1),
+ const Color(0xFFB8860B)),
  onDoubleTap: () => _showEditRiskSheet(i)),
  _td(
  WrappedText(
@@ -2196,14 +2208,14 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
  color: rowCanUndo
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF8E1)
  : const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(Icons.undo_rounded,
  size: 16,
  color: rowCanUndo
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF9CA3AF)),
  ),
  ),
@@ -2282,7 +2294,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  severity, const Color(0xFFFEE2E2), const Color(0xFFB91C1C));
  case 'High':
  return _chip(
- severity, const Color(0xFFFFE4E6), const Color(0xFFDC2626));
+ severity, const Color(0xFFFFF8E1), const Color(0xFFDC2626));
  case 'Low':
  return _chip(
  severity, const Color(0xFFDCFCE7), const Color(0xFF16A34A));
@@ -2315,7 +2327,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
- color: const Color(0xFFFFE4E6),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(16),
  ),
  child: Text(status,
@@ -2468,7 +2480,7 @@ class _ExpandableCellTextState extends State<_ExpandableCellText> {
  child: Text(
  _isExpanded ? 'View less' : 'View more',
  style: widget.style.copyWith(
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFFFC812),
  fontSize: 12.5,
  fontWeight: FontWeight.w700,
  ),
@@ -2545,11 +2557,11 @@ class _BottomOverlays extends StatelessWidget {
  ),
  child: Row(
  children: const [
- Icon(Icons.lightbulb_outline, color: Color(0xFF2563EB)),
+ Icon(Icons.lightbulb_outline, color: Color(0xFFFFC812)),
  SizedBox(width: 8),
  Text('Hint',
  style: TextStyle(
- fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+ fontWeight: FontWeight.w800, color: Color(0xFFFFC812))),
  SizedBox(width: 10),
  Text('Focus on major risks associated with each potential solution.',
  style: TextStyle(color: Color(0xFF1F2937))),

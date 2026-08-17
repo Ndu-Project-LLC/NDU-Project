@@ -62,7 +62,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Add User'),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
+                backgroundColor: const Color(0xFFB8860B),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               ),
@@ -100,8 +100,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color(0xFF6366F1),
-                      Color(0xFF8B5CF6),
+                      Color(0xFFB8860B),
+                      Color(0xFFB8860B),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -480,9 +480,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       case SiteRole.owner:
         return [const Color(0xFFDC2626), const Color(0xFFEF4444)];
       case SiteRole.admin:
-        return [const Color(0xFF7C3AED), const Color(0xFF8B5CF6)];
+        return [const Color(0xFFB8860B), const Color(0xFFB8860B)];
       case SiteRole.editor:
-        return [const Color(0xFF2563EB), const Color(0xFF3B82F6)];
+        return [const Color(0xFFFFC812), const Color(0xFFFFC812)];
       case SiteRole.user:
         return [const Color(0xFF059669), const Color(0xFF10B981)];
       case SiteRole.guest:

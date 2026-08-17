@@ -873,7 +873,7 @@ class _ProjectActivitiesLogScreenState
  child: _StatCard(
  title: 'Total Activities',
  value: '$totalCount',
- color: const Color(0xFF0EA5E9),
+ color: const Color(0xFFFFC812),
  ),
  ),
  SizedBox(
@@ -897,7 +897,7 @@ class _ProjectActivitiesLogScreenState
  child: _StatCard(
  title: 'Approved',
  value: '$approvedCount',
- color: const Color(0xFF6366F1),
+ color: const Color(0xFFB8860B),
  ),
  ),
  ],
@@ -1457,6 +1457,9 @@ class _FilterToolbar extends StatelessWidget {
  child: VoiceTextField(
  controller: searchController,
  onChanged: onSearchChanged,
+ enableVoice: false,
+ enableKazAi: false,
+ enableTextFormatting: false,
  decoration: InputDecoration(
  hintText: 'Search activity, owner, role, phase...',
  isDense: true,
@@ -2216,7 +2219,7 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
  fg = const Color(0xFF065F46);
  break;
  case 'Acknowledged':
- bg = const Color(0xFFE0E7FF);
+ bg = const Color(0xFFFFF8E1);
  fg = const Color(0xFF3730A3);
  break;
  case 'Rejected':

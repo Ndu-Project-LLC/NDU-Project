@@ -558,8 +558,8 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Wrap(
-                          alignment: WrapAlignment.spaceBetween,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(
                               mainAxisSize: MainAxisSize.min,
@@ -584,6 +584,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 ),
                               ],
                             ),
+                            const SizedBox(width: 16),
                             GestureDetector(
                               onTap: () async {
                                 final email = _emailController.text.trim();

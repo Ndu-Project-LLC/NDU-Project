@@ -498,11 +498,11 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: 0.08),
+        color: Color(0xFFFFC812).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(4),
       ),
       child:
-          Text(text, style: TextStyle(fontSize: 11, color: Colors.blue[700])),
+          Text(text, style: TextStyle(fontSize: 11, color: Color(0xFFB8860B))),
     );
   }
 
@@ -511,7 +511,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
       case 'Approved':
         return Colors.green.withValues(alpha: 0.1);
       case 'Ready':
-        return Colors.blue.withValues(alpha: 0.1);
+        return Color(0xFFFFC812).withValues(alpha: 0.1);
       default:
         return Colors.grey.withValues(alpha: 0.1);
     }
@@ -522,7 +522,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
       case 'Approved':
         return Colors.green[700]!;
       case 'Ready':
-        return Colors.blue[700]!;
+        return Color(0xFFB8860B)!;
       default:
         return Colors.grey[700]!;
     }

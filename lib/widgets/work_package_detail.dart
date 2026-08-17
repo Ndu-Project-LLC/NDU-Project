@@ -426,7 +426,7 @@ class WorkPackageDetailView extends StatelessWidget {
       case 'complete':
         return const Color(0xFF10B981);
       case 'in_progress':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'overdue':
         return const Color(0xFFEF4444);
       default:
@@ -440,7 +440,7 @@ class WorkPackageDetailView extends StatelessWidget {
       case 'complete':
         return const Color(0xFF10B981);
       case 'in_progress':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'blocked':
       case 'on_hold':
         return const Color(0xFFEF4444);
@@ -886,14 +886,14 @@ class _EwpReleaseGate extends StatelessWidget {
         color: isReleased
             ? const Color(0xFFECFDF5)
             : (blockers.isEmpty
-                ? const Color(0xFFEFF6FF)
+                ? const Color(0xFFFFF8E1)
                 : const Color(0xFFFFF7ED)),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isReleased
               ? const Color(0xFF10B981)
               : (blockers.isEmpty
-                  ? const Color(0xFF3B82F6)
+                  ? const Color(0xFFFFC812)
                   : const Color(0xFFF97316)),
         ),
       ),
@@ -910,7 +910,7 @@ class _EwpReleaseGate extends StatelessWidget {
                 color: isReleased
                     ? const Color(0xFF047857)
                     : (blockers.isEmpty
-                        ? const Color(0xFF1D4ED8)
+                        ? const Color(0xFFFFC812)
                         : const Color(0xFF9A3412)),
               ),
               const SizedBox(width: 8),
@@ -926,7 +926,7 @@ class _EwpReleaseGate extends StatelessWidget {
                   color: isReleased
                       ? const Color(0xFF047857)
                       : (blockers.isEmpty
-                          ? const Color(0xFF1D4ED8)
+                          ? const Color(0xFFFFC812)
                           : const Color(0xFF9A3412)),
                 ),
               ),
@@ -974,7 +974,7 @@ class _EwpReleaseGate extends StatelessWidget {
                 icon: const Icon(Icons.lock_open, size: 16),
                 label: const Text('Release for Execution'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF1D4ED8),
+                  backgroundColor: const Color(0xFFFFC812),
                 ),
               ),
             ),
@@ -1079,14 +1079,14 @@ class _DeliverableRow extends StatelessWidget {
                     icon: Icons.arrow_forward,
                     label:
                         'Feeds ${deliverable.feedsProcurementPackageIds.length} procurement pkg(s)',
-                    color: const Color(0xFF2563EB),
+                    color: const Color(0xFFFFC812),
                   ),
                 if (hasSpecLink)
                   _traceChip(
                     icon: Icons.link,
                     label:
                         '${deliverable.linkedSpecificationIds.length} spec(s)',
-                    color: const Color(0xFF7C3AED),
+                    color: const Color(0xFFB8860B),
                   ),
               ],
             ),
@@ -1103,7 +1103,7 @@ class _DeliverableRow extends StatelessWidget {
       case 'completed':
         return const Color(0xFF10B981);
       case 'in_review':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'planned':
         return const Color(0xFF9CA3AF);
       default:

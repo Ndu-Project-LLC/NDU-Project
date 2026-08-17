@@ -53,11 +53,11 @@ extension ChangeStatusLabel on ChangeStatus {
 
   Color get color => switch (this) {
         ChangeStatus.draft => const Color(0xFF6B7280),
-        ChangeStatus.submitted => const Color(0xFF3B82F6),
+        ChangeStatus.submitted => const Color(0xFFFFC812),
         ChangeStatus.underReview => const Color(0xFFF59E0B),
         ChangeStatus.approved => const Color(0xFF10B981),
         ChangeStatus.rejected => const Color(0xFFEF4444),
-        ChangeStatus.implemented => const Color(0xFF8B5CF6),
+        ChangeStatus.implemented => const Color(0xFFB8860B),
         ChangeStatus.archived => const Color(0xFF909096),
       };
 }
@@ -203,7 +203,7 @@ extension CompressionStrategyLabel on CompressionStrategy {
   Color get color => switch (this) {
         CompressionStrategy.none => const Color(0xFF6B7280),
         CompressionStrategy.crash => const Color(0xFFD97706),
-        CompressionStrategy.fastTrack => const Color(0xFF6366F1),
+        CompressionStrategy.fastTrack => const Color(0xFFB8860B),
       };
 }
 
@@ -222,7 +222,7 @@ extension RiskStatusLabel on RiskStatus {
   Color get color => switch (this) {
         RiskStatus.open => const Color(0xFFEF4444),
         RiskStatus.mitigated => const Color(0xFFF59E0B),
-        RiskStatus.realized => const Color(0xFF8B5CF6),
+        RiskStatus.realized => const Color(0xFFB8860B),
         RiskStatus.closed => const Color(0xFF10B981),
       };
 }
@@ -249,9 +249,9 @@ extension ResourceDisciplineLabel on ResourceDiscipline {
       };
 
   Color get color => switch (this) {
-        ResourceDiscipline.pm => const Color(0xFF6366F1),
-        ResourceDiscipline.engineering => const Color(0xFF2563EB),
-        ResourceDiscipline.design => const Color(0xFF8B5CF6),
+        ResourceDiscipline.pm => const Color(0xFFB8860B),
+        ResourceDiscipline.engineering => const Color(0xFFFFC812),
+        ResourceDiscipline.design => const Color(0xFFB8860B),
         ResourceDiscipline.qa => const Color(0xFFF59E0B),
         ResourceDiscipline.construction => const Color(0xFF10B981),
       };

@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -204,10 +205,10 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Hypercare & Warranty Support',
-              nextLabel: 'Next: Project Performance Review',
-              onBack: () => CommerceViabilityScreen.open(context),
-              onNext: () => BenefitsRealizationScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('financial_closeout'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('financial_closeout'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'financial_closeout'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'financial_closeout'),
             ),
             const SizedBox(height: 48),
           ],
@@ -255,12 +256,12 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
       actualCost = approvedBudget * 0.96;
       // Build segments by solution
       const segColors = [
-        Color(0xFF2563EB),
+        Color(0xFFFFC812),
         Color(0xFFF59E0B),
         Color(0xFF10B981),
-        Color(0xFF7C3AED),
+        Color(0xFFB8860B),
         Color(0xFFEF4444),
-        Color(0xFF06B6D4),
+        Color(0xFFD97706),
         Color(0xFFD97706),
         Color(0xFF64748B),
       ];
@@ -280,10 +281,10 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
     // Cost estimate items as a second source
     if (segments.isEmpty && projectData.costEstimateItems.isNotEmpty) {
       const segColors = [
-        Color(0xFF2563EB),
+        Color(0xFFFFC812),
         Color(0xFFF59E0B),
         Color(0xFF10B981),
-        Color(0xFF7C3AED),
+        Color(0xFFB8860B),
         Color(0xFFEF4444),
       ];
       for (var i = 0; i < projectData.costEstimateItems.length && i < 6; i++) {
@@ -320,7 +321,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
           sectionSubtitle:
               'Live read-out from project cost analysis & cost estimate',
           sectionIcon: Icons.account_balance_wallet,
-          sectionColor: const Color(0xFF1D4ED8),
+          sectionColor: const Color(0xFFFFC812),
           completionPercent: utilization.clamp(0.0, 1.0),
           completionLabel: 'BUDGET USED',
           completionCaption:
@@ -330,7 +331,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
               label: 'Approved Budget',
               value: formatter(approvedBudget),
               icon: Icons.account_balance_outlined,
-              color: const Color(0xFF2563EB),
+              color: const Color(0xFFFFC812),
               delta: 'from cost analysis',
             ),
             LaunchKpiTile(
@@ -460,9 +461,9 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFFEFF6FF),
+        color: Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFF3B82F6)),
+        border: Border.all(color: Color(0xFFFFC812)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -470,14 +471,14 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
           Row(
             children: [
               Icon(Icons.account_balance_wallet,
-                  color: Color(0xFF1D4ED8), size: 22),
+                  color: Color(0xFFFFC812), size: 22),
               SizedBox(width: 10),
               Text(
                 'Finalize all financial activities',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1E3A8A),
+                  color: Color(0xFFB8860B),
                 ),
               ),
             ],
@@ -488,7 +489,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
             'This section captures the financial summary, accounting reconciliation, and the final financial analysis '
             'including earned value, ROI, and lessons learned.',
             style:
-                TextStyle(fontSize: 13, color: Color(0xFF1E40AF), height: 1.5),
+                TextStyle(fontSize: 13, color: Color(0xFFFFC812), height: 1.5),
           ),
         ],
       ),
@@ -542,14 +543,14 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Color(0xFFEFF6FF),
+                        color: Color(0xFFFFF8E1),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Color(0xFFBFDBFE)),
+                        border: Border.all(color: Color(0xFFFDE68A)),
                       ),
                       child: Text(
                         h,
                         style: const TextStyle(
-                            fontSize: 11, color: Color(0xFF1E40AF)),
+                            fontSize: 11, color: Color(0xFFFFC812)),
                       ),
                     ))
                 .toList(),
@@ -571,7 +572,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Color(0xFF3B82F6)),
+                borderSide: BorderSide(color: Color(0xFFFFC812)),
               ),
               contentPadding: EdgeInsets.all(12),
             ),

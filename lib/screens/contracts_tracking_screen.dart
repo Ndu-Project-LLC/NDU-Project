@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -418,10 +419,10 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Status Reports',
-              nextLabel: 'Next: Vendor Tracking',
-              onBack: () => StatusReportsScreen.open(context),
-              onNext: () => VendorTrackingScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('contracts_tracking'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('contracts_tracking'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'contracts_tracking'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'contracts_tracking'),
             ),
           ],
         ),
@@ -505,7 +506,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                             'Draft → Legal Review → Signed → Active → Renewal/Expiry. '
                                 'Each contract should be tracked from initiation through close-out. '
                                 'Set renewal alerts at 90/60/30-day intervals to avoid lapses.',
-                            const Color(0xFF2563EB),
+                            const Color(0xFFFFC812),
                           ),
                           const SizedBox(height: 12),
                           _buildGuideCard(
@@ -2693,7 +2694,7 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
       case 'High':
         return const Color(0xFFF59E0B);
       case 'Medium':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Low':
         return const Color(0xFF6B7280);
       default:
@@ -2706,13 +2707,13 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
       case 'Approved':
         return const Color(0xFF10B981);
       case 'In Review':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Pending':
         return const Color(0xFFF59E0B);
       case 'Rejected':
         return const Color(0xFFEF4444);
       case 'Waived':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       case 'Not Started':
         return const Color(0xFF9CA3AF);
       default:
@@ -2742,17 +2743,17 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
   Color _deptColor(String dept) {
     switch (dept) {
       case 'Legal':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Finance':
         return const Color(0xFF059669);
       case 'Executive':
         return const Color(0xFFDC2626);
       case 'Engineering':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Risk':
         return const Color(0xFFEA580C);
       case 'Compliance':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       case 'Project Office':
         return const Color(0xFF4F46E5);
       case 'Operations':
@@ -3017,19 +3018,19 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
   Color _typeColor(String type) {
     switch (type) {
       case 'SLA':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'NDA':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'MSA':
         return const Color(0xFF059669);
       case 'License':
         return const Color(0xFFEA580C);
       case 'Lease':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       case 'Insurance':
         return const Color(0xFFDC2626);
       case 'Warranty':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       case 'Subscription':
         return const Color(0xFF4F46E5);
       default:
@@ -3046,11 +3047,11 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
       case 'Terminate':
         return const Color(0xFFEF4444);
       case 'Extend':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Consolidate':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       case 'Transfer':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       default:
         return const Color(0xFF64748B);
     }
@@ -3061,7 +3062,7 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
       case 'On Track':
         return const Color(0xFF10B981);
       case 'In Progress':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'At Risk':
         return const Color(0xFFF59E0B);
       case 'Overdue':
@@ -3428,7 +3429,7 @@ class _RenewalLaneData {
     if (days <= 0) return const Color(0xFFDC2626);
     if (days <= 30) return const Color(0xFFEF4444);
     if (days <= 60) return const Color(0xFFF97316);
-    if (days <= 90) return const Color(0xFF2563EB);
+    if (days <= 90) return const Color(0xFFFFC812);
     return const Color(0xFF10B981);
   }
 

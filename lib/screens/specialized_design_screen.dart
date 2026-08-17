@@ -1,4 +1,5 @@
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 // ignore_for_file: unused_element
 
 import 'dart:async';
@@ -324,9 +325,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildReviewGatesPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Technical Development',
- nextLabel: 'Next: Long Lead Equipment Ordering',
- onBack: () => context.push('/technical-development'),onNext: () => context.push('/long-lead-equipment-ordering')),
+ backLabel: PlanningPhaseNavigation.backLabel('specialized_design'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('specialized_design'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'specialized_design'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'specialized_design'),
+ ),
  ],
  ),
  ),
@@ -407,7 +410,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF6B7280), height: 1.5),
  ),
  const SizedBox(height: 18),
- _buildGuideCard(Icons.shield_outlined, 'Security & Access Control', 'Implement defense-in-depth with Zero Trust architecture, encryption at rest and in transit, MFA enforcement, and continuous audit logging. Align with NIST SP 800-207 and CIS Controls v8.', const Color(0xFF2563EB)),
+ _buildGuideCard(Icons.shield_outlined, 'Security & Access Control', 'Implement defense-in-depth with Zero Trust architecture, encryption at rest and in transit, MFA enforcement, and continuous audit logging. Align with NIST SP 800-207 and CIS Controls v8.', const Color(0xFFFFC812)),
  const SizedBox(height: 12),
  _buildGuideCard(Icons.speed_outlined, 'Performance & Scalability', 'Define SLA targets, implement caching strategies, optimize database queries, and establish auto-scaling thresholds. Validate under load testing with p95/p99 latency benchmarks.', const Color(0xFF10B981)),
  const SizedBox(height: 12),
@@ -486,8 +489,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Color color;
  switch (status) {
  case 'Ready': color = const Color(0xFF10B981); break;
- case 'In review': color = const Color(0xFF0EA5E9); break;
- case 'In progress': color = const Color(0xFF8B5CF6); break;
+ case 'In review': color = const Color(0xFFFFC812); break;
+ case 'In progress': color = const Color(0xFFB8860B); break;
  case 'Draft': case 'Pending': color = const Color(0xFFF59E0B); break;
  case 'Deprecated': color = const Color(0xFF9CA3AF); break;
  default: color = const Color(0xFF6B7280);
@@ -513,7 +516,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  switch (status) {
  case 'Compliant': color = const Color(0xFF10B981); break;
  case 'Non-compliant': color = const Color(0xFFEF4444); break;
- case 'In progress': color = const Color(0xFF0EA5E9); break;
+ case 'In progress': color = const Color(0xFFFFC812); break;
  case 'Partial': color = const Color(0xFFF59E0B); break;
  case 'Not assessed': color = const Color(0xFF9CA3AF); break;
  default: color = const Color(0xFF6B7280);
@@ -526,10 +529,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Color color;
  switch (status) {
  case 'Approved': color = const Color(0xFF10B981); break;
- case 'In Review': color = const Color(0xFF0EA5E9); break;
+ case 'In Review': color = const Color(0xFFFFC812); break;
  case 'Pending': color = const Color(0xFFF59E0B); break;
  case 'Rejected': color = const Color(0xFFEF4444); break;
- case 'Waived': color = const Color(0xFF8B5CF6); break;
+ case 'Waived': color = const Color(0xFFB8860B); break;
  case 'Not Started': color = const Color(0xFF9CA3AF); break;
  default: color = const Color(0xFF6B7280);
  }
@@ -717,7 +720,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _buildTableRow(isLast: i == _performanceRows.length - 1, cells: [
  Expanded(flex: 3, child: Text(row.hotspot, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF111827)))),
  Expanded(flex: 5, child: Text(row.focus, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280), height: 1.4))),
- SizedBox(width: 130, child: Text(row.sla, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0EA5E9)))),
+ SizedBox(width: 130, child: Text(row.sla, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFFFC812)))),
  SizedBox(width: 130, child: _buildStatusTag(row.status)),
  _crudButtons(() => _showPerformanceDialog(existing: row), () => _confirmDelete(() { setState(() => _performanceRows.remove(row)); _scheduleSave(); })),
  ]);

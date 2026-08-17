@@ -747,7 +747,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
             ? '${DateFormat('MMM d').format(root.startDate!)} → ${DateFormat('MMM d').format(root.endDate!)}'
             : 'Setup timeline to begin',
         icon: Icons.calendar_month_rounded,
-        tint: const Color(0xFF6366F1),
+        tint: const Color(0xFFB8860B),
         tintSoft: TreasuryTokens.infoSoft,
       ),
       TreasuryKpiSpec(
@@ -763,8 +763,8 @@ class _BuilderScreenState extends State<BuilderScreen> {
         value: _domainLabelFromColor(topDomainColor),
         sub: '${domainCounts.length} domains active',
         icon: Icons.hub_outlined,
-        tint: const Color(0xFFEC4899),
-        tintSoft: const Color(0xFFFCE7F3),
+        tint: const Color(0xFFD97706),
+        tintSoft: const Color(0xFFFFF8E1),
       ),
     ];
   }
@@ -1739,13 +1739,6 @@ class _SampleActivityTable extends StatefulWidget {
 
 class _SampleActivityTableState extends State<_SampleActivityTable> {
   late List<_SampleRow> _rows;
-
-  final _nameCtrl = TextEditingController();
-  final _durationCtrl = TextEditingController();
-  final _startCtrl = TextEditingController(text: '01/06/26');
-  final _finishCtrl = TextEditingController(text: '01/30/26');
-  final _predecessorsCtrl = TextEditingController();
-  final _resourcesCtrl = TextEditingController();
   bool _isGenerating = false;
   int _nextId = 8;
 
@@ -1758,41 +1751,135 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
-    _durationCtrl.dispose();
-    _startCtrl.dispose();
-    _finishCtrl.dispose();
-    _predecessorsCtrl.dispose();
-    _resourcesCtrl.dispose();
     super.dispose();
   }
 
-  void _addRow() {
-    final name = _nameCtrl.text.trim();
-    if (name.isEmpty) return;
+  
 
-    setState(() {
-      _rows.add(_SampleRow(
-        (_nextId++).toString(),
-        name,
-        _durationCtrl.text.trim().isNotEmpty ? _durationCtrl.text.trim() : '—',
-        _startCtrl.text.trim().isNotEmpty ? _startCtrl.text.trim() : '—',
-        _finishCtrl.text.trim().isNotEmpty ? _finishCtrl.text.trim() : '—',
-        _predecessorsCtrl.text.trim().isNotEmpty
-            ? _predecessorsCtrl.text.trim()
-            : '—',
-        _resourcesCtrl.text.trim().isNotEmpty
-            ? _resourcesCtrl.text.trim()
-            : '—',
-        ScheduleDomain.execution.color,
-      ));
-      _nameCtrl.clear();
-      _durationCtrl.clear();
-      _predecessorsCtrl.clear();
-      _resourcesCtrl.clear();
-      _startCtrl.text = '01/06/26';
-      _finishCtrl.text = '01/30/26';
-    });
+  Future<void> _showAddSampleDialog(BuildContext context) async {
+    final nameCtrl = TextEditingController();
+    final durationCtrl = TextEditingController();
+    final startCtrl = TextEditingController(text: '01/06/26');
+    final finishCtrl = TextEditingController(text: '01/30/26');
+    final predsCtrl = TextEditingController();
+    final resourcesCtrl = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Color(0xFFE4E7EC))),
+        title: const Text('Add activity',
+            style: TextStyle(
+                color: Color(0xFF1A1D1F), fontWeight: FontWeight.w600)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(labelText: 'Name'),
+                autofocus: true,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: durationCtrl,
+                decoration: const InputDecoration(labelText: 'Duration (e.g. 10 d)'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: startCtrl,
+                decoration: const InputDecoration(labelText: 'Start (MM/DD/YY)'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: finishCtrl,
+                decoration: const InputDecoration(labelText: 'Finish (MM/DD/YY)'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: predsCtrl,
+                decoration: const InputDecoration(labelText: 'Predecessors (e.g. 6FS)'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: resourcesCtrl,
+                decoration: const InputDecoration(labelText: 'Resources (e.g. Crew (4))'),
+              ),
+            ],
+          ),
+        ),
+          actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              if (nameCtrl.text.trim().isEmpty) return;
+              try {
+                final scheduleProvider = context.read<ScheduleProvider>();
+                final sch = scheduleProvider.schedule;
+                if (sch != null && sch.activities.isNotEmpty) {
+                  final parentId = sch.activities[0].id;
+                  scheduleProvider.addActivity(
+                    parentId,
+                    ScheduleActivity(
+                      id: '',
+                      level: 0,
+                      code: '',
+                      name: nameCtrl.text.trim(),
+                      type: ActivityType.activity,
+                      domain: ScheduleDomain.execution,
+                      dependencies: [],
+                      aiGenerated: false,
+                      children: [],
+                    ),
+                  );
+                } else {
+                  // Fallback to local sample rows when no real schedule is set up
+                  setState(() {
+                    _rows.add(_SampleRow(
+                      (_nextId++).toString(),
+                      nameCtrl.text.trim(),
+                      durationCtrl.text.trim().isNotEmpty ? durationCtrl.text.trim() : '—',
+                      startCtrl.text.trim().isNotEmpty ? startCtrl.text.trim() : '—',
+                      finishCtrl.text.trim().isNotEmpty ? finishCtrl.text.trim() : '—',
+                      predsCtrl.text.trim().isNotEmpty ? predsCtrl.text.trim() : '—',
+                      resourcesCtrl.text.trim().isNotEmpty ? resourcesCtrl.text.trim() : '—',
+                      ScheduleDomain.execution.color,
+                    ));
+                  });
+                }
+              } catch (e) {
+                // If provider isn't available, fall back to sample rows
+                setState(() {
+                  _rows.add(_SampleRow(
+                    (_nextId++).toString(),
+                    nameCtrl.text.trim(),
+                    durationCtrl.text.trim().isNotEmpty ? durationCtrl.text.trim() : '—',
+                    startCtrl.text.trim().isNotEmpty ? startCtrl.text.trim() : '—',
+                    finishCtrl.text.trim().isNotEmpty ? finishCtrl.text.trim() : '—',
+                    predsCtrl.text.trim().isNotEmpty ? predsCtrl.text.trim() : '—',
+                    resourcesCtrl.text.trim().isNotEmpty ? resourcesCtrl.text.trim() : '—',
+                    ScheduleDomain.execution.color,
+                  ));
+                });
+              }
+              Navigator.pop(ctx, true);
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+
+    // dispose controllers
+    nameCtrl.dispose();
+    durationCtrl.dispose();
+    startCtrl.dispose();
+    finishCtrl.dispose();
+    predsCtrl.dispose();
+    resourcesCtrl.dispose();
   }
 
   void _removeRow(int index) {
@@ -2113,164 +2200,27 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                       ],
                     );
                   }),
-                  // ── New-row edit fields ──
-                  DataRow(
-                    color: WidgetStateProperty.all(const Color(0xFFFAFFFB)),
-                    cells: [
-                      DataCell(
-                        SizedBox(
-                          width: 40,
-                          child: Text(
-                            _nextId.toString(),
-                            style: const TextStyle(
-                                color: Color(0xFF9CA3AF),
-                                fontSize: 11,
-                                fontFamily: appFontFamily,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                  // Replace inline add row with a single button that opens the
+                  // Add Activity modal so items are added via a popup.
+                  DataRow(cells: [
+                    DataCell(Container()),
+                    DataCell(FilledButton.icon(
+                      onPressed: () => _showAddSampleDialog(context),
+                      icon: const Icon(Icons.add_rounded, size: 16),
+                      label: const Text('Add activity'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: LightModeColors.accent.withValues(alpha: 0.06),
+                        foregroundColor: LightModeColors.accent,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       ),
-                      DataCell(
-                        SizedBox(
-                          width: 200,
-                          child: VoiceTextField(
-                            controller: _nameCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'New activity name...',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                            onChanged: (_) => setState(() {}),
-                            onSubmitted: (_) => _addRow(),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: VoiceTextField(
-                            controller: _durationCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'e.g. 10 d',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: VoiceTextField(
-                            controller: _startCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'MM/DD/YY',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: VoiceTextField(
-                            controller: _finishCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'MM/DD/YY',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 100,
-                          child: VoiceTextField(
-                            controller: _predecessorsCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'e.g. 6FS',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 130,
-                          child: VoiceTextField(
-                            controller: _resourcesCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'e.g. Crew (4)',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        IconButton(
-                          icon: Icon(
-                            Icons.add_circle_outline,
-                            size: 20,
-                            color: _nameCtrl.text.trim().isNotEmpty
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFF9CA3AF),
-                          ),
-                          onPressed:
-                              _nameCtrl.text.trim().isNotEmpty ? _addRow : null,
-                          tooltip: 'Add activity',
-                          padding: EdgeInsets.zero,
-                          constraints:
-                              const BoxConstraints(minWidth: 28, minHeight: 28),
-                        ),
-                      ),
-                    ],
-                  ),
+                    )),
+                    DataCell(Container()),
+                    DataCell(Container()),
+                    DataCell(Container()),
+                    DataCell(Container()),
+                    DataCell(Container()),
+                    DataCell(Container()),
+                  ]),
                 ],
               ),
             ),
@@ -2392,164 +2342,25 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                       ],
                     );
                   }),
-                  // ── New-row edit fields ──
-                  DataRow(
-                    color: WidgetStateProperty.all(const Color(0xFFFAFFFB)),
-                    cells: [
-                      DataCell(
-                        SizedBox(
-                          width: 40,
-                          child: Text(
-                            _nextId.toString(),
-                            style: const TextStyle(
-                                color: Color(0xFF9CA3AF),
-                                fontSize: 11,
-                                fontFamily: appFontFamily,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                  DataRow(cells: [
+                    DataCell(Container()),
+                    DataCell(FilledButton.icon(
+                      onPressed: () => _showAddSampleDialog(context),
+                      icon: const Icon(Icons.add_rounded, size: 16),
+                      label: const Text('Add activity'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: LightModeColors.accent.withValues(alpha: 0.06),
+                        foregroundColor: LightModeColors.accent,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       ),
-                      DataCell(
-                        SizedBox(
-                          width: 200,
-                          child: VoiceTextField(
-                            controller: _nameCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'New activity name...',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                            onChanged: (_) => setState(() {}),
-                            onSubmitted: (_) => _addRow(),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: VoiceTextField(
-                            controller: _durationCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'e.g. 10 d',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: VoiceTextField(
-                            controller: _startCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'MM/DD/YY',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: VoiceTextField(
-                            controller: _finishCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'MM/DD/YY',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 100,
-                          child: VoiceTextField(
-                            controller: _predecessorsCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'e.g. 6FS',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 130,
-                          child: VoiceTextField(
-                            controller: _resourcesCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'e.g. Crew (4)',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        IconButton(
-                          icon: Icon(
-                            Icons.add_circle_outline,
-                            size: 20,
-                            color: _nameCtrl.text.trim().isNotEmpty
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFF9CA3AF),
-                          ),
-                          onPressed:
-                              _nameCtrl.text.trim().isNotEmpty ? _addRow : null,
-                          tooltip: 'Add activity',
-                          padding: EdgeInsets.zero,
-                          constraints:
-                              const BoxConstraints(minWidth: 28, minHeight: 28),
-                        ),
-                      ),
-                    ],
-                  ),
+                    )),
+                    DataCell(Container()),
+                    DataCell(Container()),
+                    DataCell(Container()),
+                    DataCell(Container()),
+                    DataCell(Container()),
+                    DataCell(Container()),
+                  ]),
                 ],
               ),
             ),

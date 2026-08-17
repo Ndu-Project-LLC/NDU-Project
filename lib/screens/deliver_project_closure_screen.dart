@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'dart:convert';
@@ -110,10 +111,10 @@ class _DeliverProjectClosureScreenState
             _buildRiskFollowUpsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Salvage and/or Disposal Plan',
-              nextLabel: 'Next: Deployment Transfer, Certification & Release',
+              backLabel: PlanningPhaseNavigation.backLabel('deliver_project_closure'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('deliver_project_closure'),
               onBack: () => Navigator.of(context).maybePop(),
-              onNext: () => TransitionToProdTeamScreen.open(context),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'deliver_project_closure'),
             ),
             const SizedBox(height: 48),
           ],
@@ -168,7 +169,7 @@ class _DeliverProjectClosureScreenState
           label: 'Milestones',
           value: '${projectData.keyMilestones.length}',
           icon: Icons.flag_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta:
               '${projectData.keyMilestones.where((m) => m.dueDate.isNotEmpty).length} dated',
         ),

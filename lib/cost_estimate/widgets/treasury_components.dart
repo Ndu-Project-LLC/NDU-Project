@@ -66,7 +66,7 @@ class TreasuryTokens {
   static const warningSoft = Color(0xFFFFF3E0);
   static const danger = Color(0xFFDC2626);
   static const dangerSoft = Color(0xFFFEE2E2);
-  static const info = Color(0xFF6366F1);
+  static const info = Color(0xFFB8860B);
   static const infoSoft = Color(0xFFEEF0FF);
 }
 

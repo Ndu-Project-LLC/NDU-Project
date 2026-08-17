@@ -47,7 +47,7 @@ class _PortfolioGanttCardState extends State<PortfolioGanttCard> {
           Row(
             children: [
               const Icon(Icons.view_timeline_outlined,
-                  color: Color(0xFF8B5CF6), size: 20),
+                  color: Color(0xFFB8860B), size: 20),
               const SizedBox(width: 10),
               const Text('Portfolio timeline',
                   style: TextStyle(
@@ -524,11 +524,11 @@ class _PortfolioProjectLogCardState extends State<PortfolioProjectLogCard> {
   Color _phaseColor(String phase) {
     switch (phase.toLowerCase()) {
       case 'design':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       case 'execution':
         return const Color(0xFF10B981);
       case 'planning':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'initiation':
         return const Color(0xFFF59E0B);
       default:

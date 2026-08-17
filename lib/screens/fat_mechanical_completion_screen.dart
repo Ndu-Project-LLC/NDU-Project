@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -256,10 +257,10 @@ class _FatMechanicalCompletionScreenState
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Deployment Transfer, Certification & Release',
-              nextLabel: 'Next: Vendor & Contract Closeout',
-              onBack: () => TransitionToProdTeamScreen.open(context),
-              onNext: () => ContractCloseOutScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('fat_mechanical_completion'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('fat_mechanical_completion'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'fat_mechanical_completion'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'fat_mechanical_completion'),
             ),
             const SizedBox(height: 48),
           ],
@@ -309,7 +310,7 @@ class _FatMechanicalCompletionScreenState
           label: 'Total Items',
           value: '$total',
           icon: Icons.checklist_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'across 3 subsections',
         ),
         LaunchKpiTile(

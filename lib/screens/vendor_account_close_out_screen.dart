@@ -134,7 +134,7 @@ class _VendorAccountCloseOutScreenState
           label: 'Vendors',
           value: '${_vendors.length}',
           icon: Icons.business_outlined,
-          emphasisColor: const Color(0xFF2563EB),
+          emphasisColor: const Color(0xFFFFC812),
           helper: '$active active, $closed closed',
         ),
         ExecutionMetricData(
@@ -159,7 +159,7 @@ class _VendorAccountCloseOutScreenState
           value:
               '${_closureChecklist.where((c) => c.status == 'Complete').length} / ${_closureChecklist.length}',
           icon: Icons.checklist_outlined,
-          emphasisColor: const Color(0xFF8B5CF6),
+          emphasisColor: const Color(0xFFB8860B),
         ),
       ],
     );

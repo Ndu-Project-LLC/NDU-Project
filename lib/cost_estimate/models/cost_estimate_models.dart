@@ -499,6 +499,45 @@ class EstimateTotals {
         managementReserve: 0,
         totalAuthorizedBudget: 0,
       );
+
+  /// Phase 0 fix — full serialization so totals survive a save/load
+  /// round-trip. Previously only metadata was persisted, losing all
+  /// rolled-up cost totals on app restart.
+  Map<String, dynamic> toJson() => {
+        'direct': direct,
+        'indirect': indirect,
+        'sherQuality': sherQuality,
+        'riskAllowances': riskAllowances,
+        'contingency': contingency,
+        'escalation': escalation,
+        'taxes': taxes,
+        'financing': financing,
+        'startup': startup,
+        'warranty': warranty,
+        'decommissioning': decommissioning,
+        'costBaseline': costBaseline,
+        'managementReserve': managementReserve,
+        'totalAuthorizedBudget': totalAuthorizedBudget,
+      };
+
+  factory EstimateTotals.fromJson(Map<String, dynamic> json) => EstimateTotals(
+        direct: (json['direct'] as num?)?.toDouble() ?? 0,
+        indirect: (json['indirect'] as num?)?.toDouble() ?? 0,
+        sherQuality: (json['sherQuality'] as num?)?.toDouble() ?? 0,
+        riskAllowances: (json['riskAllowances'] as num?)?.toDouble() ?? 0,
+        contingency: (json['contingency'] as num?)?.toDouble() ?? 0,
+        escalation: (json['escalation'] as num?)?.toDouble() ?? 0,
+        taxes: (json['taxes'] as num?)?.toDouble() ?? 0,
+        financing: (json['financing'] as num?)?.toDouble() ?? 0,
+        startup: (json['startup'] as num?)?.toDouble() ?? 0,
+        warranty: (json['warranty'] as num?)?.toDouble() ?? 0,
+        decommissioning: (json['decommissioning'] as num?)?.toDouble() ?? 0,
+        costBaseline: (json['costBaseline'] as num?)?.toDouble() ?? 0,
+        managementReserve:
+            (json['managementReserve'] as num?)?.toDouble() ?? 0,
+        totalAuthorizedBudget:
+            (json['totalAuthorizedBudget'] as num?)?.toDouble() ?? 0,
+      );
 }
 
 /// Approver for the review flow.
@@ -647,6 +686,24 @@ class AccessGrant {
     required this.grantedBy,
     required this.grantedAt,
   });
+
+  /// Phase 0 fix — full serialization so access grants survive a save/
+  /// load round-trip. Previously dropped on persistence.
+  Map<String, dynamic> toJson() => {
+        'userEmail': userEmail,
+        'role': role.name,
+        'grantedBy': grantedBy,
+        'grantedAt': grantedAt.toIso8601String(),
+      };
+
+  factory AccessGrant.fromJson(Map<String, dynamic> json) => AccessGrant(
+        userEmail: json['userEmail'] as String? ?? '',
+        role: RBACRole.values.byName(json['role'] as String? ?? 'viewer'),
+        grantedBy: json['grantedBy'] as String? ?? '',
+        grantedAt: json['grantedAt'] is String
+            ? DateTime.tryParse(json['grantedAt'] as String) ?? DateTime.now()
+            : DateTime.now(),
+      );
 }
 
 /// Stakeholder for the estimate development process.

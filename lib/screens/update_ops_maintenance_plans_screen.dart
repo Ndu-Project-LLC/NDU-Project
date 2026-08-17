@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -201,7 +202,7 @@ class _UpdateOpsMaintenancePlansScreenState
 
   List<_StatCardData> _mapStats(List<LaunchEntry> entries) {
     final colors = [
-      const Color(0xFF0EA5E9),
+      const Color(0xFFFFC812),
       const Color(0xFF10B981),
       const Color(0xFFF59E0B),
     ];
@@ -221,7 +222,7 @@ class _UpdateOpsMaintenancePlansScreenState
 
   List<_CoverageItem> _mapCoverage(List<LaunchEntry> entries) {
     final colors = [
-      const Color(0xFF2563EB),
+      const Color(0xFFFFC812),
       const Color(0xFF10B981),
       const Color(0xFFF59E0B),
     ];
@@ -290,7 +291,7 @@ class _UpdateOpsMaintenancePlansScreenState
           label: 'Plans updated',
           value: '',
           supporting: '',
-          color: const Color(0xFF0EA5E9)),
+          color: const Color(0xFFFFC812)),
       _StatCardData(
           id: _newId(),
           label: 'Runbooks ready',
@@ -308,7 +309,7 @@ class _UpdateOpsMaintenancePlansScreenState
           label: 'Maintenance risk',
           value: '',
           supporting: '',
-          color: const Color(0xFF6366F1)),
+          color: const Color(0xFFB8860B)),
     ];
   }
 
@@ -323,7 +324,7 @@ class _UpdateOpsMaintenancePlansScreenState
           id: _newId(),
           label: 'Maintenance tasks',
           progress: 0.0,
-          color: const Color(0xFF6366F1)),
+          color: const Color(0xFFB8860B)),
       _CoverageItem(
           id: _newId(),
           label: 'Training readiness',
@@ -333,7 +334,7 @@ class _UpdateOpsMaintenancePlansScreenState
           id: _newId(),
           label: 'Ops handoff',
           progress: 0.0,
-          color: const Color(0xFF0EA5E9)),
+          color: const Color(0xFFFFC812)),
     ];
   }
 
@@ -431,7 +432,7 @@ class _UpdateOpsMaintenancePlansScreenState
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Color(0xFFEEF2FF),
+            color: Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(Icons.build_circle_outlined,
@@ -480,10 +481,10 @@ class _UpdateOpsMaintenancePlansScreenState
         ],
       ),
       child: LaunchPhaseNavigation(
-        backLabel: 'Back: Stakeholder Alignment',
-        nextLabel: 'Next: Start-up / Launch Checklist',
-        onBack: () => StakeholderAlignmentScreen.open(context),
-        onNext: () => LaunchChecklistScreen.open(context),
+        backLabel: PlanningPhaseNavigation.backLabel('update_ops_maintenance_plans'),
+        nextLabel: PlanningPhaseNavigation.nextLabel('update_ops_maintenance_plans'),
+        onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'update_ops_maintenance_plans'),
+        onNext: () => PlanningPhaseNavigation.goToNext(context, 'update_ops_maintenance_plans'),
       ),
     );
   }
@@ -806,8 +807,8 @@ class _UpdateOpsMaintenancePlansScreenState
   Widget _buildCoveragePanel() {
     return _PremiumPanel(
       icon: Icons.track_changes_outlined,
-      iconColor: const Color(0xFF6366F1),
-      iconBg: const Color(0xFFEEF2FF),
+      iconColor: const Color(0xFFB8860B),
+      iconBg: const Color(0xFFFFF8E1),
       title: 'Readiness Coverage',
       subtitle: 'Operational readiness by capability',
       child: Column(
@@ -1000,8 +1001,8 @@ class _UpdateOpsMaintenancePlansScreenState
   Widget _buildMaintenancePanel() {
     return _PremiumPanel(
       icon: Icons.calendar_month_outlined,
-      iconColor: const Color(0xFF0EA5E9),
-      iconBg: const Color(0xFFE0F2FE),
+      iconColor: const Color(0xFFFFC812),
+      iconBg: const Color(0xFFFFF8E1),
       title: 'Maintenance Windows',
       subtitle: 'Upcoming maintenance schedule',
       child: Column(
@@ -1030,11 +1031,11 @@ class _UpdateOpsMaintenancePlansScreenState
     Color getStatusColor(String status) {
       switch (status.toLowerCase()) {
         case 'scheduled':
-          return const Color(0xFF6366F1);
+          return const Color(0xFFB8860B);
         case 'completed':
           return const Color(0xFF10B981);
         case 'in progress':
-          return const Color(0xFF0EA5E9);
+          return const Color(0xFFFFC812);
         case 'pending':
           return const Color(0xFFF59E0B);
         default:
@@ -1057,11 +1058,11 @@ class _UpdateOpsMaintenancePlansScreenState
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Color(0xFFE0F2FE),
+              color: Color(0xFFFFF8E1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(Icons.schedule_outlined,
-                size: 16, color: Color(0xFF0EA5E9)),
+                size: 16, color: Color(0xFFFFC812)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1186,12 +1187,12 @@ class _UpdateOpsMaintenancePlansScreenState
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Color(0xFFEEF2FF),
+            color: Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Color(0xFFC7D2FE)),
+            border: Border.all(color: Color(0xFFFEF3C7)),
           ),
           child: const Icon(Icons.edit_outlined,
-              size: 16, color: Color(0xFF6366F1)),
+              size: 16, color: Color(0xFFB8860B)),
         ),
       ),
     );
@@ -1230,7 +1231,7 @@ class _UpdateOpsMaintenancePlansScreenState
         builder: (dialogContext) {
           return LaunchModalShell(
             icon: Icons.track_changes_rounded,
-            accent: const Color(0xFF6366F1),
+            accent: const Color(0xFFB8860B),
             title: 'Edit Coverage Item',
             subtitle: 'Update readiness coverage details.',
             body: Column(
@@ -1514,7 +1515,7 @@ class _UpdateOpsMaintenancePlansScreenState
             id: _newId(),
             label: '',
             progress: 0.0,
-            color: const Color(0xFF0EA5E9)),
+            color: const Color(0xFFFFC812)),
       );
     });
     _scheduleSave();
@@ -1696,11 +1697,11 @@ class _PlanRow extends StatelessWidget {
       case 'Ready':
         return const Color(0xFF059669);
       case 'In review':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Pending':
         return const Color(0xFFD97706);
       default:
-        return const Color(0xFF6366F1);
+        return const Color(0xFFB8860B);
     }
   }
 
@@ -1709,11 +1710,11 @@ class _PlanRow extends StatelessWidget {
       case 'Ready':
         return const Color(0xFFECFDF5);
       case 'In review':
-        return const Color(0xFFEFF6FF);
+        return const Color(0xFFFFF8E1);
       case 'Pending':
         return const Color(0xFFFEF3C7);
       default:
-        return const Color(0xFFEEF2FF);
+        return const Color(0xFFFFF8E1);
     }
   }
 
@@ -1737,7 +1738,7 @@ class _PlanRow extends StatelessWidget {
                 style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF0EA5E9))),
+                    color: Color(0xFFFFC812))),
           ),
           Expanded(
             flex: 3,
@@ -1837,7 +1838,7 @@ class _CoverageItem {
         progress: (map['progress'] is num)
             ? (map['progress'] as num).toDouble()
             : double.tryParse(map['progress']?.toString() ?? '0') ?? 0,
-        color: Color(map['color'] is int ? map['color'] as int : 0xFF0EA5E9),
+        color: Color(map['color'] is int ? map['color'] as int : 0xFFFFC812),
       );
     }).toList();
   }
@@ -1930,7 +1931,7 @@ class _StatCardData {
         label: map['label']?.toString() ?? '',
         value: map['value']?.toString() ?? '',
         supporting: map['supporting']?.toString() ?? '',
-        color: Color(map['color'] is int ? map['color'] as int : 0xFF0EA5E9),
+        color: Color(map['color'] is int ? map['color'] as int : 0xFFFFC812),
       );
     }).toList();
   }

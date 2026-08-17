@@ -249,6 +249,15 @@ class _PricingScreenState extends State<PricingScreen> {
                       const SizedBox(height: 24),
                       _buildTrustStrip(),
                       const SizedBox(height: 28),
+                      // NDU Project Logo
+                      Center(
+                        child: Image.asset(
+                          'assets/images/Ndu_Project_logo.png',
+                          height: 60,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
                       _buildPositioningSection(
                         isDesktop: isDesktop,
                         isTablet: isTablet,

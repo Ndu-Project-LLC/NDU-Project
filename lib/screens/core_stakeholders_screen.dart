@@ -15,9 +15,9 @@ import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/content_text.dart';
 import 'package:ndu_project/widgets/business_case_header.dart';
 import 'package:ndu_project/widgets/business_case_navigation_buttons.dart';
+import 'package:ndu_project/utils/business_case_navigation.dart';
 import 'package:ndu_project/screens/cost_analysis_screen.dart';
 import 'package:ndu_project/screens/initiation_phase_screen.dart';
-import 'package:ndu_project/screens/potential_solutions_screen.dart';
 import 'package:ndu_project/screens/risk_identification_screen.dart';
 import 'package:ndu_project/screens/it_considerations_screen.dart';
 import 'package:ndu_project/screens/infrastructure_considerations_screen.dart';
@@ -25,7 +25,6 @@ import 'package:ndu_project/screens/settings_screen.dart';
 import 'package:ndu_project/screens/preferred_solution_analysis_screen.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/access_policy.dart';
@@ -34,7 +33,6 @@ import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -372,7 +370,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  width: 40,
  height: 40,
  decoration: const BoxDecoration(
- color: Colors.blue, shape: BoxShape.circle),
+ color: Color(0xFFFFC812), shape: BoxShape.circle),
  child: const Icon(Icons.person, color: Colors.white, size: 20)),
  if (!isMobile) ...[
  const SizedBox(width: 12),
@@ -867,9 +865,9 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  width: double.infinity,
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(8),
- border: Border.all(color: const Color(0xFFBFDBFE)),
+ border: Border.all(color: const Color(0xFFFDE68A)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -877,14 +875,14 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  Row(
  children: [
  const Icon(Icons.business_outlined,
- size: 20, color: Color(0xFF1D4ED8)),
+ size: 20, color: Color(0xFFFFC812)),
  const SizedBox(width: 8),
  const Text(
  'Organisation Context',
  style: TextStyle(
  fontSize: 16,
  fontWeight: FontWeight.w600,
- color: Color(0xFF1E3A8A),
+ color: Color(0xFFB8860B),
  ),
  ),
  const Spacer(),
@@ -896,7 +894,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  label: const Text('Clear',
  style: TextStyle(fontSize: 12)),
  style: TextButton.styleFrom(
- foregroundColor: const Color(0xFF1D4ED8),
+ foregroundColor: const Color(0xFFFFC812),
  ),
  ),
  ],
@@ -907,7 +905,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  'The AI uses this context to suggest relevant internal stakeholders for each solution.',
  style: TextStyle(
  fontSize: 13,
- color: Color(0xFF1E40AF),
+ color: Color(0xFFFFC812),
  height: 1.5,
  ),
  ),
@@ -919,7 +917,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(6),
- border: Border.all(color: const Color(0xFFBFDBFE)),
+ border: Border.all(color: const Color(0xFFFDE68A)),
  ),
  child: VoiceTextField(
  controller: _organisationContextController,
@@ -1483,110 +1481,61 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  setState(() => _isGenerating = false);
  }
  }
- }
+ }  Future<void> _handleNextPressed() async {
+    // 1. Save data FIRST before validation check
+    await _saveCoreStakeholdersData();
 
- Future<void> _handleNextPressed() async {
- // 1. Save data FIRST before validation check
- await _saveCoreStakeholdersData();
+    if (!mounted) return;
 
- if (!mounted) return;
+    // 2. Validate data completeness
+    var hasCoreStakeholders = _hasRequiredStakeholderData(
+        ProjectDataInherited.read(context).projectData);
 
- // 2. Validate data completeness
- var hasCoreStakeholders = _hasRequiredStakeholderData(
- ProjectDataInherited.read(context).projectData);
+    if (!hasCoreStakeholders) {
+      final action = await _showMissingStakeholderDialog();
+      if (!mounted || action == null) return;
 
- if (!hasCoreStakeholders) {
- final action = await _showMissingStakeholderDialog();
- if (!mounted || action == null) return;
+      if (action == _MissingStakeholderAction.manual) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Continuing without stakeholder details. You can complete this later or let AI fill it in later.',
+            ),
+          ),
+        );
+      }
 
- if (action == _MissingStakeholderAction.manual) {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text(
- 'Continuing without stakeholder details. You can complete this later or let AI fill it in later.',
- ),
- ),
- );
- }
+      if (action == _MissingStakeholderAction.autoFill) {
+        final applied = await _autoFillStakeholdersWithConfirmation();
+        if (!mounted || !applied) return;
+        if (!mounted) return;
+        hasCoreStakeholders = _hasRequiredStakeholderData(
+          ProjectDataInherited.read(context).projectData,
+        );
+        if (!hasCoreStakeholders) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'AI could not generate stakeholder details right now. Continuing anyway so you can complete this later.',
+              ),
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Continuing without stakeholder details. You can complete this later.',
+            ),
+          ),
+        );
+      }
+    }
 
- if (action == _MissingStakeholderAction.autoFill) {
- final applied = await _autoFillStakeholdersWithConfirmation();
- if (!mounted || !applied) return;
- if (!mounted) return;
- hasCoreStakeholders = _hasRequiredStakeholderData(
- ProjectDataInherited.read(context).projectData,
- );
- if (!hasCoreStakeholders) {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text(
- 'AI could not generate stakeholder details right now. Continuing anyway so you can complete this later.',
- ),
- ),
- );
- }
- } else {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text(
- 'Continuing without stakeholder details. You can complete this later.',
- ),
- ),
- );
- }
- }
-
- // 3. Smart checkpoint check: If destination is the immediate next checkpoint, allow it (if data is valid)
- final nextCheckpoint =
- SidebarNavigationService.instance.getNextItem('core_stakeholders');
- if (nextCheckpoint?.checkpoint != 'cost_analysis') {
- // Use standard lock check for non-sequential navigation
- final isLocked =
- ProjectDataHelper.isDestinationLocked(context, 'cost_analysis');
- if (isLocked) {
- ProjectDataHelper.showLockedDestinationMessage(
- context, 'Cost Benefit Analysis');
- return;
- }
- }
-
- final nav = Navigator.of(context);
- showDialog(
- context: context,
- barrierDismissible: false,
- builder: (context) => const Center(
- child: Card(
- child: Padding(
- padding: EdgeInsets.all(24),
- child: Column(
- mainAxisSize: MainAxisSize.min,
- children: [
- CircularProgressIndicator(),
- SizedBox(height: 16),
- Text('Processing core stakeholders data...'),
- ],
- ),
- ),
- ),
- ),
- );
-
- await Future.delayed(const Duration(
- seconds: 1)); // Reduced delay from 3s to 1s for better UX
-
- if (!mounted) return;
- nav.pop();
-
- nav.push(
- MaterialPageRoute(
- builder: (context) => CostAnalysisScreen(
- notes: _notesController.text,
- solutions: widget.solutions,
- initialStepIndex: 1,
- ),
- ),
- );
- }
+    // 3. Navigate using BusinessCaseNavigation which follows sidebar order
+    if (!mounted) return;
+    BusinessCaseNavigation.navigateForward(context, 'Core Stakeholders');
+  }
 
  // ignore: unused_element
  Widget _nextButton({required bool expand}) {

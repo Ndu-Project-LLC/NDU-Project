@@ -2551,7 +2551,7 @@ class _PlanningSummaryRow extends StatelessWidget {
  _SummaryStatData('Approval Readiness', '—', 'Define checkpoints',
  Color(0xFFF59E0B)),
  _SummaryStatData('Target Award Window', '—', 'Set timeline targets',
- Color(0xFF7C3AED)),
+ Color(0xFFB8860B)),
  ],
  );
  }
@@ -2583,7 +2583,7 @@ class _PlanningSummaryRow extends StatelessWidget {
  'Target Award Window',
  timelineDefined ? 'Defined' : 'Not set',
  timelineDefined ? 'Review milestones' : 'Add timeline targets',
- const Color(0xFF7C3AED)),
+ const Color(0xFFB8860B)),
  ];
  return _PlanningSummaryCards(stats: stats);
  },
@@ -7667,7 +7667,7 @@ class _MilestoneEntry {
  return _MilestoneEntry(
  label: (json['label'] ?? '').toString(),
  date: (json['date'] ?? '').toString(),
- statusColor: Color((json['statusColor'] ?? 0xFF2563EB) as int),
+ statusColor: Color((json['statusColor'] ?? 0xFFFFC812) as int),
  );
  }
 
@@ -7974,7 +7974,7 @@ class _ContractMilestoneData {
  return _ContractMilestoneData(
  title: (json['title'] ?? '').toString(),
  value: (json['value'] ?? '').toString(),
- accentColor: Color((json['accentColor'] ?? 0xFF2563EB) as int),
+ accentColor: Color((json['accentColor'] ?? 0xFFFFC812) as int),
  emphasize: json['emphasize'] == true,
  );
  }
@@ -8313,7 +8313,7 @@ class _ContractDocumentsTabContent extends StatelessWidget {
  ElevatedButton(
  onPressed: () {},
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF6366F1),
+ backgroundColor: const Color(0xFFB8860B),
  foregroundColor: Colors.white,
  elevation: 0,
  padding:
@@ -8752,7 +8752,7 @@ class _ContractDocumentData {
  return _ContractDocumentData(
  title: (json['title'] ?? '').toString(),
  details: (json['details'] ?? '').toString(),
- accentColor: Color((json['accentColor'] ?? 0xFF2563EB) as int),
+ accentColor: Color((json['accentColor'] ?? 0xFFFFC812) as int),
  icon: _iconLookup[codePoint] ?? Icons.description_outlined,
  );
  }
@@ -8773,7 +8773,7 @@ class _ContractDocumentData {
  } else if (status.contains('doc') ||
  details.toLowerCase().contains('doc')) {
  icon = Icons.description_outlined;
- color = const Color(0xFF6366F1);
+ color = const Color(0xFFB8860B);
  }
  return _ContractDocumentData(
  title: title,

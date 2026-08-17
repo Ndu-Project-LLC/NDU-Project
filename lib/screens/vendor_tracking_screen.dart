@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/models/user_role.dart';
 import 'package:ndu_project/providers/user_role_provider.dart';
@@ -191,10 +192,10 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Contracts Tracking',
-              nextLabel: 'Next: Detailed Design',
-              onBack: () => ContractsTrackingScreen.open(context),
-              onNext: () => DetailedDesignScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('vendor_tracking'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('vendor_tracking'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'vendor_tracking'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'vendor_tracking'),
             ),
           ],
         ),
@@ -1404,11 +1405,11 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
   Color _actionStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'agenda locked':
-        return const Color(0xFF0EA5E9);
+        return const Color(0xFFFFC812);
       case 'docs requested':
         return const Color(0xFFD97706);
       case 'pending invite':
-        return const Color(0xFF6366F1);
+        return const Color(0xFFB8860B);
       case 'completed':
         return const Color(0xFF059669);
       case 'overdue':

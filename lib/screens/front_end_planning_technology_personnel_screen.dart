@@ -376,7 +376,7 @@ class _BottomOverlay extends StatelessWidget {
  height: 44,
  child: ElevatedButton(
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  ),
  onPressed: onSubmit,

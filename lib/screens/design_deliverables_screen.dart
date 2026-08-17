@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
@@ -768,10 +769,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildDependenciesPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Specialized Design',
- nextLabel: 'Next: Staff Team',
- onBack: () => context.pushReplacement('/specialized-design'),
- onNext: () => StaffTeamScreen.open(context),
+ backLabel: PlanningPhaseNavigation.backLabel('design_deliverables'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('design_deliverables'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'design_deliverables'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'design_deliverables'),
  ),
  const SizedBox(height: 40),
  ],
@@ -922,7 +923,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Draft \u2192 Review \u2192 Approved \u2192 Baselined \u2192 Handed Off. '
  'Track every deliverable from authoring through acceptance with version control at each transition. '
  'Set review milestones at 90/60/30-day intervals aligned to phase gates.',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -2442,7 +2443,7 @@ Color _statusColor(String status) {
  case 'in review':
  return const Color(0xFFF59E0B);
  case 'in progress':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case 'not started':
  return const Color(0xFF9CA3AF);
  case 'blocked':
@@ -2485,7 +2486,7 @@ Color _dependencyStatusColor(String status) {
  case 'resolved':
  return const Color(0xFF10B981);
  case 'in progress':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case 'open':
  return const Color(0xFFF59E0B);
  case 'blocked':

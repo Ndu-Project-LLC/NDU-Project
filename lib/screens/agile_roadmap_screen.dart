@@ -136,7 +136,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
     final double horizontalPadding = isMobile ? 18 : 32;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,13 +431,13 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                     ? '—'
                     : _sprints.first['sprintName']?.toString() ?? 'Sprint 1',
                 Icons.play_circle_outline,
-                const Color(0xFF0EA5E9)),
+                const Color(0xFFFFC812)),
             _execWidget('Upcoming Milestones', '$totalMilestones',
                 Icons.flag_outlined, const Color(0xFFF59E0B)),
             _execWidget('Roadmap Health', 'Green', Icons.health_and_safety,
                 const Color(0xFF10B981)),
             _execWidget('Delivery Confidence', 'High', Icons.verified,
-                const Color(0xFF6366F1)),
+                const Color(0xFFB8860B)),
             _execWidget(
                 'Release Forecast',
                 _releases.isEmpty
@@ -445,7 +445,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                     : _releases.first['releaseLabel']?.toString() ??
                         'Release 1',
                 Icons.rocket_launch,
-                const Color(0xFF8B5CF6)),
+                const Color(0xFFB8860B)),
           ];
           return Wrap(
             spacing: 16,
@@ -463,7 +463,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           'Based on current roadmap data, delivery is on track. '
               'AI recommends focusing on the next ${_sprints.length > 1 ? '2 sprints' : 'sprint'} '
               'to maintain velocity. No critical dependencies detected.',
-          const Color(0xFFA855F7),
+          const Color(0xFFFFC812),
         ),
       ],
     );
@@ -598,7 +598,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
     final color = status == 'completed'
         ? const Color(0xFF10B981)
         : status == 'active'
-            ? const Color(0xFF0EA5E9)
+            ? const Color(0xFFFFC812)
             : const Color(0xFFD1D5DB);
 
     return Padding(
@@ -698,7 +698,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                 _hierarchyLevel(
                     'Epics',
                     'No epics yet — flows from Epics & Features',
-                    const Color(0xFF7C3AED),
+                    const Color(0xFFB8860B),
                     Icons.layers)
               else
                 ..._epics.map((e) => Padding(
@@ -708,7 +708,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                         e['title']?.toString() ??
                             e['name']?.toString() ??
                             'Epic',
-                        const Color(0xFF7C3AED),
+                        const Color(0xFFB8860B),
                         Icons.layers,
                       ),
                     )),
@@ -980,7 +980,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           'AI Dependency Analysis',
           'AI continuously analyzes epic, feature, story, and cross-team dependencies. '
               'Critical path identification and impact analysis are performed automatically as new work items are added.',
-          const Color(0xFF0891B2),
+          const Color(0xFFD97706),
         ),
         const SizedBox(height: 20),
         Container(
@@ -1004,9 +1004,9 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                 runSpacing: 12,
                 children: [
                   _depType('Epic Dependencies', Icons.layers,
-                      const Color(0xFF7C3AED)),
+                      const Color(0xFFB8860B)),
                   _depType('Feature Dependencies', Icons.extension,
-                      const Color(0xFF0EA5E9)),
+                      const Color(0xFFFFC812)),
                   _depType('Story Dependencies', Icons.assignment,
                       const Color(0xFF10B981)),
                   _depType('Cross-team Dependencies', Icons.group_work,

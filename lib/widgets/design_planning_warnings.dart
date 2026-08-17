@@ -63,8 +63,8 @@ class DesignPlanningWarningsWidget extends StatelessWidget {
         icon = Icons.warning_amber_rounded;
         break;
       case WarningSeverity.info:
-        bgColor = Colors.blue.shade50;
-        iconColor = Colors.blue.shade700;
+        bgColor = Color(0xFFFFF8E1);
+        iconColor = Color(0xFFB8860B);
         icon = Icons.info_outline;
         break;
       case WarningSeverity.success:
@@ -166,7 +166,7 @@ class CoverageSummaryCard extends StatelessWidget {
                   title: 'Total Specs',
                   value: '$totalSpecs',
                   icon: Icons.description_outlined,
-                  color: Colors.indigo,
+                  color: Color(0xFFB8860B),
                 )),
                 const SizedBox(width: 12),
                 Expanded(

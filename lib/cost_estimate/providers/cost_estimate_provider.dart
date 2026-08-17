@@ -17,6 +17,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 const String _storageKey = 'ndu_cost_estimate_v1';
@@ -140,7 +141,30 @@ class CostEstimateProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final data = {
         'state': {
-          'estimate': _estimate != null ? {'id': _estimate!.id, 'projectName': _estimate!.projectName, 'className': _estimate!.className.name, 'deliveryModel': _estimate!.deliveryModel.name, 'status': _estimate!.status.name, 'currency': _estimate!.currency} : null,
+          'estimate': _estimate != null
+              ? {
+                  'id': _estimate!.id,
+                  'projectId': _estimate!.projectId,
+                  'projectName': _estimate!.projectName,
+                  'className': _estimate!.className.name,
+                  'deliveryModel': _estimate!.deliveryModel.name,
+                  'status': _estimate!.status.name,
+                  'currency': _estimate!.currency,
+                  // Phase 0 fix — persist the full estimate state so the
+                  // Project Controls BAC seeding (syncFromCostEstimate)
+                  // and the WBS ↔ Cost linkage survive an app restart.
+                  // Previously only metadata was saved → silent data loss.
+                  'lines': _estimate!.lines
+                      .map((l) => l.toJson())
+                      .toList(growable: false),
+                  'totals': _estimate!.totals.toJson(),
+                  'access': _estimate!.access
+                      .map((g) => g.toJson())
+                      .toList(growable: false),
+                  'createdAt': _estimate!.createdAt.toIso8601String(),
+                  'updatedAt': _estimate!.updatedAt.toIso8601String(),
+                }
+              : null,
           'setupComplete': _setupComplete,
         },
       };
@@ -151,7 +175,28 @@ class CostEstimateProvider extends ChangeNotifier {
   }
 
   CostEstimate _estimateFromJson(Map<String, dynamic> json) {
-    // Simplified deserialization — in production, use json_serializable
+    // Phase 0 fix — full deserialization including cost lines, totals,
+    // and access grants. Defaults gracefully for legacy records that
+    // were saved before these fields were persisted.
+    final linesJson = json['lines'] as List<dynamic>?;
+    final lines = linesJson != null
+        ? linesJson
+            .map((l) => CostLine.fromJson(l as Map<String, dynamic>))
+            .toList(growable: false)
+        : <CostLine>[];
+
+    final totalsJson = json['totals'] as Map<String, dynamic>?;
+    final totals = totalsJson != null
+        ? EstimateTotals.fromJson(totalsJson)
+        : EstimateTotals.empty();
+
+    final accessJson = json['access'] as List<dynamic>?;
+    final access = accessJson != null
+        ? accessJson
+            .map((g) => AccessGrant.fromJson(g as Map<String, dynamic>))
+            .toList(growable: false)
+        : <AccessGrant>[];
+
     return CostEstimate(
       id: json['id'] as String,
       projectId: json['projectId'] as String? ?? 'default',
@@ -163,15 +208,19 @@ class CostEstimateProvider extends ChangeNotifier {
       status: EstimateStatus.values
           .byName(json['status'] as String? ?? 'draft'),
       currency: json['currency'] as String? ?? 'USD',
-      lines: [],
+      lines: lines,
       boe: emptyBOE(EstimateClass.values
           .byName(json['className'] as String? ?? 'class3')),
-      totals: EstimateTotals.empty(),
-      access: [],
+      totals: totals,
+      access: access,
       stakeholders: [],
       aiSuggestions: [],
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+      createdAt: json['createdAt'] is String
+          ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
+      updatedAt: json['updatedAt'] is String
+          ? DateTime.tryParse(json['updatedAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 
@@ -201,6 +250,106 @@ class CostEstimateProvider extends ChangeNotifier {
     _currentRole = RBACRole.admin;
     notifyListeners();
     _saveToStorage();
+  }
+
+  /// Import [CostEstimateItem] objects from the central project data model
+  /// as [CostLine] objects in this cost estimate. This auto-populates the
+  /// Cost by WBS tab from the Initial Cost Estimate screen.
+  ///
+  /// Returns `true` if lines were imported (estimate was previously empty).
+  bool importFromProjectCostEstimateItems(
+      List<CostEstimateItem> costEstimateItems) {
+    final estimate = _estimate;
+    if (estimate == null) return false;
+    if (estimate.lines.isNotEmpty) return false;
+    if (costEstimateItems.isEmpty) return false;
+
+    final importedLines = <CostLine>[];
+    for (final item in costEstimateItems) {
+      // Only import items with a positive amount
+      if (item.amount <= 0) continue;
+
+      // Build a descriptive sub-category from phase + work package info
+      final subParts = <String>[];
+      if (item.phase.isNotEmpty) subParts.add(item.phase);
+      if (item.workPackageTitle.isNotEmpty) subParts.add(item.workPackageTitle);
+
+      importedLines.add(CostLine(
+        id: 'imported_${item.id}',
+        category: _mapCostTypeToCategory(item.costType),
+        subCategory: subParts.join(' / '),
+        description: item.title,
+        wbsRef: item.wbsItemId.isNotEmpty
+            ? item.wbsItemId
+            : (item.workPackageTitle.isNotEmpty ? item.workPackageTitle : null),
+        quantity: item.quantity > 0 ? item.quantity.toDouble() : null,
+        unit: item.unitOfMeasure.isNotEmpty ? item.unitOfMeasure : null,
+        rate: item.unitRate > 0 ? item.unitRate : null,
+        total: item.amount,
+        inSchedule: item.scheduleActivityId.isNotEmpty,
+        basisSource: _mapEstimatingMethodToSourceType(item.estimatingMethod),
+        basisReference: item.estimatingBasis.isNotEmpty
+            ? item.estimatingBasis
+            : (item.notes.isNotEmpty ? item.notes : null),
+        aiGenerated: item.source == 'ai_generated',
+      ));
+    }
+
+    if (importedLines.isEmpty) return false;
+
+    _estimate = estimate.copyWith(
+      lines: importedLines,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return true;
+  }
+
+  /// Map a costType string from CostEstimateItem to a CostCategory enum.
+  CostCategory _mapCostTypeToCategory(String costType) {
+    switch (costType.toLowerCase()) {
+      case 'labor':
+        return CostCategory.labor;
+      case 'materials':
+        return CostCategory.materials;
+      case 'software':
+        return CostCategory.software;
+      case 'procurement':
+        return CostCategory.procurement;
+      case 'travel' || 'training':
+        return CostCategory.travelTraining;
+      case 'construction':
+        return CostCategory.construction;
+      case 'team' || 'project_team':
+        return CostCategory.projectTeam;
+      case 'overhead' || 'overheads':
+        return CostCategory.overheads;
+      case 'ga' || 'general':
+        return CostCategory.ga;
+      case 'facilities':
+        return CostCategory.facilities;
+      case 'indirect':
+        return CostCategory.overheads;
+      default:
+        return CostCategory.materials;
+    }
+  }
+
+  /// Map estimatingMethod string to CostSourceType enum.
+  CostSourceType _mapEstimatingMethodToSourceType(String method) {
+    switch (method.toLowerCase()) {
+      case 'vendor_quote' || 'vendor':
+        return CostSourceType.vendorQuote;
+      case 'historical':
+        return CostSourceType.historical;
+      case 'published_index' || 'benchmark':
+        return CostSourceType.industryBenchmark;
+      case 'expert_judgment' || 'expert':
+        return CostSourceType.expertJudgment;
+      default:
+        return CostSourceType.historical;
+    }
   }
 
   /// Pick the best project name: the explicit one if it's been customised,
@@ -367,6 +516,107 @@ class CostEstimateProvider extends ChangeNotifier {
     );
     notifyListeners();
     _saveToStorage();
+  }
+
+  /// Ensure non-destructive seeding of estimate content from the central
+  /// ProjectDataModel. This uses real project data (core stakeholders,
+  /// assumptions/constraints/exclusions) when the estimate has empty
+  /// corresponding sections. No synthetic or placeholder values are created.
+  void ensureSeededFromProjectData(ProjectDataModel data) {
+    if (_estimate == null) return;
+    var changed = false;
+
+    // 1) Stakeholders — pull from project-level CoreStakeholdersData
+    try {
+      if ((_estimate!.stakeholders.isEmpty) &&
+          data.coreStakeholdersData != null) {
+        final core = data.coreStakeholdersData!;
+        final names = <String>{};
+        for (final s in core.solutionStakeholderData) {
+          for (final field in [
+            s.notableStakeholders,
+            s.internalStakeholders,
+            s.externalStakeholders
+          ]) {
+            if (field.trim().isEmpty) continue;
+            final parts = field.split(RegExp(r'[,;\n]'));
+            for (final p in parts) {
+              final n = p.trim();
+              if (n.isNotEmpty) names.add(n);
+            }
+          }
+        }
+        if (names.isNotEmpty) {
+          final stakeholders = names
+              .map((n) => Stakeholder(
+                    id: newId('sh'),
+                    name: n,
+                    email: '',
+                    role: '',
+                    sme: false,
+                    includedInDevelopment: true,
+                  ))
+              .toList();
+          _estimate = _estimate!.copyWith(
+            stakeholders: stakeholders,
+            updatedAt: DateTime.now(),
+          );
+          changed = true;
+        }
+      }
+    } catch (_) {}
+
+    // 2) BOE — import project-level assumptions/constraints/exclusions
+    try {
+      final boe = _estimate!.boe;
+      final hasAssumptions = boe.assumptions.isNotEmpty;
+      final hasConstraints = boe.constraints.isNotEmpty;
+      final hasExclusions = boe.exclusions.isNotEmpty;
+      if ((!hasAssumptions || !hasConstraints || !hasExclusions) &&
+          (data.assumptions.isNotEmpty || data.constraints.isNotEmpty || data.outOfScope.isNotEmpty)) {
+        final newBoe = boe.copyWith(
+          assumptions: hasAssumptions ? boe.assumptions : data.assumptions,
+          constraints: hasConstraints ? boe.constraints : data.constraints,
+          exclusions: hasExclusions ? boe.exclusions : data.outOfScope,
+        );
+        _estimate = _estimate!.copyWith(
+          boe: newBoe,
+          updatedAt: DateTime.now(),
+        );
+        changed = true;
+      }
+    } catch (_) {}
+
+    // 3) Review — if no explicit approvers but stakeholders with emails exist,
+    // create approver records from real stakeholder emails (non-destructive).
+    try {
+      final review = _estimate!.review;
+      final hasApprovers = review != null && review.requiredApprovers.isNotEmpty;
+      final stakeholdersWithEmail = _estimate!.stakeholders.where((s) => s.email.trim().isNotEmpty).toList();
+      if (!hasApprovers && stakeholdersWithEmail.isNotEmpty) {
+        final approvers = stakeholdersWithEmail.map((s) => Approver(
+              id: newId('ap'),
+              name: s.name,
+              email: s.email,
+              role: s.role,
+              approved: false,
+              approvedAt: null,
+            )).toList();
+        final newReview = (review ?? const ReviewApproval(requiredApprovers: [], acceptanceStep1: (confirmed: false, by: null, at: null), acceptanceStep2: (confirmed: false, by: null, at: null))).copyWith(
+          requiredApprovers: approvers,
+        );
+        _estimate = _estimate!.copyWith(
+          review: newReview,
+          updatedAt: DateTime.now(),
+        );
+        changed = true;
+      }
+    } catch (_) {}
+
+    if (changed) {
+      notifyListeners();
+      _saveToStorage();
+    }
   }
 
   // ---- Stakeholders ----

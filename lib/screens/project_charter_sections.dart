@@ -16,7 +16,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 // ─── Brand Color Tokens ───
 class BrandColors {
  static const background = Color(0xFFF7F9FB);
- static const primary = Color(0xFF005BB3);
+ static const primary = Color(0xFFFFC812);
  static const primaryContainer = Color(0xFF0073DF);
  static const onPrimary = Color(0xFFFFFFFF);
  static const onPrimaryContainer = Color(0xFFFEFCFF);
@@ -243,7 +243,7 @@ class CharterDashboardStats extends StatelessWidget {
  _buildStatItem('OPPORTUNITIES', opportunities, const Color(0xFF4ADE80),
  isMobile, mobileWidth: mobileItemWidth),
  if (!isMobile) _buildDivider(),
- _buildStatItem('DURATION', duration, const Color(0xFF60A5FA), isMobile, mobileWidth: mobileItemWidth),
+ _buildStatItem('DURATION', duration, const Color(0xFFFFC812), isMobile, mobileWidth: mobileItemWidth),
  if (!isMobile) _buildDivider(),
  _buildStatItem(
  'RISK',
@@ -527,17 +527,17 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
                    Container(
                      padding: const EdgeInsets.all(10),
                      decoration: BoxDecoration(
-                       color: const Color(0xFFEFF6FF),
+                       color: const Color(0xFFFFF8E1),
                        borderRadius: BorderRadius.circular(8),
                        border: Border.all(
-                           color: const Color(0xFF005BB3)
+                           color: const Color(0xFFFFC812)
                                .withValues(alpha: 0.2)),
                      ),
                      child: Row(
                        crossAxisAlignment: CrossAxisAlignment.start,
                        children: [
                          const Icon(Icons.lightbulb_outline,
-                             size: 16, color: Color(0xFF005BB3)),
+                             size: 16, color: Color(0xFFFFC812)),
                          const SizedBox(width: 8),
                          Expanded(
                            child: Column(
@@ -548,7 +548,7 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
                                  style: TextStyle(
                                      fontSize: 11,
                                      fontWeight: FontWeight.w700,
-                                     color: Color(0xFF005BB3)),
+                                     color: Color(0xFFFFC812)),
                                ),
                                const SizedBox(height: 2),
                                Text(
@@ -572,7 +572,7 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
                                        style: TextStyle(fontSize: 11)),
                                    style: TextButton.styleFrom(
                                      foregroundColor:
-                                         const Color(0xFF005BB3),
+                                         const Color(0xFFFFC812),
                                      padding: const EdgeInsets.symmetric(
                                          horizontal: 8, vertical: 2),
                                      minimumSize: Size.zero,
@@ -1330,7 +1330,7 @@ class CharterFinancialOverview extends StatelessWidget {
  BrandColors.error,
  Color(0xFF10B981),
  BrandColors.tertiaryFixedDim,
- Color(0xFF8B5CF6),
+ Color(0xFFB8860B),
  ];
  return table[index % table.length];
  }
@@ -2859,9 +2859,9 @@ class _CharterFloatingApprovalBarState
               );
             }
             return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                info,
+                Expanded(child: info),
+                const SizedBox(width: 12),
                 actions,
               ],
             );
@@ -3577,7 +3577,7 @@ class _AssignManagerWalkthroughState extends State<AssignManagerWalkthrough>
           Container(
             width: 22,
             height: 22,
-            decoration: const BoxDecoration(color: Color(0xFF005BB3), shape: BoxShape.circle),
+            decoration: const BoxDecoration(color: Color(0xFFFFC812), shape: BoxShape.circle),
             alignment: Alignment.center,
             child: Text('$n', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
           ),

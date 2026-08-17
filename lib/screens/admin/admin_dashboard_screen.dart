@@ -66,7 +66,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 height: 48,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    colors: [Color(0xFFB8860B), Color(0xFFB8860B)],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -166,7 +166,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Material(
-        color: isSelected ? const Color(0xFFEEF2FF) : Colors.transparent,
+        color: isSelected ? const Color(0xFFFFF8E1) : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
           onTap: onTap,
@@ -179,7 +179,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   icon,
                   size: 20,
                   color: isSelected
-                      ? const Color(0xFF6366F1)
+                      ? const Color(0xFFB8860B)
                       : Colors.grey.shade600,
                 ),
                 const SizedBox(width: 12),
@@ -190,7 +190,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: isSelected
-                          ? const Color(0xFF6366F1)
+                          ? const Color(0xFFB8860B)
                           : Colors.grey.shade700,
                     ),
                   ),
@@ -200,7 +200,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     width: 4,
                     height: 4,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF6366F1),
+                      color: Color(0xFFB8860B),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -328,13 +328,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _buildStatsGrid() {
     return Row(
       children: [
-        Expanded(child: _buildStatCard('Total Users', Icons.people, 248, const Color(0xFF6366F1))),
+        Expanded(child: _buildStatCard('Total Users', Icons.people, 248, const Color(0xFFB8860B))),
         const SizedBox(width: 16),
         Expanded(child: _buildStatCard('Projects', Icons.folder, 12, const Color(0xFF10B981))),
         const SizedBox(width: 16),
         Expanded(child: _buildStatCard('Programs', Icons.folder_copy, 5, const Color(0xFFF59E0B))),
         const SizedBox(width: 16),
-        Expanded(child: _buildStatCard('Portfolios', Icons.account_tree, 3, const Color(0xFF8B5CF6))),
+        Expanded(child: _buildStatCard('Portfolios', Icons.account_tree, 3, const Color(0xFFB8860B))),
       ],
     );
   }
@@ -509,14 +509,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           _buildActionButton(
             icon: Icons.mail_outline,
             label: 'Send Invitations',
-            color: const Color(0xFF6366F1),
+            color: const Color(0xFFB8860B),
             onTap: () {},
           ),
           const SizedBox(height: 12),
           _buildActionButton(
             icon: Icons.settings_outlined,
             label: 'Platform Settings',
-            color: const Color(0xFF8B5CF6),
+            color: const Color(0xFFB8860B),
             onTap: () {},
           ),
         ],

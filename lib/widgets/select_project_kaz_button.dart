@@ -137,7 +137,7 @@ class _SelectProjectKazButtonState extends State<SelectProjectKazButton>
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
                         child: const Icon(
-                          Icons.psychology_rounded,
+                          Icons.chat_bubble_rounded,
                           color: Colors.white,
                           size: 14,
                         ),
@@ -317,7 +317,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
                         child: const Icon(
-                          Icons.psychology_rounded,
+                          Icons.chat_bubble_rounded,
                           color: Colors.white,
                           size: 22,
                         ),

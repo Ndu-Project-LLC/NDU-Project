@@ -503,8 +503,26 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   String _searchQuery = '';
 
   bool _activeIn(Set<String> labels) {
-    final activeLabel = widget.activeItemLabel;
-    return activeLabel != null && labels.contains(activeLabel);
+    final resolved = _resolvedActiveLabel();
+    return resolved != null && labels.contains(resolved);
+  }
+
+  String? _resolvedActiveLabel() {
+    // Priority: explicit prop -> project current checkpoint -> null
+    if (widget.activeItemLabel != null && widget.activeItemLabel!.isNotEmpty) {
+      return widget.activeItemLabel;
+    }
+    final provider = ProjectDataInherited.maybeOf(context);
+    final currentCheckpoint = provider?.projectData.currentCheckpoint;
+    if (currentCheckpoint == null || currentCheckpoint.isEmpty) return null;
+    final item = SidebarNavigationService.instance
+        .findItemByCheckpoint(currentCheckpoint);
+    return item?.label;
+  }
+
+  bool _isActiveLabel(String label) {
+    final resolved = _resolvedActiveLabel();
+    return resolved != null && resolved == label;
   }
 
   bool _expandForActiveLabel() {
@@ -1447,6 +1465,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     context.push('/project-controls');
   }
 
+  void _openIntegrationDashboard() {
+    // PMB Integration Dashboard — unified Scope ↔ WBS ↔ Schedule ↔ PC view.
+    // Route-based module (uses go_router).
+    context.push('/integration-dashboard');
+  }
+
   void _openChangeManagement() {
     _navigateWithCheckpoint(
         'change_management', const ChangeManagementModuleScreen());
@@ -1732,7 +1756,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  colors: [Color(0xFFB8860B), Color(0xFFB8860B)],
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -1755,7 +1779,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             style:
-                TextButton.styleFrom(foregroundColor: const Color(0xFF6366F1)),
+                TextButton.styleFrom(foregroundColor: const Color(0xFFB8860B)),
             child: const Text('Got it'),
           ),
         ],
@@ -1968,10 +1992,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       {VoidCallback? onTap, bool isActive = false, bool isDisabled = false}) {
     const activeColor = Color(0xFFD97706);
     final isInteractive = !isDisabled && onTap != null;
-    final isHighlighted = isActive && !isDisabled;
+    final effectiveIsActive = isActive || _isActiveLabel(title);
+    final isHighlighted = effectiveIsActive && !isDisabled;
     final textColor = isDisabled
-        ? Colors.grey[400]
-        : (isHighlighted ? activeColor : Colors.black87);
+      ? Colors.grey[400]
+      : (isHighlighted ? activeColor : Colors.black87);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
@@ -2020,10 +2045,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       {VoidCallback? onTap, bool isActive = false, bool isDisabled = false}) {
     const activeColor = Color(0xFFD97706);
     final isInteractive = !isDisabled && onTap != null;
-    final isHighlighted = isActive && !isDisabled;
+    final effectiveIsActive = isActive || _isActiveLabel(title);
+    final isHighlighted = effectiveIsActive && !isDisabled;
     final textColor = isDisabled
-        ? Colors.grey[400]
-        : (isHighlighted ? activeColor : Colors.black87);
+      ? Colors.grey[400]
+      : (isHighlighted ? activeColor : Colors.black87);
 
     return Padding(
       padding: const EdgeInsets.only(left: 48, right: 24, top: 2, bottom: 2),
@@ -2078,7 +2104,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       bool isDisabled = false}) {
     const activeColor = Color(0xFFD97706);
     final isInteractive = !isDisabled;
-    final isHighlighted = isActive && !isDisabled;
+    final effectiveIsActive = isActive || _isActiveLabel(title);
+    final isHighlighted = effectiveIsActive && !isDisabled;
     final textColor = isDisabled
         ? Colors.grey[400]
         : (isHighlighted ? activeColor : Colors.black87);
@@ -2135,10 +2162,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       {VoidCallback? onTap, bool isActive = false, bool isDisabled = false}) {
     const activeColor = Color(0xFFD97706);
     final isInteractive = !isDisabled && onTap != null;
-    final isHighlighted = isActive && !isDisabled;
+    final effectiveIsActive = isActive || _isActiveLabel(title);
+    final isHighlighted = effectiveIsActive && !isDisabled;
     final textColor = isDisabled
-        ? Colors.grey[400]
-        : (isHighlighted ? activeColor : Colors.black87);
+      ? Colors.grey[400]
+      : (isHighlighted ? activeColor : Colors.black87);
     return Padding(
       padding: const EdgeInsets.only(left: 72, right: 24, top: 2, bottom: 2),
       child: AbsorbPointer(
@@ -2397,6 +2425,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     final lockProjectSummary = _isBasicPlanLocked('Project Performance Review');
     final lockWarrantiesSupport =
         _isBasicPlanLocked('Hypercare & Warranty Support');
+    final provider = ProjectDataInherited.maybeOf(context);
+    final overallFramework = provider?.projectData.overallFramework ?? '';
+    final disableDesignTech = overallFramework == 'Waterfall';
+
     return [
       _buildMenuItem(
         Icons.home_outlined,
@@ -2861,6 +2893,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         _buildSubMenuItem('Schedule',
             onTap: _openSchedule,
             isActive: widget.activeItemLabel == 'Schedule'),
+        _buildSubMenuItem('Integration Dashboard',
+            onTap: _openIntegrationDashboard,
+            isActive:
+                widget.activeItemLabel == 'Integration Dashboard'),
         _buildSubExpandableHeader(
           'Cost Estimate',
           expanded: _costEstimateExpanded,
@@ -3024,29 +3060,33 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             onTap: _openTechnicalAlignment,
             isActive: widget.activeItemLabel == 'Technical Alignment'),
         _buildSubMenuItem('Development Set Up',
-            onTap: _openDevelopmentSetUp,
-            isActive: widget.activeItemLabel == 'Development Set Up'),
+            onTap: disableDesignTech ? null : _openDevelopmentSetUp,
+            isActive: widget.activeItemLabel == 'Development Set Up',
+            isDisabled: disableDesignTech),
         _buildSubMenuItem('UI/UX Design',
-            onTap: _openUiUxDesign,
-            isActive: widget.activeItemLabel == 'UI/UX Design'),
+            onTap: disableDesignTech ? null : _openUiUxDesign,
+            isActive: widget.activeItemLabel == 'UI/UX Design',
+            isDisabled: disableDesignTech),
         _buildSubMenuItem('Backend Design',
-            onTap: _openBackendDesign,
-            isActive: widget.activeItemLabel == 'Backend Design'),
+            onTap: disableDesignTech ? null : _openBackendDesign,
+            isActive: widget.activeItemLabel == 'Backend Design',
+            isDisabled: disableDesignTech),
         _buildSubMenuItem(
           'Engineering',
-          onTap: lockEngineering ? null : _openEngineeringDesign,
+          onTap: disableDesignTech || lockEngineering ? null : _openEngineeringDesign,
           isActive: widget.activeItemLabel == 'Engineering',
-          isDisabled: lockEngineering,
+          isDisabled: disableDesignTech || lockEngineering,
         ),
         _buildSubMenuItem(
           'Technical Development',
-          onTap: lockTechnicalDevelopment ? null : _openTechnicalDevelopment,
+          onTap: disableDesignTech || lockTechnicalDevelopment ? null : _openTechnicalDevelopment,
           isActive: widget.activeItemLabel == 'Technical Development',
-          isDisabled: lockTechnicalDevelopment,
+          isDisabled: disableDesignTech || lockTechnicalDevelopment,
         ),
         _buildSubMenuItem('Tools Integration',
-            onTap: _openToolsIntegration,
-            isActive: widget.activeItemLabel == 'Tools Integration'),
+            onTap: disableDesignTech ? null : _openToolsIntegration,
+            isActive: widget.activeItemLabel == 'Tools Integration',
+            isDisabled: disableDesignTech),
         _buildSubMenuItem('Long Lead Equipment Ordering',
             onTap: _openLongLeadEquipmentOrdering,
             isActive: widget.activeItemLabel == 'Long Lead Equipment Ordering'),
@@ -3160,107 +3200,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         _buildSubMenuItem('Detailed Design',
             onTap: _openDetailedDesign,
             isActive: widget.activeItemLabel == 'Detailed Design'),
-        _buildSubExpandableHeader(
-          'Agile Project Hub',
-          expanded: _agileHubExpanded,
-          onTap: () => setState(() {
-            _agileHubExpanded = !_agileHubExpanded;
-            _sharedAgileHubExpanded = _agileHubExpanded;
-          }),
-          isActive: _activeIn(_agileHubLabels),
-        ),
-        if (_agileHubExpanded) ...[
-          _buildSubSubMenuItem(
-            'Agile Dashboard',
-            onTap: () => AgileDashboardScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Agile Dashboard',
-          ),
-          _buildSubSubMenuItem(
-            'Product Backlog',
-            onTap: _openAgileBacklogGovernance,
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Product Backlog',
-          ),
-          _buildSubSubMenuItem(
-            'Sprint / Iteration Planning',
-            onTap: _openAgileSprintCalendar,
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Sprint Planning',
-          ),
-          _buildSubSubMenuItem(
-            'Iteration Management',
-            onTap: () => AgileIterationManagementScreen.open(context),
-            isActive: widget.activeItemLabel ==
-                'Agile Project Hub - Iteration Management',
-          ),
-          _buildSubSubMenuItem(
-            'Kanban Board',
-            onTap: () => AgileKanbanBoardScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Kanban Board',
-          ),
-          _buildSubSubMenuItem(
-            'Daily Standups',
-            onTap: () => AgileDailyStandupsScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Daily Standups',
-          ),
-          _buildSubSubMenuItem(
-            'Sprint Reviews',
-            onTap: () => AgileSprintReviewsScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Sprint Reviews',
-          ),
-          _buildSubSubMenuItem(
-            'Sprint Retrospectives',
-            onTap: () => AgileRetrospectivesScreen.open(context),
-            isActive: widget.activeItemLabel ==
-                'Agile Project Hub - Sprint Retrospectives',
-          ),
-          _buildSubSubMenuItem(
-            'Backlog Grooming',
-            onTap: _openAgileBacklogGovernance,
-            isActive: widget.activeItemLabel ==
-                'Agile Project Hub - Backlog Grooming',
-          ),
-          _buildSubSubMenuItem(
-            'Agile Metrics & Reporting',
-            onTap: () => AgileMetricsScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Agile Metrics',
-          ),
-          _buildSubSubMenuItem(
-            'Release Planning',
-            onTap: _openAgileReleasePlan,
-            isActive: widget.activeItemLabel ==
-                'Agile Project Hub - Release Planning',
-          ),
-          _buildSubSubMenuItem(
-            'Agile Risks & Impediments',
-            onTap: () => AgileRisksScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Agile Risks',
-          ),
-          _buildSubSubMenuItem(
-            'Team Capacity & Workload',
-            onTap: _openAgileTeamStructure,
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Team Capacity',
-          ),
-          _buildSubSubMenuItem(
-            'AI Agile Coach',
-            onTap: () => AgileAiCoachScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - AI Agile Coach',
-          ),
-          _buildSubSubMenuItem(
-            'Agile Roadmap',
-            onTap: () => AgileRoadmapScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Agile Roadmap',
-          ),
-        ],
+        // Simplified Agile Project Hub — removed detailed sub-section list
+        // per product request. The header now navigates to the main Agile Hub
+        // landing screen when tapped.
+        _buildSubMenuItem('Agile Project Hub',
+            onTap: _openAgileProjectHub,
+            isActive: widget.activeItemLabel == 'Agile Project Hub'),
         _buildSubMenuItem('Scope Tracking Implementation',
             onTap: _openScopeTrackingImplementation,
             isActive:

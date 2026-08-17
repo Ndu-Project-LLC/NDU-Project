@@ -45,7 +45,7 @@ class _ScheduleManagementBoardScreenState extends State<ScheduleManagementBoardS
  _ScheduleColumnData(
  title: 'In Progress',
  count: 3,
- background: Color(0xFFEFF6FF),
+ background: Color(0xFFFFF8E1),
  cards: [
  _ScheduleCardData(
  title: 'Foundation Systems',
@@ -379,7 +379,7 @@ class _WorkBreakdownStructure extends StatelessWidget {
  ),
  const SizedBox(height: 24),
  const _LegendList(items: [
- _LegendItem(label: 'Project Cost', color: Color(0xFF2563EB)),
+ _LegendItem(label: 'Project Cost', color: Color(0xFFFFC812)),
  _LegendItem(label: 'Schedule Drift', color: Color(0xFFF59E0B)),
  _LegendItem(label: 'Critical Path Impact', color: Color(0xFFFF5A5F)),
  _LegendItem(label: 'Team Utilization', color: Color(0xFF16A34A)),
@@ -399,7 +399,7 @@ class _WorkBreakdownStructure extends StatelessWidget {
  children: [
  _WbsLane(
  badgeLabel: 'Infrastructure Development',
- badgeColor: Color(0xFF2563EB),
+ badgeColor: Color(0xFFFFC812),
  entries: [
  _WbsEntry(title: 'Unassigned Deliverables', subtitle: 'Filter to discipline', statusLabel: 'Unassigned'),
  _WbsEntry(title: 'Safety & Health Risk Assessment', subtitle: 'SSHER', statusLabel: 'Unassigned'),
@@ -772,7 +772,7 @@ class _BoardFooter extends StatelessWidget {
  Widget build(BuildContext context) {
  const legendItems = [
  _LegendItem(label: 'Completed', color: Color(0xFF16A34A)),
- _LegendItem(label: 'In Progress', color: Color(0xFF2563EB)),
+ _LegendItem(label: 'In Progress', color: Color(0xFFFFC812)),
  _LegendItem(label: 'Pending', color: Color(0xFFF59E0B)),
  _LegendItem(label: 'Critical Path', color: Color(0xFFFF5A5F)),
  ];
@@ -858,19 +858,19 @@ class _StatusPill extends StatelessWidget {
  case 'pending':
  case 'progress':
  case 'in progress':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case 'design':
- return const Color(0xFF9333EA);
+ return const Color(0xFFB8860B);
  case 'quality':
- return const Color(0xFF0EA5E9);
+ return const Color(0xFFFFC812);
  case 'technology':
- return const Color(0xFF1D4ED8);
+ return const Color(0xFFFFC812);
  case 'completed':
  return AppSemanticColors.success;
  case 'unassigned':
  return Colors.grey.shade600;
  case 'engineering':
- return const Color(0xFF0EA5E9);
+ return const Color(0xFFFFC812);
  case 'site prep':
  return const Color(0xFF16A34A);
  default:
@@ -1130,11 +1130,12 @@ class _ScheduleCardData {
  final double progressPercent;
 
  String get assigneeInitials {
- final parts = assignee.trim().split(' ');
+ final parts = assignee.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+ if (parts.isEmpty) return 'U';
  if (parts.length == 1) {
- return parts.first.substring(0, 1).toUpperCase();
+ return parts.first[0].toUpperCase();
  }
- return parts.take(2).map((part) => part.substring(0, 1).toUpperCase()).join();
+ return parts.take(2).map((part) => part[0].toUpperCase()).join();
  }
 }
 

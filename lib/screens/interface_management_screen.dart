@@ -230,7 +230,7 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
       _MetricCard(
           label: 'Total Interfaces',
           value: '$activeInterfaces',
-          accent: const Color(0xFF2563EB)),
+          accent: const Color(0xFFFFC812)),
       _MetricCard(
           label: 'Critical',
           value: '$criticalCount',
@@ -246,7 +246,7 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
       _MetricCard(
           label: 'Tech Integrations',
           value: '$techLinkCount',
-          accent: const Color(0xFF8B5CF6),
+          accent: const Color(0xFFB8860B),
           tooltip: 'From Technology Planning'),
       _MetricCard(
           label: 'At Risk',
@@ -882,7 +882,7 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
           // available width thanks to the Expanded "Boundary / Name" column.
           LayoutBuilder(
             builder: (context, constraints) {
-              const minTableWidth = 980.0;
+              const minTableWidth = 1200.0;
               final needsScroll = constraints.maxWidth < minTableWidth;
               final table = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1595,7 +1595,7 @@ class _ArchitectureSection extends StatelessWidget {
         _ArchitectureLayer(
           title: 'Integration Layer',
           color: const Color(0xFFD4E4FF),
-          borderColor: const Color(0xFF2563EB),
+          borderColor: const Color(0xFFFFC812),
           items: technical.isEmpty
               ? [
                   const _ArchCard(
@@ -1652,7 +1652,7 @@ class _ArchitectureSection extends StatelessWidget {
           _ArchitectureLayer(
             title: 'Physical Systems',
             color: const Color(0xFFE8D5F5),
-            borderColor: const Color(0xFF7C3AED),
+            borderColor: const Color(0xFFB8860B),
             items: physical
                 .map((e) => _ArchCard(
                       title: e.boundary.trim().isNotEmpty
@@ -1672,7 +1672,7 @@ class _ArchitectureSection extends StatelessWidget {
           _ArchitectureLayer(
             title: 'Procedural Interfaces',
             color: const Color(0xFFFFE0E6),
-            borderColor: const Color(0xFFEC4899),
+            borderColor: const Color(0xFFD97706),
             items: procedural
                 .map((e) => _ArchCard(
                       title: e.boundary.trim().isNotEmpty
@@ -1995,7 +1995,7 @@ class _RaciGovernanceSection extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(0xFFDBEAFE),
+                color: Color(0xFFFEF3C7),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -2342,14 +2342,14 @@ class _MaturitySectionState extends State<_MaturitySection> {
   Color _maturityColor(int score) {
     if (score <= 30) return const Color(0xFFEF4444);
     if (score <= 60) return const Color(0xFFF59E0B);
-    if (score <= 80) return const Color(0xFF2563EB);
+    if (score <= 80) return const Color(0xFFFFC812);
     return const Color(0xFF10B981);
   }
 
   Color _maturityBgColor(int score) {
     if (score <= 30) return const Color(0xFFFEE2E2);
     if (score <= 60) return const Color(0xFFFEF3C7);
-    if (score <= 80) return const Color(0xFFDBEAFE);
+    if (score <= 80) return const Color(0xFFFEF3C7);
     return const Color(0xFFD1FAE5);
   }
 
@@ -2452,7 +2452,7 @@ class _MaturitySectionState extends State<_MaturitySection> {
                 color: const Color(0xFFF59E0B)),
             const SizedBox(width: 12),
             _MaturityBreakdownCard(
-                label: 'Mature', count: mature, color: const Color(0xFF2563EB)),
+                label: 'Mature', count: mature, color: const Color(0xFFFFC812)),
             const SizedBox(width: 12),
             _MaturityBreakdownCard(
                 label: 'Optimized',
@@ -2629,13 +2629,13 @@ class _AuditTrailSection extends StatelessWidget {
       case 'Created':
         return const Color(0xFF10B981);
       case 'Updated':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Deleted':
         return const Color(0xFFEF4444);
       case 'Status Changed':
         return const Color(0xFFF59E0B);
       case 'Imported':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       default:
         return const Color(0xFF6B7280);
     }
@@ -3266,7 +3266,7 @@ class _StatusBadge extends StatelessWidget {
     final color = normalized.contains('active')
         ? const Color(0xFF166534)
         : normalized.contains('approved') || normalized.contains('resolved')
-            ? const Color(0xFF1D4ED8)
+            ? const Color(0xFFFFC812)
             : normalized.contains('closed') || normalized.contains('complete')
                 ? const Color(0xFF6B7280)
                 : normalized.contains('review')
@@ -3302,13 +3302,13 @@ class _TypeBadge extends StatelessWidget {
     if (type.trim().isEmpty) return const SizedBox.shrink();
 
     final color = type.toLowerCase().contains('tech')
-        ? const Color(0xFF2563EB)
+        ? const Color(0xFFFFC812)
         : type.toLowerCase().contains('contract')
             ? const Color(0xFFD97706)
             : type.toLowerCase().contains('org')
                 ? const Color(0xFF10B981)
                 : type.toLowerCase().contains('physical')
-                    ? const Color(0xFF7C3AED)
+                    ? const Color(0xFFB8860B)
                     : const Color(0xFF6B7280);
 
     final bg = Color.alphaBlend(color.withValues(alpha: 0.12), Colors.white);

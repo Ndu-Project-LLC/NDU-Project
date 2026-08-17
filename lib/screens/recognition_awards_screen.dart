@@ -712,9 +712,9 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
         _StatCard(
             'Awarded', '$awarded', Icons.verified, const Color(0xFF10B981)),
         _StatCard('Approved', '$approved', Icons.check_circle,
-            const Color(0xFF3B82F6)),
+            const Color(0xFFFFC812)),
         _StatCard(
-            'Nominated', '$nominated', Icons.star, const Color(0xFF8B5CF6)),
+            'Nominated', '$nominated', Icons.star, const Color(0xFFB8860B)),
       ];
       if (isWide) {
         return Row(
@@ -851,10 +851,10 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     final statusColor = r.status == 'Awarded'
         ? const Color(0xFF10B981)
         : r.status == 'Approved'
-            ? const Color(0xFF3B82F6)
+            ? const Color(0xFFFFC812)
             : r.status == 'Rejected'
                 ? const Color(0xFFEF4444)
-                : const Color(0xFF8B5CF6);
+                : const Color(0xFFB8860B);
 
     return Container(
       width: double.infinity,

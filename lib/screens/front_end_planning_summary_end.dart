@@ -223,42 +223,10 @@ class _BottomOverlay extends StatelessWidget {
  child: Stack(
  children: [
  Positioned(
- left: 24,
- bottom: 24,
- child: Container(
- width: 48,
- height: 48,
- decoration: const BoxDecoration(color: Color(0xFFB3D9FF), shape: BoxShape.circle),
- child: const Icon(Icons.info_outline, color: Colors.white),
- ),
- ),
- Positioned(
  right: 24,
  bottom: 24,
  child: Row(
  children: [
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
- decoration: BoxDecoration(
- color: const Color(0xFFE6F1FF),
- borderRadius: BorderRadius.circular(14),
- border: Border.all(color: const Color(0xFFD7E5FF)),
- ),
- child: const Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
- SizedBox(width: 10),
- Text('AI', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
- SizedBox(width: 12),
- Text(
- 'Generate a summary of all front end planning activities.',
- style: TextStyle(color: Color(0xFF1F2937)),
- ),
- ],
- ),
- ),
- const SizedBox(width: 16),
  ElevatedButton(
  onPressed: () => ProjectFrameworkScreen.open(context), 
  style: ElevatedButton.styleFrom(

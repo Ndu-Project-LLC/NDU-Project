@@ -137,10 +137,17 @@
   <script>
     (function() {
       // NDU_BUILD_STAMP is replaced at build time by scripts/stamp_build_version.py
+      // with a 10-digit epoch timestamp (e.g. '1786708977').
+      //
+      // IMPORTANT: We must NOT compare NDU_BUILD against the literal string
+      // 'NDU_BUILD_STAMP' to detect the un-stamped source, because the stamp
+      // script does a naive text.replace() on ALL occurrences — including any
+      // literal placeholder in this comparison — which would make the check
+      // always-true after stamping and break the cache-busting redirect.
+      // Instead, we detect the un-stamped source by checking that the value
+      // is a 10-digit epoch timestamp.
       var NDU_BUILD = 'NDU_BUILD_STAMP';
-      // If the stamp wasn't replaced (e.g. running `flutter run` locally),
-      // fall back to a fixed value so the redirect logic doesn't loop.
-      if (NDU_BUILD === 'NDU_BUILD_STAMP' || !NDU_BUILD) {
+      if (!NDU_BUILD || !/^\d{10}$/.test(NDU_BUILD)) {
         NDU_BUILD = 'dev-local';
       }
       try {

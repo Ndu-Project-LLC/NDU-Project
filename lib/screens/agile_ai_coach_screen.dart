@@ -27,7 +27,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
   static const Color _kAccent = Color(0xFFF59E0B);
   static const Color _kAccentLight = Color(0xFFFFC812);
   static const Color _kAccentBg = Color(0xFFFEF3C7);
-  static const Color _kBackground = Color(0xFFF8FAFC);
+  static const Color _kBackground = Colors.white;
   static const Color _kSurface = Colors.white;
   static const Color _kBorder = Color(0xFFE5E7EB);
   static const Color _kHeadline = Color(0xFF111827);
@@ -526,7 +526,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
                 const Text(
                     'Embedded AI guidance across sprint planning, story writing, estimation, risk detection, and continuous improvement. Proactive recommendations tuned to your delivery patterns.',
                     style: TextStyle(
-                        fontSize: 13, color: Color(0xFFC7D2FE), height: 1.5)),
+                        fontSize: 13, color: Color(0xFFFEF3C7), height: 1.5)),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,

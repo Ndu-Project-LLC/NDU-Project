@@ -21,6 +21,7 @@ import 'package:intl/intl.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
 /// Front End Planning – Milestone screen
 /// Allows users to define project start date, key milestones, and end date.
@@ -631,7 +632,7 @@ Generate milestones that cover the typical project lifecycle phases.''';
  const SnackBar(
  content:
  Text('Using default milestones - you can edit them as needed'),
- backgroundColor: Color(0xFF3B82F6),
+ backgroundColor: Color(0xFFFFC812),
  duration: Duration(seconds: 3),
  ),
  );
@@ -1428,14 +1429,56 @@ Consider typical project timelines and ensure end date is after start date.''';
  }
 
  Widget _buildMilestonesTable() {
- return FullScreenTableWrapper(
- title: 'Milestones',
- child: _buildMilestonesTableContent(),
- tableBuilder: (fsContext) => _buildMilestonesTableContent(),
- );
+	 return SearchableTableSection(
+		 title: 'Milestones',
+		 items: _milestones,
+		 searchFilter: (item, query) {
+			 final m = item as Milestone;
+			 final q = query.trim().toLowerCase();
+			 if (q.isEmpty) return true;
+			 return m.name.toLowerCase().contains(q) ||
+					 m.discipline.toLowerCase().contains(q) ||
+					 m.dueDate.toLowerCase().contains(q) ||
+					 m.comments.toLowerCase().contains(q) ||
+					 m.references.toLowerCase().contains(q);
+		 },
+		 tableBuilder: (ctx, query) {
+			 final filtered = _milestones
+					 .where((m) => m.name.toLowerCase().contains(query.trim().toLowerCase()) ||
+							 m.discipline.toLowerCase().contains(query.trim().toLowerCase()) ||
+							 m.dueDate.toLowerCase().contains(query.trim().toLowerCase()) ||
+							 m.comments.toLowerCase().contains(query.trim().toLowerCase()))
+					 .toList();
+			 return FullScreenTableWrapper(
+				 title: 'Milestones',
+				 child: _buildMilestonesTableContent(filtered),
+				 tableBuilder: (fsCtx) => _buildMilestonesTableContent(filtered),
+			 );
+		 },
+		 cardBuilder: (ctx, query) {
+			 final filtered = _milestones
+					 .where((m) => m.name.toLowerCase().contains(query.trim().toLowerCase()) ||
+							 m.discipline.toLowerCase().contains(query.trim().toLowerCase()) ||
+							 m.dueDate.toLowerCase().contains(query.trim().toLowerCase()) ||
+							 m.comments.toLowerCase().contains(query.trim().toLowerCase()))
+					 .toList();
+			 return Column(
+				 children: filtered
+						 .map((m) => Card(
+									 child: ListTile(
+										 title: Text(m.name.isEmpty ? '—' : m.name),
+										 subtitle: Text('${m.dueDate} • ${m.discipline}'),
+										 trailing: Text(m.comments, maxLines: 2, overflow: TextOverflow.ellipsis),
+									 ),
+								 ))
+						 .toList(),
+			 );
+		 },
+	 );
  }
 
- Widget _buildMilestonesTableContent() {
+ Widget _buildMilestonesTableContent([List<Milestone>? items]) {
+	 final rowsSource = items ?? _milestones;
  const border = BorderSide(color: Color(0xFFE5E7EB));
  const headerStyle = TextStyle(
  fontSize: 12,
@@ -1513,12 +1556,12 @@ Consider typical project timelines and ensure end date is after start date.''';
  _milestoneHeaderCell('Actions', headerStyle),
  ],
  ),
- ...List.generate(_milestones.length, (index) {
- final milestone = _milestones[index];
+ ...List.generate(rowsSource.length, (index) {
+ final milestone = rowsSource[index];
  final nameError =
- _validationErrors['milestone_name_$index'];
+	 _validationErrors['milestone_name_$index'];
  final dateError =
- _validationErrors['milestone_date_$index'];
+	 _validationErrors['milestone_date_$index'];
  return TableRow(
  decoration: BoxDecoration(
  color: index.isEven
@@ -1538,153 +1581,106 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  ),
  ),
- _milestoneDataCell(
- VoiceTextFormField(
- key: _milestoneNameKey(index),
- controller: _milestoneNameControllers[index],
- onChanged: (value) =>
- _updateMilestoneField(index, 'name', value),
- decoration: InputDecoration(
- hintText: 'Enter milestone name',
- errorText: nameError,
- hintStyle: TextStyle(
- color: Colors.grey[400],
- fontSize: 13,
- ),
- border:
- _milestoneFieldBorder(nameError != null),
- enabledBorder:
- _milestoneFieldBorder(nameError != null),
- focusedBorder:
- _milestoneFieldBorder(nameError != null),
- errorBorder: _milestoneFieldBorder(true),
- focusedErrorBorder: _milestoneFieldBorder(true),
- contentPadding: const EdgeInsets.symmetric(
- horizontal: 12,
- vertical: 10,
- ),
- isDense: true,
- ),
- style: const TextStyle(fontSize: 13),
- ),
- ),
- _milestoneDataCell(
- Column(
- key: _milestoneDateKey(index),
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- InkWell(
- onTap: () => _selectMilestoneDate(index),
- borderRadius: BorderRadius.circular(8),
- child: Container(
- padding: const EdgeInsets.symmetric(
- horizontal: 12,
- vertical: 10,
- ),
- decoration: BoxDecoration(
- border: Border.all(
- color: dateError != null
- ? const Color(0xFFEF4444)
- : const Color(0xFFE5E7EB),
- ),
- borderRadius: BorderRadius.circular(8),
- ),
- child: Row(
- children: [
- Icon(
- Icons.calendar_today_outlined,
- size: 14,
- color: Colors.grey[400],
- ),
- const SizedBox(width: 8),
- Expanded(
- child: WrappedText(
- milestone.dueDate.isNotEmpty
- ? milestone.dueDate
- : 'Select date',
- style: TextStyle(
- fontSize: 13,
- color:
- milestone.dueDate.isNotEmpty
- ? const Color(0xFF111827)
- : Colors.grey[400],
- ),
- ),
- ),
- ],
- ),
- ),
- ),
- if (dateError != null) ...[
- const SizedBox(height: 4),
- WrappedText(
- dateError,
- style: const TextStyle(
- color: Color(0xFFDC2626),
- fontSize: 12,
- fontWeight: FontWeight.w600,
- ),
- ),
- ],
- ],
- ),
- ),
- _milestoneDataCell(
- VoiceTextFormField(
- controller:
- _milestoneDisciplineControllers[index],
- onChanged: (value) => _updateMilestoneField(
- index, 'discipline', value),
- decoration: InputDecoration(
- hintText: 'Discipline',
- hintStyle: TextStyle(
- color: Colors.grey[400],
- fontSize: 13,
- ),
- border: _milestoneFieldBorder(false),
- enabledBorder: _milestoneFieldBorder(false),
- contentPadding: const EdgeInsets.symmetric(
- horizontal: 12,
- vertical: 10,
- ),
- isDense: true,
- ),
- style: const TextStyle(fontSize: 13),
- ),
- ),
- _milestoneDataCell(
- Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- VoiceTextFormField(
- controller:
- _milestoneCommentControllers[index],
- onChanged: (value) => _updateMilestoneField(
- index,
- 'comments',
- value,
- ),
- decoration: InputDecoration(
- hintText: 'Add notes (optional)',
- hintStyle: TextStyle(
- color: Colors.grey[400],
- fontSize: 13,
- ),
- border: _milestoneFieldBorder(false),
- enabledBorder: _milestoneFieldBorder(false),
- contentPadding: const EdgeInsets.symmetric(
- horizontal: 12,
- vertical: 10,
- ),
- isDense: true,
- ),
- style: const TextStyle(fontSize: 13),
- minLines: 1,
- maxLines: null,
- ),
- ],
- ),
- ),
+		_milestoneDataCell(
+			Container(
+				padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+				child: WrappedText(
+					milestone.name.isNotEmpty ? milestone.name : '—',
+					style: TextStyle(
+						fontSize: 13,
+						color: milestone.name.isNotEmpty
+								? const Color(0xFF111827)
+								: Colors.grey[400],
+					),
+				),
+			),
+		),
+		_milestoneDataCell(
+			Column(
+				key: _milestoneDateKey(index),
+				crossAxisAlignment: CrossAxisAlignment.start,
+				children: [
+					Container(
+						padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+						decoration: BoxDecoration(
+							border: Border.all(
+								color: dateError != null
+										? const Color(0xFFEF4444)
+										: const Color(0xFFE5E7EB),
+							),
+							borderRadius: BorderRadius.circular(8),
+						),
+						child: Row(
+							children: [
+								Icon(
+									Icons.calendar_today_outlined,
+									size: 14,
+									color: Colors.grey[400],
+								),
+								const SizedBox(width: 8),
+								Expanded(
+									child: WrappedText(
+										milestone.dueDate.isNotEmpty
+												? milestone.dueDate
+												: '—',
+										style: TextStyle(
+											fontSize: 13,
+											color: milestone.dueDate.isNotEmpty
+													? const Color(0xFF111827)
+													: Colors.grey[400],
+										),
+									),
+								),
+							],
+						),
+					),
+					if (dateError != null) ...[
+						const SizedBox(height: 4),
+						WrappedText(
+							dateError,
+							style: const TextStyle(
+								color: Color(0xFFDC2626),
+								fontSize: 12,
+								fontWeight: FontWeight.w600,
+							),
+						),
+					],
+				],
+			),
+		),
+		_milestoneDataCell(
+			Container(
+				padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+				child: WrappedText(
+					milestone.discipline.isNotEmpty ? milestone.discipline : '—',
+					style: TextStyle(
+						fontSize: 13,
+						color: milestone.discipline.isNotEmpty
+								? const Color(0xFF111827)
+								: Colors.grey[400],
+					),
+				),
+			),
+		),
+		_milestoneDataCell(
+			Column(
+				crossAxisAlignment: CrossAxisAlignment.start,
+				children: [
+					Container(
+						padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+						child: WrappedText(
+							milestone.comments.isNotEmpty ? milestone.comments : '—',
+							style: TextStyle(
+								fontSize: 13,
+								color: milestone.comments.isNotEmpty
+										? const Color(0xFF111827)
+										: Colors.grey[400],
+							),
+						),
+					),
+				],
+			),
+		),
  // ── SME Verification cell (Task 9.9) ─────────────────────────────
  // Two-step verification: SME Review + SME Approval. Both must be
  // checked for the milestone to be considered fully verified. A status

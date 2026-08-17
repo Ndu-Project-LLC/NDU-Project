@@ -17,14 +17,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/models/portfolio_model.dart';
 import 'package:ndu_project/models/program_model.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
+import 'package:ndu_project/services/portfolio_service.dart';
 import 'package:ndu_project/services/program_service.dart';
 import 'package:ndu_project/services/project_service.dart';
 import 'package:ndu_project/widgets/compact_action_button.dart';
 import 'package:ndu_project/screens/project_activities_log_screen.dart';
+import 'package:ndu_project/screens/group_into_portfolio_screen.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 
@@ -60,7 +63,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  static const _primaryContainer = Color(0xFFE5E7EB);
  static const _tertiary = Color(0xFFFFC107);
  static const _tertiaryContainer = Color(0xFFFBBF24);
- static const _secondary = Color(0xFF3B82F6);
+ static const _secondary = Color(0xFFFFC812);
  static const _emerald = Color(0xFF10B981);
  static const _amber = Color(0xFFF59E0B);
  static const _crimson = Color(0xFFEF4444);
@@ -206,9 +209,20 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
 
  void _navigateToPortfolio() {
  if (!mounted) return;
- WidgetsBinding.instance.addPostFrameCallback((_) {
- if (mounted) {
- context.go('/${AppRoutes.portfolioDashboard}');
+ // Get the current user's projects to pass to the portfolio creation screen
+ final user = FirebaseAuth.instance.currentUser;
+ if (user == null) return;
+ 
+ // Navigate to the GroupIntoPortfolioScreen with the user's projects
+ ProjectService.streamProjects(ownerId: user.uid).first.then((projects) {
+ if (mounted && projects.isNotEmpty) {
+ GroupIntoPortfolioScreen.open(context, projects);
+ } else if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text('No projects available. Create projects first.'),
+ ),
+ );
  }
  });
  }
@@ -235,6 +249,12 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  ? Stream.value(const <ProjectRecord>[])
  : ProjectService.streamProjects(ownerId: user.uid),
  builder: (context, projectSnapshot) {
+ // Load portfolios for this user
+ return StreamBuilder<List<PortfolioModel>>(
+ stream: user == null
+ ? Stream.value(const <PortfolioModel>[])
+ : PortfolioService.streamPortfolios(ownerId: user.uid),
+ builder: (context, portfolioSnapshot) {
  // Auto-create programs/portfolios based on project count
  if (user != null && projectSnapshot.hasData) {
  final projects = projectSnapshot.data!;
@@ -245,6 +265,8 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  programs: programSnapshot.data ?? const [],
  projects: projectSnapshot.data ?? const [],
  );
+
+ final portfolios = portfolioSnapshot.data ?? const [];
 
  if (projectSnapshot.connectionState ==
  ConnectionState.waiting &&
@@ -270,11 +292,18 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  const SizedBox(height: 24),
  _buildHeroBento(context, metrics: metrics),
  const SizedBox(height: 24),
+ _buildPortfoliosSection(
+ portfolios: portfolios,
+ allProjects: projectSnapshot.data ?? const [],
+ ),
+ const SizedBox(height: 24),
  _buildMainGrid(context, metrics: metrics),
  const SizedBox(height: 72),
  ],
  ),
  ),
+ );
+ },
  );
  },
  );
@@ -347,10 +376,11 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
 
  // Only create if no portfolio exists yet
  if (existingPortfoliosSnap.docs.isEmpty) {
+ final shortId = ownerId.length >= 6 ? ownerId.substring(0, 6) : ownerId;
  await FirebaseFirestore.instance
  .collection('portfolios')
  .add({
- 'name': '${ownerId.substring(0, 6)} Portfolio',
+ 'name': '$shortId Portfolio',
  'projectIds': projects.take(7).map((p) => p.id).toList(),
  'ownerId': ownerId,
  'createdAt': FieldValue.serverTimestamp(),
@@ -846,6 +876,251 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
       const SizedBox(height: 16),
       _progressGauge(metrics ?? _emptyMetrics),
     ]);
+  }
+
+  // ─── Portfolios Section ──────────────────────────────────────────────────
+  Widget _buildPortfoliosSection({
+    required List<PortfolioModel> portfolios,
+    required List<ProjectRecord> allProjects,
+  }) {
+    if (portfolios.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Portfolios',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: _onSurface,
+                fontFamily: appFontFamily,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _tertiaryContainer.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${portfolios.length} portfolio${portfolios.length != 1 ? 's' : ''}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _onSurfaceVariant,
+                  fontFamily: appFontFamily,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ...portfolios.map((portfolio) {
+          final portfolioProjects = allProjects
+              .where((p) => portfolio.projectIds.contains(p.id))
+              .toList();
+          
+          // Compute portfolio metrics
+          final totalBudget = portfolioProjects.fold<double>(
+            0,
+            (sum, p) => sum + (p.investmentMillions.isNaN ? 0 : p.investmentMillions),
+          );
+          
+          final avgProgress = portfolioProjects.isEmpty
+              ? 0.0
+              : portfolioProjects.fold<double>(
+                  0,
+                  (sum, p) => sum + (p.progress.isNaN ? 0 : p.progress.clamp(0, 1)),
+                ) / portfolioProjects.length;
+          
+          final healthyCount = portfolioProjects.where((p) {
+            final progress = p.progress.isNaN ? 0.0 : p.progress.clamp(0, 1);
+            return progress >= 0.67;
+          }).length;
+          
+          final atRiskCount = portfolioProjects.where((p) {
+            final progress = p.progress.isNaN ? 0.0 : p.progress.clamp(0, 1);
+            return progress >= 0.34 && progress < 0.67;
+          }).length;
+          
+          final criticalCount = portfolioProjects.where((p) {
+            final progress = p.progress.isNaN ? 0.0 : p.progress.clamp(0, 1);
+            return progress < 0.34;
+          }).length;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _surfaceCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: _tertiaryContainer.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.pie_chart_outline_rounded,
+                          size: 24,
+                          color: _tertiary,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              portfolio.name.isEmpty ? 'Portfolio' : portfolio.name,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: _onSurface,
+                                fontFamily: appFontFamily,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${portfolioProjects.length} projects • Created ${_formatDate(portfolio.createdAt)}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: _onSurfaceVariant,
+                                fontFamily: appFontFamily,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          portfolio.status,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF10B981),
+                            fontFamily: appFontFamily,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Portfolio metrics row
+                  Row(
+                    children: [
+                      _portfolioMetric(
+                        label: 'Total Budget',
+                        value: _formatBudget(totalBudget),
+                        icon: Icons.account_balance_wallet_outlined,
+                      ),
+                      const SizedBox(width: 24),
+                      _portfolioMetric(
+                        label: 'Avg Progress',
+                        value: '${(avgProgress * 100).round()}%',
+                        icon: Icons.trending_up,
+                      ),
+                      const SizedBox(width: 24),
+                      _portfolioMetric(
+                        label: 'Healthy',
+                        value: '$healthyCount',
+                        icon: Icons.check_circle_outline,
+                        valueColor: _emerald,
+                      ),
+                      const SizedBox(width: 24),
+                      _portfolioMetric(
+                        label: 'At Risk',
+                        value: '$atRiskCount',
+                        icon: Icons.warning_amber_outlined,
+                        valueColor: _amber,
+                      ),
+                      const SizedBox(width: 24),
+                      _portfolioMetric(
+                        label: 'Critical',
+                        value: '$criticalCount',
+                        icon: Icons.error_outline,
+                        valueColor: _crimson,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _portfolioMetric({
+    required String label,
+    required String value,
+    required IconData icon,
+    Color? valueColor,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: _outlineVariant),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 14, color: _onSurfaceVariant),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: _onSurfaceVariant,
+                    fontFamily: appFontFamily,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: valueColor ?? _onSurface,
+                fontFamily: appFontFamily,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    if (diff.inDays == 0) return 'today';
+    if (diff.inDays == 1) return 'yesterday';
+    if (diff.inDays < 7) return '${diff.inDays} days ago';
+    if (diff.inDays < 30) return '${(diff.inDays / 7).round()} weeks ago';
+    return '${(diff.inDays / 30).round()} months ago';
   }
 
  Widget _budgetKpi(_ProgramMetrics metrics) {

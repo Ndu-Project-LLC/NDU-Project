@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/screens/salvage_disposal_team_screen.dart';
@@ -108,10 +109,10 @@ class _IdentifyStaffOpsTeamScreenState
                 _buildHandoffPanel(),
                 const SizedBox(height: 24),
                 LaunchPhaseNavigation(
-                  backLabel: 'Back: Technical Debt Management',
-                  nextLabel: 'Next: Salvage & Disposal Plan',
-                  onBack: () => TechnicalDebtManagementScreen.open(context),
-                  onNext: () => SalvageDisposalTeamScreen.open(context),
+                  backLabel: PlanningPhaseNavigation.backLabel('identify_staff_ops_team'),
+                  nextLabel: PlanningPhaseNavigation.nextLabel('identify_staff_ops_team'),
+                  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'identify_staff_ops_team'),
+                  onNext: () => PlanningPhaseNavigation.goToNext(context, 'identify_staff_ops_team'),
                 ),
               ],
             ),
@@ -233,7 +234,7 @@ class _IdentifyStaffOpsTeamScreenState
       label: Text(label,
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF0EA5E9),
+        backgroundColor: const Color(0xFFFFC812),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         shape: RoundedRectangleBorder(
@@ -456,9 +457,9 @@ class _IdentifyStaffOpsTeamScreenState
               _CapabilityItem(
                   'Incident response coverage',
                   incidentResponse > 0 ? incidentResponse : avgReadiness * 0.78,
-                  const Color(0xFF0EA5E9)),
+                  const Color(0xFFFFC812)),
               _CapabilityItem('Runbook completeness', avgReadiness * 0.64,
-                  const Color(0xFF6366F1)),
+                  const Color(0xFFB8860B)),
               _CapabilityItem('Training completion', trainingCompletion,
                   const Color(0xFFF59E0B)),
               _CapabilityItem('Service desk readiness', serviceDesk,
@@ -1248,7 +1249,7 @@ class _HandoffItem extends StatelessWidget {
             width: 10,
             height: 10,
             decoration: const BoxDecoration(
-                color: Color(0xFF0EA5E9), shape: BoxShape.circle),
+                color: Color(0xFFFFC812), shape: BoxShape.circle),
           ),
           const SizedBox(width: 10),
           Expanded(

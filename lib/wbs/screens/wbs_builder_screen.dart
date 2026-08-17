@@ -19,7 +19,7 @@ import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
-import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/wbs/widgets/wbs_node_dialog.dart';
 
 class WBSBuilderScreen extends StatefulWidget {
   const WBSBuilderScreen({super.key});
@@ -331,11 +331,27 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                 ],
                 selected: {provider.viewModeSimple},
                 onSelectionChanged: (v) => provider.setViewMode(v.first),
-                style: SegmentedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                style: ButtonStyle(
                   visualDensity: VisualDensity.compact,
-                  textStyle: const TextStyle(fontSize: 12),
+                  textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  backgroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Color(0xFFFFC812); // Yellow theme
+                    }
+                    return Colors.white;
+                  }),
+                  foregroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Color(0xFF111827);
+                    }
+                    return const Color(0xFF374151);
+                  }),
+                  side: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const BorderSide(color: Color(0xFFFFC812));
+                    }
+                    return const BorderSide(color: Color(0xFFD1D5DB));
+                  }),
                 ),
               ),
               if (provider.viewModeSimple) ...[
@@ -356,11 +372,27 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                   selected: {_simpleAxis},
                   onSelectionChanged: (v) =>
                       setState(() => _simpleAxis = v.first),
-                  style: SegmentedButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  style: ButtonStyle(
                     visualDensity: VisualDensity.compact,
-                    textStyle: const TextStyle(fontSize: 12),
+                    textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    backgroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return const Color(0xFFFFC812); // Yellow theme
+                      }
+                      return Colors.white;
+                    }),
+                    foregroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return const Color(0xFF111827);
+                      }
+                      return const Color(0xFF374151);
+                    }),
+                    side: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return const BorderSide(color: Color(0xFFFFC812));
+                      }
+                      return const BorderSide(color: Color(0xFFD1D5DB));
+                    }),
                   ),
                 ),
               ],
@@ -430,8 +462,8 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
       return const SizedBox.shrink();
     }
     final color = switch (methodology) {
-      'agile' => const Color(0xFF7C3AED),
-      'waterfall' => const Color(0xFF2563EB),
+      'agile' => const Color(0xFFB8860B),
+      'waterfall' => const Color(0xFFFFC812),
       _ => const Color(0xFF059669),
     };
     final label = switch (methodology) {
@@ -1253,7 +1285,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
               // Badges row
               if (node.aiGenerated) ...[
                 const SizedBox(width: 6),
-                _buildBadge('AI', const Color(0xFF3B82F6), 8),
+                _buildBadge('AI', const Color(0xFFFFC812), 8),
               ],
               if (node.isWorkPackage == true && !isRoot) ...[
                 const SizedBox(width: 4),
@@ -1272,21 +1304,21 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                      color: const Color(0xFFFFC812).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
                           color:
-                              const Color(0xFF2563EB).withValues(alpha: 0.25)),
+                              const Color(0xFFFFC812).withValues(alpha: 0.25)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.attach_money,
-                            size: 10, color: Color(0xFF2563EB)),
+                            size: 10, color: Color(0xFFFFC812)),
                         const SizedBox(width: 2),
                         Text('$linkedCount',
                             style: const TextStyle(
-                                color: Color(0xFF2563EB),
+                                color: Color(0xFFFFC812),
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700)),
                       ],
@@ -1601,140 +1633,20 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
       _showLevel1CapMessage(context);
       return;
     }
-    final nameCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
-    final isHybrid = provider.wbs!.methodology == ProjectMethodology.hybrid;
-    String? selectedMethodology;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.add_circle_outline,
-                color: LightModeColors.accent, size: 20),
-            const SizedBox(width: 8),
-            Text('Add Level $level — $levelLabel',
-                style: const TextStyle(color: Color(0xFF1A1D1F), fontSize: 16)),
-          ],
-        ),
-        content: StatefulBuilder(
-          builder: (ctx, setDialogState) {
-            return SizedBox(
-              width: 480,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: nameCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Name *',
-                      labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-                      hintText: level <= 2
-                          ? 'Use a deliverable noun (not an activity verb)'
-                          : 'Describe the work package or activity',
-                      hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-                      filled: true,
-                      fillColor: const Color(0xFFF9FAFB),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            const BorderSide(color: LightModeColors.accent),
-                      ),
-                    ),
-                    style: const TextStyle(color: Color(0xFF1A1D1F)),
-                    autofocus: true,
-                  ),
-                  const SizedBox(height: 12),
-                  VoiceTextField(
-                    controller: descCtrl,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      labelText: 'Description (optional)',
-                      labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-                      filled: true,
-                      fillColor: const Color(0xFFF9FAFB),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            const BorderSide(color: LightModeColors.accent),
-                      ),
-                    ),
-                    style: const TextStyle(color: Color(0xFF1A1D1F)),
-                  ),
-                  if (isHybrid && level == 1) ...[
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedMethodology,
-                      decoration: InputDecoration(
-                        labelText: 'Methodology',
-                        labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-                        filled: true,
-                        fillColor: const Color(0xFFF9FAFB),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Color(0xFFE4E7EC)),
-                        ),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                            value: 'waterfall', child: Text('Waterfall')),
-                        DropdownMenuItem(value: 'agile', child: Text('Agile')),
-                      ],
-                      onChanged: (v) =>
-                          setDialogState(() => selectedMethodology = v),
-                      hint: const Text('Inherit from project'),
-                    ),
-                  ],
-                ],
-              ),
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(color: Color(0xFF6B7280))),
-          ),
-          FilledButton(
-            onPressed: () {
-              final name = nameCtrl.text.trim();
-              if (name.isEmpty) return;
-              final id =
-                  provider.addChildNode(parentId!, name, descCtrl.text.trim());
-              if (isHybrid && selectedMethodology != null && id.isNotEmpty) {
-                provider.setNodeMethodology(id, selectedMethodology);
-              }
-              Navigator.pop(ctx);
-            },
-            style: FilledButton.styleFrom(
-                backgroundColor: LightModeColors.accent,
-                foregroundColor: LightModeColors.lightOnPrimary),
-            child: Text('Add $levelLabel'),
-          ),
-        ],
-      ),
+    // Resolve the parent node (if any) so we can show its name in the hero.
+    String? parentName;
+    if (parentId != null && parentId.isNotEmpty) {
+      final parent = provider.findNode(parentId);
+      if (parent != null) parentName = parent.name;
+    }
+    showWBSAddNodeDialog(
+      context,
+      provider: provider,
+      level: level,
+      levelLabel: levelLabel,
+      parentId: parentId,
+      parentName: parentName,
+      framework: provider.wbs?.framework,
     );
   }
 
@@ -1744,82 +1656,11 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     WBSNode node,
     WBSFramework fm,
   ) {
-    final nameCtrl = TextEditingController(text: node.name);
-    final descCtrl = TextEditingController(text: node.description ?? '');
-    final levelLabel = nodeLevelLabel(node, fm);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.edit_outlined, color: LightModeColors.accent, size: 20),
-            const SizedBox(width: 8),
-            Text('Edit $levelLabel',
-                style: const TextStyle(color: Color(0xFF1A1D1F), fontSize: 16)),
-          ],
-        ),
-        content: SizedBox(
-          width: 480,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  filled: true,
-                  fillColor: const Color(0xFFF9FAFB),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                  ),
-                ),
-                style: const TextStyle(color: Color(0xFF1A1D1F)),
-              ),
-              const SizedBox(height: 12),
-              VoiceTextField(
-                controller: descCtrl,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: 'Description',
-                  filled: true,
-                  fillColor: const Color(0xFFF9FAFB),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                  ),
-                ),
-                style: const TextStyle(color: Color(0xFF1A1D1F)),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(color: Color(0xFF6B7280))),
-          ),
-          FilledButton(
-            onPressed: () {
-              provider.updateNode(
-                  node.id,
-                  node.copyWith(
-                    name: nameCtrl.text.trim(),
-                    description: descCtrl.text.trim(),
-                  ));
-              Navigator.pop(ctx);
-            },
-            style: FilledButton.styleFrom(
-                backgroundColor: LightModeColors.accent,
-                foregroundColor: LightModeColors.lightOnPrimary),
-            child: const Text('Update'),
-          ),
-        ],
-      ),
+    showWBSEditNodeDialog(
+      context,
+      provider: provider,
+      node: node,
+      framework: fm,
     );
   }
 
@@ -2085,21 +1926,21 @@ Guidelines:
       margin: const EdgeInsets.only(top: 4, bottom: 4),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-            color: const Color(0xFF2563EB).withValues(alpha: 0.25), width: 0.8),
+            color: const Color(0xFFFFC812).withValues(alpha: 0.25), width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.link, size: 12, color: Color(0xFF2563EB)),
+              const Icon(Icons.link, size: 12, color: Color(0xFFFFC812)),
               const SizedBox(width: 6),
               const Text('LINKED COST LINES',
                   style: TextStyle(
-                      color: Color(0xFF2563EB),
+                      color: Color(0xFFFFC812),
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8)),
@@ -2107,7 +1948,7 @@ Guidelines:
               Text(
                 '${linked.length} line${linked.length == 1 ? '' : 's'} · ${formatCurrency(total, currency)}',
                 style: const TextStyle(
-                    color: Color(0xFF1E40AF),
+                    color: Color(0xFFFFC812),
                     fontSize: 11,
                     fontWeight: FontWeight.w700),
               ),
@@ -2125,12 +1966,12 @@ Guidelines:
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                            color: const Color(0xFFBFDBFE), width: 0.5),
+                            color: const Color(0xFFFDE68A), width: 0.5),
                       ),
                       child: Text(
                         l.category.label,
                         style: const TextStyle(
-                            color: Color(0xFF1E40AF),
+                            color: Color(0xFFFFC812),
                             fontSize: 9,
                             fontWeight: FontWeight.w600),
                       ),

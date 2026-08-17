@@ -884,7 +884,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
           icon: Icons.upload_file,
           label: 'Import from .docx / .doc',
           tooltip: 'Extract text from a Word document',
-          accent: const Color(0xFF0EA5E9),
+          accent: const Color(0xFFFFC812),
           onTap: _isImportingDoc ? () {} : _importDocument,
           enabled: !_isImportingDoc,
         ),
@@ -903,7 +903,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
           icon: Icons.refresh,
           label: 'Regenerate this field',
           tooltip: 'Re-run the original AI generation for this field',
-          accent: const Color(0xFF2563EB),
+          accent: const Color(0xFFFFC812),
           onTap: widget.onRegenerate!,
         ),
       if (widget.onUndo != null && widget.canUndo)

@@ -7,6 +7,7 @@
 /// work package summary, open change requests, variance alerts.
 library;
 
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -252,9 +253,9 @@ class _DashboardTab extends StatelessWidget {
       icon: Icons.dashboard_rounded,
       accent: PcPalette.indigo,
       accentDeep: const Color(0xFF4F46E5),
-      accentSoft: const Color(0xFFE0E7FF),
-      tint: const Color(0xFFEEF2FF),
-      borderColor: const Color(0xFFC7D2FE),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       kpis: [
         PcKpiSpec(
           label: 'Total Budget',
@@ -382,8 +383,8 @@ class _DashboardTab extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFFEEF2FF),
-            const Color(0xFFF5F3FF),
+            const Color(0xFFFFF8E1),
+            const Color(0xFFFFF8E1),
           ],
         ),
         border: Border.all(
@@ -1143,9 +1144,9 @@ class _ScopeTrackingTab extends StatelessWidget {
       icon: Icons.account_tree_rounded,
       accent: PcPalette.indigo,
       accentDeep: const Color(0xFF4F46E5),
-      accentSoft: const Color(0xFFE0E7FF),
-      tint: const Color(0xFFEEF2FF),
-      borderColor: const Color(0xFFC7D2FE),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       // Per Task 19: 'Sync from Schedule' CTA on the hero band feeds
       // Schedule activities into Scope Tracking.
       action: PcHeroAction(
@@ -2053,7 +2054,7 @@ class _CostControlTab extends StatelessWidget {
                   label: 'Total Reserved',
                   value: formatter.format(totalReserved),
                   icon: Icons.account_balance_wallet_outlined,
-                  color: const Color(0xFF2563EB),
+                  color: const Color(0xFFFFC812),
                   tileWidth: tileW,
                 ),
                 _allowanceSummaryTile(
@@ -2117,7 +2118,7 @@ class _CostControlTab extends StatelessWidget {
                     runSpacing: 6,
                     children: [
                       _statusCountChip(
-                          'Reserved', reservedCount, const Color(0xFF2563EB)),
+                          'Reserved', reservedCount, const Color(0xFFFFC812)),
                       _statusCountChip(
                           'Released', releasedCount, PcPalette.amber),
                       _statusCountChip(
@@ -2290,7 +2291,7 @@ class _CostControlTab extends StatelessWidget {
         statusColor = PcPalette.inkMuted;
         break;
       default:
-        statusColor = const Color(0xFF2563EB);
+        statusColor = const Color(0xFFFFC812);
     }
     final burnColor = burnRate > 1.0
         ? PcPalette.danger
@@ -2738,10 +2739,10 @@ class _ChangeMgmtTab extends StatelessWidget {
           '${state.deliveryModel.label} • ${state.deliveryModel.changeProcess}',
       icon: Icons.sync_alt_rounded,
       accent: PcPalette.teal,
-      accentDeep: const Color(0xFF0D9488),
-      accentSoft: const Color(0xFFCCFBF1),
-      tint: const Color(0xFFF0FDFA),
-      borderColor: const Color(0xFF99F6E4),
+      accentDeep: const Color(0xFFD97706),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       kpis: [
         PcKpiSpec(
           label: 'Total Requests',
@@ -2827,8 +2828,8 @@ class _ChangeMgmtTab extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFFFFF1F2),
-            const Color(0xFFFFE4E6),
+            const Color(0xFFFFF8E1),
+            const Color(0xFFFFF8E1),
           ],
         ),
         border: Border.all(
@@ -2856,7 +2857,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                   colors: [
                     PcPalette.rose.withValues(alpha: 0),
                     PcPalette.rose,
-                    const Color(0xFFE11D48),
+                    const Color(0xFFD97706),
                     PcPalette.rose.withValues(alpha: 0),
                   ],
                 ),
@@ -2880,7 +2881,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                           end: Alignment.bottomRight,
                           colors: [
                             PcPalette.rose.withValues(alpha: 0.95),
-                            const Color(0xFFE11D48),
+                            const Color(0xFFD97706),
                           ],
                         ),
                         boxShadow: [
@@ -3484,9 +3485,9 @@ class _ForecastingTab extends StatelessWidget {
       icon: Icons.trending_up_rounded,
       accent: PcPalette.fuchsia,
       accentDeep: const Color(0xFFA21CAF),
-      accentSoft: const Color(0xFFFAE8FF),
-      tint: const Color(0xFFFDF4FF),
-      borderColor: const Color(0xFFF5D0FE),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       kpis: [
         PcKpiSpec(
           label: 'EAC',
@@ -3771,10 +3772,10 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
   static const Color _gold = Color(0xFFFFC107);
   static const Color _goldDeep = Color(0xFFF59E0B);
   static const Color _goldSoft = Color(0xFFFFF4CC);
-  static const Color _indigo = Color(0xFF6366F1);
+  static const Color _indigo = Color(0xFFB8860B);
   static const Color _emerald = Color(0xFF10B981);
   static const Color _amber = Color(0xFFD97706);
-  static const Color _violet = Color(0xFF8B5CF6);
+  static const Color _violet = Color(0xFFB8860B);
   static const Color _danger = Color(0xFFEF4444);
   static const Color _dangerSurface = Color(0xFFFFF1F1);
 
@@ -4963,15 +4964,15 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
       case BaselineType.scope:
         return _indigo;
       case BaselineType.schedule:
-        return const Color(0xFF0EA5E9);
+        return const Color(0xFFFFC812);
       case BaselineType.cost:
         return _amber;
       case BaselineType.resource:
         return _violet;
       case BaselineType.procurement:
-        return const Color(0xFF14B8A6);
+        return const Color(0xFFD97706);
       case BaselineType.contract:
-        return const Color(0xFFEC4899);
+        return const Color(0xFFD97706);
     }
   }
 
@@ -6392,10 +6393,17 @@ class _ScheduleControlTab extends StatefulWidget {
 
 class _ScheduleControlTabState extends State<_ScheduleControlTab> {
   String _filter = 'all'; // all | critical | delayed
+  String _searchQuery = '';
+  bool _showCardView = false;
+  final TextEditingController _searchController = TextEditingController();
   final Map<String, TextEditingController> _reasonControllers = {};
+
+  Timer? _delayReasonDebounce;
 
   @override
   void dispose() {
+    _delayReasonDebounce?.cancel();
+    _searchController.dispose();
     for (final c in _reasonControllers.values) {
       c.dispose();
     }
@@ -6422,6 +6430,18 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
         : wps.fold<double>(0.0, (s, w) => s + w.spi) / wps.length;
     final onTrackCount = wps.where((w) => _varianceFor(w.id).varianceDays <= 0).length;
 
+    // Apply search filter
+    final searchFiltered = _searchQuery.isEmpty
+        ? filtered
+        : filtered.where((wp) {
+            final q = _searchQuery.toLowerCase();
+            final sv = _varianceFor(wp.id);
+            return wp.name.toLowerCase().contains(q) ||
+                wp.id.toLowerCase().contains(q) ||
+                sv.delayReason.toLowerCase().contains(q) ||
+                sv.compressionStrategy.name.toLowerCase().contains(q);
+          }).toList();
+
     return PcTabShell(
       eyebrow: 'Schedule Control',
       title: 'Schedule Control',
@@ -6429,10 +6449,10 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
           'Real-time variance, float, and SPI tracking across all work packages — including delay reasons and compression strategies.',
       icon: Icons.schedule_rounded,
       accent: PcPalette.sky,
-      accentDeep: const Color(0xFF0284C7),
-      accentSoft: const Color(0xFFE0F2FE),
-      tint: const Color(0xFFF0F9FF),
-      borderColor: const Color(0xFFBAE6FD),
+      accentDeep: const Color(0xFFFFC812),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       kpis: [
         PcKpiSpec(
           label: 'Work Packages',
@@ -6478,15 +6498,19 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
           accent: PcPalette.sky,
           trailing: Wrap(
             spacing: 6,
+            runSpacing: 6,
             children: [
               _filterChip('All', 'all', wps.length),
               _filterChip('Critical Path', 'critical',
                   widget.state.criticalPathCount),
               _filterChip('Delayed', 'delayed',
                   widget.state.delayedWorkPackagesCount),
+              const SizedBox(width: 8),
+              _buildScheduleSearchBar(),
+              _buildScheduleViewToggle(),
             ],
           ),
-          child: filtered.isEmpty
+          child: searchFiltered.isEmpty
               ? const PcEmptyState(
                   icon: Icons.filter_alt_off_outlined,
                   title: 'No matching work packages',
@@ -6494,15 +6518,82 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
                       'No work packages match the current filter. Try changing the filter above.',
                   accent: PcPalette.sky,
                 )
-              : MediaQuery.sizeOf(context).width > 900
-                  ? _wideTable(filtered)
-                  : Column(
-                      children: filtered
+              : _showCardView
+                  ? Column(
+                      children: searchFiltered
                           .map((wp) => _narrowCard(wp))
                           .toList(growable: false),
-                    ),
+                    )
+                  : MediaQuery.sizeOf(context).width > 900
+                      ? _wideTable(searchFiltered)
+                      : Column(
+                          children: searchFiltered
+                              .map((wp) => _narrowCard(wp))
+                              .toList(growable: false),
+                        ),
         ),
       ],
+    );
+  }
+
+  Widget _buildScheduleSearchBar() {
+    return Container(
+      height: 32,
+      width: 200,
+      decoration: BoxDecoration(
+        color: PcPalette.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: PcPalette.border),
+      ),
+      child: Row(
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(left: 8),
+            child: Icon(Icons.search, size: 14, color: PcPalette.inkMuted),
+          ),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              onChanged: (v) => setState(() => _searchQuery = v),
+              style: TextStyle(fontSize: 12, fontFamily: appFontFamily),
+              decoration: InputDecoration(
+                hintText: 'Search work packages...',
+                hintStyle: TextStyle(fontSize: 12, color: PcPalette.inkMuted, fontFamily: appFontFamily),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+              ),
+            ),
+          ),
+          if (_searchQuery.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: IconButton(
+                icon: const Icon(Icons.close, size: 12),
+                onPressed: () { _searchController.clear(); setState(() => _searchQuery = ''); },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScheduleViewToggle() {
+    return Container(
+      decoration: BoxDecoration(
+        color: PcPalette.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: PcPalette.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _PcViewBtn(icon: Icons.table_chart_rounded, isActive: !_showCardView, onTap: () => setState(() => _showCardView = false)),
+          Container(width: 1, height: 20, color: PcPalette.border),
+          _PcViewBtn(icon: Icons.view_agenda_rounded, isActive: _showCardView, onTap: () => setState(() => _showCardView = true)),
+        ],
+      ),
     );
   }
 
@@ -6860,8 +6951,13 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
                     color: PcPalette.sky.withValues(alpha: 0.6)),
               ),
             ),
-            onSubmitted: (val) =>
-                widget.provider.setDelayReason(wpId, val.trim()),
+            onChanged: (val) {
+              _delayReasonDebounce?.cancel();
+              _delayReasonDebounce = Timer(
+                  const Duration(milliseconds: 500), () {
+                widget.provider.setDelayReason(wpId, val.trim());
+              });
+            },
           ),
         ),
         const SizedBox(height: 6),
@@ -7106,10 +7202,14 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
   String _severityFilter = 'all'; // all | low | medium | high | critical
   String _typeFilter = 'all'; // all | risks | issues
   String? _ownerFilter;
+  String _searchQuery = '';
+  bool _showCardView = true;
+  final TextEditingController _searchController = TextEditingController();
   final Map<String, TextEditingController> _mitigationControllers = {};
 
   @override
   void dispose() {
+    _searchController.dispose();
     for (final c in _mitigationControllers.values) {
       c.dispose();
     }
@@ -7133,6 +7233,11 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
           r.severityLabel.toLowerCase() != _severityFilter) {
         return false;
       }
+      if (_searchQuery.isNotEmpty) {
+        final q = _searchQuery.toLowerCase();
+        final haystack = '${r.description} ${r.owner} ${r.mitigation} ${r.severityLabel}'.toLowerCase();
+        if (!haystack.contains(q)) return false;
+      }
       return true;
     }).toList()
       ..sort((a, b) => b.severity.compareTo(a.severity));
@@ -7150,10 +7255,10 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
           'Track and mitigate risks and issues — heatmap, weekly trend, severity-filtered register, and per-item response plans.',
       icon: Icons.warning_amber_rounded,
       accent: PcPalette.rose,
-      accentDeep: const Color(0xFFE11D48),
-      accentSoft: const Color(0xFFFFE4E6),
-      tint: const Color(0xFFFFF1F2),
-      borderColor: const Color(0xFFFECDD3),
+      accentDeep: const Color(0xFFD97706),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       kpis: [
         PcKpiSpec(
           label: 'Open Risks',
@@ -7218,11 +7323,71 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
               'Filterable list of all risks and issues with mitigation plans, owner, and status workflow.',
           icon: Icons.list_alt_rounded,
           accent: PcPalette.rose,
-          trailing: owners.isEmpty
-              ? null
-              : Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 6),
+          trailing: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              // Search bar
+              Container(
+                height: 32,
+                width: 180,
+                decoration: BoxDecoration(
+                  color: PcPalette.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: PcPalette.border),
+                ),
+                child: Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Icon(Icons.search, size: 14, color: PcPalette.inkMuted),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                        style: TextStyle(fontSize: 12, fontFamily: appFontFamily),
+                        decoration: InputDecoration(
+                          hintText: 'Search risks...',
+                          hintStyle: TextStyle(fontSize: 12, color: PcPalette.inkMuted, fontFamily: appFontFamily),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+                        ),
+                      ),
+                    ),
+                    if (_searchQuery.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: IconButton(
+                          icon: const Icon(Icons.close, size: 12),
+                          onPressed: () { _searchController.clear(); setState(() => _searchQuery = ''); },
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // View toggle
+              Container(
+                decoration: BoxDecoration(
+                  color: PcPalette.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: PcPalette.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _PcViewBtn(icon: Icons.view_agenda_rounded, isActive: _showCardView, onTap: () => setState(() => _showCardView = true)),
+                    Container(width: 1, height: 20, color: PcPalette.border),
+                    _PcViewBtn(icon: Icons.table_chart_rounded, isActive: !_showCardView, onTap: () => setState(() => _showCardView = false)),
+                  ],
+                ),
+              ),
+              // Owner filter
+              if (owners.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: PcPalette.surfaceSubtle,
                     borderRadius: BorderRadius.circular(8),
@@ -7256,6 +7421,8 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
                     ),
                   ),
                 ),
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -7879,10 +8046,10 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
           'Weekly allocation histogram, what-if scenarios, and per-resource utilization across the 12-week rolling window.',
       icon: Icons.people_alt_rounded,
       accent: PcPalette.violet,
-      accentDeep: const Color(0xFF7C3AED),
-      accentSoft: const Color(0xFFEDE9FE),
-      tint: const Color(0xFFF5F3FF),
-      borderColor: const Color(0xFFDDD6FE),
+      accentDeep: const Color(0xFFB8860B),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       kpis: [
         PcKpiSpec(
           label: 'Resources',
@@ -8582,9 +8749,9 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
       icon: Icons.assessment_rounded,
       accent: PcPalette.indigo,
       accentDeep: const Color(0xFF4F46E5),
-      accentSoft: const Color(0xFFE0E7FF),
-      tint: const Color(0xFFEEF2FF),
-      borderColor: const Color(0xFFC7D2FE),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       action: PcHeroAction(
         label: 'Generate Report',
         icon: Icons.picture_as_pdf_outlined,
@@ -9807,4 +9974,27 @@ class _HealthGaugePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _HealthGaugePainter old) => old.score != score;
+}
+
+// ── View Toggle Button for Project Controls ────────────────────────────────
+class _PcViewBtn extends StatelessWidget {
+  const _PcViewBtn({required this.icon, required this.isActive, required this.onTap});
+  final IconData icon;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? PcPalette.sky : Colors.transparent,
+          borderRadius: BorderRadius.circular(7),
+        ),
+        child: Icon(icon, size: 14, color: isActive ? Colors.white : PcPalette.inkMuted),
+      ),
+    );
+  }
 }

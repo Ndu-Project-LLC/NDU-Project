@@ -435,16 +435,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  onForward: () =>
  PlanningPhaseNavigation.goToNext(context, 'deliverables_roadmap'), onExportPdf: _exportPdf),
  const SizedBox(height: 24),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'deliverables_roadmap',
- contextText: _carriedContext!,
- ),
- ),
+
  _buildStatsRow(),
  const SizedBox(height: 16),
  _buildFilterBar(),
@@ -485,7 +476,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  _StatCard(
  label: 'Total Deliverables',
  value: '$_totalCount',
- accent: const Color(0xFF2563EB),
+ accent: const Color(0xFFFFC812),
  ),
  _StatCard(
  label: 'Completed',
@@ -505,7 +496,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  _StatCard(
  label: 'Sprints',
  value: '${_sprints.length}',
- accent: const Color(0xFF8B5CF6),
+ accent: const Color(0xFFB8860B),
  ),
  ],
  );

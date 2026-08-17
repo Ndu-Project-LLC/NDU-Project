@@ -111,6 +111,53 @@ def stamp_file(path: Path, stamp: str, dry_run: bool) -> bool:
     return True
 
 
+def patch_flutter_bootstrap_main_js_path(build_root: Path, stamp: str, dry_run: bool) -> bool:
+    """Patch flutter_bootstrap.js so main.dart.js is loaded with ?v=<stamp>.
+
+    Without this patch, flutter_bootstrap.js calls `_flutter.loader.load()`
+    which uses `e.mainJsPath` (hardcoded as "main.dart.js") to create a
+    <script src="main.dart.js"> tag. The browser fetches main.dart.js with
+    NO query string, so GitHub Pages' `cache-control: max-age=600` causes
+    the browser to serve a STALE cached main.dart.js for up to 10 minutes
+    after each deploy — even when index.html has been refreshed.
+
+    Fix: rewrite `"mainJsPath":"main.dart.js"` to `"mainJsPath":"main.dart.js?v=<stamp>"`
+    in flutter_bootstrap.js. This makes the browser fetch a fresh main.dart.js
+    on every deploy because the URL changes.
+    """
+    bootstrap_path = build_root / "flutter_bootstrap.js"
+    if not bootstrap_path.exists():
+        print(f"  · flutter_bootstrap.js not found at {bootstrap_path} — skipping mainJsPath patch.")
+        return False
+
+    try:
+        text = bootstrap_path.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, OSError) as e:
+        print(f"  ✗ flutter_bootstrap.js (read error: {e})")
+        return False
+
+    # The buildConfig JSON contains: "mainJsPath":"main.dart.js"
+    # Rewrite to: "mainJsPath":"main.dart.js?v=<stamp>"
+    # Only patch the EXACT un-stamped form (idempotent — safe to run multiple times).
+    old = '"mainJsPath":"main.dart.js"'
+    new = f'"mainJsPath":"main.dart.js?v={stamp}"'
+
+    if old not in text:
+        if new in text:
+            print(f"  · flutter_bootstrap.js (mainJsPath already stamped to ?v={stamp})")
+        else:
+            print(f"  · flutter_bootstrap.js (no mainJsPath:\"main.dart.js\" found — skipping)")
+        return False
+
+    if dry_run:
+        print(f"  · {bootstrap_path.name} (would patch mainJsPath → main.dart.js?v={stamp})")
+    else:
+        new_text = text.replace(old, new)
+        bootstrap_path.write_text(new_text, encoding="utf-8")
+        print(f"  ✓ {bootstrap_path.name} (mainJsPath → main.dart.js?v={stamp})")
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Stamp NDU_BUILD_STAMP into Flutter web build output.",
@@ -163,6 +210,15 @@ def main() -> int:
     for f in files:
         if stamp_file(f, stamp, args.dry_run):
             changed += 1
+    print()
+
+    # 1b. Patch flutter_bootstrap.js so main.dart.js is loaded with ?v=<stamp>.
+    #     This is critical for cache-busting main.dart.js on GitHub Pages, which
+    #     serves all static files with cache-control: max-age=600. Without this
+    #     patch, the browser would serve a stale cached main.dart.js for up to
+    #     10 minutes after each deploy, even when index.html has been refreshed.
+    print(f"Patching flutter_bootstrap.js mainJsPath:")
+    patch_flutter_bootstrap_main_js_path(build_root, stamp, args.dry_run)
     print()
 
     # 2. Also stamp the source web/env-config.js so the BUILD_STAMP persists

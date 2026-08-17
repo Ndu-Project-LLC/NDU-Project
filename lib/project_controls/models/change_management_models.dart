@@ -67,21 +67,21 @@ extension CMChangeTypeMeta on CMChangeType {
       };
 
   Color get color => switch (this) {
-        CMChangeType.scope => const Color(0xFF6366F1),
-        CMChangeType.schedule => const Color(0xFF8B5CF6),
+        CMChangeType.scope => const Color(0xFFB8860B),
+        CMChangeType.schedule => const Color(0xFFB8860B),
         CMChangeType.cost => const Color(0xFFD97706),
-        CMChangeType.resource => const Color(0xFF06B6D4),
+        CMChangeType.resource => const Color(0xFFD97706),
         CMChangeType.procurement => const Color(0xFF10B981),
-        CMChangeType.contract => const Color(0xFF3B82F6),
+        CMChangeType.contract => const Color(0xFFFFC812),
         CMChangeType.risk => const Color(0xFFEF4444),
-        CMChangeType.quality => const Color(0xFF14B8A6),
+        CMChangeType.quality => const Color(0xFFD97706),
         CMChangeType.regulatory => const Color(0xFF6B7280),
         CMChangeType.product => const Color(0xFFF59E0B),
-        CMChangeType.requirements => const Color(0xFFEC4899),
-        CMChangeType.technical => const Color(0xFF6366F1),
+        CMChangeType.requirements => const Color(0xFFD97706),
+        CMChangeType.technical => const Color(0xFFB8860B),
         CMChangeType.defect => const Color(0xFFEF4444),
         CMChangeType.compliance => const Color(0xFF6B7280),
-        CMChangeType.operational => const Color(0xFF06B6D4),
+        CMChangeType.operational => const Color(0xFFD97706),
       };
 }
 
@@ -116,13 +116,13 @@ extension CMStatusMeta on CMStatus {
 
   Color get color => switch (this) {
         CMStatus.draft => const Color(0xFF6B7280),
-        CMStatus.submitted => const Color(0xFF3B82F6),
+        CMStatus.submitted => const Color(0xFFFFC812),
         CMStatus.underReview => const Color(0xFFF59E0B),
-        CMStatus.pendingApproval => const Color(0xFF8B5CF6),
+        CMStatus.pendingApproval => const Color(0xFFB8860B),
         CMStatus.approved => const Color(0xFF10B981),
         CMStatus.rejected => const Color(0xFFEF4444),
-        CMStatus.returned => const Color(0xFFEC4899),
-        CMStatus.implemented => const Color(0xFF06B6D4),
+        CMStatus.returned => const Color(0xFFD97706),
+        CMStatus.implemented => const Color(0xFFD97706),
         CMStatus.closed => const Color(0xFF6B7280),
         CMStatus.emergency => const Color(0xFFDC2626),
       };
@@ -145,7 +145,7 @@ extension CMPriorityMeta on CMPriority {
 
   Color get color => switch (this) {
         CMPriority.low => const Color(0xFF10B981),
-        CMPriority.medium => const Color(0xFF3B82F6),
+        CMPriority.medium => const Color(0xFFFFC812),
         CMPriority.high => const Color(0xFFF59E0B),
         CMPriority.critical => const Color(0xFFEF4444),
         CMPriority.emergency => const Color(0xFFDC2626),
@@ -189,9 +189,9 @@ extension ApprovalDecisionMeta on ApprovalDecision {
         ApprovalDecision.pending => const Color(0xFFF59E0B),
         ApprovalDecision.approved => const Color(0xFF10B981),
         ApprovalDecision.rejected => const Color(0xFFEF4444),
-        ApprovalDecision.requestInfo => const Color(0xFF3B82F6),
-        ApprovalDecision.returnRevision => const Color(0xFFEC4899),
-        ApprovalDecision.delegated => const Color(0xFF8B5CF6),
+        ApprovalDecision.requestInfo => const Color(0xFFFFC812),
+        ApprovalDecision.returnRevision => const Color(0xFFD97706),
+        ApprovalDecision.delegated => const Color(0xFFB8860B),
         ApprovalDecision.escalated => const Color(0xFFDC2626),
       };
 }

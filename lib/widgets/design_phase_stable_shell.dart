@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/global_save_bar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -62,8 +63,25 @@ class DesignPhaseStableShell extends StatelessWidget {
               Expanded(
                 child: Stack(
                   children: [
-                    child,
+                    // Pad child content so the floating Save pill +
+                    // chat bubble FAB never overlap body content.
+                    Positioned.fill(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: kFloatingBottomReservedHeight,
+                        ),
+                        child: child,
+                      ),
+                    ),
                     const KazAiChatBubble(positioned: true),
+                    // Global Save pill — bottom-left, opposite the chat
+                    // bubble FAB at bottom-right. Persists the current
+                    // page's in-memory project state to Firestore.
+                    const Positioned(
+                      bottom: 24,
+                      left: 24,
+                      child: GlobalSaveBar(),
+                    ),
                   ],
                 ),
               ),
@@ -100,14 +118,36 @@ class DesignPhaseStableShell extends StatelessWidget {
                     onExportPdf: onExportPdf,
                     onAiAssist: onAiAssist,
                   ),
-                  Expanded(child: child),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        // Pad child content so the floating Save pill +
+                        // chat bubble FAB never overlap body content.
+                        Positioned.fill(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: kFloatingBottomReservedHeight,
+                            ),
+                            child: child,
+                          ),
+                        ),
+                        const KazAiChatBubble(positioned: true),
+                        // Global Save pill — bottom-left, opposite the chat
+                        // bubble FAB at bottom-right.
+                        const Positioned(
+                          bottom: 24,
+                          left: 24,
+                          child: GlobalSaveBar(),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: const KazAiChatBubble(positioned: false),
     );
   }
 }

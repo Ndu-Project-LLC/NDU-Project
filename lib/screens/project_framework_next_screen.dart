@@ -29,7 +29,7 @@ const Color _kSecondaryText = Color(0xFF64748B);
 const Color _kBorderColor = Color(0xFFE2E8F0);
 const Color _kCardShadow = Color(0x14000000);
 const Color _kLightYellow = Color(0xFFFFF8E1);
-const Color _kLightBlue = Color(0xFFE0F2FE);
+const Color _kLightBlue = Color(0xFFFFF8E1);
 const Color _kGreenBrand = Color(0xFF22C55E);
 const Color _kLightGray = Color(0xFFF1F5F9);
 const List<String> _kPriorityOptions = [
@@ -743,7 +743,7 @@ class _ProjectFrameworkNextScreenState
                 label: 'Goal 2',
                 value: 'Goal 2',
                 isActive: _currentFilter == 'Goal 2',
-                activeColor: const Color(0xFF2563EB),
+                activeColor: const Color(0xFFFFC812),
                 activeBgColor: _kLightBlue,
               ),
               const SizedBox(width: 8),
@@ -778,13 +778,13 @@ class _ProjectFrameworkNextScreenState
           child: const Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.info_outline, size: 16, color: Color(0xFF1E40AF)),
+              Icon(Icons.info_outline, size: 16, color: Color(0xFFFFC812)),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Goal milestones would be a foundation for the project schedule. Focus on the key milestones required for project success.',
                   style: TextStyle(
-                      fontSize: 12, color: Color(0xFF1E40AF), height: 1.4),
+                      fontSize: 12, color: Color(0xFFFFC812), height: 1.4),
                 ),
               ),
             ],

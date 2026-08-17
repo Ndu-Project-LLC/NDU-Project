@@ -160,7 +160,7 @@ class VarianceScreen extends StatelessWidget {
                           '$currencySymbol${treasuryFmt(variance.currentTotal)}',
                       sub: '${estimate.lines.length} live lines',
                       icon: Icons.trending_flat_rounded,
-                      tint: const Color(0xFF6366F1),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFEEF0FF),
                     ),
                     TreasuryKpiSpec(
@@ -189,7 +189,7 @@ class VarianceScreen extends StatelessWidget {
                       value: '${varianceLines.length}',
                       sub: 'Items with variance entries',
                       icon: Icons.list_alt_rounded,
-                      tint: const Color(0xFF8B5CF6),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFF4EEFF),
                     ),
                   ],
@@ -257,7 +257,7 @@ class VarianceScreen extends StatelessWidget {
                       label: 'Current Total',
                       value:
                           '$currencySymbol${treasuryFmt(variance.currentTotal)}',
-                      tint: const Color(0xFF6366F1),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFEEF0FF),
                     ),
                     TreasurySpotlightColumn(

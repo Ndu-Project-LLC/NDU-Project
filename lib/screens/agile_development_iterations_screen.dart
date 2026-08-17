@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/screens/detailed_design_screen.dart';
@@ -438,9 +439,9 @@ class _AgileDevelopmentIterationsScreenState
 
     final stats = [
       _StatCardData('Iteration Progress', '$iterationProgress%',
-          '$completedTasks/$totalTasks tasks', const Color(0xFF0EA5E9)),
+          '$completedTasks/$totalTasks tasks', const Color(0xFFFFC812)),
       _StatCardData('Sprint Velocity', '$sprintVelocity', 'Total story points',
-          const Color(0xFF6366F1)),
+          const Color(0xFFB8860B)),
       _StatCardData('Active Blockers', '$activeBlockers',
           'Critical tasks pending', const Color(0xFFEF4444)),
     ];
@@ -576,7 +577,7 @@ class _AgileDevelopmentIterationsScreenState
                       child: Row(
                         children: [
                           Icon(Icons.speed,
-                              size: 16, color: const Color(0xFF7C3AED)),
+                              size: 16, color: const Color(0xFFB8860B)),
                           const SizedBox(width: 8),
                           Text(
                             epicEntry.key,
@@ -969,10 +970,10 @@ class _AgileDevelopmentIterationsScreenState
 
   Widget _buildFooterNavigation(BuildContext context) {
     return LaunchPhaseNavigation(
-      backLabel: 'Back: Detailed Design',
-      nextLabel: 'Next: Scope Tracking Implementation',
-      onBack: () => DetailedDesignScreen.open(context),
-      onNext: () => ScopeTrackingImplementationScreen.open(context),
+      backLabel: PlanningPhaseNavigation.backLabel('agile_development_iterations'),
+      nextLabel: PlanningPhaseNavigation.nextLabel('agile_development_iterations'),
+      onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'agile_development_iterations'),
+      onNext: () => PlanningPhaseNavigation.goToNext(context, 'agile_development_iterations'),
     );
   }
 

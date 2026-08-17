@@ -45,7 +45,7 @@ class DesignSpecificationsCard extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline,
-                    color: Color(0xFF6366F1)),
+                    color: Color(0xFFB8860B)),
                 onPressed: () => _showAddSpecificationDialog(context, provider),
               ),
             ],
@@ -92,7 +92,7 @@ class DesignSpecificationsCard extends StatelessWidget {
         color = Colors.green;
         break;
       case 'Implemented':
-        color = Colors.blue;
+        color = Color(0xFFFFC812);
         break;
       default:
         color = Colors.orange;

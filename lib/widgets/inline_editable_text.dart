@@ -258,11 +258,11 @@ class _InlineEditableTextState extends State<InlineEditableText> {
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Color(0xFF0EA5E9),
+                            color: Color(0xFFFFC812),
                           ),
                         )
                       : const Icon(Icons.upload_file,
-                          size: 16, color: Color(0xFF0EA5E9)),
+                          size: 16, color: Color(0xFFFFC812)),
                   onPressed: _isImportingDoc ? null : _importDocument,
                   tooltip: 'Import from .docx / .doc',
                   padding: EdgeInsets.zero,

@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -290,10 +291,10 @@ class _RecurringDeliverablesScreenState
               ),
               const SizedBox(height: 24),
               LaunchPhaseNavigation(
-                backLabel: 'Back: Deliverable Status Updates',
-                nextLabel: 'Next: Status Reports',
-                onBack: () => DeliverableStatusUpdatesScreen.open(context),
-                onNext: () => StatusReportsScreen.open(context),
+                backLabel: PlanningPhaseNavigation.backLabel('recurring_deliverables'),
+                nextLabel: PlanningPhaseNavigation.nextLabel('recurring_deliverables'),
+                onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'recurring_deliverables'),
+                onNext: () => PlanningPhaseNavigation.goToNext(context, 'recurring_deliverables'),
               ),
             ],
             const SizedBox(height: 48),
@@ -344,7 +345,7 @@ class _RecurringDeliverablesScreenState
       collapsible: true,
       initiallyExpanded: false,
       headerIcon: Icons.schedule_outlined,
-      headerIconColor: const Color(0xFF7C3AED),
+      headerIconColor: const Color(0xFFB8860B),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -357,13 +358,13 @@ class _RecurringDeliverablesScreenState
           _buildCadenceRow(
             'Weekly',
             'Status reports, risk reviews, sprint planning, timesheet approvals',
-            const Color(0xFF2563EB),
+            const Color(0xFFFFC812),
           ),
           const SizedBox(height: 10),
           _buildCadenceRow(
             'Bi-Weekly',
             'Sprint reviews, retrospectives, resource reallocation, dependency checks',
-            const Color(0xFF7C3AED),
+            const Color(0xFFB8860B),
           ),
           const SizedBox(height: 10),
           _buildCadenceRow(

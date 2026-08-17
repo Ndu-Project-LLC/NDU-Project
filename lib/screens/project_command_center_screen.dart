@@ -77,11 +77,11 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
   static const _blueDeep = Color(0xFFD97706);
   static const _blueSoft = Color(0xFFFEF3C7);
   static const _indigo = Color(0xFFF59E0B);
-  static const _violet = Color(0xFF7C3AED);
+  static const _violet = Color(0xFFB8860B);
   static const _emerald = Color(0xFF059669);
   static const _amber = Color(0xFFD97706);
   static const _crimson = Color(0xFFDC2626);
-  static const _cyan = Color(0xFF0891B2);
+  static const _cyan = Color(0xFFD97706);
 
   @override
   void initState() {

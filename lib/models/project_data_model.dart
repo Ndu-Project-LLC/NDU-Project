@@ -4020,6 +4020,15 @@ class TeamMember {
   /// since most PT members are internal users provisioned in the app.
   bool hasSiteAccess;
 
+  /// Foreign key to [StaffingRow.id] when this member was derived from
+  /// the Front-End Planning > Personnel staffing plan via the "Sync from
+  /// Staffing Plan" action on the Team Management > Members tab.
+  ///
+  /// Null when the member was added manually. Used for idempotent
+  /// re-syncing: if a staffing row with this id already has N linked
+  /// members and its quantity is N, re-syncing will not create duplicates.
+  String? staffingPlanId;
+
   TeamMember({
     String? id,
     this.name = '',
@@ -4029,6 +4038,7 @@ class TeamMember {
     this.phone = '',
     this.location = '',
     this.hasSiteAccess = true,
+    this.staffingPlanId,
   }) : id = id ?? _generateId();
 
   Map<String, dynamic> toJson() => {
@@ -4040,6 +4050,7 @@ class TeamMember {
         'phone': phone,
         'location': location,
         'hasSiteAccess': hasSiteAccess,
+        if (staffingPlanId != null) 'staffingPlanId': staffingPlanId,
       };
 
   factory TeamMember.fromJson(Map<String, dynamic> json) {
@@ -4052,6 +4063,7 @@ class TeamMember {
       phone: json['phone']?.toString() ?? '',
       location: json['location']?.toString() ?? '',
       hasSiteAccess: json['hasSiteAccess'] != false,
+      staffingPlanId: json['staffingPlanId']?.toString(),
     );
   }
 
@@ -4063,6 +4075,7 @@ class TeamMember {
     String? phone,
     String? location,
     bool? hasSiteAccess,
+    String? staffingPlanId,
   }) {
     return TeamMember(
       id: id,
@@ -4073,6 +4086,7 @@ class TeamMember {
       phone: phone ?? this.phone,
       location: location ?? this.location,
       hasSiteAccess: hasSiteAccess ?? this.hasSiteAccess,
+      staffingPlanId: staffingPlanId ?? this.staffingPlanId,
     );
   }
 
@@ -5869,7 +5883,7 @@ class DebtInsight {
     this.evidence = '',
     this.control = '',
     this.tier = 'Medium',
-    this.colorValue = 0xFF6366F1,
+    this.colorValue = 0xFFB8860B,
   });
 
   Map<String, dynamic> toJson() => {
@@ -5887,7 +5901,7 @@ class DebtInsight {
         evidence: json['evidence'] ?? '',
         control: json['control'] ?? '',
         tier: json['tier'] ?? 'Medium',
-        colorValue: json['colorValue'] ?? 0xFF6366F1,
+        colorValue: json['colorValue'] ?? 0xFFB8860B,
       );
 
   DebtInsight copyWith({
@@ -5924,7 +5938,7 @@ class RemediationTrack {
     this.evidence = '',
     this.ownerCadence = '',
     this.progress = 0.0,
-    this.colorValue = 0xFF6366F1,
+    this.colorValue = 0xFFB8860B,
   });
 
   Map<String, dynamic> toJson() => {
@@ -5947,7 +5961,7 @@ class RemediationTrack {
         progress: (json['progress'] is num)
             ? (json['progress'] as num).toDouble()
             : 0.0,
-        colorValue: json['colorValue'] ?? 0xFF6366F1,
+        colorValue: json['colorValue'] ?? 0xFFB8860B,
       );
 
   RemediationTrack copyWith({
@@ -6668,7 +6682,7 @@ class RaciDesignation {
   static ({int bg, int fg}) color(String code) {
     switch (code.toUpperCase()) {
       case 'R':
-        return (bg: 0xFFDBEAFE, fg: 0xFF1D4ED8);
+        return (bg: 0xFFFEF3C7, fg: 0xFFFFC812);
       case 'A':
         return (bg: 0xFFFEE2E2, fg: 0xFFB91C1C);
       case 'C':
@@ -6676,9 +6690,9 @@ class RaciDesignation {
       case 'RV':
         return (bg: 0xFFFFEDD5, fg: 0xFFC2410C);
       case 'I':
-        return (bg: 0xFFF3E8FF, fg: 0xFF7E22CE);
+        return (bg: 0xFFFFF8E1, fg: 0xFFB8860B);
       case 'V':
-        return (bg: 0xFFE0E7FF, fg: 0xFF4338CA);
+        return (bg: 0xFFFFF8E1, fg: 0xFF4338CA);
       default:
         return (bg: 0xFFF3F4F6, fg: 0xFF6B7280);
     }

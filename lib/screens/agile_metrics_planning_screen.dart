@@ -369,6 +369,24 @@ class _AgileMetricsPlanningScreenState
                             ],
                           ),
                           const SizedBox(height: 16),
+                          const Text('Additional Notes',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: _kHeadline)),
+                          const SizedBox(height: 8),
+                          VoiceTextField(
+                            controller: _notesCtrl,
+                            decoration: const InputDecoration(
+                              hintText:
+                                  'Target values, measurement approach, reporting cadence...',
+                              border: OutlineInputBorder(),
+                            ),
+                            minLines: 3,
+                            maxLines: 6,
+                            onChanged: (_) => _scheduleAutoSave(),
+                          ),
+                          const SizedBox(height: 16),
                           if (_isSaving)
                             const Padding(
                               padding: EdgeInsets.only(bottom: 8),
@@ -409,24 +427,6 @@ class _AgileMetricsPlanningScreenState
                           ),
                           const SizedBox(height: 12),
                           ..._groups.map((g) => _buildMetricGroup(g)),
-                          const SizedBox(height: 24),
-                          const Text('Additional Notes',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: _kHeadline)),
-                          const SizedBox(height: 8),
-                          VoiceTextField(
-                            controller: _notesCtrl,
-                            decoration: const InputDecoration(
-                              hintText:
-                                  'Target values, measurement approach, reporting cadence...',
-                              border: OutlineInputBorder(),
-                            ),
-                            minLines: 3,
-                            maxLines: 6,
-                            onChanged: (_) => _scheduleAutoSave(),
-                          ),
                         ],
                         const SizedBox(height: 24),
                         LaunchPhaseNavigation(

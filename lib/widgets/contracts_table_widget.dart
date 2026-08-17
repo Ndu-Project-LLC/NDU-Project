@@ -676,7 +676,7 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
       'active' => const Color(0xFF10B981),
       'draft' => const Color(0xFFF59E0B),
       'expired' => const Color(0xFFEF4444),
-      'signed' => const Color(0xFF2563EB),
+      'signed' => const Color(0xFFFFC812),
       _ => const Color(0xFF9CA3AF),
     };
   }
@@ -874,9 +874,9 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 5),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFF5F3FF),
+                                  color: Color(0xFFFFF8E1),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Color(0xFFDDD6FE)),
+                                  border: Border.all(color: Color(0xFFFEF3C7)),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -887,19 +887,19 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                                         height: 12,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 1.5,
-                                          color: Color(0xFF7C3AED),
+                                          color: Color(0xFFB8860B),
                                         ),
                                       )
                                     else
                                       const Icon(Icons.auto_awesome_rounded,
-                                          size: 13, color: Color(0xFF7C3AED)),
+                                          size: 13, color: Color(0xFFB8860B)),
                                     const SizedBox(width: 4),
                                     Text(
                                       _isRegenerating ? '...' : 'KAZ AI',
                                       style: const TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
-                                        color: Color(0xFF7C3AED),
+                                        color: Color(0xFFB8860B),
                                       ),
                                     ),
                                   ],

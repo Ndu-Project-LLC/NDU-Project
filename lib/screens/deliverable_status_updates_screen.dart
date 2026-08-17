@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -209,10 +210,10 @@ class _DeliverableStatusUpdatesScreenState
               ),
               const SizedBox(height: 24),
               LaunchPhaseNavigation(
-                backLabel: 'Back: Progress Tracking',
-                nextLabel: 'Next: Recurring Deliverables',
-                onBack: () => ProgressTrackingScreen.open(context),
-                onNext: () => RecurringDeliverablesScreen.open(context),
+                backLabel: PlanningPhaseNavigation.backLabel('deliverable_status_updates'),
+                nextLabel: PlanningPhaseNavigation.nextLabel('deliverable_status_updates'),
+                onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'deliverable_status_updates'),
+                onNext: () => PlanningPhaseNavigation.goToNext(context, 'deliverable_status_updates'),
               ),
             ],
             const SizedBox(height: 48),
@@ -277,10 +278,10 @@ class _DeliverableStatusUpdatesScreenState
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Color(0xFFF0F9FF),
+            color: Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 18, color: const Color(0xFF0284C7)),
+          child: Icon(icon, size: 18, color: const Color(0xFFFFC812)),
         ),
         const SizedBox(width: 14),
         Expanded(

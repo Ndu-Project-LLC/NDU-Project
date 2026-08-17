@@ -51,7 +51,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  static const _muted = Color(0xFF64748B);
  static const _outline = Color(0xFFE2E8F0);
  static const _gold = Color(0xFFD97706);
- static const _blue = Color(0xFF6366F1);
+ static const _blue = Color(0xFFB8860B);
  static const _blueDeep = Color(0xFF4F46E5);
  static const _emerald = Color(0xFF059669);
  static const _amber = Color(0xFFD97706);

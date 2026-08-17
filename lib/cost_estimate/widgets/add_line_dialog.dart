@@ -77,6 +77,33 @@ class _AddLineDialogState extends State<AddLineDialog> {
       if (!mounted) return;
       _resolveWbsNodeIdFromRef();
     });
+    // Auto-populate sensible defaults from the current estimate context
+    // when creating a new line (not editing). This uses the project
+    // name and class to give the user a helpful starting point.
+    if (widget.editingLine == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        try {
+          final provider = context.read<CostEstimateProvider>();
+          final estimate = provider.estimate;
+          if (estimate != null) {
+            setState(() {
+              _subCategory = _subCategory.isEmpty
+                  ? '${estimate.className.label} ${_category.name}'
+                  : _subCategory;
+              _description = _description.isEmpty
+                  ? '${estimate.projectName} — ${_category.name} work package'
+                  : _description;
+              _basisReference = _basisReference.isEmpty
+                  ? 'Context: ${estimate.projectName} · ${estimate.className.label}'
+                  : _basisReference;
+            });
+          }
+        } catch (_) {
+          // Non-fatal — if provider isn't available, skip defaults.
+        }
+      });
+    }
   }
 
   /// Try to resolve [_wbsRef] (a path string like `1.2.3`) back to a WBS
@@ -914,27 +941,27 @@ class _AddLineDialogState extends State<AddLineDialog> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color(0xFF6366F1).withValues(alpha: 0.1),
-                const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                const Color(0xFFB8860B).withValues(alpha: 0.1),
+                const Color(0xFFB8860B).withValues(alpha: 0.1),
               ],
             ),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+              color: const Color(0xFFB8860B).withValues(alpha: 0.2),
               width: 0.5,
             ),
           ),
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.auto_awesome, size: 12, color: Color(0xFF6366F1)),
+              Icon(Icons.auto_awesome, size: 12, color: Color(0xFFB8860B)),
               SizedBox(width: 4),
               Text(
                 'KAZ AI',
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF6366F1),
+                  color: Color(0xFFB8860B),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -962,7 +989,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
             SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF6366F1)),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFB8860B)),
             ),
             SizedBox(width: 16),
             Text('Getting KAZ AI suggestions...'),
@@ -1028,7 +1055,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Row(
             children: [
-              Icon(Icons.auto_awesome, color: Color(0xFF6366F1), size: 20),
+              Icon(Icons.auto_awesome, color: Color(0xFFB8860B), size: 20),
               SizedBox(width: 8),
               Text('KAZ AI Suggestion', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             ],
@@ -1063,7 +1090,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
             ElevatedButton(
               onPressed: () => Navigator.of(ctx).pop(suggestion),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
+                backgroundColor: const Color(0xFFB8860B),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -129,10 +130,10 @@ class _GapAnalysisScopeReconcillationScreenState
                         ),
                         const SizedBox(height: 24),
                         LaunchPhaseNavigation(
-                          backLabel: 'Back: Scope Completion',
-                          nextLabel: 'Next: Punchlist Actions',
-                          onBack: () => ScopeCompletionScreen.open(context),
-                          onNext: () => PunchlistActionsScreen.open(context),
+                          backLabel: PlanningPhaseNavigation.backLabel('gap_analysis_scope_reconcillation'),
+                          nextLabel: PlanningPhaseNavigation.nextLabel('gap_analysis_scope_reconcillation'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'gap_analysis_scope_reconcillation'),
+                          onNext: () => PlanningPhaseNavigation.goToNext(context, 'gap_analysis_scope_reconcillation'),
                         ),
                         const SizedBox(height: 48),
                       ],
@@ -675,7 +676,7 @@ class _SummaryGrid extends StatelessWidget {
     title: 'Overall reconciliation health',
     headline: '82% aligned',
     annotation: 'Remaining gaps: 3 critical · 4 moderate',
-    accentColor: Color(0xFF2563EB),
+    accentColor: Color(0xFFFFC812),
     icon: Icons.insights_outlined,
     bullets: [
       'Material gaps tracked across design, ops, and adoption streams',
@@ -688,7 +689,7 @@ class _SummaryGrid extends StatelessWidget {
     title: 'Gaps',
     headline: '12 active',
     annotation: '5 closed this sprint · 2 newly logged',
-    accentColor: Color(0xFF0891B2),
+    accentColor: Color(0xFFD97706),
     icon: Icons.warning_amber_outlined,
     bullets: [
       'Critical: Prod-ready data sync · Release deployment',
@@ -700,7 +701,7 @@ class _SummaryGrid extends StatelessWidget {
     title: 'Scope',
     headline: '3 packages in review',
     annotation: 'Procurement lead-time risk easing',
-    accentColor: Color(0xFF7C3AED),
+    accentColor: Color(0xFFB8860B),
     icon: Icons.layers_outlined,
     bullets: [
       'MVP scope freeze by 18 Dec · Consumer onboarding locked',
@@ -1088,7 +1089,7 @@ class _GapRegisterCard extends StatelessWidget {
                   color: const Color(0xFF059669)),
               _Pill(
                   label: 'Resolved · ${counts['Resolved'] ?? 0}',
-                  color: const Color(0xFF2563EB)),
+                  color: const Color(0xFFFFC812)),
             ],
           ),
           const SizedBox(height: 18),
@@ -2019,19 +2020,19 @@ class _GapEntryRowState extends State<_GapEntryRow> {
   Color _categoryColor(String cat) {
     switch (cat) {
       case 'Scope':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Schedule':
         return const Color(0xFFF59E0B);
       case 'Cost':
         return const Color(0xFF059669);
       case 'Quality':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Compliance':
         return const Color(0xFFDC2626);
       case 'Resource':
         return const Color(0xFFEA580C);
       case 'Technical':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       case 'Process':
         return const Color(0xFF4F46E5);
       default:
@@ -2063,7 +2064,7 @@ class _GapEntryRowState extends State<_GapEntryRow> {
       case 'Low':
         return const Color(0xFF059669);
       case 'Resolved':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       default:
         return const Color(0xFF9CA3AF);
     }
@@ -2360,11 +2361,11 @@ class _RootCauseRowState extends State<_RootCauseRow> {
       case 'Process':
         return const Color(0xFF4F46E5);
       case 'People':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Technology':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       case 'Requirements':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Governance':
         return const Color(0xFFDC2626);
       case 'External':
@@ -2398,13 +2399,13 @@ class _RootCauseRowState extends State<_RootCauseRow> {
       case 'Open':
         return const Color(0xFF9CA3AF);
       case 'Under Investigation':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Remediation In Progress':
         return const Color(0xFFF59E0B);
       case 'Verified Closed':
         return const Color(0xFF10B981);
       case 'Accepted Risk':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       default:
         return const Color(0xFF9CA3AF);
     }
@@ -3508,9 +3509,9 @@ class _ReconPlanRowState extends State<_ReconPlanRow> {
   Color _phaseColor(String phase) {
     switch (phase) {
       case 'Execution':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Close-out':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Handover':
         return const Color(0xFF059669);
       case 'Remediation':
@@ -3529,7 +3530,7 @@ class _ReconPlanRowState extends State<_ReconPlanRow> {
       case 'Not started':
         return const Color(0xFF9CA3AF);
       case 'In progress':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'On track':
         return const Color(0xFF10B981);
       case 'At risk':
@@ -3539,7 +3540,7 @@ class _ReconPlanRowState extends State<_ReconPlanRow> {
       case 'Complete':
         return const Color(0xFF059669);
       case 'Deferred':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       default:
         return const Color(0xFF9CA3AF);
     }
@@ -3568,7 +3569,7 @@ class _ReconPlanRowState extends State<_ReconPlanRow> {
 
   Color _progressColor(int pct) {
     if (pct >= 80) return const Color(0xFF10B981);
-    if (pct >= 50) return const Color(0xFF2563EB);
+    if (pct >= 50) return const Color(0xFFFFC812);
     if (pct >= 25) return const Color(0xFFF59E0B);
     return const Color(0xFFEF4444);
   }
@@ -3836,11 +3837,11 @@ class _ImpactAssessmentRowState extends State<_ImpactAssessmentRow> {
   Color _domainColor(String domain) {
     switch (domain) {
       case 'Schedule':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Cost':
         return const Color(0xFF059669);
       case 'Quality':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Scope':
         return const Color(0xFFEA580C);
       case 'Compliance':
@@ -3850,7 +3851,7 @@ class _ImpactAssessmentRowState extends State<_ImpactAssessmentRow> {
       case 'Reputation':
         return const Color(0xFFF59E0B);
       case 'Operations':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       default:
         return const Color(0xFF64748B);
     }
@@ -3891,7 +3892,7 @@ class _ImpactAssessmentRowState extends State<_ImpactAssessmentRow> {
       case 'Improving':
         return const Color(0xFF10B981);
       case 'Stable':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Needs attention':
         return const Color(0xFFF59E0B);
       case 'Deteriorating':
@@ -4247,7 +4248,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
           width: 42,
           height: 42,
           decoration: const BoxDecoration(
-            color: Color(0xFFEEF2FF),
+            color: Color(0xFFFFF8E1),
             borderRadius: BorderRadius.all(Radius.circular(14)),
           ),
           child: const Icon(Icons.grid_view_rounded, color: Color(0xFF4338CA)),
@@ -5091,7 +5092,7 @@ class _ReconciliationWorkflowCardState
     _WorkflowBoardColumnConfig(
       keyName: 'active',
       label: 'Active',
-      accent: Color(0xFF2563EB),
+      accent: Color(0xFFFFC812),
     ),
     _WorkflowBoardColumnConfig(
       keyName: 'in_progress',
@@ -5862,9 +5863,9 @@ class _PriorityBadge extends StatelessWidget {
       case 'moderate':
         return const Color(0xFFFDE68A);
       case 'low':
-        return const Color(0xFFCFFAFE);
+        return const Color(0xFFFFF8E1);
       default:
-        return const Color(0xFFE0E7FF);
+        return const Color(0xFFFFF8E1);
     }
   }
 
@@ -5909,15 +5910,15 @@ class _StatusBadge extends StatelessWidget {
       case 'at risk':
         return const Color(0xFFF97316);
       case 'in review':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'not started':
         return const Color(0xFF4B5563);
       case 'complete':
         return const Color(0xFF0F766E);
       case 'upcoming':
-        return const Color(0xFF6366F1);
+        return const Color(0xFFB8860B);
       case 'planned':
-        return const Color(0xFF5B21B6);
+        return const Color(0xFFB8860B);
       default:
         return const Color(0xFF111827);
     }
@@ -5951,7 +5952,7 @@ class _TrendPill extends StatelessWidget {
       case 'improving':
         return const Color(0xFF16A34A);
       case 'stable':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'needs attention':
         return const Color(0xFFDC2626);
       default:
@@ -6436,7 +6437,7 @@ InputDecoration _inputDecoration(String hintText, {bool dense = false}) {
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: Color(0xFF93C5FD)),
+      borderSide: const BorderSide(color: Color(0xFFFFC812)),
     ),
   );
 }

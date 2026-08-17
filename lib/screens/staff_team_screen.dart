@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -686,7 +687,7 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
                     radius: 16,
                     backgroundColor: isMobilized
                         ? const Color(0xFFDCFCE7)
-                        : const Color(0xFFEEF2FF),
+                        : const Color(0xFFFFF8E1),
                     child: Text(
                       (member.name.isNotEmpty ? member.name : '?')[0]
                           .toUpperCase(),
@@ -818,7 +819,7 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Color(0xFFEEF2FF),
+                color: Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.groups_rounded,
@@ -869,10 +870,10 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
         ],
       ),
       child: LaunchPhaseNavigation(
-        backLabel: 'Back: Design Deliverables',
-        nextLabel: 'Next: Team Meetings',
-        onBack: () => DesignDeliverablesScreen.open(context),
-        onNext: () => TeamMeetingsScreen.open(context),
+        backLabel: PlanningPhaseNavigation.backLabel('staff_team'),
+        nextLabel: PlanningPhaseNavigation.nextLabel('staff_team'),
+        onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'staff_team'),
+        onNext: () => PlanningPhaseNavigation.goToNext(context, 'staff_team'),
       ),
     );
   }

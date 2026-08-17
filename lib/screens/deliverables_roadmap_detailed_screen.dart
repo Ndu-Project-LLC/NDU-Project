@@ -673,17 +673,17 @@ class _DeliverablesRoadmapDetailedScreenState
   Color _getPhaseColor(DeliverablePhase phase) {
     switch (phase) {
       case DeliverablePhase.initiation:
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case DeliverablePhase.frontEndPlanning:
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       case DeliverablePhase.planning:
         return const Color(0xFF10B981);
       case DeliverablePhase.design:
-        return const Color(0xFFEC4899);
+        return const Color(0xFFD97706);
       case DeliverablePhase.execution:
         return const Color(0xFFF59E0B);
       case DeliverablePhase.launch:
-        return const Color(0xFF14B8A6);
+        return const Color(0xFFD97706);
     }
   }
 

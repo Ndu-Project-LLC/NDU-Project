@@ -201,7 +201,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  .length
  .toString(),
  icon: Icons.autorenew,
- color: Colors.blue),
+ color: Color(0xFFFFC812)),
  _IssueMetric(
  label: 'Resolved',
  value: issueItems
@@ -258,16 +258,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  children: [
  PlanningPhaseHeader(title: 'Issue Management', onExportPdf: _exportPdf),
  const SizedBox(height: 24),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'issue_management',
- contextText: _carriedContext!,
- ),
- ),
+
  const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Issue Management',
@@ -865,8 +856,8 @@ class _IssueLogRow extends StatelessWidget {
  alignment: Alignment.centerLeft,
  child: _StatusPill(
  label: entry.type,
- background: const Color(0xFFEFF6FF),
- foreground: const Color(0xFF2563EB),
+ background: const Color(0xFFFFF8E1),
+ foreground: const Color(0xFFFFC812),
  ),
  ),
  ),

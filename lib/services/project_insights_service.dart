@@ -66,7 +66,7 @@ class ProjectInsightsService {
     });
   }
 
-  static Color _fromHex(String? value, {Color fallback = const Color(0xFF0EA5E9)}) {
+  static Color _fromHex(String? value, {Color fallback = const Color(0xFFFFC812)}) {
     if (value == null || value.trim().isEmpty) return fallback;
     final hex = value.replaceFirst('#', '').padLeft(6, '0');
     final intColor = int.tryParse(hex, radix: 16);

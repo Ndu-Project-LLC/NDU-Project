@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/raci_assignment_service.dart';
 import 'package:ndu_project/services/raci_matrix_seeder.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/providers/user_role_provider.dart';
 
 /// Renders the new RACI Deliverable Matrix.
 ///
@@ -255,10 +257,18 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
   Future<void> _openApprovalDialog(BuildContext context) async {
     final data = _data(context);
     final approval = data.raciApprovalStatus;
-    final approverNameController =
-        TextEditingController(text: approval.approverName);
-    final approverRoleController =
-        TextEditingController(text: approval.approverRole);
+    
+    // Auto-fill with authenticated user's details if fields are empty
+    final currentUserDisplayName = FirebaseAuthService.displayNameOrEmail(fallback: '');
+    final roleProvider = UserRoleInherited.of(context);
+    final currentUserRole = roleProvider.siteRole.displayName;
+    
+    final approverNameController = TextEditingController(
+      text: approval.approverName.isNotEmpty ? approval.approverName : currentUserDisplayName,
+    );
+    final approverRoleController = TextEditingController(
+      text: approval.approverRole.isNotEmpty ? approval.approverRole : currentUserRole,
+    );
     bool checked = false;
 
     final result = await showDialog<bool>(
@@ -273,7 +283,7 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
           actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           title: Row(
             children: [
-              const Icon(Icons.verified, color: Color(0xFF1D4ED8)),
+              const Icon(Icons.verified, color: Color(0xFFFFC812)),
               const SizedBox(width: 10),
               const Expanded(
                 child: Text(
@@ -875,7 +885,7 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
             ),
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.edit, color: Color(0xFF2563EB)),
+              leading: const Icon(Icons.edit, color: Color(0xFFFFC812)),
               title: const Text('Bulk-fill empty cells'),
               subtitle: const Text(
                   'Apply one designation to every empty cell on this row.'),
@@ -1176,9 +1186,9 @@ class _RaciMatrixGrid extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
+                color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: const Color(0xFFBFDBFE)),
+                border: Border.all(color: const Color(0xFFFDE68A)),
               ),
               child: Text(
                 person,
@@ -1187,7 +1197,7 @@ class _RaciMatrixGrid extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1D4ED8),
+                  color: Color(0xFFFFC812),
                 ),
               ),
             )
@@ -1326,9 +1336,9 @@ class _PhaseChip extends StatelessWidget {
   ({Color bg, Color fg}) _phasePalette(String p) {
     switch (p.toLowerCase()) {
       case 'planning phase':
-        return (bg: const Color(0xFFDBEAFE), fg: const Color(0xFF1D4ED8));
+        return (bg: const Color(0xFFFEF3C7), fg: const Color(0xFFFFC812));
       case 'design phase':
-        return (bg: const Color(0xFFEDE9FE), fg: const Color(0xFF6D28D9));
+        return (bg: const Color(0xFFFFF8E1), fg: const Color(0xFFB8860B));
       case 'execution phase':
         return (bg: const Color(0xFFFFEDD5), fg: const Color(0xFFC2410C));
       case 'launch phase':

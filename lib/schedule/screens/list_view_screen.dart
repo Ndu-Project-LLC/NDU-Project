@@ -76,7 +76,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       label: 'Total Activities',
                       value: '${rows.length}',
                       icon: Icons.list_alt,
-                      color: const Color(0xFF3B82F6),
+                      color: const Color(0xFFFFC812),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -887,12 +887,12 @@ class _TraceabilityCell extends StatelessWidget {
           _miniChip(_sourceLabel(row.importSource), const Color(0xFF475467)));
     }
     if (row.hasWbs) {
-      chips.add(_miniChip('WBS', const Color(0xFF0EA5E9)));
+      chips.add(_miniChip('WBS', const Color(0xFFFFC812)));
     }
     if (row.hasAgileStory) {
       chips.add(_miniChip(
           row.agileFeatureTitle.isNotEmpty ? row.agileFeatureTitle : 'Story',
-          const Color(0xFF8B5CF6)));
+          const Color(0xFFB8860B)));
     }
     if (row.hasSprint) {
       chips.add(_miniChip(

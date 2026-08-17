@@ -59,6 +59,7 @@ import 'package:ndu_project/cost_estimate/screens/cost_estimate_module_screen.da
 import 'package:ndu_project/schedule/screens/schedule_module_screen.dart';
 import 'package:ndu_project/project_controls/screens/project_controls_screen.dart';
 import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
+import 'package:ndu_project/screens/integration_dashboard_screen.dart';
 import 'package:ndu_project/screens/landing/careers_page_screen.dart';
 import 'package:ndu_project/screens/execution_plan_screen.dart';
 import 'package:ndu_project/screens/execution_work_packages_screen.dart';
@@ -302,6 +303,7 @@ class AppRoutes {
   static const scheduleManagementBoard = 'schedule-management';
   static const projectControls = 'project-controls';
   static const changeManagementModule = 'change-management-module';
+  static const integrationDashboard = 'integration-dashboard';
   static const landingPage = 'landing-page';
   static const careersPage = 'careers';
 
@@ -972,6 +974,10 @@ class AppRouter {
           name: AppRoutes.projectControls,
           path: '/${AppRoutes.projectControls}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProjectControlsScreen())),
+      GoRoute(
+          name: AppRoutes.integrationDashboard,
+          path: '/${AppRoutes.integrationDashboard}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const IntegrationDashboardScreen())),
       GoRoute(
           name: AppRoutes.changeManagementModule,
           path: '/${AppRoutes.changeManagementModule}',

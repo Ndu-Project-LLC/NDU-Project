@@ -958,7 +958,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
   Color _statusColor(String status) {
     switch (status) {
       case 'active':
-        return Colors.blue;
+        return Color(0xFFFFC812);
       case 'complete':
         return Colors.green;
       case 'cancelled':
@@ -975,7 +975,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
       case 'high':
         return Colors.orange;
       case 'medium':
-        return Colors.blue;
+        return Color(0xFFFFC812);
       default:
         return Colors.grey;
     }

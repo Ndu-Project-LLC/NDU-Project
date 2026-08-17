@@ -27,7 +27,7 @@ String _categoryKey(_SsherCategory category) => category.name;
 
 // ── Color Palette (matching HTML design tokens) ──
 class _Palette {
- static const Color primary = Color(0xFF005BB3);
+ static const Color primary = Color(0xFFFFC812);
  static const Color primaryContainer = Color(0xFF0073DF);
  static const Color tertiaryFixedDim = Color(0xFFFABD00);
  static const Color tertiaryContainer = Color(0xFF946F00);

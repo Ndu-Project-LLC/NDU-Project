@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -95,10 +96,10 @@ class _ActualVsPlannedGapAnalysisScreenState
             _buildFollowUpPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Vendor & Contract Closeout',
-              nextLabel: 'Next: Hypercare & Warranty Support',
-              onBack: () => ContractCloseOutScreen.open(context),
-              onNext: () => CommerceViabilityScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('actual_vs_planned_gap_analysis'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('actual_vs_planned_gap_analysis'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'actual_vs_planned_gap_analysis'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'actual_vs_planned_gap_analysis'),
             ),
             const SizedBox(height: 48),
           ],
@@ -1548,7 +1549,7 @@ class _ActualVsPlannedGapAnalysisScreenState
       sectionSubtitle:
           'Planned vs actual scope, deliverables, and acceptance status',
       sectionIcon: Icons.compare_arrows_outlined,
-      sectionColor: const Color(0xFF06B6D4),
+      sectionColor: const Color(0xFFD97706),
       completionPercent: completionPct,
       completionLabel: 'RECONCILED',
       completionCaption:
@@ -1574,7 +1575,7 @@ class _ActualVsPlannedGapAnalysisScreenState
           label: 'Milestones',
           value: '${projectData.keyMilestones.length}',
           icon: Icons.flag_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'planned checkpoints',
         ),
         LaunchKpiTile(

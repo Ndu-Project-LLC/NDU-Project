@@ -670,7 +670,7 @@ class _PlanningWorkPackageCardState extends State<PlanningWorkPackageCard> {
     final normalized = status.toLowerCase();
     switch (normalized) {
       case 'in_progress':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'complete':
       case 'completed':
         return const Color(0xFF10B981);
@@ -929,7 +929,7 @@ class _PlanningWorkPackageCardState extends State<PlanningWorkPackageCard> {
                 minHeight: 6,
                 backgroundColor: const Color(0xFFE5E7EB),
                 valueColor:
-                    const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                    const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
               ),
             ),
           ],

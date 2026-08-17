@@ -97,17 +97,26 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
 
     // If storage already gave us a complete WBS for this project, nothing
     // to do — the builder will render it.
-    if (provider.wbs != null && provider.setupComplete) return;
+    if (provider.wbs != null && provider.setupComplete) return; // No persisted WBS for this project — create one with the default
+ // framework/methodology and persist it for next time.
+ provider.setup(
+ projectName: projectName,
+ framework: WBSFramework.waterfallDeliverable,
+ methodology: ProjectMethodology.waterfall,
+ projectId: projectId,
+ );
 
-    // No persisted WBS for this project — create one with the default
-    // framework/methodology and persist it for next time.
-    provider.setup(
-      projectName: projectName,
-      framework: WBSFramework.waterfallDeliverable,
-      methodology: ProjectMethodology.waterfall,
-      projectId: projectId,
-    );
-  }
+ // Auto-import cost items from the Initial Cost Estimate if the
+ // cost estimate has no lines yet. This populates the Cost by WBS
+ // tab with data from the project's cost estimate items.
+ final ceProvider = context.read<CostEstimateProvider>();
+ if (ceProvider.estimate != null && ceProvider.estimate!.lines.isEmpty) {
+ if (projectData.costEstimateItems.isNotEmpty) {
+ ceProvider.importFromProjectCostEstimateItems(
+ projectData.costEstimateItems);
+ }
+ }
+ }
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {
@@ -559,6 +568,25 @@ class _ExportAndLinkTab extends StatelessWidget {
                           Icons.auto_awesome,
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    // ── Cross-phase wiring actions ────────────────────────────
+                    // These two buttons are the explicit affordances that
+                    // connect WBS to the initiation + front-end planning
+                    // phases. They are idempotent and safe to press multiple
+                    // times — already-existing links/nodes are skipped.
+                    Consumer2<WBSProvider, ProjectDataProvider>(
+                      builder: (context, wbsProv, pdp, _) {
+                        return Consumer<CostEstimateProvider>(
+                          builder: (context, cep, _) {
+                            return _CrossPhaseActions(
+                              wbsProvider: wbsProv,
+                              projectProvider: pdp,
+                              ceProvider: cep,
+                            );
+                          },
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -1105,3 +1133,266 @@ class _ExportAndLinkTab extends StatelessWidget {
   }
 }
 
+
+/// Cross-phase actions card — surfaces the two explicit affordances that
+/// connect the WBS to the initiation + front-end planning phases:
+///
+/// 1. **Seed from Initiation** — creates L1 deliverable nodes from the
+///    project's `projectGoals` / `keyMilestones` / `withinScopeItems`.
+///    Idempotent: skips names that already exist.
+///
+/// 2. **Auto-link FEP Cost Lines** — matches existing cost-estimate lines
+///    to WBS nodes by `wbsRef == node.code` (strong) or by node-name
+///    appearing in the line description (weak). Idempotent: skips lines
+///    that are already linked.
+///
+/// Both buttons show a confirmation dialog previewing what would happen
+/// before mutating the WBS, then a SnackBar reporting the result.
+class _CrossPhaseActions extends StatelessWidget {
+  const _CrossPhaseActions({
+    required this.wbsProvider,
+    required this.projectProvider,
+    required this.ceProvider,
+  });
+
+  final WBSProvider wbsProvider;
+  final ProjectDataProvider projectProvider;
+  final CostEstimateProvider ceProvider;
+
+  @override
+  Widget build(BuildContext context) {
+    final project = projectProvider.projectData;
+    final goalsCount = project.projectGoals
+        .where((g) => g.name.trim().isNotEmpty)
+        .length;
+    final milestonesCount = project.keyMilestones
+        .where((m) => m.name.trim().isNotEmpty)
+        .length;
+    final scopeCount = project.withinScopeItems
+        .where((s) => s.description.trim().isNotEmpty)
+        .length;
+    final fepLineCount = ceProvider.estimate?.lines.length ?? 0;
+    final existingL1Count =
+        wbsProvider.wbs?.level0.children.length ?? 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFDE68A).withValues(alpha: 0.7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.hub_outlined, size: 16, color: Color(0xFFFFC812)),
+              SizedBox(width: 8),
+              Text('Connect to Initiation & Front-End Planning',
+                  style: TextStyle(
+                      color: Color(0xFFB8860B),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Pull deliverables from the initiation phase into the WBS, then '
+            'match existing front-end planning cost lines to WBS nodes by code '
+            'or by name. Both actions are idempotent — re-running them is safe.',
+            style: TextStyle(color: Color(0xFFFFC812), fontSize: 12),
+          ),
+          const SizedBox(height: 12),
+          // Source-data preview chips
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              _sourceChip('Project goals', '$goalsCount',
+                  Icons.flag_outlined),
+              _sourceChip('Key milestones', '$milestonesCount',
+                  Icons.event_outlined),
+              _sourceChip('Scope items', '$scopeCount',
+                  Icons.checklist_outlined),
+              _sourceChip('FEP cost lines', '$fepLineCount',
+                  Icons.attach_money_outlined),
+              _sourceChip('Existing L1 nodes', '$existingL1Count',
+                  Icons.layers_outlined),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // Action buttons
+          Wrap(
+            spacing: 10,
+            runSpacing: 8,
+            children: [
+              FilledButton.icon(
+                onPressed: () => _onSeedFromInitiation(context),
+                icon: const Icon(Icons.download_for_offline_outlined, size: 16),
+                label: const Text('Seed from Initiation'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFC812),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: fepLineCount == 0
+                    ? null
+                    : () => _onAutoLinkCostLines(context),
+                icon: const Icon(Icons.auto_fix_high_outlined, size: 16),
+                label: const Text('Auto-link FEP Cost Lines'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFFFC812),
+                  side: const BorderSide(color: Color(0xFFFDE68A)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sourceChip(String label, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFFDE68A).withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: const Color(0xFFFFC812)),
+          const SizedBox(width: 4),
+          Text(value,
+              style: const TextStyle(
+                  color: Color(0xFFB8860B),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700)),
+          const SizedBox(width: 4),
+          Text(label,
+              style: const TextStyle(
+                  color: Color(0xFF475569),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onSeedFromInitiation(BuildContext context) async {
+    final project = projectProvider.projectData;
+    final goalsCount = project.projectGoals
+        .where((g) => g.name.trim().isNotEmpty)
+        .length;
+    final milestonesCount = project.keyMilestones
+        .where((m) => m.name.trim().isNotEmpty)
+        .length;
+    final scopeCount = project.withinScopeItems
+        .where((s) => s.description.trim().isNotEmpty)
+        .length;
+
+    final sourceDesc = goalsCount > 0
+        ? '$goalsCount project goal${goalsCount == 1 ? '' : 's'}'
+        : milestonesCount > 0
+            ? '$milestonesCount key milestone${milestonesCount == 1 ? '' : 's'}'
+            : scopeCount > 0
+                ? '$scopeCount scope item${scopeCount == 1 ? '' : 's'}'
+                : 'no candidate sources';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Seed WBS from Initiation'),
+        content: Text(
+          'This will create L1 deliverable nodes from $sourceDesc.\n\n'
+          'Idempotent: candidate names that already exist as L1 nodes will be skipped.\n\n'
+          'Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Seed'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final created = wbsProvider.seedFromInitiation(project);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          created > 0
+              ? 'Seeded $created new L1 deliverable node${created == 1 ? '' : 's'} from initiation.'
+              : 'No new nodes added — all candidate names already exist as L1 nodes.',
+        ),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  Future<void> _onAutoLinkCostLines(BuildContext context) async {
+    final estimate = ceProvider.estimate;
+    if (estimate == null || estimate.lines.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No cost estimate lines to link.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final fepLineCount = estimate.lines.length;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Auto-link FEP Cost Lines'),
+        content: Text(
+          'This will scan $fepLineCount cost line${fepLineCount == 1 ? '' : 's'} '
+          'and match each to a WBS node by:\n\n'
+          '  1. Exact code match (line.wbsRef == node.code, e.g. "G1.2")\n'
+          '  2. Node name appearing in the line description (≥ 4 chars)\n\n'
+          'Idempotent: lines already linked to a node will be skipped.\n\n'
+          'Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Auto-link'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final newLinks = wbsProvider.autoLinkCostLines(ceProvider);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          newLinks > 0
+              ? 'Linked $newLinks new cost line${newLinks == 1 ? '' : 's'} to WBS nodes.'
+              : 'No new links created — all matching lines were already linked.',
+        ),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+}

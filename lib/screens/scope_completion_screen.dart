@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -583,11 +584,9 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                             _buildTipRow(context),
                             const SizedBox(height: 24),
                             LaunchPhaseNavigation(
-                              backLabel: 'Back: Risk Tracking',
-                              nextLabel:
-                                  'Next: Gap Analysis & Scope Reconciliation',
-                              onBack: () =>
-                                  RiskTrackingWorkspaceScreen.open(context),
+                              backLabel: PlanningPhaseNavigation.backLabel('scope_completion'),
+                              nextLabel: PlanningPhaseNavigation.nextLabel('scope_completion'),
+                              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'scope_completion'),
                               onNext: () =>
                                   GapAnalysisScopeReconcillationScreen.open(
                                       context),
@@ -1151,11 +1150,11 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   Color _signalCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'sponsor':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'operations':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'technical':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       case 'regulatory':
         return const Color(0xFFEA580C);
       default:
@@ -1166,13 +1165,13 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   Color _changeTypeColor(String type) {
     switch (type.toLowerCase()) {
       case 'scope':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'budget':
         return const Color(0xFFD97706);
       case 'schedule':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'quality':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       default:
         return const Color(0xFF6B7280);
     }
@@ -1187,7 +1186,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       case 'deferred':
         return const Color(0xFFD97706);
       case 'open':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       default:
         return const Color(0xFF6B7280);
     }
@@ -2910,7 +2909,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFF93C5FD)),
+        borderSide: BorderSide(color: Color(0xFFFFC812)),
       ),
     );
   }

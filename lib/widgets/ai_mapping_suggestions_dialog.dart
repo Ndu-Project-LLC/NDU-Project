@@ -201,7 +201,7 @@ class _AiMappingSuggestionsDialogState
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: Color(0xFFFFF8E1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -209,7 +209,7 @@ class _AiMappingSuggestionsDialogState
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: Colors.blue.shade700,
+                color: Color(0xFFB8860B),
               ),
             ),
           ),
@@ -478,7 +478,7 @@ class _SuggestionCard extends StatelessWidget {
                           suggestion.sourceType.toUpperCase(),
                           style: const TextStyle(fontSize: 10),
                         ),
-                        backgroundColor: Colors.blue.shade50,
+                        backgroundColor: Color(0xFFFFF8E1),
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize:
                             MaterialTapTargetSize.shrinkWrap,
@@ -494,7 +494,7 @@ class _SuggestionCard extends StatelessWidget {
                           suggestion.targetType.toUpperCase(),
                           style: const TextStyle(fontSize: 10),
                         ),
-                        backgroundColor: Colors.purple.shade50,
+                        backgroundColor: Color(0xFFFFF8E1),
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize:
                             MaterialTapTargetSize.shrinkWrap,

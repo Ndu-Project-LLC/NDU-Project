@@ -1,4 +1,5 @@
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/theme.dart';
 // ignore_for_file: unused_element
 
@@ -515,8 +516,6 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  const SizedBox(height: 16),
  _buildHeroHeader(isMobile: isMobile),
  const SizedBox(height: 24),
- _buildMethodologySelector(),
- const SizedBox(height: 24),
  _buildFilterChips(),
  const SizedBox(height: 20),
  _buildStatsRow(),
@@ -536,10 +535,10 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  _buildApprovalGatesPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Technical Alignment',
- nextLabel: 'Next: UI/UX Design',
- onBack: _navigateToTechnicalAlignment,
- onNext: _navigateToUiUxDesign,
+ backLabel: PlanningPhaseNavigation.backLabel('development_set_up'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('development_set_up'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'development_set_up'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'development_set_up'),
  ),
  ],
  ),
@@ -751,105 +750,6 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  }
 
  // ══════════════════════════════════════════════════════════════════════════
- // METHODOLOGY SELECTOR
- // ══════════════════════════════════════════════════════════════════════════
-
- Widget _buildMethodologySelector() {
- return _PanelShell(
- title: 'Development Methodology',
- subtitle: 'Select the delivery methodology to tailor setup requirements. Each methodology dictates different environment provisioning, quality gates, and tooling expectations per industry standards.',
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- LayoutBuilder(
- builder: (context, constraints) {
- final isNarrow = constraints.maxWidth < 700;
- if (isNarrow) {
- return Column(
- children: [
- _buildMethodologyCard('Waterfall', 'Sequential, phase-gated delivery. All environments and tooling must be fully provisioned before development begins.', Icons.timeline, const Color(0xFF2563EB)),
- const SizedBox(height: 12),
- _buildMethodologyCard('Hybrid', 'Combines waterfall rigour for infrastructure with agile flexibility for feature delivery. Core environments upfront; development evolves iteratively.', Icons.merge_type_outlined, const Color(0xFF7C3AED)),
- const SizedBox(height: 12),
- _buildMethodologyCard('Agile', 'Iterative, incremental delivery. Minimal viable environment for Sprint 1; tooling and infrastructure evolve with each iteration.', Icons.autorenew_outlined, const Color(0xFF16A34A)),
- ],
- );
- }
- return Row(
- children: [
- Expanded(child: _buildMethodologyCard('Waterfall', 'Sequential, phase-gated delivery. All environments and tooling must be fully provisioned before development begins.', Icons.timeline, const Color(0xFF2563EB))),
- const SizedBox(width: 12),
- Expanded(child: _buildMethodologyCard('Hybrid', 'Combines waterfall rigour for infrastructure with agile flexibility for feature delivery. Core environments upfront; development evolves iteratively.', Icons.merge_type_outlined, const Color(0xFF7C3AED))),
- const SizedBox(width: 12),
- Expanded(child: _buildMethodologyCard('Agile', 'Iterative, incremental delivery. Minimal viable environment for Sprint 1; tooling and infrastructure evolve with each iteration.', Icons.autorenew_outlined, const Color(0xFF16A34A))),
- ],
- );
- },
- ),
- ],
- ),
- );
- }
-
- Widget _buildMethodologyCard(String label, String description, IconData icon, Color color) {
- final isSelected = _selectedMethodology == label;
- return GestureDetector(
- onTap: () {
- setState(() => _selectedMethodology = label);
- _scheduleSave();
- },
- child: AnimatedContainer(
- duration: const Duration(milliseconds: 200),
- padding: const EdgeInsets.all(18),
- decoration: BoxDecoration(
- color: isSelected ? color.withValues(alpha: 0.08) : const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(18),
- border: Border.all(
- color: isSelected ? color : const Color(0xFFE2E8F0),
- width: isSelected ? 2.0 : 1.0,
- ),
- boxShadow: isSelected
- ? [BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 12, offset: const Offset(0, 4))]
- : [],
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Container(
- width: 38,
- height: 38,
- decoration: BoxDecoration(
- color: color.withValues(alpha: 0.12),
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withValues(alpha: 0.22)),
- ),
- child: Icon(icon, color: color, size: 20),
- ),
- const SizedBox(width: 10),
- Expanded(
- child: Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: isSelected ? color : const Color(0xFF0F172A))),
- ),
- if (isSelected)
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
- decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(999)),
- child: const Text('Active', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
- ),
- ],
- ),
- const SizedBox(height: 10),
- Text(description, style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B), height: 1.5)),
- ],
- ),
- ),
- );
- }
-
-
-
- // ══════════════════════════════════════════════════════════════════════════
  // FILTER CHIPS
  // ══════════════════════════════════════════════════════════════════════════
 
@@ -895,10 +795,10 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  final toolsActive = _toolItems.where((e) => e.status == 'Active').length;
  final secInProgress = _securityItems.where((e) => e.status == 'In Progress' || e.status == 'Not Started').length;
  final stats = [
- _StatCardData('Environments Ready', '$envReady/${_envItems.length}', 'Provisioned spaces', const Color(0xFF0EA5E9)),
+ _StatCardData('Environments Ready', '$envReady/${_envItems.length}', 'Provisioned spaces', const Color(0xFFFFC812)),
  _StatCardData('Pipeline Stages', '$pipelineReady/${_cicdItems.length}', 'Ready stages', const Color(0xFF10B981)),
  _StatCardData('Active Tools', '$toolsActive', 'Licensed and active', const Color(0xFFF97316)),
- _StatCardData('Security Pending', '$secInProgress', secInProgress > 0 ? 'Require attention' : 'All complete', const Color(0xFF6366F1)),
+ _StatCardData('Security Pending', '$secInProgress', secInProgress > 0 ? 'Require attention' : 'All complete', const Color(0xFFB8860B)),
  ];
  return LayoutBuilder(
  builder: (context, constraints) {
@@ -992,7 +892,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF6B7280), height: 1.5),
  ),
  const SizedBox(height: 18),
- _buildGuideCard(Icons.dns_outlined, 'Environment First', 'Provision and validate all environments before onboarding the team. Each environment should mirror its target configuration to prevent late-stage surprises.', const Color(0xFF0EA5E9)),
+ _buildGuideCard(Icons.dns_outlined, 'Environment First', 'Provision and validate all environments before onboarding the team. Each environment should mirror its target configuration to prevent late-stage surprises.', const Color(0xFFFFC812)),
  const SizedBox(height: 12),
  _buildGuideCard(Icons.play_circle_outline, 'Pipeline Automation', 'Automate build, test, and deployment from day one. Fast feedback loops catch issues early and reduce manual coordination overhead.', const Color(0xFF10B981)),
  const SizedBox(height: 12),
@@ -1084,7 +984,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  Expanded(flex: 4, child: Text(item.environment, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)))),
  SizedBox(width: 110, child: Text(item.type, style: const TextStyle(fontSize: 12, color: Color(0xFF475569)))),
  SizedBox(width: 120, child: _buildStatusTag(item.status, color)),
- Expanded(flex: 3, child: Text(item.accessUrl, style: const TextStyle(fontSize: 11, fontFamily: appFontFamily, color: Color(0xFF2563EB)), overflow: TextOverflow.ellipsis)),
+ Expanded(flex: 3, child: Text(item.accessUrl, style: const TextStyle(fontSize: 11, fontFamily: appFontFamily, color: Color(0xFFFFC812)), overflow: TextOverflow.ellipsis)),
  SizedBox(width: 120, child: Text(item.owner, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)))),
  SizedBox(width: 110, child: Text(item.targetDate, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
  SizedBox(

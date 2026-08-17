@@ -191,7 +191,7 @@ class _SkipBusinessCaseDialogState extends State<_SkipBusinessCaseDialog> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(
-                      color: Color(0xFF005BB3), width: 1.5),
+                      color: Color(0xFFFFC812), width: 1.5),
                 ),
               ),
             ),
@@ -199,16 +199,16 @@ class _SkipBusinessCaseDialogState extends State<_SkipBusinessCaseDialog> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
+                color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                    color: const Color(0xFF005BB3).withValues(alpha: 0.2)),
+                    color: const Color(0xFFFFC812).withValues(alpha: 0.2)),
               ),
               child: const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.info_outline,
-                      size: 16, color: Color(0xFF005BB3)),
+                      size: 16, color: Color(0xFFFFC812)),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -248,7 +248,7 @@ class _SkipBusinessCaseDialogState extends State<_SkipBusinessCaseDialog> {
                         content: Text(
                             'Business Case skipped. Your project description '
                             'is now the basis for FEP documentation with AI KAZ.'),
-                        backgroundColor: Color(0xFF005BB3),
+                        backgroundColor: Color(0xFFFFC812),
                         behavior: SnackBarBehavior.floating,
                         duration: Duration(seconds: 4),
                       ),
@@ -427,16 +427,16 @@ class BusinessCaseSkippedBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-            color: const Color(0xFF005BB3).withValues(alpha: 0.3)),
+            color: const Color(0xFFFFC812).withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(Icons.check_circle_outline,
-              size: 18, color: Color(0xFF005BB3)),
+              size: 18, color: Color(0xFFFFC812)),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -447,7 +447,7 @@ class BusinessCaseSkippedBanner extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF005BB3),
+                    color: Color(0xFFFFC812),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -457,7 +457,7 @@ class BusinessCaseSkippedBanner extends StatelessWidget {
                   'Case screens are view-only.',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF1E40AF),
+                    color: Color(0xFFFFC812),
                     height: 1.4,
                   ),
                 ),
@@ -475,7 +475,7 @@ class BusinessCaseSkippedBanner extends StatelessWidget {
                     icon: const Icon(Icons.edit_note_rounded, size: 16),
                     label: const Text('Update description'),
                     style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF005BB3),
+                      foregroundColor: const Color(0xFFFFC812),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       minimumSize: const Size(0, 32),

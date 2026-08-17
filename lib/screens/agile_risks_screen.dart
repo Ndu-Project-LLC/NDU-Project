@@ -28,7 +28,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
   static const Color _kAccent = Color(0xFFF59E0B);
   static const Color _kAccentLight = Color(0xFFFFC812);
   static const Color _kAccentBg = Color(0xFFFEF3C7);
-  static const Color _kBackground = Color(0xFFF8FAFC);
+  static const Color _kBackground = Colors.white;
   static const Color _kSurface = Colors.white;
   static const Color _kBorder = Color(0xFFE5E7EB);
   static const Color _kHeadline = Color(0xFF111827);
@@ -654,7 +654,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
         : status == 'Escalated'
             ? Colors.red
             : status == 'In Progress'
-                ? Colors.blue
+                ? Color(0xFFFFC812)
                 : _kAccent;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

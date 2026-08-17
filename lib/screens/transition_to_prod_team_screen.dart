@@ -1,6 +1,6 @@
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
-import 'package:ndu_project/widgets/launch_notes_section.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:convert';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
@@ -110,11 +110,10 @@ class _TransitionToProdTeamScreenState
             _buildSignOffsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Launch Readiness Assessment',
-              nextLabel:
-                  'Next: FAT, Mechanical Completion & Commission Solution',
-              onBack: () => DeliverProjectClosureScreen.open(context),
-              onNext: () => FatMechanicalCompletionScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('transition_to_prod_team'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('transition_to_prod_team'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'transition_to_prod_team'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'transition_to_prod_team'),
             ),
             const SizedBox(height: 48),
           ],
@@ -1294,7 +1293,7 @@ class _TransitionToProdTeamScreenState
       sectionSubtitle:
           'Certification, release readiness, and production handoff',
       sectionIcon: Icons.send_outlined,
-      sectionColor: const Color(0xFF2563EB),
+      sectionColor: const Color(0xFFFFC812),
       completionPercent: completionPct,
       completionLabel: 'TRANSFERRED',
       completionCaption:
@@ -1304,7 +1303,7 @@ class _TransitionToProdTeamScreenState
           label: 'Team Members',
           value: '${projectData.teamMembers.length}',
           icon: Icons.people_outline,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'assigned to project',
         ),
         LaunchKpiTile(
@@ -1318,7 +1317,7 @@ class _TransitionToProdTeamScreenState
           label: 'Vendors',
           value: '${projectData.vendors.length}',
           icon: Icons.inventory_2_outlined,
-          color: const Color(0xFF7C3AED),
+          color: const Color(0xFFB8860B),
           delta: 'in supply chain',
         ),
         LaunchKpiTile(

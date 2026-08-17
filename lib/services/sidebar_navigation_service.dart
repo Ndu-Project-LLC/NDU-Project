@@ -268,6 +268,9 @@ class SidebarNavigationService {
     // Schedule & Cost
     SidebarItem(checkpoint: 'schedule', label: 'Schedule'),
     SidebarItem(checkpoint: 'cost_estimate', label: 'Cost Estimate Overview'),
+    // PMB Integration — the unified Scope ↔ WBS ↔ Schedule ↔ Controls view
+    SidebarItem(
+        checkpoint: 'integration_dashboard', label: 'Integration Dashboard'),
     // Scope & Change Management
     SidebarItem(
         checkpoint: 'scope_tracking_plan', label: 'Scope Tracking Plan'),

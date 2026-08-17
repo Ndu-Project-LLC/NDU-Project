@@ -288,7 +288,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                         icon: const Icon(Icons.refresh, size: 16),
                         label: const Text('Resync from Planning'),
                         style: TextButton.styleFrom(
-                          foregroundColor: Colors.deepPurple,
+                          foregroundColor: Color(0xFFB8860B),
                           textStyle: const TextStyle(fontSize: 12),
                         ),
                       ),

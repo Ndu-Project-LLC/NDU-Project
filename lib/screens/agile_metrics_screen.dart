@@ -28,7 +28,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
   static const Color _kAccent = Color(0xFFF59E0B);
   static const Color _kAccentLight = Color(0xFFFFC812);
   static const Color _kAccentBg = Color(0xFFFEF3C7);
-  static const Color _kBackground = Color(0xFFF8FAFC);
+  static const Color _kBackground = Colors.white;
   static const Color _kSurface = Colors.white;
   static const Color _kBorder = Color(0xFFE5E7EB);
   static const Color _kHeadline = Color(0xFF111827);
@@ -576,11 +576,11 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildTimeBar('Lead Time', _leadTime, 10, Colors.blue),
+          _buildTimeBar('Lead Time', _leadTime, 10, Color(0xFFFFC812)),
           const SizedBox(height: 14),
           _buildTimeBar('Cycle Time', _cycleTime, 10, _kAccent),
           const SizedBox(height: 14),
-          _buildTimeBar('Wait Time', _leadTime - _cycleTime, 10, Colors.purple),
+          _buildTimeBar('Wait Time', _leadTime - _cycleTime, 10, Color(0xFFB8860B)),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
@@ -693,7 +693,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
                   _defectTrend.length > 1
                       ? '${((_defectTrend.last.escaped - _defectTrend[_defectTrend.length - 2].escaped) >= 0 ? '+' : '')}${(_defectTrend.last.escaped - _defectTrend[_defectTrend.length - 2].escaped)}'
                       : '0',
-                  Colors.blue),
+                  Color(0xFFFFC812)),
             ],
           ),
         ],

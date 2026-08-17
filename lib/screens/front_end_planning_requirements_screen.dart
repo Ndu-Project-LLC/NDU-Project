@@ -867,14 +867,14 @@ class _FrontEndPlanningRequirementsScreenState
             Icon(icon,
                 size: 16,
                 color:
-                    active ? const Color(0xFF2563EB) : const Color(0xFF6B7280)),
+                    active ? const Color(0xFFFFC812) : const Color(0xFF6B7280)),
             const SizedBox(width: 6),
             Text(label,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: active
-                      ? const Color(0xFF2563EB)
+                      ? const Color(0xFFFFC812)
                       : const Color(0xFF6B7280),
                 )),
           ],
@@ -1117,7 +1117,7 @@ class _FrontEndPlanningRequirementsScreenState
                                 icon: const Icon(
                                   Icons.edit_outlined,
                                   size: 16,
-                                  color: Color(0xFF2563EB),
+                                  color: Color(0xFFFFC812),
                                 ),
                                 tooltip: 'Edit',
                                 onPressed: () => _openMobileRequirementEditor(
@@ -1286,7 +1286,7 @@ class _FrontEndPlanningRequirementsScreenState
                     borderRadius: BorderRadius.circular(20),
                     child: const CircleAvatar(
                       radius: 13,
-                      backgroundColor: Color(0xFF2563EB),
+                      backgroundColor: Color(0xFFFFC812),
                       child: Text(
                         'C',
                         style: TextStyle(
@@ -1496,8 +1496,8 @@ class _FrontEndPlanningRequirementsScreenState
                         style: TextStyle(fontWeight: FontWeight.w700),
                       ),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF2563EB),
-                        side: const BorderSide(color: Color(0xFFBFDBFE)),
+                        foregroundColor: const Color(0xFFFFC812),
+                        side: const BorderSide(color: Color(0xFFFDE68A)),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 13),
@@ -1595,7 +1595,7 @@ class _FrontEndPlanningRequirementsScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -1675,213 +1675,239 @@ class _FrontEndPlanningRequirementsScreenState
         _normalizeDisciplineSelection(row.selectedDiscipline);
     String? selectedPhase = _normalizePhaseSelection(row.selectedPhase);
 
-    await showModalBottomSheet<void>(
+    await showDialog<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (sheetContext) {
-        final inset = MediaQuery.of(sheetContext).viewInsets.bottom;
-        return Padding(
-          padding: EdgeInsets.fromLTRB(16, 12, 16, inset + 14),
-          child: StatefulBuilder(
-            builder: (context, setLocalState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isNew ? 'Add Requirement' : 'Edit Requirement',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 12),
-                  VoiceTextField(
-                    controller: descriptionController,
-                    minLines: 2,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Requirement',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFD1D5DB)),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedType,
-                        hint: const Text('Requirement Type'),
-                        isExpanded: true,
-                        items: const [
-                          'Technical',
-                          'Regulatory',
-                          'Functional',
-                          'Operational',
-                          'Non-Functional',
-                          'Safety',
-                          'Sustainability',
-                          'Business',
-                          'Stakeholder',
-                          'Solutions',
-                          'Transitional',
-                          'Other'
-                        ]
-                            .map((value) => DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                ))
-                            .toList(),
-                        onChanged: (value) =>
-                            setLocalState(() => selectedType = value),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFD1D5DB)),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedDiscipline,
-                        hint: const Text('Discipline'),
-                        isExpanded: true,
-                        items: _RequirementRow.disciplineOptions
-                            .map(
-                              (value) => DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) =>
-                            setLocalState(() => selectedDiscipline = value),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFD1D5DB)),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedPhase,
-                        hint: const Text('Implementation Phase'),
-                        isExpanded: true,
-                        items: _RequirementRow.phaseOptions
-                            .map(
-                              (value) => DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) =>
-                            setLocalState(() => selectedPhase = value),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  VoiceTextField(
-                    controller: roleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Role',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _PersonDropdownField(
-                    value: personController.text,
-                    options: _memberOptions,
-                    hint: 'Person',
-                    dense: false,
-                    onChanged: (value) {
-                      personController.text = value;
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  VoiceTextField(
-                    controller: sourceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Requirement Source',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  VoiceTextField(
-                    controller: commentsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Comments and Requirement Source Links',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setLocalState) {
+            final inset = MediaQuery.of(context).viewInsets.bottom;
+            return Dialog(
+              backgroundColor: Colors.white,
+              insetPadding: EdgeInsets.fromLTRB(
+                16,
+                24,
+                16,
+                24 + inset,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.85,
+                  maxWidth: 640,
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(sheetContext),
-                        child: const Text('Cancel'),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              isNew ? 'Add Requirement' : 'Edit Requirement',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 20),
+                            onPressed: () => Navigator.pop(dialogContext),
+                            tooltip: 'Close',
+                          ),
+                        ],
                       ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          if (isNew || (index >= 0 && index < _rows.length)) {
-                            if (isNew && !_rows.contains(row)) {
-                              setState(() => _rows.add(row));
-                            }
-                            setState(() {
-                              final previousDescription =
-                                  row.descriptionController.text;
-                              final nextDescription =
-                                  descriptionController.text;
-                              if (previousDescription.trim().isNotEmpty &&
-                                  previousDescription != nextDescription) {
-                                row.manualUndoText = previousDescription;
-                              }
-                              row.setDescriptionFromCode(nextDescription);
-                              row.commentsController.text =
-                                  commentsController.text;
-                              row.roleController.text = roleController.text;
-                              row.personController.text =
-                                  _resolvePersonSelection(
-                                personController.text,
-                                roleHint: roleController.text,
-                              );
-                              row.sourceController.text = sourceController.text;
-                              row.selectedType =
-                                  _normalizeRequirementTypeSelection(
-                                selectedType,
-                              );
-                              row.selectedDiscipline =
-                                  _normalizeDisciplineSelection(
-                                selectedDiscipline,
-                              );
-                              row.selectedPhase =
-                                  _normalizePhaseSelection(selectedPhase);
-                            });
-                            _scheduleAutoSave(showSnack: false);
-                          }
-                          Navigator.pop(sheetContext);
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: descriptionController,
+                        minLines: 2,
+                        maxLines: 4,
+                        decoration: const InputDecoration(
+                          labelText: 'Requirement',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFD1D5DB)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedType,
+                            hint: const Text('Requirement Type'),
+                            isExpanded: true,
+                            items: const [
+                              'Technical',
+                              'Regulatory',
+                              'Functional',
+                              'Operational',
+                              'Non-Functional',
+                              'Safety',
+                              'Sustainability',
+                              'Business',
+                              'Stakeholder',
+                              'Solutions',
+                              'Transitional',
+                              'Other'
+                            ]
+                                .map((value) => DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    ))
+                                .toList(),
+                            onChanged: (value) =>
+                                setLocalState(() => selectedType = value),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFD1D5DB)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedDiscipline,
+                            hint: const Text('Discipline'),
+                            isExpanded: true,
+                            items: _RequirementRow.disciplineOptions
+                                .map(
+                                  (value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setLocalState(() => selectedDiscipline = value),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFD1D5DB)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedPhase,
+                            hint: const Text('Implementation Phase'),
+                            isExpanded: true,
+                            items: _RequirementRow.phaseOptions
+                                .map(
+                                  (value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setLocalState(() => selectedPhase = value),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: roleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Role',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _PersonDropdownField(
+                        value: personController.text,
+                        options: _memberOptions,
+                        hint: 'Person',
+                        dense: false,
+                        onChanged: (value) {
+                          personController.text = value;
                         },
-                        child: const Text('Save'),
+                      ),
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: sourceController,
+                        decoration: const InputDecoration(
+                          labelText: 'Requirement Source',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: commentsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Comments and Requirement Source Links',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text('Cancel'),
+                          ),
+                          const Spacer(),
+                          FilledButton(
+                            onPressed: () {
+                              if (isNew || (index >= 0 && index < _rows.length)) {
+                                if (isNew && !_rows.contains(row)) {
+                                  setState(() => _rows.add(row));
+                                }
+                                setState(() {
+                                  final previousDescription =
+                                      row.descriptionController.text;
+                                  final nextDescription =
+                                      descriptionController.text;
+                                  if (previousDescription.trim().isNotEmpty &&
+                                      previousDescription != nextDescription) {
+                                    row.manualUndoText = previousDescription;
+                                  }
+                                  row.setDescriptionFromCode(nextDescription);
+                                  row.commentsController.text =
+                                      commentsController.text;
+                                  row.roleController.text = roleController.text;
+                                  row.personController.text =
+                                      _resolvePersonSelection(
+                                        personController.text,
+                                        roleHint: roleController.text,
+                                      );
+                                  row.sourceController.text = sourceController.text;
+                                  row.selectedType =
+                                      _normalizeRequirementTypeSelection(
+                                        selectedType,
+                                      );
+                                  row.selectedDiscipline =
+                                      _normalizeDisciplineSelection(
+                                        selectedDiscipline,
+                                      );
+                                  row.selectedPhase =
+                                      _normalizePhaseSelection(selectedPhase);
+                                });
+                                _scheduleAutoSave(showSnack: false);
+                              }
+                              Navigator.pop(dialogContext);
+                            },
+                            child: const Text('Save'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -2036,8 +2062,8 @@ class _FrontEndPlanningRequirementsScreenState
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF2563EB),
-          side: const BorderSide(color: Color(0xFF93C5FD)),
+          foregroundColor: const Color(0xFFFFC812),
+          side: const BorderSide(color: Color(0xFFFFC812)),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
@@ -2056,8 +2082,8 @@ class _FrontEndPlanningRequirementsScreenState
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF2563EB),
-          side: const BorderSide(color: Color(0xFF93C5FD)),
+          foregroundColor: const Color(0xFFFFC812),
+          side: const BorderSide(color: Color(0xFFFFC812)),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
@@ -2889,7 +2915,7 @@ class _RequirementRow {
                                     CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.refresh,
-                                size: 18, color: Color(0xFF2563EB)),
+                                size: 18, color: Color(0xFFFFC812)),
                         padding: const EdgeInsets.all(6),
                         constraints:
                             const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -3090,7 +3116,7 @@ class _RequirementCard extends StatelessWidget {
                         height: 36,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEEF2FF),
+                          color: const Color(0xFFFFF8E1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -3132,8 +3158,8 @@ class _RequirementCard extends StatelessWidget {
                                 ),
                                 _RequirementSummaryChip(
                                   label: row.summaryDiscipline,
-                                  backgroundColor: const Color(0xFFEFF6FF),
-                                  textColor: const Color(0xFF1D4ED8),
+                                  backgroundColor: const Color(0xFFFFF8E1),
+                                  textColor: const Color(0xFFFFC812),
                                 ),
                                 _RequirementSummaryChip(
                                   label: row.summaryOwner,
@@ -3169,7 +3195,7 @@ class _RequirementCard extends StatelessWidget {
                                   )
                                 : const Icon(
                                     Icons.auto_awesome_rounded,
-                                    color: Color(0xFF2563EB),
+                                    color: Color(0xFFFFC812),
                                   ),
                           ),
                           IconButton(
@@ -3849,13 +3875,13 @@ class _MemberPickerDialogState extends State<_MemberPickerDialog> {
                                 dense: true,
                                 leading: CircleAvatar(
                                   radius: 14,
-                                  backgroundColor: const Color(0xFFDBEAFE),
+                                  backgroundColor: const Color(0xFFFEF3C7),
                                   child: Text(
                                     member.displayLabel[0].toUpperCase(),
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF1D4ED8),
+                                      color: Color(0xFFFFC812),
                                     ),
                                   ),
                                 ),

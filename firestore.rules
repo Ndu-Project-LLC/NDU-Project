@@ -62,6 +62,10 @@ service cloud.firestore {
     }
     
     // ─── Projects collection ───────────────────────────────────────────
+    // HIGH #6: top-level project documents used to be readable by ANY
+    // authenticated user (which leaked owner emails, team email lists,
+    // and project names to any throwaway account). Now scoped to the
+    // project owner + team members + admins.
     match /projects/{projectId} {
       function isProjectOwner() {
         return isAuthenticated()
@@ -78,7 +82,7 @@ service cloud.firestore {
           || isAdmin();
       }
 
-      allow read: if isAuthenticated();
+      allow read: if isProjectOwner() || isProjectMember();
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
       allow update: if isAuthenticated() && (
         request.auth.uid == resource.data.ownerId ||
@@ -120,25 +124,39 @@ service cloud.firestore {
     }
     
     // ─── Programs collection ───────────────────────────────────────────
+    // HIGH #6: program documents are scoped to their owner + admins.
+    // (No team-membership concept for programs — owner-only.)
     match /programs/{programId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        resource.data.ownerId == request.auth.uid ||
+        isAdmin()
+      );
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
       allow update: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || isAdmin());
       allow delete: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || isAdmin());
     }
     
     // ─── Portfolios collection ─────────────────────────────────────────
+    // HIGH #6: portfolio documents are scoped to their owner + admins.
     match /portfolios/{portfolioId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        resource.data.ownerId == request.auth.uid ||
+        isAdmin()
+      );
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
       allow update: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || isAdmin());
       allow delete: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || isAdmin());
     }
     
     // ─── Team invitations ──────────────────────────────────────────────
+    // HIGH #7: clients can no longer create teamInvitations documents
+    // directly (which previously let any auth user spam the collection
+    // with forged entries). The sendTeamInvitation Cloud Function writes
+    // via the Admin SDK which bypasses rules, so this restriction doesn't
+    // break the legitimate flow.
     match /teamInvitations/{inviteId} {
       allow read: if isAuthenticated() && resource.data.inviterUid == request.auth.uid;
-      allow create: if isAuthenticated();
+      allow create: if false; // CF-only (sendTeamInvitation uses Admin SDK)
       allow update: if isAuthenticated() && resource.data.inviterUid == request.auth.uid;
       allow delete: if isAuthenticated() && resource.data.inviterUid == request.auth.uid;
     }
@@ -227,17 +245,28 @@ service cloud.firestore {
 
     // ─── Two-factor OTP codes ──────────────────────────────────────────
     // OTP documents are keyed by email and managed by Cloud Functions.
-    // Users can read their own OTP doc (to verify); writes are CF-only.
+    // HIGH #8: previously allowed any authenticated user to read their own
+    // OTP document — which defeated the email-verification step entirely
+    // (the user could just read the OTP from Firestore instead of from
+    // their inbox). Now CF-only reads (the verifyTwoFactorCode function
+    // validates the OTP server-side via the Admin SDK, so client reads
+    // are unnecessary).
     match /twoFactorCodes/{email} {
-      allow read: if isAuthenticated() && request.auth.token.email == email;
+      allow read: if false; // CF-only (verifyTwoFactorCode uses Admin SDK)
       allow write: if false; // Managed by Cloud Functions only
     }
 
     // ─── Change requests (top-level collection) ────────────────────────
-    // Authenticated users can read and write change requests scoped to
-    // their projects. The collection is queried by projectId.
+    // HIGH #6: change requests are scoped to the requester + admins +
+    // the owner of the project the change request is for. Previously
+    // any authenticated user could read every change request.
     match /change_requests/{requestId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        resource.data.requestedByUid == request.auth.uid ||
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId))
+          && request.auth.uid == get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.ownerId)
+      );
       allow create: if isAuthenticated() &&
         request.resource.data.requestedByUid == request.auth.uid;
       allow update: if isAuthenticated() && (

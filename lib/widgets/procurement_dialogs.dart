@@ -6,7 +6,7 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/vendor_service.dart';
-
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 
 class ProcurementAssignableMemberOption {
@@ -566,6 +566,17 @@ class _AddItemDialogState extends State<AddItemDialog> {
         ? _categoryOptionsWithOther
         : [_category, ..._categoryOptionsWithOther];
 
+    // Task 14 follow-up: When the Project Charter is approved, the
+    // Add/Edit Procurement Item modal must also be locked from editing.
+    // The dialog is launched via showDialog which renders in the root
+    // Overlay — escaping any AbsorbPointer placed on the parent screen
+    // body. Without this guard here, the user could open the modal
+    // (the "Add Item" button still receives taps from locations outside
+    // the locked subtree, e.g. the tab strip or table action cell) and
+    // freely edit item fields even after the charter is saved/approved.
+    final charterLocked =
+        ProjectDataHelper.isCharterApproved(context, listen: true);
+
     return ProcurementDialogShell(
       title: _isEditing
           ? 'Edit ${widget.itemDomainLabel} Item'
@@ -578,58 +589,67 @@ class _AddItemDialogState extends State<AddItemDialog> {
       primaryLabel: _isEditing ? 'Save Changes' : 'Add Item',
       secondaryLabel: 'Cancel',
       onSecondary: () => Navigator.of(context).pop(),
-      onPrimary: () {
-        final valid = _formKey.currentState?.validate() ?? false;
-        if (!valid) return;
-        if (_deliveryDate == null) {
-          setState(() => _showDateError = true);
-          return;
-        }
-        final projectId = widget.initialItem?.projectId ??
-            ProjectDataHelper.getData(context).projectId ??
-            'project-1';
-        final budget = _parseCurrency(_budgetCtrl.text);
-        final existing = widget.initialItem;
-        final item = ProcurementItemModel(
-          id: existing?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-          projectId: projectId,
-          name: _nameCtrl.text.trim(),
-          description: _descCtrl.text.trim(),
-          category: _category,
-          status: _status,
-          priority: _priority,
-          budget: budget.toDouble(),
-          spent: existing?.spent ?? 0.0,
-          estimatedDelivery: _deliveryDate,
-          actualDelivery: existing?.actualDelivery,
-          progress: existing?.progress ?? 0,
-          vendorId: existing?.vendorId,
-          contractId: existing?.contractId,
-          events: existing?.events ?? [],
-          notes: existing?.notes ?? '',
-          projectPhase: existing?.projectPhase ?? 'Planning',
-          responsibleMember: _responsibleMember.trim(),
-          comments: existing?.comments ?? '',
-          createdAt: existing?.createdAt ?? DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        Navigator.of(context).pop(item);
-      },
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Expanded(
-                  child: DialogSectionTitle(
-                    title: 'Item details',
-                    subtitle: 'What are you sourcing for this project?',
+      // Disable the primary action button when locked so the user can
+      // still read the existing values but cannot persist any changes.
+      onPrimary: charterLocked
+          ? null
+          : () {
+              final valid = _formKey.currentState?.validate() ?? false;
+              if (!valid) return;
+              if (_deliveryDate == null) {
+                setState(() => _showDateError = true);
+                return;
+              }
+              final projectId = widget.initialItem?.projectId ??
+                  ProjectDataHelper.getData(context).projectId ??
+                  'project-1';
+              final budget = _parseCurrency(_budgetCtrl.text);
+              final existing = widget.initialItem;
+              final item = ProcurementItemModel(
+                id: existing?.id ??
+                    DateTime.now().millisecondsSinceEpoch.toString(),
+                projectId: projectId,
+                name: _nameCtrl.text.trim(),
+                description: _descCtrl.text.trim(),
+                category: _category,
+                status: _status,
+                priority: _priority,
+                budget: budget.toDouble(),
+                spent: existing?.spent ?? 0.0,
+                estimatedDelivery: _deliveryDate,
+                actualDelivery: existing?.actualDelivery,
+                progress: existing?.progress ?? 0,
+                vendorId: existing?.vendorId,
+                contractId: existing?.contractId,
+                events: existing?.events ?? [],
+                notes: existing?.notes ?? '',
+                projectPhase: existing?.projectPhase ?? 'Planning',
+                responsibleMember: _responsibleMember.trim(),
+                comments: existing?.comments ?? '',
+                createdAt: existing?.createdAt ?? DateTime.now(),
+                updatedAt: DateTime.now(),
+              );
+              Navigator.of(context).pop(item);
+            },
+      child: CharterLockBanner.applyLock(
+        locked: charterLocked,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CharterLockBanner(visible: charterLocked),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Expanded(
+                    child: DialogSectionTitle(
+                      title: 'Item details',
+                      subtitle: 'What are you sourcing for this project?',
+                    ),
                   ),
-                ),
-                if (widget.showAiGenerateButton) ...[
+                  if (widget.showAiGenerateButton) ...[
                   const SizedBox(width: 12),
                   OutlinedButton.icon(
                     onPressed: _isGenerating ? null : _generateWithAI,
@@ -858,6 +878,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

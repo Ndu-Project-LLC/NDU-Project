@@ -21,6 +21,7 @@ import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
@@ -1163,6 +1164,12 @@ Consider typical project timelines and ensure end date is after start date.''';
  }
 
  Widget _buildContent() {
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
  return SingleChildScrollView(
  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
  child: Column(
@@ -1186,6 +1193,12 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  ],
  ),
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
  const SizedBox(height: 8),
  Text(
  'Key milestones represent the minimum requirements that must be completed for the project to operate successfully.',
@@ -1473,6 +1486,9 @@ Consider typical project timelines and ensure end date is after start date.''';
  ],
  ),
  const SizedBox(height: 100), // Space for KAZ chat bubble
+ ],
+ ),
+ ),
  ],
  ),
  );

@@ -27,6 +27,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 
 /// Front End Planning – Project Opportunities page
 /// Built to match the provided screenshot exactly:
@@ -545,6 +546,12 @@ Opportunity generation constraints:
     if (isMobile) {
       return _buildMobileScaffold(context);
     }
+    // Task 14: Once the Project Charter is approved, lock this section
+    // from editing. The user can still view the data and scroll through
+    // it, but every editable control is wrapped in an AbsorbPointer so
+    // taps are silently ignored.
+    final charterLocked =
+        ProjectDataHelper.isCharterApproved(context, listen: true);
 
     return Scaffold(
       // Ensure white background as requested
@@ -578,7 +585,13 @@ Opportunity generation constraints:
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _roundedField(
+                              CharterLockBanner(visible: charterLocked),
+                              CharterLockBanner.applyLock(
+                                locked: charterLocked,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _roundedField(
                                   controller: _notes,
                                   hint: 'Input your notes here...',
                                   minLines: 3),
@@ -789,10 +802,13 @@ Opportunity generation constraints:
                                   },
                                 ),
                               const SizedBox(height: 80),
-                            ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                   _BottomOverlays(onSubmit: _submitOpportunities),

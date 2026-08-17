@@ -36,6 +36,7 @@ import 'package:ndu_project/widgets/procurement/procurement_vendor_management.da
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 enum ProcurementScreenMode { fep, planning }
 
@@ -5538,6 +5539,12 @@ class _FrontEndPlanningProcurementScreenState
  Widget build(BuildContext context) {
  final projectData = ProjectDataHelper.getData(context);
  final isMobile = AppBreakpoints.isMobile(context);
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
  final content = Stack(
  children: [
  const AdminEditToggle(),
@@ -5556,6 +5563,12 @@ class _FrontEndPlanningProcurementScreenState
  horizontal: isMobile ? 16 : 24,
  vertical: 32,
  ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -5627,6 +5640,9 @@ class _FrontEndPlanningProcurementScreenState
  const SizedBox(height: 24),
  _buildNextSectionButton(),
  const SizedBox(height: 40),
+ ],
+ ),
+ ),
  ],
  ),
  ),

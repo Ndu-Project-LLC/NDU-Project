@@ -11,6 +11,7 @@ import 'package:ndu_project/widgets/user_access_chip.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:go_router/go_router.dart';
 /// Front End Planning – Summary screen
 /// Mirrors the provided layout with shared workspace chrome,
@@ -54,6 +55,12 @@ class _FrontEndPlanningSummaryEndScreenState extends State<FrontEndPlanningSumma
 
  @override
  Widget build(BuildContext context) {
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
  return Scaffold(
  backgroundColor: Colors.white,
  body: SafeArea(
@@ -77,12 +84,21 @@ class _FrontEndPlanningSummaryEndScreenState extends State<FrontEndPlanningSumma
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
  _roundedField(controller: _notes, hint: 'Input your notes here...', minLines: 3),
  const SizedBox(height: 24),
  const _SectionTitle(),
  const SizedBox(height: 18),
  _SummaryPanel(controller: _summaryNotes),
  const SizedBox(height: 140),
+ ],
+ ),
+ ),
  ],
  ),
  ),

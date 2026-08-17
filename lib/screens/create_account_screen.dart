@@ -706,9 +706,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             const SizedBox(height: 8),
                             SizedBox(
                               height: 52,
-                              child: VoiceTextField(
-                                enableKazAi: false,
-                                enableTextFormatting: false,
+                              child: TextField(
                                 controller: _passwordController,
                                 obscureText: !_isPasswordVisible,
                                 style: const TextStyle(fontSize: 15),
@@ -761,9 +759,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             const SizedBox(height: 8),
                             SizedBox(
                               height: 52,
-                              child: VoiceTextField(
-                                enableKazAi: false,
-                                enableTextFormatting: false,
+                              child: TextField(
                                 controller: _confirmPasswordController,
                                 obscureText: !_isConfirmPasswordVisible,
                                 style: const TextStyle(fontSize: 15),

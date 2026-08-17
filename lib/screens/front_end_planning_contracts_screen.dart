@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 const String _contractingCollection = 'contracting';
 const String _contractPlanNoteKey = 'planning_contract_plan';
 const String _contractPlanMarketKey = 'planning_contract_market';
@@ -243,6 +244,12 @@ class _FrontEndPlanningContractsScreenState
  (projectData.planningNotes['contract_dashboard_payload'] ?? '')
  .trim()
  .isNotEmpty;
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
  return Scaffold(
  backgroundColor: Colors.white,
  body: SafeArea(
@@ -266,6 +273,12 @@ class _FrontEndPlanningContractsScreenState
  crossAxisAlignment: CrossAxisAlignment.stretch,
  children: [
  FrontEndPlanningHeader(title: 'Contracting', onExportPdf: _exportPdf),
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
  const SizedBox(height: 16),
  // Export PDF & AI Assist action buttons
  Wrap(
@@ -613,6 +626,9 @@ class _FrontEndPlanningContractsScreenState
  ),
  ),
  const SizedBox(height: 80),
+ ],
+ ),
+ ),
  ],
  ),
  ),

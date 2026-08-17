@@ -675,7 +675,7 @@ class _ProjectIssuesLogCard extends StatelessWidget {
  const Spacer(),
  SizedBox(
  width: 260,
- child: VoiceTextField(
+ child: TextField(
  onChanged: onSearchChanged,
  decoration: InputDecoration(
  hintText: 'Search issues...',

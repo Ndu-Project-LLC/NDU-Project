@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 /// Front End Planning – Allowance screen
 /// Refactored to support structured "Program-Aware Financial Inputs".
 ///
@@ -1154,6 +1155,12 @@ class _FrontEndPlanningAllowanceScreenState
  Widget build(BuildContext context) {
  final projectData = ProjectDataHelper.getData(context, listen: true);
  final costData = projectData.costAnalysisData;
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
 
  return Scaffold(
  backgroundColor: Colors.white,
@@ -1176,6 +1183,12 @@ class _FrontEndPlanningAllowanceScreenState
  child: SingleChildScrollView(
  padding: const EdgeInsets.symmetric(
  horizontal: 32, vertical: 24),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -1334,6 +1347,9 @@ class _FrontEndPlanningAllowanceScreenState
  ),
 
  const SizedBox(height: 140),
+ ],
+ ),
+ ),
  ],
  ),
  ),

@@ -98,8 +98,31 @@ class SectionNavigator extends StatefulWidget {
   State<SectionNavigator> createState() => _SectionNavigatorState();
 }
 
-class _SectionNavigatorState extends State<SectionNavigator> {
-  bool _isCollapsed = false;
+class _SectionNavigatorState extends State<SectionNavigator>
+    with SingleTickerProviderStateMixin {
+  bool _isCollapsed = true;
+  late final AnimationController _arrowAnimCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 250),
+    value: 0.0, // starts collapsed → arrow points down (no rotation)
+  );
+  late final Animation<double> _arrowRotation = Tween<double>(
+    begin: 0,
+    end: 3.14159, // 180° in radians
+  ).animate(CurvedAnimation(parent: _arrowAnimCtrl, curve: Curves.easeInOut));
+
+  @override
+  void initState() {
+    super.initState();
+    // Start collapsed → arrow down (value 1.0 = full rotation)
+    _arrowAnimCtrl.value = 1.0;
+  }
+
+  @override
+  void dispose() {
+    _arrowAnimCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -183,7 +206,14 @@ class _SectionNavigatorState extends State<SectionNavigator> {
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () => setState(() => _isCollapsed = !_isCollapsed),
+                      onTap: () {
+                        setState(() => _isCollapsed = !_isCollapsed);
+                        if (_isCollapsed) {
+                          _arrowAnimCtrl.reverse(); // → 0° (arrow down)
+                        } else {
+                          _arrowAnimCtrl.forward(); // → 180° (arrow up)
+                        }
+                      },
                       borderRadius: BorderRadius.circular(8),
                       child: Container(
                         width: 32,
@@ -193,12 +223,19 @@ class _SectionNavigatorState extends State<SectionNavigator> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: const Color(0xFFE4E7EC)),
                         ),
-                        child: Icon(
-                          _isCollapsed
-                              ? Icons.keyboard_arrow_down_rounded
-                              : Icons.keyboard_arrow_up_rounded,
-                          size: 18,
-                          color: const Color(0xFF6B7280),
+                        child: AnimatedBuilder(
+                          animation: _arrowRotation,
+                          builder: (context, child) {
+                            return Transform.rotate(
+                              angle: _arrowRotation.value,
+                              child: child,
+                            );
+                          },
+                          child: Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 18,
+                            color: const Color(0xFF6B7280),
+                          ),
                         ),
                       ),
                     ),

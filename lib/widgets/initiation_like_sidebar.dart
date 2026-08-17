@@ -1994,9 +1994,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     final isInteractive = !isDisabled && onTap != null;
     final effectiveIsActive = isActive || _isActiveLabel(title);
     final isHighlighted = effectiveIsActive && !isDisabled;
+    final cs = Theme.of(context).colorScheme;
     final textColor = isDisabled
-      ? Colors.grey[400]
-      : (isHighlighted ? activeColor : Colors.black87);
+      ? cs.onSurface.withValues(alpha: 0.35)
+      : (isHighlighted ? activeColor : cs.onSurface.withValues(alpha: 0.85));
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
@@ -2047,9 +2048,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     final isInteractive = !isDisabled && onTap != null;
     final effectiveIsActive = isActive || _isActiveLabel(title);
     final isHighlighted = effectiveIsActive && !isDisabled;
+    final cs = Theme.of(context).colorScheme;
     final textColor = isDisabled
-      ? Colors.grey[400]
-      : (isHighlighted ? activeColor : Colors.black87);
+      ? cs.onSurface.withValues(alpha: 0.35)
+      : (isHighlighted ? activeColor : cs.onSurface.withValues(alpha: 0.75));
 
     return Padding(
       padding: const EdgeInsets.only(left: 48, right: 24, top: 2, bottom: 2),
@@ -2073,8 +2075,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                 Icon(Icons.circle,
                     size: 8,
                     color: isDisabled
-                        ? Colors.grey[400]
-                        : (isHighlighted ? activeColor : Colors.grey[500])),
+                        ? cs.onSurface.withValues(alpha: 0.3)
+                        : (isHighlighted ? activeColor : cs.onSurface.withValues(alpha: 0.45))),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -2275,13 +2277,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   Widget build(BuildContext context) {
     final double bannerHeight = AppBreakpoints.isMobile(context) ? 72 : 96;
     final sidebarWidth = AppBreakpoints.sidebarWidth(context);
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: sidebarWidth,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         border: Border(
           right: BorderSide(
-              color: Colors.grey.withValues(alpha: 0.25), width: 0.8),
+              color: cs.onSurface.withValues(alpha: 0.12), width: 0.8),
         ),
       ),
       child: Column(
@@ -2310,10 +2313,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                           : 'Untitled Project';
                   return Text(
                     projectName,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black,
+                        color: cs.onSurface,
                         height: 1.25),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
@@ -2327,9 +2330,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               child: Container(
                 height: 42,
                 decoration: BoxDecoration(
-                  color: Color(0xFFF9FAFB),
+                  color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Color(0xFFE4E7EC)),
+                  border: Border.all(color: cs.onSurface.withValues(alpha: 0.1)),
                 ),
                 child: VoiceTextField(
                   controller: _searchController,
@@ -2347,23 +2350,22 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                   enableVoice: false,
                   enableDocxImport: false,
                   enableTextFormatting: false,
-                  style: const TextStyle(
-                      color: Color(0xFF1A1D1F),
+                  style: TextStyle(
+                      color: cs.onSurface,
                       fontSize: 14,
                       fontWeight: FontWeight.w500),
                   decoration: InputDecoration(
                     hintText: 'Search menu...',
                     hintStyle: TextStyle(
-                        color: const Color(0xFF6B7280).withValues(alpha: 0.6),
+                        color: cs.onSurface.withValues(alpha: 0.45),
                         fontSize: 14),
                     prefixIcon: Icon(Icons.search_rounded,
-                        color: const Color(0xFF6B7280).withValues(alpha: 0.7),
+                        color: cs.onSurface.withValues(alpha: 0.5),
                         size: 20),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: Icon(Icons.clear_rounded,
-                                color: const Color(0xFF6B7280)
-                                    .withValues(alpha: 0.7),
+                                color: cs.onSurface.withValues(alpha: 0.5),
                                 size: 18),
                             onPressed: () {
                               _searchController.clear();

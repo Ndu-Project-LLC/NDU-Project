@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 
-/// Unified list bullet: period "." per spec (prose fields must not use auto-bullet).
-const String kListBullet = '. ';
+/// Unified list bullet: bullet dot "•" per spec (prose fields must not use auto-bullet).
+const String kListBullet = '\u2022 ';
 
 /// Mixin that adds auto-bullet functionality for *list* fields.
-/// Uses ". " (period + space). Do not use for prose (Notes, Scope, Value narrative).
+/// Uses "• " (bullet + space). Do not use for prose (Notes, Scope, Value narrative).
 class AutoBulletTextController extends TextEditingController {
   AutoBulletTextController({super.text}) {
     _setupListener();

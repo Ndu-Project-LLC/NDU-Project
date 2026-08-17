@@ -36,6 +36,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cross_section_sync_card.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:go_router/go_router.dart';
@@ -97,12 +98,17 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
 
     // If storage already gave us a complete WBS for this project, nothing
     // to do — the builder will render it.
-    if (provider.wbs != null && provider.setupComplete) return; // No persisted WBS for this project — create one with the default
- // framework/methodology and persist it for next time.
+    if (provider.wbs != null && provider.setupComplete) return; // No persisted WBS for this project — create one with the project's
+ // resolved methodology and persist it for next time.
+ final projectData = ProjectDataHelper.getData(context, listen: false);
+ final resolvedMethodology = ProjectDataHelper.resolvedProjectMethodology(projectData);
+ final resolvedFramework = resolvedMethodology == ProjectMethodology.agile
+     ? WBSFramework.agile
+     : WBSFramework.waterfallDeliverable;
  provider.setup(
  projectName: projectName,
- framework: WBSFramework.waterfallDeliverable,
- methodology: ProjectMethodology.waterfall,
+ framework: resolvedFramework,
+ methodology: resolvedMethodology,
  projectId: projectId,
  );
 
@@ -194,21 +200,11 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
                   onChanged: (index) => setState(() {}),
                 ),
               ),
-              // ── Framework dimension indicator ─────────────────────────
+              // ── Node count indicator ─────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    Icon(fm.iconData, size: 14, color: LightModeColors.accent),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Dimension: ${fm.label}',
-                      style: const TextStyle(
-                        color: Color(0xFF6B7280),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                     const Spacer(),
                     Text(
                       'L0–L${fm.maxDepth} · $totalNodes nodes',

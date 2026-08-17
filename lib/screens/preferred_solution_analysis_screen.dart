@@ -2535,7 +2535,7 @@ class _PreferredSolutionAnalysisScreenState
       builder: (ctx) => Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 620, maxHeight: 860),
+          constraints: const BoxConstraints(maxHeight: 860),
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,

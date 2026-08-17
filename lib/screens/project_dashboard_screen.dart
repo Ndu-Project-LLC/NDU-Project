@@ -134,12 +134,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  return Dialog(
  backgroundColor: Colors.transparent,
  insetPadding:
- const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
- child: Container(
- padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(18),
+ const EdgeInsets.symmetric(horizontal: 18, vertical: 24), child: Container(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+                  decoration: BoxDecoration(
+                    color: scheme.surface,
+                    borderRadius: BorderRadius.circular(18),
  boxShadow: [
  BoxShadow(
  color: Colors.black.withValues(alpha: 0.14),

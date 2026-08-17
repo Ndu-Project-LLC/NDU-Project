@@ -1779,33 +1779,10 @@ class _OpportunityTableState extends State<_OpportunityTable> {
 
   @override
   Widget build(BuildContext context) {
-    return SearchableTableSection(
+    return FullScreenTableWrapper(
       title: 'Opportunities',
-      items: widget.rows,
-      searchFilter: (item, query) {
-        final it = item as OpportunityItem;
-        final q = query.trim().toLowerCase();
-        if (q.isEmpty) return true;
-        return it.opportunity.toLowerCase().contains(q) || it.discipline.toLowerCase().contains(q) || it.stakeholder.toLowerCase().contains(q) || it.owner.toLowerCase().contains(q) || it.status.toLowerCase().contains(q);
-      },
-      tableBuilder: (fsContext, query) {
-        final filtered = widget.rows.where((r) {
-          final q = query.trim().toLowerCase();
-          if (q.isEmpty) return true;
-          return r.opportunity.toLowerCase().contains(q) || r.discipline.toLowerCase().contains(q) || r.stakeholder.toLowerCase().contains(q) || r.owner.toLowerCase().contains(q) || r.status.toLowerCase().contains(q);
-        }).toList();
-
-        return FullScreenTableWrapper(
-          title: 'Opportunities',
-          tableBuilder: (fsCtx) => _buildTableContent(filtered),
-          child: _buildTableContent(filtered),
-        );
-      },
-      cardBuilder: (ctx, query) => Column(children: widget.rows.where((r) {
-        final q = query.trim().toLowerCase();
-        if (q.isEmpty) return true;
-        return r.opportunity.toLowerCase().contains(q) || r.discipline.toLowerCase().contains(q) || r.stakeholder.toLowerCase().contains(q) || r.owner.toLowerCase().contains(q) || r.status.toLowerCase().contains(q);
-      }).map((r) => Card(child: ListTile(title: Text(r.opportunity), subtitle: Text(r.discipline)))).toList()),
+      tableBuilder: (fsCtx) => _buildTableContent(),
+      child: _buildTableContent(),
     );
   }
 

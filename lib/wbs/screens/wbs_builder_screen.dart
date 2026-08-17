@@ -1503,32 +1503,6 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                       letterSpacing: 0.6),
                 ),
               ),
-              // Estimation method
-              if (node.estimationMethod != null) ...[
-                const SizedBox(width: 6),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFBBF7D0)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(node.estimationMethod!.icon,
-                          size: 11, color: const Color(0xFF16A34A)),
-                      const SizedBox(width: 3),
-                      Text(node.estimationMethod!.label,
-                          style: const TextStyle(
-                              color: Color(0xFF16A34A),
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                ),
-              ],
               const Spacer(),
               // Action buttons (larger, more touchable)
               _actionButton(

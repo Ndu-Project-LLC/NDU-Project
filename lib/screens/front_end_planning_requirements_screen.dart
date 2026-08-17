@@ -740,6 +740,8 @@ class _FrontEndPlanningRequirementsScreenState
                                             _buildImportCsvButton(),
                                             const SizedBox(width: 12),
                                             _buildDownloadTemplateButton(),
+                                            const SizedBox(width: 12),
+                                            _buildAddButton(),
                                           ],
                                         ),
                                         _buildViewToggle(),
@@ -747,8 +749,6 @@ class _FrontEndPlanningRequirementsScreenState
                                     ),
                                     const SizedBox(height: 10),
                                     _buildRequirementsTable(context),
-                                    const SizedBox(height: 16),
-                                    _buildAddButton(),
                                     const SizedBox(height: 24),
                                   ],
                                 ),
@@ -1440,15 +1440,6 @@ class _FrontEndPlanningRequirementsScreenState
                           ],
                         ),
                       )
-                    else ...[
-                      ..._rows.asMap().entries.map(
-                            (entry) => Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: _buildMobileRequirementCard(
-                                  context, entry.key, entry.value),
-                            ),
-                          ),
-                    ],
                     OutlinedButton.icon(
                       onPressed: _addRequirementViaEditor,
                       icon: const Icon(Icons.add, size: 18),
@@ -1463,6 +1454,64 @@ class _FrontEndPlanningRequirementsScreenState
                             borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    if (_showInitialGenerationSpinner &&
+                        _rows.every((row) =>
+                            row.descriptionController.text.trim().isEmpty))
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 28),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 10),
+                              Text(
+                                'Generating requirements...',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if ((_initialGenerationError ?? '').isNotEmpty &&
+                        _rows.every((row) =>
+                            row.descriptionController.text.trim().isEmpty))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Column(
+                          children: [
+                            Text(
+                              _initialGenerationError!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                color: Color(0xFFB91C1C),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              onPressed: _isGeneratingRequirements
+                                  ? null
+                                  : () => _generateRequirementsFromContext(),
+                              icon: const Icon(Icons.auto_awesome_rounded,
+                                  size: 16),
+                              label: const Text('Generate with AI'),
+                            ),
+                          ],
+                        ),
+                      )
+                    else ...[
+                      ..._rows.asMap().entries.map(
+                            (entry) => Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: _buildMobileRequirementCard(
+                                  context, entry.key, entry.value),
+                            ),
+                          ),
+                    ],
                   ],
                 ),
               ),

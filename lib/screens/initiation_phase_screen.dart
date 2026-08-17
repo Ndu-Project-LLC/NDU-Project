@@ -30,6 +30,7 @@ import 'package:ndu_project/widgets/business_case_header.dart';
 import 'package:ndu_project/widgets/business_case_navigation_buttons.dart';
 import 'package:ndu_project/widgets/skip_business_case_dialog.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
+import 'package:ndu_project/utils/charter_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/select_project_kaz_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -1692,6 +1693,12 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  return Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ // Charter approval lock — when the charter is approved, the entire
+ // initiation phase becomes read-only.
+ CharterLockHelper.lockBanner(
+   ProjectDataHelper.getData(context),
+   screenLabel: 'Initiation Phase',
+ ),
  // Skip Business Case status / affordance — surfaces the "skip the
  // whole Business Case workflow" entry point (or, if already skipped,
  // tells the user their description is now the basis for FEP with AI
@@ -1755,18 +1762,18 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  border: Border.all(
  color: _businessInvalid ? Colors.red : const Color(0xFFE2E8F0)),
  ),
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
- child: VoiceTextField(
- controller: _businessCaseController,
- focusNode: _businessFocusNode,
- minLines: 6,
- maxLines: 10,
- onChanged: _onBusinessChanged,
- decoration: const InputDecoration(
- border: InputBorder.none,
- hintText: '(Describe the aim of this project)',
- ),
- ),
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), child: VoiceTextField(
+              controller: _businessCaseController,
+              focusNode: _businessFocusNode,
+              readOnly: CharterLockHelper.isFepLocked(ProjectDataHelper.getData(context)),
+              minLines: 6,
+              maxLines: 10,
+              onChanged: _onBusinessChanged,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                hintText: '(Describe the aim of this project)',
+              ),
+            ),
  ),
  _buildMobileActionRow(draftMode: false),
  ],
@@ -1810,18 +1817,18 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  color: Color(0xFFCBD5E1), size: 18),
  ],
  ),
- const SizedBox(height: 8),
- VoiceTextField(
- controller: _businessCaseController,
- focusNode: _businessFocusNode,
- minLines: 6,
- maxLines: 10,
- onChanged: _onBusinessChanged,
- decoration: const InputDecoration(
- border: InputBorder.none,
- hintText: 'Write your scope statement...',
- ),
- ),
+ const SizedBox(height: 8), VoiceTextField(
+              controller: _businessCaseController,
+              focusNode: _businessFocusNode,
+              readOnly: CharterLockHelper.isFepLocked(ProjectDataHelper.getData(context)),
+              minLines: 6,
+              maxLines: 10,
+              onChanged: _onBusinessChanged,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Write your scope statement...',
+              ),
+            ),
  ],
  ),
  ),
@@ -2074,14 +2081,19 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  Widget _buildMainContent() {
  final isMobile = AppBreakpoints.isMobile(context);
  return ScrollIndicatorOverlay(
- controller: _reviewScrollController,
- child: SingleChildScrollView(
- controller: _reviewScrollController,
- padding: EdgeInsets.all(AppBreakpoints.pagePadding(context)),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- // Skip Business Case status / affordance — surfaces the "skip the
+ controller: _reviewScrollController, child: SingleChildScrollView(
+        controller: _reviewScrollController,
+        padding: EdgeInsets.all(AppBreakpoints.pagePadding(context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Charter approval lock — when the charter is approved, the entire
+            // initiation phase becomes read-only.
+            CharterLockHelper.lockBanner(
+              ProjectDataHelper.getData(context),
+              screenLabel: 'Initiation Phase',
+            ),
+            // Skip Business Case status / affordance — surfaces the "skip the
  // whole Business Case workflow" entry point (or, if already skipped,
  // tells the user their description is now the basis for FEP with AI
  // KAZ and lets them refine it).
@@ -2113,25 +2125,25 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  color: _notesInvalid
  ? Colors.red
  : Colors.grey.withValues(alpha: 0.3)),
- ),
- child: VoiceTextField(
- controller: _notesController,
- focusNode: _notesFocusNode,
- style: TextStyle(
- fontSize: 14,
- color: Colors.grey[600],
- ),
- decoration: InputDecoration(
- hintText: 'Input your notes here...',
- hintStyle: TextStyle(color: Colors.grey[400]),
- border: InputBorder.none,
- contentPadding: EdgeInsets.zero,
- ),
- // Auto-expand as the user types; no internal scroll
- minLines: 1,
- maxLines: null,
- onChanged: _onNotesChanged,
- ),
+ ), child: VoiceTextField(
+              controller: _notesController,
+              focusNode: _notesFocusNode,
+              readOnly: CharterLockHelper.isFepLocked(ProjectDataHelper.getData(context)),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+              decoration: InputDecoration(
+                hintText: 'Input your notes here...',
+                hintStyle: TextStyle(color: Colors.grey[400]),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+              // Auto-expand as the user types; no internal scroll
+              minLines: 1,
+              maxLines: null,
+              onChanged: _onNotesChanged,
+            ),
  ),
  if (_notesInvalid)
  const Padding(
@@ -2180,25 +2192,25 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  color: _businessInvalid
  ? Colors.red
  : Colors.grey.withValues(alpha: 0.3)),
- ),
- child: VoiceTextField(
- controller: _businessCaseController,
- focusNode: _businessFocusNode,
- style: TextStyle(
- fontSize: 14,
- color: Colors.grey[600],
- ),
- decoration: InputDecoration(
- hintText: '(Describe the aim of this project)',
- hintStyle: TextStyle(color: Colors.grey[400]),
- border: InputBorder.none,
- contentPadding: EdgeInsets.zero,
- ),
- // Start tall, then grow with content; no internal scroll
- minLines: isMobile ? 6 : 10,
- maxLines: null,
- onChanged: _onBusinessChanged,
- ),
+ ), child: VoiceTextField(
+              controller: _businessCaseController,
+              focusNode: _businessFocusNode,
+              readOnly: CharterLockHelper.isFepLocked(ProjectDataHelper.getData(context)),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+              decoration: InputDecoration(
+                hintText: '(Describe the aim of this project)',
+                hintStyle: TextStyle(color: Colors.grey[400]),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+              // Start tall, then grow with content; no internal scroll
+              minLines: isMobile ? 6 : 10,
+              maxLines: null,
+              onChanged: _onBusinessChanged,
+            ),
  ),
  if (_businessInvalid)
  const Padding(

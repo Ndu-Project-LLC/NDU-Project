@@ -562,7 +562,7 @@ class _TreasuryTextField extends StatelessWidget {
       controller: controller,
       enabled: enabled,
       minLines: minLines,
-      maxLines: maxLines ?? (minLines > 1 ? null : 1),
+      maxLines: maxLines ?? null,
       style: const TextStyle(
         color: TreasuryTokens.ink,
         fontSize: 13.5,

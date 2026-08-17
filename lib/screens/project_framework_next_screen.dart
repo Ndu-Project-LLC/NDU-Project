@@ -1669,13 +1669,13 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                                       child: Row(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Checkbox(
-                                            value: selected,
-                                            onChanged: (value) =>
-                                                widget.onToggleMilestone(
-                                                    milestone.id, value ?? false),
-                                            activeColor: _kAccentColor,
-                                            visualDensity: VisualDensity.compact,
+                                          IgnorePointer(
+                                            child: Checkbox(
+                                              value: selected,
+                                              onChanged: (_) {},
+                                              activeColor: _kAccentColor,
+                                              visualDensity: VisualDensity.compact,
+                                            ),
                                           ),
                                           const SizedBox(width: 6),
                                           Expanded(

@@ -209,9 +209,19 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
       _isAdmin && AccessPolicy.isRestrictedAdminHost();
 
   TextEditingController _createRiskController({String text = ''}) {
-    final controller = RichAutoBulletTextController(text: text);
+    final cleaned = _stripLeadingBullet(text);
+    final controller = AutoBulletTextController(text: cleaned);
     controller.addListener(_onDataChanged);
     return controller;
+  }
+
+  /// Strips a leading bullet prefix (". ", ".", "• ") from previously
+  /// auto-inserted or manually-added bullets.
+  static String _stripLeadingBullet(String text) {
+    if (text.startsWith('\u2022 ')) return text.substring(2);
+    if (text.startsWith('. ')) return text.substring(2);
+    if (text.startsWith('.')) return text.substring(1);
+    return text;
   }
 
   Future<void> _exportPdf() async {
@@ -426,7 +436,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         final solutionRisk = savedRisks[i];
         for (int r = 0; r < 3 && r < solutionRisk.risks.length; r++) {
           if (i < _riskControllers.length && r < _riskControllers[i].length) {
-            _riskControllers[i][r].text = solutionRisk.risks[r];
+            _riskControllers[i][r].text = _stripLeadingBullet(solutionRisk.risks[r]);
           }
         }
       }
@@ -497,7 +507,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         for (int r = 0; r < 3; r++) {
           final text = r < risks.length ? risks[r] : '';
           if (i < _riskControllers.length && r < _riskControllers[i].length) {
-            _riskControllers[i][r].text = text;
+            _riskControllers[i][r].text = _stripLeadingBullet(text);
           }
         }
       }
@@ -2090,7 +2100,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         final riskText = riskIndex < riskList.length
             ? riskList[riskIndex]
             : (riskList.isNotEmpty ? riskList.first : '');
-        controller.text = riskText;
+        controller.text = _stripLeadingBullet(riskText);
 
         await provider.saveToFirebase(checkpoint: 'risk_field_regenerated');
 

@@ -273,8 +273,21 @@ exports.openaiProxy = functions
       res.status(405).json({ error: 'Method not allowed. Use POST.' });
       return;
     }
-    
+
+    // AUTH REQUIRED — without this, anyone with the function URL can bill
+    // OpenAI completions to the project's account (CORS does not stop curl/Postman).
+    const decodedToken = await verifyAuthToken(req);
+    if (!decodedToken) {
+      res.status(401).json({ error: 'Authentication required.' });
+      return;
+    }
+
     try {
+      // Per-user rate limit: 30 OpenAI calls/hour per authenticated user
+      // (gpt-4o completions are non-trivially expensive; protects against a single
+      // compromised account draining credits before it can be suspended).
+      await checkRateLimit(decodedToken.uid, 'openai_proxy', 30);
+
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
         console.error('No API key configured. Set the OPENAI_API_KEY Firebase secret.');

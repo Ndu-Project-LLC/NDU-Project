@@ -11,6 +11,15 @@ library;
 /// Designed to be reusable across any screen that has multiple sub-sections
 /// (WBS, Cost Estimate, Schedule, SSHer, Project Controls, etc.).
 ///
+/// ## Collapsible mode
+///
+/// Pass `collapsible: true` to render a chevron toggle in the header row.
+/// Tapping the header (or the chevron) collapses the tab bar + stepper
+/// into zero height, freeing vertical space on the page. When collapsed,
+/// a compact active-tab pill is shown in the header so the user always
+/// knows which section is selected. `defaultCollapsed` controls the
+/// initial state.
+///
 /// Usage:
 /// ```dart
 /// SectionNavigator(
@@ -25,6 +34,8 @@ library;
 ///   ],
 ///   controller: _tabController,
 ///   onChanged: (index) => setState(() {}),
+///   collapsible: true,
+///   defaultCollapsed: false,
 /// )
 /// ```
 
@@ -50,7 +61,7 @@ class SectionTab {
   final int? badge;
 }
 
-class SectionNavigator extends StatelessWidget {
+class SectionNavigator extends StatefulWidget {
   const SectionNavigator({
     super.key,
     required this.tabs,
@@ -62,6 +73,8 @@ class SectionNavigator extends StatelessWidget {
     this.accentColor,
     this.backgroundColor = const Color(0xFFF9FAFB),
     this.routeLabel = 'Page Route',
+    this.collapsible = false,
+    this.defaultCollapsed = false,
   });
 
   /// The ordered list of tabs to render.
@@ -94,14 +107,55 @@ class SectionNavigator extends StatelessWidget {
   /// Label for the stepper row (default "Page Route").
   final String routeLabel;
 
+  /// Whether the section can be collapsed via a chevron toggle in the
+  /// header. When `true`, tapping the header (or the chevron) collapses
+  /// the tab bar and stepper to zero height, freeing vertical space.
+  /// When `false` (default) the full layout is always visible.
+  final bool collapsible;
+
+  /// Initial collapse state when [collapsible] is `true`. Ignored when
+  /// [collapsible] is `false`.
+  final bool defaultCollapsed;
+
+  @override
+  State<SectionNavigator> createState() => _SectionNavigatorState();
+}
+
+class _SectionNavigatorState extends State<SectionNavigator>
+    with SingleTickerProviderStateMixin {
+  late bool _collapsed;
+
+  @override
+  void initState() {
+    super.initState();
+    _collapsed = widget.collapsible && widget.defaultCollapsed;
+  }
+
+  void _toggle() {
+    if (!widget.collapsible) return;
+    setState(() => _collapsed = !_collapsed);
+  }
+
+  void _selectTab(int index) {
+    if (index == widget.controller.index) return;
+    widget.controller.animateTo(index);
+    widget.onChanged(index);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final accent = accentColor ?? LightModeColors.accent;
-    final activeIndex = controller.index.clamp(0, tabs.length - 1);
+    final accent = widget.accentColor ?? LightModeColors.accent;
+    final activeIndex =
+        widget.controller.index.clamp(0, widget.tabs.length - 1);
+    final activeTab = widget.tabs[activeIndex];
+    final hasHeader = widget.title != null || widget.icon != null;
+    // When there's no header to attach the chevron to, we cannot offer
+    // collapse (there would be no expand affordance once collapsed).
+    final canCollapse = widget.collapsible && hasHeader;
 
     return Container(
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: widget.backgroundColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE4E7EC)),
         boxShadow: [
@@ -115,109 +169,161 @@ class SectionNavigator extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Header row (icon + title + subtitle) ─────────────────────
-          if (title != null || icon != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Row(
-                children: [
-                  if (icon != null) ...[
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [accent, accent.withValues(alpha: 0.7)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+          // ── Header row (icon + title + subtitle + active-tab + chevron) ──
+          if (hasHeader)
+            _buildHeader(accent, activeTab),
+
+          // ── Tab bar + Page Route stepper (animated collapse) ─────────
+          AnimatedSize(
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeInOutCubic,
+            alignment: Alignment.topCenter,
+            child: canCollapse && _collapsed
+                ? const SizedBox(width: double.infinity, height: 0)
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Tab bar
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final tabCount = widget.tabs.length;
+                            final isScrollable =
+                                constraints.maxWidth < tabCount * 130;
+                            if (isScrollable) {
+                              return _buildScrollableTabRow(
+                                  constraints, accent, activeIndex);
+                            }
+                            return _buildFixedTabRow(
+                                constraints, accent, activeIndex);
+                          },
                         ),
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: accent.withValues(alpha: 0.25),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
                       ),
-                      child: Icon(icon, color: Colors.white, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                  if (title != null)
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title!,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1A1D1F),
-                              fontFamily: appFontFamily,
-                            ),
-                          ),
-                          if (subtitle != null) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              subtitle!,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF6B7280),
-                                fontFamily: appFontFamily,
-                              ),
-                            ),
-                          ],
-                        ],
+                      // Page Route stepper
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                        child: _PageRouteStepper(
+                          totalSteps: widget.tabs.length,
+                          currentStep: activeIndex,
+                          accentColor: accent,
+                          label: widget.routeLabel,
+                        ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-
-          // ── Tab bar ──────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Determine if tabs should wrap or fit in a single row
-                final tabCount = tabs.length;
-                final isScrollable = constraints.maxWidth < tabCount * 130;
-
-                if (isScrollable) {
-                  return _buildScrollableTabRow(accent, activeIndex);
-                }
-                return _buildFixedTabRow(constraints, accent, activeIndex);
-              },
-            ),
-          ),
-
-          // ── Page Route stepper ───────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: _PageRouteStepper(
-              totalSteps: tabs.length,
-              currentStep: activeIndex,
-              accentColor: accent,
-              label: routeLabel,
-            ),
+                    ],
+                  ),
           ),
         ],
       ),
     );
   }
 
+  /// Header row containing the icon + title + subtitle, plus (when
+  /// collapsible) the active-tab pill and a chevron toggle. The whole
+  /// row is tappable when collapsible.
+  Widget _buildHeader(Color accent, SectionTab activeTab) {
+    final showActivePill = widget.collapsible && _collapsed;
+    final headerPadding = widget.collapsible
+        ? const EdgeInsets.fromLTRB(20, 14, 8, 14)
+        : const EdgeInsets.fromLTRB(20, 16, 20, 8);
+
+    Widget header = Padding(
+      padding: headerPadding,
+      child: Row(
+        children: [
+          if (widget.icon != null) ...[
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [accent, accent.withValues(alpha: 0.7)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Icon(widget.icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
+          ],
+          if (widget.title != null)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.title!,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1D1F),
+                      fontFamily: appFontFamily,
+                    ),
+                  ),
+                  if (widget.subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.subtitle!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6B7280),
+                        fontFamily: appFontFamily,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          // Compact active-tab indicator — only visible when collapsed
+          if (showActivePill) ...[
+            _ActiveTabPill(
+              icon: activeTab.icon,
+              label: activeTab.label,
+              badge: activeTab.badge,
+              accent: accent,
+            ),
+            const SizedBox(width: 8),
+          ],
+          // Chevron toggle — only when collapsible
+          if (widget.collapsible)
+            _ChevronToggle(
+              collapsed: _collapsed,
+              accent: accent,
+              onTap: _toggle,
+            ),
+        ],
+      ),
+    );
+
+    // Make the entire header row tappable to toggle (only when collapsible).
+    if (widget.collapsible) {
+      header = InkWell(
+        onTap: _toggle,
+        borderRadius: BorderRadius.circular(16),
+        child: header,
+      );
+    }
+    return header;
+  }
+
   /// Fixed (non-scrollable) tab row — each tab takes equal width.
   Widget _buildFixedTabRow(
       BoxConstraints constraints, Color accent, int activeIndex) {
     return Row(
-      children: List.generate(tabs.length, (i) {
-        final tab = tabs[i];
+      children: List.generate(widget.tabs.length, (i) {
+        final tab = widget.tabs[i];
         final isActive = i == activeIndex;
         return Expanded(
           child: Padding(
-            padding: EdgeInsets.only(right: i < tabs.length - 1 ? 8 : 0),
+            padding: EdgeInsets.only(right: i < widget.tabs.length - 1 ? 8 : 0),
             child: _TabPill(
               icon: tab.icon,
               label: tab.label,
@@ -233,15 +339,16 @@ class SectionNavigator extends StatelessWidget {
   }
 
   /// Scrollable tab row — for narrow screens.
-  Widget _buildScrollableTabRow(Color accent, int activeIndex) {
+  Widget _buildScrollableTabRow(
+      BoxConstraints constraints, Color accent, int activeIndex) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: List.generate(tabs.length, (i) {
-          final tab = tabs[i];
+        children: List.generate(widget.tabs.length, (i) {
+          final tab = widget.tabs[i];
           final isActive = i == activeIndex;
           return Padding(
-            padding: EdgeInsets.only(right: i < tabs.length - 1 ? 8 : 0),
+            padding: EdgeInsets.only(right: i < widget.tabs.length - 1 ? 8 : 0),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 180),
               child: _TabPill(
@@ -258,11 +365,123 @@ class SectionNavigator extends StatelessWidget {
       ),
     );
   }
+}
 
-  void _selectTab(int index) {
-    if (index == controller.index) return;
-    controller.animateTo(index);
-    onChanged(index);
+/// Compact active-tab indicator shown in the collapsed header. Lets the
+/// user see which section is currently selected without expanding the
+/// full tab bar.
+class _ActiveTabPill extends StatelessWidget {
+  const _ActiveTabPill({
+    required this.icon,
+    required this.label,
+    required this.accent,
+    this.badge,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color accent;
+  final int? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: accent.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: accent),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: accent,
+              fontFamily: appFontFamily,
+            ),
+          ),
+          if (badge != null && badge! > 0) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                badge! > 99 ? '99+' : '$badge',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: accent,
+                  fontFamily: appFontFamily,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Chevron toggle button rendered at the right edge of the header when
+/// `collapsible: true`. Tapping it (or the header) toggles collapse.
+class _ChevronToggle extends StatelessWidget {
+  const _ChevronToggle({
+    required this.collapsed,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final bool collapsed;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: collapsed
+                ? Colors.white
+                : accent.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: collapsed
+                  ? const Color(0xFFE4E7EC)
+                  : accent.withValues(alpha: 0.25),
+            ),
+          ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            child: Icon(
+              collapsed
+                  ? Icons.keyboard_arrow_down_rounded
+                  : Icons.keyboard_arrow_up_rounded,
+              key: ValueKey(collapsed),
+              size: 20,
+              color: collapsed ? const Color(0xFF6B7280) : accent,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -7719,6 +7719,8 @@ class QualityStandard {
   final String category;
   final String description;
   final String applicability;
+  final String effectiveDate;
+  final String reviewDate;
 
   QualityStandard({
     required this.id,
@@ -7727,6 +7729,8 @@ class QualityStandard {
     required this.category,
     required this.description,
     required this.applicability,
+    this.effectiveDate = '',
+    this.reviewDate = '',
   });
 
   factory QualityStandard.empty() => QualityStandard(
@@ -7736,6 +7740,8 @@ class QualityStandard {
         category: '',
         description: '',
         applicability: '',
+        effectiveDate: '',
+        reviewDate: '',
       );
 
   Map<String, dynamic> toJson() => {
@@ -7745,6 +7751,8 @@ class QualityStandard {
         'category': category,
         'description': description,
         'applicability': applicability,
+        'effectiveDate': effectiveDate,
+        'reviewDate': reviewDate,
       };
 
   factory QualityStandard.fromJson(Map<String, dynamic> json) {
@@ -7755,6 +7763,8 @@ class QualityStandard {
       category: json['category']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       applicability: json['applicability']?.toString() ?? '',
+      effectiveDate: json['effectiveDate']?.toString() ?? '',
+      reviewDate: json['reviewDate']?.toString() ?? '',
     );
   }
 
@@ -7764,6 +7774,8 @@ class QualityStandard {
     String? category,
     String? description,
     String? applicability,
+    String? effectiveDate,
+    String? reviewDate,
   }) {
     return QualityStandard(
       id: id,
@@ -7772,6 +7784,8 @@ class QualityStandard {
       category: category ?? this.category,
       description: description ?? this.description,
       applicability: applicability ?? this.applicability,
+      effectiveDate: effectiveDate ?? this.effectiveDate,
+      reviewDate: reviewDate ?? this.reviewDate,
     );
   }
 

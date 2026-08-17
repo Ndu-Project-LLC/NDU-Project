@@ -50,7 +50,7 @@ class SectionTab {
   final int? badge;
 }
 
-class SectionNavigator extends StatelessWidget {
+class SectionNavigator extends StatefulWidget {
   const SectionNavigator({
     super.key,
     required this.tabs,
@@ -95,13 +95,20 @@ class SectionNavigator extends StatelessWidget {
   final String routeLabel;
 
   @override
+  State<SectionNavigator> createState() => _SectionNavigatorState();
+}
+
+class _SectionNavigatorState extends State<SectionNavigator> {
+  bool _isCollapsed = false;
+
+  @override
   Widget build(BuildContext context) {
-    final accent = accentColor ?? LightModeColors.accent;
-    final activeIndex = controller.index.clamp(0, tabs.length - 1);
+    final accent = widget.accentColor ?? LightModeColors.accent;
+    final activeIndex = widget.controller.index.clamp(0, widget.tabs.length - 1);
 
     return Container(
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: widget.backgroundColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE4E7EC)),
         boxShadow: [
@@ -115,13 +122,13 @@ class SectionNavigator extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Header row (icon + title + subtitle) ─────────────────────
-          if (title != null || icon != null)
+          // ── Header row (icon + title + subtitle + collapse toggle) ──
+          if (widget.title != null || widget.icon != null)
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
               child: Row(
                 children: [
-                  if (icon != null) ...[
+                  if (widget.icon != null) ...[
                     Container(
                       width: 40,
                       height: 40,
@@ -140,17 +147,17 @@ class SectionNavigator extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Icon(icon, color: Colors.white, size: 20),
+                      child: Icon(widget.icon, color: Colors.white, size: 20),
                     ),
                     const SizedBox(width: 12),
                   ],
-                  if (title != null)
+                  if (widget.title != null)
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            title!,
+                            widget.title!,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -158,10 +165,10 @@ class SectionNavigator extends StatelessWidget {
                               fontFamily: appFontFamily,
                             ),
                           ),
-                          if (subtitle != null) ...[
+                          if (widget.subtitle != null) ...[
                             const SizedBox(height: 2),
                             Text(
-                              subtitle!,
+                              widget.subtitle!,
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFF6B7280),
@@ -172,36 +179,75 @@ class SectionNavigator extends StatelessWidget {
                         ],
                       ),
                     ),
+                  // ── Collapse / Expand toggle ──
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => setState(() => _isCollapsed = !_isCollapsed),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE4E7EC)),
+                        ),
+                        child: Icon(
+                          _isCollapsed
+                              ? Icons.keyboard_arrow_down_rounded
+                              : Icons.keyboard_arrow_up_rounded,
+                          size: 18,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
 
-          // ── Tab bar ──────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Determine if tabs should wrap or fit in a single row
-                final tabCount = tabs.length;
-                final isScrollable = constraints.maxWidth < tabCount * 130;
+          // ── Collapsible content ──
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Tab bar ──────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final tabCount = widget.tabs.length;
+                      final isScrollable =
+                          constraints.maxWidth < tabCount * 130;
 
-                if (isScrollable) {
-                  return _buildScrollableTabRow(accent, activeIndex);
-                }
-                return _buildFixedTabRow(constraints, accent, activeIndex);
-              },
-            ),
-          ),
+                      if (isScrollable) {
+                        return _buildScrollableTabRow(accent, activeIndex);
+                      }
+                      return _buildFixedTabRow(
+                          constraints, accent, activeIndex);
+                    },
+                  ),
+                ),
 
-          // ── Page Route stepper ───────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: _PageRouteStepper(
-              totalSteps: tabs.length,
-              currentStep: activeIndex,
-              accentColor: accent,
-              label: routeLabel,
+                // ── Page Route stepper ───────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                  child: _PageRouteStepper(
+                    totalSteps: widget.tabs.length,
+                    currentStep: activeIndex,
+                    accentColor: accent,
+                    label: widget.routeLabel,
+                  ),
+                ),
+              ],
             ),
+            crossFadeState: _isCollapsed
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
+            duration: const Duration(milliseconds: 250),
+            sizeCurve: Curves.easeOutCubic,
           ),
         ],
       ),
@@ -212,12 +258,12 @@ class SectionNavigator extends StatelessWidget {
   Widget _buildFixedTabRow(
       BoxConstraints constraints, Color accent, int activeIndex) {
     return Row(
-      children: List.generate(tabs.length, (i) {
-        final tab = tabs[i];
+      children: List.generate(widget.tabs.length, (i) {
+        final tab = widget.tabs[i];
         final isActive = i == activeIndex;
         return Expanded(
           child: Padding(
-            padding: EdgeInsets.only(right: i < tabs.length - 1 ? 8 : 0),
+            padding: EdgeInsets.only(right: i < widget.tabs.length - 1 ? 8 : 0),
             child: _TabPill(
               icon: tab.icon,
               label: tab.label,
@@ -237,11 +283,11 @@ class SectionNavigator extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: List.generate(tabs.length, (i) {
-          final tab = tabs[i];
+        children: List.generate(widget.tabs.length, (i) {
+          final tab = widget.tabs[i];
           final isActive = i == activeIndex;
           return Padding(
-            padding: EdgeInsets.only(right: i < tabs.length - 1 ? 8 : 0),
+            padding: EdgeInsets.only(right: i < widget.tabs.length - 1 ? 8 : 0),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 180),
               child: _TabPill(
@@ -260,9 +306,9 @@ class SectionNavigator extends StatelessWidget {
   }
 
   void _selectTab(int index) {
-    if (index == controller.index) return;
-    controller.animateTo(index);
-    onChanged(index);
+    if (index == widget.controller.index) return;
+    widget.controller.animateTo(index);
+    widget.onChanged(index);
   }
 }
 

@@ -3455,58 +3455,56 @@ class _StandardsTable extends StatelessWidget {
  message:
  'No standards defined. Add standards to ensure QA/QC controls align with requirements.',
  );
- }
-
- return _DataTableShell(
- title: 'Quality Standards',
- table: DataTable(
- headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
- headingRowHeight: 52,
- dataRowMinHeight: 56,
- dataRowMaxHeight: 56,
- columnSpacing: 24,
- horizontalMargin: 16,
- columns: const [
- DataColumn(label: Text('Standard', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
- DataColumn(label: Text('Source', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
- DataColumn(label: Text('Category', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
- DataColumn(label: Text('Applicability', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
- DataColumn(label: Text('Actions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
- ],
- rows: [
- for (int i = 0; i < standards.length; i++)
- DataRow(
- cells: [
- DataCell(SizedBox(width: 220, child: Text(standards[i].name, style: const TextStyle(fontSize: 13)))),
- DataCell(
- SizedBox(width: 140, child: Text(standards[i].source, style: const TextStyle(fontSize: 13)))),
- DataCell(
- SizedBox(width: 120, child: Text(standards[i].category, style: const TextStyle(fontSize: 13)))),
- DataCell(SizedBox(
- width: 180, child: Text(standards[i].applicability, style: const TextStyle(fontSize: 13)))),
- DataCell(
- Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- IconButton(
- icon: const Icon(Icons.edit_outlined, size: 18),
- onPressed: () => onEdit(i),
- tooltip: 'Edit',
- ),
- IconButton(
- icon: const Icon(Icons.delete_outline, size: 18),
- color: const Color(0xFFDC2626),
- onPressed: () => onRemove(i),
- tooltip: 'Delete',
- ),
- ],
- ),
- ),
- ],
- ),
- ],
- ),
- );
+ } return _DataTableShell(
+   title: 'Quality Standards',
+   table: DataTable(
+    headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
+    headingRowHeight: 52,
+    dataRowMinHeight: 56,
+    dataRowMaxHeight: 56,
+    columnSpacing: 24,
+    horizontalMargin: 16,     columns: const [
+      DataColumn(label: Text('Standard', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+      DataColumn(label: Text('Source', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+      DataColumn(label: Text('Category', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+      DataColumn(label: Text('Applicability', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+      DataColumn(label: Text('Effective Date', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+      DataColumn(label: Text('Review Date', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+      DataColumn(label: Text('Actions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+     ],
+     rows: [
+      for (int i = 0; i < standards.length; i++)
+       DataRow(
+        cells: [
+         DataCell(Text(standards[i].name, style: const TextStyle(fontSize: 13))),
+         DataCell(Text(standards[i].source, style: const TextStyle(fontSize: 13))),
+         DataCell(Text(standards[i].category, style: const TextStyle(fontSize: 13))),
+         DataCell(Text(standards[i].applicability, style: const TextStyle(fontSize: 13))),
+         DataCell(Text(standards[i].effectiveDate.isEmpty ? '—' : standards[i].effectiveDate, style: const TextStyle(fontSize: 13))),
+         DataCell(Text(standards[i].reviewDate.isEmpty ? '—' : standards[i].reviewDate, style: const TextStyle(fontSize: 13))),
+         DataCell(
+          Row(
+           mainAxisSize: MainAxisSize.min,
+           children: [
+            IconButton(
+             icon: const Icon(Icons.edit_outlined, size: 18),
+             onPressed: () => onEdit(i),
+             tooltip: 'Edit',
+            ),
+            IconButton(
+             icon: const Icon(Icons.delete_outline, size: 18),
+             color: const Color(0xFFDC2626),
+             onPressed: () => onRemove(i),
+             tooltip: 'Delete',
+            ),
+           ],
+          ),
+         ),
+        ],
+      ),
+    ],
+   ),
+  );
  }
 }
 
@@ -4262,57 +4260,83 @@ class _QualityStandardDialog extends StatefulWidget {
 
  @override
  State<_QualityStandardDialog> createState() => _QualityStandardDialogState();
-}
+}class _QualityStandardDialogState extends State<_QualityStandardDialog> {
+  late final TextEditingController _name;
+  late final TextEditingController _source;
+  late final TextEditingController _category;
+  late final TextEditingController _description;
+  late final TextEditingController _applicability;
+  late final TextEditingController _effectiveDate;
+  late final TextEditingController _reviewDate;
 
-class _QualityStandardDialogState extends State<_QualityStandardDialog> {
- late final TextEditingController _name;
- late final TextEditingController _source;
- late final TextEditingController _category;
- late final TextEditingController _description;
- late final TextEditingController _applicability;
+  @override
+  void initState() {
+    super.initState();
+    _name = TextEditingController(text: widget.initialValue?.name ?? '');
+    _source = TextEditingController(text: widget.initialValue?.source ?? '');
+    _category =
+        TextEditingController(text: widget.initialValue?.category ?? '');
+    _description =
+        TextEditingController(text: widget.initialValue?.description ?? '');
+    _applicability =
+        TextEditingController(text: widget.initialValue?.applicability ?? '');
+    _effectiveDate = TextEditingController(
+        text: _normalizedDateText(widget.initialValue?.effectiveDate ?? ''));
+    _reviewDate = TextEditingController(
+        text: _normalizedDateText(widget.initialValue?.reviewDate ?? ''));
+  }
 
- @override
- void initState() {
- super.initState();
- _name = TextEditingController(text: widget.initialValue?.name ?? '');
- _source = TextEditingController(text: widget.initialValue?.source ?? '');
- _category =
- TextEditingController(text: widget.initialValue?.category ?? '');
- _description =
- TextEditingController(text: widget.initialValue?.description ?? '');
- _applicability =
- TextEditingController(text: widget.initialValue?.applicability ?? '');
- }
+  Future<void> _pickEffectiveDate() async {
+    final picked = await _showQualityDatePicker(
+      context,
+      currentValue: _effectiveDate.text.trim(),
+    );
+    if (!mounted || picked == null) return;
+    setState(() => _effectiveDate.text = _formatDate(picked));
+  }
 
- @override
- void dispose() {
- _name.dispose();
- _source.dispose();
- _category.dispose();
- _description.dispose();
- _applicability.dispose();
- super.dispose();
- }
+  Future<void> _pickReviewDate() async {
+    final picked = await _showQualityDatePicker(
+      context,
+      currentValue: _reviewDate.text.trim(),
+    );
+    if (!mounted || picked == null) return;
+    setState(() => _reviewDate.text = _formatDate(picked));
+  }
 
- void _save() {
- if (_name.text.trim().isEmpty) {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Standard name is required')),
- );
- return;
- }
+  @override
+  void dispose() {
+    _name.dispose();
+    _source.dispose();
+    _category.dispose();
+    _description.dispose();
+    _applicability.dispose();
+    _effectiveDate.dispose();
+    _reviewDate.dispose();
+    super.dispose();
+  }
 
- Navigator.of(context).pop(
- QualityStandard(
- id: widget.initialValue?.id ?? _newId(),
- name: _name.text.trim(),
- source: _source.text.trim(),
- category: _category.text.trim(),
- description: _description.text.trim(),
- applicability: _applicability.text.trim(),
- ),
- );
- }
+  void _save() {
+    if (_name.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Standard name is required')),
+      );
+      return;
+    }
+
+    Navigator.of(context).pop(
+      QualityStandard(
+        id: widget.initialValue?.id ?? _newId(),
+        name: _name.text.trim(),
+        source: _source.text.trim(),
+        category: _category.text.trim(),
+        description: _description.text.trim(),
+        applicability: _applicability.text.trim(),
+        effectiveDate: _effectiveDate.text.trim(),
+        reviewDate: _reviewDate.text.trim(),
+      ),
+    );
+  }
 
  @override
  Widget build(BuildContext context) {
@@ -4345,15 +4369,46 @@ class _QualityStandardDialogState extends State<_QualityStandardDialog> {
  maxLines: 4,
  decoration: _inputDecoration(context, ''),
  ),
- const SizedBox(height: 10),
- const _FieldLabel('Applicability'),
- VoiceTextField(
- controller: _applicability,
- decoration: _inputDecoration(context, '')),
- ],
- ),
- ),
- actions: [
+ const SizedBox(height: 10), const _FieldLabel('Applicability'),
+          VoiceTextField(
+              controller: _applicability,
+              decoration: _inputDecoration(context, '')),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _FieldLabel('Effective Date'),
+                    _datePickerField(
+                      context,
+                      controller: _effectiveDate,
+                      onTap: _pickEffectiveDate,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _FieldLabel('Review Date'),
+                    _datePickerField(
+                      context,
+                      controller: _reviewDate,
+                      onTap: _pickReviewDate,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+    actions: [
  TextButton(
  onPressed: () => Navigator.of(context).pop(),
  child: const Text('Cancel')),

@@ -1457,6 +1457,7 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                   child: VoiceTextField(
                     controller: widget.titleController,
                     focusNode: widget.titleFocusNode,
+                    maxLines: 1,
                     decoration: InputDecoration(
                       hintText: 'Goal ${widget.goalIndex + 1} Title',
                       border: InputBorder.none,
@@ -1466,7 +1467,8 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                     style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: _kPrimaryText),
+                        color: _kPrimaryText,
+                        overflow: TextOverflow.ellipsis),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1545,33 +1547,38 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                         fontWeight: FontWeight.w500,
                         color: _kSecondaryText)),
                 const SizedBox(height: 6),
-                VoiceTextField(
-                  controller: widget.descController,
-                  focusNode: widget.descFocusNode,
-                  decoration: InputDecoration(
-                    hintText: 'Enter description',
-                    hintStyle:
-                        const TextStyle(color: _kSecondaryText, fontSize: 14),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: _kBorderColor),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 80),
+                  child: VoiceTextField(
+                    controller: widget.descController,
+                    focusNode: widget.descFocusNode,
+                    maxLines: 2,
+                    minLines: 1,
+                    decoration: InputDecoration(
+                      hintText: 'Enter description',
+                      hintStyle:
+                          const TextStyle(color: _kSecondaryText, fontSize: 14),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _kBorderColor),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _kBorderColor),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide:
+                            const BorderSide(color: _kAccentColor, width: 1.5),
+                      ),
+                      isDense: true,
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: _kBorderColor),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                          const BorderSide(color: _kAccentColor, width: 1.5),
-                    ),
-                    isDense: true,
+                    style: const TextStyle(fontSize: 14, color: _kPrimaryText),
                   ),
-                  style: const TextStyle(fontSize: 14, color: _kPrimaryText),
                 ),
                 const SizedBox(height: 16),
                 // ── Milestones sub-section (mapped from FEP) ──
@@ -1630,85 +1637,97 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                               TextStyle(fontSize: 12, color: _kSecondaryText),
                         )
                       else
-                        ...widget.availableMilestones
-                            .where((m) => m.id.trim().isNotEmpty)
-                            .map((milestone) {
-                          final selected = widget.selectedMilestoneIds
-                              .contains(milestone.id);
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: InkWell(
-                              onTap: () => widget.onToggleMilestone(
-                                  milestone.id, !selected),
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: selected
-                                      ? Colors.white
-                                      : const Color(0x80FFFFFF),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: selected
-                                        ? _kAccentColor
-                                        : const Color(0xFFFFE082),
-                                  ),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Checkbox(
-                                      value: selected,
-                                      onChanged: (value) =>
-                                          widget.onToggleMilestone(
-                                              milestone.id, value ?? false),
-                                      activeColor: _kAccentColor,
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 160),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: widget.availableMilestones
+                                  .where((m) => m.id.trim().isNotEmpty)
+                                  .map((milestone) {
+                                final selected = widget.selectedMilestoneIds
+                                    .contains(milestone.id);
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: InkWell(
+                                    onTap: () => widget.onToggleMilestone(
+                                        milestone.id, !selected),
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: selected
+                                            ? Colors.white
+                                            : const Color(0x80FFFFFF),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: selected
+                                              ? _kAccentColor
+                                              : const Color(0xFFFFE082),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            milestone.name.trim().isEmpty
-                                                ? 'Untitled milestone'
-                                                : milestone.name.trim(),
-                                            style: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                color: _kPrimaryText),
+                                          Checkbox(
+                                            value: selected,
+                                            onChanged: (value) =>
+                                                widget.onToggleMilestone(
+                                                    milestone.id, value ?? false),
+                                            activeColor: _kAccentColor,
+                                            visualDensity: VisualDensity.compact,
                                           ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '${_formatMilestoneDate(milestone.dueDate)}${milestone.discipline.trim().isEmpty ? '' : ' • ${milestone.discipline.trim()}'}',
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: _kSecondaryText),
-                                          ),
-                                          if (milestone.comments
-                                              .trim()
-                                              .isNotEmpty) ...[
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              milestone.comments.trim(),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: _kSecondaryText),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  milestone.name.trim().isEmpty
+                                                      ? 'Untitled milestone'
+                                                      : milestone.name.trim(),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: _kPrimaryText),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  '${_formatMilestoneDate(milestone.dueDate)}${milestone.discipline.trim().isEmpty ? '' : ' • ${milestone.discipline.trim()}'}',
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: _kSecondaryText),
+                                                ),
+                                                if (milestone.comments
+                                                    .trim()
+                                                    .isNotEmpty) ...[
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    milestone.comments.trim(),
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color: _kSecondaryText),
+                                                  ),
+                                                ],
+                                              ],
                                             ),
-                                          ],
+                                          ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
+                                  ),
+                                );
+                              }).toList(),
                             ),
-                          );
-                        }),
+                          ),
+                        ),
                       const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerRight,

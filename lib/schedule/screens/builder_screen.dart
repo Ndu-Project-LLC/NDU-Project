@@ -1984,6 +1984,7 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),

@@ -549,13 +549,15 @@ class _LongLeadEquipmentOrderingScreenState
  Widget _buildNotesCard() {
  return _SectionCard(
  title: 'Notes',
- subtitle: 'Capture lead times, vendor constraints, and critical dates.',
- child: VoiceTextField(
- controller: _notesController,
- maxLines: 3,
- decoration: InputDecoration(
- hintText:
- 'Document key ordering considerations, vendor contacts, and escalation triggers.',
+ subtitle: 'Capture lead times, vendor constraints, and critical dates.',      child: VoiceTextField(
+        controller: _notesController,
+        maxLines: 3,
+        enableVoice: false,
+        enableDocxImport: false,
+        enableKazAi: false,
+        decoration: InputDecoration(
+          hintText:
+              'Document key ordering considerations, vendor contacts, and escalation triggers.',
  hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
  filled: true,
  fillColor: Colors.white,

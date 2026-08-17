@@ -218,16 +218,31 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     final summary = levelParts.join(' · ');
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE4E7EC)),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            const Color(0xFFFFFCF5),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: wbs.methodology.color.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
         boxShadow: [
+          BoxShadow(
+            color: wbs.methodology.color.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
-            offset: const Offset(0, 3),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -236,18 +251,29 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
         children: [
           Row(
             children: [
-              // Icon with methodology color
+              // Icon with methodology color — refined
               Container(
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: wbs.methodology.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    colors: [
+                      wbs.methodology.color.withValues(alpha: 0.18),
+                      wbs.methodology.color.withValues(alpha: 0.08),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: wbs.methodology.color.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
                 ),
                 child:
-                    Icon(fm.iconData, color: wbs.methodology.color, size: 22),
+                    Icon(fm.iconData, color: wbs.methodology.color, size: 24),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,21 +283,30 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                         Flexible(
                           child: Text(wbs.projectName,
                               style: const TextStyle(
-                                  color: Color(0xFF1A1D1F),
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold)),
+                                  color: Color(0xFF111827),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.3,
+                                  height: 1.2)),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         _buildMethodologyBadge(wbs.methodology),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      summary.isNotEmpty
-                          ? '${fm.label} · $summary · $totalNodes nodes total'
-                          : '${fm.label} · $totalNodes nodes total',
-                      style: const TextStyle(
-                          color: Color(0xFF6B7280), fontSize: 13),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(fm.iconData, size: 13, color: const Color(0xFF9CA3AF)),
+                        const SizedBox(width: 5),
+                        Text(
+                          summary.isNotEmpty
+                              ? '${fm.label} · $summary · $totalNodes nodes'
+                              : '${fm.label} · $totalNodes nodes',
+                          style: const TextStyle(
+                              color: Color(0xFF6B7280), fontSize: 13,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -431,23 +466,37 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
 
   Widget _buildMethodologyBadge(ProjectMethodology methodology) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: methodology.color.withValues(alpha: 0.12),
+        gradient: LinearGradient(
+          colors: [
+            methodology.color.withValues(alpha: 0.15),
+            methodology.color.withValues(alpha: 0.08),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: methodology.color.withValues(alpha: 0.3)),
+        border: Border.all(color: methodology.color.withValues(alpha: 0.25)),
+        boxShadow: [
+          BoxShadow(
+            color: methodology.color.withValues(alpha: 0.08),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(methodology.icon, size: 12, color: methodology.color),
-          const SizedBox(width: 4),
+          const SizedBox(width: 5),
           Text(
             methodology.label,
             style: TextStyle(
               color: methodology.color,
               fontSize: 10,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               letterSpacing: 0.5,
             ),
           ),
@@ -527,16 +576,20 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
         const SizedBox(height: 16),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: const Color(0xFFE4E7EC)),
+            gradient: LinearGradient(
+              colors: [Colors.white, const Color(0xFFFAFBFC)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(color: const Color(0xFFE8EBF0)),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -693,17 +746,24 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     final hasChildren = node.children.isNotEmpty;
     final canAddChild = node.level.value < fm.maxDepth;
     return Container(
-      constraints: const BoxConstraints(minWidth: 160, maxWidth: 220),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      constraints: const BoxConstraints(minWidth: 170, maxWidth: 240),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: accent.withValues(alpha: 0.6), width: 1.5),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            accent.withValues(alpha: 0.03),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withValues(alpha: 0.4), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: accent.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -811,15 +871,27 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
 
   Widget _buildSimpleLevelHint(WBSFramework fm) {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE4E7EC)),
+        gradient: LinearGradient(
+          colors: [const Color(0xFFF8FAFC), const Color(0xFFF1F5F9)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Text(
-        'Level 0 = Project · Level 1 = ${fm.level1Label} · Level 2 = ${fm.level2Label} · ... up to Level ${fm.maxDepth}',
-        style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, size: 14, color: Color(0xFF94A3B8)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Level 0 = Project · Level 1 = ${fm.level1Label} · Level 2 = ${fm.level2Label} · ... up to Level ${fm.maxDepth}',
+              style: const TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -827,25 +899,41 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
   Widget _buildSimpleEmptyState(
       BuildContext context, WBSProvider provider, WBSFramework fm) {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFE4E7EC)),
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: [Colors.white, const Color(0xFFFFFCF5)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        border: Border.all(color: const Color(0xFFE8EBF0)),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          const Icon(Icons.layers, color: Color(0xFF9CA3AF), size: 32),
-          const SizedBox(height: 8),
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8E1),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFFFE082).withValues(alpha: 0.5)),
+            ),
+            child: const Icon(Icons.layers, color: Color(0xFFFFC107), size: 28),
+          ),
+          const SizedBox(height: 16),
           Text('No ${fm.level1Label} nodes yet.',
-              style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+              style: const TextStyle(color: Color(0xFF374151), fontSize: 15, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          const Text('Start building your work breakdown structure by adding the first level.',
+              style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13), textAlign: TextAlign.center),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -892,13 +980,21 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
       child: InkWell(
         onTap: onPressed,
         borderRadius: BorderRadius.circular(999),
+        hoverColor: color.withValues(alpha: 0.08),
         child: Container(
-          width: 30,
-          height: 30,
+          width: 32,
+          height: 32,
           decoration: BoxDecoration(
             color: const Color(0xFFF8FAFC),
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFFE4E7EC)),
+            border: Border.all(color: const Color(0xFFE4E7EC), width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
           child: Icon(icon, size: 16, color: color),
         ),
@@ -1194,22 +1290,29 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
         : levelColor(depth, LightModeColors.accent);
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            isRoot ? accentColor.withValues(alpha: 0.02) : const Color(0xFFFAFBFC),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
             color: isRoot
-                ? accentColor.withValues(alpha: 0.3)
-                : const Color(0xFFE4E7EC),
+                ? accentColor.withValues(alpha: 0.25)
+                : const Color(0xFFE8EBF0),
             width: isRoot ? 1.5 : 1),
         boxShadow: [
           BoxShadow(
             color: isRoot
-                ? accentColor.withValues(alpha: 0.06)
-                : Colors.black.withValues(alpha: 0.03),
-            blurRadius: isRoot ? 12 : 6,
-            offset: const Offset(0, 3),
+                ? accentColor.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.04),
+            blurRadius: isRoot ? 16 : 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),

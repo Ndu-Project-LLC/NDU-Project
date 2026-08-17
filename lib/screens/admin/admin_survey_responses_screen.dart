@@ -1,12 +1,10 @@
 import 'dart:convert';
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:ndu_project/models/user_model.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
-import 'package:ndu_project/services/profile_onboarding_service.dart';
-import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 
 // Conditional import: web impl uses dart:html to trigger a browser
@@ -24,16 +22,21 @@ import 'csv_download_web.dart'
 /// counterpart — it lists every user's responses in one place so the admin
 /// team can audit them at a glance.
 ///
-/// Data sources:
-///   - [UserService.watchAllUsers] — top-level `users/{uid}` docs (for the
-///     email + display name cross-reference).
-///   - [ProfileOnboardingService.watchAllForAdmin] — every user's
-///     `profile/onboarding` doc, streamed live so the admin panel sees
-///     responses the moment a user submits the survey.
+/// Data source:
+///   The `getAdminSurveyResponses` Callable Cloud Function (defined in
+///   functions/index.js). It uses the Admin SDK, so it bypasses Firestore
+///   rules — which matters because the firestore.rules deploy is currently
+///   blocked by a missing STAGING_DEPLOY_TOKEN secret in CI, so the
+///   direct-Firestore-read path can't be relied on. The Cloud Function
+///   reads every user's `users/{uid}` document + their
+///   `users/{uid}/profile/onboarding` document in parallel and returns
+///   the combined payload as JSON.
 ///
-/// The Firestore rule on `users/{uid}/profile/{document=**}` grants
-/// `isAdmin()` read access (in addition to the document owner), which is
-/// what makes the second stream possible.
+/// Authorisation: the Cloud Function checks that the caller's email is in
+/// ADMIN_EMAILS (currently `chungu424@gmail.com`) and throws
+/// `permission-denied` otherwise. This screen is wrapped in
+/// `AdminAuthWrapper` so it's only reachable by signed-in admins; the CF
+/// check is a defence-in-depth second gate.
 class AdminSurveyResponsesScreen extends StatefulWidget {
   const AdminSurveyResponsesScreen({super.key});
 
@@ -50,9 +53,14 @@ class _AdminSurveyResponsesScreenState
   /// Free-text search across email / display name / position / country.
   String _searchQuery = '';
 
-  /// Cached filtered rows used by the CSV export bar at the bottom of the
-  /// screen. Updated on every build pass where filtering is applied.
-  List<_SurveyRow> _lastFilteredRows = const [];
+  /// Cached snapshot of the most recent Cloud Function response. Used by
+  /// the CSV export bar so the admin can export the currently-filtered
+  /// rows without re-fetching.
+  List<_SurveyRow> _lastAllRows = const [];
+
+  /// The active fetch future. Replaced by [_refresh] when the admin
+  /// clicks the refresh button.
+  late Future<List<_SurveyRow>> _fetchFuture;
 
   @override
   void initState() {
@@ -60,6 +68,41 @@ class _AdminSurveyResponsesScreenState
     // Record admin dashboard context for logo navigation.
     NavigationContextService.instance
         .setLastAdminDashboard(AppRoutes.adminSurveyResponses);
+    _fetchFuture = _fetchRows();
+  }
+
+  Future<List<_SurveyRow>> _fetchRows() async {
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'getAdminSurveyResponses',
+      options: HttpsCallableOptions(timeout: const Duration(seconds: 60)),
+    );
+    final result =
+        await callable.call<Map<String, dynamic>>(<String, dynamic>{});
+    final data = result.data;
+    final usersList = (data['users'] as List<dynamic>?) ?? const [];
+    final rows = <_SurveyRow>[];
+    for (final u in usersList) {
+      final map = u as Map<String, dynamic>;
+      rows.add(_SurveyRow.fromJson(map));
+    }
+    // Sort: most recently completed first; users who haven't started
+    // sink to the bottom.
+    rows.sort((a, b) {
+      final ta = a.completedAt;
+      final tb = b.completedAt;
+      if (ta == null && tb == null) return 0;
+      if (ta == null) return 1;
+      if (tb == null) return -1;
+      return tb.compareTo(ta);
+    });
+    _lastAllRows = rows;
+    return rows;
+  }
+
+  void _refresh() {
+    setState(() {
+      _fetchFuture = _fetchRows();
+    });
   }
 
   @override
@@ -88,8 +131,13 @@ class _AdminSurveyResponsesScreenState
             ),
           ],
         ),
-        actions: const [
-          Padding(
+        actions: [
+          IconButton(
+            onPressed: _refresh,
+            icon: const Icon(Icons.refresh, color: Colors.black),
+            tooltip: 'Refresh',
+          ),
+          const Padding(
             padding: EdgeInsets.only(right: 12),
             child: UnifiedProfileMenu(compact: true),
           ),
@@ -101,136 +149,114 @@ class _AdminSurveyResponsesScreenState
           children: [
             _buildFilterBar(),
             Expanded(
-              child: StreamBuilder<List<UserModel>>(
-                stream: UserService.watchAllUsers(),
-                builder: (context, usersSnapshot) {
-                  if (usersSnapshot.connectionState ==
-                      ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+              child: FutureBuilder<List<_SurveyRow>>(
+                future: _fetchFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text(
+                            'Loading survey responses…',
+                            style: TextStyle(color: Colors.black54),
+                          ),
+                        ],
+                      ),
+                    );
                   }
-                  if (usersSnapshot.hasError) {
+                  if (snapshot.hasError) {
+                    final err = snapshot.error.toString();
+                    final isPermission = err.contains('permission-denied') ||
+                        err.contains('admin');
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.all(32),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.error_outline,
-                                size: 64, color: Colors.red),
+                            Icon(
+                              isPermission
+                                  ? Icons.lock_outline
+                                  : Icons.error_outline,
+                              size: 64,
+                              color: isPermission
+                                  ? Colors.amber
+                                  : Colors.red,
+                            ),
                             const SizedBox(height: 16),
                             Text(
-                                'Error loading users: ${usersSnapshot.error}'),
+                              isPermission
+                                  ? 'Admin access required'
+                                  : 'Unable to load survey responses',
+                              style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              isPermission
+                                  ? 'Your account is not on the admin email '
+                                      'allowlist (chungu424@gmail.com). The Cloud '
+                                      'Function getAdminSurveyResponses refuses '
+                                      'to read other users\' survey answers for '
+                                      'non-admin callers.'
+                                  : 'The Cloud Function getAdminSurveyResponses '
+                                      'could not be reached. Make sure it has been '
+                                      'deployed (firebase deploy --only functions) '
+                                      'and that you are signed in as an admin.\n\n'
+                                      'Error: $err',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.black54),
+                            ),
+                            const SizedBox(height: 16),
+                            FilledButton.icon(
+                              onPressed: _refresh,
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Retry'),
+                            ),
                           ],
                         ),
                       ),
                     );
                   }
 
-                  final users = usersSnapshot.data ?? const [];
+                  final rows = snapshot.data ?? const <_SurveyRow>[];
+                  final filtered = _applyFilter(rows);
 
-                  return StreamBuilder<List<AdminOnboardingRecord>>(
-                    stream: ProfileOnboardingService.watchAllForAdmin(),
-                    builder: (context, onboardingSnapshot) {
-                      if (onboardingSnapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (onboardingSnapshot.hasError) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(32),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.lock_outline,
-                                    size: 64, color: Colors.amber),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'Unable to read survey responses',
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'This usually means the Firestore rules '
-                                  'have not been deployed yet, or the '
-                                  'signed-in admin account lacks permission. '
-                                  'Error: ${onboardingSnapshot.error}',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      color: Colors.black54),
-                                ),
-                              ],
-                            ),
+                  if (filtered.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.assignment_outlined,
+                              size: 64, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text(
+                            'No survey responses match this filter',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600),
                           ),
-                        );
-                      }
-
-                      final records = onboardingSnapshot.data ??
-                          const <AdminOnboardingRecord>[];
-
-                      // Cross-reference: pair each onboarding record with
-                      // its UserModel (for email + display name). Users
-                      // without an onboarding doc are still surfaced as
-                      // "not started" so the admin can see who hasn't
-                      // taken the survey yet.
-                      final byUid = {for (final r in records) r.uid: r};
-                      final rows = <_SurveyRow>[];
-                      for (final u in users) {
-                        final rec = byUid[u.uid];
-                        rows.add(_SurveyRow(
-                          user: u,
-                          answers: rec?.answers,
-                        ));
-                      }
-
-                      // Most recently completed first; users who haven't
-                      // started sink to the bottom.
-                      rows.sort((a, b) {
-                        final ta = a.answers?.completedAt;
-                        final tb = b.answers?.completedAt;
-                        if (ta == null && tb == null) return 0;
-                        if (ta == null) return 1;
-                        if (tb == null) return -1;
-                        return tb.compareTo(ta);
-                      });
-
-                      final filtered = _applyFilter(rows);
-
-                      if (filtered.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(Icons.assignment_outlined,
-                                  size: 64, color: Colors.grey),
-                              SizedBox(height: 16),
-                              Text(
-                                'No survey responses match this filter',
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Try switching the filter above or clearing '
-                                'the search box.',
-                                style: TextStyle(color: Colors.black54),
-                              ),
-                            ],
+                          SizedBox(height: 8),
+                          Text(
+                            'Try switching the filter above or clearing '
+                            'the search box.',
+                            style: TextStyle(color: Colors.black54),
                           ),
-                        );
-                      }
+                        ],
+                      ),
+                    );
+                  }
 
-                      return ListView.builder(
-                        padding: const EdgeInsets.all(32),
-                        itemCount: filtered.length,
-                        itemBuilder: (context, index) => _SurveyResponseCard(
-                          row: filtered[index],
-                        ),
-                      );
-                    },
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(32),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) => _SurveyResponseCard(
+                      row: filtered[index],
+                    ),
                   );
                 },
               ),
@@ -241,6 +267,10 @@ class _AdminSurveyResponsesScreenState
       ),
     );
   }
+
+  /// Cached filtered rows used by the CSV export bar at the bottom of the
+  /// screen. Updated on every build pass where filtering is applied.
+  List<_SurveyRow> _lastFilteredRows = const [];
 
   Widget _buildFilterBar() {
     return Container(
@@ -368,24 +398,24 @@ class _AdminSurveyResponsesScreenState
       case 'completed':
         out = out
             .where((r) =>
-                r.answers != null &&
-                r.answers!.completedAt != null &&
-                !r.answers!.skipped)
+                r.onboarding != null &&
+                r.completedAt != null &&
+                !r.onboarding!.skipped)
             .toList();
         break;
       case 'in_progress':
         out = out
             .where((r) =>
-                r.answers != null &&
-                r.answers!.completedAt == null &&
-                !r.answers!.skipped)
+                r.onboarding != null &&
+                r.completedAt == null &&
+                !r.onboarding!.skipped)
             .toList();
         break;
       case 'skipped':
-        out = out.where((r) => r.answers?.skipped == true).toList();
+        out = out.where((r) => r.onboarding?.skipped == true).toList();
         break;
       case 'not_started':
-        out = out.where((r) => r.answers == null).toList();
+        out = out.where((r) => r.onboarding == null).toList();
         break;
       default:
         break;
@@ -394,18 +424,18 @@ class _AdminSurveyResponsesScreenState
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
       out = out.where((r) {
-        final a = r.answers;
+        final o = r.onboarding;
         final haystack = <String>[
-          r.user.email,
-          r.user.displayName,
-          a?.position ?? '',
-          a?.positionOther ?? '',
-          a?.country ?? '',
-          a?.countryOther ?? '',
-          a?.currency ?? '',
-          a?.currencyOther ?? '',
-          a?.organizationOverview ?? '',
-          ...(a?.currentTools ?? const []),
+          r.email,
+          r.displayName,
+          o?.position ?? '',
+          o?.positionOther ?? '',
+          o?.country ?? '',
+          o?.countryOther ?? '',
+          o?.currency ?? '',
+          o?.currencyOther ?? '',
+          o?.organizationOverview ?? '',
+          ...(o?.currentTools ?? const []),
         ].join(' ').toLowerCase();
         return haystack.contains(q);
       }).toList();
@@ -418,28 +448,27 @@ class _AdminSurveyResponsesScreenState
 
   String _buildCsv(List<_SurveyRow> rows) {
     final buf = StringBuffer();
-    buf.writeln('uid,email,displayName,completedAt,skipped,position,'
+    buf.writeln('uid,email,displayName,createdAt,completedAt,skipped,position,'
         'isDecisionMaker,country,currency,currentTools,organizationOverview,'
         'invitedEmails,maxTeamSizePerProject,tierAtSignup');
     for (final r in rows) {
-      final a = r.answers;
+      final o = r.onboarding;
       final cells = <String>[
-        r.user.uid,
-        r.user.email,
-        r.user.displayName,
-        a?.completedAt != null
-            ? a!.completedAt!.toUtc().toIso8601String()
-            : '',
-        (a?.skipped ?? false).toString(),
-        a?.positionDisplay ?? '',
-        a?.isDecisionMaker?.toString() ?? '',
-        a?.countryDisplay ?? '',
-        a?.currencyDisplay ?? '',
-        (a?.currentToolsDisplay ?? const []).join('; '),
-        a?.organizationOverview ?? '',
-        (a?.invitedEmails ?? const []).join('; '),
-        a?.maxTeamSizePerProject?.toString() ?? '',
-        a?.tierAtSignup ?? '',
+        r.uid,
+        r.email,
+        r.displayName,
+        r.createdAt?.toUtc().toIso8601String() ?? '',
+        r.completedAt?.toUtc().toIso8601String() ?? '',
+        (o?.skipped ?? false).toString(),
+        o?.positionDisplay ?? '',
+        o?.isDecisionMaker?.toString() ?? '',
+        o?.countryDisplay ?? '',
+        o?.currencyDisplay ?? '',
+        (o?.currentToolsDisplay ?? const []).join('; '),
+        o?.organizationOverview ?? '',
+        (o?.invitedEmails ?? const []).join('; '),
+        o?.maxTeamSizePerProject?.toString() ?? '',
+        o?.tierAtSignup ?? '',
       ];
       buf.writeln(cells.map(_csvCell).join(','));
     }
@@ -455,14 +484,159 @@ class _AdminSurveyResponsesScreenState
   }
 }
 
-/// Single row in the admin survey-responses table: a [UserModel] paired with
-/// their optional [ProfileOnboardingAnswers] (null when the user hasn't
-/// started the survey yet).
+/// Single row in the admin survey-responses table. Built directly from the
+/// Cloud Function's JSON payload (no Firestore types involved).
 class _SurveyRow {
-  final UserModel user;
-  final ProfileOnboardingAnswers? answers;
+  final String uid;
+  final String email;
+  final String displayName;
+  final DateTime? createdAt;
+  final bool isAdmin;
+  final bool isActive;
+  final _OnboardingAnswers? onboarding;
 
-  const _SurveyRow({required this.user, required this.answers});
+  /// Convenience accessor: the onboarding's completedAt (or null when the
+  /// user has not started the survey).
+  DateTime? get completedAt => onboarding?.completedAt;
+
+  const _SurveyRow({
+    required this.uid,
+    required this.email,
+    required this.displayName,
+    required this.createdAt,
+    required this.isAdmin,
+    required this.isActive,
+    required this.onboarding,
+  });
+
+  factory _SurveyRow.fromJson(Map<String, dynamic> json) {
+    final onboardingJson = json['onboarding'] as Map<String, dynamic>?;
+    return _SurveyRow(
+      uid: json['uid'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      displayName: json['displayName'] as String? ?? '',
+      createdAt: _parseIso(json['createdAt']),
+      isAdmin: json['isAdmin'] as bool? ?? false,
+      isActive: json['isActive'] as bool? ?? true,
+      onboarding: onboardingJson != null
+          ? _OnboardingAnswers.fromJson(onboardingJson)
+          : null,
+    );
+  }
+
+  static DateTime? _parseIso(dynamic v) {
+    if (v == null) return null;
+    if (v is String && v.isNotEmpty) {
+      return DateTime.tryParse(v);
+    }
+    return null;
+  }
+}
+
+/// Plain-Dart mirror of [ProfileOnboardingAnswers] — only the fields the
+/// admin screen needs. We avoid importing the service-side class because
+/// that pulls in the Firestore types, and the Cloud Function hands us
+/// plain JSON.
+class _OnboardingAnswers {
+  final String? position;
+  final String? positionOther;
+  final bool? isDecisionMaker;
+  final String? country;
+  final String? countryOther;
+  final String? currency;
+  final String? currencyOther;
+  final List<String> currentTools;
+  final String? currentToolsOther;
+  final String? organizationOverview;
+  final List<String> invitedEmails;
+  final int? maxTeamSizePerProject;
+  final String? tierAtSignup;
+  final DateTime? completedAt;
+  final bool skipped;
+  final DateTime? updatedAt;
+
+  const _OnboardingAnswers({
+    required this.position,
+    required this.positionOther,
+    required this.isDecisionMaker,
+    required this.country,
+    required this.countryOther,
+    required this.currency,
+    required this.currencyOther,
+    required this.currentTools,
+    required this.currentToolsOther,
+    required this.organizationOverview,
+    required this.invitedEmails,
+    required this.maxTeamSizePerProject,
+    required this.tierAtSignup,
+    required this.completedAt,
+    required this.skipped,
+    required this.updatedAt,
+  });
+
+  factory _OnboardingAnswers.fromJson(Map<String, dynamic> json) {
+    return _OnboardingAnswers(
+      position: json['position'] as String?,
+      positionOther: json['positionOther'] as String?,
+      isDecisionMaker: json['isDecisionMaker'] as bool?,
+      country: json['country'] as String?,
+      countryOther: json['countryOther'] as String?,
+      currency: json['currency'] as String?,
+      currencyOther: json['currencyOther'] as String?,
+      currentTools: ((json['currentTools'] as List<dynamic>?) ?? const [])
+          .map((e) => e.toString())
+          .toList(),
+      currentToolsOther: json['currentToolsOther'] as String?,
+      organizationOverview: json['organizationOverview'] as String?,
+      invitedEmails: ((json['invitedEmails'] as List<dynamic>?) ?? const [])
+          .map((e) => e.toString())
+          .toList(),
+      maxTeamSizePerProject: (json['maxTeamSizePerProject'] as num?)?.toInt(),
+      tierAtSignup: json['tierAtSignup'] as String?,
+      completedAt: _parseIso(json['completedAt']),
+      skipped: (json['skipped'] as bool?) ?? false,
+      updatedAt: _parseIso(json['updatedAt']),
+    );
+  }
+
+  static DateTime? _parseIso(dynamic v) {
+    if (v == null) return null;
+    if (v is String && v.isNotEmpty) {
+      return DateTime.tryParse(v);
+    }
+    return null;
+  }
+
+  String get positionDisplay {
+    if (position == 'Other' && (positionOther?.isNotEmpty ?? false)) {
+      return positionOther!.trim();
+    }
+    return position ?? '';
+  }
+
+  String get countryDisplay {
+    if (country == 'Other' && (countryOther?.isNotEmpty ?? false)) {
+      return countryOther!.trim();
+    }
+    return country ?? '';
+  }
+
+  String get currencyDisplay {
+    if (currency == 'Other' && (currencyOther?.isNotEmpty ?? false)) {
+      return currencyOther!.trim();
+    }
+    return currency ?? '';
+  }
+
+  List<String> get currentToolsDisplay {
+    final out = <String>[...currentTools];
+    final other = currentToolsOther?.trim();
+    if (currentTools.contains('Other') && other != null && other.isNotEmpty) {
+      out.remove('Other');
+      out.add('Other: $other');
+    }
+    return out;
+  }
 }
 
 /// Draws a single user's survey responses as an expandable card.
@@ -485,8 +659,8 @@ class _SurveyResponseCardState extends State<_SurveyResponseCard> {
   @override
   Widget build(BuildContext context) {
     final row = widget.row;
-    final a = row.answers;
-    final status = _statusChip(a);
+    final o = row.onboarding;
+    final status = _statusChip(o);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -517,10 +691,10 @@ class _SurveyResponseCardState extends State<_SurveyResponseCard> {
                     backgroundColor: const Color(0xFFFFC107)
                         .withValues(alpha: 0.18),
                     child: Text(
-                      row.user.displayName.isNotEmpty
-                          ? row.user.displayName[0].toUpperCase()
-                          : (row.user.email.isNotEmpty
-                              ? row.user.email[0].toUpperCase()
+                      row.displayName.isNotEmpty
+                          ? row.displayName[0].toUpperCase()
+                          : (row.email.isNotEmpty
+                              ? row.email[0].toUpperCase()
                               : '?'),
                       style: const TextStyle(
                         color: Colors.black,
@@ -534,8 +708,8 @@ class _SurveyResponseCardState extends State<_SurveyResponseCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          row.user.displayName.isNotEmpty
-                              ? row.user.displayName
+                          row.displayName.isNotEmpty
+                              ? row.displayName
                               : '(no display name)',
                           style: const TextStyle(
                             fontSize: 15,
@@ -545,7 +719,7 @@ class _SurveyResponseCardState extends State<_SurveyResponseCard> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          row.user.email,
+                          row.email,
                           style: const TextStyle(
                               color: Colors.black54, fontSize: 13),
                         ),
@@ -571,7 +745,7 @@ class _SurveyResponseCardState extends State<_SurveyResponseCard> {
             child: _expanded
                 ? Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: _DetailGrid(answers: a),
+                    child: _DetailGrid(row: row),
                   )
                 : const SizedBox.shrink(),
           ),
@@ -580,19 +754,19 @@ class _SurveyResponseCardState extends State<_SurveyResponseCard> {
     );
   }
 
-  Widget _statusChip(ProfileOnboardingAnswers? a) {
+  Widget _statusChip(_OnboardingAnswers? o) {
     String label;
     Color bg;
     Color fg;
-    if (a == null) {
+    if (o == null) {
       label = 'Not started';
       bg = Colors.grey.withValues(alpha: 0.18);
       fg = Colors.black54;
-    } else if (a.skipped) {
+    } else if (o.skipped) {
       label = 'Skipped';
       bg = Colors.orange.withValues(alpha: 0.18);
       fg = Colors.deepOrange;
-    } else if (a.completedAt != null) {
+    } else if (o.completedAt != null) {
       label = 'Completed';
       bg = Colors.green.withValues(alpha: 0.18);
       fg = Colors.green.shade800;
@@ -620,13 +794,14 @@ class _SurveyResponseCardState extends State<_SurveyResponseCard> {
 }
 
 class _DetailGrid extends StatelessWidget {
-  const _DetailGrid({required this.answers});
+  const _DetailGrid({required this.row});
 
-  final ProfileOnboardingAnswers? answers;
+  final _SurveyRow row;
 
   @override
   Widget build(BuildContext context) {
-    if (answers == null) {
+    final o = row.onboarding;
+    if (o == null) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 12),
         child: Text(
@@ -637,54 +812,62 @@ class _DetailGrid extends StatelessWidget {
         ),
       );
     }
-    final a = answers!;
     final fmt = DateFormat.yMMMd().add_jm();
     final rows = <_DetailRow>[
       _DetailRow(
-        label: 'Completed at',
-        value: a.completedAt != null ? fmt.format(a.completedAt!.toLocal()) : '—',
+        label: 'Account created',
+        value: row.createdAt != null
+            ? fmt.format(row.createdAt!.toLocal())
+            : '—',
       ),
-      _DetailRow(label: 'Skipped', value: a.skipped ? 'Yes' : 'No'),
-      _DetailRow(label: 'Position', value: a.positionDisplay.isEmpty ? '—' : a.positionDisplay),
+      _DetailRow(
+        label: 'Survey completed at',
+        value: o.completedAt != null ? fmt.format(o.completedAt!.toLocal()) : '—',
+      ),
+      _DetailRow(label: 'Skipped', value: o.skipped ? 'Yes' : 'No'),
+      _DetailRow(
+        label: 'Position',
+        value: o.positionDisplay.isEmpty ? '—' : o.positionDisplay,
+      ),
       _DetailRow(
         label: 'Decision maker?',
-        value: a.isDecisionMaker == null
+        value: o.isDecisionMaker == null
             ? '—'
-            : (a.isDecisionMaker! ? 'Yes' : 'No'),
+            : (o.isDecisionMaker! ? 'Yes' : 'No'),
       ),
       _DetailRow(
         label: 'Country',
-        value: a.countryDisplay.isEmpty ? '—' : a.countryDisplay,
+        value: o.countryDisplay.isEmpty ? '—' : o.countryDisplay,
       ),
       _DetailRow(
         label: 'Currency',
-        value: a.currencyDisplay.isEmpty ? '—' : a.currencyDisplay,
+        value: o.currencyDisplay.isEmpty ? '—' : o.currencyDisplay,
       ),
       _DetailRow(
         label: 'Current tools',
-        value: a.currentToolsDisplay.isEmpty
+        value: o.currentToolsDisplay.isEmpty
             ? '—'
-            : a.currentToolsDisplay.join(', '),
+            : o.currentToolsDisplay.join(', '),
       ),
       _DetailRow(
         label: 'Team invites sent',
-        value: a.invitedEmails.isEmpty
+        value: o.invitedEmails.isEmpty
             ? '—'
-            : '${a.invitedEmails.length} (${a.invitedEmails.join(', ')})',
+            : '${o.invitedEmails.length} (${o.invitedEmails.join(', ')})',
       ),
       _DetailRow(
         label: 'Max team size / project',
-        value: a.maxTeamSizePerProject?.toString() ?? '—',
+        value: o.maxTeamSizePerProject?.toString() ?? '—',
       ),
       _DetailRow(
         label: 'Tier at signup',
-        value: a.tierAtSignup ?? '—',
+        value: o.tierAtSignup ?? '—',
       ),
       _DetailRow(
         label: 'Organization overview',
-        value: (a.organizationOverview ?? '').isEmpty
+        value: (o.organizationOverview ?? '').isEmpty
             ? '—'
-            : a.organizationOverview!,
+            : o.organizationOverview!,
         multiline: true,
       ),
     ];

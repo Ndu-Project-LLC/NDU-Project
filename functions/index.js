@@ -2590,6 +2590,153 @@ exports.sendManagerInvite = functions
   });
 
 // ============================================================================
+// ADMIN: PROFILE-ONBOARDING SURVEY RESPONSES
+// ============================================================================
+//
+// Returns every user's profile-onboarding (survey) answers in a single
+// payload for the admin panel's "Survey Responses" screen. Uses the
+// Admin SDK so the read bypasses Firestore rules — this means the screen
+// works whether or not the firestore.rules change that grants admins
+// direct read access to users/{uid}/profile/onboarding has been deployed
+// (which it can't be from CI without a STAGING_DEPLOY_TOKEN).
+//
+// Authorisation:
+//   - Caller must be signed in (context.auth.uid present).
+//   - Caller's email must be in ADMIN_EMAILS (same list used by
+//     getUserInvoices / sendManagerInvite / sendCharterApprovalEmail).
+//   - Returns 403 otherwise.
+//
+// Response shape:
+//   {
+//     users: [
+//       {
+//         uid: "...",
+//         email: "...",
+//         displayName: "...",
+//         createdAt: "2026-08-17T11:38:05.000Z" | null,
+//         isAdmin: true | false,
+//         isActive: true | false,
+//         onboarding: {
+//           position: "...",
+//           positionOther: "...",
+//           isDecisionMaker: true | false | null,
+//           country: "...",
+//           countryOther: "...",
+//           currency: "...",
+//           currencyOther: "...",
+//           currentTools: ["..."],
+//           currentToolsOther: "...",
+//           organizationOverview: "...",
+//           invitedEmails: ["..."],
+//           maxTeamSizePerProject: 25,
+//           tierAtSignup: "growth",
+//           completedAt: "2026-08-17T11:38:05.000Z" | null,
+//           skipped: false,
+//           updatedAt: "2026-08-17T11:38:05.000Z"
+//         } | null
+//       },
+//       ...
+//     ]
+//   }
+exports.getAdminSurveyResponses = functions
+  .runWith({ timeoutSeconds: 60, memory: '256MB' })
+  .https.onCall(async (data, context) => {
+    // ── Auth gate ───────────────────────────────────────────────────────
+    if (!context.auth || !context.auth.uid) {
+      throw new functions.https.HttpsError('unauthenticated', 'Sign in required.');
+    }
+    const ADMIN_EMAILS = ['chungu424@gmail.com'];
+    const callerEmail = (context.auth.token && context.auth.token.email) || '';
+    if (!ADMIN_EMAILS.includes(callerEmail)) {
+      throw new functions.https.HttpsError('permission-denied', 'Admin access required.');
+    }
+
+    try {
+      // ── Read all user docs (top-level collection) ──
+      // We deliberately do NOT paginate — the admin panel expects a single
+      // snapshot. If the user base grows past ~50k we should switch to a
+      // cursor-based variant, but for the current scale this is fine.
+      const usersSnapshot = await db.collection('users').get();
+
+      // ── Read every user's profile/onboarding doc in parallel ─────────
+      // Collection-group query is faster than N reads, but the per-user get
+      // pattern is simpler and matches the existing per-user lookups used by
+      // the rest of the admin codebase. Batching is bounded by the user count.
+      const users = [];
+      await Promise.all(usersSnapshot.docs.map(async (userDoc) => {
+        const userData = userDoc.data();
+        let onboarding = null;
+        try {
+          const onboardingSnap = await db
+            .collection('users')
+            .doc(userDoc.id)
+            .collection('profile')
+            .doc('onboarding')
+            .get();
+          if (onboardingSnap.exists) {
+            const data = onboardingSnap.data();
+            // Serialise Firestore Timestamps to ISO strings so the client
+            // can pass them straight to Dart's DateTime.parse.
+            const toIso = (ts) => {
+              if (!ts) return null;
+              if (ts.toDate) return ts.toDate().toISOString();
+              if (ts instanceof Date) return ts.toISOString();
+              if (typeof ts === 'string') return ts;
+              return null;
+            };
+            onboarding = {
+              position: data.position || null,
+              positionOther: data.positionOther || null,
+              isDecisionMaker: typeof data.isDecisionMaker === 'boolean' ? data.isDecisionMaker : null,
+              country: data.country || null,
+              countryOther: data.countryOther || null,
+              currency: data.currency || null,
+              currencyOther: data.currencyOther || null,
+              currentTools: Array.isArray(data.currentTools) ? data.currentTools : [],
+              currentToolsOther: data.currentToolsOther || null,
+              organizationOverview: data.organizationOverview || null,
+              invitedEmails: Array.isArray(data.invitedEmails) ? data.invitedEmails : [],
+              maxTeamSizePerProject: typeof data.maxTeamSizePerProject === 'number' ? data.maxTeamSizePerProject : null,
+              tierAtSignup: data.tierAtSignup || null,
+              completedAt: toIso(data.completedAt),
+              skipped: data.skipped === true,
+              updatedAt: toIso(data.updatedAt),
+            };
+          }
+        } catch (err) {
+          // Per-user failure shouldn't break the whole payload — just log
+          // and surface this user with onboarding: null.
+          console.error(`Failed to read onboarding for ${userDoc.id}:`, err);
+        }
+
+        const createdRaw = userData.createdAt;
+        const createdIso = createdRaw && createdRaw.toDate
+          ? createdRaw.toDate().toISOString()
+          : (createdRaw instanceof Date ? createdRaw.toISOString() : null);
+
+        users.push({
+          uid: userDoc.id,
+          email: userData.email || '',
+          displayName: userData.displayName || '',
+          createdAt: createdIso,
+          isAdmin: userData.isAdmin === true,
+          isActive: userData.isActive !== false, // default true
+          onboarding,
+        });
+      }));
+
+      await logSecurityEvent('admin_survey_responses_read', context.auth.uid, {
+        userCount: users.length,
+      });
+
+      return { users };
+    } catch (error) {
+      console.error('getAdminSurveyResponses error:', error);
+      throw new functions.https.HttpsError('internal', `Failed to fetch survey responses: ${error.message}`);
+    }
+  });
+
+// ============================================================================
 // SECURITY UTILITIES (shared across all Cloud Functions)
 // ============================================================================
 

@@ -4,6 +4,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/project_charter_sections.dart';
+import 'package:ndu_project/utils/charter_lock_helper.dart';
 
 class CharterGovernanceSection extends StatelessWidget {
  final ProjectDataModel? data;
@@ -20,6 +21,13 @@ class CharterGovernanceSection extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  if (data == null) return const SizedBox();
+
+ // Once the charter is approved, the entire FEP is locked —
+ // the "Edit" affordance on the stakeholders card disappears
+ // so the approved baseline is preserved.
+ final isLocked = CharterLockHelper.isFepLocked(data);
+ final effectiveOnEditStakeholders =
+ isLocked ? null : onEditStakeholders;
 
  return Container(
  padding: const EdgeInsets.all(24),
@@ -58,7 +66,7 @@ class CharterGovernanceSection extends StatelessWidget {
  child: _GovernanceCard(
  child: CharterStakeholdersShort(
  data: data,
- onEdit: onEditStakeholders,
+ onEdit: effectiveOnEditStakeholders,
  ))),
  ],
  ),

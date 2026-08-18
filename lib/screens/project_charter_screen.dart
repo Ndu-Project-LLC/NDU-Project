@@ -114,6 +114,23 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
 
  Future<void> _regenerateAllCharter() async {
  if (_projectData == null) return;
+ // Defense-in-depth: charter is read-only once approved.
+ // The button itself is hidden when locked, but block here too
+ // so accidental callers (e.g. tests, future code) cannot mutate
+ // an approved charter.
+ if (CharterLockHelper.isFepLocked(_projectData)) {
+ if (!mounted) return;
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Charter is approved and locked. Regeneration is disabled.'),
+ backgroundColor: Color(0xFFD97706),
+ behavior: SnackBarBehavior.floating,
+ duration: Duration(seconds: 3),
+ ),
+ );
+ return;
+ }
  final provider = ProjectDataInherited.read(context);
  provider.updateField((data) {
  return data.copyWith(
@@ -131,6 +148,8 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
 
  Future<void> _ensureCharterContent() async {
  if (_projectData == null || _isGenerating) return;
+ // Defense-in-depth: never regenerate an approved charter.
+ if (CharterLockHelper.isFepLocked(_projectData)) return;
 
  // ── Task 9.8 — Charter caching ────────────────────────────────────
  // Compute a hash of the FEP source inputs that feed the charter. If the
@@ -315,6 +334,20 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
 
  Future<void> _generateSection(String sectionType) async {
  if (_projectData == null || _isGenerating) return;
+ // Defense-in-depth: charter is read-only once approved.
+ if (CharterLockHelper.isFepLocked(_projectData)) {
+ if (!mounted) return;
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Charter is approved and locked. Section regeneration is disabled.'),
+ backgroundColor: Color(0xFFD97706),
+ behavior: SnackBarBehavior.floating,
+ duration: Duration(seconds: 3),
+ ),
+ );
+ return;
+ }
  setState(() => _isGenerating = true);
 
  try {

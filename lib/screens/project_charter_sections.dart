@@ -8,6 +8,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/user_model.dart';
 import 'package:ndu_project/services/charter_approval_service.dart';
 import 'package:ndu_project/services/user_service.dart';
+import 'package:ndu_project/utils/charter_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/charter_tech_proc_helper.dart';
 import 'package:ndu_project/widgets/expandable_text.dart';
@@ -128,6 +129,11 @@ class CharterHeroHeader extends StatelessWidget {
  ? data!.projectName
  : 'Untitled Project';
 
+ // When the charter is approved, the FEP is locked — all
+ // regeneration / editing affordances disappear from the charter
+ // surface so the approved snapshot is preserved.
+ final isLocked = CharterLockHelper.isFepLocked(data);
+
  return Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -147,7 +153,7 @@ class CharterHeroHeader extends StatelessWidget {
  Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- if (onRegenerateAll != null) ...[
+ if (onRegenerateAll != null && !isLocked) ...[
  const SizedBox(width: 8),
  PageRegenerateAllButton(
  onRegenerateAll: onRegenerateAll!,
@@ -381,6 +387,9 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  final data = widget.data!;
  final hasManager = data.charterProjectManagerName.isNotEmpty;
  final hasSponsor = data.charterProjectSponsorName.isNotEmpty;
+ // Charter is read-only once approved — the "Assign Manager"
+ // affordance disappears so the approved baseline is preserved.
+ final isLocked = CharterLockHelper.isFepLocked(data);
 
  final items = [
  _MetaInfoItem(
@@ -391,7 +400,9 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  : 'Assign Manager',
  iconBgColor: BrandColors.secondaryContainer,
  iconFgColor: const Color(0xFF636262),
- onTap: hasManager ? null : () => _showAssignManagerDialog(data),
+ onTap: (hasManager || isLocked)
+ ? null
+ : () => _showAssignManagerDialog(data),
  ),
  // Sponsor card — system suggests the highest role-based authority
  // (admin, then active user, then signed-in user) as the sponsor.
@@ -1194,6 +1205,8 @@ class CharterProjectDefinition extends StatelessWidget {
  Widget build(BuildContext context) {
  if (data == null) return const SizedBox();
 
+ final isLocked = CharterLockHelper.isFepLocked(data);
+
  final projectPurposeText = data!.projectObjective.trim().isNotEmpty
  ? data!.projectObjective
  : data!.solutionDescription.trim().isNotEmpty
@@ -1210,7 +1223,7 @@ class CharterProjectDefinition extends StatelessWidget {
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
  sectionTitleWithIcon(Icons.description_outlined, 'Project Purpose'),
- if (onGenerate != null)
+ if (onGenerate != null && !isLocked)
  TextButton.icon(
  onPressed: onGenerate,
  icon: const Icon(Icons.auto_awesome, size: 16),
@@ -1637,6 +1650,8 @@ class CharterScope extends StatelessWidget {
  Widget build(BuildContext context) {
  if (data == null) return const SizedBox();
 
+ final isLocked = CharterLockHelper.isFepLocked(data);
+
  final inScopeItems = data!.withinScope
  .where((s) => s.trim().isNotEmpty)
  .toList();
@@ -1656,7 +1671,9 @@ class CharterScope extends StatelessWidget {
  sectionTitleWithIcon(Icons.zoom_in_outlined, 'Project Scope'),
  // AI Generate removed — scope comes from the Project Details
  // page. Show an Edit button that takes the user back there.
- if (onEdit != null)
+ // When the charter is approved, the entire FEP is locked,
+ // so the edit affordance disappears.
+ if (onEdit != null && !isLocked)
  TextButton.icon(
  onPressed: onEdit,
  icon: const Icon(Icons.edit_outlined, size: 16),
@@ -2078,6 +2095,9 @@ class _CharterTechnicalProcurementBentoState
 
     final vendorCount = data.vendors.length;
     final contractCount = data.contractors.length;
+    // Charter is read-only once approved — the "View Preferred Solution"
+    // affordance disappears so the approved baseline is preserved.
+    final isLocked = CharterLockHelper.isFepLocked(data);
 
     // IT considerations + Infrastructure source from the preferred
     // solution when one is locked. The user can still update the
@@ -2105,7 +2125,8 @@ class _CharterTechnicalProcurementBentoState
             // AI Generate removed per user request — IT considerations and
             // Infrastructure come from the preferred solution (Business Case
             // section, which is locked once a preferred solution is selected).
-            if (widget.onEdit != null)
+            // When the charter is approved, the edit affordance disappears.
+            if (widget.onEdit != null && !isLocked)
               TextButton.icon(
                 onPressed: widget.onEdit,
                 icon: const Icon(Icons.visibility_outlined, size: 16),

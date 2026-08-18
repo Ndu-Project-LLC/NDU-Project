@@ -322,17 +322,6 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  PlanningPhaseHeader(title: 'Scope Tracking Plan', onExportPdf: _exportPdf),
- const SizedBox(height: 16),
- _ScopeTrackingHeader(
- onBack: () =>
- PlanningPhaseNavigation.goToPrevious(
- context, 'scope_tracking_plan'),
- onForward: () =>
- PlanningPhaseNavigation.goToNext(
- context, 'scope_tracking_plan'),
- onRegenerateAll: _regenerateAllFromAi,
- isRegenerating: _isAutoGenerating,
- ),
  const SizedBox(height: 20),
  const PlanningAiNotesCard(
  title: 'Notes',
@@ -466,8 +455,6 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  'Items not in baseline', Icons.warning_amber),
  ],
  ),
- const SizedBox(height: 24),
- const _ScopeTrackingHero(),
  const SizedBox(height: 20),
  const _ScopeControlPlaybook(),
  const SizedBox(height: 20),

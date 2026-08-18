@@ -1139,16 +1139,21 @@ class _OperationsPageBody extends StatelessWidget {
  Widget build(BuildContext context) {
  final data = state.operations;
  return Column(children: [
- _SimpleFormCard(
- title: 'Service and ownership',
- children: [
- _SimpleField(label: 'Document owner', initialValue: state.primaryOwner, onChanged: (v) { state.primaryOwner = v.trim(); onChanged(state); }),
- _SimpleField(label: 'Ops owner', initialValue: data.opsOwner, onChanged: (v) { data.opsOwner = v.trim(); onChanged(state); }),
- _SimpleField(label: 'Engineering owner', initialValue: data.engineeringOwner, onChanged: (v) { data.engineeringOwner = v.trim(); onChanged(state); }),
- _SimpleField(label: 'Support hours', initialValue: data.supportHours, onChanged: (v) { data.supportHours = v.trim(); onChanged(state); }),
- _SimpleField(label: 'SLA / SLO', initialValue: '${data.sla}${data.slo.isNotEmpty ? ' | ${data.slo}' : ''}', onChanged: (v) { final parts = v.split('|'); data.sla = parts.first.trim(); data.slo = parts.length > 1 ? parts[1].trim() : ''; onChanged(state); }),
- _SimpleField(label: 'RTO / RPO', initialValue: '${data.rto}${data.rpo.isNotEmpty ? ' | ${data.rpo}' : ''}', onChanged: (v) { final parts = v.split('|'); data.rto = parts.first.trim(); data.rpo = parts.length > 1 ? parts[1].trim() : ''; onChanged(state); }),
- ],
+ _ServiceOwnershipTable(
+ primaryOwner: state.primaryOwner,
+ onPrimaryOwnerChanged: (v) { state.primaryOwner = v.trim(); onChanged(state); },
+ opsOwner: data.opsOwner,
+ onOpsOwnerChanged: (v) { data.opsOwner = v.trim(); onChanged(state); },
+ engineeringOwner: data.engineeringOwner,
+ onEngineeringOwnerChanged: (v) { data.engineeringOwner = v.trim(); onChanged(state); },
+ supportHours: data.supportHours,
+ onSupportHoursChanged: (v) { data.supportHours = v.trim(); onChanged(state); },
+ sla: data.sla,
+ slo: data.slo,
+ onSlaSloChanged: (v) { final parts = v.split('|'); data.sla = parts.first.trim(); data.slo = parts.length > 1 ? parts[1].trim() : ''; onChanged(state); },
+ rto: data.rto,
+ rpo: data.rpo,
+ onRtoRpoChanged: (v) { final parts = v.split('|'); data.rto = parts.first.trim(); data.rpo = parts.length > 1 ? parts[1].trim() : ''; onChanged(state); },
  ),
  const SizedBox(height: 16),
  _RunbookRegisterCard(rows: data.runbookRegister, onChanged: (rows) { data.runbookRegister = rows; onChanged(state); }),
@@ -1276,6 +1281,81 @@ class _SimpleFormCard extends StatelessWidget {
  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE5E7EB))),
  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)), const SizedBox(height: 12), Wrap(spacing: 12, runSpacing: 12, children: children)]),
  );
+}
+
+class _ServiceOwnershipTable extends StatelessWidget {
+ const _ServiceOwnershipTable({
+   required this.primaryOwner, required this.onPrimaryOwnerChanged,
+   required this.opsOwner, required this.onOpsOwnerChanged,
+   required this.engineeringOwner, required this.onEngineeringOwnerChanged,
+   required this.supportHours, required this.onSupportHoursChanged,
+   required this.sla, required this.slo, required this.onSlaSloChanged,
+   required this.rto, required this.rpo, required this.onRtoRpoChanged,
+ });
+ final String primaryOwner, opsOwner, engineeringOwner, supportHours, sla, slo, rto, rpo;
+ final ValueChanged<String> onPrimaryOwnerChanged, onOpsOwnerChanged, onEngineeringOwnerChanged, onSupportHoursChanged, onSlaSloChanged, onRtoRpoChanged;
+
+ @override
+ Widget build(BuildContext context) {
+   final fields = [
+     ('Document owner', primaryOwner, onPrimaryOwnerChanged),
+     ('Ops owner', opsOwner, onOpsOwnerChanged),
+     ('Engineering owner', engineeringOwner, onEngineeringOwnerChanged),
+     ('Support hours', supportHours, onSupportHoursChanged),
+     ('SLA / SLO', '$sla${slo.isNotEmpty ? ' | $slo' : ''}', onSlaSloChanged),
+     ('RTO / RPO', '$rto${rpo.isNotEmpty ? ' | $rpo' : ''}', onRtoRpoChanged),
+   ];
+   return Container(
+     width: double.infinity,
+     padding: const EdgeInsets.all(18),
+     decoration: BoxDecoration(
+       color: Colors.white,
+       borderRadius: BorderRadius.circular(16),
+       border: Border.all(color: const Color(0xFFE5E7EB)),
+     ),
+     child: Column(
+       crossAxisAlignment: CrossAxisAlignment.start,
+       children: [
+         const Text('Service and ownership', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+         const SizedBox(height: 12),
+         Table(
+           columnWidths: const {0: FlexColumnWidth(1.2), 1: FlexColumnWidth(2)},
+           border: TableBorder(
+             horizontalInside: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+             verticalInside: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+             top: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+             bottom: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+             left: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+             right: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+           ),
+           children: [
+             TableRow(
+               decoration: const BoxDecoration(color: Color(0xFFF9FAFB)),
+               children: const [
+                 Padding(padding: EdgeInsets.all(10), child: Text('Field', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
+                 Padding(padding: EdgeInsets.all(10), child: Text('Value', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
+               ],
+             ),
+             for (final f in fields)
+               TableRow(
+                 children: [
+                   Padding(padding: const EdgeInsets.all(10), child: Text(f.$1, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151)))),
+                   Padding(
+                     padding: const EdgeInsets.all(6),
+                     child: VoiceTextFormField(
+                       initialValue: f.$2,
+                       decoration: _fieldDecoration(f.$1),
+                       onChanged: f.$3,
+                     ),
+                   ),
+                 ],
+               ),
+           ],
+         ),
+       ],
+     ),
+   );
+ }
 }
 
 class _SimpleField extends StatelessWidget {
@@ -1828,35 +1908,109 @@ class _ChecklistRow extends StatelessWidget {
  ),
  );
  }
-}
-
-class _RunbookRegisterCard extends StatelessWidget {
+}class _RunbookRegisterCard extends StatelessWidget {
  const _RunbookRegisterCard({required this.rows, required this.onChanged});
  final List<_RunbookEntry> rows;
  final ValueChanged<List<_RunbookEntry>> onChanged;
  @override
  Widget build(BuildContext context) {
- final safeRows = rows.isEmpty ? const [_RunbookEntry(name: '', owner: '', documentLink: '', reviewDate: '', status: 'Draft')] : rows;
- return _RegisterShell(
- title: 'Runbook register',
- child: Column(children: [
- for (var i = 0; i < safeRows.length; i++)
- Padding(
- padding: const EdgeInsets.only(bottom: 12),
- child: _RegisterRow(
- onRemove: safeRows.length <= 1 ? null : () { final copy = [...safeRows]..removeAt(i); onChanged(copy); },
- children: [
- _registerField('Runbook', safeRows[i].name, (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: v.trim(), owner: copy[i].owner, documentLink: copy[i].documentLink, reviewDate: copy[i].reviewDate, status: copy[i].status); onChanged(copy); }),
- _registerField('Owner', safeRows[i].owner, (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: copy[i].name, owner: v.trim(), documentLink: copy[i].documentLink, reviewDate: copy[i].reviewDate, status: copy[i].status); onChanged(copy); }),
- _registerField('Link / doc', safeRows[i].documentLink, (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: copy[i].name, owner: copy[i].owner, documentLink: v.trim(), reviewDate: copy[i].reviewDate, status: copy[i].status); onChanged(copy); }),
- _registerField('Review date', safeRows[i].reviewDate, (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: copy[i].name, owner: copy[i].owner, documentLink: copy[i].documentLink, reviewDate: v.trim(), status: copy[i].status); onChanged(copy); }),
- _registerField('Status', safeRows[i].status, (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: copy[i].name, owner: copy[i].owner, documentLink: copy[i].documentLink, reviewDate: copy[i].reviewDate, status: v.trim()); onChanged(copy); }),
- ],
- ),
- ),
- Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: () => onChanged([...safeRows, const _RunbookEntry(name: '', owner: '', documentLink: '', reviewDate: '', status: 'Draft')]), icon: const Icon(Icons.add), label: const Text('Add runbook'))),
- ]),
- );
+   final safeRows = rows.isEmpty ? const [_RunbookEntry(name: '', owner: '', documentLink: '', reviewDate: '', status: 'Draft')] : rows;
+   return _RegisterShell(
+     title: 'Runbook register',
+     child: Column(children: [
+       SingleChildScrollView(
+         scrollDirection: Axis.horizontal,
+         child: Table(
+           columnWidths: const {
+             0: FixedColumnWidth(160),
+             1: FixedColumnWidth(140),
+             2: FixedColumnWidth(160),
+             3: FixedColumnWidth(140),
+             4: FixedColumnWidth(120),
+             5: FixedColumnWidth(48),
+           },
+           border: TableBorder(
+             horizontalInside: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+             verticalInside: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+             top: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+             bottom: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+             left: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+             right: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+           ),
+           children: [
+             TableRow(
+               decoration: const BoxDecoration(color: Color(0xFFF9FAFB)),
+               children: const [
+                 Padding(padding: EdgeInsets.all(10), child: Text('Runbook', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
+                 Padding(padding: EdgeInsets.all(10), child: Text('Owner', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
+                 Padding(padding: EdgeInsets.all(10), child: Text('Link / doc', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
+                 Padding(padding: EdgeInsets.all(10), child: Text('Review date', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
+                 Padding(padding: EdgeInsets.all(10), child: Text('Status', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
+                 SizedBox.shrink(),
+               ],
+             ),
+             for (var i = 0; i < safeRows.length; i++)
+               TableRow(
+                 children: [
+                   Padding(
+                     padding: const EdgeInsets.all(4),
+                     child: VoiceTextFormField(
+                       initialValue: safeRows[i].name,
+                       decoration: _fieldDecoration('Runbook'),
+                       onChanged: (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: v.trim(), owner: copy[i].owner, documentLink: copy[i].documentLink, reviewDate: copy[i].reviewDate, status: copy[i].status); onChanged(copy); },
+                     ),
+                   ),
+                   Padding(
+                     padding: const EdgeInsets.all(4),
+                     child: VoiceTextFormField(
+                       initialValue: safeRows[i].owner,
+                       decoration: _fieldDecoration('Owner'),
+                       onChanged: (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: copy[i].name, owner: v.trim(), documentLink: copy[i].documentLink, reviewDate: copy[i].reviewDate, status: copy[i].status); onChanged(copy); },
+                     ),
+                   ),
+                   Padding(
+                     padding: const EdgeInsets.all(4),
+                     child: VoiceTextFormField(
+                       initialValue: safeRows[i].documentLink,
+                       decoration: _fieldDecoration('Link / doc'),
+                       onChanged: (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: copy[i].name, owner: copy[i].owner, documentLink: v.trim(), reviewDate: copy[i].reviewDate, status: copy[i].status); onChanged(copy); },
+                     ),
+                   ),
+                   Padding(
+                     padding: const EdgeInsets.all(4),
+                     child: VoiceTextFormField(
+                       initialValue: safeRows[i].reviewDate,
+                       decoration: _fieldDecoration('Review date'),
+                       onChanged: (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: copy[i].name, owner: copy[i].owner, documentLink: copy[i].documentLink, reviewDate: v.trim(), status: copy[i].status); onChanged(copy); },
+                     ),
+                   ),
+                   Padding(
+                     padding: const EdgeInsets.all(4),
+                     child: VoiceTextFormField(
+                       initialValue: safeRows[i].status,
+                       decoration: _fieldDecoration('Status'),
+                       onChanged: (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: copy[i].name, owner: copy[i].owner, documentLink: copy[i].documentLink, reviewDate: copy[i].reviewDate, status: v.trim()); onChanged(copy); },
+                     ),
+                   ),
+                   Padding(
+                     padding: const EdgeInsets.all(4),
+                     child: safeRows.length <= 1
+                         ? const SizedBox.shrink()
+                         : IconButton(
+                             onPressed: () { final copy = [...safeRows]..removeAt(i); onChanged(copy); },
+                             icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF9CA3AF)),
+                             tooltip: 'Remove row',
+                           ),
+                   ),
+                 ],
+               ),
+           ],
+         ),
+       ),
+       const SizedBox(height: 8),
+       Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: () => onChanged([...safeRows, const _RunbookEntry(name: '', owner: '', documentLink: '', reviewDate: '', status: 'Draft')]), icon: const Icon(Icons.add), label: const Text('Add runbook'))),
+     ]),
+   );
  }
 }
 

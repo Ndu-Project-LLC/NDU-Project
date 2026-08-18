@@ -100,8 +100,8 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
     // to do — the builder will render it.
     if (provider.wbs != null && provider.setupComplete) return; // No persisted WBS for this project — create one with the project's
  // resolved methodology and persist it for next time.
- final projectData = ProjectDataHelper.getData(context, listen: false);
- final resolvedMethodology = ProjectDataHelper.resolvedProjectMethodology(projectData);
+ final helperProjectData = ProjectDataHelper.getData(context, listen: false);
+ final resolvedMethodology = ProjectDataHelper.resolvedProjectMethodology(helperProjectData);
  final resolvedFramework = resolvedMethodology == ProjectMethodology.agile
      ? WBSFramework.agile
      : WBSFramework.waterfallDeliverable;

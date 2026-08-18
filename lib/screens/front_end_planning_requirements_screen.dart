@@ -1455,7 +1455,7 @@ class _FrontEndPlanningRequirementsScreenState
                             ),
                           ],
                         ),
-                      )
+                      ),
                     OutlinedButton.icon(
                       onPressed: _addRequirementViaEditor,
                       icon: const Icon(Icons.add, size: 18),

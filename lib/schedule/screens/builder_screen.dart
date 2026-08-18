@@ -632,61 +632,95 @@ class _BuilderScreenState extends State<BuilderScreen> {
               ),
               const SizedBox(height: 22),
               // ═══════════════════════════════════════════════════════════════
-              // ACTIVITY TREE
+              // ACTIVITY TREE (full width)
               // ═══════════════════════════════════════════════════════════════
-              Row(
-                children: [
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: TreasuryTokens.brandSoft,
-                      borderRadius: BorderRadius.circular(9),
-                      border: Border.all(
-                          color: TreasuryTokens.brand.withValues(alpha: 0.3)),
+              // ACTIVITY TREE (full width, scrollable on narrow screens)
+              // ═══════════════════════════════════════════════════════════════
+              OverflowBox(
+                alignment: Alignment.center,
+                maxWidth: MediaQuery.of(context).size.width,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: MediaQuery.of(context).size.width,
                     ),
-                    child: Icon(Icons.account_tree_rounded,
-                        size: 16, color: TreasuryTokens.brandDeep),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text('Activity Tree',
-                      style: TextStyle(
-                          color: TreasuryTokens.ink,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.1)),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: TreasuryTokens.surfaceAlt,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: TreasuryTokens.hairline),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: TreasuryTokens.brandSoft,
+                                borderRadius: BorderRadius.circular(9),
+                                border: Border.all(
+                                    color: TreasuryTokens.brand.withValues(alpha: 0.3)),
+                              ),
+                              child: Icon(Icons.account_tree_rounded,
+                                  size: 16, color: TreasuryTokens.brandDeep),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text('Activity Tree',
+                                style: TextStyle(
+                                    color: TreasuryTokens.ink,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.1)),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: TreasuryTokens.surfaceAlt,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: TreasuryTokens.hairline),
+                              ),
+                              child: Text(
+                                  '${root.children.length} L1 · ${_countTotalActivities(root)} total',
+                                  style: const TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: TreasuryTokens.muted,
+                                      letterSpacing: 0.3)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        _ActivityNode(
+                            activity: root,
+                            isRoot: true,
+                            provider: provider,
+                            isLocked: schedule.isLocked),
+                        ...root.children.map((child) => _ActivityNode(
+                            activity: child,
+                            provider: provider,
+                            isLocked: schedule.isLocked)),
+                      ],
                     ),
-                    child: Text(
-                        '${root.children.length} L1 · ${_countTotalActivities(root)} total',
-                        style: const TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: TreasuryTokens.muted,
-                            letterSpacing: 0.3)),
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 10),
-              _ActivityNode(
-                  activity: root,
-                  isRoot: true,
-                  provider: provider,
-                  isLocked: schedule.isLocked),
-              ...root.children.map((child) => _ActivityNode(
-                  activity: child,
-                  provider: provider,
-                  isLocked: schedule.isLocked)),
               const SizedBox(height: 28),
               // Sample activity table (preview of what Gantt/List will show)
-              _SampleActivityTable(schedule: schedule),
+              // Break out of parent horizontal padding, scrollable on narrow screens
+              OverflowBox(
+                alignment: Alignment.center,
+                maxWidth: MediaQuery.of(context).size.width,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: MediaQuery.of(context).size.width,
+                    ),
+                    child: _SampleActivityTable(schedule: schedule),
+                  ),
+                ),
+              ),
               const SizedBox(height: 14),
               // Footer note — Treasury info card
               Container(

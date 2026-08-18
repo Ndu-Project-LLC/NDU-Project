@@ -23,6 +23,7 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/services/portfolio_service.dart';
+import 'package:ndu_project/models/user_model.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/program_service.dart';
 import 'package:ndu_project/services/project_service.dart';

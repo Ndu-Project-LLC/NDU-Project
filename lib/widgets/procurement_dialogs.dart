@@ -48,7 +48,7 @@ class ProcurementDialogShell extends StatelessWidget {
     required this.contextChips,
     required this.primaryLabel,
     required this.secondaryLabel,
-    required this.onPrimary,
+    this.onPrimary,
     required this.onSecondary,
     required this.child,
   });
@@ -59,7 +59,7 @@ class ProcurementDialogShell extends StatelessWidget {
   final List<Widget> contextChips;
   final String primaryLabel;
   final String secondaryLabel;
-  final VoidCallback onPrimary;
+  final VoidCallback? onPrimary;
   final VoidCallback onSecondary;
   final Widget child;
 

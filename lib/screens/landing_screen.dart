@@ -330,19 +330,15 @@ class _LandingScreenState extends State<LandingScreen>
  Widget _buildStickyHeader(BuildContext context, bool isDesktop) {
  final width = MediaQuery.of(context).size.width;
  final bool isTablet = width >= 900 && width < 1200;
- final bool isMobile = width < 700;
-
- Widget buildLogo() {
+ final bool isMobile = width < 700;Widget buildLogo() {
+ // Constrain both height and width for the new wide wordmark logo
+ final h = isDesktop ? 50.0 : isTablet ? 40.0 : 35.0;
  return Image.asset(
- 'assets/images/Logo.png',
- height: isDesktop
- ? 90
- : isTablet
- ? 70
- : 60,
- fit: BoxFit.contain,
- );
- }
+      'assets/images/Logo.png',
+      height: h,
+      fit: BoxFit.contain,
+    );
+  }
 
  PopupMenuButton<String> buildMenuButton() {
  return PopupMenuButton<String>(

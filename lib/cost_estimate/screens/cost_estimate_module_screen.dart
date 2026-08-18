@@ -171,37 +171,6 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   defaultCollapsed: false,
                 ),
               ),
-              // ── Context banner (drawn from Initiation + WBS) ──────────
-              ContextBanner(
-                storageKey: 'cost_estimate_module_context_banner',
-                items: [
-                  ContextBannerItem(
-                    label: 'Project',
-                    value: projectName,
-                    icon: Icons.flag_outlined,
-                  ),
-                  if (wbs != null && wbsCounts != null)
-                    ContextBannerItem(
-                      label: 'WBS',
-                      value:
-                          '${wbsFrameworkLabel ?? 'WBS'} · ${wbsCounts.level1} $wbsDeliverableWord',
-                      icon: Icons.account_tree_outlined,
-                    ),
-                  ContextBannerItem(
-                    label: 'Solutions',
-                    value: '$solutionsCount potential',
-                    icon: Icons.lightbulb_outline,
-                  ),
-                ],
-              ),
-              // ── NDU PROJECT logo banner (replaces the previous
-              // CrossSectionSyncCard so the page now leads with the
-              // NDU PROJECT brand identity, freeing the vertical space
-              // the sync card used to occupy). ──────────────────────
-              NduLogoBanner(
-                onTap: () => NavigationContextService.instance
-                    .navigateFromLogo(context),
-              ),
               // Tab content
               Expanded(
                 child: TabBarView(
@@ -709,13 +678,7 @@ class _HeroBand extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 18),
-                // Context chips
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: contextChips,
-                ),
+
               ],
             ),
           ),

@@ -963,6 +963,11 @@ class _LaunchEditableCellState extends State<LaunchEditableCell> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: borderColor, width: _isFocused ? 1.5 : 1),
         ),
+        // Internal padding around the VoiceTextField so the Open Editor
+        // button row + TextField body have breathing room from the cell's
+        // border. Previously the field hugged the border on all sides,
+        // making cells feel cramped especially in narrow columns.
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         child: VoiceTextField(
           controller: _controller,
           onChanged: widget.onChanged,
@@ -975,9 +980,13 @@ class _LaunchEditableCellState extends State<LaunchEditableCell> {
             hintText: widget.hint,
             hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
             border: InputBorder.none,
+            // Increased from horizontal: 10, vertical: 8 with isDense: true
+            // to give the actual text input area generous inner spacing.
+            // Combined with the cell's outer padding, the field now feels
+            // open and readable instead of squeezed.
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            isDense: true,
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            isDense: false,
           ),
         ),
       ),

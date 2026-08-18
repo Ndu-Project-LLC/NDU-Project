@@ -62,8 +62,12 @@ function getCorsAllowedOrigins() {
   return [
     /^(http|https):\/\/localhost(:\d+)?$/,
     /^(http|https):\/\/127\.0\.0\.1(:\d+)?$/,
-    /\.web\.app$/,
-    /\.firebaseapp\.com$/,
+    // HIGH #5: anchored, project-scoped regexes — Firebase Hosting gives
+    // *.web.app and *.firebaseapp.com subdomains to anyone, so an
+    // attacker could register attacker.web.app and pass the old
+    // unanchored /\.web\.app$/ regex. Anchored to the specific project.
+    /^https:\/\/ndu-d3f60\.web\.app$/,
+    /^https:\/\/ndu-d3f60\.firebaseapp\.com$/,
     /^https:\/\/staging\.admin\.nduproject\.com$/,
     /^https:\/\/.*\.nduproject\.com$/, // Allow all nduproject.com subdomains
     /^https:\/\/nduproject\.com$/, // Allow bare domain
@@ -273,8 +277,21 @@ exports.openaiProxy = functions
       res.status(405).json({ error: 'Method not allowed. Use POST.' });
       return;
     }
-    
+
+    // AUTH REQUIRED — without this, anyone with the function URL can bill
+    // OpenAI completions to the project's account (CORS does not stop curl/Postman).
+    const decodedToken = await verifyAuthToken(req);
+    if (!decodedToken) {
+      res.status(401).json({ error: 'Authentication required.' });
+      return;
+    }
+
     try {
+      // Per-user rate limit: 30 OpenAI calls/hour per authenticated user
+      // (gpt-4o completions are non-trivially expensive; protects against a single
+      // compromised account draining credits before it can be suspended).
+      await checkRateLimit(decodedToken.uid, 'openai_proxy', 30);
+
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
         console.error('No API key configured. Set the OPENAI_API_KEY Firebase secret.');
@@ -1590,7 +1607,29 @@ exports.sendTwoFactorCode = functions
     }
 
     const emailLower = email.toLowerCase().trim();
-    await checkRateLimit(emailLower, 'sendTwoFactorCode', 5);
+
+    // HIGH #2 mitigation: sendTwoFactorCode is callable WITHOUT auth (the
+    // sign-in 2FA flow needs it — see lib/services/security_services.dart
+    // line 877-879). The audit's "require context.auth" recommendation
+    // would break the sign-in flow. Instead, mitigate the email-bomb risk
+    // with a per-source-IP rate limit (10 emails/hour per source IP) in
+    // addition to the per-target-email rate limit (3 emails/hour per
+    // email, tightened from 5). The per-IP limit prevents one attacker
+    // from spamming many different email addresses; the per-email limit
+    // bounds the volume any single victim can receive.
+    const fwdFor = (context.rawRequest && context.rawRequest.headers && context.rawRequest.headers['x-forwarded-for']) || '';
+    const clientIp = fwdFor.toString().split(',')[0].trim()
+      || (context.rawRequest && context.rawRequest.ip)
+      || 'unknown';
+    if (clientIp && clientIp !== 'unknown') {
+      try {
+        await checkRateLimit(clientIp, 'sendTwoFactorCode_ip', 10);
+      } catch (e) {
+        console.warn(`[sendTwoFactorCode] Per-IP rate limit hit for ${clientIp}: ${e.message}`);
+        throw e;
+      }
+    }
+    await checkRateLimit(emailLower, 'sendTwoFactorCode', 3);
 
     const resend = getResendClient();
     const otp = generateOtp();
@@ -2067,29 +2106,37 @@ exports.handleResendWebhook = functions
       return;
     }
 
-    // ── Signature verification ────────────────────────────────────────
+    // ── Signature verification (MANDATORY) ───────────────────────────────
+    // HIGH/MEDIUM audit finding: previously this was best-effort — if
+    // RESEND_WEBHOOK_SECRET was unset OR the signature check threw, the
+    // webhook was processed anyway. That allowed any external party to
+    // POST forged events and mutate teamInvitations (deliveryStatus,
+    // failureReason, etc.) knowing only a messageId (which is logged).
+    // Now: hard-fail. No secret → 401. Bad signature → 401. Throw → 401.
     const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      try {
-        const signature = req.headers['resend-signature'] || '';
-        const timestamp = req.headers['resend-timestamp'] || '';
-        const body = JSON.stringify(req.body);
-        const payload = `${timestamp}.${body}`;
-        const expectedSig = crypto
-          .createHmac('sha256', webhookSecret)
-          .update(payload)
-          .digest('hex');
-        if (signature !== expectedSig) {
-          console.error('[Webhook] Invalid signature — rejecting');
-          res.status(401).json({ error: 'Invalid signature' });
-          return;
-        }
-      } catch (e) {
-        console.error('[Webhook] Signature check error:', e);
-        // Continue anyway — signature verification is best-effort
+    if (!webhookSecret) {
+      console.error('[Webhook] RESEND_WEBHOOK_SECRET not set — refusing to process webhook. Set via: firebase functions:secrets:set RESEND_WEBHOOK_SECRET');
+      res.status(401).json({ error: 'Webhook secret not configured.' });
+      return;
+    }
+    try {
+      const signature = req.headers['resend-signature'] || '';
+      const timestamp = req.headers['resend-timestamp'] || '';
+      const body = JSON.stringify(req.body);
+      const payload = `${timestamp}.${body}`;
+      const expectedSig = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(payload)
+        .digest('hex');
+      if (signature !== expectedSig) {
+        console.error('[Webhook] Invalid signature — rejecting');
+        res.status(401).json({ error: 'Invalid signature' });
+        return;
       }
-    } else {
-      console.warn('[Webhook] RESEND_WEBHOOK_SECRET not set — skipping signature verification');
+    } catch (e) {
+      console.error('[Webhook] Signature check error:', e);
+      res.status(401).json({ error: 'Signature verification failed.' });
+      return;
     }
 
     const event = req.body;
@@ -2294,6 +2341,299 @@ exports.sendCharterApprovalEmail = functions
       console.error('Charter approval email error:', error);
       if (error instanceof functions.https.HttpsError) throw error;
       throw new functions.https.HttpsError('internal', `Failed to send charter email: ${error.message}`);
+    }
+  });
+
+// ============================================================================
+// PROJECT MANAGER INVITATION EMAIL
+// ============================================================================
+// Sends an email from noreply@nduproject.tech to a user who has been assigned
+// as the Project Manager for a project. The user is pre-populated from the
+// site's registered users collection (callers query 'users' and surface them
+// in an Autocomplete — see _showAssignManagerDialog in
+// lib/screens/project_charter_sections.dart). The Cloud Function accepts a
+// `resend` flag so the caller can re-send the invitation without re-creating
+// the underlying assignment (the user already has the role).
+//
+// Firestore collection: 'manager_invitations' (one document per send, with
+// toEmail / toName / projectName / projectId / sentBy / sentAt / isResend /
+// messageId). The collection is queried by the caller to detect whether a
+// 'Resend' button should appear on the Assign Project Manager dialog.
+//
+// Called from Flutter:
+//   FirebaseFunctions.instance.httpsCallable('sendManagerInvite')
+//       .call({ toEmail, toName, projectName, projectId, managerName, resend });
+// ============================================================================
+exports.sendManagerInvite = functions
+  .runWith({
+    secrets: ['RESEND_API_KEY'],
+    timeoutSeconds: 30,
+    memory: '256MB'
+  })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'You must be signed in.');
+    }
+
+    const {
+      toEmail,
+      toName,
+      projectName,
+      projectId,
+      managerName,
+      resend
+    } = data || {};
+
+    if (!toEmail || typeof toEmail !== 'string' || !toEmail.includes('@')) {
+      throw new functions.https.HttpsError('invalid-argument', 'A valid manager email is required.');
+    }
+
+    const project = (projectName && String(projectName).trim().length > 0)
+      ? String(projectName).trim()
+      : 'Untitled Project';
+    const managerDisplay = (managerName && String(managerName).trim().length > 0)
+      ? String(managerName).trim()
+      : (toName && String(toName).trim().length > 0 ? String(toName).trim() : 'there');
+    const senderName = context.auth.token.name || context.auth.token.email || 'Project Owner';
+    const isResend = Boolean(resend);
+
+    await checkRateLimit(context.auth.uid, 'manager_invite', 15); // 15 sends/hour per sender
+
+    const resendClient = getResendClient();
+
+    const subject = isResend
+      ? `Reminder: You are the Project Manager for ${project}`
+      : `You've been assigned as Project Manager for ${project}`;
+
+    const ctaUrl = projectId && String(projectId).trim().length > 0
+      ? `https://nduproject.tech/#/project-charter?projectId=${encodeURIComponent(String(projectId).trim())}`
+      : 'https://nduproject.tech/#/project-charter';
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:40px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr><td style="background:#051424;padding:32px 40px;text-align:center;">
+          <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:1px;">NDU <span style="color:#f8bd2a;">PROJECT</span></div>
+          <div style="font-size:11px;color:#909096;letter-spacing:3px;margin-top:4px;">NAVIGATE. DELIVER. UPGRADE.</div>
+        </td></tr>
+        <tr><td style="padding:40px;">
+          <h1 style="font-size:22px;font-weight:700;color:#1a1d1f;margin:0 0 16px;">${isResend ? 'Reminder: ' : ''}You're the Project Manager</h1>
+          <p style="font-size:15px;color:#495057;line-height:1.6;margin:0 0 24px;"><strong>${senderName}</strong> has assigned you as the Project Manager for <strong>${project}</strong>. You will be responsible for planning, execution, and delivery of this project on the NDU Project platform.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:12px;margin:0 0 24px;">
+            <tr><td style="padding:20px;">
+              <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">Project</p>
+              <p style="font-size:15px;font-weight:600;color:#1a1d1f;margin:0 0 16px;">${project}</p>
+              <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">Your Role</p>
+              <p style="font-size:15px;font-weight:600;color:#1a1d1f;margin:0;">Project Manager</p>
+            </td></tr>
+          </table>
+          <p style="font-size:14px;color:#6b7280;line-height:1.6;margin:0 0 32px;">Please sign in to NDU Project to review the project charter, front-end execution plan, and milestone schedule before kicking off execution.</p>
+          <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
+            <tr><td style="background:#ffc107;border-radius:12px;">
+              <a href="${ctaUrl}" style="display:inline-block;padding:14px 36px;font-size:15px;font-weight:700;color:#1a1d1f;text-decoration:none;">Open Project Charter &rarr;</a>
+            </td></tr>
+          </table>
+          <p style="font-size:13px;color:#9ca3af;line-height:1.5;margin:0 0 8px;">Or copy this link into your browser:</p>
+          <p style="font-size:13px;color:#6366f1;word-break:break-all;margin:0 0 32px;">${ctaUrl}</p>
+          <div style="border-top:1px solid #e4e7ec;padding-top:24px;">
+            <p style="font-size:12px;color:#9ca3af;margin:0;">This assignment was made by ${senderName} via NDU Project. If you believe this was sent in error, you can safely ignore this email.</p>
+          </div>
+        </td></tr>
+      </table>
+      <p style="font-size:11px;color:#9ca3af;margin:24px 0 0;">&copy; 2026 NDU Project. All rights reserved.</p>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+    try {
+      const { data: emailResult, error } = await resendClient.emails.send({
+        from: RESEND_FROM_EMAIL,
+        to: toEmail,
+        subject: subject,
+        html: htmlBody,
+        text: `${senderName} has assigned you as Project Manager for ${project}. Visit ${ctaUrl} to review and start.`
+      });
+
+      if (error) {
+        console.error('Resend manager invite error:', error);
+        throw new functions.https.HttpsError('internal', `Failed to send manager invite: ${error.message}`);
+      }
+
+      console.log(`Manager invite email sent to ${toEmail}: ${emailResult?.id} (resend=${isResend})`);
+
+      // Track in Firestore so the caller can detect 'already invited' state.
+      await db.collection('manager_invitations').add({
+        toEmail: toEmail.toLowerCase().trim(),
+        toName: managerDisplay,
+        projectName: project,
+        projectId: projectId || '',
+        sentBy: context.auth.uid,
+        isResend: isResend,
+        messageId: emailResult?.id || null,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      await logSecurityEvent('manager_invite_sent', context.auth.uid, { toEmail, project, isResend });
+
+      return { success: true, messageId: emailResult?.id, isResend: isResend };
+
+    } catch (error) {
+      console.error('Manager invite email error:', error);
+      if (error instanceof functions.https.HttpsError) throw error;
+      throw new functions.https.HttpsError('internal', `Failed to send manager invite: ${error.message}`);
+    }
+  });
+
+// ============================================================================
+// ADMIN: PROFILE-ONBOARDING SURVEY RESPONSES
+// ============================================================================
+//
+// Returns every user's profile-onboarding (survey) answers in a single
+// payload for the admin panel's "Survey Responses" screen. Uses the
+// Admin SDK so the read bypasses Firestore rules — this means the screen
+// works whether or not the firestore.rules change that grants admins
+// direct read access to users/{uid}/profile/onboarding has been deployed
+// (which it can't be from CI without a STAGING_DEPLOY_TOKEN).
+//
+// Authorisation:
+//   - Caller must be signed in (context.auth.uid present).
+//   - Caller's email must be in ADMIN_EMAILS (same list used by
+//     getUserInvoices / sendManagerInvite / sendCharterApprovalEmail).
+//   - Returns 403 otherwise.
+//
+// Response shape:
+//   {
+//     users: [
+//       {
+//         uid: "...",
+//         email: "...",
+//         displayName: "...",
+//         createdAt: "2026-08-17T11:38:05.000Z" | null,
+//         isAdmin: true | false,
+//         isActive: true | false,
+//         onboarding: {
+//           position: "...",
+//           positionOther: "...",
+//           isDecisionMaker: true | false | null,
+//           country: "...",
+//           countryOther: "...",
+//           currency: "...",
+//           currencyOther: "...",
+//           currentTools: ["..."],
+//           currentToolsOther: "...",
+//           organizationOverview: "...",
+//           invitedEmails: ["..."],
+//           maxTeamSizePerProject: 25,
+//           tierAtSignup: "growth",
+//           completedAt: "2026-08-17T11:38:05.000Z" | null,
+//           skipped: false,
+//           updatedAt: "2026-08-17T11:38:05.000Z"
+//         } | null
+//       },
+//       ...
+//     ]
+//   }
+exports.getAdminSurveyResponses = functions
+  .runWith({ timeoutSeconds: 60, memory: '256MB' })
+  .https.onCall(async (data, context) => {
+    // ── Auth gate ───────────────────────────────────────────────────────
+    if (!context.auth || !context.auth.uid) {
+      throw new functions.https.HttpsError('unauthenticated', 'Sign in required.');
+    }
+    const ADMIN_EMAILS = ['chungu424@gmail.com'];
+    const callerEmail = (context.auth.token && context.auth.token.email) || '';
+    if (!ADMIN_EMAILS.includes(callerEmail)) {
+      throw new functions.https.HttpsError('permission-denied', 'Admin access required.');
+    }
+
+    try {
+      // ── Read all user docs (top-level collection) ──
+      // We deliberately do NOT paginate — the admin panel expects a single
+      // snapshot. If the user base grows past ~50k we should switch to a
+      // cursor-based variant, but for the current scale this is fine.
+      const usersSnapshot = await db.collection('users').get();
+
+      // ── Read every user's profile/onboarding doc in parallel ─────────
+      // Collection-group query is faster than N reads, but the per-user get
+      // pattern is simpler and matches the existing per-user lookups used by
+      // the rest of the admin codebase. Batching is bounded by the user count.
+      const users = [];
+      await Promise.all(usersSnapshot.docs.map(async (userDoc) => {
+        const userData = userDoc.data();
+        let onboarding = null;
+        try {
+          const onboardingSnap = await db
+            .collection('users')
+            .doc(userDoc.id)
+            .collection('profile')
+            .doc('onboarding')
+            .get();
+          if (onboardingSnap.exists) {
+            const data = onboardingSnap.data();
+            // Serialise Firestore Timestamps to ISO strings so the client
+            // can pass them straight to Dart's DateTime.parse.
+            const toIso = (ts) => {
+              if (!ts) return null;
+              if (ts.toDate) return ts.toDate().toISOString();
+              if (ts instanceof Date) return ts.toISOString();
+              if (typeof ts === 'string') return ts;
+              return null;
+            };
+            onboarding = {
+              position: data.position || null,
+              positionOther: data.positionOther || null,
+              isDecisionMaker: typeof data.isDecisionMaker === 'boolean' ? data.isDecisionMaker : null,
+              country: data.country || null,
+              countryOther: data.countryOther || null,
+              currency: data.currency || null,
+              currencyOther: data.currencyOther || null,
+              currentTools: Array.isArray(data.currentTools) ? data.currentTools : [],
+              currentToolsOther: data.currentToolsOther || null,
+              organizationOverview: data.organizationOverview || null,
+              invitedEmails: Array.isArray(data.invitedEmails) ? data.invitedEmails : [],
+              maxTeamSizePerProject: typeof data.maxTeamSizePerProject === 'number' ? data.maxTeamSizePerProject : null,
+              tierAtSignup: data.tierAtSignup || null,
+              completedAt: toIso(data.completedAt),
+              skipped: data.skipped === true,
+              updatedAt: toIso(data.updatedAt),
+            };
+          }
+        } catch (err) {
+          // Per-user failure shouldn't break the whole payload — just log
+          // and surface this user with onboarding: null.
+          console.error(`Failed to read onboarding for ${userDoc.id}:`, err);
+        }
+
+        const createdRaw = userData.createdAt;
+        const createdIso = createdRaw && createdRaw.toDate
+          ? createdRaw.toDate().toISOString()
+          : (createdRaw instanceof Date ? createdRaw.toISOString() : null);
+
+        users.push({
+          uid: userDoc.id,
+          email: userData.email || '',
+          displayName: userData.displayName || '',
+          createdAt: createdIso,
+          isAdmin: userData.isAdmin === true,
+          isActive: userData.isActive !== false, // default true
+          onboarding,
+        });
+      }));
+
+      await logSecurityEvent('admin_survey_responses_read', context.auth.uid, {
+        userCount: users.length,
+      });
+
+      return { users };
+    } catch (error) {
+      console.error('getAdminSurveyResponses error:', error);
+      throw new functions.https.HttpsError('internal', `Failed to fetch survey responses: ${error.message}`);
     }
   });
 

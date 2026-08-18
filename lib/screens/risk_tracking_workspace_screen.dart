@@ -781,6 +781,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildRiskTable() {
  final table = Container(
+ width: double.infinity,
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
@@ -1657,6 +1658,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  VoidCallback? onAction,
  }) {
  return Container(
+ width: double.infinity,
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
  color: Colors.white,

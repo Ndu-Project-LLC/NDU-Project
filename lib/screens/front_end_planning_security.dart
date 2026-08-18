@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 /// Front End Planning – Security screen
 /// Mirrors the provided layout with shared workspace chrome,
 /// large notes area, security text panel, and AI hint + Next controls.
@@ -1261,6 +1262,12 @@ Security Training:
 
  @override
  Widget build(BuildContext context) {
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
  return Scaffold(
  backgroundColor: Colors.white,
  body: SafeArea(
@@ -1285,6 +1292,12 @@ Security Training:
  controller: _contentScrollController,
  padding: const EdgeInsets.symmetric(
  horizontal: 32, vertical: 24),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -1361,6 +1374,9 @@ Security Training:
  const SizedBox(height: 24),
  _buildInformationSecurityPillar(),
  const SizedBox(height: 140),
+ ],
+ ),
+ ),
  ],
  ),
  ),

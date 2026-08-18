@@ -231,6 +231,8 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                   ],
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
+                  collapsible: true,
+                  defaultCollapsed: false,
                 ),
               ),
               // ── Context banner (drawn from WBS + Cost Estimate) ───────

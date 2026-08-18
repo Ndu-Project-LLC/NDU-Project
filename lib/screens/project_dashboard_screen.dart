@@ -608,7 +608,6 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                           if (_metrics!.projectStatuses.isNotEmpty) ...[
                             CollapsibleSection(
                               title: 'Project status',
-                              itemCount: _metrics!.projectStatuses.length,
                               initiallyExpanded: false,
                               child: Wrap(
                                 spacing: 16,

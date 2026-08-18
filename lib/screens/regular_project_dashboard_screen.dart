@@ -938,6 +938,31 @@ class _RegularProjectCard extends StatelessWidget {
     final progress = (project.progress * 100).clamp(0, 100).toDouble();
     final updatedLabel = _formatRelative(project.updatedAt);
 
+    // Pick the most informative description available — solutionDescription
+    // is the long-form brief, falling back to businessCase, then notes,
+    // then milestone. Empty string means we render nothing for the
+    // descriptive band.
+    final description = (project.solutionDescription.trim().isNotEmpty
+            ? project.solutionDescription
+            : project.businessCase.trim().isNotEmpty
+                ? project.businessCase
+                : project.notes.trim().isNotEmpty
+                    ? project.notes
+                    : project.milestone.trim().isNotEmpty
+                        ? project.milestone
+                        : '')
+        .trim();
+
+    // Phase tag — derived from progress so we always have something
+    // meaningful to show next to the timestamp in the footer.
+    final phaseLabel = progress <= 0
+        ? 'Initiation'
+        : progress < 25
+            ? 'Planning'
+            : progress < 75
+                ? 'Execution'
+                : 'Closure';
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1012,6 +1037,68 @@ class _RegularProjectCard extends StatelessWidget {
                   _StatusPill(color: statusColor, label: statusLabel),
                 ],
               ),
+              // ── Descriptive section ──────────────────────────────────────
+              // Mirrors the "Project" column pattern from the Executive
+              // Dashboard table: a 2-3 line brief that gives the project
+              // manager enough context to recognize the workspace without
+              // having to open it. Skipped entirely when the project has
+              // no description yet (keeps the card compact for new
+              // workspaces).
+              if (description.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFBF9F3),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: const Color(0xFFF1ECDE), width: 1),
+                  ),
+                  child: Text(
+                    description,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      height: 1.45,
+                      color: Color(0xFF4B5563),
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+              // ── "Last edited by" metadata row ───────────────────────────
+              // Shows who last touched the workspace + when — same pattern
+              // as the Executive Dashboard's "Last edited by [name] • [time]"
+              // metadata line. Hidden when there is no owner name and no
+              // meaningful timestamp.
+              if (project.ownerName.isNotEmpty ||
+                  project.updatedAt
+                      .isAfter(DateTime.fromMillisecondsSinceEpoch(0))) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(Icons.history_rounded,
+                        size: 12, color: Colors.grey.shade500),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        project.ownerName.isNotEmpty
+                            ? 'Last edited by ${project.ownerName} • $updatedLabel'
+                            : 'Updated $updatedLabel',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 16),
               // Progress bar
               Column(
@@ -1097,6 +1184,30 @@ class _RegularProjectCard extends StatelessWidget {
                     )
                   else
                     const SizedBox.shrink(),
+                  const SizedBox(width: 8),
+                  // Phase pill — solidifies the "descriptive section"
+                  // by always showing the project phase next to the
+                  // forward arrow (mirrors screenshot 1786981889271's
+                  // footer pill pattern).
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF8E5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: const Color(0xFFE7C98E), width: 1),
+                    ),
+                    child: Text(
+                      phaseLabel,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF92580A),
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   const Icon(
                     Icons.arrow_forward_rounded,

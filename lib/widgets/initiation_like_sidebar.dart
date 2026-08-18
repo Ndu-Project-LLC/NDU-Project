@@ -502,9 +502,25 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  /// Strips a leading numeric index like "3. " or "12) " from a label so
+  /// that screens which prefix their `activeItemLabel` with a phase step
+  /// number (e.g. "3. FAT, Mechanical Completion & Commission Solution")
+  /// still match the bare title used internally by the sidebar
+  /// ("FAT, Mechanical Completion & Commission Solution"). Also tolerates
+  /// the reverse mismatch (sidebar uses numbered, screen passes bare).
+  static String _normalizeLabel(String label) {
+    return label.replaceFirst(RegExp(r'^\d{1,3}[.)]\s+'), '');
+  }
+
   bool _activeIn(Set<String> labels) {
     final resolved = _resolvedActiveLabel();
-    return resolved != null && labels.contains(resolved);
+    if (resolved == null) return false;
+    if (labels.contains(resolved)) return true;
+    final normalized = _normalizeLabel(resolved);
+    // Compare against both the raw label set and a normalised version of
+    // it so screens that pass "3. FAT, ..." still expand the Launch Phase.
+    return labels.contains(normalized) ||
+        labels.any((label) => _normalizeLabel(label) == normalized);
   }
 
   String? _resolvedActiveLabel() {
@@ -522,7 +538,13 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   bool _isActiveLabel(String label) {
     final resolved = _resolvedActiveLabel();
-    return resolved != null && resolved == label;
+    if (resolved == null) return false;
+    if (resolved == label) return true;
+    // Tolerate leading "N. " / "N) " numeric prefixes on either side so
+    // screens that pass "3. FAT, Mechanical Completion & Commission
+    // Solution" highlight the sidebar item titled "FAT, Mechanical
+    // Completion & Commission Solution" (and vice versa).
+    return _normalizeLabel(resolved) == _normalizeLabel(label);
   }
 
   bool _expandForActiveLabel() {
@@ -2005,17 +2027,26 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         absorbing: !isInteractive,
         child: InkWell(
           onTap: isInteractive ? onTap : null,
+          borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: isHighlighted
-                  ? activeColor.withValues(alpha: 0.08)
+                  ? activeColor.withValues(alpha: 0.10)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: isHighlighted
-                  ? Border.all(color: activeColor.withValues(alpha: 0.20))
+                  ? Border.all(color: activeColor.withValues(alpha: 0.24))
                   : null,
             ),
+            foregroundDecoration: isHighlighted
+                ? BoxDecoration(
+                    border: Border(
+                      left: BorderSide(width: 4, color: activeColor),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  )
+                : null,
             child: Row(
               children: [
                 Icon(icon, size: 20, color: textColor),
@@ -2027,13 +2058,18 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                       fontSize: 14,
                       color: textColor,
                       fontWeight:
-                          isHighlighted ? FontWeight.w600 : FontWeight.normal,
+                          isHighlighted ? FontWeight.w700 : FontWeight.normal,
                     ),
                     softWrap: true,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (isHighlighted) ...[
+                  const SizedBox(width: 8),
+                  Icon(Icons.chevron_right_rounded,
+                      size: 18, color: activeColor),
+                ],
               ],
             ),
           ),
@@ -2059,17 +2095,26 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         absorbing: !isInteractive,
         child: InkWell(
           onTap: isInteractive ? onTap : null,
+          borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: isHighlighted
-                  ? activeColor.withValues(alpha: 0.08)
+                  ? activeColor.withValues(alpha: 0.12)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: isHighlighted
-                  ? Border.all(color: activeColor.withValues(alpha: 0.18))
+                  ? Border.all(color: activeColor.withValues(alpha: 0.24))
                   : null,
             ),
+            foregroundDecoration: isHighlighted
+                ? BoxDecoration(
+                    border: Border(
+                      left: BorderSide(width: 4, color: activeColor),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  )
+                : null,
             child: Row(
               children: [
                 Icon(Icons.circle,
@@ -2085,12 +2130,17 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                       fontSize: 13,
                       color: textColor,
                       fontWeight:
-                          isHighlighted ? FontWeight.w600 : FontWeight.normal,
+                          isHighlighted ? FontWeight.w700 : FontWeight.normal,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (isHighlighted) ...[
+                  const SizedBox(width: 8),
+                  Icon(Icons.chevron_right_rounded,
+                      size: 16, color: activeColor),
+                ],
               ],
             ),
           ),
@@ -2115,17 +2165,26 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       padding: const EdgeInsets.only(left: 48, right: 24, top: 2, bottom: 2),
       child: InkWell(
         onTap: isInteractive ? onTap : null,
+        borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: isHighlighted
-                ? activeColor.withValues(alpha: 0.08)
+                ? activeColor.withValues(alpha: 0.12)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
             border: isHighlighted
-                ? Border.all(color: activeColor.withValues(alpha: 0.18))
+                ? Border.all(color: activeColor.withValues(alpha: 0.24))
                 : null,
           ),
+          foregroundDecoration: isHighlighted
+              ? BoxDecoration(
+                  border: Border(
+                    left: BorderSide(width: 4, color: activeColor),
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                )
+              : null,
           child: Row(
             children: [
               Icon(Icons.circle,
@@ -2141,7 +2200,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                     fontSize: 13,
                     color: textColor,
                     fontWeight:
-                        isHighlighted ? FontWeight.w600 : FontWeight.normal,
+                        isHighlighted ? FontWeight.w700 : FontWeight.normal,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -2151,7 +2210,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                   expanded
                       ? Icons.keyboard_arrow_up
                       : Icons.keyboard_arrow_down,
-                  color: isDisabled ? Colors.grey[400] : Colors.grey[600],
+                  color: isDisabled
+                      ? Colors.grey[400]
+                      : (isHighlighted ? activeColor : Colors.grey[600]),
                   size: 18),
             ],
           ),
@@ -2177,17 +2238,26 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap: isInteractive
               ? onTap
               : (isDisabled ? () => _showLockedItemMessage(title) : null),
+          borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
             decoration: BoxDecoration(
               color: isHighlighted
-                  ? activeColor.withValues(alpha: 0.08)
+                  ? activeColor.withValues(alpha: 0.12)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: isHighlighted
-                  ? Border.all(color: activeColor.withValues(alpha: 0.15))
+                  ? Border.all(color: activeColor.withValues(alpha: 0.22))
                   : null,
             ),
+            foregroundDecoration: isHighlighted
+                ? BoxDecoration(
+                    border: Border(
+                      left: BorderSide(width: 3, color: activeColor),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  )
+                : null,
             child: Row(
               children: [
                 Container(
@@ -2208,12 +2278,17 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                       fontSize: 12,
                       color: textColor,
                       fontWeight:
-                          isHighlighted ? FontWeight.w600 : FontWeight.normal,
+                          isHighlighted ? FontWeight.w700 : FontWeight.normal,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (isHighlighted) ...[
+                  const SizedBox(width: 6),
+                  Icon(Icons.chevron_right_rounded,
+                      size: 14, color: activeColor),
+                ],
               ],
             ),
           ),
@@ -2227,33 +2302,43 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       required VoidCallback onTap,
       bool isActive = false}) {
     const activeColor = Color(0xFFD97706);
+    final isHighlighted = isActive;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: isActive
-                ? activeColor.withValues(alpha: 0.08)
+            color: isHighlighted
+                ? activeColor.withValues(alpha: 0.10)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
-            border: isActive
-                ? Border.all(color: activeColor.withValues(alpha: 0.20))
+            border: isHighlighted
+                ? Border.all(color: activeColor.withValues(alpha: 0.24))
                 : null,
           ),
+          foregroundDecoration: isHighlighted
+              ? BoxDecoration(
+                  border: Border(
+                    left: BorderSide(width: 4, color: activeColor),
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                )
+              : null,
           child: Row(
             children: [
               Icon(icon,
-                  size: 20, color: isActive ? activeColor : Colors.black87),
+                  size: 20, color: isHighlighted ? activeColor : Colors.black87),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
                   title,
                   style: TextStyle(
                     fontSize: 14,
-                    color: isActive ? activeColor : Colors.black87,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                    color: isHighlighted ? activeColor : Colors.black87,
+                    fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.normal,
                   ),
                   softWrap: true,
                   maxLines: 2,
@@ -2264,7 +2349,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                   expanded
                       ? Icons.keyboard_arrow_up
                       : Icons.keyboard_arrow_down,
-                  color: isActive ? activeColor : Colors.grey[700],
+                  color: isHighlighted ? activeColor : Colors.grey[700],
                   size: 20),
             ],
           ),
@@ -2436,7 +2521,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         Icons.home_outlined,
         'Home',
         onTap: () => HomeScreen.open(context),
-        isActive: widget.activeItemLabel == 'Home',
+        isActive: _isActiveLabel('Home'),
       ),
       _buildExpandableHeader(
         Icons.flag_outlined,
@@ -2461,26 +2546,26 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         if (_businessCaseExpanded) ...[
           _buildSubSubMenuItem('Scope Statement',
               onTap: _openBusinessCase,
-              isActive: widget.activeItemLabel == 'Business Case Detail'),
+              isActive: _isActiveLabel('Business Case Detail')),
           _buildSubSubMenuItem('Potential Solutions',
               onTap: _openPotentialSolutions,
-              isActive: widget.activeItemLabel == 'Potential Solutions'),
+              isActive: _isActiveLabel('Potential Solutions')),
           _buildSubSubMenuItem('Risk Identification',
               onTap: _openRiskIdentification,
-              isActive: widget.activeItemLabel == 'Risk Identification'),
+              isActive: _isActiveLabel('Risk Identification')),
           _buildSubSubMenuItem('IT Considerations',
               onTap: _openITConsiderations,
-              isActive: widget.activeItemLabel == 'IT Considerations'),
+              isActive: _isActiveLabel('IT Considerations')),
           _buildSubSubMenuItem('Infrastructure Considerations',
               onTap: _openInfrastructureConsiderations,
               isActive:
-                  widget.activeItemLabel == 'Infrastructure Considerations'),
+                  _isActiveLabel('Infrastructure Considerations')),
           _buildSubSubMenuItem('Core Stakeholders',
               onTap: _openCoreStakeholders,
-              isActive: widget.activeItemLabel == 'Core Stakeholders'),
+              isActive: _isActiveLabel('Core Stakeholders')),
           _buildSubSubMenuItem('Initial Cost Estimate',
               onTap: _openCostAnalysis,
-              isActive: widget.activeItemLabel == 'Initial Cost Estimate'),
+              isActive: _isActiveLabel('Initial Cost Estimate')),
           _buildSubExpandableHeader(
             'Executive Summary',
             expanded: _executiveSummaryExpanded,
@@ -2493,11 +2578,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           if (_executiveSummaryExpanded) ...[
             _buildSubSubMenuItem('Preferred Solution',
                 onTap: _openPreferredSolutionsComparison,
-                isActive: widget.activeItemLabel == 'Preferred Solution'),
+                isActive: _isActiveLabel('Preferred Solution')),
             _buildSubSubMenuItem('Preferred Solution Analysis',
                 onTap: _openPreferredSolutionAnalysis,
                 isActive:
-                    widget.activeItemLabel == 'Preferred Solution Analysis'),
+                    _isActiveLabel('Preferred Solution Analysis')),
           ],
         ],
         _buildSubExpandableHeader(
@@ -2512,46 +2597,46 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         if (_frontEndExpanded) ...[
           _buildSubSubMenuItem('Details',
               onTap: _openSummary,
-              isActive: widget.activeItemLabel == 'Details' ||
-                  widget.activeItemLabel == 'Summary'),
+              isActive: _isActiveLabel('Details') ||
+                  _isActiveLabel('Summary')),
           _buildSubSubMenuItem('Project Requirements',
               onTap: _openFrontEndRequirements,
-              isActive: widget.activeItemLabel == 'Project Requirements'),
+              isActive: _isActiveLabel('Project Requirements')),
           _buildSubSubMenuItem('Project Risks',
               onTap: _openFrontEndRisks,
-              isActive: widget.activeItemLabel == 'Project Risks'),
+              isActive: _isActiveLabel('Project Risks')),
           _buildSubSubMenuItem('Project Opportunities',
               onTap: _openFrontEndOpportunities,
-              isActive: widget.activeItemLabel == 'Project Opportunities'),
+              isActive: _isActiveLabel('Project Opportunities')),
           _buildSubSubMenuItem(
             'Contracting',
             onTap: lockContractVendorQuotes ? null : _openContractVendorQuotes,
-            isActive: widget.activeItemLabel == 'Contracting',
+            isActive: _isActiveLabel('Contracting'),
             isDisabled: lockContractVendorQuotes,
           ),
           _buildSubSubMenuItem('Procurement',
               onTap: _openProcurement,
-              isActive: widget.activeItemLabel == 'FEP Procurement'),
+              isActive: _isActiveLabel('FEP Procurement')),
           _buildSubSubMenuItem(
             'Security',
             onTap: lockSecurity ? null : _openSecurity,
-            isActive: widget.activeItemLabel == 'Security',
+            isActive: _isActiveLabel('Security'),
             isDisabled: lockSecurity,
           ),
           _buildSubSubMenuItem(
             'Milestone',
             onTap: _openMilestone,
-            isActive: widget.activeItemLabel == 'Milestone',
+            isActive: _isActiveLabel('Milestone'),
           ),
           _buildSubSubMenuItem(
             'Allowance',
             onTap: lockAllowance ? null : _openAllowance,
-            isActive: widget.activeItemLabel == 'Allowance',
+            isActive: _isActiveLabel('Allowance'),
             isDisabled: lockAllowance,
           ),
           _buildSubSubMenuItem('Project Charter',
               onTap: _openProjectCharter,
-              isActive: widget.activeItemLabel == 'Project Charter'),
+              isActive: _isActiveLabel('Project Charter')),
         ],
       ],
       _buildExpandableHeader(
@@ -2567,19 +2652,19 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       if (_planningPhaseExpanded) ...[
         _buildSubMenuItem('Project Details',
             onTap: _openProjectFramework,
-            isActive: widget.activeItemLabel == 'Project Details'),
+            isActive: _isActiveLabel('Project Details')),
         _buildSubMenuItem(
           'Work Breakdown Structure',
           onTap: lockWorkBreakdown ? null : _openWorkBreakdownStructure,
-          isActive: widget.activeItemLabel == 'Work Breakdown Structure',
+          isActive: _isActiveLabel('Work Breakdown Structure'),
           isDisabled: lockWorkBreakdown,
         ),
         _buildSubMenuItem('Project Goals & Milestones',
             onTap: _openProjectGoalsMilestones,
-            isActive: widget.activeItemLabel == 'Project Goals & Milestones'),
+            isActive: _isActiveLabel('Project Goals & Milestones')),
         _buildSubMenuItem('Requirements',
             onTap: _openPlanningRequirements,
-            isActive: widget.activeItemLabel == 'Requirements'),
+            isActive: _isActiveLabel('Requirements')),
         _buildSubExpandableHeader(
           'Organization Plan',
           expanded: _organizationPlanExpanded,
@@ -2592,33 +2677,31 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         if (_organizationPlanExpanded) ...[
           _buildSubSubMenuItem('Roles & Responsibilities',
               onTap: _openOrganizationRolesResponsibilities,
-              isActive: widget.activeItemLabel ==
-                  'Organization Plan - Roles & Responsibilities'),
+              isActive: _isActiveLabel('Organization Plan - Roles & Responsibilities')),
           _buildSubSubMenuItem('Staffing Plan',
               onTap: _openOrganizationStaffingPlan,
-              isActive: widget.activeItemLabel ==
-                  'Organization Plan - Staffing Plan'),
+              isActive: _isActiveLabel('Organization Plan - Staffing Plan')),
           _buildSubSubMenuItem('RACI Matrix',
               onTap: _openOrganizationRaciMatrix,
               isActive:
-                  widget.activeItemLabel == 'Organization Plan - RACI Matrix'),
+                  _isActiveLabel('Organization Plan - RACI Matrix')),
           _buildSubSubMenuItem('Training & Team Building',
               onTap: _openTeamTraining,
               isActive:
-                  widget.activeItemLabel == 'Team Training and Team Building'),
+                  _isActiveLabel('Team Training and Team Building')),
           _buildSubSubMenuItem('Stakeholder Management',
               onTap: _openStakeholderManagement,
-              isActive: widget.activeItemLabel == 'Stakeholder Management'),
+              isActive: _isActiveLabel('Stakeholder Management')),
           _buildSubSubMenuItem('Team Management',
               onTap: lockTeamManagement ? null : _openTeamManagement,
-              isActive: widget.activeItemLabel == 'Team Management',
+              isActive: _isActiveLabel('Team Management'),
               isDisabled: lockTeamManagement),
         ],
         _buildSubMenuItem('SSHER',
-            onTap: _openSSHER, isActive: widget.activeItemLabel == 'SSHER'),
+            onTap: _openSSHER, isActive: _isActiveLabel('SSHER')),
         _buildSubMenuItem('Quality Management',
             onTap: _openQualityManagement,
-            isActive: widget.activeItemLabel == 'Quality Management'),
+            isActive: _isActiveLabel('Quality Management')),
         _buildSubExpandableHeader(
           'Technology Planning',
           expanded: _technologyPlanningExpanded,
@@ -2632,7 +2715,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _buildSubSubMenuItem(
             'Technology Planning Overview',
             onTap: _openTechnology,
-            isActive: widget.activeItemLabel == 'Technology Planning',
+            isActive: _isActiveLabel('Technology Planning'),
           ),
         ],
         _buildSubExpandableHeader(
@@ -2649,95 +2732,91 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             'Project Overview',
             onTap: _openDesignProjectOverview,
             isActive:
-                widget.activeItemLabel == 'Design Planning - Project Overview',
+                _isActiveLabel('Design Planning - Project Overview'),
           ),
           _buildSubSubMenuItem(
             'Design Overview',
             onTap: _openDesignDesignOverview,
             isActive:
-                widget.activeItemLabel == 'Design Planning - Design Overview',
+                _isActiveLabel('Design Planning - Design Overview'),
           ),
           _buildSubSubMenuItem(
             'Design Specifications',
             onTap: _openDesignSpecifications,
-            isActive: widget.activeItemLabel ==
-                'Design Planning - Design Specifications',
+            isActive: _isActiveLabel('Design Planning - Design Specifications'),
           ),
           _buildSubSubMenuItem(
             'Deviations',
             onTap: _openDesignDeviations,
             isActive:
-                widget.activeItemLabel == 'Design Planning - Deviations',
+                _isActiveLabel('Design Planning - Deviations'),
           ),
           _buildSubSubMenuItem(
             'Requirements Mapping',
             onTap: _openDesignRequirementsMapping,
-            isActive: widget.activeItemLabel ==
-                'Design Planning - Requirements Mapping',
+            isActive: _isActiveLabel('Design Planning - Requirements Mapping'),
           ),
           _buildSubSubMenuItem(
             'Architecture Basis',
             onTap: _openDesignArchitectureBasis,
-            isActive: widget.activeItemLabel ==
-                'Design Planning - Architecture Basis',
+            isActive: _isActiveLabel('Design Planning - Architecture Basis'),
           ),
           _buildSubSubMenuItem(
             'UI/UX Basis',
             onTap: _openDesignUiUxBasis,
             isActive:
-                widget.activeItemLabel == 'Design Planning - UI/UX Basis',
+                _isActiveLabel('Design Planning - UI/UX Basis'),
           ),
           _buildSubSubMenuItem(
             'Technical Basis',
             onTap: _openDesignTechnicalBasis,
             isActive:
-                widget.activeItemLabel == 'Design Planning - Technical Basis',
+                _isActiveLabel('Design Planning - Technical Basis'),
           ),
           _buildSubSubMenuItem(
             'Constraints & Assumptions',
             onTap: _openDesignConstraintsAssumptions,
-            isActive: widget.activeItemLabel ==
-                'Design Planning - Constraints & Assumptions',
+            isActive: _isActiveLabel('Design Planning - Constraints & Assumptions'),
           ),
           _buildSubSubMenuItem(
             'Risks & Mitigation',
             onTap: _openDesignRisksMitigation,
             isActive:
-                widget.activeItemLabel == 'Design Planning - Risks & Mitigation',
+                _isActiveLabel('Design Planning - Risks & Mitigation'),
           ),
           _buildSubSubMenuItem(
             'Dependencies',
             onTap: _openDesignDependencies,
             isActive:
-                widget.activeItemLabel == 'Design Planning - Dependencies',
+                _isActiveLabel('Design Planning - Dependencies'),
           ),
           _buildSubSubMenuItem(
             'Decision Log',
             onTap: _openDesignDecisionLog,
             isActive:
-                widget.activeItemLabel == 'Design Planning - Decision Log',
+                _isActiveLabel('Design Planning - Decision Log'),
           ),
           _buildSubSubMenuItem(
             'Validation',
             onTap: _openDesignValidation,
-            isActive: widget.activeItemLabel == 'Design Planning - Validation',
+            isActive: _isActiveLabel('Design Planning - Validation'),
           ),
           _buildSubSubMenuItem(
             'Approvals',
             onTap: _openDesignApprovals,
-            isActive: widget.activeItemLabel == 'Design Planning - Approvals',
+            isActive: _isActiveLabel('Design Planning - Approvals'),
           ),
           _buildSubSubMenuItem(
             'Work Packages',
             onTap: _openDesignWorkPackages,
             isActive:
-                widget.activeItemLabel == 'Design Planning - Work Packages',
+                _isActiveLabel('Design Planning - Work Packages'),
           ),
         ],
         _buildSubMenuItem(
           'Interface Management',
           onTap: lockInterfaceManagement ? null : _openInterfaceManagement,
-          isActive: widget.activeItemLabel == 'Interface Management',
+          isActive: _isActiveLabel('Interface Management'),
           isDisabled: lockInterfaceManagement,
         ),
         _buildSubExpandableHeader(
@@ -2752,40 +2831,31 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         if (_agileWireframeExpanded) ...[
           _buildSubSubMenuItem('Agile Delivery Model',
               onTap: _openAgileDeliveryModel,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Delivery Model'),
+              isActive: _isActiveLabel('Agile Delivery Model - Delivery Model')),
           _buildSubSubMenuItem('Backlog Governance',
               onTap: _openAgileBacklogGovernance,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Backlog Governance'),
+              isActive: _isActiveLabel('Agile Delivery Model - Backlog Governance')),
           _buildSubSubMenuItem('Agile Team Structure',
               onTap: _openAgileTeamStructure,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Team Structure'),
+              isActive: _isActiveLabel('Agile Delivery Model - Team Structure')),
           _buildSubSubMenuItem('Kanban Configuration',
               onTap: _openAgileKanbanConfig,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Kanban Configuration'),
+              isActive: _isActiveLabel('Agile Delivery Model - Kanban Configuration')),
           _buildSubSubMenuItem('Epics & Features',
               onTap: _openAgileEpicsFeatures,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Epics & Features'),
+              isActive: _isActiveLabel('Agile Delivery Model - Epics & Features')),
           _buildSubSubMenuItem('Acceptance Criteria Planning',
               onTap: _openAgileAcceptanceCriteria,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Acceptance Criteria Planning'),
+              isActive: _isActiveLabel('Agile Delivery Model - Acceptance Criteria Planning')),
           _buildSubSubMenuItem('Agile Map Out',
               onTap: _openAgileMapOut,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Agile Map Out'),
+              isActive: _isActiveLabel('Agile Delivery Model - Agile Map Out')),
           _buildSubSubMenuItem('Release Plan',
               onTap: _openAgileReleasePlan,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Release Plan'),
+              isActive: _isActiveLabel('Agile Delivery Model - Release Plan')),
           _buildSubSubMenuItem('Agile Metrics Planning',
               onTap: _openAgileMetricsPlanning,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Metrics Planning'),
+              isActive: _isActiveLabel('Agile Delivery Model - Metrics Planning')),
         ],
         _buildSubExpandableHeader(
           'Execution Plan',
@@ -2800,105 +2870,101 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _buildSubSubMenuItem(
             'Overview',
             onTap: _openExecutionPlan,
-            isActive: widget.activeItemLabel == 'Execution Plan Overview',
+            isActive: _isActiveLabel('Execution Plan Overview'),
           ),
           _buildSubSubMenuItem(
             'Execution Work Packages',
             onTap: _openExecutionWorkPackages,
-            isActive: widget.activeItemLabel == 'Execution Work Packages',
+            isActive: _isActiveLabel('Execution Work Packages'),
           ),
           _buildSubSubMenuItem(
             'Executive Plan Strategy',
             onTap: _openExecutionPlanStrategy,
-            isActive: widget.activeItemLabel == 'Executive Plan Strategy',
+            isActive: _isActiveLabel('Executive Plan Strategy'),
           ),
           _buildSubSubMenuItem(
             'Execution Plan Details',
             onTap: _openExecutionPlanDetails,
-            isActive: widget.activeItemLabel == 'Execution Plan Details',
+            isActive: _isActiveLabel('Execution Plan Details'),
           ),
           _buildSubSubMenuItem(
             'Execution Early Works',
             onTap: _openExecutionEarlyWorks,
-            isActive: widget.activeItemLabel == 'Execution Early Works',
+            isActive: _isActiveLabel('Execution Early Works'),
           ),
           _buildSubSubMenuItem(
             'Execution Enabling Work Plan',
             onTap: _openExecutionEnablingWorkPlan,
-            isActive: widget.activeItemLabel == 'Execution Enabling Work Plan',
+            isActive: _isActiveLabel('Execution Enabling Work Plan'),
           ),
           _buildSubSubMenuItem(
             'Execution Issue Management',
             onTap: _openExecutionIssueManagement,
-            isActive: widget.activeItemLabel == 'Execution Issue Management',
+            isActive: _isActiveLabel('Execution Issue Management'),
           ),
           _buildSubSubMenuItem(
             'Execution Stakeholder Identification',
             onTap: _openExecutionPlanStakeholderIdentification,
-            isActive: widget.activeItemLabel ==
-                'Execution Stakeholder Identification',
+            isActive: _isActiveLabel('Execution Stakeholder Identification'),
           ),
           _buildSubSubMenuItem('Construction Plan',
               onTap: _openExecutionPlanConstructionPlan,
-              isActive: widget.activeItemLabel ==
-                  'Execution Plan - Construction Plan'),
+              isActive: _isActiveLabel('Execution Plan - Construction Plan')),
           _buildSubSubMenuItem('Infrastructure Plan',
               onTap: _openExecutionPlanInfrastructurePlan,
-              isActive: widget.activeItemLabel ==
-                  'Execution Plan - Infrastructure Plan'),
+              isActive: _isActiveLabel('Execution Plan - Infrastructure Plan')),
           _buildSubSubMenuItem(
             'Execution Lessons Learned',
             onTap: _openExecutionPlanLessonsLearned,
-            isActive: widget.activeItemLabel == 'Execution Lessons Learned',
+            isActive: _isActiveLabel('Execution Lessons Learned'),
           ),
           _buildSubSubMenuItem(
             'Best Practices',
             onTap: _openExecutionPlanBestPractices,
             isActive:
-                widget.activeItemLabel == 'Execution Plan - Best Practices',
+                _isActiveLabel('Execution Plan - Best Practices'),
           ),
           _buildSubSubMenuItem(
             'Execution Interface Management',
             onTap: _openExecutionPlanInterfaceManagement,
             isActive:
-                widget.activeItemLabel == 'Execution Interface Management',
+                _isActiveLabel('Execution Interface Management'),
           ),
           _buildSubSubMenuItem(
             'Communication Plan',
             onTap: _openExecutionPlanCommunicationPlan,
             isActive:
-                widget.activeItemLabel == 'Execution Plan - Communication Plan',
+                _isActiveLabel('Execution Plan - Communication Plan'),
           ),
           _buildSubSubMenuItem(
             'Execution Interface Management Plan',
             onTap: _openExecutionPlanInterfaceManagementPlan,
             isActive:
-                widget.activeItemLabel == 'Execution Interface Management Plan',
+                _isActiveLabel('Execution Interface Management Plan'),
           ),
           _buildSubSubMenuItem(
             'Execution Interface Management Overview',
             onTap: _openExecutionPlanInterfaceManagementOverview,
-            isActive: widget.activeItemLabel ==
-                'Execution Interface Management Overview',
+            isActive: _isActiveLabel('Execution Interface Management Overview'),
           ),
         ],
         _buildSubMenuItem('Risk Assessment',
             onTap: _openRiskAssessment,
-            isActive: widget.activeItemLabel == 'Risk Assessment'),
+            isActive: _isActiveLabel('Risk Assessment')),
         _buildSubMenuItem('Contract Planning',
             onTap: _openContract,
-            isActive: widget.activeItemLabel == 'Contract Planning' ||
-                widget.activeItemLabel == 'Contract'),
+            isActive: _isActiveLabel('Contract Planning') ||
+                _isActiveLabel('Contract')),
         _buildSubMenuItem('Procurement',
             onTap: _openPlanningProcurement,
-            isActive: widget.activeItemLabel == 'Planning Procurement'),
+            isActive: _isActiveLabel('Planning Procurement')),
         _buildSubMenuItem('Schedule',
             onTap: _openSchedule,
-            isActive: widget.activeItemLabel == 'Schedule'),
+            isActive: _isActiveLabel('Schedule')),
         _buildSubMenuItem('Integration Dashboard',
             onTap: _openIntegrationDashboard,
             isActive:
-                widget.activeItemLabel == 'Integration Dashboard'),
+                _isActiveLabel('Integration Dashboard')),
         _buildSubExpandableHeader(
           'Cost Estimate',
           expanded: _costEstimateExpanded,
@@ -2911,7 +2977,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         if (_costEstimateExpanded) ...[
           _buildSubSubMenuItem('Cost Estimate Overview',
               onTap: _openCostEstimate,
-              isActive: widget.activeItemLabel == 'Cost Estimate'),
+              isActive: _isActiveLabel('Cost Estimate')),
         ],
         _buildSubExpandableHeader(
           'Project Services',
@@ -2925,26 +2991,26 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         if (_projectServicesExpanded) ...[
           _buildSubSubMenuItem('Scope Tracking Plan',
               onTap: _openScopeTrackingPlan,
-              isActive: widget.activeItemLabel == 'Scope Tracking Plan'),
+              isActive: _isActiveLabel('Scope Tracking Plan')),
           _buildSubSubMenuItem('Project Controls',
               onTap: _openProjectControls,
-              isActive: widget.activeItemLabel == 'Project Controls'),
+              isActive: _isActiveLabel('Project Controls')),
         ],
         _buildSubMenuItem(
           'Change Management',
           onTap: lockChangeManagement ? null : _openChangeManagement,
-          isActive: widget.activeItemLabel == 'Change Management',
+          isActive: _isActiveLabel('Change Management'),
           isDisabled: lockChangeManagement,
         ),
         _buildSubMenuItem('Issue Management',
             onTap: _openIssueManagement,
-            isActive: widget.activeItemLabel == 'Issue Management'),
+            isActive: _isActiveLabel('Issue Management')),
         _buildSubMenuItem('Lessons Learned',
             onTap: _openLessonsLearned,
-            isActive: widget.activeItemLabel == 'Lessons Learned'),
+            isActive: _isActiveLabel('Lessons Learned')),
         _buildSubMenuItem('Security Management',
             onTap: _openSecurityManagement,
-            isActive: widget.activeItemLabel == 'Security Management'),
+            isActive: _isActiveLabel('Security Management')),
         _buildSubExpandableHeader(
           'Start-Up Planning',
           expanded: _startUpPlanningExpanded,
@@ -2958,25 +3024,24 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _buildSubSubMenuItem(
             'Operations Plan and Manual',
             onTap: _openStartUpPlanningOperations,
-            isActive: widget.activeItemLabel ==
-                'Start-Up Planning - Operations Plan and Manual',
+            isActive: _isActiveLabel('Start-Up Planning - Operations Plan and Manual'),
           ),
           _buildSubSubMenuItem(
             'Hypercare Plan',
             onTap: _openStartUpPlanningHypercare,
             isActive:
-                widget.activeItemLabel == 'Start-Up Planning - Hypercare Plan',
+                _isActiveLabel('Start-Up Planning - Hypercare Plan'),
           ),
           _buildSubSubMenuItem(
             'DevOps',
             onTap: _openStartUpPlanningDevOps,
-            isActive: widget.activeItemLabel == 'Start-Up Planning - DevOps',
+            isActive: _isActiveLabel('Start-Up Planning - DevOps'),
           ),
           _buildSubSubMenuItem(
             'Close Out Plan',
             onTap: _openStartUpPlanningCloseOut,
             isActive:
-                widget.activeItemLabel == 'Start-Up Planning - Close Out Plan',
+                _isActiveLabel('Start-Up Planning - Close Out Plan'),
           ),
         ],
         _buildSubExpandableHeader(
@@ -2991,8 +3056,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         if (_deliverableRoadmapExpanded) ...[
           _buildSubSubMenuItem('Roadmap Overview',
               onTap: _openDeliverableRoadmap,
-              isActive: widget.activeItemLabel == 'Deliverable Roadmap' ||
-                  widget.activeItemLabel == 'Roadmap Overview'),
+              isActive: _isActiveLabel('Deliverable Roadmap') ||
+                  _isActiveLabel('Roadmap Overview')),
         ],
         _buildSubExpandableHeader(
           'Project Plan',
@@ -3006,13 +3071,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         if (_projectPlanExpanded) ...[
           _buildSubSubMenuItem('Project Plan Overview',
               onTap: _openProjectPlan,
-              isActive: widget.activeItemLabel == 'Project Plan'),
+              isActive: _isActiveLabel('Project Plan')),
           _buildSubSubMenuItem(
             'Level 1 - Project Schedule',
             onTap:
                 lockProjectPlanLevel1 ? null : _openProjectPlanLevel1Schedule,
-            isActive: widget.activeItemLabel ==
-                'Project Plan - Level 1 - Project Schedule',
+            isActive: _isActiveLabel('Project Plan - Level 1 - Project Schedule'),
             isDisabled: lockProjectPlanLevel1,
           ),
           _buildSubSubMenuItem(
@@ -3020,8 +3084,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             onTap: lockProjectPlanDetailed
                 ? null
                 : _openProjectPlanDetailedSchedule,
-            isActive: widget.activeItemLabel ==
-                'Project Plan - Detailed Project Schedule',
+            isActive: _isActiveLabel('Project Plan - Detailed Project Schedule'),
             isDisabled: lockProjectPlanDetailed,
           ),
           _buildSubSubMenuItem(
@@ -3029,15 +3092,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             onTap: lockProjectPlanCondensed
                 ? null
                 : _openProjectPlanCondensedSummary,
-            isActive: widget.activeItemLabel ==
-                'Project Plan - Condensed Project Summary',
+            isActive: _isActiveLabel('Project Plan - Condensed Project Summary'),
             isDisabled: lockProjectPlanCondensed,
           ),
         ],
         _buildSubMenuItem(
           'Project Baseline',
           onTap: lockProjectBaseline ? null : _openProjectBaseline,
-          isActive: widget.activeItemLabel == 'Project Baseline',
+          isActive: _isActiveLabel('Project Baseline'),
           isDisabled: lockProjectBaseline,
         ),
       ],
@@ -3054,53 +3116,53 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       if (_designPhaseExpanded) ...[
         _buildSubMenuItem('Design Management',
             onTap: _openDesignManagement,
-            isActive: widget.activeItemLabel == 'Design Management'),
+            isActive: _isActiveLabel('Design Management')),
         _buildSubMenuItem('Design Specifications',
             onTap: _openRequirementsImplementation,
-            isActive: widget.activeItemLabel == 'Design Specifications'),
+            isActive: _isActiveLabel('Design Specifications')),
         _buildSubMenuItem('Technical Alignment',
             onTap: _openTechnicalAlignment,
-            isActive: widget.activeItemLabel == 'Technical Alignment'),
+            isActive: _isActiveLabel('Technical Alignment')),
         _buildSubMenuItem('Development Set Up',
             onTap: disableDesignTech ? null : _openDevelopmentSetUp,
-            isActive: widget.activeItemLabel == 'Development Set Up',
+            isActive: _isActiveLabel('Development Set Up'),
             isDisabled: disableDesignTech),
         _buildSubMenuItem('UI/UX Design',
             onTap: disableDesignTech ? null : _openUiUxDesign,
-            isActive: widget.activeItemLabel == 'UI/UX Design',
+            isActive: _isActiveLabel('UI/UX Design'),
             isDisabled: disableDesignTech),
         _buildSubMenuItem('Backend Design',
             onTap: disableDesignTech ? null : _openBackendDesign,
-            isActive: widget.activeItemLabel == 'Backend Design',
+            isActive: _isActiveLabel('Backend Design'),
             isDisabled: disableDesignTech),
         _buildSubMenuItem(
           'Engineering',
           onTap: disableDesignTech || lockEngineering ? null : _openEngineeringDesign,
-          isActive: widget.activeItemLabel == 'Engineering',
+          isActive: _isActiveLabel('Engineering'),
           isDisabled: disableDesignTech || lockEngineering,
         ),
         _buildSubMenuItem(
           'Technical Development',
           onTap: disableDesignTech || lockTechnicalDevelopment ? null : _openTechnicalDevelopment,
-          isActive: widget.activeItemLabel == 'Technical Development',
+          isActive: _isActiveLabel('Technical Development'),
           isDisabled: disableDesignTech || lockTechnicalDevelopment,
         ),
         _buildSubMenuItem('Tools Integration',
             onTap: disableDesignTech ? null : _openToolsIntegration,
-            isActive: widget.activeItemLabel == 'Tools Integration',
+            isActive: _isActiveLabel('Tools Integration'),
             isDisabled: disableDesignTech),
         _buildSubMenuItem('Long Lead Equipment Ordering',
             onTap: _openLongLeadEquipmentOrdering,
-            isActive: widget.activeItemLabel == 'Long Lead Equipment Ordering'),
+            isActive: _isActiveLabel('Long Lead Equipment Ordering')),
         _buildSubMenuItem(
           'Specialized Design',
           onTap: lockSpecializedDesign ? null : _openSpecializedDesign,
-          isActive: widget.activeItemLabel == 'Specialized Design',
+          isActive: _isActiveLabel('Specialized Design'),
           isDisabled: lockSpecializedDesign,
         ),
         _buildSubMenuItem('Design Deliverables',
             onTap: _openDesignDeliverables,
-            isActive: widget.activeItemLabel == 'Design Deliverables'),
+            isActive: _isActiveLabel('Design Deliverables')),
       ],
       _buildExpandableHeader(
         Icons.play_circle_outline,
@@ -3127,16 +3189,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _buildSubSubMenuItem(
             'Mobilize Team',
             onTap: lockStaffTeam ? null : _openStaffTeam,
-            isActive: widget.activeItemLabel == 'Staff Team' ||
-                widget.activeItemLabel ==
-                    'Project Team Activities - Mobilize Team',
+            isActive: _isActiveLabel('Staff Team') ||
+                _isActiveLabel('Project Team Activities - Mobilize Team'),
           ),
           _buildSubSubMenuItem(
             'Team Meetings',
             onTap: _openTeamMeetings,
-            isActive: widget.activeItemLabel == 'Team Meetings' ||
-                widget.activeItemLabel ==
-                    'Project Team Activities - Team Meetings',
+            isActive: _isActiveLabel('Team Meetings') ||
+                _isActiveLabel('Project Team Activities - Team Meetings'),
           ),
           _buildSubSubMenuItem(
             'Training & Team Building',
@@ -3145,32 +3205,28 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                   'team_training', const TeamTrainingAndBuildingScreen());
             },
             isActive:
-                widget.activeItemLabel == 'Team Training and Team Building',
+                _isActiveLabel('Team Training and Team Building'),
           ),
           _buildSubSubMenuItem(
             'Recognition & Awards',
             onTap: _openRecognitionAwards,
-            isActive: widget.activeItemLabel ==
-                'Project Team Activities - Recognition & Awards',
+            isActive: _isActiveLabel('Project Team Activities - Recognition & Awards'),
           ),
           _buildSubSubMenuItem(
             'Team Status Check',
             onTap: _openTeamStatusCheck,
-            isActive: widget.activeItemLabel ==
-                'Project Team Activities - Team Status Check',
+            isActive: _isActiveLabel('Project Team Activities - Team Status Check'),
           ),
           _buildSubSubMenuItem(
             'Team Handover',
             onTap: _openTeamHandover,
-            isActive: widget.activeItemLabel ==
-                'Project Team Activities - Team Handover',
+            isActive: _isActiveLabel('Project Team Activities - Team Handover'),
           ),
           _buildSubSubMenuItem(
             'Lessons Learned',
             onTap: _openLessonsLearned,
-            isActive: widget.activeItemLabel == 'Lessons Learned' ||
-                widget.activeItemLabel ==
-                    'Project Team Activities - Lessons Learned',
+            isActive: _isActiveLabel('Lessons Learned') ||
+                _isActiveLabel('Project Team Activities - Lessons Learned'),
           ),
         ],
         _buildSubExpandableHeader(
@@ -3185,58 +3241,58 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         if (_progressTrackingExpanded) ...[
           _buildSubSubMenuItem('Deliverable Status Updates',
               onTap: _openDeliverableStatusUpdates,
-              isActive: widget.activeItemLabel == 'Deliverable Status Updates'),
+              isActive: _isActiveLabel('Deliverable Status Updates')),
           _buildSubSubMenuItem('Recurring Deliverables',
               onTap: _openRecurringDeliverables,
-              isActive: widget.activeItemLabel == 'Recurring Deliverables'),
+              isActive: _isActiveLabel('Recurring Deliverables')),
           _buildSubSubMenuItem('Status Reports',
               onTap: _openStatusReports,
-              isActive: widget.activeItemLabel == 'Status Reports'),
+              isActive: _isActiveLabel('Status Reports')),
         ],
         _buildSubMenuItem('Contracts Tracking',
             onTap: _openContractsTracking,
-            isActive: widget.activeItemLabel == 'Contracts Tracking'),
+            isActive: _isActiveLabel('Contracts Tracking')),
         _buildSubMenuItem('Vendor Tracking',
             onTap: _openVendorTracking,
-            isActive: widget.activeItemLabel == 'Vendor Tracking'),
+            isActive: _isActiveLabel('Vendor Tracking')),
         _buildSubMenuItem('Detailed Design',
             onTap: _openDetailedDesign,
-            isActive: widget.activeItemLabel == 'Detailed Design'),
+            isActive: _isActiveLabel('Detailed Design')),
         // Simplified Agile Project Hub — removed detailed sub-section list
         // per product request. The header now navigates to the main Agile Hub
         // landing screen when tapped.
         _buildSubMenuItem('Agile Project Hub',
             onTap: _openAgileProjectHub,
-            isActive: widget.activeItemLabel == 'Agile Project Hub'),
+            isActive: _isActiveLabel('Agile Project Hub')),
         _buildSubMenuItem('Scope Tracking Implementation',
             onTap: _openScopeTrackingImplementation,
             isActive:
-                widget.activeItemLabel == 'Scope Tracking Implementation'),
+                _isActiveLabel('Scope Tracking Implementation')),
         _buildSubMenuItem('Stakeholder Alignment',
             onTap: _openStakeholderAlignment,
-            isActive: widget.activeItemLabel == 'Stakeholder Alignment'),
+            isActive: _isActiveLabel('Stakeholder Alignment')),
         _buildSubMenuItem(
           'Update Ops and Maintenance Plans',
           onTap: lockUpdateOps ? null : _openUpdateOpsMaintenancePlans,
           isActive:
-              widget.activeItemLabel == 'Update Ops and Maintenance Plans',
+              _isActiveLabel('Update Ops and Maintenance Plans'),
           isDisabled: lockUpdateOps,
         ),
         _buildSubMenuItem('Launch Checklist',
             onTap: _openLaunchChecklist,
-            isActive: widget.activeItemLabel == 'Launch Checklist'),
+            isActive: _isActiveLabel('Launch Checklist')),
         _buildSubMenuItem('Risk Tracking',
             onTap: _openRiskTracking,
-            isActive: widget.activeItemLabel == 'Risk Tracking'),
+            isActive: _isActiveLabel('Risk Tracking')),
         _buildSubMenuItem('Scope Completion',
             onTap: _openScopeCompletion,
-            isActive: widget.activeItemLabel == 'Scope Completion'),
+            isActive: _isActiveLabel('Scope Completion')),
         _buildSubMenuItem(
           'Gap Analysis and Scope Reconciliation',
           onTap:
               lockGapAnalysis ? null : _openGapAnalysisAndScopeReconcillation,
           isActive:
-              widget.activeItemLabel == 'Gap Analysis and Scope Reconciliation',
+              _isActiveLabel('Gap Analysis and Scope Reconciliation'),
           isDisabled: lockGapAnalysis,
         ),
         _buildSubExpandableHeader(
@@ -3253,28 +3309,28 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _buildSubSubMenuItem(
             'Punchlist Overview',
             onTap: lockPunchlistActions ? null : _openPunchlistActions,
-            isActive: widget.activeItemLabel == 'Punchlist Actions',
+            isActive: _isActiveLabel('Punchlist Actions'),
             isDisabled: lockPunchlistActions,
           ),
           _buildSubSubMenuItem(
             'Tech Debt Management',
             onTap: lockPunchlistActions ? null : _openTechnicalDebtManagement,
-            isActive: widget.activeItemLabel == 'Technical Debt Management',
+            isActive: _isActiveLabel('Technical Debt Management'),
             isDisabled: lockPunchlistActions,
           ),
         ],
         _buildSubMenuItem('Identify and Staff Ops Team',
             onTap: _openIdentifyStaffOpsTeam,
-            isActive: widget.activeItemLabel == 'Identify and Staff Ops Team'),
+            isActive: _isActiveLabel('Identify and Staff Ops Team')),
         _buildSubMenuItem(
           'Salvage and/or Disposal Plan',
           onTap: lockSalvageDisposal ? null : _openSalvageDisposalTeam,
-          isActive: widget.activeItemLabel == 'Salvage and/or Disposal Plan',
+          isActive: _isActiveLabel('Salvage and/or Disposal Plan'),
           isDisabled: lockSalvageDisposal,
         ),
         _buildSubMenuItem('Finalize Project',
             onTap: _openFinalizeProject,
-            isActive: widget.activeItemLabel == 'Finalize Project'),
+            isActive: _isActiveLabel('Finalize Project')),
       ],
       _buildExpandableHeader(
         Icons.rocket_launch_outlined,
@@ -3289,56 +3345,53 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       if (_launchPhaseExpanded) ...[
         _buildSubMenuItem('Launch Readiness Assessment',
             onTap: _openDeliverProjectClosure,
-            isActive: widget.activeItemLabel == 'Launch Readiness Assessment'),
+            isActive: _isActiveLabel('Launch Readiness Assessment')),
         _buildSubMenuItem('Deployment Transfer, Certification & Release',
             onTap: _openTransitionToProdTeam,
-            isActive: widget.activeItemLabel ==
-                'Deployment Transfer, Certification & Release'),
+            isActive: _isActiveLabel('Deployment Transfer, Certification & Release')),
         _buildSubMenuItem('FAT, Mechanical Completion & Commission Solution',
             onTap: _openFatMechanicalCompletion,
-            isActive: widget.activeItemLabel ==
-                'FAT, Mechanical Completion & Commission Solution'),
+            isActive: _isActiveLabel('FAT, Mechanical Completion & Commission Solution')),
         _buildSubMenuItem('Vendor & Contract Closeout',
             onTap: _openContractCloseOut,
-            isActive: widget.activeItemLabel == 'Vendor & Contract Closeout'),
+            isActive: _isActiveLabel('Vendor & Contract Closeout')),
         _buildSubMenuItem('Scope & Deliverable Reconciliation',
             onTap: _openActualVsPlannedGapAnalysis,
             isActive:
-                widget.activeItemLabel == 'Scope & Deliverable Reconciliation'),
+                _isActiveLabel('Scope & Deliverable Reconciliation')),
         _buildSubMenuItem(
           'Hypercare & Warranty Support',
           onTap: lockWarrantiesSupport ? null : _openCommerceViability,
-          isActive: widget.activeItemLabel == 'Hypercare & Warranty Support',
+          isActive: _isActiveLabel('Hypercare & Warranty Support'),
           isDisabled: lockWarrantiesSupport,
         ),
         _buildSubMenuItem('Financial Closeout',
             onTap: _openFinancialCloseout,
-            isActive: widget.activeItemLabel == 'Financial Closeout'),
+            isActive: _isActiveLabel('Financial Closeout')),
         _buildSubMenuItem(
           'Project Performance Review',
           onTap: lockProjectSummary ? null : _openSummarizeAccountRisks,
-          isActive: widget.activeItemLabel == 'Project Performance Review',
+          isActive: _isActiveLabel('Project Performance Review'),
           isDisabled: lockProjectSummary,
         ),
         _buildSubMenuItem('Benefits Realization',
             onTap: _openBenefitsRealization,
-            isActive: widget.activeItemLabel == 'Benefits Realization'),
+            isActive: _isActiveLabel('Benefits Realization')),
         _buildSubMenuItem(
             'Team Demobilization & Operations/Production Transition',
             onTap: _openDemobilizeTeam,
-            isActive: widget.activeItemLabel ==
-                'Team Demobilization & Operations/Production Transition'),
+            isActive: _isActiveLabel('Team Demobilization & Operations/Production Transition')),
         _buildSubMenuItem('Project Closeout',
             onTap: _openProjectCloseOutLongForm,
-            isActive: widget.activeItemLabel == 'Project Closeout'),
+            isActive: _isActiveLabel('Project Closeout')),
       ],
       const SizedBox(height: 20),
       _buildMenuItem(Icons.settings_outlined, 'Settings',
           onTap: () => SettingsScreen.open(context),
-          isActive: widget.activeItemLabel == 'Settings'),
+          isActive: _isActiveLabel('Settings')),
       _buildMenuItem(Icons.logout_outlined, 'LogOut',
           onTap: () => AuthNav.signOutAndExit(context),
-          isActive: widget.activeItemLabel == 'LogOut'),
+          isActive: _isActiveLabel('LogOut')),
     ];
   }
 
@@ -3379,51 +3432,51 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     if ('home'.contains(query)) {
       results.add(_buildMenuItem(Icons.home_outlined, 'Home',
           onTap: () => HomeScreen.open(context),
-          isActive: widget.activeItemLabel == 'Home'));
+          isActive: _isActiveLabel('Home')));
     }
     if ('business case'.contains(query)) {
       results.add(_buildMenuItem(Icons.description_outlined, 'Business Case',
           onTap: _openBusinessCase,
-          isActive: widget.activeItemLabel == 'Business Case'));
+          isActive: _isActiveLabel('Business Case')));
     }
     if ('potential solutions'.contains(query)) {
       results.add(_buildMenuItem(Icons.lightbulb_outline, 'Potential Solutions',
           onTap: _openPotentialSolutions,
-          isActive: widget.activeItemLabel == 'Potential Solutions'));
+          isActive: _isActiveLabel('Potential Solutions')));
     }
     if ('risk identification'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.warning_amber_outlined, 'Risk Identification',
           onTap: _openRiskIdentification,
-          isActive: widget.activeItemLabel == 'Risk Identification'));
+          isActive: _isActiveLabel('Risk Identification')));
     }
     if ('it considerations'.contains(query)) {
       results.add(_buildMenuItem(Icons.computer_outlined, 'IT Considerations',
           onTap: _openITConsiderations,
-          isActive: widget.activeItemLabel == 'IT Considerations'));
+          isActive: _isActiveLabel('IT Considerations')));
     }
     if ('infrastructure considerations'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.foundation_outlined, 'Infrastructure Considerations',
           onTap: _openInfrastructureConsiderations,
-          isActive: widget.activeItemLabel == 'Infrastructure Considerations'));
+          isActive: _isActiveLabel('Infrastructure Considerations')));
     }
     if ('core stakeholders'.contains(query)) {
       results.add(_buildMenuItem(Icons.groups_outlined, 'Core Stakeholders',
           onTap: _openCoreStakeholders,
-          isActive: widget.activeItemLabel == 'Core Stakeholders'));
+          isActive: _isActiveLabel('Core Stakeholders')));
     }
     if ('cost benefit analysis'.contains(query) ||
         'financial metrics'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.analytics_outlined, 'Initial Cost Estimate',
           onTap: _openCostAnalysis,
-          isActive: widget.activeItemLabel == 'Initial Cost Estimate'));
+          isActive: _isActiveLabel('Initial Cost Estimate')));
     }
     if ('executive summary'.contains(query)) {
       results.add(_buildMenuItem(Icons.summarize_outlined, 'Executive Summary',
           onTap: _openExecutiveSummary,
-          isActive: widget.activeItemLabel == 'Executive Summary'));
+          isActive: _isActiveLabel('Executive Summary')));
     }
     if ('preferred solution'.contains(query) ||
         'preferred solutions'.contains(query) ||
@@ -3431,14 +3484,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.fact_check_outlined, 'Preferred Solution',
           onTap: _openPreferredSolutionsComparison,
-          isActive: widget.activeItemLabel == 'Preferred Solution'));
+          isActive: _isActiveLabel('Preferred Solution')));
     }
     if ('preferred solution analysis'.contains(query) ||
         'preferred'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.fact_check_outlined, 'Preferred Solution Analysis',
           onTap: _openPreferredSolutionAnalysis,
-          isActive: widget.activeItemLabel == 'Preferred Solution Analysis'));
+          isActive: _isActiveLabel('Preferred Solution Analysis')));
     }
     if ('work breakdown structure'.contains(query) ||
         'wbs'.contains(query) ||
@@ -3448,7 +3501,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.account_tree_outlined,
           'Work Breakdown Structure',
           onTap: lockWorkBreakdown ? null : _openWorkBreakdownStructure,
-          isActive: widget.activeItemLabel == 'Work Breakdown Structure',
+          isActive: _isActiveLabel('Work Breakdown Structure'),
           isDisabled: lockWorkBreakdown,
         ),
       );
@@ -3459,29 +3512,29 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'details'.contains(query)) {
       results.add(_buildMenuItem(Icons.widgets_outlined, 'Project Details',
           onTap: _openProjectFramework,
-          isActive: widget.activeItemLabel == 'Project Details'));
+          isActive: _isActiveLabel('Project Details')));
     }
     if ('summary'.contains(query) || 'front end'.contains(query)) {
       results.add(_buildMenuItem(Icons.summarize_outlined, 'Summary',
-          onTap: _openSummary, isActive: widget.activeItemLabel == 'Summary'));
+          onTap: _openSummary, isActive: _isActiveLabel('Summary')));
     }
     if ('project requirements'.contains(query) ||
         'requirements'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.checklist_outlined, 'Project Requirements',
           onTap: _openFrontEndRequirements,
-          isActive: widget.activeItemLabel == 'Project Requirements'));
+          isActive: _isActiveLabel('Project Requirements')));
     }
     if ('project risks'.contains(query) || 'risks'.contains(query)) {
       results.add(_buildMenuItem(Icons.error_outline, 'Project Risks',
           onTap: _openFrontEndRisks,
-          isActive: widget.activeItemLabel == 'Project Risks'));
+          isActive: _isActiveLabel('Project Risks')));
     }
     if ('project opportunities'.contains(query) ||
         'opportunities'.contains(query)) {
       results.add(_buildMenuItem(Icons.stars_outlined, 'Project Opportunities',
           onTap: _openFrontEndOpportunities,
-          isActive: widget.activeItemLabel == 'Project Opportunities'));
+          isActive: _isActiveLabel('Project Opportunities')));
     }
     if ('contract'.contains(query) || 'vendor quotes'.contains(query)) {
       results.add(
@@ -3489,7 +3542,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.description_outlined,
           'Contracting',
           onTap: lockContractVendorQuotes ? null : _openContractVendorQuotes,
-          isActive: widget.activeItemLabel == 'Contracting',
+          isActive: _isActiveLabel('Contracting'),
           isDisabled: lockContractVendorQuotes,
         ),
       );
@@ -3497,7 +3550,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     if ('procurement'.contains(query)) {
       results.add(_buildMenuItem(Icons.shopping_cart_outlined, 'Procurement',
           onTap: _openProcurement,
-          isActive: widget.activeItemLabel == 'Procurement'));
+          isActive: _isActiveLabel('Procurement')));
     }
     if ('security'.contains(query)) {
       results.add(
@@ -3505,7 +3558,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.security_outlined,
           'Security',
           onTap: lockSecurity ? null : _openSecurity,
-          isActive: widget.activeItemLabel == 'Security',
+          isActive: _isActiveLabel('Security'),
           isDisabled: lockSecurity,
         ),
       );
@@ -3516,7 +3569,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.account_balance_wallet_outlined,
           'Allowance',
           onTap: lockAllowance ? null : _openAllowance,
-          isActive: widget.activeItemLabel == 'Allowance',
+          isActive: _isActiveLabel('Allowance'),
           isDisabled: lockAllowance,
         ),
       );
@@ -3524,11 +3577,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     if ('project charter'.contains(query) || 'charter'.contains(query)) {
       results.add(_buildMenuItem(Icons.description_outlined, 'Project Charter',
           onTap: _openProjectCharter,
-          isActive: widget.activeItemLabel == 'Project Charter'));
+          isActive: _isActiveLabel('Project Charter')));
     }
     if ('ssher'.contains(query)) {
       results.add(_buildMenuItem(Icons.shield_outlined, 'SSHER',
-          onTap: _openSSHER, isActive: widget.activeItemLabel == 'SSHER'));
+          onTap: _openSSHER, isActive: _isActiveLabel('SSHER')));
     }
     if ('change management'.contains(query)) {
       results.add(
@@ -3536,7 +3589,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.change_circle_outlined,
           'Change Management',
           onTap: lockChangeManagement ? null : _openChangeManagement,
-          isActive: widget.activeItemLabel == 'Change Management',
+          isActive: _isActiveLabel('Change Management'),
           isDisabled: lockChangeManagement,
         ),
       );
@@ -3545,12 +3598,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.report_problem_outlined, 'Issue Management',
           onTap: _openIssueManagement,
-          isActive: widget.activeItemLabel == 'Issue Management'));
+          isActive: _isActiveLabel('Issue Management')));
     }
     if ('cost estimate'.contains(query)) {
       results.add(_buildMenuItem(Icons.attach_money_outlined, 'Cost Estimate',
           onTap: _openCostEstimate,
-          isActive: widget.activeItemLabel == 'Cost Estimate'));
+          isActive: _isActiveLabel('Cost Estimate')));
     }
     if ('project services'.contains(query) ||
         'scope tracking plan'.contains(query) ||
@@ -3558,12 +3611,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.track_changes_outlined, 'Scope Tracking Plan',
           onTap: _openScopeTrackingPlan,
-          isActive: widget.activeItemLabel == 'Scope Tracking Plan'));
+          isActive: _isActiveLabel('Scope Tracking Plan')));
     }
     if ('project plan'.contains(query)) {
       results.add(_buildMenuItem(Icons.assignment_outlined, 'Project Plan',
           onTap: _openProjectPlan,
-          isActive: widget.activeItemLabel == 'Project Plan'));
+          isActive: _isActiveLabel('Project Plan')));
     }
     if ('level 1 project schedule'.contains(query) ||
         'level 1 - project schedule'.contains(query) ||
@@ -3573,8 +3626,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.timeline_outlined,
           'Level 1 - Project Schedule',
           onTap: lockProjectPlanLevel1 ? null : _openProjectPlanLevel1Schedule,
-          isActive: widget.activeItemLabel ==
-              'Project Plan - Level 1 - Project Schedule',
+          isActive: _isActiveLabel('Project Plan - Level 1 - Project Schedule'),
           isDisabled: lockProjectPlanLevel1,
         ),
       );
@@ -3587,8 +3639,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Detailed Project Schedule',
           onTap:
               lockProjectPlanDetailed ? null : _openProjectPlanDetailedSchedule,
-          isActive: widget.activeItemLabel ==
-              'Project Plan - Detailed Project Schedule',
+          isActive: _isActiveLabel('Project Plan - Detailed Project Schedule'),
           isDisabled: lockProjectPlanDetailed,
         ),
       );
@@ -3603,8 +3654,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap: lockProjectPlanCondensed
               ? null
               : _openProjectPlanCondensedSummary,
-          isActive: widget.activeItemLabel ==
-              'Project Plan - Condensed Project Summary',
+          isActive: _isActiveLabel('Project Plan - Condensed Project Summary'),
           isDisabled: lockProjectPlanCondensed,
         ),
       );
@@ -3635,7 +3685,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'release planning'.contains(query)) {
       results.add(_buildMenuItem(Icons.dashboard_outlined, 'Agile Project Hub',
           onTap: _openAgileProjectHub,
-          isActive: widget.activeItemLabel == 'Agile Project Hub'));
+          isActive: _isActiveLabel('Agile Project Hub')));
     }
     if ('agile roadmap'.contains(query) ||
         'roadmap'.contains(query) ||
@@ -3647,15 +3697,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.map_outlined, 'Agile Project Hub - Agile Roadmap',
           onTap: () => AgileRoadmapScreen.open(context),
           isActive:
-              widget.activeItemLabel == 'Agile Project Hub - Agile Roadmap'));
+              _isActiveLabel('Agile Project Hub - Agile Roadmap')));
     }
     if ('agile project baseline'.contains(query) ||
         'agile baseline'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.grid_view_outlined, 'Agile Project Baseline',
           onTap: _openAgileProjectBaseline,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Metrics Planning'));
+          isActive: _isActiveLabel('Agile Delivery Model - Metrics Planning')));
     }
     if ('agile metrics'.contains(query) ||
         'metrics'.contains(query) ||
@@ -3667,8 +3716,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.analytics_outlined, 'Agile Metrics Planning',
           onTap: _openAgileMetricsPlanning,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Metrics Planning'));
+          isActive: _isActiveLabel('Agile Delivery Model - Metrics Planning')));
     }
     if ('project baseline'.contains(query) || 'baseline'.contains(query)) {
       results.add(
@@ -3676,7 +3724,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.flag_circle_outlined,
           'Project Baseline',
           onTap: lockProjectBaseline ? null : _openProjectBaseline,
-          isActive: widget.activeItemLabel == 'Project Baseline',
+          isActive: _isActiveLabel('Project Baseline'),
           isDisabled: lockProjectBaseline,
         ),
       );
@@ -3687,27 +3735,25 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.home_repair_service_outlined, 'Construction Plan',
           onTap: _openExecutionPlanConstructionPlan,
           isActive:
-              widget.activeItemLabel == 'Execution Plan - Construction Plan'));
+              _isActiveLabel('Execution Plan - Construction Plan')));
     }
     if ('execution plan'.contains(query) ||
         'infrastructure plan'.contains(query)) {
       results.add(_buildMenuItem(Icons.domain_outlined, 'Infrastructure Plan',
           onTap: _openExecutionPlanInfrastructurePlan,
-          isActive: widget.activeItemLabel ==
-              'Execution Plan - Infrastructure Plan'));
+          isActive: _isActiveLabel('Execution Plan - Infrastructure Plan')));
     }
     if ('agile delivery model'.contains(query) ||
         'agile delivery plan'.contains(query) ||
         'agile delivery'.contains(query)) {
       results.add(_buildMenuItem(Icons.route_outlined, 'Agile Delivery Model',
           onTap: _openAgileDeliveryModel,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Delivery Model'));
+          isActive: _isActiveLabel('Agile Delivery Model - Delivery Model')));
     }
     if ('schedule'.contains(query)) {
       results.add(_buildMenuItem(Icons.calendar_today_outlined, 'Schedule',
           onTap: _openSchedule,
-          isActive: widget.activeItemLabel == 'Schedule'));
+          isActive: _isActiveLabel('Schedule')));
     }
     if ('design planning'.contains(query) || 'design'.contains(query)) {
       results.add(_buildMenuItem(
@@ -3723,7 +3769,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Design Planning · Project Overview',
           onTap: _openDesignProjectOverview,
           isActive:
-              widget.activeItemLabel == 'Design Planning - Project Overview'));
+              _isActiveLabel('Design Planning - Project Overview')));
     }
     if ('design overview'.contains(query) ||
         'design approach'.contains(query) ||
@@ -3732,7 +3778,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Design Planning · Design Overview',
           onTap: _openDesignDesignOverview,
           isActive:
-              widget.activeItemLabel == 'Design Planning - Design Overview'));
+              _isActiveLabel('Design Planning - Design Overview')));
     }
     if ('design specifications'.contains(query) ||
         'specifications'.contains(query) ||
@@ -3742,8 +3788,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.design_services_outlined,
           'Design Planning · Design Specifications',
           onTap: _openDesignSpecifications,
-          isActive: widget.activeItemLabel ==
-              'Design Planning - Design Specifications'));
+          isActive: _isActiveLabel('Design Planning - Design Specifications')));
     }
     if ('deviations'.contains(query) ||
         'deviation'.contains(query) ||
@@ -3752,7 +3797,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Design Planning · Deviations',
           onTap: _openDesignDeviations,
           isActive:
-              widget.activeItemLabel == 'Design Planning - Deviations'));
+              _isActiveLabel('Design Planning - Deviations')));
     }
     if ('requirements mapping'.contains(query) ||
         'requirements'.contains(query) ||
@@ -3761,8 +3806,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.design_services_outlined,
           'Design Planning · Requirements Mapping',
           onTap: _openDesignRequirementsMapping,
-          isActive: widget.activeItemLabel ==
-              'Design Planning - Requirements Mapping'));
+          isActive: _isActiveLabel('Design Planning - Requirements Mapping')));
     }
     if ('architecture basis'.contains(query) ||
         'architecture'.contains(query) ||
@@ -3771,8 +3815,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.design_services_outlined,
           'Design Planning · Architecture Basis',
           onTap: _openDesignArchitectureBasis,
-          isActive: widget.activeItemLabel ==
-              'Design Planning - Architecture Basis'));
+          isActive: _isActiveLabel('Design Planning - Architecture Basis')));
     }
     if ('ui ux basis'.contains(query) ||
         'ui/ux'.contains(query) ||
@@ -3782,7 +3825,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Design Planning · UI/UX Basis',
           onTap: _openDesignUiUxBasis,
           isActive:
-              widget.activeItemLabel == 'Design Planning - UI/UX Basis'));
+              _isActiveLabel('Design Planning - UI/UX Basis')));
     }
     if ('technical basis'.contains(query) ||
         'technical design'.contains(query) ||
@@ -3791,7 +3834,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Design Planning · Technical Basis',
           onTap: _openDesignTechnicalBasis,
           isActive:
-              widget.activeItemLabel == 'Design Planning - Technical Basis'));
+              _isActiveLabel('Design Planning - Technical Basis')));
     }
     if ('constraints'.contains(query) ||
         'assumptions'.contains(query) ||
@@ -3801,8 +3844,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.design_services_outlined,
           'Design Planning · Constraints & Assumptions',
           onTap: _openDesignConstraintsAssumptions,
-          isActive: widget.activeItemLabel ==
-              'Design Planning - Constraints & Assumptions'));
+          isActive: _isActiveLabel('Design Planning - Constraints & Assumptions')));
     }
     if ('risks'.contains(query) ||
         'risk mitigation'.contains(query) ||
@@ -3812,7 +3854,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Design Planning · Risks & Mitigation',
           onTap: _openDesignRisksMitigation,
           isActive:
-              widget.activeItemLabel == 'Design Planning - Risks & Mitigation'));
+              _isActiveLabel('Design Planning - Risks & Mitigation')));
     }
     if ('dependencies'.contains(query) ||
         'dependency'.contains(query) ||
@@ -3821,7 +3863,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Design Planning · Dependencies',
           onTap: _openDesignDependencies,
           isActive:
-              widget.activeItemLabel == 'Design Planning - Dependencies'));
+              _isActiveLabel('Design Planning - Dependencies')));
     }
     if ('decision log'.contains(query) ||
         'decisions'.contains(query) ||
@@ -3831,7 +3873,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Design Planning · Decision Log',
           onTap: _openDesignDecisionLog,
           isActive:
-              widget.activeItemLabel == 'Design Planning - Decision Log'));
+              _isActiveLabel('Design Planning - Decision Log')));
     }
     if ('validation'.contains(query) ||
         'design validation'.contains(query) ||
@@ -3839,7 +3881,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(Icons.design_services_outlined,
           'Design Planning · Validation',
           onTap: _openDesignValidation,
-          isActive: widget.activeItemLabel == 'Design Planning - Validation'));
+          isActive: _isActiveLabel('Design Planning - Validation')));
     }
     if ('approvals'.contains(query) ||
         'approval'.contains(query) ||
@@ -3848,7 +3890,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(Icons.design_services_outlined,
           'Design Planning · Approvals',
           onTap: _openDesignApprovals,
-          isActive: widget.activeItemLabel == 'Design Planning - Approvals'));
+          isActive: _isActiveLabel('Design Planning - Approvals')));
     }
     if ('work packages'.contains(query) ||
         'work package'.contains(query) ||
@@ -3858,12 +3900,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Design Planning · Work Packages',
           onTap: _openDesignWorkPackages,
           isActive:
-              widget.activeItemLabel == 'Design Planning - Work Packages'));
+              _isActiveLabel('Design Planning - Work Packages')));
     }
     if ('technology'.contains(query)) {
       results.add(_buildMenuItem(Icons.computer_outlined, 'Technology Planning',
           onTap: _openTechnology,
-          isActive: widget.activeItemLabel == 'Technology Planning'));
+          isActive: _isActiveLabel('Technology Planning')));
     }
     if ('interface management'.contains(query) ||
         'interfaces'.contains(query)) {
@@ -3872,7 +3914,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.device_hub_outlined,
           'Interface Management',
           onTap: lockInterfaceManagement ? null : _openInterfaceManagement,
-          isActive: widget.activeItemLabel == 'Interface Management',
+          isActive: _isActiveLabel('Interface Management'),
           isDisabled: lockInterfaceManagement,
         ),
       );
@@ -3880,8 +3922,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     if ('agile team structure'.contains(query) || 'squad'.contains(query)) {
       results.add(_buildMenuItem(Icons.groups_outlined, 'Agile Team Structure',
           onTap: _openAgileTeamStructure,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Team Structure'));
+          isActive: _isActiveLabel('Agile Delivery Model - Team Structure')));
     }
     if ('kanban'.contains(query) ||
         'workflow'.contains(query) ||
@@ -3890,8 +3931,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.dashboard_outlined, 'Kanban Configuration',
           onTap: _openAgileKanbanConfig,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Kanban Configuration'));
+          isActive: _isActiveLabel('Agile Delivery Model - Kanban Configuration')));
     }
     if ('epics'.contains(query) ||
         'features'.contains(query) ||
@@ -3899,8 +3939,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.account_tree_outlined, 'Epics & Features',
           onTap: _openAgileEpicsFeatures,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Epics & Features'));
+          isActive: _isActiveLabel('Agile Delivery Model - Epics & Features')));
     }
     if ('acceptance criteria'.contains(query) ||
         'ac'.contains(query) ||
@@ -3910,8 +3949,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.checklist_outlined, 'Acceptance Criteria Planning',
           onTap: _openAgileAcceptanceCriteria,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Acceptance Criteria Planning'));
+          isActive: _isActiveLabel('Agile Delivery Model - Acceptance Criteria Planning')));
     }
     if ('release plan'.contains(query) ||
         'release'.contains(query) ||
@@ -3919,7 +3957,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(Icons.rocket_launch_outlined, 'Release Plan',
           onTap: _openAgileReleasePlan,
           isActive:
-              widget.activeItemLabel == 'Agile Delivery Model - Release Plan'));
+              _isActiveLabel('Agile Delivery Model - Release Plan')));
     }
     if ('backlog'.contains(query) ||
         'backlog governance'.contains(query) ||
@@ -3927,8 +3965,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'refinement'.contains(query)) {
       results.add(_buildMenuItem(Icons.list_alt_outlined, 'Backlog Governance',
           onTap: _openAgileBacklogGovernance,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Backlog Governance'));
+          isActive: _isActiveLabel('Agile Delivery Model - Backlog Governance')));
     }
     if ('start-up planning'.contains(query) ||
         'startup planning'.contains(query) ||
@@ -3936,41 +3973,40 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.rocket_launch_outlined, 'Start-Up Planning',
           onTap: _openStartUpPlanning,
-          isActive: widget.activeItemLabel == 'Start-Up Planning'));
+          isActive: _isActiveLabel('Start-Up Planning')));
     }
     if ('operations plan'.contains(query) || 'manual'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.menu_book_outlined, 'Operations Plan and Manual',
           onTap: _openStartUpPlanningOperations,
-          isActive: widget.activeItemLabel ==
-              'Start-Up Planning - Operations Plan and Manual'));
+          isActive: _isActiveLabel('Start-Up Planning - Operations Plan and Manual')));
     }
     if ('hypercare'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.health_and_safety_outlined, 'Hypercare Plan',
           onTap: _openStartUpPlanningHypercare,
           isActive:
-              widget.activeItemLabel == 'Start-Up Planning - Hypercare Plan'));
+              _isActiveLabel('Start-Up Planning - Hypercare Plan')));
     }
     if ('devops'.contains(query) ||
         'ci/cd'.contains(query) ||
         'pipeline'.contains(query)) {
       results.add(_buildMenuItem(Icons.settings_suggest_outlined, 'DevOps',
           onTap: _openStartUpPlanningDevOps,
-          isActive: widget.activeItemLabel == 'Start-Up Planning - DevOps'));
+          isActive: _isActiveLabel('Start-Up Planning - DevOps')));
     }
     if ('close out plan'.contains(query) || 'closeout plan'.contains(query)) {
       results.add(_buildMenuItem(Icons.fact_check_outlined, 'Close Out Plan',
           onTap: _openStartUpPlanningCloseOut,
           isActive:
-              widget.activeItemLabel == 'Start-Up Planning - Close Out Plan'));
+              _isActiveLabel('Start-Up Planning - Close Out Plan')));
     }
     if ('team training'.contains(query) || 'team building'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.school_outlined, 'Team Training and Team Building',
           onTap: _openTeamTraining,
           isActive:
-              widget.activeItemLabel == 'Team Training and Team Building'));
+              _isActiveLabel('Team Training and Team Building')));
     }
     if ('roles and responsibilities'.contains(query) ||
         'roles & responsibilities'.contains(query) ||
@@ -3978,8 +4014,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.assignment_ind_outlined, 'Roles & Responsibilities',
           onTap: _openOrganizationRolesResponsibilities,
-          isActive: widget.activeItemLabel ==
-              'Organization Plan - Roles & Responsibilities'));
+          isActive: _isActiveLabel('Organization Plan - Roles & Responsibilities')));
     }
     if ('raci matrix'.contains(query) ||
         'responsibility matrix'.contains(query) ||
@@ -3987,7 +4022,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(Icons.grid_on_outlined, 'RACI Matrix',
           onTap: _openOrganizationRaciMatrix,
           isActive:
-              widget.activeItemLabel == 'Organization Plan - RACI Matrix'));
+              _isActiveLabel('Organization Plan - RACI Matrix')));
     }
     if ('staffing plan'.contains(query) ||
         'staffing'.contains(query) ||
@@ -3995,12 +4030,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(Icons.badge_outlined, 'Staffing Plan',
           onTap: _openOrganizationStaffingPlan,
           isActive:
-              widget.activeItemLabel == 'Organization Plan - Staffing Plan'));
+              _isActiveLabel('Organization Plan - Staffing Plan')));
     }
     if ('lessons learned'.contains(query)) {
       results.add(_buildMenuItem(Icons.history_edu_outlined, 'Lessons Learned',
           onTap: _openLessonsLearned,
-          isActive: widget.activeItemLabel == 'Lessons Learned'));
+          isActive: _isActiveLabel('Lessons Learned')));
     }
     if ('team management'.contains(query)) {
       results.add(
@@ -4008,7 +4043,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.groups_outlined,
           'Team Management',
           onTap: lockTeamManagement ? null : _openTeamManagement,
-          isActive: widget.activeItemLabel == 'Team Management',
+          isActive: _isActiveLabel('Team Management'),
           isDisabled: lockTeamManagement,
         ),
       );
@@ -4016,36 +4051,36 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     if ('security management'.contains(query)) {
       results.add(_buildMenuItem(Icons.security_outlined, 'Security Management',
           onTap: _openSecurityManagement,
-          isActive: widget.activeItemLabel == 'Security Management'));
+          isActive: _isActiveLabel('Security Management')));
     }
     if ('quality management'.contains(query) || 'quality'.contains(query)) {
       results.add(_buildMenuItem(Icons.verified_outlined, 'Quality Management',
           onTap: _openQualityManagement,
-          isActive: widget.activeItemLabel == 'Quality Management'));
+          isActive: _isActiveLabel('Quality Management')));
     }
     if ('stakeholder management'.contains(query) ||
         'stakeholder'.contains(query)) {
       results.add(_buildMenuItem(Icons.people_outline, 'Stakeholder Management',
           onTap: _openStakeholderManagement,
-          isActive: widget.activeItemLabel == 'Stakeholder Management'));
+          isActive: _isActiveLabel('Stakeholder Management')));
     }
     if ('risk assessment'.contains(query)) {
       results.add(_buildMenuItem(Icons.assessment_outlined, 'Risk Assessment',
           onTap: _openRiskAssessment,
-          isActive: widget.activeItemLabel == 'Risk Assessment'));
+          isActive: _isActiveLabel('Risk Assessment')));
     }
     if ('design management'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.design_services_outlined, 'Design Management',
           onTap: _openDesignManagement,
-          isActive: widget.activeItemLabel == 'Design Management'));
+          isActive: _isActiveLabel('Design Management')));
     }
     if ('design deliverables'.contains(query) ||
         'deliverables'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.inventory_2_outlined, 'Design Deliverables',
           onTap: _openDesignDeliverables,
-          isActive: widget.activeItemLabel == 'Design Deliverables'));
+          isActive: _isActiveLabel('Design Deliverables')));
     }
     if ('requirements implementation'.contains(query) ||
         'requirements'.contains(query) ||
@@ -4053,14 +4088,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.checklist_rtl_outlined, 'Requirements Implementation',
           onTap: _openRequirementsImplementation,
-          isActive: widget.activeItemLabel == 'Requirements Implementation'));
+          isActive: _isActiveLabel('Requirements Implementation')));
     }
     if ('development set up'.contains(query) ||
         'development setup'.contains(query) ||
         'setup'.contains(query)) {
       results.add(_buildMenuItem(Icons.build_outlined, 'Development Set Up',
           onTap: _openDevelopmentSetUp,
-          isActive: widget.activeItemLabel == 'Development Set Up'));
+          isActive: _isActiveLabel('Development Set Up')));
     }
     if ('ui/ux design'.contains(query) ||
         'ui ux'.contains(query) ||
@@ -4069,14 +4104,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'user experience'.contains(query)) {
       results.add(_buildMenuItem(Icons.palette_outlined, 'UI/UX Design',
           onTap: _openUiUxDesign,
-          isActive: widget.activeItemLabel == 'UI/UX Design'));
+          isActive: _isActiveLabel('UI/UX Design')));
     }
     if ('backend design'.contains(query) ||
         'backend'.contains(query) ||
         'database'.contains(query)) {
       results.add(_buildMenuItem(Icons.storage_outlined, 'Backend Design',
           onTap: _openBackendDesign,
-          isActive: widget.activeItemLabel == 'Backend Design'));
+          isActive: _isActiveLabel('Backend Design')));
     }
     // ── Project Team Activities hub ──
     if ('project team activities'.contains(query) ||
@@ -4087,7 +4122,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.groups_outlined, 'Project Team Activities',
           onTap: _openProjectTeamActivities,
-          isActive: widget.activeItemLabel == 'Project Team Activities'));
+          isActive: _isActiveLabel('Project Team Activities')));
     }
     if ('staff team'.contains(query) || 'mobilize'.contains(query)) {
       results.add(
@@ -4095,7 +4130,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.badge_outlined,
           'Mobilize Team',
           onTap: lockStaffTeam ? null : _openStaffTeam,
-          isActive: widget.activeItemLabel == 'Staff Team',
+          isActive: _isActiveLabel('Staff Team'),
           isDisabled: lockStaffTeam,
         ),
       );
@@ -4106,8 +4141,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.emoji_events_outlined, 'Recognition & Awards',
           onTap: _openRecognitionAwards,
-          isActive: widget.activeItemLabel ==
-              'Project Team Activities - Recognition & Awards'));
+          isActive: _isActiveLabel('Project Team Activities - Recognition & Awards')));
     }
     if ('team status'.contains(query) ||
         'status check'.contains(query) ||
@@ -4118,8 +4152,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.health_and_safety_outlined, 'Team Status Check',
           onTap: _openTeamStatusCheck,
-          isActive: widget.activeItemLabel ==
-              'Project Team Activities - Team Status Check'));
+          isActive: _isActiveLabel('Project Team Activities - Team Status Check')));
     }
     if ('team handover'.contains(query) ||
         'handover'.contains(query) ||
@@ -4127,8 +4160,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'offboarding'.contains(query)) {
       results.add(_buildMenuItem(Icons.swap_horiz_outlined, 'Team Handover',
           onTap: _openTeamHandover,
-          isActive: widget.activeItemLabel ==
-              'Project Team Activities - Team Handover'));
+          isActive: _isActiveLabel('Project Team Activities - Team Handover')));
     }
     if ('engineering'.contains(query) ||
         'engineering design'.contains(query) ||
@@ -4139,7 +4171,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.architecture_outlined,
           'Engineering Design',
           onTap: lockEngineering ? null : _openEngineeringDesign,
-          isActive: widget.activeItemLabel == 'Engineering',
+          isActive: _isActiveLabel('Engineering'),
           isDisabled: lockEngineering,
         ),
       );
@@ -4147,32 +4179,32 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     if ('team meetings'.contains(query) || 'meetings'.contains(query)) {
       results.add(_buildMenuItem(Icons.meeting_room_outlined, 'Team Meetings',
           onTap: _openTeamMeetings,
-          isActive: widget.activeItemLabel == 'Team Meetings'));
+          isActive: _isActiveLabel('Team Meetings')));
     }
     if ('progress tracking'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.track_changes_outlined, 'Progress Tracking',
           onTap: _openProgressTracking,
-          isActive: widget.activeItemLabel == 'Progress Tracking'));
+          isActive: _isActiveLabel('Progress Tracking')));
     }
     if ('deliverable status updates'.contains(query) ||
         'deliverable updates'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.inventory_2_outlined, 'Deliverable Status Updates',
           onTap: _openDeliverableStatusUpdates,
-          isActive: widget.activeItemLabel == 'Deliverable Status Updates'));
+          isActive: _isActiveLabel('Deliverable Status Updates')));
     }
     if ('recurring deliverables'.contains(query) ||
         'recurring'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.repeat_outlined, 'Recurring Deliverables',
           onTap: _openRecurringDeliverables,
-          isActive: widget.activeItemLabel == 'Recurring Deliverables'));
+          isActive: _isActiveLabel('Recurring Deliverables')));
     }
     if ('status reports'.contains(query) || 'reports'.contains(query)) {
       results.add(_buildMenuItem(Icons.description_outlined, 'Status Reports',
           onTap: _openStatusReports,
-          isActive: widget.activeItemLabel == 'Status Reports'));
+          isActive: _isActiveLabel('Status Reports')));
     }
     if ('gap analysis'.contains(query) ||
         'scope reconciliation'.contains(query) ||
@@ -4184,7 +4216,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap:
               lockGapAnalysis ? null : _openGapAnalysisAndScopeReconcillation,
           isActive:
-              widget.activeItemLabel == 'Gap Analysis And Scope Reconcillation',
+              _isActiveLabel('Gap Analysis And Scope Reconcillation'),
           isDisabled: lockGapAnalysis,
         ),
       );
@@ -4197,7 +4229,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.fact_check_outlined,
           'Punchlist Actions',
           onTap: lockPunchlistActions ? null : _openPunchlistActions,
-          isActive: widget.activeItemLabel == 'Punchlist Actions',
+          isActive: _isActiveLabel('Punchlist Actions'),
           isDisabled: lockPunchlistActions,
         ),
       );
@@ -4208,34 +4240,34 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.description_outlined, 'Contracts Tracking',
           onTap: _openContractsTracking,
-          isActive: widget.activeItemLabel == 'Contracts Tracking'));
+          isActive: _isActiveLabel('Contracts Tracking')));
     }
     if ('vendor tracking'.contains(query) ||
         'vendors'.contains(query) ||
         'vendor'.contains(query)) {
       results.add(_buildMenuItem(Icons.storefront_outlined, 'Vendor Tracking',
           onTap: _openVendorTracking,
-          isActive: widget.activeItemLabel == 'Vendor Tracking'));
+          isActive: _isActiveLabel('Vendor Tracking')));
     }
     if ('detailed design'.contains(query) || 'detail design'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.design_services_outlined, 'Detailed Design',
           onTap: _openDetailedDesign,
-          isActive: widget.activeItemLabel == 'Detailed Design'));
+          isActive: _isActiveLabel('Detailed Design')));
     }
     if ('scope tracking implementation'.contains(query) ||
         'scope tracking'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.track_changes_outlined, 'Scope Tracking Implementation',
           onTap: _openScopeTrackingImplementation,
-          isActive: widget.activeItemLabel == 'Scope Tracking Implementation'));
+          isActive: _isActiveLabel('Scope Tracking Implementation')));
     }
     if ('stakeholder alignment'.contains(query) ||
         'alignment'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.group_work_outlined, 'Stakeholder Alignment',
           onTap: _openStakeholderAlignment,
-          isActive: widget.activeItemLabel == 'Stakeholder Alignment'));
+          isActive: _isActiveLabel('Stakeholder Alignment')));
     }
     if ('update ops and maintenance plans'.contains(query) ||
         'ops maintenance'.contains(query) ||
@@ -4246,7 +4278,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Update Ops and Maintenance Plans',
           onTap: lockUpdateOps ? null : _openUpdateOpsMaintenancePlans,
           isActive:
-              widget.activeItemLabel == 'Update Ops and Maintenance Plans',
+              _isActiveLabel('Update Ops and Maintenance Plans'),
           isDisabled: lockUpdateOps,
         ),
       );
@@ -4256,12 +4288,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.rule_folder_outlined, 'Technical Debt Management',
           onTap: _openTechnicalDebtManagement,
-          isActive: widget.activeItemLabel == 'Technical Debt Management'));
+          isActive: _isActiveLabel('Technical Debt Management')));
     }
     if ('risk tracking'.contains(query) || 'risk'.contains(query)) {
       results.add(_buildMenuItem(Icons.assessment_outlined, 'Risk Tracking',
           onTap: _openRiskTracking,
-          isActive: widget.activeItemLabel == 'Risk Tracking'));
+          isActive: _isActiveLabel('Risk Tracking')));
     }
     if ('identify and staff ops team'.contains(query) ||
         'ops team'.contains(query) ||
@@ -4269,28 +4301,27 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.groups_outlined, 'Identify and Staff Ops Team',
           onTap: _openIdentifyStaffOpsTeam,
-          isActive: widget.activeItemLabel == 'Identify and Staff Ops Team'));
+          isActive: _isActiveLabel('Identify and Staff Ops Team')));
     }
     if ('launch checklist'.contains(query) || 'launch'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.rocket_launch_outlined, 'Launch Checklist',
           onTap: _openLaunchChecklist,
-          isActive: widget.activeItemLabel == 'Launch Checklist'));
+          isActive: _isActiveLabel('Launch Checklist')));
     }
     if ('deliverable roadmap'.contains(query) ||
         'deliverables'.contains(query) ||
         'roadmap'.contains(query)) {
       results.add(_buildMenuItem(Icons.map_outlined, 'Deliverable Roadmap',
           onTap: _openDeliverableRoadmap,
-          isActive: widget.activeItemLabel == 'Deliverable Roadmap'));
+          isActive: _isActiveLabel('Deliverable Roadmap')));
     }
     if ('agile map out'.contains(query) ||
         'agile map'.contains(query) ||
         'map out'.contains(query)) {
       results.add(_buildMenuItem(Icons.timeline_outlined, 'Agile Map Out',
           onTap: _openAgileMapOut,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Agile Map Out'));
+          isActive: _isActiveLabel('Agile Delivery Model - Agile Map Out')));
     }
     if ('tools integration'.contains(query) ||
         'integration'.contains(query) ||
@@ -4298,7 +4329,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'miro'.contains(query)) {
       results.add(_buildMenuItem(Icons.extension_outlined, 'Tools Integration',
           onTap: _openToolsIntegration,
-          isActive: widget.activeItemLabel == 'Tools Integration'));
+          isActive: _isActiveLabel('Tools Integration')));
     }
     if ('technical development'.contains(query)) {
       results.add(
@@ -4306,7 +4337,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.build_outlined,
           'Technical Development',
           onTap: lockTechnicalDevelopment ? null : _openTechnicalDevelopment,
-          isActive: widget.activeItemLabel == 'Technical Development',
+          isActive: _isActiveLabel('Technical Development'),
           isDisabled: lockTechnicalDevelopment,
         ),
       );
@@ -4318,7 +4349,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.design_services_outlined,
           'Specialized Design',
           onTap: lockSpecializedDesign ? null : _openSpecializedDesign,
-          isActive: widget.activeItemLabel == 'Specialized Design',
+          isActive: _isActiveLabel('Specialized Design'),
           isDisabled: lockSpecializedDesign,
         ),
       );
@@ -4331,7 +4362,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.recycling_outlined,
           'Salvage Disposal Team',
           onTap: lockSalvageDisposal ? null : _openSalvageDisposalTeam,
-          isActive: widget.activeItemLabel == 'Salvage Disposal Team',
+          isActive: _isActiveLabel('Salvage Disposal Team'),
           isDisabled: lockSalvageDisposal,
         ),
       );
@@ -4344,7 +4375,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.delivery_dining_outlined, 'Launch Readiness Assessment',
           onTap: _openDeliverProjectClosure,
-          isActive: widget.activeItemLabel == 'Launch Readiness Assessment'));
+          isActive: _isActiveLabel('Launch Readiness Assessment')));
     }
     if ('contract close out'.contains(query) ||
         'contract closure'.contains(query) ||
@@ -4354,7 +4385,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.description_outlined, 'Vendor & Contract Closeout',
           onTap: _openContractCloseOut,
-          isActive: widget.activeItemLabel == 'Vendor & Contract Closeout'));
+          isActive: _isActiveLabel('Vendor & Contract Closeout')));
     }
     if ('vendor account close out'.contains(query) ||
         'vendor close'.contains(query) ||
@@ -4362,7 +4393,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.business_outlined, 'Vendor & Contract Closeout',
           onTap: _openContractCloseOut,
-          isActive: widget.activeItemLabel == 'Vendor & Contract Closeout'));
+          isActive: _isActiveLabel('Vendor & Contract Closeout')));
     }
     if ('transition'.contains(query) ||
         'production team'.contains(query) ||
@@ -4374,8 +4405,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(Icons.swap_horiz_outlined,
           'Deployment Transfer, Certification & Release',
           onTap: _openTransitionToProdTeam,
-          isActive: widget.activeItemLabel ==
-              'Deployment Transfer, Certification & Release'));
+          isActive: _isActiveLabel('Deployment Transfer, Certification & Release')));
     }
     if ('fat'.contains(query) ||
         'mechanical completion'.contains(query) ||
@@ -4385,8 +4415,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(Icons.engineering_outlined,
           'FAT, Mechanical Completion & Commission Solution',
           onTap: _openFatMechanicalCompletion,
-          isActive: widget.activeItemLabel ==
-              'FAT, Mechanical Completion & Commission Solution'));
+          isActive: _isActiveLabel('FAT, Mechanical Completion & Commission Solution')));
     }
     if ('project close out'.contains(query) ||
         'project closure'.contains(query) ||
@@ -4394,12 +4423,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'project closeout'.contains(query)) {
       results.add(_buildMenuItem(Icons.task_alt_outlined, 'Project Closeout',
           onTap: _openProjectCloseOutLongForm,
-          isActive: widget.activeItemLabel == 'Project Closeout'));
+          isActive: _isActiveLabel('Project Closeout')));
     }
     if ('close out long form'.contains(query) || 'long form'.contains(query)) {
       results.add(_buildMenuItem(Icons.task_alt_outlined, 'Project Closeout',
           onTap: _openProjectCloseOutLongForm,
-          isActive: widget.activeItemLabel == 'Project Closeout'));
+          isActive: _isActiveLabel('Project Closeout')));
     }
     if ('close out summarized form'.contains(query) ||
         'summarized form'.contains(query) ||
@@ -4407,7 +4436,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'close out summary'.contains(query)) {
       results.add(_buildMenuItem(Icons.task_alt_outlined, 'Project Closeout',
           onTap: _openProjectCloseOutLongForm,
-          isActive: widget.activeItemLabel == 'Project Closeout'));
+          isActive: _isActiveLabel('Project Closeout')));
     }
     if ('demobilize team'.contains(query) ||
         'demobilize'.contains(query) ||
@@ -4418,8 +4447,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(Icons.groups_outlined,
           'Team Demobilization & Operations/Production Transition',
           onTap: _openDemobilizeTeam,
-          isActive: widget.activeItemLabel ==
-              'Team Demobilization & Operations/Production Transition'));
+          isActive: _isActiveLabel('Team Demobilization & Operations/Production Transition')));
     }
     if ('project financial review'.contains(query) ||
         'actual vs planned'.contains(query) ||
@@ -4434,7 +4462,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Scope & Deliverable Reconciliation',
           onTap: _openActualVsPlannedGapAnalysis,
           isActive:
-              widget.activeItemLabel == 'Scope & Deliverable Reconciliation',
+              _isActiveLabel('Scope & Deliverable Reconciliation'),
         ),
       );
     }
@@ -4444,7 +4472,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.compare_arrows_outlined, 'Scope & Deliverable Reconciliation',
           onTap: _openActualVsPlannedGapAnalysis,
           isActive:
-              widget.activeItemLabel == 'Scope & Deliverable Reconciliation'));
+              _isActiveLabel('Scope & Deliverable Reconciliation')));
     }
     if ('warranties'.contains(query) ||
         'warranty'.contains(query) ||
@@ -4459,7 +4487,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.monetization_on_outlined,
           'Hypercare & Warranty Support',
           onTap: lockWarrantiesSupport ? null : _openCommerceViability,
-          isActive: widget.activeItemLabel == 'Hypercare & Warranty Support',
+          isActive: _isActiveLabel('Hypercare & Warranty Support'),
           isDisabled: lockWarrantiesSupport,
         ),
       );
@@ -4477,7 +4505,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.summarize_outlined,
           'Project Performance Review',
           onTap: lockProjectSummary ? null : _openSummarizeAccountRisks,
-          isActive: widget.activeItemLabel == 'Project Performance Review',
+          isActive: _isActiveLabel('Project Performance Review'),
           isDisabled: lockProjectSummary,
         ),
       );
@@ -4492,7 +4520,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.account_balance_wallet_outlined, 'Financial Closeout',
           onTap: _openFinancialCloseout,
-          isActive: widget.activeItemLabel == 'Financial Closeout'));
+          isActive: _isActiveLabel('Financial Closeout')));
     }
     if ('benefits realization'.contains(query) ||
         'benefits'.contains(query) ||
@@ -4502,7 +4530,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.insights_outlined, 'Benefits Realization',
           onTap: _openBenefitsRealization,
-          isActive: widget.activeItemLabel == 'Benefits Realization'));
+          isActive: _isActiveLabel('Benefits Realization')));
     }
     if ('project controls'.contains(query) ||
         'controls'.contains(query) ||
@@ -4513,7 +4541,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'forecasting'.contains(query)) {
       results.add(_buildMenuItem(Icons.shield_moon_outlined, 'Project Controls',
           onTap: () => context.push('/project-controls'),
-          isActive: widget.activeItemLabel == 'Project Controls'));
+          isActive: _isActiveLabel('Project Controls')));
     }
     // NOTE: 'Change Management' search entry removed from this block — it
     // was duplicating the Change Management entry in the Planning Phase
@@ -4524,7 +4552,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     if ('settings'.contains(query)) {
       results.add(_buildMenuItem(Icons.settings_outlined, 'Settings',
           onTap: () => SettingsScreen.open(context),
-          isActive: widget.activeItemLabel == 'Settings'));
+          isActive: _isActiveLabel('Settings')));
     }
 
     if (results.isEmpty) {

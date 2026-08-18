@@ -44,6 +44,7 @@ import 'package:ndu_project/models/project_data_model.dart'
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
+import 'package:ndu_project/schedule/widgets/integrated_schedule_methodology.dart';
 
 class BuilderScreen extends StatefulWidget {
   const BuilderScreen({super.key});
@@ -552,6 +553,31 @@ class _BuilderScreenState extends State<BuilderScreen> {
                     root, schedule, costTotal, currency, estimate),
               ),
               const SizedBox(height: 20),
+              // ═══════════════════════════════════════════════════════════════
+              // INTEGRATED SCHEDULE METHODOLOGY — 12-step process guide
+              // World-class centerpiece: WBS → EWPs → Procurement → CWPs →
+              // Sequence → Durations → CPM → Contracts → Resources → Gantt →
+              // Readiness → Baseline. With NDU-specific scoping notes.
+              // ═══════════════════════════════════════════════════════════════
+              IntegratedScheduleMethodology(
+                wbsDepth: 2,
+                ewpLevel: 3,
+                procurementLevel: 3,
+                cwpDepthFrom: 2,
+                cwpDepthTo: 8,
+                deliveryModel: schedule.basis.deliveryModel.toUpperCase(),
+              ),
+              const SizedBox(height: 18),
+              // ═══════════════════════════════════════════════════════════════
+              // ESTIMATE BASIS — assumptions / methods / data sources
+              // ═══════════════════════════════════════════════════════════════
+              const EstimateBasisCard(),
+              const SizedBox(height: 18),
+              // ═══════════════════════════════════════════════════════════════
+              // SCHEDULE READINESS RULES — pre-CWP gate checklist
+              // ═══════════════════════════════════════════════════════════════
+              const ScheduleReadinessRules(),
+              const SizedBox(height: 18),
               // ═══════════════════════════════════════════════════════════════
               // SCHEDULE LEVELS CONVENTION CARD
               // ═══════════════════════════════════════════════════════════════
@@ -1880,7 +1906,6 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
     finishCtrl.dispose();
     predsCtrl.dispose();
     resourcesCtrl.dispose();
-    return result;
   }
 
   void _removeRow(int index) {

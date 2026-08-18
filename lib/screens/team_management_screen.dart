@@ -294,6 +294,8 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  ),
  ),
  ),
+ ),
+ ),
  );
  },
  );

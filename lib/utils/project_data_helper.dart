@@ -1129,6 +1129,32 @@ class ProjectDataHelper {
     return Provider.of<ProjectDataProvider>(context).projectData;
   }
 
+  /// Returns `true` when the Project Charter has been approved for the
+  /// current project context.
+  ///
+  /// Once approved, the Initiation Phase + Front End Planning sub-section
+  /// pages must be LOCKED from editing (per Task 14). The user can still
+  /// navigate and view the data, but they cannot modify fields, add or
+  /// delete rows, or trigger AI generation on those pages.
+  ///
+  /// This reads the same flags that the project_charter_sections.dart
+  /// approval flow sets — `frontEndPlanning.charterApproved` OR the
+  /// legacy `charterApprovalDate` field. Either being present means the
+  /// charter has been signed off.
+  static bool isCharterApproved(BuildContext context, {bool listen = false}) {
+    try {
+      final data = getData(context, listen: listen);
+      return (data.frontEndPlanning.charterApproved == true) ||
+          (data.charterApprovalDate != null);
+    } catch (_) {
+      // If the provider isn't available (e.g. on a screen that doesn't
+      // have project context, such as a global admin screen), default
+      // to NOT locked — fail-open so we don't accidentally brick a
+      // page that should be editable.
+      return false;
+    }
+  }
+
   /// Get provider from context
   static ProjectDataProvider getProvider(BuildContext context) {
     return Provider.of<ProjectDataProvider>(context, listen: false);

@@ -32,6 +32,7 @@ import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 /// Front End Planning - Project Requirements page
@@ -636,6 +637,12 @@ class _FrontEndPlanningRequirementsScreenState
     if (isMobile) {
       return _buildMobileScaffold(context);
     }
+    // Task 14: Once the Project Charter is approved, lock this section
+    // from editing. The user can still view the data and scroll through
+    // it, but every editable control is wrapped in an AbsorbPointer so
+    // taps are silently ignored.
+    final charterLocked =
+        ProjectDataHelper.isCharterApproved(context, listen: true);
 
     return Scaffold(
       // Ensure white background as requested
@@ -673,7 +680,13 @@ class _FrontEndPlanningRequirementsScreenState
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _roundedField(
+                                    CharterLockBanner(visible: charterLocked),
+                                    CharterLockBanner.applyLock(
+                                      locked: charterLocked,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          _roundedField(
                                       controller: _notesController,
                                       hint: 'Input your notes here...',
                                       minLines: 3,
@@ -750,6 +763,9 @@ class _FrontEndPlanningRequirementsScreenState
                                     const SizedBox(height: 10),
                                     _buildRequirementsTable(context),
                                     const SizedBox(height: 24),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),

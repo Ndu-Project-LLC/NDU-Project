@@ -23,6 +23,7 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/services/portfolio_service.dart';
+import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/program_service.dart';
 import 'package:ndu_project/services/project_service.dart';
 import 'package:ndu_project/widgets/compact_action_button.dart';
@@ -50,6 +51,12 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  late AnimationController _fadeController;
  late Animation<double> _gaugeAnim;
  late Animation<double> _fadeAnim;
+
+ // ─── Portfolio expansion / deletion state (Task 12) ──────────────────────
+ // Tracks which portfolio cards have their "projects in this portfolio"
+ // block expanded. Tap the chevron on a card to toggle. Closed by default
+ // so the dashboard stays compact.
+ final Set<String> _expandedPortfolioIds = <String>{};
 
  // ─── Design Tokens (light theme, aligned with the rest of the app) ────────
  static const _bg = Colors.white;
@@ -954,6 +961,11 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
             return progress < 0.34;
           }).length;
 
+          // Task 12: per-card expand state. Tap the chevron to reveal
+          // the list of projects grouped into this portfolio.
+          final isExpanded =
+              _expandedPortfolioIds.contains(portfolio.id);
+
           return Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: _surfaceCard(
@@ -990,13 +1002,53 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              '${portfolioProjects.length} projects • Created ${_formatDate(portfolio.createdAt)}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: _onSurfaceVariant,
-                                fontFamily: appFontFamily,
-                              ),
+                            // Task 13: show portfolio manager + project
+                            // count + creation date on the same metadata
+                            // row so the user sees who's accountable at
+                            // a glance.
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                if (portfolio.managerName.isNotEmpty) ...[
+                                  const Icon(Icons.person_outline_rounded,
+                                      size: 12, color: _onSurfaceVariant),
+                                  Text(
+                                    portfolio.managerName,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: _tertiary,
+                                      fontFamily: appFontFamily,
+                                    ),
+                                  ),
+                                  const Text('•',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: _onSurfaceVariant)),
+                                ],
+                                Text(
+                                  '${portfolioProjects.length} project${portfolioProjects.length == 1 ? '' : 's'}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: _onSurfaceVariant,
+                                    fontFamily: appFontFamily,
+                                  ),
+                                ),
+                                const Text('•',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: _onSurfaceVariant)),
+                                Text(
+                                  'Created ${_formatDate(portfolio.createdAt)}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: _onSurfaceVariant,
+                                    fontFamily: appFontFamily,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -1017,38 +1069,85 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
                           ),
                         ),
                       ),
+                      // Task 12: assign-manager action. Opens a small
+                      // dialog with a dropdown of registered users on
+                      // this account. Mirrors the create-portfolio modal
+                      // dropdown (Task 13) but writes via
+                      // PortfolioService.assignManager so existing
+                      // portfolios can be re-assigned without recreating
+                      // them.
+                      IconButton(
+                        tooltip: 'Assign portfolio manager',
+                        icon: const Icon(Icons.manage_accounts_outlined,
+                            size: 18, color: _onSurfaceVariant),
+                        onPressed: () =>
+                            _showAssignManagerDialog(portfolio),
+                      ),
+                      // Task 12: expand / collapse the list of projects
+                      // grouped into this portfolio. Tap once to reveal
+                      // a tile per project (name + progress + owner).
+                      IconButton(
+                        tooltip: isExpanded
+                            ? 'Hide projects in this portfolio'
+                            : 'View projects in this portfolio',
+                        icon: Icon(
+                          isExpanded
+                              ? Icons.expand_less_rounded
+                              : Icons.expand_more_rounded,
+                          size: 20,
+                          color: _onSurfaceVariant,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            if (isExpanded) {
+                              _expandedPortfolioIds.remove(portfolio.id);
+                            } else {
+                              _expandedPortfolioIds.add(portfolio.id);
+                            }
+                          });
+                        },
+                      ),
+                      // Task 12: delete action. Shows a confirmation
+                      // dialog (so a stray tap doesn't wipe the
+                      // portfolio + its project-grouping), then calls
+                      // PortfolioService.deletePortfolio.
+                      IconButton(
+                        tooltip: 'Delete portfolio',
+                        icon: const Icon(Icons.delete_outline_rounded,
+                            size: 18, color: _crimson),
+                        onPressed: () =>
+                            _showDeletePortfolioDialog(portfolio),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
                   // Portfolio metrics row
-                  Row(
+                  Wrap(
+                    spacing: 24,
+                    runSpacing: 16,
                     children: [
                       _portfolioMetric(
                         label: 'Total Budget',
                         value: _formatBudget(totalBudget),
                         icon: Icons.account_balance_wallet_outlined,
                       ),
-                      const SizedBox(width: 24),
                       _portfolioMetric(
                         label: 'Avg Progress',
                         value: '${(avgProgress * 100).round()}%',
                         icon: Icons.trending_up,
                       ),
-                      const SizedBox(width: 24),
                       _portfolioMetric(
                         label: 'Healthy',
                         value: '$healthyCount',
                         icon: Icons.check_circle_outline,
                         valueColor: _emerald,
                       ),
-                      const SizedBox(width: 24),
                       _portfolioMetric(
                         label: 'At Risk',
                         value: '$atRiskCount',
                         icon: Icons.warning_amber_outlined,
                         valueColor: _amber,
                       ),
-                      const SizedBox(width: 24),
                       _portfolioMetric(
                         label: 'Critical',
                         value: '$criticalCount',
@@ -1057,6 +1156,61 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
                       ),
                     ],
                   ),
+                  // Task 12: expanded list of projects grouped into
+                  // this portfolio. Hidden by default; tap the chevron
+                  // to reveal. Each row shows project name + progress %
+                  // + owner — same data shape as the dashboard's
+                  // project cards, but filtered to this portfolio's
+                  // projectIds list.
+                  if (isExpanded) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _outlineVariant),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.folder_open_rounded,
+                                  size: 14, color: _onSurfaceVariant),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Projects in ${portfolio.name.isEmpty ? 'this portfolio' : portfolio.name}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: _onSurfaceVariant,
+                                  letterSpacing: 0.4,
+                                  fontFamily: appFontFamily,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          if (portfolioProjects.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Text(
+                                'No projects in this portfolio yet — the source projects may have been deleted.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                  color: _onSurfaceVariant,
+                                ),
+                              ),
+                            )
+                          else
+                            ...portfolioProjects.map((p) => _portfolioProjectRow(p)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -1065,6 +1219,293 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
       ],
     );
   }
+
+  // Task 12: row inside the expanded portfolio card showing one
+  // project's name + progress + owner.
+  Widget _portfolioProjectRow(ProjectRecord p) {
+    final progress = (p.progress.isNaN ? 0 : p.progress.clamp(0, 1)) * 100;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              p.name.isEmpty ? 'Untitled project' : p.name,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: _onSurface,
+                fontFamily: appFontFamily,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 80,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: progress / 100,
+                minHeight: 6,
+                backgroundColor: _surfaceHighest,
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(progress >= 67 ? _emerald : progress >= 34 ? _amber : _crimson),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 50,
+            child: Text(
+              '${progress.round()}%',
+              textAlign: TextAlign.end,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: _onSurface,
+                fontFamily: appFontFamily,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 140,
+            child: Text(
+              p.ownerName.isEmpty ? 'Unassigned' : p.ownerName,
+              style: const TextStyle(
+                fontSize: 12,
+                color: _onSurfaceVariant,
+                fontFamily: appFontFamily,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Task 12: delete-confirmation dialog. Calls
+  // PortfolioService.deletePortfolio on confirm. The portfolio's
+  // projectIds are NOT deleted — only the grouping is removed; the
+  // individual projects stay on the dashboard as standalone workspaces.
+  Future<void> _showDeletePortfolioDialog(PortfolioModel portfolio) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded,
+                  color: _crimson, size: 28),
+              SizedBox(width: 12),
+              Text('Delete Portfolio'),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to delete "${portfolio.name.isEmpty ? 'this portfolio' : portfolio.name}"? '
+            'This removes the portfolio grouping. The ${portfolio.projectIds.length} project${portfolio.projectIds.length == 1 ? '' : 's'} inside it will NOT be deleted — they will simply appear as standalone projects again.',
+            style: const TextStyle(fontSize: 14, color: _onSurfaceVariant),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _crimson,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) return;
+    try {
+      await PortfolioService.deletePortfolio(portfolio.id);
+      if (!mounted) return;
+      // Collapse the card if it was expanded — the portfolio no longer
+      // exists, so the expansion state is stale.
+      setState(() {
+        _expandedPortfolioIds.remove(portfolio.id);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Portfolio deleted successfully.'),
+          backgroundColor: _emerald,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error deleting portfolio: $e'),
+          backgroundColor: _crimson,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  // Task 13: assign / re-assign portfolio manager. Loads the account's
+  // registered users via UserService.watchAllUsers().first and shows a
+  // dropdown — same shape as the create-portfolio modal dropdown, but
+  // writes via PortfolioService.assignManager so the existing portfolio
+  // is updated in place rather than being re-created.
+  Future<void> _showAssignManagerDialog(PortfolioModel portfolio) async {
+    List<UserModel> availableUsers = const [];
+    try {
+      availableUsers = await UserService.watchAllUsers().first;
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not load registered users: $e'),
+          backgroundColor: _crimson,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+    // Find the currently-assigned manager in the loaded users list so
+    // the dropdown starts on the right row. Falls back to `null` (the
+    // "— No manager assigned —" item) when the manager is no longer a
+    // registered user.
+    UserModel? selected;
+    for (final u in availableUsers) {
+      if (u.uid == portfolio.managerId) {
+        selected = u;
+        break;
+      }
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: const Row(
+                children: [
+                  Icon(Icons.person_outline_rounded,
+                      color: _tertiary, size: 28),
+                  SizedBox(width: 12),
+                  Text('Assign Portfolio Manager'),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Pick a registered user to manage "${portfolio.name.isEmpty ? 'this portfolio' : portfolio.name}".',
+                    style: const TextStyle(
+                        fontSize: 14, color: _onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<UserModel?>(
+                    value: selected,
+                    decoration: InputDecoration(
+                      labelText: 'Portfolio Manager',
+                      hintText: availableUsers.isEmpty
+                          ? 'No registered users available'
+                          : 'Select a manager',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      filled: true,
+                      fillColor: _surface,
+                    ),
+                    items: [
+                      const DropdownMenuItem<UserModel?>(
+                        value: null,
+                        child: Text('— No manager assigned —'),
+                      ),
+                      ...availableUsers.map(
+                        (u) => DropdownMenuItem<UserModel?>(
+                          value: u,
+                          child: Text(
+                            u.displayName.isNotEmpty
+                                ? '${u.displayName} (${u.email})'
+                                : u.email,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                    onChanged: availableUsers.isEmpty
+                        ? null
+                        : (user) {
+                            setDialogState(() => selected = user);
+                          },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _tertiary,
+                    foregroundColor: _onTertiary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (confirmed != true) return;
+    try {
+      await PortfolioService.assignManager(
+        portfolioId: portfolio.id,
+        managerId: selected?.uid ?? '',
+        managerName: selected?.displayName ?? '',
+        managerEmail: selected?.email ?? '',
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(selected == null
+              ? 'Portfolio manager cleared.'
+              : 'Assigned ${selected!.displayName.isEmpty ? selected!.email : selected!.displayName} as portfolio manager.'),
+          backgroundColor: _emerald,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error assigning manager: $e'),
+          backgroundColor: _crimson,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
 
   Widget _portfolioMetric({
     required String label,

@@ -116,7 +116,11 @@ class CostByWBSTab extends StatelessWidget {
               style: const TextStyle(color: _textSecondary, fontSize: 13)),
           const SizedBox(height: 24),
 
-          // KPI Cards
+          // KPI Cards — unified to the same amber/gold accent color so the
+          // row reads as one cohesive visual band (per product decision
+          // 2026-08-17: cards/containers on this screen share the same
+          // yellow throughout, replacing the prior green/red semantic
+          // tints that broke visual rhythm).
           Row(
             children: [
               Expanded(
@@ -131,14 +135,14 @@ class CostByWBSTab extends StatelessWidget {
                       'Linked',
                       '$currencySymbol${_fmt(totalLinked)}',
                       Icons.link_outlined,
-                      const Color(0xFF10B981))),
+                      const Color(0xFFB8860B))),
               const SizedBox(width: 12),
               Expanded(
                   child: _costKpi(
                       'Unlinked',
                       '$currencySymbol${_fmt(unlinkedTotal)}',
                       Icons.link_off_outlined,
-                      const Color(0xFFEF4444))),
+                      const Color(0xFFB8860B))),
               const SizedBox(width: 12),
               Expanded(
                   child: _costKpi('L1 Deliverables', '${l1Rollups.length}',

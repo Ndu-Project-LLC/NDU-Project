@@ -111,6 +111,59 @@ def stamp_file(path: Path, stamp: str, dry_run: bool) -> bool:
     return True
 
 
+def write_version_json(build_root: Path, stamp: str, sha: str | None, dry_run: bool) -> bool:
+    """Write build/web/version.json with the current build stamp + git SHA.
+
+    The version.json file is fetched by the cache-bust script in index.html
+    on every page load (cache-busted via a random query param, so it always
+    bypasses HTTP cache). This lets the script detect when the user's
+    browser-cached index.html is stale (i.e. when a new deploy happened
+    but the user's HTTP cache for index.html hasn't expired yet —
+    max-age=600 on GitHub Pages).
+
+    Without this check, users with browser-cached OLD index.html will
+    continue to see the OLD app for up to 10 minutes after each deploy
+    because the OLD index.html's NDU_BUILD stamp is stale and the
+    existing redirect logic only redirects to the OLD stamp.
+
+    With this check, the script fetches version.json, gets the LATEST
+    stamp, compares to the embedded NDU_BUILD, and if different,
+    redirects to `?_ndu=<latest_stamp>` — forcing a fresh fetch of
+    everything (index.html, flutter_bootstrap.js, main.dart.js).
+    """
+    import datetime
+    version_path = build_root / "version.json"
+    payload = {
+        "build": stamp,
+        "sha": sha or "",
+        "deployed_at": datetime.datetime.now(datetime.timezone.utc)
+        .strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+    import json
+    content = json.dumps(payload, indent=2, separators=(",", ": ")) + "\n"
+    if dry_run:
+        print(f"  · {version_path.name} (would write: {content.strip()})")
+    else:
+        version_path.write_text(content, encoding="utf-8")
+        print(f"  ✓ {version_path.name} ({content.strip()})")
+    return True
+
+
+def get_git_sha() -> str | None:
+    """Return the current git HEAD SHA (short), or None if not in a git repo."""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except (subprocess.SubprocessError, FileNotFoundError, OSError):
+        pass
+    return None
+
+
 def patch_flutter_bootstrap_main_js_path(build_root: Path, stamp: str, dry_run: bool) -> bool:
     """Patch flutter_bootstrap.js so main.dart.js is loaded with ?v=<stamp>.
 
@@ -219,6 +272,17 @@ def main() -> int:
     #     10 minutes after each deploy, even when index.html has been refreshed.
     print(f"Patching flutter_bootstrap.js mainJsPath:")
     patch_flutter_bootstrap_main_js_path(build_root, stamp, args.dry_run)
+    print()
+
+    # 1c. Write build/web/version.json — a small JSON file containing the
+    #     current build stamp + git SHA + ISO timestamp. The index.html
+    #     cache-bust script fetches this on every load (cache-busted via
+    #     a random query param) to detect when the browser-cached
+    #     index.html is stale. If the fetched stamp differs from the
+    #     embedded NDU_BUILD, the script redirects to the new stamp,
+    #     forcing a fresh fetch of all assets.
+    print(f"Writing version.json:")
+    write_version_json(build_root, stamp, get_git_sha(), args.dry_run)
     print()
 
     # 2. Also stamp the source web/env-config.js so the BUILD_STAMP persists

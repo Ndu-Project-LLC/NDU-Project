@@ -22,6 +22,7 @@ import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
 import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kanban_card_grid.dart';
@@ -203,6 +204,12 @@ class _FrontEndPlanningSummaryScreenState
  if (AppBreakpoints.isMobile(context)) {
  return _buildMobileScaffold(context);
  }
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
 
  return ResponsiveScaffold(
  activeItemLabel: 'Details',
@@ -220,6 +227,12 @@ class _FrontEndPlanningSummaryScreenState
  controller: _contentScrollController,
  padding: const EdgeInsets.symmetric(
  horizontal: 32, vertical: 24),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -248,6 +261,9 @@ class _FrontEndPlanningSummaryScreenState
  scrollController: _contentScrollController,
  ),
  const SizedBox(height: 140),
+ ],
+ ),
+ ),
  ],
  ),
  ),

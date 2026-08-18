@@ -20,6 +20,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 /// Front End Planning – Project Risks page
 /// Matches the provided screenshot with:
 /// - Top bar (back/forward, centered title, user chip)
@@ -1318,6 +1319,12 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  if (isMobile) {
  return _buildMobileScaffold(context);
  }
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
 
  return Scaffold(
  // Ensure white background as requested
@@ -1343,6 +1350,12 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  child: SingleChildScrollView(
  padding: const EdgeInsets.symmetric(
  horizontal: 32, vertical: 24),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -1472,6 +1485,9 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  ),
  const SizedBox(height: 140),
+ ],
+ ),
+ ),
  ],
  ),
  ),

@@ -197,6 +197,39 @@
             location.replace(url.toString());
             return;
           }
+
+          // 5. Fetch version.json (cache-busted via random query param) and
+          //    compare the latest deployed stamp to NDU_BUILD (which is
+          //    embedded in this index.html). If they differ, this index.html
+          //    is STALE — the browser's HTTP cache (max-age=600 on GitHub
+          //    Pages) is serving an old version. Redirect to the new stamp
+          //    so the browser fetches fresh HTML/JS from the origin.
+          //
+          //    This runs ASYNC — it does NOT block page load. If a new
+          //    deploy is detected, the redirect kills the in-progress
+          //    bootstrap. The user sees a brief flash before redirect,
+          //    but always ends up on the latest version.
+          //
+          //    Without this check, users with cached OLD index.html will
+          //    continue to see the OLD app for up to 10 minutes after
+          //    each deploy because the existing redirect logic above
+          //    only redirects to the OLD stamp embedded in OLD index.html.
+          try {
+            fetch('version.json?cb=' + Date.now() + Math.random().toString(36).slice(2), {cache: 'no-cache'})
+              .then(function(r) { return r.ok ? r.json() : null; })
+              .then(function(data) {
+                if (!data || !data.build) return;
+                if (data.build === NDU_BUILD) return; // same — no redirect needed
+                // New deploy detected — redirect with new stamp.
+                var u = new URL(location.href);
+                u.searchParams.set('_ndu', data.build);
+                localStorage.setItem('__ndu_build', data.build);
+                location.replace(u.toString());
+              })
+              .catch(function() { /* network error — ignore, fall through */ });
+          } catch(e) {
+            console.warn('[NDU] version.json fetch error:', e);
+          }
         }
 
         localStorage.setItem('__ndu_build', NDU_BUILD);

@@ -340,13 +340,13 @@ class _Level1ScheduleScreenState
  children: [
  PlanningPhaseHeader(title: 'Project Schedule', onExportPdf: _exportPdf),
  const SizedBox(height: 16),
- _TopHeader(
- title: 'Level 1 - Project Schedule',
- onBack: () => PlanningPhaseNavigation.goToPrevious(
- context, 'project_plan_level1_schedule'),
- onForward: () => PlanningPhaseNavigation.goToNext(
- context, 'project_plan_level1_schedule'),
- ),
+ // _TopHeader (Level 1 - Project Schedule sub-header with nav arrows +
+ // duplicate user chip) removed per product decision 2026-08-17 — the
+ // standard PlanningPhaseHeader above already provides the page title
+ // and user identity, so this was a redundant sub-header taking up
+ // vertical space. The PlanningPhaseNavigation forward/back chevrons
+ // are still surfaced by LaunchPhaseNavigation at the bottom of the
+ // page (no functional regression).
  const SizedBox(height: 12),
 
  Text(

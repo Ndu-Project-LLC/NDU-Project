@@ -6,9 +6,9 @@ import 'package:ndu_project/screens/pricing_screen.dart';
 import 'package:ndu_project/screens/partner_screen.dart';
 import 'package:ndu_project/screens/use_cases_screen.dart';
 import 'package:ndu_project/screens/how_it_works_screen.dart';
-import 'package:ndu_project/screens/sign_in_screen.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
+import 'package:ndu_project/widgets/sign_in_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -42,20 +42,29 @@ class _LandingScreenState extends State<LandingScreen>
  int _kazAiTapCount = 0;
  DateTime? _lastKazAiTap;
  int _workflowTapCount = 0;
- DateTime? _lastWorkflowTap;
-
- @override
- void initState() {
- super.initState();
- _animController = AnimationController(
- vsync: this,
- duration: const Duration(milliseconds: 1400),
- );
- _fadeAnimation =
- CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic);
- _scrollController = ScrollController();
- _animController.forward();
- }
+ DateTime? _lastWorkflowTap;  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    _fadeAnimation =
+        CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic);
+    _scrollController = ScrollController();
+    _animController.forward();
+    // If redirected with ?auth=required, show the sign-in popup.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final uri = GoRouterState.of(context).uri;
+      if (uri.queryParameters['auth'] == 'required') {
+        SignInDialog.show(context);
+        // Clean up the URL so refresh doesn't re-show the dialog.
+        if (mounted) {
+          context.go('/');
+        }
+      }
+    });
+  }
 
  @override
  void dispose() {
@@ -112,14 +121,12 @@ class _LandingScreenState extends State<LandingScreen>
  } else {
  _workflowTapCount++;
  }
- _lastWorkflowTap = now;
-
- // Triple-tap Easter egg: navigate to the authenticate (sign-in) screen
- if (_workflowTapCount >= 3) {
- _workflowTapCount = 0;
- context.go('/${AppRoutes.signIn}');
- return;
- }
+ _lastWorkflowTap = now; // Triple-tap Easter egg: show sign-in popup instead of navigating
+    if (_workflowTapCount >= 3) {
+      _workflowTapCount = 0;
+      SignInDialog.show(context);
+      return;
+    }
 
  // Navigate to the standalone How It Works page
  HowItWorksScreen.open(context);
@@ -376,12 +383,11 @@ class _LandingScreenState extends State<LandingScreen>
  );
  }
 
- Widget buildSignInButton({bool fullWidth = false}) {
- final button = TextButton(
- onPressed: () {
- context.push('/sign-in');
- },
- style: TextButton.styleFrom(
+ Widget buildSignInButton({bool fullWidth = false}) {    final button = TextButton(
+      onPressed: () {
+        SignInDialog.show(context);
+      },
+      style: TextButton.styleFrom(
  foregroundColor: Colors.white,
  padding: EdgeInsets.symmetric(
  horizontal: fullWidth ? 16 : 20, vertical: 12),

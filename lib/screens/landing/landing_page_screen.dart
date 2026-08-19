@@ -15,6 +15,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/sign_in_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // ─── Color System ──────────────────────────────────────────────────────────
@@ -42,11 +43,32 @@ const _tealLight = Color(0xFFFBBF24);
 const _orange = Color(0xFFF97316);     // For Execution phase
 const _orangeLight = Color(0xFFFB923C);
 
-class LandingPageScreen extends StatelessWidget {
+class LandingPageScreen extends StatefulWidget {
   const LandingPageScreen({super.key});
 
   static void open(BuildContext context) {
     context.push('/landing-page-screen');
+  }
+
+  @override
+  State<LandingPageScreen> createState() => _LandingPageScreenState();
+}
+
+class _LandingPageScreenState extends State<LandingPageScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // If redirected with ?auth=required, show the sign-in popup.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final uri = GoRouterState.of(context).uri;
+      if (uri.queryParameters['auth'] == 'required') {
+        SignInDialog.show(context);
+        // Clean up the URL so refresh doesn't re-show the dialog.
+        if (mounted) {
+          context.go('/');
+        }
+      }
+    });
   }
 
   @override
@@ -138,9 +160,9 @@ class LandingPageScreen extends StatelessWidget {
                         _socialIcon(Icons.play_circle_outline, 'https://youtube.com/@nduproject'),
                         _socialIcon(Icons.music_note, 'https://tiktok.com/@nduproject'),
                         const SizedBox(width: 12),
-                        TextButton(onPressed: () => context.go('/sign-in'), child: const Text('Sign In', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
+                        TextButton(onPressed: () => SignInDialog.show(context), child: const Text('Sign In', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
                         const SizedBox(width: 16),
-                        _yellowButton('Start Your Project', () => context.go('/create-account')),
+                        _yellowButton('Start Your Project', () => SignInDialog.show(context)),
                       ]),
                     ],
                   ),
@@ -378,7 +400,7 @@ class _HeroSection extends StatelessWidget {
                 const SizedBox(height: 40),
                 // CTAs
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  _ctaButton('Request a Demo', _blue, Colors.white, () => context.go('/create-account')),
+                  _ctaButton('Request a Demo', _blue, Colors.white, () => SignInDialog.show(context)),
                   const SizedBox(width: 16),
                   _ctaButton('See How It Works', Colors.transparent, _textPrimary, () {}, border: true),
                 ]),
@@ -1183,7 +1205,7 @@ class _PricingSectionState extends State<_PricingSection> {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
-            onPressed: () => context.go('/create-account'),
+            onPressed: () => SignInDialog.show(context),
             style: OutlinedButton.styleFrom(
               foregroundColor: isSelected ? Colors.white : _accentGoldDark,
               backgroundColor: isSelected ? _accentGold : Colors.transparent,
@@ -1224,7 +1246,7 @@ class _ServicesSection extends StatelessWidget {
           const Text('Beyond software — we help you deliver', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
           const SizedBox(height: 40),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            _serviceCard('Project Delivery', 'Access our PDOS platform with full lifecycle tools. Start a project now and move from initiation to launch.', Icons.assignment_outlined, _blue, 'Start a Project', () => context.go('/create-account')),
+            _serviceCard('Project Delivery', 'Access our PDOS platform with full lifecycle tools. Start a project now and move from initiation to launch.', Icons.assignment_outlined, _blue, 'Start a Project', () => SignInDialog.show(context)),
             const SizedBox(width: 20),
             _serviceCard('Training', 'Ensure individuals, students, and teams are knowledgeable on core project delivery processes. Request training or sign up.', Icons.school_outlined, _green, 'Request Training', () => _launchUrl('https://nduproject.tech')),
             const SizedBox(width: 20),
@@ -1265,7 +1287,7 @@ class _FinalCTASection extends StatelessWidget {
           const Text('Move beyond tracking tools. Implement a system designed for real project success.', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 17, fontFamily: appFontFamily)),
           const SizedBox(height: 32),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Container(decoration: BoxDecoration(gradient: const LinearGradient(colors: [_blue, _purple]), borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: _blue.withValues(alpha: 0.3), blurRadius: 16)]), child: Material(color: Colors.transparent, child: InkWell(onTap: () => context.go('/create-account'), borderRadius: BorderRadius.circular(24), child: const Padding(padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16), child: Text('Start Your Project', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700, fontFamily: appFontFamily)))))),
+            Container(decoration: BoxDecoration(gradient: const LinearGradient(colors: [_blue, _purple]), borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: _blue.withValues(alpha: 0.3), blurRadius: 16)]), child: Material(color: Colors.transparent, child: InkWell(onTap: () => SignInDialog.show(context), borderRadius: BorderRadius.circular(24), child: const Padding(padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16), child: Text('Start Your Project', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700, fontFamily: appFontFamily)))))),
             const SizedBox(width: 16),
             Container(decoration: BoxDecoration(color: Colors.transparent, borderRadius: BorderRadius.circular(24), border: Border.all(color: _border)), child: Material(color: Colors.transparent, child: InkWell(onTap: () => _launchUrl('mailto:contact@nduproject.com'), borderRadius: BorderRadius.circular(24), child: const Padding(padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16), child: Text('Contact Us', style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w600, fontFamily: appFontFamily)))))),
           ]),

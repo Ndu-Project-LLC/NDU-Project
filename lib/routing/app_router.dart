@@ -602,7 +602,11 @@ class AppRouter {
       ];
       final isPublicRoute = publicRoutes.contains(state.matchedLocation);
       if (user == null && !isPublicRoute) {
-        return '/${AppRoutes.signIn}';
+        // Instead of redirecting to the sign-in page, redirect to the
+        // landing page with a query parameter so it can show a sign-in
+        // popup dialog (no full-page navigation away from the current
+        // context).
+        return '/?auth=required';
       }
 
       // On admin host: authenticated users on root or sign-in go to dashboard

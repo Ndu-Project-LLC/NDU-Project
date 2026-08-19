@@ -198,6 +198,7 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
                   ],
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
+                  isCollapsible: true,
                 ),
               ),
               // ── Node count indicator ─────────────────────────

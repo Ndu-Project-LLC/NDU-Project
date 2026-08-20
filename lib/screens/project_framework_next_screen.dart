@@ -1458,6 +1458,10 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                     controller: widget.titleController,
                     focusNode: widget.titleFocusNode,
                     maxLines: 1,
+                    enableVoice: false,
+                    enableKazAi: false,
+                    enableDocxImport: false,
+                    enableTextFormatting: false,
                     decoration: InputDecoration(
                       hintText: 'Goal ${widget.goalIndex + 1} Title',
                       border: InputBorder.none,
@@ -1554,6 +1558,10 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                     focusNode: widget.descFocusNode,
                     maxLines: 2,
                     minLines: 1,
+                    enableVoice: false,
+                    enableKazAi: false,
+                    enableDocxImport: false,
+                    enableTextFormatting: false,
                     decoration: InputDecoration(
                       hintText: 'Enter description',
                       hintStyle:

@@ -350,32 +350,16 @@ class _DashboardTab extends StatelessWidget {
                 ),
               ];
 
-              // Desktop: all 7 in one row using Expanded (no overflow)
-              if (constraints.maxWidth > 1100) {
-                return Row(
-                  children: kpiCards.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                            right: i < kpiCards.length - 1 ? 12 : 0),
-                        child: entry.value,
-                      ),
-                    );
-                  }).toList(),
-                );
-              }
-
-              // Tablet/mobile: GridView with 4 or 2 columns
-              final count = constraints.maxWidth > 700 ? 4 : 2;
-              return GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: count,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.4,
-                children: kpiCards,
+              // All 7 KPI cards in one row, wrapping gracefully
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: kpiCards.map((card) {
+                  return SizedBox(
+                    width: (constraints.maxWidth - 12 * 6) / 7,
+                    child: card,
+                  );
+                }).toList(),
               );
             },
           ),

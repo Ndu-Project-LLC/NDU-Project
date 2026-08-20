@@ -228,13 +228,13 @@ enum WBSFramework {
   EstimationMethod? suggestedEstimation(int level) {
     if (this == WBSFramework.agile) {
       return switch (level) {
-        1 => EstimationMethod.tShirt,
+        1 => EstimationMethod.storyPoints,
         2 || 3 => EstimationMethod.storyPoints,
         _ => EstimationMethod.hours,
       };
     }
     return switch (level) {
-      1 || 2 => EstimationMethod.tShirt,
+      1 || 2 => EstimationMethod.days,
       3 => EstimationMethod.days,
       _ => EstimationMethod.hours,
     };

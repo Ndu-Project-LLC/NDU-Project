@@ -1758,35 +1758,6 @@ class _MobileGoalsSection extends StatelessWidget {
  ],
  ),
  ),
- const SizedBox(width: 12),
- Material(
- color: _Tokens.primary.withValues(alpha: 0.2),
- borderRadius: BorderRadius.circular(8),
- child: InkWell(
- onTap: onAddGoal,
- borderRadius: BorderRadius.circular(8),
- child: Container(
- padding:
- const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
- child: const Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.add, size: 16,
- color: _Tokens.primaryOnContainer),
- SizedBox(width: 4),
- Text(
- 'Add Goal',
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: _Tokens.primaryOnContainer,
- ),
- ),
- ],
- ),
- ),
- ),
- ),
  ],
  ),
  const SizedBox(height: 12),

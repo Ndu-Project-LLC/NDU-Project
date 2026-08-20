@@ -261,12 +261,15 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  return StreamBuilder<List<PortfolioModel>>(
  stream: user == null
  ? Stream.value(const <PortfolioModel>[])
- : PortfolioService.streamPortfolios(ownerId: user.uid),
- builder: (context, portfolioSnapshot) {
+ : PortfolioService.streamPortfolios(ownerId: user.uid),              builder: (context, portfolioSnapshot) {
  // Auto-create programs/portfolios based on project count
+ // Deferred to post-frame to avoid setState-during-build crashes
+ // when Firestore streams re-emit after writes.
  if (user != null && projectSnapshot.hasData) {
- final projects = projectSnapshot.data!;
- _maybeAutoCreatePrograms(user.uid, projects);
+   final projects = projectSnapshot.data!;
+   WidgetsBinding.instance.addPostFrameCallback((_) {
+     if (mounted) _maybeAutoCreatePrograms(user.uid, projects);
+   });
  }
 
  final metrics = _computeMetrics(

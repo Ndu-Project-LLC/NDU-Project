@@ -286,17 +286,17 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                       story.assignedRole.isNotEmpty
                           ? story.assignedRole
                           : 'Unassigned',
-                      Color(0xFFFFC812)),
+                      const Color(0xFFFFC812)),
                   _metaChip(
                       Icons.account_tree_outlined,
                       feature?.title.isNotEmpty == true
                           ? feature!.title
                           : 'Feature unlinked',
-                      Color(0xFFB8860B)),
+                      const Color(0xFFB8860B)),
                   _metaChip(
                       Icons.layers_outlined,
                       epicTitle.isNotEmpty ? epicTitle : 'Epic unlinked',
-                      Color(0xFFD97706)),
+                      const Color(0xFFD97706)),
                   _metaChip(
                       Icons.flag_outlined, story.readinessStatus, Colors.green),
                 ],
@@ -385,8 +385,8 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Kanban Board',
                     ),
                   ),
@@ -397,7 +397,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        PlanningPhaseHeader(
+                        const PlanningPhaseHeader(
                           title: 'Kanban Board',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -470,7 +470,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -793,7 +793,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                     style: const TextStyle(fontSize: 11, color: _kMuted),
                   ),
                 ),
-                Icon(Icons.drag_indicator, size: 14, color: _kMuted),
+                const Icon(Icons.drag_indicator, size: 14, color: _kMuted),
               ],
             ),
           ],
@@ -806,7 +806,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       decoration: BoxDecoration(
-          color: Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(6)),
+          color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(6)),
       child: Text(label, style: const TextStyle(fontSize: 10, color: _kMuted)),
     );
   }
@@ -864,7 +864,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
           ),
         ),
         const Spacer(),
-        Text(
+        const Text(
             'Board columns come from planning Kanban workflow configuration; cards come from the same AgileTask stories used by backlog planning and schedule import.',
             style: TextStyle(
                 fontSize: 12, color: _kMuted, fontStyle: FontStyle.italic)),
@@ -896,7 +896,7 @@ class _LoadingStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

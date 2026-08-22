@@ -4,8 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/meeting_row.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/progress_tracking_screen.dart';
-import 'package:ndu_project/screens/staff_team_screen.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';

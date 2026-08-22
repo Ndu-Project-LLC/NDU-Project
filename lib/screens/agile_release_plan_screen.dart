@@ -243,7 +243,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: _kBorder),
+        side: const BorderSide(color: _kBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -329,9 +329,9 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Color(0xFFFFF7ED),
+                  color: const Color(0xFFFFF7ED),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Color(0xFFF59E0B)),
+                  border: Border.all(color: const Color(0xFFF59E0B)),
                 ),
                 child: Text(
                   '${_releaseUnassignedSprintCount(plan)} story(ies) in this release do not yet have a target sprint. Assign sprint targets before schedule import for better forecast quality.',
@@ -498,11 +498,11 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Color(0xFFFFC812).withValues(alpha: 0.08),
+        color: const Color(0xFFFFC812).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(4),
       ),
       child:
-          Text(text, style: TextStyle(fontSize: 11, color: Color(0xFFB8860B))),
+          Text(text, style: const TextStyle(fontSize: 11, color: Color(0xFFB8860B))),
     );
   }
 
@@ -511,7 +511,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
       case 'Approved':
         return Colors.green.withValues(alpha: 0.1);
       case 'Ready':
-        return Color(0xFFFFC812).withValues(alpha: 0.1);
+        return const Color(0xFFFFC812).withValues(alpha: 0.1);
       default:
         return Colors.grey.withValues(alpha: 0.1);
     }
@@ -522,7 +522,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
       case 'Approved':
         return Colors.green[700]!;
       case 'Ready':
-        return Color(0xFFB8860B)!;
+        return const Color(0xFFB8860B);
       default:
         return Colors.grey[700]!;
     }
@@ -738,7 +738,7 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: DropdownButtonFormField<String>(
-        value: value.isEmpty ? null : value,
+        initialValue: value.isEmpty ? null : value,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
@@ -832,7 +832,7 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
             const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Color(0xFFE5E7EB)),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
                 borderRadius: BorderRadius.circular(4),
               ),
               padding: const EdgeInsets.all(12),

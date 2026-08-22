@@ -301,9 +301,9 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       final entries = generated['designComponents'] ?? const [];
       if (entries.isEmpty) return;
 
-      final typeRotation = DesignComponent.specificationTypes;
-      final priorityRotation = DesignComponent.priorities;
-      final ownerRotation = DesignComponent.ownerRoles;
+      const typeRotation = DesignComponent.specificationTypes;
+      const priorityRotation = DesignComponent.priorities;
+      const ownerRotation = DesignComponent.ownerRoles;
 
       final newComponents = <DesignComponent>[];
       for (var i = 0; i < entries.length; i++) {
@@ -344,26 +344,39 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
 
   String _inferSpecType(String text) {
     final lower = text.toLowerCase();
-    if (lower.contains('architecture') || lower.contains('decompos'))
+    if (lower.contains('architecture') || lower.contains('decompos')) {
       return 'Architecture';
+    }
     if (lower.contains('interface') ||
         lower.contains('api') ||
-        lower.contains('contract')) return 'Interface';
+        lower.contains('contract')) {
+      return 'Interface';
+    }
     if (lower.contains('data') ||
         lower.contains('schema') ||
-        lower.contains('database')) return 'Data';
+        lower.contains('database')) {
+      return 'Data';
+    }
     if (lower.contains('security') ||
         lower.contains('auth') ||
-        lower.contains('compliance')) return 'Security';
+        lower.contains('compliance')) {
+      return 'Security';
+    }
     if (lower.contains('performance') ||
         lower.contains('scalab') ||
-        lower.contains('availab')) return 'NFR';
+        lower.contains('availab')) {
+      return 'NFR';
+    }
     if (lower.contains('ui') ||
         lower.contains('ux') ||
-        lower.contains('design system')) return 'UI/UX';
+        lower.contains('design system')) {
+      return 'UI/UX';
+    }
     if (lower.contains('infra') ||
         lower.contains('deploy') ||
-        lower.contains('cloud')) return 'Infrastructure';
+        lower.contains('cloud')) {
+      return 'Infrastructure';
+    }
     return 'Component';
   }
 
@@ -391,18 +404,24 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
   List<DesignComponent> _filterComponents(List<DesignComponent> components) {
     if (_selectedFilters.contains('All')) return components;
     return components.where((c) {
-      if (_selectedFilters.contains('Approved') && c.status == 'Approved')
+      if (_selectedFilters.contains('Approved') && c.status == 'Approved') {
         return true;
-      if (_selectedFilters.contains('In Review') && c.status == 'In Review')
+      }
+      if (_selectedFilters.contains('In Review') && c.status == 'In Review') {
         return true;
-      if (_selectedFilters.contains('Reviewed') && c.status == 'Reviewed')
+      }
+      if (_selectedFilters.contains('Reviewed') && c.status == 'Reviewed') {
         return true;
-      if (_selectedFilters.contains('Baseline') && c.status == 'Baseline')
+      }
+      if (_selectedFilters.contains('Baseline') && c.status == 'Baseline') {
         return true;
-      if (_selectedFilters.contains('Draft') && c.status == 'Draft')
+      }
+      if (_selectedFilters.contains('Draft') && c.status == 'Draft') {
         return true;
-      if (_selectedFilters.contains('Must Have') && c.priority == 'Must Have')
+      }
+      if (_selectedFilters.contains('Must Have') && c.priority == 'Must Have') {
         return true;
+      }
       return false;
     }).toList();
   }
@@ -484,7 +503,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Color(0xFFFFF8E1),
+                  color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
@@ -841,7 +860,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: selectedStatus,
+                        initialValue: selectedStatus,
                         decoration: const InputDecoration(
                           labelText: 'Status',
                           isDense: true,
@@ -948,15 +967,15 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
 
   Widget _buildSpecificationRegister() {
     if (_isLoading) {
-      return ExecutionPanelShell(
+      return const ExecutionPanelShell(
         title: 'Design Specification Register',
         subtitle:
             'Traceable specifications with MoSCoW prioritization, methodology phasing, and requirements traceability',
         collapsible: true,
         initiallyExpanded: true,
         headerIcon: Icons.folder_special_outlined,
-        headerIconColor: const Color(0xFFFFC812),
-        child: const Center(
+        headerIconColor: Color(0xFFFFC812),
+        child: Center(
           child: Padding(
             padding: EdgeInsets.all(24.0),
             child: CircularProgressIndicator(),
@@ -981,7 +1000,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
           CsvTableImportButton(
             compact: true,
             tableTitle: 'Design Specification Register',
-            columns: [
+            columns: const [
               CsvColumnSpec(
                   key: 'specId', label: 'Spec ID', hint: 'e.g. DS-001'),
               CsvColumnSpec(
@@ -1205,9 +1224,9 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Color(0xFFF8FAFC),
+              color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Color(0xFFE2E8F0)),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Row(
               children: [
@@ -1319,7 +1338,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: selectedPriority,
+                            initialValue: selectedPriority,
                             decoration: const InputDecoration(
                                 labelText: 'Priority *', isDense: true),
                             items: DesignComponent.priorities
@@ -1353,7 +1372,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: selectedType,
+                            initialValue: selectedType,
                             decoration: const InputDecoration(
                                 labelText: 'Type *', isDense: true),
                             items: DesignComponent.specificationTypes
@@ -1375,7 +1394,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: selectedPhase,
+                            initialValue: selectedPhase,
                             decoration: const InputDecoration(
                                 labelText: 'Phase', isDense: true),
                             items: _getPhaseOptionsForDialog()
@@ -1392,7 +1411,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: selectedOwner,
+                            initialValue: selectedOwner,
                             decoration: const InputDecoration(
                                 labelText: 'Owner', isDense: true),
                             items: DesignComponent.ownerRoles
@@ -1409,7 +1428,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: selectedStatus,
+                            initialValue: selectedStatus,
                             decoration: const InputDecoration(
                                 labelText: 'Status *', isDense: true),
                             items: DesignComponent.statuses
@@ -1564,9 +1583,9 @@ class _ArchitecturePatternCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1655,9 +1674,9 @@ class _SecurityControlCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: [
@@ -1734,9 +1753,9 @@ class _NFRCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: [
@@ -1813,9 +1832,9 @@ class _ADRecordCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

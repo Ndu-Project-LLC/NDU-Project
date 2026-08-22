@@ -74,16 +74,16 @@ class BusinessCaseLockHelper {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFD97706), width: 1),
       ),
-      child: Row(
+      child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.lock_outline,
+          Icon(Icons.lock_outline,
               size: 18, color: Color(0xFFD97706)),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Business Case is locked',
                   style: TextStyle(

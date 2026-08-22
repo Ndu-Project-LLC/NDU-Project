@@ -339,8 +339,8 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                       ),
                     ],
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Finalize Project',
                     ),
                   ),
@@ -407,9 +407,9 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
             color: Color(0x0A000000),
             blurRadius: 8,
@@ -482,9 +482,9 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  OutlinedButton.icon(
  onPressed: () async {
  final rows = await showCsvImportDialog(context, tableTitle: 'Snapshot', columns: [
- CsvColumnSpec(key: 'title', label: 'Metric', sampleValue: 'Delivery Package'),
- CsvColumnSpec(key: 'subtitle', label: 'Description', sampleValue: 'Final artifacts and deployment notes'),
- CsvColumnSpec(key: 'value', label: 'Status', sampleValue: 'Ready'),
+ const CsvColumnSpec(key: 'title', label: 'Metric', sampleValue: 'Delivery Package'),
+ const CsvColumnSpec(key: 'subtitle', label: 'Description', sampleValue: 'Final artifacts and deployment notes'),
+ const CsvColumnSpec(key: 'value', label: 'Status', sampleValue: 'Ready'),
  ]);
  if (rows == null || !mounted) return;
  setState(() {
@@ -571,7 +571,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  onChanged: (v) => _updateSnapshotMetric(metric.copyWith(title: v)),
  )
  : Row(children: [
- Container(width: 4, height: 32, decoration: BoxDecoration(color: metric.accent.withOpacity(0.8), borderRadius: BorderRadius.circular(2))),
+ Container(width: 4, height: 32, decoration: BoxDecoration(color: metric.accent.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(2))),
  const SizedBox(width: 12),
  ConstrainedBox(constraints: const BoxConstraints(maxWidth: 200), child: Text(metric.title.isEmpty ? 'Untitled' : metric.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF111827)), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis)),
  ]),
@@ -589,8 +589,8 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  decoration: _inputDecoration('Status'),
  onChanged: (v) => _updateSnapshotMetric(metric.copyWith(value: v)),
  )
- : Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: (metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)).withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: (metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)).withOpacity(0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(metric.value.isEmpty ? Icons.radio_button_unchecked : Icons.check_circle, size: 12, color: metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)), const SizedBox(width: 4), Text(metric.value.isEmpty ? 'Not set' : metric.value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)))]))),
- DataCell(Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withOpacity(0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(hasData ? Icons.lock : Icons.lock_outline, size: 12, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)), const SizedBox(width: 4), Text(hasData ? 'Saved' : 'Empty', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)))]))),
+ : Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: (metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: (metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)).withValues(alpha: 0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(metric.value.isEmpty ? Icons.radio_button_unchecked : Icons.check_circle, size: 12, color: metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)), const SizedBox(width: 4), Text(metric.value.isEmpty ? 'Not set' : metric.value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)))]))),
+ DataCell(Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withValues(alpha: 0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(hasData ? Icons.lock : Icons.lock_outline, size: 12, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)), const SizedBox(width: 4), Text(hasData ? 'Saved' : 'Empty', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)))]))),
  if (true) DataCell(Row(
  mainAxisSize: MainAxisSize.min,
  children: [
@@ -629,9 +629,9 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Color(0xFFFAFAFA),
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-          border: Border.all(color: Color(0xFFE5E7EB), width: 1),
+          color: const Color(0xFFFAFAFA),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
         ),
         child: Row(
           children: [
@@ -648,11 +648,11 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
               ),
             ),
             const SizedBox(width: 14),
-            Expanded(
+            const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'No data entered',
                     style: TextStyle(
                       fontSize: 14,
@@ -660,10 +660,10 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                       color: Color(0xFF9CA3AF),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     'Click Edit to add this metric',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       color: Color(0xFF9CA3AF),
                     ),
@@ -674,22 +674,22 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: Color(0xFFEFEFEF),
-                borderRadius: BorderRadius.all(Radius.circular(20)),
-                border: Border.all(color: Color(0xFFE5E7EB)),
+                color: const Color(0xFFEFEFEF),
+                borderRadius: const BorderRadius.all(Radius.circular(20)),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.lock_outline,
                     size: 12,
                     color: Color(0xFF9CA3AF),
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   Text(
                     'Empty',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF9CA3AF),
@@ -796,16 +796,16 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                 color: const Color(0xFF16A34A).withValues(alpha: 0.2),
               ),
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.lock_rounded,
                   size: 11,
                   color: Color(0xFF16A34A),
                 ),
-                const SizedBox(width: 4),
-                const Text(
+                SizedBox(width: 4),
+                Text(
                   'Saved',
                   style: TextStyle(
                     fontSize: 11,
@@ -914,19 +914,19 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                   final rows = await showCsvImportDialog(context,
                       tableTitle: 'Checklist',
                       columns: [
-                        CsvColumnSpec(
+                        const CsvColumnSpec(
                             key: 'title',
                             label: 'Checklist Item',
                             sampleValue: 'Final deployment review'),
-                        CsvColumnSpec(
+                        const CsvColumnSpec(
                             key: 'owner',
                             label: 'Owner',
                             sampleValue: 'Project Manager'),
-                        CsvColumnSpec(
+                        const CsvColumnSpec(
                             key: 'dueDate',
                             label: 'Due Date',
                             sampleValue: '2026-07-15'),
-                        CsvColumnSpec(
+                        const CsvColumnSpec(
                             key: 'status',
                             label: 'Status',
                             sampleValue: 'Pending',
@@ -1034,7 +1034,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
           Expanded(
             flex: 2,
             child: DropdownButtonFormField<String>(
-              value: item.status,
+              initialValue: item.status,
               decoration: _inputDecoration('Status', dense: true),
               items: _checklistStatuses
                   .map((status) =>
@@ -1135,7 +1135,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
           Expanded(
             flex: 2,
             child: DropdownButtonFormField<String>(
-              value: item.status,
+              initialValue: item.status,
               decoration: _inputDecoration('Status', dense: true),
               items: _signOffStatuses
                   .map((status) =>
@@ -1249,9 +1249,9 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
       padding: const EdgeInsets.all(0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.all(Radius.circular(20)),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0A000000), blurRadius: 16, offset: Offset(0, 8)),
         ],
@@ -1292,11 +1292,11 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                   ),
                 ),
                 const SizedBox(width: 14),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Finalize Decision Log',
                         style: TextStyle(
                           fontSize: 16,
@@ -1305,8 +1305,8 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                           letterSpacing: -0.3,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      const Text(
+                      SizedBox(height: 2),
+                      Text(
                         'Capture the final decision summary and next-step actions.',
                         style: TextStyle(
                           fontSize: 12,
@@ -1335,16 +1335,16 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                       color: const Color(0xFF6EE7B7).withValues(alpha: 0.5),
                     ),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.edit_outlined,
                         size: 12,
-                        color: const Color(0xFF059669),
+                        color: Color(0xFF059669),
                       ),
-                      const SizedBox(width: 6),
-                      const Text(
+                      SizedBox(width: 6),
+                      Text(
                         'Editable \u00B7 Auto-saves',
                         style: TextStyle(
                           fontSize: 11,
@@ -1504,9 +1504,9 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.all(Radius.circular(14)),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            color: const Color(0xFFF8FAFC),
+            borderRadius: const BorderRadius.all(Radius.circular(14)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: VoiceTextField(
             controller: controller,
@@ -1520,8 +1520,8 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
             ),
             decoration: InputDecoration(
               hintText: hintText,
-              hintStyle: TextStyle(
-                color: const Color(0xFF9CA3AF),
+              hintStyle: const TextStyle(
+                color: Color(0xFF9CA3AF),
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
                 fontStyle: FontStyle.italic,
@@ -1538,10 +1538,10 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
           alignment: Alignment.centerRight,
           child: Text(
             '${controller.text.length} characters',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF9CA3AF),
+              color: Color(0xFF9CA3AF),
             ),
           ),
         ),
@@ -1706,8 +1706,8 @@ class _CurrentUserProfileChip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.all(Radius.circular(999)),
-              border: Border.all(color: Color(0xFFE5E7EB)),
+              borderRadius: const BorderRadius.all(Radius.circular(999)),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1869,16 +1869,16 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
                             child: VoiceTextFormField(
                               key: ValueKey('insight-title-${widget.item.id}'),
                               initialValue: widget.item.title,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 hintText: 'Insight title',
                                 hintStyle: TextStyle(
-                                  color: const Color(0xFF9CA3AF),
+                                  color: Color(0xFF9CA3AF),
                                   fontWeight: FontWeight.w500,
                                 ),
                                 border: InputBorder.none,
                                 isDense: true,
                                 contentPadding:
-                                    const EdgeInsets.symmetric(vertical: 6),
+                                    EdgeInsets.symmetric(vertical: 6),
                               ),
                               style: TextStyle(
                                 fontSize: 15,
@@ -1956,11 +1956,11 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
                         child: VoiceTextFormField(
                           key: ValueKey('insight-detail-${widget.item.id}'),
                           initialValue: widget.item.detail,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             hintText:
                                 'Describe the risk, coverage need, or warranty detail…',
                             hintStyle: TextStyle(
-                              color: const Color(0xFF9CA3AF),
+                              color: Color(0xFF9CA3AF),
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -1985,14 +1985,14 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
                       Row(
                         children: [
                           // Character / word count
-                          Icon(Icons.text_fields_rounded,
-                              size: 12, color: const Color(0xFF9CA3AF)),
+                          const Icon(Icons.text_fields_rounded,
+                              size: 12, color: Color(0xFF9CA3AF)),
                           const SizedBox(width: 4),
                           Text(
                             '${widget.item.detail.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length} words',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
-                              color: const Color(0xFF9CA3AF),
+                              color: Color(0xFF9CA3AF),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -2070,9 +2070,9 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
             color: Color(0x0A000000),
             blurRadius: 12,
@@ -2090,7 +2090,7 @@ class _SectionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Color(0xFFF0FDF4),
+                    color: const Color(0xFFF0FDF4),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, size: 18, color: const Color(0xFF059669)),
@@ -2141,9 +2141,9 @@ class _InlineEmptyState extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        color: const Color(0xFFF9FAFB),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [

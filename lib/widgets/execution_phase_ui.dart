@@ -47,7 +47,7 @@ class ExecutionActionBar extends StatelessWidget {
 
   Widget _buildAction(BuildContext context, ExecutionActionItem action) {
     final bool disabled = action.onPressed == null || action.isLoading;
-    final Color aiColor = const Color(0xFF5B5BD6);
+    const Color aiColor = Color(0xFF5B5BD6);
 
     switch (action.tone) {
       case ExecutionActionTone.primary:
@@ -186,7 +186,7 @@ class ExecutionPageHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -201,7 +201,7 @@ class ExecutionPageHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Color(0xFFFEF3C7),
+              color: const Color(0xFFFEF3C7),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -329,7 +329,7 @@ class ExecutionMetricsGrid extends StatelessWidget {
       builder: (context, constraints) {
         final double width = constraints.maxWidth;
         final int count = metrics.length;
-        final double spacing = 12;
+        const double spacing = 12;
 
         // Wide screens: single row with equal-width Expanded cards
         if (width >= 900) {
@@ -425,7 +425,7 @@ class ExecutionMetricCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -754,9 +754,9 @@ class ExecutionEmptyState extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         children: [
@@ -765,7 +765,7 @@ class ExecutionEmptyState extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Color(0xFFE2E8F0)),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Icon(icon, size: 26, color: const Color(0xFF64748B)),
           ),
@@ -1001,7 +1001,7 @@ class _ExecutionEditorSurface extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Color(0xFFF8FAFC),
+                      color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(icon, size: 20, color: const Color(0xFF334155)),

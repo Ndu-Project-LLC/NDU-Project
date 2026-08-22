@@ -890,16 +890,16 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  // ── Tab 4: Recognition ───────────────────────────────────────────────
  Widget _buildRecognitionTab() {
  if (_isBasicPlan) {
- return Center(
+ return const Center(
  child: Padding(
- padding: const EdgeInsets.all(48),
+ padding: EdgeInsets.all(48),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(Icons.lock_outline,
+ Icon(Icons.lock_outline,
  size: 48, color: Color(0xFF9CA3AF)),
- const SizedBox(height: 16),
- const Text(
+ SizedBox(height: 16),
+ Text(
  'Team member recognition is not available on the Basic plan.',
  style: TextStyle(
  fontSize: 15,
@@ -908,8 +908,8 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  ),
  textAlign: TextAlign.center,
  ),
- const SizedBox(height: 8),
- const Text(
+ SizedBox(height: 8),
+ Text(
  'Upgrade to a Standard plan to define a recognition process for your project team.',
  style: TextStyle(
  fontSize: 13, color: Color(0xFF9CA3AF)),
@@ -1116,7 +1116,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  mainAxisSize: MainAxisSize.min,
  children: [
  DropdownButtonFormField<String>(
- value: members.isNotEmpty ? members.first.role : '',
+ initialValue: members.isNotEmpty ? members.first.role : '',
  decoration: const InputDecoration(
  labelText: 'Role',
  border: OutlineInputBorder(),
@@ -1196,7 +1196,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  mainAxisSize: MainAxisSize.min,
  children: [
  DropdownButtonFormField<TeamMember>(
- value: member,
+ initialValue: member,
  decoration: const InputDecoration(
  labelText: 'Outgoing team member',
  border: OutlineInputBorder()),
@@ -1990,8 +1990,7 @@ class _EditableTextBlock extends StatefulWidget {
  required this.hint,
  required this.onChanged,
  this.aiSectionLabel,
- this.enableAi = true,
- });
+ }) : enableAi = true;
 
  final String initialText;
  final String hint;

@@ -10,7 +10,6 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 
 class StartUpPlanningScreen extends StatefulWidget {
  const StartUpPlanningScreen({super.key});

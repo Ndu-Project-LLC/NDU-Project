@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 
 class PartnerScreen extends StatelessWidget {

@@ -557,17 +557,17 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
                     size: 20, color: Color(0xFFD97706)),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Team Mobilization',
+                    Text('Team Mobilization',
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF111827))),
-                    const SizedBox(height: 2),
-                    const Text(
+                    SizedBox(height: 2),
+                    Text(
                       'Per-member onboarding checklists from the Team Management '
                       'plan. Complete all items to mobilize each member for Execution.',
                       style: TextStyle(
@@ -819,18 +819,18 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Color(0xFFFFF8E1),
+                color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.groups_rounded,
                   size: 22, color: Color(0xFF4338CA)),
             ),
             const SizedBox(width: 14),
-            Expanded(
+            const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Staff Plan',
                     style: TextStyle(
                       fontSize: 22,
@@ -838,10 +838,10 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
                       color: Color(0xFF111827),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     "Strategize your project's human capital requirements. Identify core roles, determine resource allocation, and align staffing costs with your project's execution timeline.",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: Color(0xFF6B7280),
@@ -863,8 +863,8 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0A000000), blurRadius: 16, offset: Offset(0, 8)),
         ],

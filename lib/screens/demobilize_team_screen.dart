@@ -1107,7 +1107,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Team Ramp-Down Roster'),
@@ -1115,14 +1115,14 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
             if (_teamRoster.isEmpty)
               pw.Text('No team members.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1143,14 +1143,14 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
             if (_knowledgeTransfers.isEmpty)
               pw.Text('No knowledge transfers.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1172,14 +1172,14 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
             if (_vendorOffboarding.isEmpty)
               pw.Text('No vendor offboarding items.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1200,14 +1200,14 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
             if (_communications.isEmpty)
               pw.Text('No communications.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1236,7 +1236,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
               _debriefNotes.notes.trim().isEmpty
                   ? 'No debrief notes recorded.'
                   : _debriefNotes.notes.trim(),
-              style: pw.TextStyle(fontSize: 9),
+              style: const pw.TextStyle(fontSize: 9),
             ),
           ],
         ),

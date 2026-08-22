@@ -2459,10 +2459,7 @@ class _ContractDateField extends StatelessWidget {
 
 class _ContractHeader extends StatelessWidget {  const _ContractHeader({
     required this.title,
-    this.onBack,
-    this.onForward,
-    this.onCreateContract,
-  });
+  }) : onBack = null : onForward = null : onCreateContract = null;
 
  final String title;
  final VoidCallback? onBack;
@@ -2853,10 +2850,7 @@ class _CollapsibleAiTextCard extends StatefulWidget {  const _CollapsibleAiTextC
     required this.sectionLabel,
     required this.hintText,
     this.subtitle,
-    this.minLines = 3,
-    this.maxLines = 8,
-    this.initiallyExpanded = false,
-  });
+  }) : minLines = 3 : maxLines = 8 : initiallyExpanded = false;
 
  final String title;
  final String? subtitle;
@@ -6337,7 +6331,7 @@ class _ContractStatusOverview extends StatelessWidget {
  width: timelineWidth,
  child: _ContractStatusTimelineCard(
  months: months, rows: rows, progress: progress)),
- SizedBox(width: spacing),
+ const SizedBox(width: spacing),
  SizedBox(
  width: rightColumnWidth,
  child: Column(

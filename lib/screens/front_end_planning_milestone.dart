@@ -1776,11 +1776,10 @@ Consider typical project timelines and ensure end date is after start date.''';
                                                          m.dueDate.toLowerCase().contains(query.trim().toLowerCase()) ||
                                                          m.comments.toLowerCase().contains(query.trim().toLowerCase()))
                                          .toList();
-                         return FullScreenTableWrapper(
-                                 title: 'Milestones',
-                                 child: _buildMilestonesTableContent(filtered),
-                                 tableBuilder: (fsCtx) => _buildMilestonesTableContent(filtered),
-                         );
+                        return FullScreenTableWrapper(
+                                child: _buildMilestonesTableContent(filtered),
+                                tableBuilder: (fsCtx) => _buildMilestonesTableContent(filtered),
+                        );
                  },
                  cardBuilder: (ctx, query) {
                          final filtered = _milestones
@@ -1862,13 +1861,13 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  defaultVerticalAlignment: TableCellVerticalAlignment.top,
  columnWidths: {
- 0: FixedColumnWidth(col0),
+ 0: const FixedColumnWidth(col0),
  1: FixedColumnWidth(col1),
  2: FixedColumnWidth(col2),
  3: FixedColumnWidth(col3),
  4: FixedColumnWidth(col4Adjusted),
  5: FixedColumnWidth(col5),
- 6: FixedColumnWidth(col6),
+ 6: const FixedColumnWidth(col6),
  },
  children: [
  TableRow(

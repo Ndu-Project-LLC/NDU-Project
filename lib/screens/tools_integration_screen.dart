@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/models/user_role.dart';
 import 'package:ndu_project/providers/user_role_provider.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/activity_log_service.dart';
 import 'package:ndu_project/services/integration_oauth_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';

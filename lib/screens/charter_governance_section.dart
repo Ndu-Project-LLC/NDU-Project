@@ -274,10 +274,10 @@ class CharterStakeholdersShort extends StatelessWidget {
  padding:
  const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
  decoration: BoxDecoration(
- color: Color(0xFFFFF8E1),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(4)),
  child: Text(i['role']!,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 10, color: Color(0xFFB8860B))),
  )
  ],
@@ -326,8 +326,8 @@ class CharterStakeholdersShort extends StatelessWidget {
  label: Text(s,
  style: const TextStyle(
  fontSize: 11, fontWeight: FontWeight.w500)),
- backgroundColor: Color(0xFFFFF8E1),
- labelStyle: TextStyle(color: Color(0xFF92400E)),
+ backgroundColor: const Color(0xFFFFF8E1),
+ labelStyle: const TextStyle(color: Color(0xFF92400E)),
  padding: EdgeInsets.zero,
  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
  visualDensity: VisualDensity.compact,
@@ -731,7 +731,7 @@ class _CharterApprovalsState extends State<CharterApprovals> {
  padding:
  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
- color: Color(0xFFD97706),
+ color: const Color(0xFFD97706),
  borderRadius: BorderRadius.circular(4)),
  child: const Text('Click to Approve',
  style: TextStyle(

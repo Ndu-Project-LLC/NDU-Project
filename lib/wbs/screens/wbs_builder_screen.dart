@@ -220,10 +220,10 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
             Colors.white,
-            const Color(0xFFFFFCF5),
+            Color(0xFFFFFCF5),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -578,8 +578,8 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, const Color(0xFFFAFBFC)],
+            gradient: const LinearGradient(
+              colors: [Colors.white, Color(0xFFFAFBFC)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -873,8 +873,8 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [const Color(0xFFF8FAFC), const Color(0xFFF1F5F9)],
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -901,8 +901,8 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     return Container(
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, const Color(0xFFFFFCF5)],
+        gradient: const LinearGradient(
+          colors: [Colors.white, Color(0xFFFFFCF5)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),

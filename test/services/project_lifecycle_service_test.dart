@@ -50,7 +50,7 @@ void main() {
         PlanningDashboardItem(description: 'Install upgraded line'),
       );
     final now = DateTime(2026, 8, 12);
-    final workPackage = WBSNode(
+    const workPackage = WBSNode(
       id: 'wp-1',
       level: WBSLevel.level1,
       code: '1.1',
@@ -154,7 +154,7 @@ void main() {
       createdAt: now,
       updatedAt: now,
     );
-    final controls = ProjectControlsState(
+    const controls = ProjectControlsState(
       deliveryModel: DeliveryModel.waterfall,
       isBaselined: true,
       isExecutionActive: false,

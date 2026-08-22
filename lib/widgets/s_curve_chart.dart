@@ -27,9 +27,9 @@ class SCurveChart extends StatelessWidget {
         height: height,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Color(0xFFF9FAFB),
+          color: const Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: const Center(
           child: Text(
@@ -47,7 +47,7 @@ class SCurveChart extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

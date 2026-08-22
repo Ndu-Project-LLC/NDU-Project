@@ -174,7 +174,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                     // and surfaced on the dashboard card via
                     // PortfolioModel.managerName / managerEmail.
                     DropdownButtonFormField<UserModel?>(
-                      value: selectedManager,
+                      initialValue: selectedManager,
                       decoration: InputDecoration(
                         labelText: 'Portfolio Manager (optional)',
                         hintText: availableUsers.isEmpty

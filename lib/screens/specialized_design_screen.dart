@@ -5,8 +5,6 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:ndu_project/screens/long_lead_equipment_ordering_screen.dart';
-import 'package:ndu_project/screens/technical_development_screen.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';

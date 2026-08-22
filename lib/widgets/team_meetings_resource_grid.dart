@@ -441,7 +441,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -526,15 +526,15 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.all(32),
+    return const Padding(
+      padding: EdgeInsets.all(32),
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.event_note_outlined,
+            Icon(Icons.event_note_outlined,
                 color: Color(0xFF9CA3AF), size: 32),
-            const SizedBox(height: 12),
-            const Text(
+            SizedBox(height: 12),
+            Text(
               'No meetings scheduled yet. Add details to get started.',
               style: TextStyle(
                 fontSize: 13,
@@ -560,7 +560,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
               bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
             ),
           ),
-          child: Row(
+          child: const Row(
             children: [
               _TableHeaderCell('Meeting Type', flex: 2),
               _TableHeaderCell('Frequency', flex: 2),
@@ -615,7 +615,7 @@ class _SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -770,7 +770,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                   children: [
                     // Meeting Type
                     DropdownButtonFormField<String>(
-                      value: selectedMeetingType.isEmpty
+                      initialValue: selectedMeetingType.isEmpty
                           ? null
                           : selectedMeetingType,
                       decoration: const InputDecoration(
@@ -803,7 +803,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                     const SizedBox(height: 12),
                     // Frequency
                     DropdownButtonFormField<String>(
-                      value:
+                      initialValue:
                           selectedFrequency.isEmpty ? null : selectedFrequency,
                       decoration: const InputDecoration(
                         labelText: 'Frequency *',
@@ -837,7 +837,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Color(0xFFE5E7EB)),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -929,7 +929,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                     const SizedBox(height: 12),
                     // Status
                     DropdownButtonFormField<String>(
-                      value: selectedStatus.isEmpty ? null : selectedStatus,
+                      initialValue: selectedStatus.isEmpty ? null : selectedStatus,
                       decoration: const InputDecoration(
                         labelText: 'Status',
                         isDense: true,
@@ -1368,7 +1368,7 @@ class _MultiSelectCell extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(

@@ -724,12 +724,12 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
                 fillColor: Colors.white,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide:
-                      BorderSide(color: Color(0xFFFFD700), width: 1.6),
+                      const BorderSide(color: Color(0xFFFFD700), width: 1.6),
                 ),
                 suffixIcon: null,
               ),
@@ -759,12 +759,12 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
         ],
         if (_aiEnabled && _isBasicPlanProject && _aiLimitReached) ...[
           const SizedBox(height: 10),
-          _AiLimitBanner(
+          const _AiLimitBanner(
             message:
                 'AI suggestions are not available for this section on the Basic plan.',
-            background: const Color(0xFFF3F4F6),
-            border: const Color(0xFFE5E7EB),
-            textColor: const Color(0xFF6B7280),
+            background: Color(0xFFF3F4F6),
+            border: Color(0xFFE5E7EB),
+            textColor: Color(0xFF6B7280),
           ),
         ] else if (_aiEnabled && _showLastChanceNote) ...[
           const SizedBox(height: 10),
@@ -781,9 +781,9 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
-              color: Color(0xFFFEF2F2),
+              color: const Color(0xFFFEF2F2),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Color(0xFFFCA5A5)),
+              border: Border.all(color: const Color(0xFFFCA5A5)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -943,7 +943,6 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
 
 class _AiLimitBanner extends StatelessWidget {
   const _AiLimitBanner({
-    super.key,
     required this.message,
     required this.background,
     required this.border,

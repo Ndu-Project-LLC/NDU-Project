@@ -488,7 +488,7 @@ class _MetricCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kCardBorder),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 6)),
         ],
@@ -522,7 +522,7 @@ class _SectionCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kCardBorder),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 6)),
         ],
@@ -584,7 +584,7 @@ class _WaveRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFC),
+        color: const Color(0xFFF9FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _kCardBorder),
       ),
@@ -881,7 +881,7 @@ class _MilestoneRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFC),
+        color: const Color(0xFFF9FAFC),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _kCardBorder),
       ),

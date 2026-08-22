@@ -259,7 +259,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
-                  color: Color(0xFFFFF8E1),
+                  color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: const Row(
@@ -620,7 +620,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: _kBorder),
+        side: const BorderSide(color: _kBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),

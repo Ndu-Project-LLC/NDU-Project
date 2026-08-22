@@ -645,7 +645,7 @@ class _InfrastructureTable extends StatelessWidget {
  6: FixedColumnWidth(110),
  7: FixedColumnWidth(110),
  },
- border: TableBorder(
+ border: const TableBorder(
  horizontalInside: border,
  verticalInside: border,
  top: border,
@@ -689,7 +689,7 @@ class _InfrastructureTable extends StatelessWidget {
  6: FixedColumnWidth(110),
  7: FixedColumnWidth(110),
  },
- border: TableBorder(
+ border: const TableBorder(
  horizontalInside: border,
  verticalInside: border,
  top: border,

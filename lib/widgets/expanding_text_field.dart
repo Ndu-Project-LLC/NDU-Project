@@ -268,7 +268,7 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
           child: SizedBox(
             width: 18,
             height: 18,
-            child: const CircularProgressIndicator(
+            child: CircularProgressIndicator(
                 strokeWidth: 2, color: iconColor),
           ),
         ),
@@ -584,7 +584,7 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
           child: SizedBox(
             width: 18,
             height: 18,
-            child: const CircularProgressIndicator(
+            child: CircularProgressIndicator(
                 strokeWidth: 2, color: iconColor),
           ),
         ),

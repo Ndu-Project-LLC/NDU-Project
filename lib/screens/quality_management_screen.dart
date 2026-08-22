@@ -800,34 +800,34 @@ class _TabContent extends StatelessWidget {
  Widget build(BuildContext context) {
  switch (selectedTab) {
  case _QualityTab.plan:
- return _QualityTabScaffold(
+ return const _QualityTabScaffold(
  tab: _QualityTab.plan,
- child: const _QualityPlanView(),
+ child: _QualityPlanView(),
  );
  case _QualityTab.targets:
- return _QualityTabScaffold(
+ return const _QualityTabScaffold(
  tab: _QualityTab.targets,
- child: const _ObjectivesView(),
+ child: _ObjectivesView(),
  );
  case _QualityTab.qaTracking:
- return _QualityTabScaffold(
+ return const _QualityTabScaffold(
  tab: _QualityTab.qaTracking,
- child: const _QaTrackingView(),
+ child: _QaTrackingView(),
  );
  case _QualityTab.qcTracking:
- return _QualityTabScaffold(
+ return const _QualityTabScaffold(
  tab: _QualityTab.qcTracking,
- child: const _QcTrackingView(),
+ child: _QcTrackingView(),
  );
  case _QualityTab.metrics:
- return _QualityTabScaffold(
+ return const _QualityTabScaffold(
  tab: _QualityTab.metrics,
- child: const _MetricsView(),
+ child: _MetricsView(),
  );
  case _QualityTab.register:
- return _QualityTabScaffold(
+ return const _QualityTabScaffold(
  tab: _QualityTab.register,
- child: const _QualityRegisterView(),
+ child: _QualityRegisterView(),
  );
  }
  }
@@ -3248,8 +3248,7 @@ class _PrimaryCard extends StatelessWidget {
  this.subtitle,
  required this.child,
  this.actions,
- this.showHeader = true,
- });
+ }) : showHeader = true;
 
  final IconData? icon;
  final Color? iconBackground;

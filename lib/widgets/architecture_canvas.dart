@@ -190,7 +190,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
   String? _hoveredNodeId;
   bool _showGrid = true;
   Offset? _connectionDragEnd;
-  bool _isPanning = false;
+  final bool _isPanning = false;
 
   @override
   void initState() {
@@ -621,8 +621,8 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Color(0xFFE4E7EC)),
-                    boxShadow: [
+                    border: Border.all(color: const Color(0xFFE4E7EC)),
+                    boxShadow: const [
                       BoxShadow(
                           color: Color(0x0A000000),
                           blurRadius: 8,
@@ -636,7 +636,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: Color(0xFFFFF8E1), // amber 50 — yellow theme
+                          color: const Color(0xFFFFF8E1), // amber 50 — yellow theme
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Icon(Icons.account_tree_outlined,
@@ -651,7 +651,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Color(0xFFFFF8E1), // amber 50
+                          color: const Color(0xFFFFF8E1), // amber 50
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text('${widget.nodes.length}',
@@ -671,8 +671,8 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Color(0xFFE4E7EC)),
-                    boxShadow: [
+                    border: Border.all(color: const Color(0xFFE4E7EC)),
+                    boxShadow: const [
                       BoxShadow(
                           color: Color(0x0A000000),
                           blurRadius: 8,

@@ -7,8 +7,6 @@ import 'package:ndu_project/models/deliverable_row.dart';
 import 'package:ndu_project/models/recurring_deliverable_row.dart';
 import 'package:ndu_project/models/status_report_row.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/contracts_tracking_screen.dart';
-import 'package:ndu_project/screens/team_meetings_screen.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';

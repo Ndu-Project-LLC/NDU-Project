@@ -283,7 +283,7 @@ class _TeamTrainingAndBuildingScreenState
  addLabel: 'Add Discipline Training',
  addIcon: Icons.school_outlined,
  activities: disciplineActivities,
- accent: Color(0xFFFFC812),
+ accent: const Color(0xFFFFC812),
  onAdd: () => _addActivity(
  context,
  title: 'New Training',
@@ -299,7 +299,7 @@ class _TeamTrainingAndBuildingScreenState
  addLabel: 'Add Team Building',
  addIcon: Icons.favorite_outline,
  activities: teamBuildingActivities,
- accent: Color(0xFFB8860B),
+ accent: const Color(0xFFB8860B),
  heart: true,
  onAdd: () => _addActivity(
  context,
@@ -789,9 +789,9 @@ class _TeamTrainingAndBuildingScreenState
  padding:
  const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
  decoration: BoxDecoration(
- color: Color(0xFFFFF8E1),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(8),
- border: Border.all(color: Color(0xFFFEF3C7)!),
+ border: Border.all(color: const Color(0xFFFEF3C7)),
  ),
  child: Row(
  children: [
@@ -804,7 +804,7 @@ class _TeamTrainingAndBuildingScreenState
  maxLines: 1,
  overflow: TextOverflow.ellipsis,
  style:
- TextStyle(color: Color(0xFF92400E), fontSize: 13),
+ const TextStyle(color: Color(0xFF92400E), fontSize: 13),
  ),
  ),
  if ((attachedFileUrl ?? '').trim().isNotEmpty)
@@ -2270,7 +2270,7 @@ class _UpcomingTrainingList extends StatelessWidget {
  const SizedBox(height: 8),
  Row(
  children: [
- Icon(Icons.insert_drive_file_outlined,
+ const Icon(Icons.insert_drive_file_outlined,
  size: 14, color: Color(0xFFB8860B)),
  const SizedBox(width: 6),
  Expanded(
@@ -2278,7 +2278,7 @@ class _UpcomingTrainingList extends StatelessWidget {
  activity.attachedFile!,
  maxLines: 1,
  overflow: TextOverflow.ellipsis,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 11,
  color: Color(0xFFB8860B),
  fontStyle: FontStyle.italic,

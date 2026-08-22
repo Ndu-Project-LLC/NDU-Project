@@ -374,7 +374,7 @@ class PcHeroBand extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             color: PcPalette.inkPrimary,
             fontSize: 26,
             fontWeight: FontWeight.w800,
@@ -386,7 +386,7 @@ class PcHeroBand extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           subtitle,
-          style: TextStyle(
+          style: const TextStyle(
             color: PcPalette.inkSecondary,
             fontSize: 13.5,
             fontWeight: FontWeight.w500,
@@ -447,7 +447,7 @@ class PcHeroBand extends StatelessWidget {
                     const SizedBox(width: 10),
                     Text(
                       action!.label,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
@@ -640,7 +640,7 @@ class _PcKpiCard extends StatelessWidget {
                     const SizedBox(height: 14),
                     Text(
                       spec.label.toUpperCase(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkMuted,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -655,7 +655,7 @@ class _PcKpiCard extends StatelessWidget {
                         Flexible(
                           child: Text(
                             spec.value,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: PcPalette.inkPrimary,
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
@@ -710,7 +710,7 @@ class _PcKpiCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       spec.sub,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkSecondary,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -779,7 +779,7 @@ class PcSectionCard extends StatelessWidget {
           children: [
             // Header row with accent rail
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 border: Border(
                   bottom: BorderSide(color: PcPalette.borderSubtle),
                 ),
@@ -806,7 +806,7 @@ class PcSectionCard extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: PcPalette.inkPrimary,
                             fontSize: 14.5,
                             fontWeight: FontWeight.w700,
@@ -818,7 +818,7 @@ class PcSectionCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             subtitle!,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: PcPalette.inkSecondary,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -960,7 +960,7 @@ class PcEmptyState extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               color: PcPalette.inkPrimary,
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -973,7 +973,7 @@ class PcEmptyState extends StatelessWidget {
             child: Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.inkSecondary,
                 fontSize: 12.5,
                 fontWeight: FontWeight.w500,

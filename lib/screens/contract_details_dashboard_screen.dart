@@ -660,7 +660,7 @@ class _ContractRowTile extends StatelessWidget {
 
  const actions = Wrap(
  spacing: 10,
- children: const [
+ children: [
  _RoundIcon(icon: Icons.remove_red_eye_outlined),
  _RoundIcon(icon: Icons.edit_outlined),
  ],
@@ -695,7 +695,7 @@ class _ContractRowTile extends StatelessWidget {
  Expanded(flex: 2, child: progressBar),
  Expanded(
  child: Text(row.value, style: theme.textTheme.bodyMedium)),
- SizedBox(width: 120, child: Center(child: actions)),
+ const SizedBox(width: 120, child: Center(child: actions)),
  ],
  );
 

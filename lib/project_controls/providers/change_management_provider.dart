@@ -265,12 +265,12 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   void rejectCR(String crId, {String? reason}) {
-    final _crForUpdate = _changeRequests.firstOrNull((c) => c.id == crId);
-    if (_crForUpdate == null) {
+    final crForUpdate = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (crForUpdate == null) {
       debugPrint('rejectCR: CR not found: $crId');
       return;
     }
-    _updateCR(crId, _crForUpdate.copyWith(
+    _updateCR(crId, crForUpdate.copyWith(
       status: CMStatus.rejected,
     ));
     _addAudit('CR Rejected', reason ?? 'No reason provided', crId);
@@ -278,12 +278,12 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   void returnForRevision(String crId, {String? comments}) {
-    final _crForReturn = _changeRequests.firstOrNull((c) => c.id == crId);
-    if (_crForReturn == null) {
+    final crForReturn = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (crForReturn == null) {
       debugPrint('returnForRevision: CR not found: $crId');
       return;
     }
-    _updateCR(crId, _crForReturn.copyWith(
+    _updateCR(crId, crForReturn.copyWith(
       status: CMStatus.returned,
     ));
     _addAudit('CR Returned', comments ?? 'Returned for revision', crId);
@@ -591,9 +591,9 @@ class ChangeManagementProvider extends ChangeNotifier {
     final allDone = updatedTasks.isNotEmpty &&
         updatedTasks.every((t) => t.status == ImplementationStatus.done);
     if (allDone && cr.status == CMStatus.approved) {
-      final _crForImpl = _changeRequests.firstOrNull((c) => c.id == crId);
-      if (_crForImpl != null) {
-        _updateCR(crId, _crForImpl.copyWith(
+      final crForImpl = _changeRequests.firstOrNull((c) => c.id == crId);
+      if (crForImpl != null) {
+        _updateCR(crId, crForImpl.copyWith(
           status: CMStatus.implemented,
           implementedAt: DateTime.now(),
         ));

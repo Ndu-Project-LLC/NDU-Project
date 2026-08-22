@@ -238,7 +238,6 @@ import 'package:ndu_project/services/access_policy.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/subscription_service.dart';
 import 'package:ndu_project/services/activity_auto_logger.dart';
-import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/pricing/mobile_pricing_screen.dart';
 import 'package:ndu_project/routing/shimmer_page_transition.dart';

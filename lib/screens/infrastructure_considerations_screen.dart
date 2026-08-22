@@ -20,7 +20,6 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 // Removed AppLogo from the top header for this screen per request
 import 'package:ndu_project/screens/core_stakeholders_screen.dart';
 import 'package:ndu_project/screens/initiation_phase_screen.dart';
-import 'package:ndu_project/screens/potential_solutions_screen.dart';
 import 'package:ndu_project/screens/risk_identification_screen.dart';
 import 'package:ndu_project/screens/it_considerations_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
@@ -32,7 +31,6 @@ import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/services/access_policy.dart';
 import 'package:ndu_project/widgets/page_hint_dialog.dart';
 import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';

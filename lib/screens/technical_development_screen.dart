@@ -688,7 +688,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle: 'Track build workstreams, ownership, and sprint progress',
  trailing: CsvEnabledSectionHeader(
  tableTitle: 'Workstream Register',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'title', label: 'Workstream', required: true),
  CsvColumnSpec(key: 'subtitle', label: 'Description'),
  CsvColumnSpec(key: 'status', label: 'Status', allowedValues: _workstreamStatusOptions),
@@ -849,7 +849,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Track deliverables across software modules, fabrication packages, and site build items',
  trailing: CsvEnabledSectionHeader(
  tableTitle: 'Component Build Register',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'name', label: 'Component', required: true),
  CsvColumnSpec(key: 'owner', label: 'Owner'),
  CsvColumnSpec(key: 'status', label: 'Status', allowedValues: _buildStatusOptions),
@@ -965,7 +965,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Live connection checks between build components, services, and physical systems',
  trailing: CsvEnabledSectionHeader(
  tableTitle: 'Integration Register',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'label', label: 'Interface', required: true),
  CsvColumnSpec(key: 'description', label: 'Description'),
  CsvColumnSpec(key: 'status', label: 'Status', allowedValues: _integrationStatusOptions),
@@ -1075,7 +1075,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Current build blockers, production exceptions, and technical rework items',
  trailing: CsvEnabledSectionHeader(
  tableTitle: 'Defect & Issue Register',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'title', label: 'Issue', required: true),
  CsvColumnSpec(key: 'severity', label: 'Severity', allowedValues: _severityOptions),
  CsvColumnSpec(key: 'detail', label: 'Detail/Description'),

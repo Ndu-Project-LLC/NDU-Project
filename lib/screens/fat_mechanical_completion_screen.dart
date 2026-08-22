@@ -390,9 +390,9 @@ class _FatMechanicalCompletionScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFFFFFBEB),
+        color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFFCD34D)),
+        border: Border.all(color: const Color(0xFFFCD34D)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -435,7 +435,7 @@ class _FatMechanicalCompletionScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -513,9 +513,9 @@ class _StatusDropdown extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(

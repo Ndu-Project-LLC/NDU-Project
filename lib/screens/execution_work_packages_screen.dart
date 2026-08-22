@@ -727,9 +727,9 @@ class _ExecutionWorkPackagesScreenState
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Color(0xFFFFFBEB),
+          color: const Color(0xFFFFFBEB),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Color(0xFFFDE68A)),
+          border: Border.all(color: const Color(0xFFFDE68A)),
         ),
         child: Row(
           children: [
@@ -1030,7 +1030,7 @@ class _ExecutionWorkPackagesScreenState
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Color(0xFFF3F4F6),
+        color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -1108,15 +1108,15 @@ class _ExecutionWorkPackagesScreenState
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppSemanticColors.border),
+                  borderSide: const BorderSide(color: AppSemanticColors.border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppSemanticColors.border),
+                  borderSide: const BorderSide(color: AppSemanticColors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Color(0xFFF59E0B), width: 1.5),
+                  borderSide: const BorderSide(color: Color(0xFFF59E0B), width: 1.5),
                 ),
               ),
             ),
@@ -1124,7 +1124,7 @@ class _ExecutionWorkPackagesScreenState
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB),
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: AppSemanticColors.border),
             ),
@@ -1186,7 +1186,7 @@ class _ExecutionWorkPackagesScreenState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: Color(0xFFF3F4F6),
+          color: const Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppSemanticColors.border),
         ),
@@ -1294,9 +1294,9 @@ class _ExecutionWorkPackagesScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 5, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Color(0xFFFFF7ED),
+                        color: const Color(0xFFFFF7ED),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: Color(0xFFF97316)),
+                        border: Border.all(color: const Color(0xFFF97316)),
                       ),
                       child: Text(
                         '${warnings.length}',

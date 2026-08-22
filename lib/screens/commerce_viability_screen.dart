@@ -1116,7 +1116,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             pw.Text(
                 '$projectName — Generated ${now.toLocal().toIso8601String()}',
                 style:
-                    pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                    const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
             pw.SizedBox(height: 16),
 
             // Financial Metrics
@@ -1132,7 +1132,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1152,7 +1152,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1173,7 +1173,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1193,7 +1193,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1232,7 +1232,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
   pw.Widget _pdfCell(String text) {
     return pw.Padding(
         padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(text, style: pw.TextStyle(fontSize: 9)));
+        child: pw.Text(text, style: const pw.TextStyle(fontSize: 9)));
   }
 
   String _s(dynamic v) => (v ?? '').toString().trim();

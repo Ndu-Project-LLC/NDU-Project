@@ -2105,8 +2105,8 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
   }
   return FullScreenTableWrapper(
    title: 'Project Activities Log',
-   child: buildTable(bc),
    tableBuilder: buildTable,
+   child: buildTable(bc),
   );
  });
  }

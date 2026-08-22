@@ -193,7 +193,7 @@ class ScopeTrackingTableWidget extends StatelessWidget {
             top: BorderSide(color: dividerColor, width: 0.8),
             bottom: BorderSide(color: dividerColor, width: 0.8),
             horizontalInside:
-                BorderSide(color: dividerColor.withOpacity(0.6), width: 0.6),
+                BorderSide(color: dividerColor.withValues(alpha: 0.6), width: 0.6),
           ),
           children: [headerRow, ...dataRows],
         );
@@ -235,7 +235,7 @@ class ScopeTrackingTableWidget extends StatelessWidget {
             border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -649,7 +649,7 @@ class _StatusPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(

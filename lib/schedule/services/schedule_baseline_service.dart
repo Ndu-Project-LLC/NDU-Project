@@ -185,12 +185,12 @@ class ScheduleBaselineService {
       projectName: json['projectName'] as String? ?? '',
       basis: json['basis'] != null
           ? _basisFromJson(json['basis'] as Map<String, dynamic>)
-          : ScheduleBasis(
+          : const ScheduleBasis(
               deliveryModel: 'WATERFALL',
-              assumptions: const [],
-              constraints: const [],
-              milestones: const [],
-              interfaces: const [],
+              assumptions: [],
+              constraints: [],
+              milestones: [],
+              interfaces: [],
             ),
       activities: (json['activities'] as List<dynamic>? ?? [])
           .map((a) => _activityFromJson(a as Map<String, dynamic>))

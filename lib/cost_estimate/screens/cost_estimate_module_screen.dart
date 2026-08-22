@@ -338,7 +338,7 @@ class _CostDashboardTab extends StatelessWidget {
             LayoutBuilder(
               builder: (context, constraints) {
                 final wide = constraints.maxWidth >= 1100;
-                final gap = 14.0;
+                const gap = 14.0;
                 final cols = wide ? 4 : 2;
                 final rows = (4 / cols).ceil();
                 final tileW = (constraints.maxWidth - gap * (cols - 1)) / cols;
@@ -899,7 +899,7 @@ class _KpiTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   spec.label.toUpperCase(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.7,
@@ -917,19 +917,19 @@ class _KpiTile extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               spec.value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.6,
                 color: _CostDashboardTab._ink,
-                fontFeatures: const [FontFeature.tabularFigures()],
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             spec.sub,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11.5,
               color: _CostDashboardTab._mutedSoft,
               fontWeight: FontWeight.w500,
@@ -1031,7 +1031,7 @@ class _CostBreakdownCard extends StatelessWidget {
                         children: [
                           Text(
                             c.label,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w600,
                               color: _CostDashboardTab._inkSoft,
@@ -1040,11 +1040,11 @@ class _CostBreakdownCard extends StatelessWidget {
                           ),
                           Text(
                             '$currencySymbol${_CostDashboardTab._fmt(c.value)} · ${pct.toStringAsFixed(1)}%',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 10.5,
                               color: _CostDashboardTab._muted,
                               fontWeight: FontWeight.w500,
-                              fontFeatures: const [FontFeature.tabularFigures()],
+                              fontFeatures: [FontFeature.tabularFigures()],
                             ),
                           ),
                         ],
@@ -1101,7 +1101,7 @@ class _CompositionDonutCard extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    const Text(
                       'BASELINE',
                       style: TextStyle(
                         fontSize: 9.5,
@@ -1113,18 +1113,18 @@ class _CompositionDonutCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '$currencySymbol${_CostDashboardTab._fmt(total)}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.4,
                         color: _CostDashboardTab._ink,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                        fontFeatures: [FontFeature.tabularFigures()],
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${categories.length} active ${categories.length == 1 ? "category" : "categories"}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         color: _CostDashboardTab._mutedSoft,
                         fontWeight: FontWeight.w500,
@@ -1156,7 +1156,7 @@ class _CompositionDonutCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         c.label,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           color: _CostDashboardTab._inkSoft,
                           fontWeight: FontWeight.w500,
@@ -1166,11 +1166,11 @@ class _CompositionDonutCard extends StatelessWidget {
                     ),
                     Text(
                       '${pct.toStringAsFixed(1)}%',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: _CostDashboardTab._muted,
                         fontWeight: FontWeight.w700,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                        fontFeatures: [FontFeature.tabularFigures()],
                       ),
                     ),
                   ],
@@ -1228,7 +1228,7 @@ class _DonutPainter extends CustomPainter {
     // Each segment's sweep is proportional to its share of totalActive.
     // We start at -90deg (12 o'clock) and sweep clockwise.
     var startAngle = -math.pi / 2;
-    final gapRad = gapDegrees * math.pi / 180;
+    const gapRad = gapDegrees * math.pi / 180;
 
     for (final seg in activeSegments) {
       final sweep = (seg.value / totalActive) * 2 * math.pi;
@@ -1279,10 +1279,10 @@ class _CategoryDetailsCard extends StatelessWidget {
       child: Column(
         children: [
           // Header row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             child: Row(
-              children: const [
+              children: [
                 Expanded(flex: 5, child: _TableHeader('CATEGORY')),
                 Expanded(flex: 4, child: _TableHeader('SHARE', alignRight: true)),
                 Expanded(flex: 4, child: _TableHeader('VALUE', alignRight: true)),
@@ -1314,7 +1314,7 @@ class _TableHeader extends StatelessWidget {
     return Text(
       label,
       textAlign: alignRight ? TextAlign.right : TextAlign.left,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 9.5,
         fontWeight: FontWeight.w800,
         letterSpacing: 0.8,
@@ -1646,7 +1646,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             body,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12.5,
               color: _CostDashboardTab._muted,
               height: 1.55,
@@ -1783,7 +1783,7 @@ class _TotalsSpotlightBar extends StatelessWidget {
                             color: _CostDashboardTab._brand.withValues(alpha: 0.22),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Icon(Icons.account_balance_wallet_rounded,
+                          child: const Icon(Icons.account_balance_wallet_rounded,
                               size: 15, color: _CostDashboardTab._brand),
                         ),
                         const SizedBox(width: 9),
@@ -1804,12 +1804,12 @@ class _TotalsSpotlightBar extends StatelessWidget {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         '$currencySymbol${_CostDashboardTab._fmt(totalAuthorized)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.4,
                           color: _CostDashboardTab._brand,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                          fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
                     ),
@@ -1861,7 +1861,7 @@ class _SpotlightColumn extends StatelessWidget {
               Flexible(
                 child: Text(
                   label.toUpperCase(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.0,
@@ -1878,12 +1878,12 @@ class _SpotlightColumn extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.4,
                 color: _CostDashboardTab._ink,
-                fontFeatures: const [FontFeature.tabularFigures()],
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
           ),
@@ -1949,7 +1949,7 @@ class _SectionCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         subtitle!,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11.5,
                           color: _CostDashboardTab._muted,
                           fontWeight: FontWeight.w500,

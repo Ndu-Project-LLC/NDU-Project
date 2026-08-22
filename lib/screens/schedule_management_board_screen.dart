@@ -153,7 +153,7 @@ class _PageHeader extends StatelessWidget {
 
  const chips = Wrap(
  spacing: 12,
- children: const [
+ children: [
  _SoftBadge(icon: Icons.group_outlined, label: 'Teams'),
  _SoftBadge(icon: Icons.bar_chart_outlined, label: 'Analytics'),
  ],
@@ -800,14 +800,14 @@ class _BoardFooter extends StatelessWidget {
  ? Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _LegendList(items: legendItems),
+ const _LegendList(items: legendItems),
  const SizedBox(height: 24),
  buttons,
  ],
  )
  : Row(
  children: [
- Expanded(child: _LegendList(items: legendItems)),
+ const Expanded(child: _LegendList(items: legendItems)),
  const SizedBox(width: 24),
  buttons,
  ],

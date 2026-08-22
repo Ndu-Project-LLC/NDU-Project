@@ -205,7 +205,7 @@ class _SearchField extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: const VoiceTextField(
@@ -242,7 +242,7 @@ class _DropdownField extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: DropdownButtonHideUnderline(
@@ -373,7 +373,7 @@ class _ProcurementItemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -498,7 +498,7 @@ class _BadgePill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Color(0xFFF1F5F9),
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -589,7 +589,7 @@ class _TrackableItemsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -711,7 +711,7 @@ class _TrackableRow extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(0xFFF1F5F9),
+                color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -744,7 +744,7 @@ class _TrackingTimelineCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(

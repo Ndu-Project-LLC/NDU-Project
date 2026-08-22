@@ -293,7 +293,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           color: Colors.white,
-          border: Border.all(color: Colors.grey.withOpacity(0.12)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
           boxShadow: const [
             BoxShadow(
                 blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -308,7 +308,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.18),
+                    color: accent.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: accent, size: 22),
@@ -346,10 +346,10 @@ class _SettingsScreenState extends State<SettingsScreen>
             Switch(
               value: value,
               onChanged: onChanged,
-              activeColor: accent,
+              activeThumbColor: accent,
               trackColor: WidgetStateProperty.resolveWith((states) =>
                   states.contains(WidgetState.selected)
-                      ? accent.withOpacity(0.4)
+                      ? accent.withValues(alpha: 0.4)
                       : null),
             ),
           ],
@@ -376,7 +376,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             const SizedBox(width: 12),
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.withOpacity(0.25)),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -395,10 +395,10 @@ class _SettingsScreenState extends State<SettingsScreen>
       );
     }
 
-    Widget _buildDefaultCurrencyRow() {
+    Widget buildDefaultCurrencyRow() {
       final currencyService = CurrencyService.instance;
       final currentCode = currencyService.defaultCurrencyCode;
-      final currencies = CurrencyService.supportedCurrencies;
+      const currencies = CurrencyService.supportedCurrencies;
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
@@ -421,7 +421,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             const SizedBox(width: 12),
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.withOpacity(0.25)),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -485,7 +485,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: accent.withOpacity(0.18),
+                            color: accent.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text('Preferences',
@@ -493,7 +493,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                   color: accent, fontWeight: FontWeight.w700)),
                         ),
                         const SizedBox(width: 12),
-                        Icon(Icons.tune, color: accent, size: 20),
+                        const Icon(Icons.tune, color: accent, size: 20),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -504,7 +504,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     Text(
                         'Personalize appearance, notifications, and privacy settings to match your workflow.',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                            color: Colors.white.withOpacity(0.78),
+                            color: Colors.white.withValues(alpha: 0.78),
                             height: 1.45)),
                   ],
                 ),
@@ -619,7 +619,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                             }
                           }, icon: Icons.calendar_today),
                           const SizedBox(height: 8),
-                          _buildDefaultCurrencyRow(),
+                          buildDefaultCurrencyRow(),
                         ],
                       ),
                     ),
@@ -706,7 +706,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       }
                     }, icon: Icons.calendar_today),
                     const SizedBox(height: 8),
-                    _buildDefaultCurrencyRow(),
+                    buildDefaultCurrencyRow(),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -876,8 +876,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                           height: 20,
                           decoration: BoxDecoration(
                             color: _twoFactorEnabled
-                                ? Colors.green.withOpacity(0.18)
-                                : Colors.grey.withOpacity(0.12),
+                                ? Colors.green.withValues(alpha: 0.18)
+                                : Colors.grey.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Icon(
@@ -902,7 +902,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                 _twoFactorEnabled
                                     ? 'Your account is protected with email verification'
                                     : 'Add an extra layer of security to your account',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 13,
                                   color: Colors.black54,
                                 ),
@@ -920,11 +920,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                           Switch(
                             value: _twoFactorEnabled,
                             onChanged: _handleTwoFactorToggle,
-                            activeColor: accent,
+                            activeThumbColor: accent,
                             trackColor: WidgetStateProperty.resolveWith(
                                 (states) =>
                                     states.contains(WidgetState.selected)
-                                        ? accent.withOpacity(0.4)
+                                        ? accent.withValues(alpha: 0.4)
                                         : null),
                           ),
                       ],
@@ -948,8 +948,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                 title: 'About',
                 icon: Icons.info_outline,
                 children: [
-                  _PrefInfoRow(label: 'App version', value: '1.0.0'),
-                  _PrefInfoRow(label: 'Build', value: '2024.12'),
+                  const _PrefInfoRow(label: 'App version', value: '1.0.0'),
+                  const _PrefInfoRow(label: 'Build', value: '2024.12'),
                   const SizedBox(height: 8),
                   _PrefActionTile(
                     icon: Icons.description_outlined,
@@ -1129,7 +1129,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       ),
     ];
 
-    final actionItems = const <_ActionItemData>[
+    const actionItems = <_ActionItemData>[
       _ActionItemData(
         title: 'Finalize migration test plan for release 7.2',
         owner: 'Product Ops',
@@ -1243,7 +1243,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: accent.withOpacity(0.18),
+                color: accent.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text('Executive Summary',
@@ -1264,7 +1264,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         Text(
           'StackOne delivery is pacing ahead of target, with stakeholder sentiment at an all-time high.\nWe are on track for the Q4 milestone with strong compliance posture and predictable burn.',
           style: theme.textTheme.bodyLarge
-              ?.copyWith(color: Colors.white.withOpacity(0.78), height: 1.45),
+              ?.copyWith(color: Colors.white.withValues(alpha: 0.78), height: 1.45),
         ),
         const SizedBox(height: 18),
         Wrap(
@@ -1280,8 +1280,8 @@ class _SettingsScreenState extends State<SettingsScreen>
     final highlightCard = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        color: Colors.white.withOpacity(0.12),
-        border: Border.all(color: Colors.white.withOpacity(0.18)),
+        color: Colors.white.withValues(alpha: 0.12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -1311,7 +1311,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               child: LinearProgressIndicator(
                 value: 0.94,
                 minHeight: 10,
-                backgroundColor: Colors.white.withOpacity(0.2),
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
                 valueColor: AlwaysStoppedAnimation(accent),
               ),
             ),
@@ -1368,7 +1368,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         color: Colors.white,
         boxShadow: const [
           BoxShadow(
@@ -1382,7 +1382,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.18),
+              color: accent.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(data.icon, color: accent, size: 24),
@@ -1421,7 +1421,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             child: LinearProgressIndicator(
               value: data.progress,
               minHeight: 10,
-              backgroundColor: Colors.grey.withOpacity(0.12),
+              backgroundColor: Colors.grey.withValues(alpha: 0.12),
               valueColor: AlwaysStoppedAnimation(accent),
             ),
           ),
@@ -1440,7 +1440,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -1453,19 +1453,19 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 12),
-          Text(
+          const Text(
               'Velocity trend across the past six sprints with forecast confidence.',
-              style: const TextStyle(color: Colors.black54)),
+              style: TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           SizedBox(
             height: 160,
             child: _VelocitySparkline(accent: accent),
           ),
           const SizedBox(height: 16),
-          Wrap(
+          const Wrap(
             spacing: 16,
             runSpacing: 12,
-            children: const [
+            children: [
               _TrendStat(
                   label: 'Throughput',
                   value: '42 pts',
@@ -1495,18 +1495,18 @@ class _SettingsScreenState extends State<SettingsScreen>
     final heatMap = {
       'Delivery': {
         'High': accent,
-        'Medium': accent.withOpacity(0.6),
-        'Low': accent.withOpacity(0.25)
+        'Medium': accent.withValues(alpha: 0.6),
+        'Low': accent.withValues(alpha: 0.25)
       },
       'Security': {
         'High': Colors.redAccent,
         'Medium': Colors.orangeAccent,
-        'Low': Colors.orange.withOpacity(0.4)
+        'Low': Colors.orange.withValues(alpha: 0.4)
       },
       'People': {
-        'High': Color(0xFFFFC812),
-        'Medium': Color(0xFFFFC812).withOpacity(0.6),
-        'Low': Color(0xFFFFC812).withOpacity(0.3)
+        'High': const Color(0xFFFFC812),
+        'Medium': const Color(0xFFFFC812).withValues(alpha: 0.6),
+        'Low': const Color(0xFFFFC812).withValues(alpha: 0.3)
       },
     };
 
@@ -1515,7 +1515,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -1528,13 +1528,13 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 10),
-          Text(
+          const Text(
               'Risk posture for current delivery window, mapped by likelihood vs per-domain impact.',
-              style: const TextStyle(color: Colors.black54)),
+              style: TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           Table(
             border: TableBorder.symmetric(
-                inside: BorderSide(color: Colors.grey.withOpacity(0.2))),
+                inside: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
             columnWidths: const {0: IntrinsicColumnWidth()},
             children: [
               TableRow(
@@ -1599,7 +1599,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -1612,9 +1612,9 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          Text(
+          const Text(
               'Prioritized interventions to sustain momentum and de-risk the next release.',
-              style: const TextStyle(color: Colors.black54)),
+              style: TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           ...actionItems
               .map((item) => _ActionItemRow(item: item, accent: accent)),
@@ -1648,7 +1648,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -1661,9 +1661,9 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 10),
-          Text(
+          const Text(
               'Latest artefacts ready to distribute to project leadership and partners.',
-              style: const TextStyle(color: Colors.black54)),
+              style: TextStyle(color: Colors.black54)),
           const SizedBox(height: 16),
           ...downloads.map((item) {
             return Padding(
@@ -1673,7 +1673,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: accent.withOpacity(0.18),
+                      color: accent.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(Icons.insert_drive_file_outlined,
@@ -1747,23 +1747,23 @@ class _SettingsScreenState extends State<SettingsScreen>
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.18),
+                        color: accent.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(Icons.edit_note, color: accent, size: 28),
+                      child: const Icon(Icons.edit_note, color: accent, size: 28),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Inline Content Editor',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 22, fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6),
                           Text(
                             'Edit text content directly on any page in your application.',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: Colors.black54, fontSize: 15),
                           ),
                         ],
@@ -1776,13 +1776,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: isEditMode
-                        ? Colors.green.withOpacity(0.08)
-                        : Colors.grey.withOpacity(0.06),
+                        ? Colors.green.withValues(alpha: 0.08)
+                        : Colors.grey.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                         color: isEditMode
-                            ? Colors.green.withOpacity(0.3)
-                            : Colors.grey.withOpacity(0.2)),
+                            ? Colors.green.withValues(alpha: 0.3)
+                            : Colors.grey.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
@@ -1790,8 +1790,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isEditMode
-                              ? Colors.green.withOpacity(0.18)
-                              : Colors.grey.withOpacity(0.12),
+                              ? Colors.green.withValues(alpha: 0.18)
+                              : Colors.grey.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -1888,27 +1888,27 @@ class _SettingsScreenState extends State<SettingsScreen>
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Color(0xFFFFC812).withOpacity(0.08),
+                    color: const Color(0xFFFFC812).withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Color(0xFFFFC812).withOpacity(0.2)),
+                    border: Border.all(color: const Color(0xFFFFC812).withValues(alpha: 0.2)),
                   ),
-                  child: Row(
+                  child: const Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(Icons.info_outline, color: Color(0xFFFFC812), size: 22),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Admin Only',
                               style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFFFFC812)),
                             ),
-                            const SizedBox(height: 6),
-                            const Text(
+                            SizedBox(height: 6),
+                            Text(
                               'Only users with admin privileges can access edit mode. Regular users will see the published content without editing capabilities.',
                               style:
                                   TextStyle(color: Colors.black87, height: 1.4),
@@ -1924,13 +1924,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: contentProvider.showEditButton
-                        ? Colors.red.withOpacity(0.08)
-                        : Colors.green.withOpacity(0.06),
+                        ? Colors.red.withValues(alpha: 0.08)
+                        : Colors.green.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                         color: contentProvider.showEditButton
-                            ? Colors.red.withOpacity(0.3)
-                            : Colors.green.withOpacity(0.2)),
+                            ? Colors.red.withValues(alpha: 0.3)
+                            : Colors.green.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
@@ -1938,8 +1938,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: contentProvider.showEditButton
-                              ? Colors.red.withOpacity(0.18)
-                              : Colors.green.withOpacity(0.12),
+                              ? Colors.red.withValues(alpha: 0.18)
+                              : Colors.green.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -1957,9 +1957,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Remove Content Modification Button',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -2047,17 +2047,17 @@ class _SettingsScreenState extends State<SettingsScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.08),
+                          color: statusColor.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(999),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
                                 Icons.check_circle,
                                 size: 14,
                                 color: statusColor),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4),
                             Text(statusLabel,
                                 style: TextStyle(
                                     fontSize: 12,
@@ -2069,9 +2069,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
+                  const Text(
                     subtitle,
-                    style: const TextStyle(color: Colors.black54),
+                    style: TextStyle(color: Colors.black54),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -2267,7 +2267,7 @@ class _AccountPlanCard extends StatelessWidget {
               BoxShadow(
                 blurRadius: 8,
                 offset: const Offset(0, 2),
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withValues(alpha: 0.06),
               ),
             ],
           ),
@@ -2330,7 +2330,7 @@ class _AccountPlanCard extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFC812).withOpacity(0.1),
+                      color: const Color(0xFFFFC812).withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -2386,7 +2386,7 @@ class _BillingPaymentCard extends StatelessWidget {
               BoxShadow(
                 blurRadius: 8,
                 offset: const Offset(0, 2),
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withValues(alpha: 0.06),
               ),
             ],
           ),
@@ -2442,7 +2442,7 @@ class _BillingPaymentCard extends StatelessWidget {
                           'Expires 12/25',
                           style: TextStyle(
                             fontSize: 12,
-                            color: const Color(0xFF414754).withOpacity(0.7),
+                            color: const Color(0xFF414754).withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -2594,7 +2594,7 @@ class _LegalTermsCard extends StatelessWidget {
           BoxShadow(
             blurRadius: 8,
             offset: const Offset(0, 2),
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
           ),
         ],
       ),
@@ -2757,7 +2757,7 @@ class _BottomNavBar extends StatelessWidget {
           BoxShadow(
             blurRadius: 4,
             offset: const Offset(0, -1),
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
           ),
         ],
       ),
@@ -2917,8 +2917,8 @@ class _InsightBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.white.withOpacity(0.12),
-        border: Border.all(color: accent.withOpacity(0.2)),
+        color: Colors.white.withValues(alpha: 0.12),
+        border: Border.all(color: accent.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2953,8 +2953,8 @@ class _VelocitySparkline extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: Colors.grey.withOpacity(0.08),
-        border: Border.all(color: Colors.grey.withOpacity(0.14)),
+        color: Colors.grey.withValues(alpha: 0.08),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.14)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -3012,7 +3012,7 @@ class _VelocitySparklinePainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [accent.withOpacity(0.28), accent.withOpacity(0.04)],
+        colors: [accent.withValues(alpha: 0.28), accent.withValues(alpha: 0.04)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     canvas.drawPath(fillPath, fillPaint);
@@ -3056,7 +3056,7 @@ class _TrendStat extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.grey.withOpacity(0.08),
+        color: Colors.grey.withValues(alpha: 0.08),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -3182,8 +3182,8 @@ class _ActionItemRow extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: Colors.grey.withOpacity(0.06),
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        color: Colors.grey.withValues(alpha: 0.06),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3194,7 +3194,7 @@ class _ActionItemRow extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: priorityColor.withOpacity(0.16),
+                  color: priorityColor.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text('Priority $priorityLabel',
@@ -3225,7 +3225,7 @@ class _ActionItemRow extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: accent.withOpacity(0.2),
+                backgroundColor: accent.withValues(alpha: 0.2),
                 child: const Icon(Icons.person_outline, color: Colors.black87),
               ),
               const SizedBox(width: 12),
@@ -3316,7 +3316,7 @@ class _BillingHeroBanner extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: accent.withOpacity(0.18),
+                      color: accent.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text('Billing & Subscription',
@@ -3337,7 +3337,7 @@ class _BillingHeroBanner extends StatelessWidget {
               Text(
                 'View your current plan, manage payment methods, and access your billing history.\nUpgrade anytime to unlock premium features.',
                 style: theme.textTheme.bodyLarge?.copyWith(
-                    color: Colors.white.withOpacity(0.78), height: 1.45),
+                    color: Colors.white.withValues(alpha: 0.78), height: 1.45),
               ),
               const SizedBox(height: 18),
               if (isLoading)
@@ -3365,8 +3365,8 @@ class _BillingHeroBanner extends StatelessWidget {
           final highlightCard = DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
-              color: Colors.white.withOpacity(0.12),
-              border: Border.all(color: Colors.white.withOpacity(0.18)),
+              color: Colors.white.withValues(alpha: 0.12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
             ),
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -3409,7 +3409,7 @@ class _BillingHeroBanner extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: billingProgress,
                       minHeight: 10,
-                      backgroundColor: Colors.white.withOpacity(0.2),
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
                       valueColor: AlwaysStoppedAnimation(accent),
                     ),
                   ),
@@ -3461,8 +3461,8 @@ class _BillingStatBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.white.withOpacity(0.12),
-        border: Border.all(color: accent.withOpacity(0.2)),
+        color: Colors.white.withValues(alpha: 0.12),
+        border: Border.all(color: accent.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3509,7 +3509,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
     final statusColor = isActive
         ? Colors.green
         : (hasSubscription && subscription!.isTrial
-            ? Color(0xFFFFC812)
+            ? const Color(0xFFFFC812)
             : Colors.grey);
     final billingCycle = hasSubscription
         ? (subscription!.isAnnual ? 'Annual' : 'Monthly')
@@ -3534,7 +3534,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -3554,7 +3554,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.18),
+                        color: accent.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(Icons.workspace_premium,
@@ -3579,7 +3579,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.12),
+                        color: statusColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Row(
@@ -3606,9 +3606,9 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.06),
+                    color: Colors.grey.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.withOpacity(0.12)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
                   ),
                   child: Column(
                     children: [
@@ -3732,7 +3732,7 @@ class _PaymentMethodsCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -3745,8 +3745,8 @@ class _PaymentMethodsCard extends StatelessWidget {
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          Text('Connect your preferred payment provider',
-              style: const TextStyle(color: Colors.black54)),
+          const Text('Connect your preferred payment provider',
+              style: TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           _PaymentProviderTile(
             name: 'Stripe',
@@ -3821,12 +3821,12 @@ class _PaymentProviderTile extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: isConnected
-            ? accent.withOpacity(0.08)
-            : Colors.grey.withOpacity(0.06),
+            ? accent.withValues(alpha: 0.08)
+            : Colors.grey.withValues(alpha: 0.06),
         border: Border.all(
             color: isConnected
-                ? accent.withOpacity(0.3)
-                : Colors.grey.withOpacity(0.12)),
+                ? accent.withValues(alpha: 0.3)
+                : Colors.grey.withValues(alpha: 0.12)),
       ),
       child: Row(
         children: [
@@ -3834,7 +3834,7 @@ class _PaymentProviderTile extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.15),
+              color: iconColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: iconColor, size: 24),
@@ -3855,7 +3855,7 @@ class _PaymentProviderTile extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.15),
+                          color: Colors.green.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text('Connected',
@@ -3901,7 +3901,7 @@ class _InvoicesCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -3918,7 +3918,7 @@ class _InvoicesCard extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.18),
+                    color: accent.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.receipt_long, color: accent, size: 24),
@@ -3932,8 +3932,8 @@ class _InvoicesCard extends StatelessWidget {
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w700)),
                       const SizedBox(height: 4),
-                      Text('View and download past invoices',
-                          style: const TextStyle(color: Colors.black54)),
+                      const Text('View and download past invoices',
+                          style: TextStyle(color: Colors.black54)),
                     ],
                   ),
                 ),
@@ -3943,7 +3943,7 @@ class _InvoicesCard extends StatelessWidget {
                   label: const Text('Export All'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.black87,
-                    side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                    side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     shape: RoundedRectangleBorder(
@@ -4197,9 +4197,9 @@ class _UpgradePlanCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [accent.withOpacity(0.15), accent.withOpacity(0.05)],
+          colors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
         ),
-        border: Border.all(color: accent.withOpacity(0.3)),
+        border: Border.all(color: accent.withValues(alpha: 0.3)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -4252,10 +4252,10 @@ class _UpgradePlanCard extends StatelessWidget {
                         style: theme.textTheme.headlineMedium
                             ?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(width: 4),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 4),
                       child: Text('/month',
-                          style: const TextStyle(color: Colors.black54)),
+                          style: TextStyle(color: Colors.black54)),
                     ),
                   ],
                 ),
@@ -4275,7 +4275,7 @@ class _UpgradePlanCard extends StatelessWidget {
                   ),
                 ),
               ] else
-                Icon(Icons.check_circle, color: Colors.green, size: 48),
+                const Icon(Icons.check_circle, color: Colors.green, size: 48),
             ],
           );
 
@@ -4547,7 +4547,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
   ResourceAccessLevel _selectedAccess = ResourceAccessLevel.editor;
   String _selectedScope = 'Current project';
   String _selectedExpiry = '30 days';
-  bool _requireMfa = true;
+  final bool _requireMfa = true;
   bool _notifyOnAccessChange = true;
   bool _passwordLoginEnabled = true;
   bool _passwordlessEmailEnabled = false;
@@ -4759,7 +4759,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _accent.withOpacity(0.18),
+                  color: _accent.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.admin_panel_settings_outlined,
@@ -4775,11 +4775,11 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               Text(
                 'Invite collaborators, assign least-privilege roles, control project-level access, and review the RBAC policy before changes reach delivery data.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withOpacity(0.72), height: 1.45),
+                    color: Colors.white.withValues(alpha: 0.72), height: 1.45),
               ),
             ],
           );
-          final stats = Wrap(
+          const stats = Wrap(
             spacing: 12,
             runSpacing: 12,
             children: const [
@@ -4905,7 +4905,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
           ),
           const SizedBox(height: 18),
           DropdownButtonFormField<MfaRequirement>(
-            value: _mfaRequirement,
+            initialValue: _mfaRequirement,
             items: const [
               DropdownMenuItem(
                   value: MfaRequirement.everyLogin, child: Text('Every Login')),
@@ -4928,7 +4928,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
           ),
           const SizedBox(height: 18),
           DropdownButtonFormField<int>(
-            value: _rememberDeviceDays,
+            initialValue: _rememberDeviceDays,
             items: const [
               DropdownMenuItem(value: 7, child: Text('7 days')),
               DropdownMenuItem(value: 30, child: Text('30 days')),
@@ -5018,7 +5018,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<SiteRole>(
-                  value: _selectedRole,
+                  initialValue: _selectedRole,
                   isExpanded: true,
                   menuMaxHeight: 280,
                   decoration:
@@ -5044,7 +5044,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<ResourceAccessLevel>(
-                  value: _selectedAccess,
+                  initialValue: _selectedAccess,
                   isExpanded: true,
                   menuMaxHeight: 280,
                   decoration: _fieldDecoration('Resource access',
@@ -5068,7 +5068,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _selectedScope,
+                  initialValue: _selectedScope,
                   isExpanded: true,
                   menuMaxHeight: 280,
                   decoration: _fieldDecoration('Access scope',
@@ -5091,7 +5091,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _selectedExpiry,
+                  initialValue: _selectedExpiry,
                   isExpanded: true,
                   menuMaxHeight: 280,
                   decoration: _fieldDecoration('Invite expires',
@@ -5137,7 +5137,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               return FilterChip(
                 selected: selected,
                 label: Text(_permissionLabel(permission)),
-                selectedColor: _accent.withOpacity(0.22),
+                selectedColor: _accent.withValues(alpha: 0.22),
                 checkmarkColor: Colors.black,
                 onSelected: (value) {
                   setState(() {
@@ -5193,7 +5193,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
             return const _RbacLoadingRow(label: 'Loading collaborators...');
           }
           if (snapshot.hasError) {
-            return _EmptyRbacState(
+            return const _EmptyRbacState(
               icon: Icons.lock_outline,
               title: 'Roster unavailable',
               message:
@@ -5239,17 +5239,17 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: selected
-                    ? _accent.withOpacity(0.12)
+                    ? _accent.withValues(alpha: 0.12)
                     : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: selected ? _accent : Colors.grey.withOpacity(0.14)),
+                    color: selected ? _accent : Colors.grey.withValues(alpha: 0.14)),
               ),
               child: Row(
                 children: [
                   CircleAvatar(
                     radius: 18,
-                    backgroundColor: role.color.withOpacity(0.14),
+                    backgroundColor: role.color.withValues(alpha: 0.14),
                     child: Icon(_roleIcon(role), color: role.color, size: 18),
                   ),
                   const SizedBox(width: 12),
@@ -5401,7 +5401,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
           child: Table(
             border: TableBorder(
               horizontalInside:
-                  BorderSide(color: Colors.grey.withOpacity(0.12)),
+                  BorderSide(color: Colors.grey.withValues(alpha: 0.12)),
             ),
             columnWidths: const {
               0: FlexColumnWidth(2.6),
@@ -5475,11 +5475,11 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
       fillColor: const Color(0xFFF8FAFC),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.withOpacity(0.18)),
+        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.18)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.withOpacity(0.18)),
+        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.18)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -5509,7 +5509,7 @@ class _RbacCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withOpacity(0.16)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.16)),
         boxShadow: const [
           BoxShadow(
             blurRadius: 18,
@@ -5528,7 +5528,7 @@ class _RbacCard extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFC107).withOpacity(0.16),
+                  color: const Color(0xFFFFC107).withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: const Color(0xFFFFC107), size: 22),
@@ -5572,9 +5572,9 @@ class _AccessStat extends StatelessWidget {
       width: 118,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -5587,7 +5587,7 @@ class _AccessStat extends StatelessWidget {
           const SizedBox(height: 4),
           Text(label,
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.65), fontSize: 12)),
+                  color: Colors.white.withValues(alpha: 0.65), fontSize: 12)),
         ],
       ),
     );
@@ -5617,7 +5617,7 @@ class _PolicyToggle extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFFC107).withOpacity(0.28)),
+        border: Border.all(color: const Color(0xFFFFC107).withValues(alpha: 0.28)),
       ),
       child: Row(
         children: [
@@ -5659,7 +5659,7 @@ class _CollaboratorTile extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: user.siteRole.color.withOpacity(0.16),
+            backgroundColor: user.siteRole.color.withValues(alpha: 0.16),
             child: Text(user.initials,
                 style: TextStyle(
                     color: user.siteRole.color, fontWeight: FontWeight.w800)),
@@ -5757,7 +5757,7 @@ class _RolePill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: role.color.withOpacity(0.12),
+        color: role.color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(role.displayName,
@@ -5910,7 +5910,7 @@ class _FeatureChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withOpacity(0.3)),
+        border: Border.all(color: accent.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -5952,11 +5952,11 @@ class _ThemeModeOption extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
           color: selected
-              ? accent.withOpacity(0.12)
-              : Colors.grey.withOpacity(0.06),
+              ? accent.withValues(alpha: 0.12)
+              : Colors.grey.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? accent : Colors.grey.withOpacity(0.2),
+            color: selected ? accent : Colors.grey.withValues(alpha: 0.2),
             width: selected ? 2 : 1,
           ),
         ),
@@ -5997,7 +5997,7 @@ class _PrefActionTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Material(
-        color: Colors.grey.withOpacity(0.06),
+        color: Colors.grey.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -6011,7 +6011,7 @@ class _PrefActionTile extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: (labelColor ?? const Color(0xFFFFC107))
-                        .withOpacity(0.18),
+                        .withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child:
@@ -6250,7 +6250,7 @@ class _InviteVerificationDialogState extends State<InviteVerificationDialog> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: accent.withOpacity(0.15),
+                      color: accent.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.mark_email_read_outlined,
@@ -6285,9 +6285,9 @@ class _InviteVerificationDialogState extends State<InviteVerificationDialog> {
               const SizedBox(height: 20),
 
               // ── Description ───────────────────────────────────────
-              Text(
+              const Text(
                 'Enter the 6-digit code sent to',
-                style: const TextStyle(fontSize: 13, color: secondaryText),
+                style: TextStyle(fontSize: 13, color: secondaryText),
               ),
               const SizedBox(height: 2),
               Text(

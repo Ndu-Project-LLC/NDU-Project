@@ -129,7 +129,7 @@ class _IdentifyStaffOpsTeamScreenState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Color(0xFFFFC812),
+            color: const Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(6),
           ),
           child: const Text(
@@ -141,10 +141,10 @@ class _IdentifyStaffOpsTeamScreenState
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(
+            const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     'Identify & Staff Ops Team',
                     style: TextStyle(
@@ -180,11 +180,11 @@ class _IdentifyStaffOpsTeamScreenState
           final rows = await showCsvImportDialog(context,
               tableTitle: 'Ops Team',
               columns: [
-                CsvColumnSpec(
+                const CsvColumnSpec(
                     key: 'name', label: 'Member Name', sampleValue: 'John Doe'),
-                CsvColumnSpec(
+                const CsvColumnSpec(
                     key: 'role', label: 'Role', sampleValue: 'Operations Lead'),
-                CsvColumnSpec(
+                const CsvColumnSpec(
                     key: 'email',
                     label: 'Email',
                     sampleValue: 'john@company.com'),
@@ -399,10 +399,10 @@ class _IdentifyStaffOpsTeamScreenState
 
   Widget _buildCoveragePanel() {
     if (_projectId == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Capability coverage',
         subtitle: 'Readiness by operational capability',
-        child: const SizedBox.shrink(),
+        child: SizedBox.shrink(),
       );
     }
 
@@ -1194,7 +1194,7 @@ class _PanelShell extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1239,9 +1239,9 @@ class _HandoffItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [

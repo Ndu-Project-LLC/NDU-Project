@@ -1083,7 +1083,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Financial Summary'),
@@ -1091,14 +1091,14 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             if (_financialSummary.isEmpty)
               pw.Text('No financial metrics.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1118,14 +1118,14 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             if (_contracts.isEmpty)
               pw.Text('No contracts.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1147,14 +1147,14 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             if (_closeOutSteps.isEmpty)
               pw.Text('No close-out steps.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1175,14 +1175,14 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             if (_signOffs.isEmpty)
               pw.Text('No sign-off records.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:

@@ -20,7 +20,6 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
-import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 
 const Color _kAccentColor = Color(0xFFFFC107);

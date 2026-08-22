@@ -661,7 +661,7 @@ class _StakeholderManagementScreenState
 
     final List<StakeholderEntry> newEntries = [];
     final now = DateTime.now();
-    String _id(String seed) =>
+    String id(String seed) =>
         '${now.microsecondsSinceEpoch}_${seed.hashCode.abs()}';
 
     // ── 1. Initiation Phase core stakeholders ──────────────────────────
@@ -680,9 +680,11 @@ class _StakeholderManagementScreenState
           final cleaned = line.replaceAll(RegExp(r'^[-*•]\s*'), '').trim();
           if (cleaned.isEmpty) continue;
           if (newEntries.any((e) =>
-              e.name.toLowerCase() == cleaned.toLowerCase())) continue;
+              e.name.toLowerCase() == cleaned.toLowerCase())) {
+            continue;
+          }
           newEntries.add(StakeholderEntry(
-            id: _id('init_$cleaned'),
+            id: id('init_$cleaned'),
             name: cleaned,
             organization: org,
             role: 'TBD',
@@ -711,9 +713,11 @@ class _StakeholderManagementScreenState
       final name = m.name.trim();
       if (name.isEmpty) continue;
       if (newEntries.any((e) =>
-          e.name.toLowerCase() == name.toLowerCase())) continue;
+          e.name.toLowerCase() == name.toLowerCase())) {
+        continue;
+      }
       newEntries.add(StakeholderEntry(
-        id: _id('pt_${m.id}'),
+        id: id('pt_${m.id}'),
         name: name,
         organization: 'Project Team',
         role: m.role.isEmpty ? 'TBD' : m.role,
@@ -767,9 +771,11 @@ class _StakeholderManagementScreenState
     ];
     for (final (name, org, role, note) in commonStakeholders) {
       if (newEntries.any((e) =>
-          e.name.toLowerCase() == name.toLowerCase())) continue;
+          e.name.toLowerCase() == name.toLowerCase())) {
+        continue;
+      }
       newEntries.add(StakeholderEntry(
-        id: _id('sugg_$name'),
+        id: id('sugg_$name'),
         name: name,
         organization: org,
         role: role,
@@ -1528,11 +1534,13 @@ parentheses to disambiguate.''';
         plansBuffer.writeln('${i + 1}. ${e.stakeholder}'
             '${e.stakeholderGroup.isNotEmpty ? ' [${e.stakeholderGroup}]' : ''}'
             '${e.manageClosely ? ' (Manage Closely)' : ''}');
-        if (e.objective.isNotEmpty)
+        if (e.objective.isNotEmpty) {
           plansBuffer.writeln('   Objective: ${e.objective}');
+        }
         if (e.method.isNotEmpty) plansBuffer.writeln('   Method: ${e.method}');
-        if (e.frequency.isNotEmpty)
+        if (e.frequency.isNotEmpty) {
           plansBuffer.writeln('   Frequency: ${e.frequency}');
+        }
         if (e.owner.isNotEmpty) plansBuffer.writeln('   Owner: ${e.owner}');
         if (e.status.isNotEmpty) plansBuffer.writeln('   Status: ${e.status}');
         if (e.q1Plan.isNotEmpty ||
@@ -1548,8 +1556,9 @@ parentheses to disambiguate.''';
         if (e.dataShareLinks.isNotEmpty) {
           plansBuffer.writeln('   Data Sharing Links:');
           for (final line in e.dataShareLinks.split('\n')) {
-            if (line.trim().isNotEmpty)
+            if (line.trim().isNotEmpty) {
               plansBuffer.writeln('     - ${line.trim()}');
+            }
           }
         }
         plansBuffer.writeln('');
@@ -3146,7 +3155,7 @@ class _StakeholderMappingTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
-      return _SectionEmptyState(
+      return const _SectionEmptyState(
         title: 'No stakeholders to map',
         message: 'Add stakeholders on the Stakeholders tab first, then use '
             '"AI Suggest Ratings" to auto-classify them into matrix quadrants.',
@@ -3508,7 +3517,7 @@ class _MappingRowActions extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: influence,
+                          initialValue: influence,
                           decoration: const InputDecoration(
                             labelText: 'Influence',
                             border: OutlineInputBorder(),
@@ -3524,7 +3533,7 @@ class _MappingRowActions extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: interest,
+                          initialValue: interest,
                           decoration: const InputDecoration(
                             labelText: 'Interest',
                             border: OutlineInputBorder(),
@@ -4719,7 +4728,7 @@ class _RowActions extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: influence,
+                          initialValue: influence,
                           decoration: const InputDecoration(
                             labelText: 'Influence',
                             border: OutlineInputBorder(),
@@ -4735,7 +4744,7 @@ class _RowActions extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: interest,
+                          initialValue: interest,
                           decoration: const InputDecoration(
                             labelText: 'Interest',
                             border: OutlineInputBorder(),
@@ -4866,11 +4875,11 @@ class _ProjectTeamRosterSection extends StatelessWidget {
                       size: 22, color: Color(0xFFB45309)),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Row(
+                      Row(
                         children: [
                           Text(
                             'Project Team Communication Roster',
@@ -4884,13 +4893,13 @@ class _ProjectTeamRosterSection extends StatelessWidget {
                           _ManageCloselyBadge(),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         'All Project Team members (pulled from the staffing plan). '
                         'Email is required for every PT member — especially for '
                         'positions that do not have site access and must be '
                         'engaged out-of-band.',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           color: Color(0xFF6B7280),
                         ),
@@ -5418,11 +5427,11 @@ class _AnnouncementsTabState extends State<_AnnouncementsTab> {
         // ── Header row: title + New Announcement button ──
         Row(
           children: [
-            Expanded(
+            const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Stakeholder Announcements',
                     style: TextStyle(
                       fontSize: 16,
@@ -5430,8 +5439,8 @@ class _AnnouncementsTabState extends State<_AnnouncementsTab> {
                       color: Color(0xFF111827),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
+                  SizedBox(height: 4),
+                  Text(
                     'Templates for each engagement level (Manage Closely, '
                     'Keep Satisfied, Keep Informed, Monitor) and the Project '
                     'Team section. Pick a template to seed the composer, then '
@@ -5502,20 +5511,20 @@ class _AnnouncementsTabState extends State<_AnnouncementsTab> {
               border: Border.all(
                   color: const Color(0xFFE5E7EB), style: BorderStyle.solid),
             ),
-            child: Column(
+            child: const Column(
               children: [
-                const Icon(Icons.campaign_outlined,
+                Icon(Icons.campaign_outlined,
                     size: 36, color: Color(0xFF9CA3AF)),
-                const SizedBox(height: 12),
-                const Text(
+                SizedBox(height: 12),
+                Text(
                   'No announcements yet',
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF6B7280)),
                 ),
-                const SizedBox(height: 4),
-                const Text(
+                SizedBox(height: 4),
+                Text(
                   'Pick a template above or tap "New Announcement" to compose one.',
                   style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
                   textAlign: TextAlign.center,
@@ -5575,12 +5584,12 @@ class _AnnouncementTemplatePicker extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.style_outlined,
+              Icon(Icons.style_outlined,
                   size: 18, color: Color(0xFF6B7280)),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 'Announcement Templates',
                 style: TextStyle(
                   fontSize: 13,
@@ -5588,8 +5597,8 @@ class _AnnouncementTemplatePicker extends StatelessWidget {
                   color: Color(0xFF111827),
                 ),
               ),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 '— tap to seed the composer',
                 style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
               ),

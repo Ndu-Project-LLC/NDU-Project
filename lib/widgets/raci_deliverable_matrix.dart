@@ -281,11 +281,11 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
           titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
           contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-          title: Row(
+          title: const Row(
             children: [
-              const Icon(Icons.verified, color: Color(0xFFFFC812)),
-              const SizedBox(width: 10),
-              const Expanded(
+              Icon(Icons.verified, color: Color(0xFFFFC812)),
+              SizedBox(width: 10),
+              Expanded(
                 child: Text(
                   'Approve RACI Matrix',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -984,7 +984,7 @@ class _ApprovalBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1106,7 +1106,7 @@ class _RaciMatrixGrid extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeaderRow(),
-        ...rows.map((row) => _buildDataRow(row)).toList(growable: false),
+        ...rows.map((row) => _buildDataRow(row)),
       ],
     );
   }
@@ -1319,7 +1319,7 @@ class _PhaseChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: palette.bg,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: palette.fg.withOpacity(0.25)),
+        border: Border.all(color: palette.fg.withValues(alpha: 0.25)),
       ),
       child: Text(
         phase.replaceAll(' Phase', ''),
@@ -1374,9 +1374,9 @@ class _AssignmentCell extends StatelessWidget {
       child: Container(
         width: width,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
-          border: const Border(
+          border: Border(
             bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
             right: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
           ),

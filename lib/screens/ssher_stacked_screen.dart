@@ -81,7 +81,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
 
  // Per-category generation flags so we don't re-fetch an existing plan
  // every time the user switches tabs.
- Map<_SsherCategory, bool> _categoryPlanLoaded =
+ final Map<_SsherCategory, bool> _categoryPlanLoaded =
  <_SsherCategory, bool>{};
  _SsherCategory? _generatingCategoryPlan;
 
@@ -2073,7 +2073,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  : _Palette.onSurfaceVariant,
  ),
  ),
- SizedBox(width: 8),
+ const SizedBox(width: 8),
  Icon(Icons.arrow_forward,
  size: 20,
  color: enabled

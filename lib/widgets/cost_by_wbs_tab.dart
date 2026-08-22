@@ -281,17 +281,17 @@ class CostByWBSTab extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                        color: Color(0xFFFEF3C7),
+                        color: const Color(0xFFFEF3C7),
                         borderRadius: BorderRadius.circular(8)),
-                    child: Row(
+                    child: const Row(
                       children: [
-                        const Icon(Icons.warning_amber_rounded,
+                        Icon(Icons.warning_amber_rounded,
                             color: Color(0xFFD97706), size: 18),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Expanded(
                           child: Text(
                               'These cost lines have no WBS reference. Link them in the Cost Estimate Builder, or use "Auto-link FEP Cost Lines" in Export & Link to match by name.',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: Color(0xFF92400E), fontSize: 12)),
                         ),
                       ],
@@ -312,7 +312,7 @@ class CostByWBSTab extends StatelessWidget {
                                         color: _textPrimary, fontSize: 12),
                                     overflow: TextOverflow.ellipsis)),
                             const SizedBox(width: 8),
-                            Text('${line.category.label}',
+                            Text(line.category.label,
                                 style: const TextStyle(
                                     color: _textSecondary, fontSize: 10)),
                             const SizedBox(width: 8),
@@ -389,7 +389,7 @@ class CostByWBSTab extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                      color: Color(0xFF1A1D1F),
+                      color: const Color(0xFF1A1D1F),
                       borderRadius: BorderRadius.circular(12)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,11 +402,11 @@ class CostByWBSTab extends StatelessWidget {
                               letterSpacing: 0.5)),
                       const SizedBox(height: 10),
                       Text('$currencySymbol${_fmt(totalAll)}',
-                          style: TextStyle(
+                          style: const TextStyle(
                               color: LightModeColors.accent,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              fontFeatures: const [
+                              fontFeatures: [
                                 FontFeature.tabularFigures()
                               ])),
                       const SizedBox(height: 4),
@@ -624,7 +624,7 @@ class CostByWBSTab extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                      color: Color(0xFFF3F4F6),
+                      color: const Color(0xFFF3F4F6),
                       borderRadius: BorderRadius.circular(4)),
                   child: Text('$lineCount',
                       style: const TextStyle(

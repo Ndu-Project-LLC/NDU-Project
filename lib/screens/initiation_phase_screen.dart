@@ -1063,7 +1063,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  }  if (screen != null) {
   context.push(
   NavigationRouteResolver.resolveCheckpointToUrl(checkpoint),
-  extra: screen!,
+  extra: screen,
   );
   }
  }
@@ -2728,12 +2728,12 @@ class _RingPainter extends CustomPainter {
  const gradient = SweepGradient(
  startAngle: 0,
  endAngle: 2 * 3.1415926535,
- colors: const [
+ colors: [
  Color(0xFFFFD700),
  Color(0xFFFFA800),
  Color(0xFFFFD700),
  ],
- stops: const [0.0, 0.5, 1.0],
+ stops: [0.0, 0.5, 1.0],
  );
 
  final progressPaint = Paint()

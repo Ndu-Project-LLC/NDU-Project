@@ -91,7 +91,7 @@ class BatchDeleteBar extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Color(0xFFDC2626),
+                        color: const Color(0xFFDC2626),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

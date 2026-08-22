@@ -107,8 +107,8 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  expendedPercent: 0,
  globalProgress: 0,
  projectCount: 0,
- healthEntries: const [],
- projects: const [],
+ healthEntries: [],
+ projects: [],
  );
 
  String _formatBudget(double millions) {
@@ -1423,7 +1423,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<UserModel?>(
-                    value: selected,
+                    initialValue: selected,
                     decoration: InputDecoration(
                       labelText: 'Portfolio Manager',
                       hintText: availableUsers.isEmpty

@@ -841,11 +841,11 @@ class _RequirementsImplementationScreenState
  ),
  ),
  const SizedBox(width: 14),
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const Text(
+ Text(
  'Add Document',
  style: TextStyle(
  fontSize: 19,
@@ -854,12 +854,12 @@ class _RequirementsImplementationScreenState
  letterSpacing: -0.2,
  ),
  ),
- const SizedBox(height: 4),
+ SizedBox(height: 4),
  Text(
  'Register a new document or link in the Documents & Links Register.',
  style: TextStyle(
  fontSize: 13,
- color: const Color(0xFF6B7280),
+ color: Color(0xFF6B7280),
  height: 1.4,
  ),
  ),
@@ -920,7 +920,7 @@ class _RequirementsImplementationScreenState
  children: [
  fieldLabel('Category'),
  DropdownButtonFormField<String>(
- value: selectedCategory.isEmpty
+ initialValue: selectedCategory.isEmpty
  ? null
  : selectedCategory,
  isExpanded: true,
@@ -1018,7 +1018,7 @@ class _RequirementsImplementationScreenState
  children: [
  fieldLabel('Owner'),
  DropdownButtonFormField<String>(
- value: selectedOwner.isEmpty
+ initialValue: selectedOwner.isEmpty
  ? null
  : selectedOwner,
  isExpanded: true,
@@ -1055,7 +1055,7 @@ class _RequirementsImplementationScreenState
  children: [
  fieldLabel('Status'),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  isExpanded: true,
  decoration: nduDecoration(
  label: 'Status',
@@ -1854,7 +1854,7 @@ class _RequirementsImplementationScreenState
  final compact = constraints.maxWidth < 1040;
  const titleBlock = Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Design Specifications',
  style: TextStyle(
@@ -3255,10 +3255,10 @@ class _RequirementsImplementationScreenState
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Approval readiness',
  style: TextStyle(
@@ -4192,7 +4192,7 @@ class _RequirementsImplementationScreenState
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedPriority,
+ initialValue: selectedPriority,
  decoration: const InputDecoration(
  labelText: 'Priority',
  isDense: true,
@@ -4216,7 +4216,7 @@ class _RequirementsImplementationScreenState
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  decoration: const InputDecoration(
  labelText: 'Status',
  isDense: true,
@@ -4256,7 +4256,9 @@ class _RequirementsImplementationScreenState
  ElevatedButton(
  onPressed: () {
  if (gateController.text.trim().isEmpty ||
- approverController.text.trim().isEmpty) return;
+ approverController.text.trim().isEmpty) {
+   return;
+ }
  Navigator.pop(
  dialogContext,
  _ApprovalGateData(
@@ -4413,9 +4415,7 @@ class _ApprovalGateData {
 
 class _TableColumn {  const _TableColumn({
     required this.label,
-    this.flex = 1,
-    this.alignment = Alignment.centerLeft,
-  });
+  }) : flex = 1 : alignment = Alignment.centerLeft;
 
  final String label;
  final int flex;

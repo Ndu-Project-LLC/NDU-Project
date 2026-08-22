@@ -128,24 +128,24 @@ class _GanttPainter extends CustomPainter {
     const barHeight = 24.0;
     const rowHeight = 44.0;
     const labelWidth = 120.0;
-    final chartLeft = labelWidth + 8;
+    const chartLeft = labelWidth + 8;
     final chartWidth = size.width - chartLeft - 16;
     const chartTop = 24.0;
 
     // Draw header labels
     const headerStyle = TextStyle(
-      color: const Color(0xFF94A3B8),
+      color: Color(0xFF94A3B8),
       fontSize: 10,
       fontWeight: FontWeight.w600,
     );
     final projectLabel = TextPainter(
-      text: TextSpan(text: 'PROJECT', style: headerStyle),
+      text: const TextSpan(text: 'PROJECT', style: headerStyle),
       textDirection: TextDirection.ltr,
     )..layout();
     projectLabel.paint(canvas, const Offset(8, 4));
 
     final timelineLabel = TextPainter(
-      text: TextSpan(text: 'TIMELINE', style: headerStyle),
+      text: const TextSpan(text: 'TIMELINE', style: headerStyle),
       textDirection: TextDirection.ltr,
     )..layout();
     timelineLabel.paint(canvas, Offset(chartLeft, 4));

@@ -750,13 +750,13 @@ class _LandingScreenState extends State<LandingScreen>
   borderRadius: BorderRadius.circular(24),
   border: Border.all(color: const Color(0xFFFFC812).withValues(alpha: 0.3)),
   ),
-  child: Row(
+  child: const Row(
   mainAxisSize: MainAxisSize.min,
   mainAxisAlignment: MainAxisAlignment.center,
   children: [
-  const Icon(Icons.verified, color: Color(0xFFFFC812), size: 16),
-  const SizedBox(width: 8),
-  const Flexible(
+  Icon(Icons.verified, color: Color(0xFFFFC812), size: 16),
+  SizedBox(width: 8),
+  Flexible(
   child: Text('Built from real-world delivery experience across global enterprises and high-growth organizations',
   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFFFC812))),
   ),
@@ -3016,14 +3016,14 @@ class _LandingScreenState extends State<LandingScreen>
  ? Row(
  children: [
  Expanded(child: _programCard()),
- SizedBox(width: spacing),
+ const SizedBox(width: spacing),
  Expanded(child: _portfolioCard()),
  ],
  )
  : Column(
  children: [
  _programCard(),
- SizedBox(height: spacing),
+ const SizedBox(height: spacing),
  _portfolioCard(),
  ],
  );

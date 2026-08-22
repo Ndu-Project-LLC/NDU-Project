@@ -963,7 +963,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   }
 
   void _openPlanningRequirements() {
-    _navigateWithCheckpoint('requirements', PlanningRequirementsScreen());
+    _navigateWithCheckpoint('requirements', const PlanningRequirementsScreen());
   }
 
   void _openFrontEndRisks() {
@@ -1777,7 +1777,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: [Color(0xFFB8860B), Color(0xFFB8860B)],
                 ),
                 borderRadius: BorderRadius.circular(8),
@@ -2041,7 +2041,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             ),
             foregroundDecoration: isHighlighted
                 ? BoxDecoration(
-                    border: Border(
+                    border: const Border(
                       left: BorderSide(width: 4, color: activeColor),
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -2067,7 +2067,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                 ),
                 if (isHighlighted) ...[
                   const SizedBox(width: 8),
-                  Icon(Icons.chevron_right_rounded,
+                  const Icon(Icons.chevron_right_rounded,
                       size: 18, color: activeColor),
                 ],
               ],
@@ -2109,7 +2109,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             ),
             foregroundDecoration: isHighlighted
                 ? BoxDecoration(
-                    border: Border(
+                    border: const Border(
                       left: BorderSide(width: 4, color: activeColor),
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -2138,7 +2138,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                 ),
                 if (isHighlighted) ...[
                   const SizedBox(width: 8),
-                  Icon(Icons.chevron_right_rounded,
+                  const Icon(Icons.chevron_right_rounded,
                       size: 16, color: activeColor),
                 ],
               ],
@@ -2179,7 +2179,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           ),
           foregroundDecoration: isHighlighted
               ? BoxDecoration(
-                  border: Border(
+                  border: const Border(
                     left: BorderSide(width: 4, color: activeColor),
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -2252,7 +2252,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             ),
             foregroundDecoration: isHighlighted
                 ? BoxDecoration(
-                    border: Border(
+                    border: const Border(
                       left: BorderSide(width: 3, color: activeColor),
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -2286,7 +2286,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                 ),
                 if (isHighlighted) ...[
                   const SizedBox(width: 6),
-                  Icon(Icons.chevron_right_rounded,
+                  const Icon(Icons.chevron_right_rounded,
                       size: 14, color: activeColor),
                 ],
               ],
@@ -2321,7 +2321,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           ),
           foregroundDecoration: isHighlighted
               ? BoxDecoration(
-                  border: Border(
+                  border: const Border(
                     left: BorderSide(width: 4, color: activeColor),
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -2379,7 +2379,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             SizedBox(
               width: double.infinity,
               height: bannerHeight,
-              child: Center(child: AppLogo(height: 64)),
+              child: const Center(child: AppLogo(height: 64)),
             ),
             Container(
               padding: const EdgeInsets.all(24),

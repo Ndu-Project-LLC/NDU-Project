@@ -38,7 +38,7 @@ class StakeholderAlignmentTableWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -324,7 +324,7 @@ class _StakeholderAlignmentRowWidget extends StatefulWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                border: Border.all(color: Color(0xFFE2E8F0)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -555,7 +555,7 @@ class _StakeholderAlignmentRowWidget extends StatefulWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: selectedStatus,
+                  initialValue: selectedStatus,
                   decoration: const InputDecoration(
                     labelText: 'Alignment Status',
                     border: OutlineInputBorder(),
@@ -574,7 +574,7 @@ class _StakeholderAlignmentRowWidget extends StatefulWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: selectedKeyInterest,
+                  initialValue: selectedKeyInterest,
                   decoration: const InputDecoration(
                     labelText: 'Key Interest/Value',
                     border: OutlineInputBorder(),

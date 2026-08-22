@@ -317,14 +317,14 @@ class _RegularProjectDashboardScreenState
         onPressed: _createNewProject,
         backgroundColor: const Color(0xFFFFC107),
         foregroundColor: const Color(0xFF1C1C1C),
+        elevation: 4,
+        shape: const CircleBorder(),
+        tooltip: 'KAZ AI — New Project',
         child: const _KazAiBadge(
           size: 36,
           iconColor: Color(0xFF1C1C1C),
           badgeColor: Colors.transparent,
         ),
-        elevation: 4,
-        shape: const CircleBorder(),
-        tooltip: 'KAZ AI — New Project',
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       // The bottom navigation bar is a mobile-only affordance. On web the
@@ -774,7 +774,7 @@ class _RegularProjectDashboardScreenState
             Container(
               width: 88,
               height: 88,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: _tealSoft,
                 shape: BoxShape.circle,
               ),
@@ -824,7 +824,7 @@ class _RegularProjectDashboardScreenState
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline_rounded, color: _coral, size: 22),
+          const Icon(Icons.error_outline_rounded, color: _coral, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -1307,9 +1307,9 @@ class _BottomMiniNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: const Color(0xFFE7E5E0))),
+        border: Border(top: BorderSide(color: Color(0xFFE7E5E0))),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(

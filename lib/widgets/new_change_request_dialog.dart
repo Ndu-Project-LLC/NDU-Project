@@ -521,7 +521,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
           borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.6)),
+          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.6)),
       suffixIcon: suffixIcon,
     );
   }
@@ -537,8 +537,9 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
         minLines: maxLines,
         decoration: _decoration(label, hint: hint),
         validator: (v) {
-          if (label == 'Description' || label == 'Justification / Reason')
+          if (label == 'Description' || label == 'Justification / Reason') {
             return null; // optional
+          }
           if (v == null || v.trim().isEmpty) return 'Required';
           return null;
         },
@@ -547,8 +548,9 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
     return VoiceTextFormField(
       controller: controller,
       validator: (v) {
-        if (label == 'Description' || label == 'Justification / Reason')
+        if (label == 'Description' || label == 'Justification / Reason') {
           return null; // optional
+        }
         if (v == null || v.trim().isEmpty) return 'Required';
         return null;
       },

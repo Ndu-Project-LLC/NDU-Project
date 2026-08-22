@@ -651,8 +651,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TabBar(
-          tabs: const [
+        const TabBar(
+          tabs: [
             Tab(text: 'Delivery Model'),
             Tab(text: 'Metrics & Reporting'),
             Tab(text: 'Release Strategy'),
@@ -662,8 +662,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           indicatorColor: _kAccent,
           indicatorSize: TabBarIndicatorSize.tab,
           labelStyle:
-              const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          unselectedLabelStyle: const TextStyle(fontSize: 14),
+              TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: TextStyle(fontSize: 14),
           isScrollable: true,
         ),
         const SizedBox(height: 16),
@@ -1030,7 +1030,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Color(0xFFFFF8E1),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Row(
@@ -1067,7 +1067,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Color(0xFFD1D5DB)),
+                border: Border.all(color: const Color(0xFFD1D5DB)),
               ),
               child: VoiceTextField(
                 controller: controller,

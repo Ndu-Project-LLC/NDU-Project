@@ -356,8 +356,8 @@ class _UpdateOpsMaintenancePlansScreenState
               _buildMobileLayout(hPad, projectId)
             else
               _buildDesktopLayout(hPad, projectId),
-            MobileSidebarHamburger(
-              sidebar: const InitiationLikeSidebar(
+            const MobileSidebarHamburger(
+              sidebar: InitiationLikeSidebar(
                 activeItemLabel: 'Update Ops and Maintenance Plans',
               ),
             ),
@@ -432,18 +432,18 @@ class _UpdateOpsMaintenancePlansScreenState
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Color(0xFFFFF8E1),
+            color: const Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(Icons.build_circle_outlined,
               size: 22, color: Color(0xFF4338CA)),
         ),
         const SizedBox(width: 14),
-        Expanded(
+        const Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Ops & Maintenance Plans',
                 style: TextStyle(
                   fontSize: 22,
@@ -451,10 +451,10 @@ class _UpdateOpsMaintenancePlansScreenState
                   color: Color(0xFF111827),
                 ),
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2),
               Text(
                 'Finalize operational playbooks, maintenance cadence, and training updates before launch.',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: Color(0xFF6B7280),
@@ -474,8 +474,8 @@ class _UpdateOpsMaintenancePlansScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0A000000), blurRadius: 16, offset: Offset(0, 8)),
         ],
@@ -518,8 +518,8 @@ class _UpdateOpsMaintenancePlansScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
             color: Color(0x08000000),
             blurRadius: 8,
@@ -572,8 +572,8 @@ class _UpdateOpsMaintenancePlansScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
             color: Color(0x0A000000),
             blurRadius: 16,
@@ -591,7 +591,7 @@ class _UpdateOpsMaintenancePlansScreenState
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Color(0xFFECFDF5),
+                    color: const Color(0xFFECFDF5),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.playlist_add_check_rounded,
@@ -841,8 +841,8 @@ class _UpdateOpsMaintenancePlansScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
             color: Color(0x04000000),
             blurRadius: 10,
@@ -943,8 +943,8 @@ class _UpdateOpsMaintenancePlansScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
             color: Color(0x04000000),
             blurRadius: 10,
@@ -958,7 +958,7 @@ class _UpdateOpsMaintenancePlansScreenState
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Color(0xFFFEF3C7),
+              color: const Color(0xFFFEF3C7),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.warning_amber_rounded,
@@ -1049,16 +1049,16 @@ class _UpdateOpsMaintenancePlansScreenState
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Color(0xFFFFF8E1),
+              color: const Color(0xFFFFF8E1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(Icons.schedule_outlined,
@@ -1187,9 +1187,9 @@ class _UpdateOpsMaintenancePlansScreenState
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Color(0xFFFFF8E1),
+            color: const Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Color(0xFFFEF3C7)),
+            border: Border.all(color: const Color(0xFFFEF3C7)),
           ),
           child: const Icon(Icons.edit_outlined,
               size: 16, color: Color(0xFFB8860B)),
@@ -1207,9 +1207,9 @@ class _UpdateOpsMaintenancePlansScreenState
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Color(0xFFFEE2E2),
+            color: const Color(0xFFFEE2E2),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Color(0xFFFECACA)),
+            border: Border.all(color: const Color(0xFFFECACA)),
           ),
           child: const Icon(Icons.delete_outline_rounded,
               size: 16, color: Color(0xFFDC2626)),
@@ -1603,8 +1603,8 @@ class _PremiumPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
             color: Color(0x0A000000),
             blurRadius: 16,

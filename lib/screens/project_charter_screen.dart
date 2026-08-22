@@ -10,7 +10,6 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/project_framework_screen.dart';
-import 'package:ndu_project/screens/program_basics_screen.dart' show ProjectDetailsScreen;
 import 'package:ndu_project/screens/core_stakeholders_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';

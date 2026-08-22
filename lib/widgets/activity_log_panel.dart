@@ -57,7 +57,7 @@ class _ActivityLogPanelDialog extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Color(0x24000000),
                   blurRadius: 28,
@@ -305,17 +305,17 @@ class _FullScreenActivityLog extends StatelessWidget {
 
                 final entries = snapshot.data ?? const [];
                 if (entries.isEmpty) {
-                  return Center(
+                  return const Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.fact_check_outlined,
                           size: 64,
                           color: Color(0xFFD1D5DB),
                         ),
-                        const SizedBox(height: 16),
-                        const Text(
+                        SizedBox(height: 16),
+                        Text(
                           'No logged activity yet',
                           style: TextStyle(
                             fontSize: 20,
@@ -323,8 +323,8 @@ class _FullScreenActivityLog extends StatelessWidget {
                             color: Color(0xFF111827),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
+                        SizedBox(height: 8),
+                        Text(
                           'Edits, AI runs, row changes, and page saves will appear here.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
@@ -530,7 +530,7 @@ class _FullScreenActivityLogTile extends StatelessWidget {
                 // User and phase info
                 Row(
                   children: [
-                    Icon(Icons.person_outline, size: 14, color: const Color(0xFF9CA3AF)),
+                    const Icon(Icons.person_outline, size: 14, color: Color(0xFF9CA3AF)),
                     const SizedBox(width: 4),
                     Text(
                       userLabel,
@@ -696,9 +696,9 @@ class _ActivityLogTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -761,7 +761,7 @@ class _MetaChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Text(
         label,

@@ -990,15 +990,15 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         indicatorWeight: 3,
         indicatorSize: TabBarIndicatorSize.label,
         dividerHeight: 0,
-        tabs: [
+        tabs: const [
           Tab(
             height: 40,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.chat_bubble_rounded, size: 18),
-                const SizedBox(width: 8),
-                const Text('AI Assistant'),
+                Icon(Icons.chat_bubble_rounded, size: 18),
+                SizedBox(width: 8),
+                Text('AI Assistant'),
               ],
             ),
           ),
@@ -1007,9 +1007,9 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.support_agent_rounded, size: 18),
-                const SizedBox(width: 8),
-                const Text('Support'),
+                Icon(Icons.support_agent_rounded, size: 18),
+                SizedBox(width: 8),
+                Text('Support'),
               ],
             ),
           ),
@@ -1217,7 +1217,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(0xFFFABD00).withValues(alpha: 0.25),
+                    color: const Color(0xFFFABD00).withValues(alpha: 0.25),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -1262,23 +1262,23 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
             controller: _ticketSubjectController,
             decoration: InputDecoration(
               hintText: 'Brief description of your issue',
-              hintStyle: TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
+              hintStyle: const TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
               filled: true,
-              fillColor: Color(0xFFF8FAFC),
+              fillColor: const Color(0xFFF8FAFC),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Color(0xFFFABD00), width: 1.5),
+                borderSide: const BorderSide(color: Color(0xFFFABD00), width: 1.5),
               ),
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             style: const TextStyle(fontSize: 14),
           ),
@@ -1297,23 +1297,23 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
             maxLines: 4,
             decoration: InputDecoration(
               hintText: 'Provide additional context about your issue...',
-              hintStyle: TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
+              hintStyle: const TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
               filled: true,
-              fillColor: Color(0xFFF8FAFC),
+              fillColor: const Color(0xFFF8FAFC),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Color(0xFFFABD00), width: 1.5),
+                borderSide: const BorderSide(color: Color(0xFFFABD00), width: 1.5),
               ),
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             style: const TextStyle(fontSize: 14),
           ),
@@ -1344,10 +1344,10 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Color(0xFFFABD00).withValues(alpha: 0.06),
+              color: const Color(0xFFFABD00).withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(14),
               border:
-                  Border.all(color: Color(0xFFFABD00).withValues(alpha: 0.2)),
+                  Border.all(color: const Color(0xFFFABD00).withValues(alpha: 0.2)),
             ),
             child: const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1566,9 +1566,9 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Color(0xFFF8FAFC),
+                color: const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Color(0xFFE2E8F0)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: VoiceTextField(
                 controller: controller,
@@ -1741,9 +1741,9 @@ class _ChatBubble extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: Color(0xFFF1F5F9),
+            color: const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Color(0xFFE2E8F0)),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1804,10 +1804,10 @@ class _ChatBubble extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: isSupport
-            ? LinearGradient(
-                colors: [const Color(0xFFFABD00), const Color(0xFFFFD54F)])
-            : LinearGradient(
-                colors: [const Color(0xFFFFC812), const Color(0xFFFF9800)]),
+            ? const LinearGradient(
+                colors: [Color(0xFFFABD00), Color(0xFFFFD54F)])
+            : const LinearGradient(
+                colors: [Color(0xFFFFC812), Color(0xFFFF9800)]),
         boxShadow: [
           BoxShadow(
             color: bgColor.withValues(alpha: 0.25),
@@ -1822,8 +1822,9 @@ class _ChatBubble extends StatelessWidget {
 
   Color _bubbleColor() {
     if (message.isUser) return const Color(0xFFFFC812).withValues(alpha: 0.1);
-    if (message.isSupportAgent)
-      return Color(0xFFFABD00).withValues(alpha: 0.06);
+    if (message.isSupportAgent) {
+      return const Color(0xFFFABD00).withValues(alpha: 0.06);
+    }
     return const Color(0xFFF8FAFC);
   }
 

@@ -139,10 +139,10 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
           mood: risks.length > index ? 'neutral' : 'positive',
           color: [
             Colors.green,
-            Color(0xFFFFC812),
-            Color(0xFFB8860B),
+            const Color(0xFFFFC812),
+            const Color(0xFFB8860B),
             Colors.orange,
-            Color(0xFFD97706),
+            const Color(0xFFD97706),
             _kAccent,
           ][index % 6],
         ),
@@ -190,10 +190,10 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Standup data saved'),
+          const SnackBar(
+            content: Text('Standup data saved'),
             backgroundColor: _kAccent,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -240,8 +240,8 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Daily Standups',
                     ),
                   ),
@@ -252,7 +252,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        PlanningPhaseHeader(
+                        const PlanningPhaseHeader(
                           title: 'Daily Standups',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -324,7 +324,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -724,8 +724,8 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
   Widget _buildTableHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: Row(
-        children: const [
+      child: const Row(
+        children: [
           SizedBox(width: 30),
           Expanded(
               flex: 4,
@@ -810,7 +810,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Color(0xFFFEF3C7),
+                  color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: WrappedText(a.due,
@@ -834,7 +834,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
     final color = status == 'Done'
         ? Colors.green
         : status == 'In Progress'
-            ? Color(0xFFFFC812)
+            ? const Color(0xFFFFC812)
             : _kAccent;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -991,7 +991,7 @@ class _LoadingStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

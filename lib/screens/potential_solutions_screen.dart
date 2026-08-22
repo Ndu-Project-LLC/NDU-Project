@@ -997,7 +997,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  children: [
  CircleAvatar(
  radius: 16,
- backgroundColor: Color(0xFFFBBF24),
+ backgroundColor: const Color(0xFFFBBF24),
  child: Text(
  FirebaseAuthService.displayNameOrEmail(fallback: 'U')
  .characters
@@ -1044,7 +1044,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  else
  CircleAvatar(
  radius: 16,
- backgroundColor: Color(0xFFFBBF24),
+ backgroundColor: const Color(0xFFFBBF24),
  child: Text(
  FirebaseAuthService.displayNameOrEmail(fallback: 'U')
  .characters

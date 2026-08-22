@@ -1,7 +1,6 @@
 // Web-only implementation of the CSV download function. Selected by the
 // conditional import in `admin_survey_responses_screen.dart` when the
 // `dart.library.html` import succeeds (i.e. when compiling for the web).
-import 'dart:convert';
 import 'dart:html' as html;
 import 'dart:typed_data';
 

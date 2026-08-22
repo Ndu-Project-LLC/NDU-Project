@@ -389,7 +389,7 @@ class _PlanningInfrastructureCostSectionState
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Color(0xFFE5E7EB)),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: const Text(
               'No infrastructure cost items yet. Add hosting, environments, network, tooling, migration, or platform costs here.',
@@ -404,7 +404,7 @@ class _PlanningInfrastructureCostSectionState
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Color(0xFFE5E7EB)),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,

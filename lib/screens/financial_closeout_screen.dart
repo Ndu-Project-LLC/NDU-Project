@@ -461,9 +461,9 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFFFFF8E1),
+        color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFFFC812)),
+        border: Border.all(color: const Color(0xFFFFC812)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -543,9 +543,9 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Color(0xFFFFF8E1),
+                        color: const Color(0xFFFFF8E1),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Color(0xFFFDE68A)),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
                       ),
                       child: Text(
                         h,

@@ -206,7 +206,7 @@ class CircleIconButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Icon(
           icon,
@@ -250,7 +250,7 @@ class CurrentUserProfileChip extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: Color(0xFFE5E7EB)),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -494,7 +494,7 @@ class AiTipCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Color(0xFFE1EEFF),
+        color: const Color(0xFFE1EEFF),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -619,9 +619,9 @@ class CrossReferenceNote extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Color(0xFFF0FDF4),
+        color: const Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFBBF7D0)),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
       ),
       child: Row(
         children: [

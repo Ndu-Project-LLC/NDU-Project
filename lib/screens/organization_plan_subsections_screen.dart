@@ -814,11 +814,11 @@ class _OrganizationStaffingPlanScreenState
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(
+                              const Padding(
+                                padding: EdgeInsets.fromLTRB(
                                     16, 12, 12, 4),
                                 child: Row(
-                                  children: const [
+                                  children: [
                                     Icon(Icons.table_rows_outlined,
                                         size: 18,
                                         color: Color(0xFF6B7280)),
@@ -1215,8 +1215,8 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
     final overTier = totalAfter > widget.tierCapacity;
 
     return AlertDialog(
-      title: Row(
-        children: const [
+      title: const Row(
+        children: [
           Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
           SizedBox(width: 8),
           Expanded(
@@ -5355,7 +5355,7 @@ class _EstimatedCostTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currencyFmt = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
-    final columns = const <_StaffingColumnDef>[
+    const columns = <_StaffingColumnDef>[
       _StaffingColumnDef('#', 48),
       _StaffingColumnDef('Position', 180),
       _StaffingColumnDef('Name', 150),
@@ -5574,7 +5574,7 @@ class _EstimatedCostTable extends StatelessWidget {
                                           style: const TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w700,
-                                              color: const Color(0xFF047857)))),
+                                              color: Color(0xFF047857)))),
                                   SizedBox(
                                     width: columns[9].width,
                                     child: Center(
@@ -5747,7 +5747,7 @@ class _TopHeader extends StatelessWidget {
 }
 
 class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon, this.onTap});
+  const _CircleIconButton({required this.icon}) : onTap = null;
 
   final IconData icon;
   final VoidCallback? onTap;
@@ -5763,7 +5763,7 @@ class _CircleIconButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
       ),
@@ -5784,7 +5784,7 @@ class _UserChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -5880,7 +5880,7 @@ class _MetricCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -5951,8 +5951,8 @@ class _SectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 6)),
         ],
@@ -6121,7 +6121,7 @@ class _SectionEmptyState extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
@@ -6129,7 +6129,7 @@ class _SectionEmptyState extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: Color(0xFFFFF7ED),
+              color: const Color(0xFFFFF7ED),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: const Color(0xFFF59E0B)),

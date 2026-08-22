@@ -17,8 +17,6 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
-import 'package:ndu_project/screens/backend_design_screen.dart';
-import 'package:ndu_project/screens/development_set_up_screen.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/design_planning_document.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';

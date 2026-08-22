@@ -57,8 +57,9 @@ String _extractJson(String text) {
   if (match != null) return match.group(1)?.trim() ?? text.trim();
   final jsonStart = text.indexOf('{');
   final jsonEnd = text.lastIndexOf('}');
-  if (jsonStart >= 0 && jsonEnd > jsonStart)
+  if (jsonStart >= 0 && jsonEnd > jsonStart) {
     return text.substring(jsonStart, jsonEnd + 1);
+  }
   return text.trim();
 }
 
@@ -116,8 +117,9 @@ String _usdRateHint(String currency) {
 String _convertHint(double usdAmount, String currency) {
   final rate = _usdToCurrencyRates[currency.toUpperCase()] ?? 1.0;
   final converted = usdAmount * rate;
-  if (converted >= 1000000)
+  if (converted >= 1000000) {
     return '${(converted / 1000000).toStringAsFixed(1)}M';
+  }
   if (converted >= 1000) return converted.toStringAsFixed(0);
   return converted.toStringAsFixed(converted % 1 == 0 ? 0 : 2);
 }
@@ -3683,10 +3685,11 @@ $domainHints
     if (!cleaned.startsWith('[')) {
       // Try to find the first [ character
       final idx = cleaned.indexOf('[');
-      if (idx >= 0)
+      if (idx >= 0) {
         cleaned = cleaned.substring(idx);
-      else
+      } else {
         return null;
+      }
     }
     try {
       final decoded = jsonDecode(cleaned);
@@ -4882,10 +4885,12 @@ Domain guardrail: $guardrails
     // --- Decision logic ---
     if (smallScore >= 3 && largeScore < 3) return _AiProjectScale.small;
     if (largeScore >= 3 && smallScore < 3) return _AiProjectScale.large;
-    if (smallScore >= 3 && smallScore > largeScore)
+    if (smallScore >= 3 && smallScore > largeScore) {
       return _AiProjectScale.small;
-    if (largeScore >= 3 && largeScore > smallScore)
+    }
+    if (largeScore >= 3 && largeScore > smallScore) {
       return _AiProjectScale.large;
+    }
     // Default to medium when no strong signal
     return _AiProjectScale.medium;
   }

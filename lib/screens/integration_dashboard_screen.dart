@@ -160,11 +160,11 @@ class _Header extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
+        const Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Integration Dashboard',
                 style: TextStyle(
                   fontSize: 28,
@@ -172,7 +172,7 @@ class _Header extends StatelessWidget {
                   color: _Tk.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 'The Performance Measurement Baseline (PMB) is the integration '
                 'of Scope, WBS, Schedule, and Cost. This dashboard shows the '
@@ -223,9 +223,9 @@ class _IbrBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.35)),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
@@ -287,7 +287,7 @@ class _ScoreBadge extends StatelessWidget {
               child: CircularProgressIndicator(
                 value: clamped / 100,
                 strokeWidth: 6,
-                backgroundColor: color.withOpacity(0.15),
+                backgroundColor: color.withValues(alpha: 0.15),
                 valueColor: AlwaysStoppedAnimation(color),
               ),
             ),
@@ -657,7 +657,7 @@ class _EvmSummaryCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withOpacity(0.12),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Text(
@@ -759,46 +759,46 @@ class _QuickLinksCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final links = <_QuickLink>[
-      _QuickLink(
+      const _QuickLink(
         label: 'WBS Builder',
         subtitle: 'Decompose scope',
         icon: Icons.account_tree,
-        color: const Color(0xFFFFC812),
+        color: Color(0xFFFFC812),
         route: AppRoutes.wbs,
       ),
-      _QuickLink(
+      const _QuickLink(
         label: 'Schedule',
         subtitle: 'Sequence activities',
         icon: Icons.calendar_month,
-        color: const Color(0xFFD97706),
+        color: Color(0xFFD97706),
         route: AppRoutes.schedule,
       ),
-      _QuickLink(
+      const _QuickLink(
         label: 'Project Controls',
         subtitle: 'EVM & variances',
         icon: Icons.dashboard_customize,
-        color: const Color(0xFFF59E0B),
+        color: Color(0xFFF59E0B),
         route: AppRoutes.projectControls,
       ),
-      _QuickLink(
+      const _QuickLink(
         label: 'Cost Estimate',
         subtitle: 'BAC & baseline',
         icon: Icons.attach_money,
-        color: const Color(0xFFD97706),
+        color: Color(0xFFD97706),
         route: AppRoutes.costEstimate,
       ),
-      _QuickLink(
+      const _QuickLink(
         label: 'Change Management',
         subtitle: 'CCB & rebaseline',
         icon: Icons.sync_alt,
-        color: const Color(0xFFB8860B),
+        color: Color(0xFFB8860B),
         route: AppRoutes.changeManagement,
       ),
-      _QuickLink(
+      const _QuickLink(
         label: 'Project Baseline',
         subtitle: 'PMB snapshot',
         icon: Icons.lock,
-        color: const Color(0xFFB8860B),
+        color: Color(0xFFB8860B),
         route: AppRoutes.projectBaseline,
       ),
     ];
@@ -867,9 +867,9 @@ class _QuickLinkChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: link.color.withOpacity(0.06),
+          color: link.color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: link.color.withOpacity(0.25)),
+          border: Border.all(color: link.color.withValues(alpha: 0.25)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1222,38 +1222,38 @@ class _IntegrationFlow extends StatelessWidget {
       builder: (context, c) {
         final horizontal = c.maxWidth > 900;
         if (horizontal) {
-          return Row(
+          return const Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _FlowNode('Scope', 'Statement', Icons.description,
-                  const Color(0xFFB8860B)),
+                  Color(0xFFB8860B)),
               _FlowArrow(label: 'decomposes'),
               _FlowNode('WBS', 'Tree', Icons.account_tree,
-                  const Color(0xFFFFC812)),
+                  Color(0xFFFFC812)),
               _FlowArrow(label: 'sequences'),
               _FlowNode('Schedule', 'Activities', Icons.calendar_month,
-                  const Color(0xFFD97706)),
+                  Color(0xFFD97706)),
               _FlowArrow(label: 'measures'),
               _FlowNode('Controls', 'EVM', Icons.dashboard_customize,
-                  const Color(0xFFF59E0B)),
+                  Color(0xFFF59E0B)),
               _FlowArrow(label: 'feeds back', reversed: true),
             ],
           );
         }
-        return Column(
+        return const Column(
           children: [
             _FlowNode('Scope', 'Statement', Icons.description,
-                const Color(0xFFB8860B)),
+                Color(0xFFB8860B)),
             _FlowArrow(label: 'decomposes'),
             _FlowNode('WBS', 'Tree', Icons.account_tree,
-                const Color(0xFFFFC812)),
+                Color(0xFFFFC812)),
             _FlowArrow(label: 'sequences'),
             _FlowNode('Schedule', 'Activities', Icons.calendar_month,
-                const Color(0xFFD97706)),
+                Color(0xFFD97706)),
             _FlowArrow(label: 'measures'),
             _FlowNode('Controls', 'EVM', Icons.dashboard_customize,
-                const Color(0xFFF59E0B)),
+                Color(0xFFF59E0B)),
           ],
         );
       },
@@ -1370,11 +1370,11 @@ class _EmptyStateCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
-      child: Column(
+      child: const Column(
         children: [
-          const Icon(Icons.insights, size: 48, color: _Tk.textSecondary),
-          const SizedBox(height: 12),
-          const Text(
+          Icon(Icons.insights, size: 48, color: _Tk.textSecondary),
+          SizedBox(height: 12),
+          Text(
             'No assessment yet',
             style: TextStyle(
               fontSize: 16,
@@ -1382,8 +1382,8 @@ class _EmptyStateCard extends StatelessWidget {
               color: _Tk.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
-          const Text(
+          SizedBox(height: 4),
+          Text(
             'Click "Re-run IBR" to assess the integration state of '
             'Scope, WBS, Schedule, and Project Controls.',
             textAlign: TextAlign.center,

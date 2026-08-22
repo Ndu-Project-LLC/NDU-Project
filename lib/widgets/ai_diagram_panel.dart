@@ -163,11 +163,11 @@ class _DiagramLayout {
     }
 
     // ── Compute positions (D6: centered rows, adequate spacing) ──────────
-    final W = _DiagramPainter._nodeW;
-    final H = _DiagramPainter._nodeH;
-    final hGap = _DiagramPainter._hGap;
-    final vGap = _DiagramPainter._vGap;
-    final pad = _DiagramPainter._pad;
+    const W = _DiagramPainter._nodeW;
+    const H = _DiagramPainter._nodeH;
+    const hGap = _DiagramPainter._hGap;
+    const vGap = _DiagramPainter._vGap;
+    const pad = _DiagramPainter._pad;
 
     // Determine widest row for dynamic centering
     final levels = groups.keys.toList()..sort();
@@ -782,10 +782,10 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Color(0xFFE1EEFF),
+                color: const Color(0xFFE1EEFF),
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: Row(children: const [
+              child: const Row(children: [
                 Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
                 SizedBox(width: 6),
                 Text('AI Diagram',
@@ -888,7 +888,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Color(0xFFE5E7EB)),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -928,7 +928,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Color(0xFFE5E7EB)),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: Stack(
               children: [
@@ -1066,7 +1066,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Color(0xFFD1D5DB),
+                color: const Color(0xFFD1D5DB),
                 width: 1.5,
                 strokeAlign: BorderSide.strokeAlignInside,
               ),
@@ -1080,8 +1080,8 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.hub_outlined,
-                        size: 48, color: const Color(0xFFD1D5DB)),
+                    const Icon(Icons.hub_outlined,
+                        size: 48, color: Color(0xFFD1D5DB)),
                     const SizedBox(height: 16),
                     const Text(
                       'Generate a strategic reasoning diagram',
@@ -1284,7 +1284,7 @@ class _ToolbarButton extends StatelessWidget {
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: Color(0xFFF3F4F6),
+              color: const Color(0xFFF3F4F6),
             ),
             child: Icon(icon, size: 18, color: const Color(0xFF6B7280)),
           ),

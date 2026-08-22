@@ -653,7 +653,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Color(0xFFE5E7EB)),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -997,7 +997,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Close-Out Checklist'),
@@ -1005,14 +1005,14 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
             if (_closeOutChecklist.isEmpty)
               pw.Text('No checklist items.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1033,14 +1033,14 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
             if (_approvals.isEmpty)
               pw.Text('No approval records.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1068,14 +1068,14 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
             if (_archive.isEmpty)
               pw.Text('No archive items.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1104,7 +1104,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
               _lessonsLearned.notes.trim().isEmpty
                   ? 'No lessons learned recorded.'
                   : _lessonsLearned.notes.trim(),
-              style: pw.TextStyle(fontSize: 9),
+              style: const pw.TextStyle(fontSize: 9),
             ),
           ],
         ),

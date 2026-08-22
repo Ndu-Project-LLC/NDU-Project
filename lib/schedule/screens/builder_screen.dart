@@ -593,12 +593,12 @@ class _BuilderScreenState extends State<BuilderScreen> {
                     border: Border.all(
                         color: TreasuryTokens.brand.withValues(alpha: 0.4)),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.layers_outlined,
                           size: 12, color: TreasuryTokens.brandDeep),
-                      const SizedBox(width: 5),
+                      SizedBox(width: 5),
                       Text('L0 — L8',
                           style: TextStyle(
                               fontSize: 10,
@@ -660,7 +660,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
                                 border: Border.all(
                                     color: TreasuryTokens.brand.withValues(alpha: 0.3)),
                               ),
-                              child: Icon(Icons.account_tree_rounded,
+                              child: const Icon(Icons.account_tree_rounded,
                                   size: 16, color: TreasuryTokens.brandDeep),
                             ),
                             const SizedBox(width: 10),
@@ -741,7 +741,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
                         color: TreasuryTokens.info.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(7),
                       ),
-                      child: Icon(Icons.tips_and_updates_outlined,
+                      child: const Icon(Icons.tips_and_updates_outlined,
                           size: 15, color: TreasuryTokens.info),
                     ),
                     const SizedBox(width: 10),
@@ -1233,9 +1233,7 @@ class _ActionChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.primary = false,
-    this.enabled = true,
-  });
+  }) : primary = false : enabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -2671,7 +2669,7 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                     border: Border.all(
                         color: TreasuryTokens.brand.withValues(alpha: 0.3)),
                   ),
-                  child: Icon(Icons.timeline_rounded,
+                  child: const Icon(Icons.timeline_rounded,
                       size: 17, color: TreasuryTokens.brandDeep),
                 ),
                 const SizedBox(width: 10),
@@ -2709,7 +2707,7 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.date_range_rounded,
+                      const Icon(Icons.date_range_rounded,
                           size: 12, color: TreasuryTokens.muted),
                       const SizedBox(width: 5),
                       Text(
@@ -3429,7 +3427,7 @@ class _DrawingFromBanner extends StatelessWidget {
                 color: TreasuryTokens.warning.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.info_outline,
+              child: const Icon(Icons.info_outline,
                   size: 16, color: TreasuryTokens.warning),
             ),
             const SizedBox(width: 10),
@@ -3497,7 +3495,7 @@ class _DrawingFromBanner extends StatelessWidget {
                   border: Border.all(
                       color: TreasuryTokens.brand.withValues(alpha: 0.3)),
                 ),
-                child: Icon(Icons.input_rounded,
+                child: const Icon(Icons.input_rounded,
                     size: 15, color: TreasuryTokens.brandDeep),
               ),
               const SizedBox(width: 10),

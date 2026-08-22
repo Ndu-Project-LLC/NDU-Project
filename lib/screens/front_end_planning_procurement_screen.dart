@@ -757,7 +757,7 @@ class _FrontEndPlanningProcurementScreenState
  /// On narrow viewports the strip scrolls horizontally so all 7 tabs
  /// remain reachable.
  Widget _buildProcurementTabStrip() {
- final tabs = _ProcurementTab.values;
+ const tabs = _ProcurementTab.values;
  final restricted = _tabsWithRestrictedAccess;
 
  return Container(
@@ -790,7 +790,7 @@ class _FrontEndPlanningProcurementScreenState
  _ProcurementTab tab, Set<_ProcurementTab> restricted) {
  final isSelected = _selectedTab == tab;
  final isRestricted = restricted.contains(tab);
- final accent = const Color(0xFFB8860B);
+ const accent = Color(0xFFB8860B);
 
  VoidCallback? onTap = () => _handleTabSelected(tab);
  if (isRestricted) onTap = null;
@@ -12697,7 +12697,7 @@ class _ContractingWorkflowViewState extends State<_ContractingWorkflowView> {
  );
  }
 
- final accent = const Color(0xFFB8860B);
+ const accent = Color(0xFFB8860B);
  final nextStage = _nextPendingStage;
 
  return Column(
@@ -12847,9 +12847,9 @@ class _ContractingStageCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final accent = const Color(0xFFB8860B);
- final successGreen = const Color(0xFF16A34A);
- final amber = const Color(0xFFF59E0B);
+ const accent = Color(0xFFB8860B);
+ const successGreen = Color(0xFF16A34A);
+ const amber = Color(0xFFF59E0B);
 
  Color badgeColor = isComplete
  ? successGreen
@@ -12913,10 +12913,10 @@ class _ContractingStageCard extends StatelessWidget {
  bgColor: const Color(0xFFE8FFF4),
  )
  else if (isNext)
- _StageChip(
+ const _StageChip(
  text: 'NEXT',
- color: const Color(0xFFB45309),
- bgColor: const Color(0xFFFEF3C7),
+ color: Color(0xFFB45309),
+ bgColor: Color(0xFFFEF3C7),
  ),
  ],
  ),
@@ -13049,7 +13049,7 @@ class _VendorEvaluationViewState extends State<_VendorEvaluationView> {
 
  @override
  Widget build(BuildContext context) {
- final accent = const Color(0xFFB8860B);
+ const accent = Color(0xFFB8860B);
  final vendors = widget.vendors;
 
  if (vendors.isEmpty) {
@@ -13323,7 +13323,7 @@ class _EvaluationMatrix extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final headerStyle = TextStyle(
+ const headerStyle = TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
  color: const Color(0xFF1E293B),

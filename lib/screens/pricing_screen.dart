@@ -1424,7 +1424,7 @@ class _PlanColumn extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: accent, width: 1.4),
+                  side: const BorderSide(color: accent, width: 1.4),
                 ),
                 textStyle:
                     const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
@@ -1940,10 +1940,10 @@ class _NduProjectLogo extends StatelessWidget {
         color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
+      child: const Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Row(
+          Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
@@ -1976,8 +1976,8 @@ class _NduProjectLogo extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          const Text(
+          SizedBox(height: 6),
+          Text(
             'Navigate. Deliver. Upgrade',
             style: TextStyle(
               color: Color(0xFF909096),

@@ -343,7 +343,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
             pw.Text(
                 '$projectName — Generated ${now.toLocal().toIso8601String()}',
                 style:
-                    pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                    const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
             pw.SizedBox(height: 16),
 
             // Checklist Items
@@ -359,7 +359,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -379,7 +379,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -399,7 +399,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -419,7 +419,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -458,7 +458,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
   pw.Widget _pdfCell(String text) {
     return pw.Padding(
         padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(text, style: pw.TextStyle(fontSize: 9)));
+        child: pw.Text(text, style: const pw.TextStyle(fontSize: 9)));
   }
 
   String _s(dynamic v) => (v ?? '').toString().trim();
@@ -473,28 +473,28 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
   // ── Defaults ────────────────────────────────────────────────────
 
   List<_ChecklistItemData> _defaultChecklistItems() => [
-        _ChecklistItemData(
+        const _ChecklistItemData(
           title: 'Cutover rehearsals signed off',
           detail: 'Dry run #2 captured follow-up items',
           owner: 'Operations lead',
           due: 'Aug 12',
           status: 'Complete',
         ),
-        _ChecklistItemData(
+        const _ChecklistItemData(
           title: 'Rollback playbook distributed',
           detail: 'Share final rollback guide with war room',
           owner: 'Program manager',
           due: 'Aug 09',
           status: 'At risk',
         ),
-        _ChecklistItemData(
+        const _ChecklistItemData(
           title: 'Hypercare squad roster confirmed',
           detail: 'Roster, shifts, and bridge details communicated',
           owner: 'Launch director',
           due: 'Aug 15',
           status: 'On track',
         ),
-        _ChecklistItemData(
+        const _ChecklistItemData(
           title: 'Customer comms final approval',
           detail: 'Exec sign-off on launch narratives',
           owner: 'Comms lead',
@@ -504,19 +504,19 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
       ];
 
   List<_ApprovalData> _defaultApprovals() => [
-        _ApprovalData(
+        const _ApprovalData(
           label: 'Cutover rehearsal sign-off',
           detail: 'Delivery, platform, and ops leads approved',
           status: 'Complete',
           approver: 'Ops Director',
         ),
-        _ApprovalData(
+        const _ApprovalData(
           label: 'Business readiness validation',
           detail: 'Support staffing matrix ready',
           status: 'Complete',
           approver: 'Business Owner',
         ),
-        _ApprovalData(
+        const _ApprovalData(
           label: 'Comms go-live bundle',
           detail: 'Legal + comms reviewing final messaging',
           status: 'In review',
@@ -525,19 +525,19 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
       ];
 
   List<_MilestoneData> _defaultMilestones() => [
-        _MilestoneData(
+        const _MilestoneData(
           title: 'Cutover rehearsal playback',
           detail: 'Ops + Engineering walk-through',
           due: 'Aug 09',
           status: 'Complete',
         ),
-        _MilestoneData(
+        const _MilestoneData(
           title: 'Go / no-go rehearsal',
           detail: 'Dry run with scenario walk-through',
           due: 'Aug 11',
           status: 'Upcoming',
         ),
-        _MilestoneData(
+        const _MilestoneData(
           title: 'Launch day',
           detail: 'Go-live execution',
           due: 'Aug 18',
@@ -546,19 +546,19 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
       ];
 
   List<_TimelineStage> _defaultTimelineStages() => [
-        _TimelineStage(
+        const _TimelineStage(
           label: 'Final readiness review',
           detail: 'All cutover artefacts verified',
           date: 'Aug 10',
           status: 'Complete',
         ),
-        _TimelineStage(
+        const _TimelineStage(
           label: 'Go / no-go rehearsal',
           detail: 'Dry run with escalation practices',
           date: 'Aug 11',
           status: 'In progress',
         ),
-        _TimelineStage(
+        const _TimelineStage(
           label: 'Launch day execution',
           detail: 'Go-live cutover',
           date: 'Aug 18',

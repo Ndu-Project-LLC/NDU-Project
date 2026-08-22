@@ -148,9 +148,9 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              Text(
+                              const Text(
                                 'Define how project interfaces will be identified, coordinated, and managed to ensure effective integration across stakeholders, organizations, systems, disciplines, and deliverables.',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
                                   color: Color(0xFF4B5563),
                                   height: 1.5,
@@ -302,7 +302,7 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
     return Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Color(0xFFF4B422),
+        color: const Color(0xFFF4B422),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -343,7 +343,7 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,7 +510,7 @@ class _MetricCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1749,7 +1749,7 @@ class _ArchCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1995,7 +1995,7 @@ class _RaciGovernanceSection extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(0xFFFEF3C7),
+                color: const Color(0xFFFEF3C7),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -2012,7 +2012,7 @@ class _RaciGovernanceSection extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(0xFFFEF3C7),
+                color: const Color(0xFFFEF3C7),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -2029,7 +2029,7 @@ class _RaciGovernanceSection extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(0xFFD1FAE5),
+                color: const Color(0xFFD1FAE5),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -2046,7 +2046,7 @@ class _RaciGovernanceSection extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(0xFFF3F4F6),
+                color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: const Text(
@@ -3039,7 +3039,7 @@ class _HandoffCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3126,7 +3126,7 @@ class _ReadinessSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3160,8 +3160,8 @@ class _SectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 6)),
         ],
@@ -3202,9 +3202,9 @@ class _SectionSubcard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3243,7 +3243,7 @@ class _CircleIconButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
       ),
@@ -3429,7 +3429,7 @@ class _RaciTooltipBadge extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            color: Color(0xFFF3F4F6),
+            color: const Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(

@@ -1888,9 +1888,9 @@ class _ExpandTableChip extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Icon(Icons.fullscreen,
                     size: 16, color: Color(0xFF4B5563)),
                 SizedBox(width: 6),

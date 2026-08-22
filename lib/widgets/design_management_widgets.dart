@@ -92,7 +92,7 @@ class DesignSpecificationsCard extends StatelessWidget {
         color = Colors.green;
         break;
       case 'Implemented':
-        color = Color(0xFFFFC812);
+        color = const Color(0xFFFFC812);
         break;
       default:
         color = Colors.orange;
@@ -218,7 +218,7 @@ class DesignDocumentsCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Color(0xFFDCFCE7),
+                  color: const Color(0xFFDCFCE7),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.description,
@@ -305,7 +305,7 @@ class DesignDocumentsCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Color(0xFFBBF7D0)),
+                        border: Border.all(color: const Color(0xFFBBF7D0)),
                       ),
                       child: Row(
                         children: [
@@ -313,7 +313,7 @@ class DesignDocumentsCard extends StatelessWidget {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: Color(0xFFDCFCE7),
+                              color: const Color(0xFFDCFCE7),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -435,7 +435,7 @@ class DesignDocumentsCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Color(0xFFF0FDF4),
+                  color: const Color(0xFFF0FDF4),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.insert_drive_file_outlined,
@@ -458,7 +458,7 @@ class DesignDocumentsCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: docType,
+                  initialValue: docType,
                   decoration: const InputDecoration(labelText: 'Type'),
                   items: ['Input', 'Output', 'Reference'].map((t) {
                     return DropdownMenuItem(value: t, child: Text(t));
@@ -649,7 +649,7 @@ class DesignToolsCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Color(0xFFFEF3C7),
+                  color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.construction,
@@ -735,7 +735,7 @@ class DesignToolsCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Color(0xFFFDE68A)),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
                       ),
                       child: Row(
                         children: [
@@ -743,7 +743,7 @@ class DesignToolsCard extends StatelessWidget {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: Color(0xFFFEF3C7),
+                              color: const Color(0xFFFEF3C7),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -871,7 +871,7 @@ class DesignToolsCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Color(0xFFFFFBEB),
+                  color: const Color(0xFFFFFBEB),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.build_outlined,

@@ -543,7 +543,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: _kBorder),
+        side: const BorderSide(color: _kBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),

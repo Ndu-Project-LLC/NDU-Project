@@ -431,8 +431,8 @@ class CharterSecurity extends StatelessWidget {
  children: secRoles
  .map((r) => Chip(
  label: Text(r.name),
- backgroundColor: Color(0xFFFFF8E1),
- labelStyle: TextStyle(
+ backgroundColor: const Color(0xFFFFF8E1),
+ labelStyle: const TextStyle(
  color: Color(0xFFB8860B), fontSize: 11),
  ))
  .toList(),

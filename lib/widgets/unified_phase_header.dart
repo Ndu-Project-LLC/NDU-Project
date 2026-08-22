@@ -379,9 +379,7 @@ class _CircleNavButton extends StatelessWidget {
   const _CircleNavButton({
     required this.icon,
     required this.iconSize,
-    this.onTap,
-    this.enabled = true,
-  });
+  }) : onTap = null : enabled = true;
 
   final IconData icon;
   final double iconSize;
@@ -399,7 +397,7 @@ class _CircleNavButton extends StatelessWidget {
           color: Colors.white,
           shape: BoxShape.circle,
           border: Border.all(
-            color: Color(0xFFE2E8F0),
+            color: const Color(0xFFE2E8F0),
           ),
         ),
         alignment: Alignment.center,
@@ -523,7 +521,7 @@ class UnifiedProfileMenu extends StatelessWidget {
         ? CircleAvatar(
             radius: compact ? 16 : 20,
             backgroundImage: NetworkImage(photoUrl),
-            backgroundColor: Color(0xFFFFC812),
+            backgroundColor: const Color(0xFFFFC812),
           )
         : Container(
             width: compact ? 32 : 40,
@@ -663,9 +661,9 @@ class _ActivityLogAction extends StatelessWidget {
             vertical: 8,
           ),
           decoration: BoxDecoration(
-            color: Color(0xFFFFF7E0),
+            color: const Color(0xFFFFF7E0),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFFFFD873)),
+            border: Border.all(color: const Color(0xFFFFD873)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -716,9 +714,9 @@ class _HeaderActionChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
-            color: Color(0xFFF0F4FF),
+            color: const Color(0xFFF0F4FF),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFFFEF3C7)),
+            border: Border.all(color: const Color(0xFFFEF3C7)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -761,7 +759,7 @@ class _AiAssistChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
-            color: Color(0xFF4154F1),
+            color: const Color(0xFF4154F1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(

@@ -314,7 +314,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: TabBar(
         controller: _tabController,
@@ -357,11 +357,11 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [Color(0xFFECFDF5), Color(0xFFF0FDF4)],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFF86EFAC)),
+            border: Border.all(color: const Color(0xFF86EFAC)),
           ),
           child: Row(
             children: [
@@ -369,7 +369,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [Color(0xFF059669), Color(0xFF047857)],
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -567,7 +567,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -678,7 +678,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -798,7 +798,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: Column(
             children: [
@@ -860,7 +860,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Color(0xFFF3F4F6),
+        color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -892,7 +892,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: _milestones.isEmpty
               ? const Center(
@@ -988,7 +988,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

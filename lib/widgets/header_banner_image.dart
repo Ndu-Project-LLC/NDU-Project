@@ -19,8 +19,8 @@ class HeaderBannerImage extends StatefulWidget {
 
   const HeaderBannerImage({
     super.key,
-    this.asset = 'assets/images/NDU_items.png',
-    this.fallbackAsset = 'assets/images/NDU.png',
+    this.asset = 'assets/images/Logo.png',
+    this.fallbackAsset = 'assets/images/Ndu_logodarkmode.png',
     this.height,
     this.fit = BoxFit.cover,
   });

@@ -332,7 +332,7 @@ class _StakeholderIdentificationSectionState
             children: [
               CsvTableImportButton(
                 tableTitle: 'Stakeholders',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'stakeholderGroup',
                       label: 'Stakeholder Group',
@@ -393,7 +393,7 @@ class _StakeholderIdentificationSectionState
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileStakeholderIdentificationActions()
+          const _MobileStakeholderIdentificationActions()
         else
           const _DesktopStakeholderIdentificationActions(),
       ],

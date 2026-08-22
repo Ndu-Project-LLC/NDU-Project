@@ -821,7 +821,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
       margin: const EdgeInsets.only(bottom: 6, left: 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: _kBorder),
+        side: const BorderSide(color: _kBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(10),
@@ -958,7 +958,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
   Color _statusColor(String status) {
     switch (status) {
       case 'active':
-        return Color(0xFFFFC812);
+        return const Color(0xFFFFC812);
       case 'complete':
         return Colors.green;
       case 'cancelled':
@@ -975,7 +975,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
       case 'high':
         return Colors.orange;
       case 'medium':
-        return Color(0xFFFFC812);
+        return const Color(0xFFFFC812);
       default:
         return Colors.grey;
     }

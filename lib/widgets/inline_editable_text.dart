@@ -284,15 +284,15 @@ class _InlineEditableTextState extends State<InlineEditableText> {
               hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5),
+                borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5),
+                borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 6),

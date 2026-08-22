@@ -1871,7 +1871,7 @@ class _ApproverAutocomplete extends StatelessWidget {
  Icon(
  isCreate ? Icons.add_circle : Icons.person,
  size: 18,
- color: isCreate ? Color(0xFFFFC812) : _kMuted,
+ color: isCreate ? const Color(0xFFFFC812) : _kMuted,
  ),
  const SizedBox(width: 8),
  Expanded(
@@ -1881,7 +1881,7 @@ class _ApproverAutocomplete extends StatelessWidget {
  : option,
  style: TextStyle(
  fontSize: 14,
- color: isCreate ? Color(0xFFFFC812) : _kHeadline,
+ color: isCreate ? const Color(0xFFFFC812) : _kHeadline,
  ),
  ),
  ),

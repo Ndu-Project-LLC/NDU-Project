@@ -223,8 +223,8 @@ class _AgileDevelopmentIterationsScreenState
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Development Iterations',
                     ),
                   ),
@@ -246,7 +246,7 @@ class _AgileDevelopmentIterationsScreenState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Color(0xFFFFC812),
+            color: const Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(4),
           ),
           child: const Text(
@@ -472,7 +472,7 @@ class _AgileDevelopmentIterationsScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -534,7 +534,7 @@ class _AgileDevelopmentIterationsScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -571,13 +571,13 @@ class _AgileDevelopmentIterationsScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Color(0xFFF3F4F6),
+                        color: const Color(0xFFF3F4F6),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.speed,
-                              size: 16, color: const Color(0xFFB8860B)),
+                          const Icon(Icons.speed,
+                              size: 16, color: Color(0xFFB8860B)),
                           const SizedBox(width: 8),
                           Text(
                             epicEntry.key,
@@ -610,8 +610,8 @@ class _AgileDevelopmentIterationsScreenState
                                   const EdgeInsets.only(left: 12, bottom: 4),
                               child: Row(
                                 children: [
-                                  Icon(Icons.flag,
-                                      size: 14, color: const Color(0xFFF59E0B)),
+                                  const Icon(Icons.flag,
+                                      size: 14, color: Color(0xFFF59E0B)),
                                   const SizedBox(width: 6),
                                   Text(
                                     featureEntry.key,
@@ -729,7 +729,7 @@ class _AgileDevelopmentIterationsScreenState
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       key: assignedRoleFieldKey,
-                      value: _availableRoles.isEmpty
+                      initialValue: _availableRoles.isEmpty
                           ? null
                           : (_availableRoles.contains(selectedRole)
                               ? selectedRole
@@ -763,7 +763,7 @@ class _AgileDevelopmentIterationsScreenState
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
-                      value: selectedStoryPoints,
+                      initialValue: selectedStoryPoints,
                       decoration:
                           const InputDecoration(labelText: 'Story Points *'),
                       items: const [1, 2, 3, 5, 8].map((points) {
@@ -774,7 +774,7 @@ class _AgileDevelopmentIterationsScreenState
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: selectedPriority,
+                      initialValue: selectedPriority,
                       decoration:
                           const InputDecoration(labelText: 'Priority *'),
                       items:
@@ -787,7 +787,7 @@ class _AgileDevelopmentIterationsScreenState
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: selectedStatus,
+                      initialValue: selectedStatus,
                       decoration: const InputDecoration(labelText: 'Status *'),
                       items: const ['To-Do', 'In-Progress', 'Testing', 'Done']
                           .map((s) {
@@ -799,7 +799,7 @@ class _AgileDevelopmentIterationsScreenState
                     const SizedBox(height: 12),
                     if (_epics.isNotEmpty)
                       DropdownButtonFormField<String>(
-                        value: selectedEpicId,
+                        initialValue: selectedEpicId,
                         decoration: const InputDecoration(labelText: 'Epic *'),
                         items: _epics
                             .map((e) => DropdownMenuItem<String>(
@@ -822,7 +822,7 @@ class _AgileDevelopmentIterationsScreenState
                       Padding(
                         padding: const EdgeInsets.only(top: 12),
                         child: DropdownButtonFormField<String>(
-                          value: selectedFeatureId.isNotEmpty
+                          initialValue: selectedFeatureId.isNotEmpty
                               ? selectedFeatureId
                               : null,
                           decoration:
@@ -1042,9 +1042,9 @@ class _MilestoneLinkButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Color(0xFFFFF8E1),
+          color: const Color(0xFFFFF8E1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Color(0xFFFFE082)),
+          border: Border.all(color: const Color(0xFFFFE082)),
         ),
         child: Row(
           children: [

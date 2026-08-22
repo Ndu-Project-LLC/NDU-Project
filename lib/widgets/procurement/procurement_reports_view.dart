@@ -386,7 +386,7 @@ class _SpendBreakdownCard extends StatelessWidget {
                     Container(
                       height: 8,
                       decoration: BoxDecoration(
-                        color: Color(0xFFE2E8F0),
+                        color: const Color(0xFFE2E8F0),
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),

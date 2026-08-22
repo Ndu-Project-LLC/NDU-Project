@@ -436,7 +436,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -456,7 +456,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Expanded(
+                  const Expanded(
                     child: Text(
                       'Contract control framework',
                       style: TextStyle(
@@ -471,7 +471,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
                     size: 22,
-                    color: Color(0xFF6B7280),
+                    color: const Color(0xFF6B7280),
                   ),
                 ],
               ),
@@ -600,10 +600,10 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
   Widget _buildContractRegister() {
     final contractsStream = _contractStreamForProject();
     if (contractsStream == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Contract register',
         subtitle: 'Track scope, owners, and renewal milestones',
-        child: const Center(
+        child: Center(
           child: Padding(
             padding: EdgeInsets.all(24.0),
             child: Text('No project selected. Please open a project first.',
@@ -676,13 +676,13 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
   Widget _buildRenewalPanel() {
     if (_projectId == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Renewal pipeline',
         subtitle:
             'Contract renewal tracker aligned with PMI PMBOK Control Procurements. '
             'Monitor contracts approaching expiry, assign renewal owners, and track '
             'renegotiation progress across urgency windows.',
-        child: const SizedBox.shrink(),
+        child: SizedBox.shrink(),
       );
     }
 
@@ -690,7 +690,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -707,11 +707,11 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Renewal pipeline',
                         style: TextStyle(
                           fontSize: 16,
@@ -719,12 +719,12 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           color: Color(0xFF111827),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         'Contract renewal tracker aligned with PMI PMBOK Control '
                         'Procurements. Monitor contracts approaching expiry, assign '
                         'renewal owners, and track renegotiation progress across urgency windows.',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF6B7280),
@@ -755,15 +755,15 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
           ),
           const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
           if (_renewalLanes.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(32),
+            const Padding(
+              padding: EdgeInsets.all(32),
               child: Center(
                 child: Column(
                   children: [
-                    const Icon(Icons.autorenew_outlined,
+                    Icon(Icons.autorenew_outlined,
                         color: Color(0xFF9CA3AF), size: 32),
-                    const SizedBox(height: 12),
-                    const Text(
+                    SizedBox(height: 12),
+                    Text(
                       'No contracts in the renewal pipeline. Add contracts to start tracking renewals.',
                       style: TextStyle(
                         fontSize: 13,
@@ -896,10 +896,10 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
   Widget _buildSignalsPanel() {
     if (_projectId == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Risk signals',
         subtitle: 'Items that need attention this week',
-        child: const SizedBox.shrink(),
+        child: SizedBox.shrink(),
       );
     }
 
@@ -927,13 +927,13 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
   Widget _buildApprovalsPanel() {
     if (_projectId == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Approval readiness',
         subtitle:
             'Contract approval gates aligned with PMI PMBOK Close Procurements '
             'and organizational authority matrices. Each gate must be cleared '
             'before the contract advances to the next stage.',
-        child: const SizedBox.shrink(),
+        child: SizedBox.shrink(),
       );
     }
 
@@ -941,7 +941,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -959,11 +959,11 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Approval readiness',
                         style: TextStyle(
                           fontSize: 16,
@@ -971,12 +971,12 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           color: Color(0xFF111827),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         'Contract approval gates aligned with PMI PMBOK Close Procurements '
                         'and organizational authority matrices. Each gate must be cleared '
                         'before the contract advances to the next stage.',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF6B7280),
@@ -1008,15 +1008,15 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
           const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
           // Table
           if (_approvalCheckpoints.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(32),
+            const Padding(
+              padding: EdgeInsets.all(32),
               child: Center(
                 child: Column(
                   children: [
-                    const Icon(Icons.verified_outlined,
+                    Icon(Icons.verified_outlined,
                         color: Color(0xFF9CA3AF), size: 32),
-                    const SizedBox(height: 12),
-                    const Text(
+                    SizedBox(height: 12),
+                    Text(
                       'No approval gates defined. Add gates to set up the approval workflow.',
                       style: TextStyle(
                         fontSize: 13,
@@ -1228,9 +1228,9 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1433,7 +1433,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedType,
+                              initialValue: selectedType,
                               decoration: const InputDecoration(
                                 labelText: 'Contract type',
                                 isDense: true,
@@ -1454,7 +1454,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedAction,
+                              initialValue: selectedAction,
                               decoration: const InputDecoration(
                                 labelText: 'Renewal action',
                                 isDense: true,
@@ -1518,7 +1518,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<int>(
-                              value: _daysLeftOptions.contains(selectedDaysLeft)
+                              initialValue: _daysLeftOptions.contains(selectedDaysLeft)
                                   ? selectedDaysLeft
                                   : null,
                               decoration: const InputDecoration(
@@ -1535,9 +1535,10 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                                       ))
                                   .toList(),
                               onChanged: (value) {
-                                if (value != null)
+                                if (value != null) {
                                   setDialogState(
                                       () => selectedDaysLeft = value);
+                                }
                               },
                             ),
                           ),
@@ -1571,7 +1572,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: selectedStatus,
+                        initialValue: selectedStatus,
                         decoration: const InputDecoration(
                           labelText: 'Renewal status',
                           isDense: true,
@@ -1755,7 +1756,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedStatus,
+                              initialValue: selectedStatus,
                               decoration: const InputDecoration(
                                 labelText: 'Status',
                               ),
@@ -1957,7 +1958,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedDepartment,
+                              initialValue: selectedDepartment,
                               decoration: const InputDecoration(
                                 labelText: 'Department',
                                 isDense: true,
@@ -1983,7 +1984,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedPriority,
+                              initialValue: selectedPriority,
                               decoration: const InputDecoration(
                                 labelText: 'Priority',
                                 isDense: true,
@@ -2004,7 +2005,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedStatus,
+                              initialValue: selectedStatus,
                               decoration: const InputDecoration(
                                 labelText: 'Status',
                                 isDense: true,
@@ -2260,7 +2261,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: contractTypeController.text.isEmpty
+                    initialValue: contractTypeController.text.isEmpty
                         ? null
                         : contractTypeController.text,
                     decoration: const InputDecoration(
@@ -2296,7 +2297,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedStatus.isEmpty ? null : selectedStatus,
+                    initialValue: selectedStatus.isEmpty ? null : selectedStatus,
                     decoration: const InputDecoration(
                       labelText: 'Status',
                       isDense: true,
@@ -2332,7 +2333,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   // the contract is expected to kick off in. May not be known
                   // in initiation; can be left as 'Not Sure' for bidding.
                   DropdownButtonFormField<String>(
-                    value: selectedStartPhase,
+                    initialValue: selectedStartPhase,
                     decoration: const InputDecoration(
                       labelText: 'Phase for Contract Start',
                       isDense: true,
@@ -2634,7 +2635,7 @@ class _PanelShell extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

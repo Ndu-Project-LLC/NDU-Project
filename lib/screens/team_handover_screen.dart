@@ -278,7 +278,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFFDE68A)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,7 +568,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFFCD34D)),
+        border: Border.all(color: const Color(0xFFFCD34D)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

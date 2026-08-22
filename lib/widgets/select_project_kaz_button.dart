@@ -427,7 +427,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
                         errorText: _projectNameError,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey, width: 1),
+                          borderSide: const BorderSide(color: Colors.grey, width: 1),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -438,7 +438,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide:
-                              BorderSide(color: Color(0xFFFFC812), width: 2),
+                              const BorderSide(color: Color(0xFFFFC812), width: 2),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),

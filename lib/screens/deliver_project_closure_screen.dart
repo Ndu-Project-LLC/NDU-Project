@@ -1315,14 +1315,14 @@ class _DeliverProjectClosureScreenState
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Scope Acceptance'),
             pw.SizedBox(height: 6),
             if (_scopeItems.isEmpty)
               pw.Text('No scope items recorded.',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey500))
             else
               pw.Table(
@@ -1349,7 +1349,7 @@ class _DeliverProjectClosureScreenState
             pw.SizedBox(height: 6),
             if (_milestones.isEmpty)
               pw.Text('No milestones recorded.',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey500))
             else
               pw.Table(
@@ -1374,7 +1374,7 @@ class _DeliverProjectClosureScreenState
             pw.SizedBox(height: 6),
             if (_outstandingItems.isEmpty)
               pw.Text('No outstanding items.',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey500))
             else
               pw.Table(
@@ -1401,7 +1401,7 @@ class _DeliverProjectClosureScreenState
             pw.SizedBox(height: 6),
             if (_riskFollowUps.isEmpty)
               pw.Text('No post-delivery risks recorded.',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey500))
             else
               pw.Table(
@@ -1459,7 +1459,7 @@ class _DeliverProjectClosureScreenState
   pw.Widget _pdfCell(String text) {
     return pw.Padding(
       padding: const pw.EdgeInsets.all(6),
-      child: pw.Text(text, style: pw.TextStyle(fontSize: 9)),
+      child: pw.Text(text, style: const pw.TextStyle(fontSize: 9)),
     );
   }
 
@@ -1658,7 +1658,7 @@ class _ScopeEditDialogState extends State<_ScopeEditDialog> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Color(0xFFFEF3C7),
+                        color: const Color(0xFFFEF3C7),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.edit_note_rounded,

@@ -142,10 +142,10 @@ class _AggregatedBusinessSystemsCardState
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: Color(0xFFE2E8F0), style: BorderStyle.solid, width: 1),
+            color: const Color(0xFFE2E8F0), style: BorderStyle.solid, width: 1),
       ),
       child: Column(
         children: [

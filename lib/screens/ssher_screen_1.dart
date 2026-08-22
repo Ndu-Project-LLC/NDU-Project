@@ -65,7 +65,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  padding: const EdgeInsets.symmetric(
  horizontal: 20, vertical: 14),
  decoration: BoxDecoration(
- color: Color(0xFFFFC812).withValues(alpha: 0.08),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.08),
  borderRadius: const BorderRadius.vertical(
  top: Radius.circular(12)),
  ),
@@ -75,7 +75,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  width: 30,
  height: 30,
  decoration: BoxDecoration(
- color: Color(0xFFFFC812).withValues(alpha: 0.15),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.15),
  shape: BoxShape.circle),
  child: const Icon(Icons.receipt_long,
  size: 18, color: Color(0xFFFFC812)),
@@ -250,7 +250,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  padding: const EdgeInsets.symmetric(
  horizontal: 20, vertical: 14),
  decoration: BoxDecoration(
- color: Color(0xFFFFC812).withValues(alpha: 0.08),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.08),
  borderRadius: const BorderRadius.vertical(
  top: Radius.circular(12)),
  ),
@@ -261,7 +261,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  height: 30,
  decoration: BoxDecoration(
  color:
- Color(0xFFFFC812).withValues(alpha: 0.15),
+ const Color(0xFFFFC812).withValues(alpha: 0.15),
  shape: BoxShape.circle),
  child: const Icon(Icons.receipt_long,
  size: 18, color: Color(0xFFFFC812)),

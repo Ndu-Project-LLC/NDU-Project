@@ -188,7 +188,7 @@ class _InterfaceManagementPlanFormState
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: const Text(
             'The Interface Management Plan defines the coordination framework, responsibilities, escalation procedures, and communication protocols for managing interfaces between project packages, disciplines, and external stakeholders.',
@@ -268,8 +268,8 @@ class _InterfaceManagementPlanSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0F000000), blurRadius: 10, offset: Offset(0, 6)),
         ],

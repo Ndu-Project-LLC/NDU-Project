@@ -43,7 +43,7 @@ class VendorsTableWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB), width: 1),
+            border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.03),
@@ -263,9 +263,9 @@ class _VendorNameCell extends StatelessWidget {
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: Color(0xFFF1F5F9),
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFE2E8F0), width: 0.5),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.5),
       ),
       child: Center(
         child: Text(
@@ -607,7 +607,7 @@ class _SlaCell extends StatelessWidget {
                 Container(
                   height: 6,
                   decoration: BoxDecoration(
-                    color: Color(0xFFE2E8F0),
+                    color: const Color(0xFFE2E8F0),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -787,7 +787,7 @@ class _LeadTimeCell extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Color(0xFFF1F5F9),
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -1074,11 +1074,11 @@ class _ActionsCellState extends State<_ActionsCell> {
                   ),
               ],
             )
-          : Row(
+          : const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.more_horiz,
-                    size: 18, color: const Color(0xFFCBD5E1)),
+                    size: 18, color: Color(0xFFCBD5E1)),
               ],
             ),
     );

@@ -482,7 +482,7 @@ class _PlanDecisionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
       decoration: BoxDecoration(
-        color: Color(0xFFBDBDBD),
+        color: const Color(0xFFBDBDBD),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -579,8 +579,8 @@ class _PlanInputCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0F000000), blurRadius: 12, offset: Offset(0, 6)),
         ],

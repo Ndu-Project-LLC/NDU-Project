@@ -192,8 +192,8 @@ class _StakeholderAlignmentScreenState
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Stakeholder Alignment',
                     ),
                   ),
@@ -215,7 +215,7 @@ class _StakeholderAlignmentScreenState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Color(0xFFFFC812),
+            color: const Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(4),
           ),
           child: const Text(
@@ -372,7 +372,7 @@ class _StakeholderAlignmentScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,7 +429,7 @@ class _StakeholderAlignmentScreenState
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
-                      value: selectedStakeholder,
+                      initialValue: selectedStakeholder,
                       decoration: const InputDecoration(
                         labelText: 'Stakeholder Name/Role',
                         hintText: 'Select from Core Stakeholders or enter new',
@@ -479,7 +479,7 @@ class _StakeholderAlignmentScreenState
                       ),
                     ],
                     DropdownButtonFormField<String>(
-                      value: selectedStatus,
+                      initialValue: selectedStatus,
                       decoration:
                           const InputDecoration(labelText: 'Alignment Status'),
                       items: ['Aligned', 'Neutral', 'Concerned', 'Resistent']
@@ -495,7 +495,7 @@ class _StakeholderAlignmentScreenState
                       },
                     ),
                     DropdownButtonFormField<String>(
-                      value: selectedKeyInterest,
+                      initialValue: selectedKeyInterest,
                       decoration: const InputDecoration(
                           labelText: 'Key Interest/Value'),
                       items: [

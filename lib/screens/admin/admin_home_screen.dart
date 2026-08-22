@@ -3,16 +3,9 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/project_service.dart';
-import 'package:ndu_project/screens/admin/admin_users_screen.dart';
-import 'package:ndu_project/screens/admin/admin_hints_screen.dart';
-import 'package:ndu_project/screens/admin_content_screen.dart';
-import 'package:ndu_project/screens/admin/admin_projects_screen.dart';
 import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 
-import 'package:ndu_project/screens/admin/admin_coupons_screen.dart';
-import 'package:ndu_project/screens/admin/admin_subscription_lookup_screen.dart';
-import 'package:ndu_project/screens/admin/admin_pricing_config_screen.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 import 'package:go_router/go_router.dart';
 

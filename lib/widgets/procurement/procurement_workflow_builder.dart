@@ -52,9 +52,9 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,9 +148,9 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: Color(0xFFF3F4F6),
+                color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Color(0xFFD1D5DB)),
+                border: Border.all(color: const Color(0xFFD1D5DB)),
               ),
               child: Text(
                 'Bidding is not required for "${selectedScopeName.trim().isEmpty ? 'this scope' : selectedScopeName.trim()}". The procurement workflow is greyed out for this selection.',
@@ -168,7 +168,7 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Color(0xFFE5E7EB)),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: const Text(
                 'No workflow steps yet. Add your first step to build the procurement cycle.',
@@ -271,7 +271,7 @@ class _ProcurementWorkflowStepRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,7 +281,7 @@ class _ProcurementWorkflowStepRow extends StatelessWidget {
             height: 26,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Color(0xFFFFF8E1),
+              color: const Color(0xFFFFF8E1),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(

@@ -507,7 +507,7 @@ class TreasuryKpiTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   spec.label.toUpperCase(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.7,
@@ -525,19 +525,19 @@ class TreasuryKpiTile extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               spec.value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.6,
                 color: TreasuryTokens.ink,
-                fontFeatures: const [FontFeature.tabularFigures()],
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             spec.sub,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11.5,
               color: TreasuryTokens.mutedSoft,
               fontWeight: FontWeight.w500,
@@ -592,7 +592,7 @@ class TreasuryKpiStrip extends StatelessWidget {
                           ),
                         )
                       else
-                        Expanded(child: const SizedBox()),
+                        const Expanded(child: SizedBox()),
                   ],
                 ),
               ),
@@ -662,7 +662,7 @@ class TreasurySectionCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         subtitle!,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11.5,
                           color: TreasuryTokens.muted,
                           fontWeight: FontWeight.w500,
@@ -742,7 +742,7 @@ class TreasuryEmptyState extends StatelessWidget {
           Text(
             body,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12.5,
               color: TreasuryTokens.muted,
               height: 1.55,
@@ -811,7 +811,7 @@ class TreasuryTableHeader extends StatelessWidget {
     return Text(
       label,
       textAlign: alignRight ? TextAlign.right : TextAlign.left,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 9.5,
         fontWeight: FontWeight.w800,
         letterSpacing: 0.8,
@@ -881,9 +881,9 @@ class _SpotlightDarkWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF0B1220),
-        borderRadius: const BorderRadius.only(
+      decoration: const BoxDecoration(
+        color: Color(0xFF0B1220),
+        borderRadius: BorderRadius.only(
           topRight: Radius.circular(18),
           bottomRight: Radius.circular(18),
         ),

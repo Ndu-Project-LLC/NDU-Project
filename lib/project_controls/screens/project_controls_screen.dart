@@ -379,12 +379,12 @@ class _DashboardTab extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFFFFF8E1),
-            const Color(0xFFFFF8E1),
+            Color(0xFFFFF8E1),
+            Color(0xFFFFF8E1),
           ],
         ),
         border: Border.all(
@@ -431,7 +431,7 @@ class _DashboardTab extends StatelessWidget {
                       height: 44,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        gradient: LinearGradient(
+                        gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [PcPalette.indigo, PcPalette.violet],
@@ -451,7 +451,7 @@ class _DashboardTab extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 14),
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -466,7 +466,7 @@ class _DashboardTab extends StatelessWidget {
                               fontFamily: appFontFamily,
                             ),
                           ),
-                          const SizedBox(height: 3),
+                          SizedBox(height: 3),
                           Text(
                             'Auto-populated from project data across all phases',
                             style: TextStyle(
@@ -490,7 +490,7 @@ class _DashboardTab extends StatelessWidget {
                               .withValues(alpha: 0.3),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'AI CONTEXT',
                         style: TextStyle(
                           color: PcPalette.indigo,
@@ -521,14 +521,14 @@ class _DashboardTab extends StatelessWidget {
                                     .withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(5),
                               ),
-                              child: Icon(Icons.flag_outlined,
+                              child: const Icon(Icons.flag_outlined,
                                   size: 11, color: PcPalette.indigo),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 m,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: PcPalette.inkPrimary,
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w500,
@@ -558,13 +558,13 @@ class _DashboardTab extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.attach_money_rounded,
+                        const Icon(Icons.attach_money_rounded,
                             size: 18, color: PcPalette.amber),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             aiCostForecast,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: PcPalette.inkPrimary,
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -595,14 +595,14 @@ class _DashboardTab extends StatelessWidget {
                                     .withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(5),
                               ),
-                              child: Icon(Icons.lightbulb_outline_rounded,
+                              child: const Icon(Icons.lightbulb_outline_rounded,
                                   size: 11, color: PcPalette.amber),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 r,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: PcPalette.inkPrimary,
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w500,
@@ -634,7 +634,7 @@ class _DashboardTab extends StatelessWidget {
                       aiContext.length > 400
                           ? '${aiContext.substring(0, 400)}...'
                           : aiContext,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkSecondary,
                         fontSize: 11.5,
                         height: 1.5,
@@ -654,7 +654,7 @@ class _DashboardTab extends StatelessWidget {
   Widget _aiSectionLabel(String text) {
     return Text(
       text,
-      style: TextStyle(
+      style: const TextStyle(
         color: PcPalette.inkMuted,
         fontSize: 10,
         fontWeight: FontWeight.w800,
@@ -710,7 +710,7 @@ class _DashboardTab extends StatelessWidget {
                         fontFamily: appFontFamily,
                       ),
                     ),
-                    Text(
+                    const Text(
                       '/100',
                       style: TextStyle(
                         color: PcPalette.inkMuted,
@@ -757,7 +757,7 @@ class _DashboardTab extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   '${state.workPackages.length} work packages tracked',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: PcPalette.inkSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -767,7 +767,7 @@ class _DashboardTab extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${state.openChangeRequests} open change requests',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: PcPalette.inkSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -833,7 +833,7 @@ class _DashboardTab extends StatelessWidget {
     return Container(
       height: 1,
       margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: PcPalette.borderSubtle,
       ),
     );
@@ -849,7 +849,7 @@ class _DashboardTab extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.inkSecondary,
                 fontSize: 12.5,
                 fontWeight: FontWeight.w500,
@@ -889,7 +889,7 @@ class _DashboardTab extends StatelessWidget {
         ),
         child: Text(
           '${state.openChangeRequests} OPEN',
-          style: TextStyle(
+          style: const TextStyle(
             color: PcPalette.amber,
             fontSize: 11,
             fontWeight: FontWeight.w800,
@@ -932,7 +932,7 @@ class _DashboardTab extends StatelessWidget {
                           children: [
                             Text(
                               cr.description,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: PcPalette.inkPrimary,
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
@@ -1002,11 +1002,11 @@ class _DashboardTab extends StatelessWidget {
                           .withValues(alpha: 0.3),
                     ),
                   ),
-                  child: Icon(Icons.check_circle_rounded,
+                  child: const Icon(Icons.check_circle_rounded,
                       size: 18, color: PcPalette.emerald),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
+                const Expanded(
                   child: Text(
                     'No unauthorized scope growth detected',
                     style: TextStyle(
@@ -1038,14 +1038,14 @@ class _DashboardTab extends StatelessWidget {
                                       .withValues(alpha: 0.3),
                                 ),
                               ),
-                              child: Icon(Icons.warning_amber_rounded,
+                              child: const Icon(Icons.warning_amber_rounded,
                                   size: 16, color: PcPalette.danger),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 issue,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: PcPalette.inkPrimary,
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w500,
@@ -1171,7 +1171,7 @@ class _ScopeTrackingTab extends StatelessWidget {
             ),
             child: Text(
               '${wps.length} package${wps.length == 1 ? '' : 's'}',
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.indigo,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -1202,12 +1202,12 @@ class _ScopeTrackingTab extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFFECFDF5),
-            const Color(0xFFD1FAE5),
+            Color(0xFFECFDF5),
+            Color(0xFFD1FAE5),
           ],
         ),
         border: Border.all(
@@ -1277,7 +1277,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 14),
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -1292,7 +1292,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                               fontFamily: appFontFamily,
                             ),
                           ),
-                          const SizedBox(height: 3),
+                          SizedBox(height: 3),
                           Text(
                             'Auto-populated from your project context — review and add to the work package table.',
                             style: TextStyle(
@@ -1318,7 +1318,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                       ),
                       child: Text(
                         '${milestones.length} proposed',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: PcPalette.emerald,
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
@@ -1361,7 +1361,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                               child: Center(
                                 child: Text(
                                   '${entry.key + 1}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: PcPalette.emerald,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w800,
@@ -1374,7 +1374,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 entry.value,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: PcPalette.inkPrimary,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
@@ -1475,7 +1475,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                 // Header
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: PcPalette.surfaceSubtle,
                     border: Border(
                       bottom: BorderSide(
@@ -1500,7 +1500,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                           children: [
                             Text(
                               wp.name,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: PcPalette.inkPrimary,
                                 fontSize: 14.5,
                                 fontWeight: FontWeight.w700,
@@ -1510,7 +1510,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                             const SizedBox(height: 3),
                             Text(
                               '${wp.wbsCode} • ${wp.discipline ?? "N/A"} • ${wp.status}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: PcPalette.inkSecondary,
                                 fontSize: 11.5,
                                 fontFamily: appFontFamily,
@@ -1531,7 +1531,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                                   .withValues(alpha: 0.35),
                             ),
                           ),
-                          child: Text(
+                          child: const Text(
                             'CRITICAL PATH',
                             style: TextStyle(
                               color: PcPalette.danger,
@@ -1554,7 +1554,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                       // Progress
                       Row(
                         children: [
-                          Text(
+                          const Text(
                             'PROGRESS',
                             style: TextStyle(
                               color: PcPalette.inkMuted,
@@ -1567,7 +1567,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                           const Spacer(),
                           Text(
                             '${(wp.percentComplete ?? 0).round()}%',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: PcPalette.inkPrimary,
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
@@ -1652,7 +1652,7 @@ class _ScopeTrackingTab extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(),
-            style: TextStyle(
+            style: const TextStyle(
               color: PcPalette.inkMuted,
               fontSize: 9,
               fontWeight: FontWeight.w800,
@@ -1663,7 +1663,7 @@ class _ScopeTrackingTab extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               color: PcPalette.inkPrimary,
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -1780,7 +1780,7 @@ class _CostControlTab extends StatelessWidget {
             ),
             child: Text(
               '${state.workPackages.length} package${state.workPackages.length == 1 ? '' : 's'}',
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.indigo,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -1888,7 +1888,7 @@ class _CostControlTab extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 14),
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -1903,7 +1903,7 @@ class _CostControlTab extends StatelessWidget {
                               fontFamily: appFontFamily,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          SizedBox(height: 2),
                           Text(
                             'Auto-populated from your project cost analysis',
                             style: TextStyle(
@@ -1926,10 +1926,10 @@ class _CostControlTab extends StatelessWidget {
                           color: const Color(0xFFFDE68A),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'FROM COST ANALYSIS',
                         style: TextStyle(
-                          color: const Color(0xFFD97706),
+                          color: Color(0xFFD97706),
                           fontSize: 9,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.6,
@@ -1958,7 +1958,7 @@ class _CostControlTab extends StatelessWidget {
                       Expanded(
                         child: Text(
                           forecast,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: PcPalette.inkPrimary,
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
@@ -1970,7 +1970,7 @@ class _CostControlTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Text(
+                const Text(
                   'Compare this estimated solution cost against the EVM metrics above to validate your forecast vs. actuals.',
                   style: TextStyle(
                     color: PcPalette.inkSecondary,
@@ -2027,7 +2027,7 @@ class _CostControlTab extends StatelessWidget {
         ),
         child: Text(
           '${items.length} item${items.length == 1 ? '' : 's'}',
-          style: TextStyle(
+          style: const TextStyle(
             color: PcPalette.amber,
             fontSize: 11,
             fontWeight: FontWeight.w700,
@@ -2098,10 +2098,10 @@ class _CostControlTab extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.pie_chart_outline,
+                const Icon(Icons.pie_chart_outline,
                     size: 16, color: PcPalette.inkSecondary),
                 const SizedBox(width: 8),
-                Text(
+                const Text(
                   'Status Mix',
                   style: TextStyle(
                     color: PcPalette.inkSecondary,
@@ -2243,7 +2243,7 @@ class _CostControlTab extends StatelessWidget {
                   children: [
                     Text(
                       label.toUpperCase(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkMuted,
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
@@ -2254,7 +2254,7 @@ class _CostControlTab extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       value,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -2344,7 +2344,7 @@ class _CostControlTab extends StatelessWidget {
                       children: [
                         Text(
                           item.name,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: PcPalette.inkPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -2356,7 +2356,7 @@ class _CostControlTab extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             item.description,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: PcPalette.inkSecondary,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -2376,7 +2376,7 @@ class _CostControlTab extends StatelessWidget {
               // Burn rate progress bar
               Row(
                 children: [
-                  Text(
+                  const Text(
                     'Burn Rate',
                     style: TextStyle(
                       color: PcPalette.inkMuted,
@@ -2446,7 +2446,7 @@ class _CostControlTab extends StatelessWidget {
   Widget _metaText(String label, String value) {
     return RichText(
       text: TextSpan(
-        style: TextStyle(
+        style: const TextStyle(
           color: PcPalette.inkSecondary,
           fontSize: 11,
           fontFamily: appFontFamily,
@@ -2458,7 +2458,7 @@ class _CostControlTab extends StatelessWidget {
           ),
           TextSpan(
             text: value,
-            style: TextStyle(
+            style: const TextStyle(
                 color: PcPalette.inkPrimary, fontWeight: FontWeight.w600),
           ),
         ],
@@ -2512,7 +2512,7 @@ class _CostControlTab extends StatelessWidget {
                     ),
                     child: Text(
                       wp.wbsCode,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.indigo,
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -2525,7 +2525,7 @@ class _CostControlTab extends StatelessWidget {
                   Expanded(
                     child: Text(
                       wp.name,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkPrimary,
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
@@ -2573,7 +2573,7 @@ class _CostControlTab extends StatelessWidget {
               // Spend progress
               Row(
                 children: [
-                  Text(
+                  const Text(
                     'Spend',
                     style: TextStyle(
                       color: PcPalette.inkMuted,
@@ -2620,7 +2620,7 @@ class _CostControlTab extends StatelessWidget {
               LayoutBuilder(
                 builder: (context, c) {
                   final cols = c.maxWidth > 720 ? 4 : 2;
-                  final spacing = 10.0;
+                  const spacing = 10.0;
                   final cellW = (c.maxWidth - spacing * (cols - 1)) / cols;
                   final cells = <Widget>[
                     _costMetricCell(
@@ -2684,7 +2684,7 @@ class _CostControlTab extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(),
-            style: TextStyle(
+            style: const TextStyle(
               color: PcPalette.inkMuted,
               fontSize: 9,
               fontWeight: FontWeight.w700,
@@ -2793,7 +2793,7 @@ class _ChangeMgmtTab extends StatelessWidget {
             ),
             child: Text(
               '${crs.length} request${crs.length == 1 ? '' : 's'}',
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.teal,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -2824,12 +2824,12 @@ class _ChangeMgmtTab extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFFFFF8E1),
-            const Color(0xFFFFF8E1),
+            Color(0xFFFFF8E1),
+            Color(0xFFFFF8E1),
           ],
         ),
         border: Border.all(
@@ -2899,7 +2899,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 14),
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -2914,7 +2914,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                               fontFamily: appFontFamily,
                             ),
                           ),
-                          const SizedBox(height: 3),
+                          SizedBox(height: 3),
                           Text(
                             'Auto-populated from project constraints, assumptions, and risk data',
                             style: TextStyle(
@@ -2939,7 +2939,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                       ),
                       child: Text(
                         '${recommendations.length} item${recommendations.length == 1 ? '' : 's'}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: PcPalette.rose,
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
@@ -2980,7 +2980,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                               child: Center(
                                 child: Text(
                                   '${entry.key + 1}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: PcPalette.amber,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w800,
@@ -2993,7 +2993,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 entry.value,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: PcPalette.inkPrimary,
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w500,
@@ -3147,7 +3147,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                           children: [
                             Text(
                               cr.description,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: PcPalette.inkPrimary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
@@ -3157,7 +3157,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                             const SizedBox(height: 3),
                             Text(
                               '${cr.id} • ${cr.category.label} • Priority: ${cr.priority}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: PcPalette.inkSecondary,
                                 fontSize: 11,
                                 fontFamily: appFontFamily,
@@ -3230,7 +3230,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                     ),
                     child: Text(
                       b,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkSecondary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -3305,7 +3305,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   '✓ ${step.approvedAt!.day}/${step.approvedAt!.month}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: PcPalette.emerald,
                     fontSize: 10.5,
                     fontWeight: FontWeight.w600,
@@ -3361,7 +3361,7 @@ class _ChangeMgmtTab extends StatelessWidget {
   Widget _kvRow(String label, String value) {
     return RichText(
       text: TextSpan(
-        style: TextStyle(
+        style: const TextStyle(
           color: PcPalette.inkSecondary,
           fontSize: 12,
           height: 1.4,
@@ -3374,7 +3374,7 @@ class _ChangeMgmtTab extends StatelessWidget {
           ),
           TextSpan(
             text: value,
-            style: TextStyle(
+            style: const TextStyle(
                 color: PcPalette.inkPrimary,
                 fontWeight: FontWeight.w500),
           ),
@@ -3386,7 +3386,7 @@ class _ChangeMgmtTab extends StatelessWidget {
   Widget _sectionLabel(String text) {
     return Text(
       text,
-      style: TextStyle(
+      style: const TextStyle(
         color: PcPalette.inkMuted,
         fontSize: 10,
         fontWeight: FontWeight.w800,
@@ -3544,7 +3544,7 @@ class _ForecastingTab extends StatelessWidget {
             ),
             child: Text(
               '${state.workPackages.length} package${state.workPackages.length == 1 ? '' : 's'}',
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.fuchsia,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -3615,7 +3615,7 @@ class _ForecastingTab extends StatelessWidget {
                     ),
                     child: Text(
                       wp.wbsCode,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.indigo,
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -3628,7 +3628,7 @@ class _ForecastingTab extends StatelessWidget {
                   Expanded(
                     child: Text(
                       wp.name,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkPrimary,
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
@@ -3681,7 +3681,7 @@ class _ForecastingTab extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Text(
+                  const Text(
                     'PROGRESS',
                     style: TextStyle(
                       color: PcPalette.inkMuted,
@@ -3719,7 +3719,7 @@ class _ForecastingTab extends StatelessWidget {
                     ),
                     child: Text(
                       '$pctComplete%',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkPrimary,
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -3925,7 +3925,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
       height: 64,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [_gold, _goldDeep],
@@ -3978,7 +3978,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
             borderRadius: BorderRadius.circular(6),
             border: Border.all(color: _gold.withValues(alpha: 0.35)),
           ),
-          child: Text(
+          child: const Text(
             'BASELINE MANAGEMENT',
             style: TextStyle(
               color: _goldDeep,
@@ -3990,7 +3990,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
           ),
         ),
         const SizedBox(height: 10),
-        Text(
+        const Text(
           'Baseline Management',
           style: TextStyle(
             color: _inkPrimary,
@@ -4002,7 +4002,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
           ),
         ),
         const SizedBox(height: 6),
-        Text(
+        const Text(
           'Snapshots, version comparison and rollback control',
           style: TextStyle(
             color: _inkSecondary,
@@ -4033,7 +4033,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                     horizontal: 18, vertical: 12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [_gold, _goldDeep],
@@ -4063,7 +4063,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Text(
+                    const Text(
                       'New Baseline',
                       style: TextStyle(
                         color: Colors.white,
@@ -4243,7 +4243,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                     const SizedBox(height: 14),
                     Text(
                       label.toUpperCase(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: _inkMuted,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -4254,7 +4254,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                     const SizedBox(height: 4),
                     Text(
                       value,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: _inkPrimary,
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
@@ -4265,7 +4265,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                     const SizedBox(height: 2),
                     Text(
                       sub,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: _inkSecondary,
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -4317,11 +4317,11 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: _gold.withValues(alpha: 0.3)),
                 ),
-                child: Icon(Icons.history_rounded,
+                child: const Icon(Icons.history_rounded,
                     color: _goldDeep, size: 18),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -4357,12 +4357,12 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.layers_rounded,
+                    const Icon(Icons.layers_rounded,
                         size: 12, color: _inkSecondary),
                     const SizedBox(width: 6),
                     Text(
                       '${history.length} ${history.length == 1 ? 'snapshot' : 'snapshots'}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: _inkSecondary,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -4412,11 +4412,11 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                 ),
               ],
             ),
-            child: Icon(Icons.history_toggle_off_rounded,
+            child: const Icon(Icons.history_toggle_off_rounded,
                 color: _inkMuted, size: 28),
           ),
           const SizedBox(height: 14),
-          Text(
+          const Text(
             'No baselines locked yet',
             style: TextStyle(
               color: _inkPrimary,
@@ -4426,7 +4426,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
             ),
           ),
           const SizedBox(height: 4),
-          Text(
+          const Text(
             'Lock your first baseline to capture a snapshot of scope, cost and schedule.',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -4452,7 +4452,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                         horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [_gold, _goldDeep],
                       ),
                       boxShadow: [
@@ -4463,11 +4463,11 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                         ),
                       ],
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.add_rounded, color: Colors.white, size: 16),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Text(
                           'Lock first baseline',
                           style: TextStyle(
@@ -4562,11 +4562,11 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                   ),
                   child: Center(
                     child: isCurrent
-                        ? Icon(Icons.lock_rounded,
+                        ? const Icon(Icons.lock_rounded,
                             color: Colors.white, size: 16)
                         : Text(
                             'v${b.version}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: _inkSecondary,
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
@@ -4658,7 +4658,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                             children: [
                               Text(
                                 'v${b.version}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: _inkPrimary,
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
@@ -4679,7 +4679,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                               Flexible(
                                 child: Text(
                                   b.type.label,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: _inkSecondary,
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w600,
@@ -4693,12 +4693,12 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(Icons.calendar_today_rounded,
+                              const Icon(Icons.calendar_today_rounded,
                                   size: 11, color: _inkMuted),
                               const SizedBox(width: 4),
                               Text(
                                 dateStr,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: _inkMuted,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
@@ -4706,13 +4706,13 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              Icon(Icons.person_rounded,
+                              const Icon(Icons.person_rounded,
                                   size: 11, color: _inkMuted),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
                                   b.lockedBy,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: _inkMuted,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,
@@ -4741,12 +4741,12 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                             ),
                           ],
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.check_circle_rounded,
                                 color: Colors.white, size: 10),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4),
                             Text(
                               'CURRENT',
                               style: TextStyle(
@@ -4782,12 +4782,12 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                                 border: Border.all(
                                     color: _danger.withValues(alpha: 0.2)),
                               ),
-                              child: Row(
+                              child: const Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(Icons.restore_rounded,
                                       color: _danger, size: 13),
-                                  const SizedBox(width: 4),
+                                  SizedBox(width: 4),
                                   Text(
                                     'Roll back',
                                     style: TextStyle(
@@ -4821,14 +4821,14 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.flag_rounded,
+                      const Icon(Icons.flag_rounded,
                           size: 13, color: _inkMuted),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'REASON',
                               style: TextStyle(
                                 color: _inkMuted,
@@ -4841,7 +4841,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                             const SizedBox(height: 2),
                             Text(
                               b.reason!,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: _inkPrimary,
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w500,
@@ -4877,7 +4877,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                             icon: Icons.account_balance_wallet_rounded,
                           ),
                         ),
-                        VerticalDivider(
+                        const VerticalDivider(
                             width: 1,
                             color: _borderSubtle,
                             indent: 10,
@@ -4889,7 +4889,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                             icon: Icons.account_tree_rounded,
                           ),
                         ),
-                        VerticalDivider(
+                        const VerticalDivider(
                             width: 1,
                             color: _borderSubtle,
                             indent: 10,
@@ -4931,7 +4931,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
               const SizedBox(width: 5),
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   color: _inkMuted,
                   fontSize: 9,
                   fontWeight: FontWeight.w800,
@@ -5029,7 +5029,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                       height: 36,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
-                        gradient: LinearGradient(
+                        gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [_indigo, _violet],
@@ -5046,7 +5046,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                           color: Colors.white, size: 18),
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -5190,7 +5190,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: _border),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.swap_horiz_rounded,
                   color: _inkSecondary,
                   size: 20,
@@ -5239,7 +5239,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
               children: [
                 Text(
                   label.toUpperCase(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: _inkMuted,
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
@@ -5255,7 +5255,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                     child: DropdownButton<int?>(
                       value: value,
                       isExpanded: true,
-                      hint: Text(
+                      hint: const Text(
                         'Select version',
                         style: TextStyle(
                           color: _inkSecondary,
@@ -5264,7 +5264,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                           fontFamily: appFontFamily,
                         ),
                       ),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: _inkPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -5335,7 +5335,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
               ),
               child: Text(
                 'v${selected.first.version}',
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -5379,7 +5379,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
           const SizedBox(height: 10),
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               color: _inkPrimary,
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -5390,7 +5390,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
           Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: _inkSecondary,
               fontSize: 11.5,
               height: 1.5,
@@ -5460,7 +5460,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                 Expanded(
                   child: RichText(
                     text: TextSpan(
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: _inkSecondary,
                         fontSize: 12,
                         fontFamily: appFontFamily,
@@ -5489,7 +5489,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
               ],
             ),
           ),
-          Divider(height: 1, color: _border, thickness: 1),
+          const Divider(height: 1, color: _border, thickness: 1),
           // Table header
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
@@ -5513,7 +5513,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
               ],
             ),
           ),
-          Divider(height: 1, color: _borderSubtle, thickness: 1),
+          const Divider(height: 1, color: _borderSubtle, thickness: 1),
           // Rows
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
@@ -5584,7 +5584,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                   Flexible(
                     child: Text(
                       r.field,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: _inkPrimary,
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
@@ -5635,7 +5635,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                           color: _amber.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Icon(Icons.arrow_forward_rounded,
+                        child: const Icon(Icons.arrow_forward_rounded,
                             color: _amber, size: 12),
                       )
                     : Container(
@@ -5645,7 +5645,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                           color: _emerald.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Icon(Icons.check_rounded,
+                        child: const Icon(Icons.check_rounded,
                             color: _emerald, size: 12),
                       ),
               ),
@@ -5674,8 +5674,8 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
           actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           titlePadding: EdgeInsets.zero,
           title: Container(
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.only(
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
               ),
@@ -5706,7 +5706,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Create New Baseline',
                         style: TextStyle(
                           color: Colors.white,
@@ -5739,7 +5739,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'BASELINE TYPE',
                       style: TextStyle(
                         color: _inkMuted,
@@ -5763,7 +5763,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                       ],
                     ),
                     const SizedBox(height: 20),
-                    Text(
+                    const Text(
                       'REASON / DESCRIPTION',
                       style: TextStyle(
                         color: _inkMuted,
@@ -5781,7 +5781,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                       decoration: InputDecoration(
                         hintText:
                             'e.g. Quarterly baseline refresh after CR-001',
-                        hintStyle: TextStyle(
+                        hintStyle: const TextStyle(
                           color: _inkMuted,
                           fontSize: 12.5,
                           fontFamily: appFontFamily,
@@ -5817,11 +5817,11 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          const Row(
                             children: [
                               Icon(Icons.visibility_rounded,
                                   size: 12, color: _inkMuted),
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6),
                               Text(
                                 'PREVIEW — what gets locked',
                                 style: TextStyle(
@@ -5887,7 +5887,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
-              child: Text(
+              child: const Text(
                 'Cancel',
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
@@ -5922,7 +5922,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                         horizontal: 18, vertical: 12),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [_gold, _goldDeep],
                       ),
                       boxShadow: [
@@ -5933,12 +5933,12 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                         ),
                       ],
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.lock_rounded,
                             color: Colors.white, size: 14),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(
                           'Lock Baseline',
                           style: TextStyle(
@@ -6041,7 +6041,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
         children: [
           Text(
             label.toUpperCase(),
-            style: TextStyle(
+            style: const TextStyle(
               color: _inkMuted,
               fontSize: 8.5,
               fontWeight: FontWeight.w800,
@@ -6052,7 +6052,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
           const SizedBox(height: 3),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               color: _inkPrimary,
               fontSize: 12,
               fontWeight: FontWeight.w800,
@@ -6079,15 +6079,15 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
         actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         titlePadding: EdgeInsets.zero,
         title: Container(
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.only(
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.only(
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),
             ),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [_danger, const Color(0xFFDC2626)],
+              colors: [_danger, Color(0xFFDC2626)],
             ),
           ),
           padding: const EdgeInsets.fromLTRB(24, 22, 24, 22),
@@ -6111,7 +6111,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Confirm Rollback',
                       style: TextStyle(
                         color: Colors.white,
@@ -6154,13 +6154,13 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info_rounded,
+                      const Icon(Icons.info_rounded,
                           color: _danger, size: 16),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           'This action restores the project state to baseline v${b.version}. Baseline history will be retained as audit records.',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: _inkPrimary,
                             fontSize: 12.5,
                             height: 1.5,
@@ -6172,7 +6172,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   'IMPACT SUMMARY',
                   style: TextStyle(
                     color: _inkMuted,
@@ -6225,7 +6225,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text(
+            child: const Text(
               'Cancel',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
@@ -6255,8 +6255,8 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                       horizontal: 18, vertical: 12),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    gradient: LinearGradient(
-                      colors: [_danger, const Color(0xFFDC2626)],
+                    gradient: const LinearGradient(
+                      colors: [_danger, Color(0xFFDC2626)],
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -6266,12 +6266,12 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                       ),
                     ],
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.restore_rounded,
                           color: Colors.white, size: 14),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         'Roll back now',
                         style: TextStyle(
@@ -6320,7 +6320,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
           Expanded(
             child: Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 color: _inkSecondary,
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,
@@ -6330,7 +6330,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
           ),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               color: _inkPrimary,
               fontSize: 11.5,
               fontWeight: FontWeight.w800,
@@ -6457,7 +6457,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
         PcKpiSpec(
           label: 'Work Packages',
           value: '${wps.length}',
-          sub: '${onTrackCount} on track',
+          sub: '$onTrackCount on track',
           icon: Icons.account_tree_rounded,
           accent: PcPalette.indigo,
         ),
@@ -6555,12 +6555,12 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
             child: TextField(
               controller: _searchController,
               onChanged: (v) => setState(() => _searchQuery = v),
-              style: TextStyle(fontSize: 12, fontFamily: appFontFamily),
-              decoration: InputDecoration(
+              style: const TextStyle(fontSize: 12, fontFamily: appFontFamily),
+              decoration: const InputDecoration(
                 hintText: 'Search work packages...',
                 hintStyle: TextStyle(fontSize: 12, color: PcPalette.inkMuted, fontFamily: appFontFamily),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+                contentPadding: EdgeInsets.symmetric(horizontal: 6),
               ),
             ),
           ),
@@ -6689,16 +6689,16 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
           Container(
             padding: const EdgeInsets.symmetric(
                 horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: PcPalette.surfaceSubtle,
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(10),
                 topRight: Radius.circular(10),
               ),
             ),
             child: Row(
               children: [
-                Expanded(
+                const Expanded(
                   flex: 3,
                   child: Text(
                     'Work Package',
@@ -6750,7 +6750,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
     );
   }
 
-  TextStyle _tableHeaderStyle() => TextStyle(
+  TextStyle _tableHeaderStyle() => const TextStyle(
         color: PcPalette.inkMuted,
         fontSize: 10,
         fontWeight: FontWeight.w800,
@@ -6771,7 +6771,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
     final variance = sv.varianceDays;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border(
           top: BorderSide(color: PcPalette.borderSubtle),
         ),
@@ -6798,7 +6798,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
                     children: [
                       Text(
                         wp.name,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: PcPalette.inkPrimary,
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -6810,7 +6810,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
                       const SizedBox(height: 2),
                       Text(
                         wp.wbsCode,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: PcPalette.inkMuted,
                           fontSize: 10.5,
                           fontFamily: appFontFamily,
@@ -6826,7 +6826,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
             flex: 2,
             child: Text(
               plannedStr,
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.inkPrimary,
                 fontSize: 11,
                 fontFamily: appFontFamily,
@@ -6837,7 +6837,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
             flex: 2,
             child: Text(
               actualStr,
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.inkSecondary,
                 fontSize: 11,
                 fontFamily: appFontFamily,
@@ -6881,7 +6881,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
 
   Widget _varianceBadge(int days) {
     if (days == 0) {
-      return Text(
+      return const Text(
         '0d',
         style: TextStyle(
           color: PcPalette.inkSecondary,
@@ -6920,7 +6920,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
           height: 30,
           child: TextField(
             controller: _reasonControllerFor(wpId, sv.delayReason),
-            style: TextStyle(
+            style: const TextStyle(
               color: PcPalette.inkPrimary,
               fontSize: 11.5,
               fontFamily: appFontFamily,
@@ -6930,7 +6930,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               hintText: 'Add delay reason…',
-              hintStyle: TextStyle(
+              hintStyle: const TextStyle(
                 color: PcPalette.inkMuted,
                 fontSize: 10.5,
                 fontFamily: appFontFamily,
@@ -6939,11 +6939,11 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
               fillColor: PcPalette.surfaceSubtle,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: PcPalette.borderSubtle),
+                borderSide: const BorderSide(color: PcPalette.borderSubtle),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: PcPalette.borderSubtle),
+                borderSide: const BorderSide(color: PcPalette.borderSubtle),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
@@ -7066,7 +7066,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
                   Expanded(
                     child: Text(
                       wp.name,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkPrimary,
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
@@ -7086,7 +7086,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
                               .withValues(alpha: 0.35),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'CRITICAL',
                         style: TextStyle(
                           color: PcPalette.danger,
@@ -7102,7 +7102,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
               const SizedBox(height: 4),
               Text(
                 wp.wbsCode,
-                style: TextStyle(
+                style: const TextStyle(
                   color: PcPalette.inkMuted,
                   fontSize: 10.5,
                   fontFamily: appFontFamily,
@@ -7157,7 +7157,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
         children: [
           Text(
             label.toUpperCase(),
-            style: TextStyle(
+            style: const TextStyle(
               color: PcPalette.inkMuted,
               fontSize: 9,
               fontWeight: FontWeight.w800,
@@ -7168,7 +7168,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
           const SizedBox(height: 3),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               color: PcPalette.inkPrimary,
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
@@ -7346,12 +7346,12 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
                       child: TextField(
                         controller: _searchController,
                         onChanged: (v) => setState(() => _searchQuery = v),
-                        style: TextStyle(fontSize: 12, fontFamily: appFontFamily),
-                        decoration: InputDecoration(
+                        style: const TextStyle(fontSize: 12, fontFamily: appFontFamily),
+                        decoration: const InputDecoration(
                           hintText: 'Search risks...',
                           hintStyle: TextStyle(fontSize: 12, color: PcPalette.inkMuted, fontFamily: appFontFamily),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 6),
                         ),
                       ),
                     ),
@@ -7398,7 +7398,7 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
                       value: _ownerFilter,
                       isDense: true,
                       underline: const SizedBox.shrink(),
-                      hint: Text(
+                      hint: const Text(
                         'Owner: All',
                         style: TextStyle(
                           color: PcPalette.inkSecondary,
@@ -7643,7 +7643,7 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
         const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: PcPalette.inkSecondary,
             fontSize: 11,
             fontWeight: FontWeight.w600,
@@ -7732,7 +7732,7 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
                           children: [
                             Text(
                               r.description,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: PcPalette.inkPrimary,
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w700,
@@ -7742,7 +7742,7 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
                             const SizedBox(height: 2),
                             Text(
                               '${r.id} • ${r.isIssue ? "Issue" : "Risk"} • Owner: ${r.owner}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: PcPalette.inkSecondary,
                                 fontSize: 11,
                                 fontFamily: appFontFamily,
@@ -7818,7 +7818,7 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Text(
+                      const Text(
                         'MITIGATION / RESPONSE PLAN',
                         style: TextStyle(
                           color: PcPalette.inkMuted,
@@ -7833,7 +7833,7 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
                         controller:
                             _mitigationControllerFor(r.id, r.mitigation),
                         maxLines: 2,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: PcPalette.inkPrimary,
                           fontSize: 12,
                           fontFamily: appFontFamily,
@@ -7842,7 +7842,7 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
                           isDense: true,
                           contentPadding: const EdgeInsets.all(10),
                           hintText: 'Describe the mitigation/response plan…',
-                          hintStyle: TextStyle(
+                          hintStyle: const TextStyle(
                             color: PcPalette.inkMuted,
                             fontSize: 11,
                             fontFamily: appFontFamily,
@@ -7852,12 +7852,12 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide:
-                                BorderSide(color: PcPalette.borderSubtle),
+                                const BorderSide(color: PcPalette.borderSubtle),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide:
-                                BorderSide(color: PcPalette.borderSubtle),
+                                const BorderSide(color: PcPalette.borderSubtle),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -7966,7 +7966,7 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
         children: [
           Text(
             label.toUpperCase(),
-            style: TextStyle(
+            style: const TextStyle(
               color: PcPalette.inkMuted,
               fontSize: 9,
               fontWeight: FontWeight.w800,
@@ -7977,7 +7977,7 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
           const SizedBox(height: 3),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               color: PcPalette.inkPrimary,
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
@@ -8106,7 +8106,7 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
             ),
             child: Text(
               'Projection: ${_adjustment >= 0 ? "+" : ""}${_adjustment.round()}% • Capacity ${_capacityBoost >= 0 ? "+" : ""}${_capacityBoost.toStringAsFixed(1)}h/wk',
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.amber,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -8140,12 +8140,12 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFFFFF8E6),
-                const Color(0xFFFFF4CC),
+                Color(0xFFFFF8E6),
+                Color(0xFFFFF4CC),
               ],
             ),
             border: Border.all(
@@ -8194,7 +8194,7 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -8209,7 +8209,7 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
                               fontFamily: appFontFamily,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          SizedBox(height: 2),
                           Text(
                             'Test allocation or capacity changes. The histogram and utilization cards below update live.',
                             style: TextStyle(
@@ -8317,7 +8317,7 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
             ),
             child: Text(
               '${projectedAllocations.length} resource${projectedAllocations.length == 1 ? '' : 's'}',
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.violet,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -8376,7 +8376,7 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
             children: [
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   color: PcPalette.inkPrimary,
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
@@ -8411,13 +8411,13 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
               overlayColor: PcPalette.amber.withValues(alpha: 0.2),
               trackHeight: 4,
               valueIndicatorColor: PcPalette.amber,
-              valueIndicatorTextStyle: TextStyle(
+              valueIndicatorTextStyle: const TextStyle(
                 color: Colors.white,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 fontFamily: appFontFamily,
               ),
-              showValueIndicator: ShowValueIndicator.always,
+              showValueIndicator: ShowValueIndicator.onDrag,
             ),
             child: Slider(
               value: value,
@@ -8455,7 +8455,7 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
         const SizedBox(width: 7),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: PcPalette.inkSecondary,
             fontSize: 11.5,
             fontWeight: FontWeight.w600,
@@ -8546,7 +8546,7 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
                       children: [
                         Text(
                           ra.resourceName,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: PcPalette.inkPrimary,
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
@@ -8556,7 +8556,7 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
                         const SizedBox(height: 2),
                         Text(
                           '${ra.discipline.label} • ${ra.capacityHoursPerWeek.round()}h capacity/wk',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: PcPalette.inkSecondary,
                             fontSize: 11.5,
                             fontFamily: appFontFamily,
@@ -8606,7 +8606,7 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
               // Utilization bar
               Row(
                 children: [
-                  Text(
+                  const Text(
                     'UTIL',
                     style: TextStyle(
                       color: PcPalette.inkMuted,
@@ -8665,7 +8665,7 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
           children: [
             Text(
               label.toUpperCase(),
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.inkMuted,
                 fontSize: 9,
                 fontWeight: FontWeight.w800,
@@ -8810,7 +8810,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
             ),
             child: Text(
               '${reports.length} report${reports.length == 1 ? '' : 's'}',
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.indigo,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -8842,7 +8842,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
           accent: PcPalette.violet,
           trailing: Text(
             '${filteredAudit.length} of ${widget.state.auditTrail.length} entries',
-            style: TextStyle(
+            style: const TextStyle(
               color: PcPalette.inkSecondary,
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
@@ -8964,11 +8964,11 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
         child: DropdownButton<String?>(
           value: _actorFilter,
           isExpanded: true,
-          hint: Row(
+          hint: const Row(
             children: [
               Icon(Icons.person_outline,
                   size: 14, color: PcPalette.inkMuted),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Text(
                 'All actors',
                 style: TextStyle(
@@ -9004,12 +9004,12 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
         decoration: InputDecoration(
           isDense: true,
           hintText: 'Search action / reason…',
-          hintStyle: TextStyle(
+          hintStyle: const TextStyle(
             color: PcPalette.inkMuted,
             fontSize: 11.5,
             fontFamily: appFontFamily,
           ),
-          prefixIcon: Icon(Icons.search,
+          prefixIcon: const Icon(Icons.search,
               size: 16, color: PcPalette.inkMuted),
           prefixIconConstraints:
               const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -9019,11 +9019,11 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
           fillColor: PcPalette.surface,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: PcPalette.border),
+            borderSide: const BorderSide(color: PcPalette.border),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: PcPalette.border),
+            borderSide: const BorderSide(color: PcPalette.border),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
@@ -9031,7 +9031,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                 color: PcPalette.indigo.withValues(alpha: 0.5)),
           ),
         ),
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 12,
           color: PcPalette.inkPrimary,
           fontFamily: appFontFamily,
@@ -9063,7 +9063,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
         ),
         child: Row(
           children: [
-            Icon(Icons.calendar_today_outlined,
+            const Icon(Icons.calendar_today_outlined,
                 size: 14, color: PcPalette.inkMuted),
             const SizedBox(width: 8),
             Expanded(
@@ -9148,7 +9148,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                         Expanded(
                           child: Text(
                             r.type.label,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: PcPalette.inkPrimary,
                               fontSize: 13.5,
                               fontWeight: FontWeight.w700,
@@ -9159,7 +9159,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                         const SizedBox(width: 8),
                         Text(
                           '${r.generatedAt.day}/${r.generatedAt.month}/${r.generatedAt.year}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: PcPalette.inkSecondary,
                             fontSize: 11,
                             fontFamily: appFontFamily,
@@ -9170,7 +9170,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                     const SizedBox(height: 3),
                     Text(
                       '${r.id} • by ${r.generatedBy} • range: ${r.dateRangeStart.day}/${r.dateRangeStart.month}–${r.dateRangeEnd.day}/${r.dateRangeEnd.month}/${r.dateRangeEnd.year}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkSecondary,
                         fontSize: 10.5,
                         fontFamily: appFontFamily,
@@ -9187,7 +9187,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                       ),
                       child: Text(
                         r.summaryText,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: PcPalette.inkPrimary,
                           fontSize: 11.5,
                           height: 1.45,
@@ -9211,7 +9211,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                     ),
                     child: IconButton(
                       onPressed: () => _downloadReport(r),
-                      icon: Icon(Icons.download_rounded,
+                      icon: const Icon(Icons.download_rounded,
                           color: PcPalette.indigo),
                       tooltip: 'Download',
                       splashRadius: 18,
@@ -9303,7 +9303,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                           ),
                           child: Text(
                             a.field,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: PcPalette.indigo,
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
@@ -9315,7 +9315,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                         const SizedBox(width: 8),
                         Text(
                           '${a.timestamp.day}/${a.timestamp.month}/${a.timestamp.year} ${a.timestamp.hour.toString().padLeft(2, '0')}:${a.timestamp.minute.toString().padLeft(2, '0')}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: PcPalette.inkSecondary,
                             fontSize: 10.5,
                             fontWeight: FontWeight.w600,
@@ -9327,7 +9327,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                     const SizedBox(height: 6),
                     Text(
                       a.reason ?? '(no reason recorded)',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkPrimary,
                         fontSize: 12.5,
                         fontWeight: FontWeight.w500,
@@ -9340,7 +9340,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                       children: [
                         Text(
                           'by ${a.user}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: PcPalette.inkSecondary,
                             fontSize: 10.5,
                             fontFamily: appFontFamily,
@@ -9352,7 +9352,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                           Expanded(
                             child: Text(
                               '${a.previousValue.isEmpty ? "—" : a.previousValue} → ${a.newValue.isEmpty ? "—" : a.newValue}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: PcPalette.inkMuted,
                                 fontSize: 10.5,
                                 fontStyle: FontStyle.italic,
@@ -9388,7 +9388,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                 height: 36,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [PcPalette.gold, PcPalette.goldDeep],
@@ -9409,7 +9409,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Report Type',
                   style: TextStyle(
                     color: PcPalette.inkSecondary,
@@ -9453,7 +9453,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   'Date Range',
                   style: TextStyle(
                     color: PcPalette.inkSecondary,
@@ -9490,14 +9490,14 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.calendar_today_outlined,
+                              const Icon(Icons.calendar_today_outlined,
                                   size: 14,
                                   color: PcPalette.inkMuted),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   'From: ${startDate.day}/${startDate.month}/${startDate.year}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: PcPalette.inkPrimary,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -9535,14 +9535,14 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.calendar_today_outlined,
+                              const Icon(Icons.calendar_today_outlined,
                                   size: 14,
                                   color: PcPalette.inkMuted),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   'To: ${endDate.day}/${endDate.month}/${endDate.year}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: PcPalette.inkPrimary,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -9598,7 +9598,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.download_rounded,
+            const Icon(Icons.download_rounded,
                 color: Colors.white, size: 16),
             const SizedBox(width: 8),
             Expanded(
@@ -9652,7 +9652,7 @@ class _RiskHeatmapPainter extends CustomPainter {
     // Axis labels (probability on bottom, impact on left)
     final labelPainter = TextPainter(textDirection: ui.TextDirection.ltr);
     const labelStyle = TextStyle(
-        color: const Color(0xFF6B7280),
+        color: Color(0xFF6B7280),
         fontSize: 10,
         fontWeight: FontWeight.w700);
 
@@ -9881,7 +9881,7 @@ class _ResourceHistogramPainter extends CustomPainter {
     final gridPaint = Paint()..color = const Color(0xFFE4E7EC)..strokeWidth = 1;
     final labelPainter = TextPainter(textDirection: ui.TextDirection.ltr);
     const labelStyle = TextStyle(
-        color: const Color(0xFF6B7280),
+        color: Color(0xFF6B7280),
         fontSize: 9,
         fontWeight: FontWeight.w600);
     for (var g = 0; g <= 4; g++) {

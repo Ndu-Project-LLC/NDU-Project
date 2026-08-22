@@ -77,9 +77,9 @@ class PageHintDialog {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Color(0xFFF3F4F6),
+                        color: const Color(0xFFF3F4F6),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Row(
                         children: [

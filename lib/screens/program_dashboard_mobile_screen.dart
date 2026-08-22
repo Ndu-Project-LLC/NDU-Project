@@ -69,9 +69,7 @@ class _ProgramAction {  const _ProgramAction({
     required this.description,
     required this.appliesTo,
     required this.isOn,
-    this.badgeColor,
-    this.badgeTextColor,
-  });
+  }) : badgeColor = null : badgeTextColor = null;
 
  final String title;
  final String description;

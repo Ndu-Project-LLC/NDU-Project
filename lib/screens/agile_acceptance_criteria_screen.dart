@@ -792,7 +792,7 @@ class _AgileAcceptanceCriteriaScreenState
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Color(0xFFF9FAFB),
+          color: const Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: _kBorder),
         ),

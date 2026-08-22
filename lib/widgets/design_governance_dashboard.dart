@@ -124,7 +124,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
@@ -134,7 +134,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Color(0x180F172A),
             blurRadius: 28,
@@ -253,7 +253,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       child: Container(
                         height: 6,
                         decoration: BoxDecoration(
-                          color: Color(0xFFE2E8F0),
+                          color: const Color(0xFFE2E8F0),
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
@@ -267,7 +267,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                             .clamp(0.0, usableWidth),
                         height: 6,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [
                               Color(0xFF0F172A),
                               Color(0xFFF59E0B),
@@ -365,9 +365,9 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Color(0xFFF8FAFC),
+                      color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: Color(0xFFE2E8F0)),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: Text(
                       attendee,
@@ -685,9 +685,9 @@ class DesignGovernanceDashboard extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Color(0xFFF8FAFC),
+                  color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Color(0xFFE2E8F0)),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -870,9 +870,9 @@ class DesignGovernanceDashboard extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Color(0xFFF8FAFC),
+                  color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Color(0xFFE2E8F0)),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -950,9 +950,9 @@ class DesignGovernanceDashboard extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Color(0xFFF8FAFC),
+                  color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Color(0xFFE2E8F0)),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -961,7 +961,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Color(0xFFFFF8E1),
+                        color: const Color(0xFFFFF8E1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -1027,8 +1027,8 @@ class _GovernanceCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Color(0xFFE2E8F0)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
           BoxShadow(
             color: Color(0x120F172A),
             blurRadius: 24,
@@ -1046,7 +1046,7 @@ class _GovernanceCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [
                       Color(0xFF0F172A),
                       Color(0xFF1E293B),
@@ -1485,9 +1485,9 @@ class _TableHeaderRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: List.generate(labels.length, (index) {
@@ -1530,7 +1530,7 @@ class _TableDataRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -191,7 +191,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   DateTime? _lastSavedAt;
  // ValueNotifier for lightweight save-indicator rebuilds without full setState
  final ValueNotifier<_SaveIndicatorState> _saveIndicatorNotifier =
- ValueNotifier<_SaveIndicatorState>(_SaveIndicatorState(
+ ValueNotifier<_SaveIndicatorState>(const _SaveIndicatorState(
  saving: false, pending: false, lastSavedAt: null));
  final Map<String, bool> _aiGenerating = {};
  late Map<String, _SectionProgressState> _sectionProgress;
@@ -358,7 +358,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
      requestedSectionId.isNotEmpty &&
      _sectionOrder.any((section) => section.id == requestedSectionId);
  _activeSectionId = hasValidInitialSection
-     ? requestedSectionId!
+     ? requestedSectionId
      : _sectionOrder
          .firstWhere(
            (section) => !_isSectionResolved(section.id),
@@ -1211,7 +1211,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  pw.SizedBox(height: 4),
  pw.Text(
  'Generated ${generatedAt.toLocal().toIso8601String()}',
- style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+ style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
  ),
  pw.SizedBox(height: 12),
  pw.TableHelper.fromTextArray(
@@ -2592,7 +2592,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Specifications',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'title', label: 'Title', required: true, hint: 'Specification title'),
  CsvColumnSpec(key: 'specificationType', label: 'Spec type', allowedValues: ['Code', 'Law', 'Standard', 'Criteria', 'Guideline', 'Contract', 'Other'], defaultValue: 'Standard'),
  CsvColumnSpec(key: 'discipline', label: 'Discipline', hint: 'e.g. Architecture, Civil, Frontend'),
@@ -3734,7 +3734,7 @@ class _MappingCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -3755,7 +3755,7 @@ class _MappingCard extends StatelessWidget {
           ),
           if (specificationOptions.isNotEmpty)
             DropdownButtonFormField<String>(
-              value: selectedId,
+              initialValue: selectedId,
               isExpanded: true,
               decoration: _inputDecoration('Select specification item'),
               items: specificationOptions
@@ -3921,7 +3921,7 @@ class _WorkItemCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4052,7 +4052,7 @@ class _SpecificationPlanRowCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4269,7 +4269,7 @@ class _SpecificationDeviationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4291,7 +4291,7 @@ class _SpecificationDeviationCard extends StatelessWidget {
           ),
           if (specificationOptions.isNotEmpty)
             DropdownButtonFormField<String>(
-              value: selectedId,
+              initialValue: selectedId,
               isExpanded: true,
               decoration: _inputDecoration('Select specification item'),
               items: specificationOptions
@@ -4364,7 +4364,7 @@ class _SpecificationDocumentCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4478,9 +4478,9 @@ class _RiskCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFFFFBEB),
+        color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFFDE68A)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Column(
         children: [
@@ -4575,7 +4575,7 @@ class _DependencyCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4684,7 +4684,7 @@ class _DecisionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4786,7 +4786,7 @@ class _ApprovalCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4887,7 +4887,7 @@ class _DropdownField extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: selected,
+          initialValue: selected,
           isExpanded: true,
           decoration: _inputDecoration(''),
           items: items
@@ -5460,7 +5460,7 @@ class _FourColumnGrid extends StatelessWidget {
     final preferredColumns = isMobile ? 1 : (isTablet ? 2 : 4);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final spacing = 12.0;
+        const spacing = 12.0;
         final maxWidth = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : MediaQuery.sizeOf(context).width;
@@ -5697,7 +5697,7 @@ class _EmptyState extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
       ),
@@ -5729,15 +5729,15 @@ InputDecoration _inputDecoration(String hintText) {
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
-      borderSide: BorderSide(color: Color(0xFFD1D5DB)),
+      borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
-      borderSide: BorderSide(color: Color(0xFFD1D5DB)),
+      borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
-      borderSide: BorderSide(color: _kBrandYellow, width: 1.5),
+      borderSide: const BorderSide(color: _kBrandYellow, width: 1.5),
     ),
   );
 }

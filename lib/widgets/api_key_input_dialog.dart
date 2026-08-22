@@ -123,7 +123,7 @@ class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Color(0xFFFFC812).withValues(alpha: 0.1),
+                color: const Color(0xFFFFC812).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Column(

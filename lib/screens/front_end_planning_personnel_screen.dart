@@ -707,7 +707,7 @@ class _PersonnelTable extends StatelessWidget {
  8: FixedColumnWidth(110),
  9: FixedColumnWidth(110),
  },
- border: TableBorder(
+ border: const TableBorder(
  horizontalInside: border,
  verticalInside: border,
  top: border,
@@ -753,7 +753,7 @@ class _PersonnelTable extends StatelessWidget {
  8: FixedColumnWidth(110),
  9: FixedColumnWidth(110),
  },
- border: TableBorder(
+ border: const TableBorder(
  horizontalInside: border,
  verticalInside: border,
  top: border,

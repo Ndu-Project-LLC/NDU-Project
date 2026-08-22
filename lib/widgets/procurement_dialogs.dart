@@ -75,7 +75,7 @@ class ProcurementDialogShell extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
                 color: Color(0x1F0F172A),
                 blurRadius: 30,
@@ -118,8 +118,8 @@ class ProcurementDialogShell extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Color(0xFFE2E8F0)),
-                          boxShadow: [
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: const [
                             BoxShadow(
                                 color: Color(0x140F172A),
                                 blurRadius: 10,
@@ -557,13 +557,13 @@ class _AddItemDialogState extends State<AddItemDialog> {
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -1372,13 +1372,13 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -1756,13 +1756,13 @@ class _CreateRfqDialogState extends State<CreateRfqDialog> {
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -2168,13 +2168,13 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -2267,9 +2267,9 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Color(0xFFF8FAFC),
+                    color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Color(0xFFE2E8F0)),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: const Text(
                     'No source items available.',
@@ -2564,13 +2564,13 @@ class _AddContractDialogState extends State<AddContractDialog> {
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }

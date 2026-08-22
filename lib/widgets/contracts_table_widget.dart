@@ -45,7 +45,7 @@ class ContractsTableWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -66,7 +66,7 @@ class ContractsTableWidget extends StatelessWidget {
                 topRight: Radius.circular(12),
               ),
             ),
-            child: Row(
+            child: const Row(
               children: [
                 _TableHeaderCell('Vendor/Party Name', flex: 2),
                 _TableHeaderCell('Contract Type', flex: 2),
@@ -480,7 +480,7 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _dropdownValue(
+                        initialValue: _dropdownValue(
                             contractTypeOptions, selectedContractType),
                         decoration: const InputDecoration(
                           labelText: 'Contract Type *',
@@ -499,7 +499,7 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _dropdownValue(statusOptions, selectedStatus),
+                        initialValue: _dropdownValue(statusOptions, selectedStatus),
                         decoration: const InputDecoration(
                           labelText: 'Status *',
                           isDense: true,
@@ -874,9 +874,9 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 5),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFFFF8E1),
+                                  color: const Color(0xFFFFF8E1),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Color(0xFFFEF3C7)),
+                                  border: Border.all(color: const Color(0xFFFEF3C7)),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,

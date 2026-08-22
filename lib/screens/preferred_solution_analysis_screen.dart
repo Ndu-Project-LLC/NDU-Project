@@ -6897,18 +6897,18 @@ class _PreferredSolutionDetailsScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Color(0xFFFFF8E1),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Color(0xFFFDE68A)),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.attach_money,
+                      const Icon(Icons.attach_money,
                           size: 16, color: Color(0xFFB8860B)),
                       const SizedBox(width: 6),
                       Text(
                         'Currency: $currency',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFFB8860B),
@@ -7273,7 +7273,7 @@ class _PreferredSolutionDetailsScreenState
     if (analysis.technologies.isEmpty &&
         (analysis.itConsiderationText?.isEmpty ?? true)) {
       return _buildEmptyState(
-          'No IT considerations recorded', Icons.computer, Color(0xFFFFC812));
+          'No IT considerations recorded', Icons.computer, const Color(0xFFFFC812));
     }
 
     return Column(
@@ -7331,7 +7331,7 @@ class _PreferredSolutionDetailsScreenState
     if (analysis.infrastructure.isEmpty &&
         (analysis.infraConsiderationText?.isEmpty ?? true)) {
       return _buildEmptyState('No infrastructure considerations',
-          Icons.construction, Color(0xFFB8860B));
+          Icons.construction, const Color(0xFFB8860B));
     }
 
     return Column(
@@ -7376,7 +7376,7 @@ class _PreferredSolutionDetailsScreenState
 
     if (!hasStakeholders) {
       return _buildEmptyState(
-          'No stakeholders identified', Icons.people, Color(0xFFD97706));
+          'No stakeholders identified', Icons.people, const Color(0xFFD97706));
     }
 
     return Column(
@@ -7632,7 +7632,7 @@ class _PreferredSolutionDetailsScreenState
                               style: const TextStyle(fontSize: 14, height: 1.6),
                             )
                           : _buildEmptyState('No scope statement provided',
-                              Icons.description, Color(0xFFB8860B)),
+                              Icons.description, const Color(0xFFB8860B)),
                     ),
 
                     const SizedBox(height: 100), // Space for bottom buttons

@@ -345,7 +345,7 @@ class _TimelineEntry extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: Color(0xFFFFF8E1),
+            color: const Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(999),
           ),
           child: const Icon(
@@ -405,7 +405,7 @@ class _PanelFrame extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
       child: child,
@@ -461,9 +461,9 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

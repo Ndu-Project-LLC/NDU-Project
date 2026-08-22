@@ -165,11 +165,11 @@ class _ScheduleMasterViewState extends State<ScheduleMasterView> {
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: AppSemanticColors.border),
+                      borderSide: const BorderSide(color: AppSemanticColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: AppSemanticColors.border),
+                      borderSide: const BorderSide(color: AppSemanticColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -631,15 +631,15 @@ class _EmptyMasterView extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
-      child: Column(
+      child: const Column(
         children: [
           Icon(
             Icons.account_tree_outlined,
             size: 48,
-            color: const Color(0xFF9CA3AF),
+            color: Color(0xFF9CA3AF),
           ),
-          const SizedBox(height: 12),
-          const Text(
+          SizedBox(height: 12),
+          Text(
             'No Work Packages Yet',
             style: TextStyle(
               fontSize: 16,
@@ -647,8 +647,8 @@ class _EmptyMasterView extends StatelessWidget {
               color: Color(0xFF374151),
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Create work packages and link them to schedule activities '
             'to see the master schedule view.',
             style: TextStyle(

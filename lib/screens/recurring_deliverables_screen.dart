@@ -155,8 +155,9 @@ class _RecurringDeliverablesScreenState
   String _extractFrequency(String text) {
     final String lower = text.toLowerCase();
     if (lower.contains('daily')) return 'Daily';
-    if (lower.contains('bi-weekly') || lower.contains('bi weekly'))
+    if (lower.contains('bi-weekly') || lower.contains('bi weekly')) {
       return 'Bi-Weekly';
+    }
     if (lower.contains('weekly')) return 'Weekly';
     if (lower.contains('monthly')) return 'Monthly';
     if (lower.contains('quarter')) return 'Quarterly';

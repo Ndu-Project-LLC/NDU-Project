@@ -20,7 +20,6 @@ import 'package:ndu_project/widgets/business_case_header.dart';
 import 'package:ndu_project/widgets/business_case_navigation_buttons.dart';
 // Removed AppLogo to match updated header pattern
 import 'package:ndu_project/screens/initiation_phase_screen.dart';
-import 'package:ndu_project/screens/potential_solutions_screen.dart';
 import 'package:ndu_project/screens/risk_identification_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
 import 'package:ndu_project/screens/cost_analysis_screen.dart';
@@ -33,7 +32,6 @@ import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/widgets/page_hint_dialog.dart';
 import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';

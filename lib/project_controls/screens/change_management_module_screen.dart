@@ -455,7 +455,7 @@ class _DashboardTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
+              color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             const Text('Peak day',
@@ -561,7 +561,7 @@ class _DashboardTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
+              color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             const Text('Total Cost Impact (Approved)',
@@ -580,7 +580,7 @@ class _DashboardTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
+              color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             const Text('Total Schedule Impact (Approved)',
@@ -939,7 +939,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                 // View toggle: Card / Table
                 Container(
                   decoration: BoxDecoration(
-                    color: Color(0xFFF9FAFB),
+                    color: const Color(0xFFF9FAFB),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: _surfaceBorder),
                   ),
@@ -1275,7 +1275,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB),
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
           child: DropdownButtonHideUnderline(
@@ -1322,10 +1322,10 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
           fillColor: const Color(0xFFF9FAFB),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
         ),
         style: const TextStyle(color: _textPrimary, fontSize: 12),
       ),
@@ -1422,7 +1422,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                      color: Color(0xFFDC2626),
+                      color: const Color(0xFFDC2626),
                       borderRadius: BorderRadius.circular(4)),
                   child: const Text('EMERGENCY',
                       style: TextStyle(
@@ -1893,7 +1893,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
+              color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             const Text('Highest-impact dimension',
@@ -2090,7 +2090,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
               Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                      color: Color(0xFFF9FAFB),
+                      color: const Color(0xFFF9FAFB),
                       borderRadius: BorderRadius.circular(8)),
                   child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -2551,7 +2551,7 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-            color: Color(0xFFF9FAFB),
+            color: const Color(0xFFF9FAFB),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: _surfaceBorder)),
         child: DropdownButtonHideUnderline(
@@ -2587,7 +2587,7 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB),
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
           child: Row(children: [
@@ -2986,7 +2986,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                  color: Color(0xFFF9FAFB),
+                  color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(8)),
               child: Row(children: [
                 const Icon(Icons.info_outline,
@@ -3022,7 +3022,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Color(0xFFF9FAFB),
+                  color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                       color: _surfaceBorder, style: BorderStyle.solid),
@@ -3162,10 +3162,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
           fillColor: _bgColor,
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
         ),
         style: const TextStyle(color: _textPrimary, fontSize: 12),
       ),
@@ -3183,7 +3183,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
-            color: Color(0xFFF3F4F6),
+            color: const Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: _surfaceBorder)),
         child: Text(value,
@@ -3281,10 +3281,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
           fillColor: _bgColor,
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
           prefixIcon: allowNegative
               ? Icon(Icons.remove_circle_outline,
                   size: 14, color: color.withValues(alpha: 0.5))
@@ -3315,10 +3315,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
           fillColor: _bgColor,
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
           prefixIcon: const Icon(Icons.attach_money,
               size: 14, color: Color(0xFF6B7280)),
         ),
@@ -3687,10 +3687,10 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
             fillColor: _bgColor,
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: _surfaceBorder)),
+                borderSide: const BorderSide(color: _surfaceBorder)),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: _surfaceBorder)),
+                borderSide: const BorderSide(color: _surfaceBorder)),
           ),
           style: const TextStyle(color: _textPrimary, fontSize: 11),
         ),
@@ -3711,10 +3711,10 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
                 size: 12, color: _textSecondary),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: _surfaceBorder)),
+                borderSide: const BorderSide(color: _surfaceBorder)),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: _surfaceBorder)),
+                borderSide: const BorderSide(color: _surfaceBorder)),
           ),
           style: const TextStyle(color: _textPrimary, fontSize: 11),
         ),
@@ -4125,7 +4125,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB),
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
           child:
@@ -4301,7 +4301,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
               Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                      color: Color(0xFFF9FAFB),
+                      color: const Color(0xFFF9FAFB),
                       borderRadius: BorderRadius.circular(6)),
                   child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -5031,7 +5031,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
           Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                  color: Color(0xFFF9FAFB),
+                  color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(6)),
               child:
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -5092,7 +5092,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
+              color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
           child: Column(children: [
             // BAC diff
             Row(children: [

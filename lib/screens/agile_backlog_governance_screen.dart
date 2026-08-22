@@ -838,7 +838,7 @@ class _AgileBacklogGovernanceScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Color(0xFFFFF8E1),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Row(
@@ -875,7 +875,7 @@ class _AgileBacklogGovernanceScreenState
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Color(0xFFD1D5DB)),
+                border: Border.all(color: const Color(0xFFD1D5DB)),
               ),
               child: VoiceTextField(
                 controller: controller,

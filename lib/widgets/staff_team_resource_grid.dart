@@ -296,8 +296,9 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                                               child: Text('External')),
                                         ],
                                         onChanged: (v) {
-                                          if (v != null)
+                                          if (v != null) {
                                             setModalState(() => isInternal = v);
+                                          }
                                         },
                                       ),
                                     ),
@@ -347,8 +348,9 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                                               child: Text('Completed')),
                                         ],
                                         onChanged: (v) {
-                                          if (v != null)
+                                          if (v != null) {
                                             setModalState(() => status = v);
+                                          }
                                         },
                                       ),
                                     ),
@@ -469,8 +471,9 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                                   } catch (_) {
                                     // silent
                                   }
-                                  if (ctx.mounted)
+                                  if (ctx.mounted) {
                                     setModalState(() => aiLoading = false);
+                                  }
                                 },
                           icon: aiLoading
                               ? const SizedBox(
@@ -788,9 +791,9 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Color(0xFFF9FAFB),
+          color: const Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: const Row(
           children: [
@@ -810,9 +813,9 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Color(0xFFFFF3CD),
+          color: const Color(0xFFFFF3CD),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Color(0xFFFFC107)),
+          border: Border.all(color: const Color(0xFFFFC107)),
         ),
         child: Row(
           children: [
@@ -832,9 +835,9 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFFFF8E1),
+        color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFFEF3C7)),
+        border: Border.all(color: const Color(0xFFFEF3C7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -844,7 +847,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Color(0xFFB8860B),
+                  color: const Color(0xFFB8860B),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.auto_awesome,
@@ -905,7 +908,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Color(0xFFFFF8E1),
+                        color: const Color(0xFFFFF8E1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.table_chart_outlined,
@@ -957,7 +960,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                       label: const Text('Import'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFD97706),
-                        side: const BorderSide(color: const Color(0xFFFDE68A)),
+                        side: const BorderSide(color: Color(0xFFFDE68A)),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 12),
                         shape: RoundedRectangleBorder(
@@ -972,7 +975,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                       label: const Text('Template'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF92400E),
-                        side: const BorderSide(color: const Color(0xFFFDE68A)),
+                        side: const BorderSide(color: Color(0xFFFDE68A)),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 12),
                         shape: RoundedRectangleBorder(
@@ -1933,9 +1936,9 @@ class _KazAiActionButtonState extends State<_KazAiActionButton> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
-            color: _loading ? Color(0xFFF3F0FF) : Color(0xFFFFF8E1),
+            color: _loading ? const Color(0xFFF3F0FF) : const Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Color(0xFFFEF3C7)),
+            border: Border.all(color: const Color(0xFFFEF3C7)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

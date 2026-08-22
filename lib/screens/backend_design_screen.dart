@@ -12,8 +12,6 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
-import 'package:ndu_project/screens/ui_ux_design_screen.dart';
-import 'package:ndu_project/screens/engineering_design_screen.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -22,7 +20,6 @@ import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class BackendDesignScreen extends StatefulWidget {
  const BackendDesignScreen({super.key});

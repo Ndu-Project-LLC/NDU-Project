@@ -305,8 +305,8 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Lessons Learned',
  ),
  ),
@@ -416,10 +416,10 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: Colors.grey.withOpacity(0.2)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.02),
+ color: Colors.black.withValues(alpha: 0.02),
  blurRadius: 12,
  offset: const Offset(0, 4),
  ),
@@ -438,7 +438,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
  ),
  const SizedBox(height: 20),
- Divider(color: Colors.grey.withOpacity(0.2), thickness: 1),
+ Divider(color: Colors.grey.withValues(alpha: 0.2), thickness: 1),
  const SizedBox(height: 20),
  isMobile
  ? Column(
@@ -458,7 +458,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  width: 1,
  height: 220,
  margin: const EdgeInsets.symmetric(horizontal: 24),
- color: Colors.grey.withOpacity(0.2),
+ color: Colors.grey.withValues(alpha: 0.2),
  ),
  Expanded(
  child: _summaryRightColumn(
@@ -598,10 +598,10 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: Colors.grey.withOpacity(0.2)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.02),
+ color: Colors.black.withValues(alpha: 0.02),
  blurRadius: 12,
  offset: const Offset(0, 4),
  ),
@@ -628,7 +628,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  prefixIcon: const Icon(Icons.search),
  hintText: 'Search...',
  filled: true,
- fillColor: Colors.grey.withOpacity(0.1),
+ fillColor: Colors.grey.withValues(alpha: 0.1),
  contentPadding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
  border: OutlineInputBorder(
@@ -686,7 +686,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  prefixIcon: const Icon(Icons.search),
  hintText: 'Search...',
  filled: true,
- fillColor: Colors.grey.withOpacity(0.1),
+ fillColor: Colors.grey.withValues(alpha: 0.1),
  contentPadding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
  border: OutlineInputBorder(
@@ -745,7 +745,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  width: double.infinity,
  padding: const EdgeInsets.symmetric(vertical: 48),
  decoration: BoxDecoration(
- color: Colors.grey.withOpacity(0.08),
+ color: Colors.grey.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(16),
  ),
  child: Column(
@@ -791,11 +791,11 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  padding:
  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
  decoration: BoxDecoration(
- color: Colors.grey.withOpacity(0.12),
+ color: Colors.grey.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(12),
  ),
- child: Row(
- children: const [
+ child: const Row(
+ children: [
  Expanded(flex: 6, child: Text('#', style: headerStyle)),
  Expanded(
  flex: 32, child: Text('Lesson', style: headerStyle)),
@@ -828,7 +828,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
  border:
- Border.all(color: Colors.grey.withOpacity(0.12)),
+ Border.all(color: Colors.grey.withValues(alpha: 0.12)),
  ),
  child: Column(
  children: [
@@ -838,7 +838,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  color: entries[i].highlight
  ? Colors.white
  : Colors.grey
- .withOpacity(0.05 * ((i % 2) + 1)),
+ .withValues(alpha: 0.05 * ((i % 2) + 1)),
  borderRadius: i == 0
  ? const BorderRadius.vertical(
  top: Radius.circular(16))
@@ -960,8 +960,8 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
 
  return FullScreenTableWrapper(
  title: 'Lessons Learned — Tasks',
- child: buildTable(context),
  tableBuilder: buildTable,
+ child: buildTable(context),
  );
  }
 
@@ -1012,10 +1012,10 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  ? const Color(0xFFFFD700)
  : Colors.white,
  borderRadius: BorderRadius.circular(22),
- border: Border.all(color: Colors.grey.withOpacity(0.2)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  blurRadius: 6,
  offset: const Offset(0, 2)),
  ],
@@ -1036,10 +1036,10 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(30),
- border: Border.all(color: Colors.grey.withOpacity(0.2)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  blurRadius: 6,
  offset: const Offset(0, 2)),
  ],
@@ -1063,7 +1063,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  children: [
  CircleAvatar(
  radius: 18,
- backgroundColor: Colors.grey.withOpacity(0.2),
+ backgroundColor: Colors.grey.withValues(alpha: 0.2),
  backgroundImage:
  photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
  child: photoUrl.isEmpty
@@ -1404,7 +1404,7 @@ class _LessonDialogState extends State<_LessonDialog> {
  labelText: label,
  hintText: hintText,
  filled: true,
- fillColor: Colors.grey.withOpacity(0.08),
+ fillColor: Colors.grey.withValues(alpha: 0.08),
  border: OutlineInputBorder(
  borderRadius: BorderRadius.circular(12),
  borderSide: BorderSide.none,
@@ -1498,7 +1498,7 @@ class _SummaryStat extends StatelessWidget {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
  decoration: BoxDecoration(
- color: color.withOpacity(0.08),
+ color: color.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(14),
  ),
  child: Column(

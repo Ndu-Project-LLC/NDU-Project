@@ -527,9 +527,9 @@ class _PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
           'Gap Analysis & Scope Reconciliation',
           style: TextStyle(
@@ -1106,8 +1106,8 @@ class _GapRegisterCard extends StatelessWidget {
                     width: tableWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Column(
                         children: [
@@ -1275,7 +1275,7 @@ class _GapRegisterCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedCategory,
+                    initialValue: selectedCategory,
                     decoration: const InputDecoration(
                       labelText: 'Category *',
                       isDense: true,
@@ -1295,7 +1295,7 @@ class _GapRegisterCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: selectedSeverity,
+                          initialValue: selectedSeverity,
                           decoration: const InputDecoration(
                             labelText: 'Severity *',
                             isDense: true,
@@ -1307,15 +1307,16 @@ class _GapRegisterCard extends StatelessWidget {
                                       style: const TextStyle(fontSize: 13))))
                               .toList(),
                           onChanged: (v) {
-                            if (v != null)
+                            if (v != null) {
                               setDialogState(() => selectedSeverity = v);
+                            }
                           },
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _priorityOptions.contains(selectedStage)
+                          initialValue: _priorityOptions.contains(selectedStage)
                               ? selectedStage
                               : _priorityOptions.first,
                           decoration: const InputDecoration(
@@ -1329,8 +1330,9 @@ class _GapRegisterCard extends StatelessWidget {
                                       style: const TextStyle(fontSize: 13))))
                               .toList(),
                           onChanged: (v) {
-                            if (v != null)
+                            if (v != null) {
                               setDialogState(() => selectedStage = v);
+                            }
                           },
                         ),
                       ),
@@ -1527,9 +1529,9 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Root cause themes',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF374151)),
@@ -1548,8 +1550,8 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                     width: tableWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Column(
                         children: [
@@ -1643,9 +1645,9 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
               },
             ),
           const SizedBox(height: 24),
-          Text(
+          const Text(
             'Mitigation confidence',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF374151)),
@@ -1664,8 +1666,8 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                     width: tableWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Column(
                         children: [
@@ -1805,7 +1807,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedCategory,
+                    initialValue: selectedCategory,
                     decoration: const InputDecoration(
                       labelText: 'Category *',
                       isDense: true,
@@ -1824,7 +1826,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedMethod,
+                    initialValue: selectedMethod,
                     decoration: const InputDecoration(
                       labelText: 'Analysis method *',
                       isDense: true,
@@ -1846,7 +1848,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: selectedImpact,
+                          initialValue: selectedImpact,
                           decoration: const InputDecoration(
                             labelText: 'Impact *',
                             isDense: true,
@@ -1867,7 +1869,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: selectedStatus,
+                          initialValue: selectedStatus,
                           decoration: const InputDecoration(
                             labelText: 'Status *',
                             isDense: true,
@@ -1951,7 +1953,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Root Cause'),
-        content: Text('Remove this root cause entry?'),
+        content: const Text('Remove this root cause entry?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -1976,7 +1978,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Mitigation'),
-        content: Text('Remove this mitigation entry?'),
+        content: const Text('Remove this mitigation entry?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -2119,7 +2121,7 @@ class _GapEntryRowState extends State<_GapEntryRow> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Color(0xFFF1F5F9),
+                              color: const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -2708,8 +2710,8 @@ class _ReconciliationPlanningCard extends StatelessWidget {
                     width: tableWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Column(
                         children: [
@@ -2864,7 +2866,7 @@ class _ReconciliationPlanningCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: selectedPhase,
+                          initialValue: selectedPhase,
                           decoration: const InputDecoration(
                             labelText: 'Phase *',
                             isDense: true,
@@ -2885,7 +2887,7 @@ class _ReconciliationPlanningCard extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _statusOptions.contains(selectedStatus)
+                          initialValue: _statusOptions.contains(selectedStatus)
                               ? selectedStatus
                               : _statusOptions.first,
                           decoration: const InputDecoration(
@@ -3142,8 +3144,8 @@ class _ImpactAssessmentCard extends StatelessWidget {
                     width: tableWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Column(
                         children: [
@@ -3299,7 +3301,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: selectedDomain,
+                          initialValue: selectedDomain,
                           decoration: const InputDecoration(
                             labelText: 'Domain *',
                             isDense: true,
@@ -3320,7 +3322,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _ratingOptions.contains(selectedRating)
+                          initialValue: _ratingOptions.contains(selectedRating)
                               ? selectedRating
                               : _ratingOptions.first,
                           decoration: const InputDecoration(
@@ -3347,7 +3349,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _trendOptions.contains(selectedTrend)
+                          initialValue: _trendOptions.contains(selectedTrend)
                               ? selectedTrend
                               : _trendOptions.first,
                           decoration: const InputDecoration(
@@ -4275,9 +4277,9 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.all(Radius.circular(999)),
-            border: Border.all(color: Color(0xFFE2E8F0)),
+            color: const Color(0xFFF8FAFC),
+            borderRadius: const BorderRadius.all(Radius.circular(999)),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: Text('$totalCount scenarios',
               style:
@@ -4334,7 +4336,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                     decoration: const InputDecoration(labelText: 'Owner')),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                    value: category,
+                    initialValue: category,
                     items: ['Custom', 'Impact', 'Gap', 'Plan']
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                         .toList(),
@@ -4344,7 +4346,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                 Row(children: [
                   Expanded(
                       child: DropdownButtonFormField<int>(
-                          value: severity,
+                          initialValue: severity,
                           items: [1, 2, 3]
                               .map((i) => DropdownMenuItem(
                                   value: i, child: Text('Severity $i')))
@@ -4355,7 +4357,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                       child: DropdownButtonFormField<int>(
-                          value: likelihood,
+                          initialValue: likelihood,
                           items: [1, 2, 3]
                               .map((i) => DropdownMenuItem(
                                   value: i, child: Text('Likelihood $i')))
@@ -4438,20 +4440,20 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
           child: VoiceTextField(
             controller: _searchController,
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               hintText: 'Search scenarios, owners, or tags',
-              prefixIcon: const Icon(Icons.search, size: 20),
+              prefixIcon: Icon(Icons.search, size: 20),
               filled: true,
-              fillColor: const Color(0xFFF8FAFC),
+              fillColor: Color(0xFFF8FAFC),
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              border: const OutlineInputBorder(
+                  EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(14)),
                   borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-              enabledBorder: const OutlineInputBorder(
+              enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(14)),
                   borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-              focusedBorder: const OutlineInputBorder(
+              focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(14)),
                   borderSide: BorderSide(color: Color(0xFF4338CA), width: 1.6)),
             ),
@@ -4570,9 +4572,9 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4611,8 +4613,8 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  border: Border.all(color: Color(0xFFE2E8F0)),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -4999,9 +5001,9 @@ class _AxisHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Text(
         label,
@@ -5053,7 +5055,7 @@ class _Tag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Color(0xFFF1F5F9),
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(label,
@@ -5174,7 +5176,7 @@ class _ReconciliationWorkflowCardState
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: status,
+                    initialValue: status,
                     items: _columns
                         .map((col) => DropdownMenuItem<String>(
                               value: col.label,
@@ -5674,9 +5676,9 @@ class _EmptyPanel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        color: const Color(0xFFF9FAFB),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [

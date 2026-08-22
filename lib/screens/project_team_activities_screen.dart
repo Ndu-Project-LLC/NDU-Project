@@ -643,7 +643,7 @@ class _ProjectTeamActivitiesScreenState
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Color(0xFFF1F5F9),
+                color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -832,9 +832,9 @@ class _ProjectTeamActivitiesScreenState
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: Color(0xFFF3F4F6),
+                              color: const Color(0xFFF3F4F6),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Color(0xFFE5E7EB)),
+                              border: Border.all(color: const Color(0xFFE5E7EB)),
                             ),
                             child: Text(
                               f,
@@ -902,11 +902,11 @@ class _ProjectTeamActivitiesScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [Color(0xFFFFF8E1), Color(0xFFFEF3C7)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFFFC812)),
+        border: Border.all(color: const Color(0xFFFFC812)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

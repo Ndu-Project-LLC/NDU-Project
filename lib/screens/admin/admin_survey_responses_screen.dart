@@ -227,10 +227,10 @@ class _AdminSurveyResponsesScreenState
                   final filtered = _applyFilter(rows);
 
                   if (filtered.isEmpty) {
-                    return Center(
+                    return const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           Icon(Icons.assignment_outlined,
                               size: 64, color: Colors.grey),
                           SizedBox(height: 16),

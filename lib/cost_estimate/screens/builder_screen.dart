@@ -251,10 +251,10 @@ class _BuilderScreenState extends State<BuilderScreen>
                     ),
                     const SizedBox(width: 14),
                     // Totals sidebar
-                    SizedBox(
+                    const SizedBox(
                       width: 320,
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 0),
+                        padding: EdgeInsets.only(top: 0),
                         child: TotalsPanel(),
                       ),
                     ),
@@ -503,7 +503,7 @@ class _BaselinedNotice extends StatelessWidget {
               color: TreasuryTokens.warning.withValues(alpha: 0.20),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.lock_rounded,
+            child: const Icon(Icons.lock_rounded,
                 size: 15, color: TreasuryTokens.warning),
           ),
           const SizedBox(width: 12),
@@ -513,7 +513,7 @@ class _BaselinedNotice extends StatelessWidget {
               children: [
                 Text(
                   'Estimate is baselined (v$version)',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: TreasuryTokens.ink,
@@ -522,7 +522,7 @@ class _BaselinedNotice extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Edits create variance entries. Re-baselines remaining: $remaining',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 11.5,
                     color: TreasuryTokens.muted,
                   ),
@@ -576,7 +576,7 @@ class _TreasuryLineRow extends StatelessWidget {
                 color: TreasuryTokens.brand.withValues(alpha: 0.20),
               ),
             ),
-            child: Icon(Icons.receipt_long_rounded,
+            child: const Icon(Icons.receipt_long_rounded,
                 size: 18, color: TreasuryTokens.brandDeep),
           ),
           const SizedBox(width: 12),
@@ -652,27 +652,27 @@ class _TreasuryLineRow extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.label_outline,
+                    const Icon(Icons.label_outline,
                         size: 11,
                         color: TreasuryTokens.mutedSoft),
                     const SizedBox(width: 4),
                     Text(
                       line.category.label,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         color: TreasuryTokens.muted,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Icon(Icons.source_outlined,
+                    const Icon(Icons.source_outlined,
                         size: 11,
                         color: TreasuryTokens.mutedSoft),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         line.basisSource.label,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
                           color: TreasuryTokens.muted,
                         ),

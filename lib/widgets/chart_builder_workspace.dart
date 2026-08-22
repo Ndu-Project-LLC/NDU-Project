@@ -83,9 +83,9 @@ class _ChartBuilderWorkspaceState extends State<ChartBuilderWorkspace> {
           ),
           Container(
             width: 280,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               border: Border(left: BorderSide(color: AppSemanticColors.border)),
-              color: const Color(0xFFF9FAFB),
+              color: Color(0xFFF9FAFB),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

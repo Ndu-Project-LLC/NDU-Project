@@ -158,7 +158,7 @@ class PremiumEditDialog extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Color(0xFFD1D5DB)),
+        border: Border.all(color: const Color(0xFFD1D5DB)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: VoiceTextField(

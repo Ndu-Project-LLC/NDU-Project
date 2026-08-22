@@ -948,10 +948,10 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
                    onChanged: (_) => setDialogState(() {}),
                  ),
                  if (wasPreviouslyInvited)
-                   Padding(
-                     padding: const EdgeInsets.only(top: 8),
+                   const Padding(
+                     padding: EdgeInsets.only(top: 8),
                      child: Row(
-                       children: const [
+                       children: [
                          Icon(Icons.check_circle_outline,
                              size: 14, color: Color(0xFF10B981)),
                          SizedBox(width: 6),

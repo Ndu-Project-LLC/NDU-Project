@@ -20,7 +20,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';

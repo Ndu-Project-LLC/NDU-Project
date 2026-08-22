@@ -361,9 +361,9 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  ),
  ),
  const SizedBox(height: 10),
- Row(
+ const Row(
  children: [
- const Expanded(
+ Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -654,8 +654,8 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
   }
   return FullScreenTableWrapper(
    title: 'Risk register',
-   child: buildTable(bc),
    tableBuilder: buildTable,
+   child: buildTable(bc),
   );
  })
  );
@@ -824,8 +824,8 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
   }
   return FullScreenTableWrapper(
    title: 'Mitigation coverage',
-   child: buildTable(bc),
    tableBuilder: buildTable,
+   child: buildTable(bc),
   );
  })
  );
@@ -1095,8 +1095,8 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
   }
   return FullScreenTableWrapper(
    title: 'Risk signals',
-   child: buildTable(bc),
    tableBuilder: buildTable,
+   child: buildTable(bc),
   );
  })
  );
@@ -1348,8 +1348,8 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
   }
   return FullScreenTableWrapper(
    title: 'Escalation readiness',
-   child: buildTable(bc),
    tableBuilder: buildTable,
+   child: buildTable(bc),
   );
  })
  );
@@ -2760,7 +2760,7 @@ class _PanelShell extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

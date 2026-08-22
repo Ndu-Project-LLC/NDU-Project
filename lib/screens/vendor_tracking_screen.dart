@@ -43,21 +43,21 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
   final List<_KpiRow> _customKpiRows = [];
   final List<_RiskSignalRow> _customSignalRows = [];
   final List<_ActionRow> _actionRows = [
-    _ActionRow(
+    const _ActionRow(
         id: 'act_1',
         title: 'Quarterly business review',
         priority: 'High',
         dueDate: 'Oct 21',
         owner: 'Vendor Manager',
         status: 'Agenda locked'),
-    _ActionRow(
+    const _ActionRow(
         id: 'act_2',
         title: 'Security compliance audit',
         priority: 'Critical',
         dueDate: 'Oct 25',
         owner: 'Compliance Lead',
         status: 'Docs requested'),
-    _ActionRow(
+    const _ActionRow(
         id: 'act_3',
         title: 'Performance tuning workshop',
         priority: 'Medium',
@@ -228,10 +228,10 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
   Widget _buildVendorRegister() {
     final policy = _crudPolicy;
     if (_projectId == null || _projectId!.isEmpty) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Vendor scorecard',
         subtitle: 'Performance, rating, and compliance checkpoints',
-        child: const Center(
+        child: Center(
           child: Padding(
             padding: EdgeInsets.all(24.0),
             child: Text('No project selected. Please open a project first.',
@@ -329,10 +329,10 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
 
   Widget _buildPerformancePanel() {
     if (_projectId == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Performance pulse',
         subtitle: 'Key service health indicators',
-        child: const SizedBox.shrink(),
+        child: SizedBox.shrink(),
       );
     }
 
@@ -422,7 +422,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Color(0xFF1F2937),
+                    color: const Color(0xFF1F2937),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Row(
@@ -474,7 +474,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                               ? Colors.white
                               : const Color(0xFFFAFBFD),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Color(0xFFF3F4F6)),
+                          border: Border.all(color: const Color(0xFFF3F4F6)),
                         ),
                         child: Row(
                           children: [
@@ -752,10 +752,10 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
 
   Widget _buildSignalsPanel() {
     if (_projectId == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Risk signals',
         subtitle: 'Active alerts and vendor watch items',
-        child: const SizedBox.shrink(),
+        child: SizedBox.shrink(),
       );
     }
 
@@ -912,9 +912,9 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                           borderRadius: BorderRadius.circular(6),
                           border: Border(
                             left: BorderSide(color: sevColor, width: 3),
-                            top: BorderSide(color: const Color(0xFFF3F4F6)),
-                            right: BorderSide(color: const Color(0xFFF3F4F6)),
-                            bottom: BorderSide(color: const Color(0xFFF3F4F6)),
+                            top: const BorderSide(color: Color(0xFFF3F4F6)),
+                            right: const BorderSide(color: Color(0xFFF3F4F6)),
+                            bottom: const BorderSide(color: Color(0xFFF3F4F6)),
                           ),
                         ),
                         child: Column(
@@ -1113,7 +1113,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                     Row(children: [
                       Expanded(
                           child: DropdownButtonFormField<String>(
-                        value: severity,
+                        initialValue: severity,
                         decoration: const InputDecoration(
                             labelText: 'Severity',
                             isDense: true,
@@ -1129,7 +1129,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                           child: DropdownButtonFormField<String>(
-                        value: status,
+                        initialValue: status,
                         decoration: const InputDecoration(
                             labelText: 'Status',
                             isDense: true,
@@ -1308,7 +1308,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                               ? Colors.white
                               : const Color(0xFFFAFBFD),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Color(0xFFF3F4F6)),
+                          border: Border.all(color: const Color(0xFFF3F4F6)),
                         ),
                         child: Row(
                           children: [
@@ -1454,7 +1454,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                   Row(children: [
                     Expanded(
                         child: DropdownButtonFormField<String>(
-                      value: priority,
+                      initialValue: priority,
                       decoration: const InputDecoration(
                           labelText: 'Priority',
                           isDense: true,
@@ -1470,7 +1470,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                         child: DropdownButtonFormField<String>(
-                      value: status,
+                      initialValue: status,
                       decoration: const InputDecoration(
                           labelText: 'Status',
                           isDense: true,
@@ -1695,7 +1695,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                   ],
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedCategory,
+                    initialValue: selectedCategory,
                     decoration: const InputDecoration(labelText: 'Category *'),
                     items: const [
                       'Logistics',
@@ -1715,7 +1715,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedCriticality,
+                    initialValue: selectedCriticality,
                     decoration:
                         const InputDecoration(labelText: 'Criticality *'),
                     items: const ['High', 'Medium', 'Low']
@@ -1753,7 +1753,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                       maxLines: 5),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: ratingController.text,
+                    initialValue: ratingController.text,
                     decoration: const InputDecoration(labelText: 'Rating *'),
                     items: ['A', 'B', 'C', 'D']
                         .map((r) => DropdownMenuItem(value: r, child: Text(r)))
@@ -1762,7 +1762,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: statusController.text,
+                    initialValue: statusController.text,
                     decoration: const InputDecoration(labelText: 'Status *'),
                     items: ['Active', 'Watch', 'At risk', 'Onboard']
                         .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -1778,7 +1778,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                   if (contracts.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String?>(
-                      value: selectedContractId,
+                      initialValue: selectedContractId,
                       decoration: const InputDecoration(
                           labelText: 'Linked Contract (Optional)'),
                       items: [
@@ -1853,7 +1853,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                   final slaPerformance =
                       double.tryParse(slaPerformanceController.text) ?? 0.0;
 
-                  if (isEdit && vendor != null) {
+                  if (isEdit) {
                     await VendorService.updateVendor(
                       projectId: projectId,
                       vendorId: vendor.id,
@@ -1978,7 +1978,7 @@ class _PanelShell extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -430,7 +430,7 @@ class _MetaTile extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.8,
@@ -440,7 +440,7 @@ class _MetaTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     value,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                       color: TreasuryTokens.ink,
@@ -520,7 +520,7 @@ class _ListCard extends StatelessWidget {
             TextButton.icon(
               onPressed: onAdd,
               icon: Icon(Icons.add, size: 14, color: tint),
-              label: Text('Add ${suffixSingular}',
+              label: Text('Add $suffixSingular',
                   style: TextStyle(
                     color: tint,
                     fontSize: 12,
@@ -547,9 +547,8 @@ class _TreasuryTextField extends StatelessWidget {
     required this.controller,
     required this.enabled,
     this.minLines = 1,
-    this.maxLines,
     this.hint,
-  });
+  }) : maxLines = null;
   final TextEditingController controller;
   final bool enabled;
   final int minLines;
@@ -562,7 +561,7 @@ class _TreasuryTextField extends StatelessWidget {
       controller: controller,
       enabled: enabled,
       minLines: minLines,
-      maxLines: maxLines ?? null,
+      maxLines: maxLines,
       style: const TextStyle(
         color: TreasuryTokens.ink,
         fontSize: 13.5,
@@ -570,7 +569,7 @@ class _TreasuryTextField extends StatelessWidget {
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(
+        hintStyle: const TextStyle(
           color: TreasuryTokens.mutedSoft,
           fontSize: 13,
         ),
@@ -585,7 +584,7 @@ class _TreasuryTextField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide:
-              BorderSide(color: TreasuryTokens.brandDeep, width: 1.6),
+              const BorderSide(color: TreasuryTokens.brandDeep, width: 1.6),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -643,10 +642,10 @@ class _TreasuryFilterChip extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (selected)
-                Icon(Icons.check_rounded,
+                const Icon(Icons.check_rounded,
                     size: 13, color: TreasuryTokens.brandDeep)
               else
-                Icon(Icons.add_rounded,
+                const Icon(Icons.add_rounded,
                     size: 13, color: TreasuryTokens.mutedSoft),
               const SizedBox(width: 6),
               Text(

@@ -303,7 +303,7 @@ class WorkPackageDetailView extends StatelessWidget {
                               margin: const EdgeInsets.only(bottom: 4),
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Color(0xFFF9FAFB),
+                                color: const Color(0xFFF9FAFB),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: AppSemanticColors.border,
@@ -357,7 +357,7 @@ class WorkPackageDetailView extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Color(0xFFF9FAFB),
+                        color: const Color(0xFFF9FAFB),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: AppSemanticColors.border),
                       ),
@@ -499,7 +499,7 @@ class _AccordionSection extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppSemanticColors.border),
       ),
@@ -547,9 +547,9 @@ class _WarningPanel extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Color(0xFFECFDF5),
+          color: const Color(0xFFECFDF5),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Color(0xFF10B981)),
+          border: Border.all(color: const Color(0xFF10B981)),
         ),
         child: const Text(
           'No readiness warnings.',
@@ -566,9 +566,9 @@ class _WarningPanel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFFFF7ED),
+        color: const Color(0xFFFFF7ED),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF97316)),
+        border: Border.all(color: const Color(0xFFF97316)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -612,7 +612,7 @@ class _PackageSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppSemanticColors.border),
       ),

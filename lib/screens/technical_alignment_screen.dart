@@ -4443,8 +4443,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
  return FullScreenTableWrapper(
  title: title,
- child: buildInner(context),
  tableBuilder: buildInner,
+ child: buildInner(context),
  );
  }
 
@@ -4491,9 +4491,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final isEditing = _editingConstraintRows.contains(index);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        border: const Border(
+        border: Border(
           bottom: BorderSide(color: Color(0xFFF3F4F6)),
         ),
       ),

@@ -9,14 +9,12 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
-import 'package:ndu_project/widgets/unified_phase_header.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:math' as math;
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';

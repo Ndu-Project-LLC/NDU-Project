@@ -1438,7 +1438,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  statusColor = Colors.red;
  break;
  default:
- statusColor = Color(0xFFFFC812);
+ statusColor = const Color(0xFFFFC812);
  }
 
  return DataRow(
@@ -1558,7 +1558,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  statusColor = Colors.red;
  break;
  default:
- statusColor = Color(0xFFFFC812);
+ statusColor = const Color(0xFFFFC812);
  }
 
  return DataRow(
@@ -3493,7 +3493,7 @@ Execution snapshot:
  CircleAvatar(
  radius: 14,
  backgroundColor: const Color(0xFFFFC812)
- .withOpacity(0.1),
+ .withValues(alpha: 0.1),
  child: Text(
  initial,
  style: const TextStyle(
@@ -3803,10 +3803,10 @@ Execution snapshot:
  rows: items.isEmpty
  ? [
  DataRow(cells: [
- DataCell(Text(
+ const DataCell(Text(
  'No disposal items added yet.',
  style: TextStyle(
- color: const Color(0xFF64748B),
+ color: Color(0xFF64748B),
  fontStyle: FontStyle.italic))),
  for (var i = 0; i < 11; i++) const DataCell(SizedBox()),
  ]),

@@ -380,9 +380,9 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFFECFDF5),
+        color: const Color(0xFFECFDF5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFF10B981)),
+        border: Border.all(color: const Color(0xFF10B981)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,9 +461,9 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Color(0xFFECFDF5),
+                        color: const Color(0xFFECFDF5),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Color(0xFFA7F3D0)),
+                        border: Border.all(color: const Color(0xFFA7F3D0)),
                       ),
                       child: Text(
                         h,

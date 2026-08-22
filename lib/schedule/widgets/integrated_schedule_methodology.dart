@@ -115,9 +115,8 @@ class _MethodologyStep {
     required this.icon,
     required this.phase,
     this.nduNote,
-    this.status = _StepStatus.notStarted,
     this.deliverables = const [],
-  });
+  }) : status = _StepStatus.notStarted;
 
   final int number;
   final String title;
@@ -186,7 +185,7 @@ class _IntegratedScheduleMethodologyState
     final isAgile = widget.deliveryModel.toUpperCase() == 'AGILE';
     return [
       // ─── PHASE 1: SCOPE DEFINITION ───────────────────────────────────────
-      _MethodologyStep(
+      const _MethodologyStep(
         number: 1,
         title: 'Deliverable-Based WBS',
         description:
@@ -195,13 +194,13 @@ class _IntegratedScheduleMethodologyState
             'For NDU Project, the WBS goes to the second level (Level 2).',
         icon: Icons.account_tree_rounded,
         phase: _MethodologyPhase.scope,
-        deliverables: const [
+        deliverables: [
           'WBS dictionary',
           'Level 1 control accounts',
           'Level 2 deliverable accounts',
         ],
       ),
-      _MethodologyStep(
+      const _MethodologyStep(
         number: 2,
         title: 'Engineering Work Packages (EWPs)',
         description:
@@ -210,7 +209,7 @@ class _IntegratedScheduleMethodologyState
             'For NDU Project, these are the design packages that align with all requirements and applicable specifications. They sit at the 3rd level of the WBS to identify all design and engineering work needed for each scope element.',
         icon: Icons.design_services_rounded,
         phase: _MethodologyPhase.scope,
-        deliverables: const [
+        deliverables: [
           'Drawing register',
           'Specification index',
           'Calculation set',
@@ -218,7 +217,7 @@ class _IntegratedScheduleMethodologyState
           'Code & standards matrix',
         ],
       ),
-      _MethodologyStep(
+      const _MethodologyStep(
         number: 3,
         title: 'Procurement & Contracting Breakdown',
         description:
@@ -227,14 +226,14 @@ class _IntegratedScheduleMethodologyState
             'For NDU Project, any design that needs to feed into a procured item is identified in its package so that its scope is complete for sending to the vendor to build (mostly for waterfall but could apply to agile sometimes). Sits at the 3rd level of the WBS.',
         icon: Icons.inventory_2_outlined,
         phase: _MethodologyPhase.scope,
-        deliverables: const [
+        deliverables: [
           'Procurement Breakdown Structure (PBS)',
           'Long-lead register',
           'Vendor scope packages',
           'RFQ/RFP plan',
         ],
       ),
-      _MethodologyStep(
+      const _MethodologyStep(
         number: 4,
         title: 'Execution Work Packages (EWPs) / Construction (CWPs)',
         description:
@@ -243,7 +242,7 @@ class _IntegratedScheduleMethodologyState
             'For NDU Project, execution work packages are called CWPs when there is construction work for that scope; otherwise EWP, especially for Agile. They cascade from the WBS second level all the way to the lowest level possible — up to 8 levels if needed, until reaching the hours-of-work level. These work packages usually combine design and procurement or contract scope, especially at the 3rd to 5th levels.',
         icon: Icons.construction_rounded,
         phase: _MethodologyPhase.scope,
-        deliverables: const [
+        deliverables: [
           'CWP register',
           'EWP register',
           'Prerequisites matrix per package',
@@ -268,7 +267,7 @@ class _IntegratedScheduleMethodologyState
           'Agile iteration map (if applicable)',
         ],
       ),
-      _MethodologyStep(
+      const _MethodologyStep(
         number: 6,
         title: 'Estimate Durations Across All Domains',
         description:
@@ -277,7 +276,7 @@ class _IntegratedScheduleMethodologyState
             'For NDU Project, all three domains (Engineering, Procurement, Execution) must use a single, documented estimation method. See the Estimate Basis card below for the assumptions and data sources.',
         icon: Icons.timelapse_rounded,
         phase: _MethodologyPhase.network,
-        deliverables: const [
+        deliverables: [
           'Engineering duration basis',
           'Procurement lead-time register',
           'Construction productivity rates',
@@ -285,7 +284,7 @@ class _IntegratedScheduleMethodologyState
       ),
 
       // ─── PHASE 3: SCHEDULE BUILD ─────────────────────────────────────────
-      _MethodologyStep(
+      const _MethodologyStep(
         number: 7,
         title: 'Build the Integrated Schedule Network (CPM)',
         description:
@@ -294,13 +293,13 @@ class _IntegratedScheduleMethodologyState
             'For NDU Project, CPM is run from the Schedule Builder via the "Run CPM" action above. Critical path drives staging decisions and forecast reporting.',
         icon: Icons.route_rounded,
         phase: _MethodologyPhase.build,
-        deliverables: const [
+        deliverables: [
           'Critical path diagram',
           'Total project duration',
           'Float report on non-critical paths',
         ],
       ),
-      _MethodologyStep(
+      const _MethodologyStep(
         number: 8,
         title: 'Align Contracts to Work Packages',
         description:
@@ -309,13 +308,13 @@ class _IntegratedScheduleMethodologyState
             'For NDU Project, the Contract Register should be filterable by CWP id so the team can trace every contract back to a single executable scope.',
         icon: Icons.handshake_outlined,
         phase: _MethodologyPhase.build,
-        deliverables: const [
+        deliverables: [
           'Contract → CWP mapping',
           'Vendor contract register',
           'Subcontractor scope sheets',
         ],
       ),
-      _MethodologyStep(
+      const _MethodologyStep(
         number: 9,
         title: 'Resource Load and Validate',
         description:
@@ -324,13 +323,13 @@ class _IntegratedScheduleMethodologyState
             'For NDU Project, the Resource Plan should be cross-checked against the Team Management roster before each CWP release.',
         icon: Icons.groups_2_outlined,
         phase: _MethodologyPhase.build,
-        deliverables: const [
+        deliverables: [
           'Resource-loaded schedule',
           'Resource leveling report',
           'Constructability review log',
         ],
       ),
-      _MethodologyStep(
+      const _MethodologyStep(
         number: 10,
         title: 'Develop the Time-Phased Schedule',
         description:
@@ -339,7 +338,7 @@ class _IntegratedScheduleMethodologyState
             'For NDU Project, the Gantt tab (next to this Builder tab) renders the time-phased view and the milestone register.',
         icon: Icons.view_timeline_rounded,
         phase: _MethodologyPhase.build,
-        deliverables: const [
+        deliverables: [
           'Gantt chart (EWPs + Procurement + CWPs)',
           'Milestone register',
           'Baseline start/finish dates',
@@ -347,7 +346,7 @@ class _IntegratedScheduleMethodologyState
       ),
 
       // ─── PHASE 4: BASELINE & CONTROL ──────────────────────────────────────
-      _MethodologyStep(
+      const _MethodologyStep(
         number: 11,
         title: 'Establish Schedule Readiness Rules',
         description:
@@ -356,13 +355,13 @@ class _IntegratedScheduleMethodologyState
             'For NDU Project, see the Schedule Readiness Rules card below — each gate must be cleared before a CWP moves from "Planned" to "In Progress".',
         icon: Icons.checklist_rounded,
         phase: _MethodologyPhase.control,
-        deliverables: const [
+        deliverables: [
           'CWP release gate checklist',
           'Permit & access register',
           'Predecessor completion log',
         ],
       ),
-      _MethodologyStep(
+      const _MethodologyStep(
         number: 12,
         title: 'Baseline and Control',
         description:
@@ -371,7 +370,7 @@ class _IntegratedScheduleMethodologyState
             'For NDU Project, the baseline is locked from the Builder page. Variance reporting is then run from the Project Controls dashboards.',
         icon: Icons.fact_check_outlined,
         phase: _MethodologyPhase.control,
-        deliverables: const [
+        deliverables: [
           'Baseline schedule (locked)',
           'Engineering progress S-curve',
           'Procurement expediting dashboard',
@@ -451,11 +450,11 @@ class _CoreInsightBanner extends StatelessWidget {
                 color: Colors.white, size: 18),
           ),
           const SizedBox(width: 12),
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'CORE INSIGHT',
                   style: TextStyle(
                     fontSize: 9.5,
@@ -464,8 +463,8 @@ class _CoreInsightBanner extends StatelessWidget {
                     letterSpacing: 1.2,
                   ),
                 ),
-                const SizedBox(height: 3),
-                const Text(
+                SizedBox(height: 3),
+                Text(
                   'The quality of a schedule is only as strong as its estimate basis. Weak or undocumented assumptions lead to unrealistic timelines and execution failure.',
                   style: TextStyle(
                     fontSize: 12.5,
@@ -526,7 +525,7 @@ class _PhaseHeader extends StatelessWidget {
           Expanded(
             child: Text(
               phase.subtitle,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 11.5,
                 color: TreasuryTokens.inkSoft,
                 fontWeight: FontWeight.w600,
@@ -668,7 +667,7 @@ class _StepCard extends StatelessWidget {
                                     overflow: expanded
                                         ? TextOverflow.visible
                                         : TextOverflow.ellipsis,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 11.5,
                                       color: TreasuryTokens.inkSoft,
                                       height: 1.5,
@@ -699,14 +698,14 @@ class _StepCard extends StatelessWidget {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(Icons.flag_rounded,
+                                const Icon(Icons.flag_rounded,
                                     size: 12,
                                     color: TreasuryTokens.brandDeep),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     step.nduNote!,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 11,
                                       color: TreasuryTokens.ink,
                                       height: 1.5,
@@ -893,7 +892,7 @@ class _MethodologyLegend extends StatelessWidget {
                 const SizedBox(width: 5),
                 Text(
                   phase.label.split(' · ').last,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     color: TreasuryTokens.inkSoft,
@@ -972,7 +971,7 @@ class _MethodologyProgressPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.timeline_rounded,
+          const Icon(Icons.timeline_rounded,
               size: 13, color: TreasuryTokens.brandDeep),
           const SizedBox(width: 6),
           Text(
@@ -1011,7 +1010,7 @@ class EstimateBasisCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = <_BasisItem>[
-      _BasisItem(
+      const _BasisItem(
         title: 'Scope alignment',
         icon: Icons.account_tree_outlined,
         bullets: [
@@ -1019,7 +1018,7 @@ class EstimateBasisCard extends StatelessWidget {
           'Every duration reflects a clearly defined deliverable or work package',
         ],
       ),
-      _BasisItem(
+      const _BasisItem(
         title: 'Estimation methods',
         icon: Icons.calculate_outlined,
         bullets: [
@@ -1029,7 +1028,7 @@ class EstimateBasisCard extends StatelessWidget {
           'Three-point estimating where uncertainty is high',
         ],
       ),
-      _BasisItem(
+      const _BasisItem(
         title: 'Key assumptions',
         icon: Icons.tune_rounded,
         bullets: [
@@ -1039,7 +1038,7 @@ class EstimateBasisCard extends StatelessWidget {
           'Site conditions and access',
         ],
       ),
-      _BasisItem(
+      const _BasisItem(
         title: 'Procurement considerations',
         icon: Icons.local_shipping_outlined,
         bullets: [
@@ -1049,7 +1048,7 @@ class EstimateBasisCard extends StatelessWidget {
           'Contract award timelines',
         ],
       ),
-      _BasisItem(
+      const _BasisItem(
         title: 'Engineering considerations',
         icon: Icons.design_services_outlined,
         bullets: [
@@ -1058,7 +1057,7 @@ class EstimateBasisCard extends StatelessWidget {
           'Iteration and rework allowances',
         ],
       ),
-      _BasisItem(
+      const _BasisItem(
         title: 'Constraints and risks',
         icon: Icons.warning_amber_rounded,
         bullets: [
@@ -1068,7 +1067,7 @@ class EstimateBasisCard extends StatelessWidget {
           'Known uncertainties and contingency assumptions',
         ],
       ),
-      _BasisItem(
+      const _BasisItem(
         title: 'Validation and benchmarking',
         icon: Icons.verified_outlined,
         bullets: [
@@ -1077,7 +1076,7 @@ class EstimateBasisCard extends StatelessWidget {
           'Alignment with the Critical Path Method to ensure logical consistency',
         ],
       ),
-      _BasisItem(
+      const _BasisItem(
         title: 'Documentation',
         icon: Icons.description_outlined,
         bullets: [
@@ -1101,12 +1100,12 @@ class EstimateBasisCard extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.fact_check_outlined,
+            const Icon(Icons.fact_check_outlined,
                 size: 12, color: TreasuryTokens.info),
             const SizedBox(width: 5),
             Text(
               '${items.length} CATEGORIES',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 9.5,
                 fontWeight: FontWeight.w900,
                 color: TreasuryTokens.info,
@@ -1213,7 +1212,7 @@ class _BasisTile extends StatelessWidget {
                   child: Container(
                     width: 4,
                     height: 4,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: TreasuryTokens.brandDeep,
                       shape: BoxShape.circle,
                     ),
@@ -1223,7 +1222,7 @@ class _BasisTile extends StatelessWidget {
                 Expanded(
                   child: Text(
                     b,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 10.5,
                       color: TreasuryTokens.inkSoft,
                       height: 1.45,
@@ -1395,7 +1394,7 @@ class _ScheduleReadinessRulesState extends State<ScheduleReadinessRules> {
                     allCleared
                         ? 'All gates cleared — CWP may be released to "In Progress".'
                         : 'CWP release blocked — clear the remaining gates below before moving from "Planned" to "In Progress".',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11.5,
                       color: TreasuryTokens.ink,
                       fontWeight: FontWeight.w600,
@@ -1507,7 +1506,7 @@ class _ReadinessGateTile extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       gate.description,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 10.5,
                         color: TreasuryTokens.inkSoft,
                         height: 1.4,

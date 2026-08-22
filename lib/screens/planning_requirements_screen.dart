@@ -1409,7 +1409,7 @@ $requirementsList
 
       return Container(
         key: ValueKey('req_row_$index'),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           border: Border(bottom: BorderSide(color: borderColor)),
         ),
         child: Row(
@@ -1647,7 +1647,7 @@ $requirementsList
                   // Header row (non-draggable)
                   Container(
                     key: const ValueKey('req_header'),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: bgHeader,
                       border: Border(
                         bottom: BorderSide(color: borderColor),
@@ -1716,7 +1716,7 @@ $requirementsList
                   // Header row (non-draggable)
                   Container(
                     key: const ValueKey('req_header'),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: bgHeader,
                       border: Border(
                         bottom: BorderSide(color: borderColor),

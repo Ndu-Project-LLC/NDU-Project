@@ -595,8 +595,8 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                           ],
                         ),
                       ),
-                      MobileSidebarHamburger(
-                        sidebar: const InitiationLikeSidebar(
+                      const MobileSidebarHamburger(
+                        sidebar: InitiationLikeSidebar(
                           activeItemLabel: 'Scope Completion',
                         ),
                       ),
@@ -742,9 +742,9 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -797,7 +797,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
@@ -817,7 +817,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           ),
           const SizedBox(height: 6),
           if (_workPackages.isEmpty)
-            _InlineEmptyState(
+            const _InlineEmptyState(
               title: 'No work packages yet',
               message:
                   'Add work packages to track delivered scope against baseline.',
@@ -896,7 +896,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -1511,7 +1511,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
@@ -1530,7 +1530,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           ),
           const SizedBox(height: 6),
           if (_acceptanceCheckpoints.isEmpty)
-            _InlineEmptyState(
+            const _InlineEmptyState(
               title: 'No checkpoints yet',
               message: 'List the acceptance checkpoints for sponsor sign-off.',
               icon: Icons.checklist_outlined,
@@ -1602,7 +1602,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -1971,7 +1971,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
@@ -1988,7 +1988,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           ),
           const SizedBox(height: 6),
           if (_acceptanceTags.isEmpty)
-            _InlineEmptyState(
+            const _InlineEmptyState(
               title: 'No acceptance signals yet',
               message: 'Add sponsor and operations acceptance signals.',
               icon: Icons.verified_outlined,
@@ -2045,7 +2045,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -2405,7 +2405,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
@@ -2427,7 +2427,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           ),
           const SizedBox(height: 6),
           if (_scopeChanges.isEmpty)
-            _InlineEmptyState(
+            const _InlineEmptyState(
               title: 'No scope changes yet',
               message: 'Add the most impactful scope changes.',
               icon: Icons.swap_horiz_outlined,
@@ -2497,7 +2497,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -2901,15 +2901,15 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFFFFC812)),
+        borderSide: const BorderSide(color: Color(0xFFFFC812)),
       ),
     );
   }
@@ -2921,7 +2921,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Color(0xFFF3F4F6),
+        color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -2999,9 +2999,9 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(0xFFF9FAFB),
+                color: const Color(0xFFF9FAFB),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Color(0xFFE5E7EB)),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: Text(
                 badge,
@@ -3219,14 +3219,14 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
 
   Widget _buildTipRow(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
-        Icon(Icons.lightbulb_outline, size: 18, color: const Color(0xFFFFC812)),
-        const SizedBox(width: 8),
+        Icon(Icons.lightbulb_outline, size: 18, color: Color(0xFFFFC812)),
+        SizedBox(width: 8),
         Expanded(
           child: Text(
             'If someone reads only this page, can they quickly see what was delivered, what moved, and that the right people have agreed?',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 13,
                 color: Color(0xFF9CA3AF),
                 fontStyle: FontStyle.italic),
@@ -3270,7 +3270,7 @@ class _ContentCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: child,
     );
@@ -3383,9 +3383,9 @@ class _InlineEmptyState extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [

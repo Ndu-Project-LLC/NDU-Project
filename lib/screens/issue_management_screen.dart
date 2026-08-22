@@ -201,7 +201,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  .length
  .toString(),
  icon: Icons.autorenew,
- color: Color(0xFFFFC812)),
+ color: const Color(0xFFFFC812)),
  _IssueMetric(
  label: 'Resolved',
  value: issueItems
@@ -305,8 +305,8 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Issue Management',
  ),
  ),
@@ -423,7 +423,7 @@ class _MetricCard extends StatelessWidget {
  width: 42,
  height: 42,
  decoration: BoxDecoration(
- color: metric.color.withOpacity(0.12),
+ color: metric.color.withValues(alpha: 0.12),
  shape: BoxShape.circle,
  ),
  child: Icon(metric.icon, size: 22, color: metric.color),
@@ -444,7 +444,7 @@ class _MetricCard extends StatelessWidget {
  metric.label,
  style: TextStyle(
  fontSize: 13,
- color: metric.color.withOpacity(0.8),
+ color: metric.color.withValues(alpha: 0.8),
  fontWeight: FontWeight.w500),
  ),
  ],
@@ -1103,10 +1103,10 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
  border: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: BorderSide(color: Colors.grey.withOpacity(0.35))),
+ borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
  enabledBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: BorderSide(color: Colors.grey.withOpacity(0.35))),
+ borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
  borderSide: const BorderSide(color: Color(0xFFFFD54F), width: 1.6)),
@@ -1135,7 +1135,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _selectedType,
+ initialValue: _selectedType,
  items: _types
  .map((type) =>
  DropdownMenuItem(value: type, child: Text(type)))
@@ -1146,7 +1146,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _selectedSeverity,
+ initialValue: _selectedSeverity,
  items: _severities
  .map((severity) => DropdownMenuItem(
  value: severity, child: Text(severity)))
@@ -1157,7 +1157,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _selectedStatus,
+ initialValue: _selectedStatus,
  items: _statuses
  .map((status) =>
  DropdownMenuItem(value: status, child: Text(status)))
@@ -1293,7 +1293,7 @@ class _UserChip extends StatelessWidget {
 }
 
 class _YellowButton extends StatelessWidget {
- const _YellowButton({required this.label, this.onPressed});
+ const _YellowButton({required this.label}) : onPressed = null;
 
  final String label;
  final VoidCallback? onPressed;

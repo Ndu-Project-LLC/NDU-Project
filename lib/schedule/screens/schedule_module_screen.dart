@@ -140,13 +140,13 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
         // model / methodology, but that information is already captured
         // upstream on the Project Framework screen.
         if (schedule == null || !provider.setupComplete) {
-          return ResponsiveScaffold(
+          return const ResponsiveScaffold(
             activeItemLabel: 'Schedule',
             appBarTitle: 'Schedule',
             breadcrumbPhase: 'Planning Phase',
             breadcrumbTitle: 'Schedule',
             backgroundColor: Colors.white,
-            body: const Center(
+            body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -290,7 +290,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                         icon: const Icon(Icons.refresh, size: 16),
                         label: const Text('Resync from Planning'),
                         style: TextButton.styleFrom(
-                          foregroundColor: Color(0xFFB8860B),
+                          foregroundColor: const Color(0xFFB8860B),
                           textStyle: const TextStyle(fontSize: 12),
                         ),
                       ),

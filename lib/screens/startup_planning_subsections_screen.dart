@@ -1320,18 +1320,18 @@ class _ServiceOwnershipTable extends StatelessWidget {
          const SizedBox(height: 12),
          Table(
            columnWidths: const {0: FlexColumnWidth(1.2), 1: FlexColumnWidth(2)},
-           border: TableBorder(
-             horizontalInside: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
-             verticalInside: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
-             top: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
-             bottom: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
-             left: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
-             right: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+           border: const TableBorder(
+             horizontalInside: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+             verticalInside: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+             top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+             bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+             left: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+             right: BorderSide(color: Color(0xFFE5E7EB), width: 1),
            ),
            children: [
-             TableRow(
-               decoration: const BoxDecoration(color: Color(0xFFF9FAFB)),
-               children: const [
+             const TableRow(
+               decoration: BoxDecoration(color: Color(0xFFF9FAFB)),
+               children: [
                  Padding(padding: EdgeInsets.all(10), child: Text('Field', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
                  Padding(padding: EdgeInsets.all(10), child: Text('Value', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
                ],
@@ -1929,18 +1929,18 @@ class _ChecklistRow extends StatelessWidget {
              4: FixedColumnWidth(120),
              5: FixedColumnWidth(48),
            },
-           border: TableBorder(
-             horizontalInside: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
-             verticalInside: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
-             top: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
-             bottom: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
-             left: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
-             right: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+           border: const TableBorder(
+             horizontalInside: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+             verticalInside: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+             top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+             bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+             left: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+             right: BorderSide(color: Color(0xFFE5E7EB), width: 1),
            ),
            children: [
-             TableRow(
-               decoration: const BoxDecoration(color: Color(0xFFF9FAFB)),
-               children: const [
+             const TableRow(
+               decoration: BoxDecoration(color: Color(0xFFF9FAFB)),
+               children: [
                  Padding(padding: EdgeInsets.all(10), child: Text('Runbook', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
                  Padding(padding: EdgeInsets.all(10), child: Text('Owner', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
                  Padding(padding: EdgeInsets.all(10), child: Text('Link / doc', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),

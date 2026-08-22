@@ -16,10 +16,6 @@ import '../services/project_service.dart';
 import '../utils/dashboard_palette.dart';
 import '../utils/navigation_route_resolver.dart';
 import 'initiation_phase_screen.dart';
-import 'program_dashboard_mobile_screen.dart';
-import 'portfolio_dashboard_screen.dart';
-import 'regular_project_dashboard_screen.dart';
-import 'project_command_center_screen.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import '../widgets/dashboard_bottom_nav_bar.dart';

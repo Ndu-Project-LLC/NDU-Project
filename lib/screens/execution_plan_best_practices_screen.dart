@@ -107,7 +107,7 @@ class _BestPracticesSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Best Practices',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'issueTopic',
                       label: 'Topic',
@@ -203,7 +203,7 @@ class _BestPracticesSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileBestPracticesActions()
+          const _MobileBestPracticesActions()
         else
           const _DesktopBestPracticesActions(),
       ],

@@ -467,7 +467,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                     child: CircularProgressIndicator(
                                         strokeWidth: 2),
                                   )
-                                : _GoogleLogo(size: 20),
+                                : const _GoogleLogo(size: 20),
                             label: const Text(
                               'Continue with Google',
                               style: TextStyle(
@@ -477,7 +477,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               ),
                             ),
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(
+                              side: const BorderSide(
                                   color: fieldBorder, width: 1.5),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
@@ -489,7 +489,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         // OR divider
                         Row(
                           children: [
-                            Expanded(
+                            const Expanded(
                                 child:
                                     Divider(color: fieldBorder, height: 1)),
                             Padding(
@@ -503,7 +503,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                     fontWeight: FontWeight.w600,
                                   )),
                             ),
-                            Expanded(
+                            const Expanded(
                                 child:
                                     Divider(color: fieldBorder, height: 1)),
                           ],

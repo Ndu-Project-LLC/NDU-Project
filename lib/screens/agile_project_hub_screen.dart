@@ -434,7 +434,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                 ),
                 borderRadius: BorderRadius.circular(8),
@@ -463,7 +463,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Color(0xFFF3F4F6),
+                color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -742,7 +742,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Color(0xFFFFF8E1),
+                color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -784,7 +784,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -917,11 +917,11 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [Color(0xFFF0FDF4), Color(0xFFECFDF5)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFBBF7D0)),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

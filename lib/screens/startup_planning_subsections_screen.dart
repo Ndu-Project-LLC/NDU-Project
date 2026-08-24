@@ -1446,7 +1446,7 @@ class _ChecklistTableCard extends StatelessWidget {
  mainAxisSize: MainAxisSize.min,
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- TextFormField(
+ VoiceTextFormField(
  controller: titleController,
  autofocus: true,
  decoration: _fieldDecoration('Item / deliverable').copyWith(
@@ -1458,7 +1458,7 @@ class _ChecklistTableCard extends StatelessWidget {
  : null,
  ),
  const SizedBox(height: 14),
- TextFormField(
+ VoiceTextFormField(
  controller: ownerController,
  decoration: _fieldDecoration('Owner').copyWith(
  labelText: 'Owner',
@@ -1466,7 +1466,7 @@ class _ChecklistTableCard extends StatelessWidget {
  ),
  ),
  const SizedBox(height: 14),
- TextFormField(
+ VoiceTextFormField(
  controller: notesController,
  minLines: 3,
  maxLines: 5,
@@ -1653,7 +1653,7 @@ class _ChecklistTableCard extends StatelessWidget {
  DataColumn(label: Text('Register item')),
  DataColumn(label: Text('Owner')),
  DataColumn(label: Text('Notes / evidence')),
- DataColumn(label: Text('Actions')),
+ DataColumn(label: Text('Action')),
  ],
  rows: items.asMap().entries.map((record) {
  final index = record.key;
@@ -1720,15 +1720,15 @@ class _ChecklistTableCard extends StatelessWidget {
  Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- IconButton(
- tooltip: 'Edit register item',
+ _RowEditButton(
  onPressed: () => _openEntryDialog(
  context,
  entry: item,
  index: index,
  ),
- icon: const Icon(Icons.edit_outlined, size: 19),
+ tooltip: 'Edit register item',
  ),
+ const SizedBox(width: 8),
  IconButton(
  tooltip: 'Delete register item',
  onPressed: () => _removeItem(index),
@@ -1765,247 +1765,143 @@ class _ChecklistCard extends StatelessWidget {
  final List<_ChecklistEntry> items;
  final ValueChanged<List<_ChecklistEntry>> onChanged;
 
+ Future<void> _openEditDialog(BuildContext context, int i, List<_ChecklistEntry> safeItems) async {
+   final result = await _showRowEditDialog(
+     context,
+     title: safeItems[i].title.isEmpty ? 'Edit $title item' : 'Edit: ${safeItems[i].title}',
+     fields: [
+       _EditFieldSpec(label: 'Item / deliverable', initialValue: safeItems[i].title, multiline: true, hintText: 'Enter the register item or requirement'),
+       _EditFieldSpec(label: 'Owner', initialValue: safeItems[i].owner, hintText: 'Assign an accountable owner'),
+       _EditFieldSpec(label: 'Notes / evidence / link / trigger', initialValue: safeItems[i].notes, multiline: true, hintText: 'Add evidence, links, conditions, or supporting notes'),
+     ],
+   );
+   if (result == null) return;
+   final copy = [...safeItems];
+   copy[i] = _ChecklistEntry(
+     title: result[0] ?? copy[i].title,
+     done: copy[i].done,
+     owner: result[1] ?? copy[i].owner,
+     notes: result[2] ?? copy[i].notes,
+   );
+   onChanged(copy);
+ }
+
  @override
  Widget build(BuildContext context) {
- final safeItems =
- items.isEmpty ? const [_ChecklistEntry(title: '', done: false)] : items;
- return Container(
- width: double.infinity,
- padding: const EdgeInsets.all(18),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- title,
- style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
- ),
- const SizedBox(height: 12),
- for (var i = 0; i < safeItems.length; i++)
- Padding(
- padding: const EdgeInsets.only(bottom: 12),
- child: _ChecklistRow(
- entry: safeItems[i],
- onChanged: (updated) {
- final copy = [...safeItems];
- copy[i] = updated;
- onChanged(copy);
- },
- onRemove: safeItems.length <= 1
- ? null
- : () {
- final copy = [...safeItems]..removeAt(i);
- onChanged(copy);
- },
- ),
- ),
- TextButton.icon(
- onPressed: () => onChanged([
- ...safeItems,
- const _ChecklistEntry(title: '', done: false),
- ]),
- icon: const Icon(Icons.add),
- label: const Text('Add row'),
- ),
- ],
- ),
- );
+   final safeItems = items.isEmpty ? const [_ChecklistEntry(title: '', done: false)] : items;
+   return _RegisterShell(
+     title: title,
+     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+       _RegisterTable(
+         columns: const [
+           _RegisterColumnSpec('Done', 90),
+           _RegisterColumnSpec('Item / deliverable', 300),
+           _RegisterColumnSpec('Owner', 170),
+           _RegisterColumnSpec('Notes / evidence / link / trigger', 340),
+           _RegisterColumnSpec('Action', 140),
+         ],
+         rowCells: [
+           for (var i = 0; i < safeItems.length; i++)
+             [
+               Align(
+                 alignment: Alignment.centerLeft,
+                 child: Checkbox(
+                   value: safeItems[i].done,
+                   activeColor: const Color(0xFF10B981),
+                   onChanged: (value) {
+                     final copy = [...safeItems];
+                     copy[i] = _ChecklistEntry(title: copy[i].title, done: value ?? false, owner: copy[i].owner, notes: copy[i].notes);
+                     onChanged(copy);
+                   },
+                 ),
+               ),
+               _RegisterCellView(label: 'Item / deliverable', value: safeItems[i].title, multiline: true),
+               _RegisterCellView(label: 'Owner', value: safeItems[i].owner),
+               _RegisterCellView(label: 'Notes / evidence / link / trigger', value: safeItems[i].notes, multiline: true),
+               Row(mainAxisSize: MainAxisSize.min, children: [
+                 _RowEditButton(onPressed: () => _openEditDialog(context, i, safeItems), tooltip: 'Edit item'),
+                 const SizedBox(width: 8),
+                 if (safeItems.length > 1)
+                   IconButton(
+                     onPressed: () { final copy = [...safeItems]..removeAt(i); onChanged(copy); },
+                     icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF9CA3AF)),
+                     tooltip: 'Remove row',
+                   ),
+               ]),
+             ],
+         ],
+       ),
+       const SizedBox(height: 8),
+       Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: () => onChanged([...safeItems, const _ChecklistEntry(title: '', done: false)]), icon: const Icon(Icons.add), label: const Text('Add row'))),
+     ]),
+   );
  }
 }
 
-class _ChecklistRow extends StatelessWidget {
- const _ChecklistRow({
- required this.entry,
- required this.onChanged,
- this.onRemove,
- });
-
- final _ChecklistEntry entry;
- final ValueChanged<_ChecklistEntry> onChanged;
- final VoidCallback? onRemove;
-
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(12),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Column(
- children: [
- Row(
- children: [
- Checkbox(
- value: entry.done,
- onChanged: (value) => onChanged(
- _ChecklistEntry(
- title: entry.title,
- done: value ?? false,
- owner: entry.owner,
- notes: entry.notes,
- ),
- ),
- ),
- Expanded(
- flex: 3,
- child: VoiceTextFormField(
- initialValue: entry.title,
- decoration: _fieldDecoration('Item / deliverable'),
- onChanged: (value) => onChanged(
- _ChecklistEntry(
- title: value.trim(),
- done: entry.done,
- owner: entry.owner,
- notes: entry.notes,
- ),
- ),
- ),
- ),
- const SizedBox(width: 8),
- Expanded(
- flex: 2,
- child: VoiceTextFormField(
- initialValue: entry.owner,
- decoration: _fieldDecoration('Owner'),
- onChanged: (value) => onChanged(
- _ChecklistEntry(
- title: entry.title,
- done: entry.done,
- owner: value.trim(),
- notes: entry.notes,
- ),
- ),
- ),
- ),
- if (onRemove != null)
- IconButton(
- onPressed: onRemove,
- icon: const Icon(Icons.delete_outline),
- ),
- ],
- ),
- const SizedBox(height: 8),
- VoiceTextFormField(
- initialValue: entry.notes,
- maxLines: 2,
- decoration: _fieldDecoration('Notes / evidence / link / trigger'),
- onChanged: (value) => onChanged(
- _ChecklistEntry(
- title: entry.title,
- done: entry.done,
- owner: entry.owner,
- notes: value.trim(),
- ),
- ),
- ),
- ],
- ),
- );
- }
-}class _RunbookRegisterCard extends StatelessWidget {
+class _RunbookRegisterCard extends StatelessWidget {
  const _RunbookRegisterCard({required this.rows, required this.onChanged});
  final List<_RunbookEntry> rows;
  final ValueChanged<List<_RunbookEntry>> onChanged;
+
+ Future<void> _openEditDialog(BuildContext context, int i, List<_RunbookEntry> safeRows) async {
+   final result = await _showRowEditDialog(
+     context,
+     title: safeRows[i].name.isEmpty ? 'Edit runbook' : 'Edit: ${safeRows[i].name}',
+     fields: [
+       _EditFieldSpec(label: 'Runbook', initialValue: safeRows[i].name, hintText: 'Runbook name'),
+       _EditFieldSpec(label: 'Owner', initialValue: safeRows[i].owner, hintText: 'Owner'),
+       _EditFieldSpec(label: 'Link / doc', initialValue: safeRows[i].documentLink, hintText: 'Link / doc'),
+       _EditFieldSpec(label: 'Review date', initialValue: safeRows[i].reviewDate, hintText: 'Review date (YYYY-MM-DD)'),
+       _EditFieldSpec(label: 'Status', initialValue: safeRows[i].status, hintText: 'Status', options: const ['Draft', 'In review', 'Reviewed', 'Approved']),
+     ],
+   );
+   if (result == null) return;
+   final copy = [...safeRows];
+   copy[i] = _RunbookEntry(
+     name: result[0] ?? copy[i].name,
+     owner: result[1] ?? copy[i].owner,
+     documentLink: result[2] ?? copy[i].documentLink,
+     reviewDate: result[3] ?? copy[i].reviewDate,
+     status: result[4] ?? copy[i].status,
+   );
+   onChanged(copy);
+ }
+
  @override
  Widget build(BuildContext context) {
    final safeRows = rows.isEmpty ? const [_RunbookEntry(name: '', owner: '', documentLink: '', reviewDate: '', status: 'Draft')] : rows;
    return _RegisterShell(
      title: 'Runbook register',
-     child: Column(children: [
-       SingleChildScrollView(
-         scrollDirection: Axis.horizontal,
-         child: Table(
-           columnWidths: const {
-             0: FixedColumnWidth(160),
-             1: FixedColumnWidth(140),
-             2: FixedColumnWidth(160),
-             3: FixedColumnWidth(140),
-             4: FixedColumnWidth(120),
-             5: FixedColumnWidth(48),
-           },
-           border: const TableBorder(
-             horizontalInside: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-             verticalInside: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-             top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-             bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-             left: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-             right: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-           ),
-           children: [
-             const TableRow(
-               decoration: BoxDecoration(color: Color(0xFFF9FAFB)),
-               children: [
-                 Padding(padding: EdgeInsets.all(10), child: Text('Runbook', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
-                 Padding(padding: EdgeInsets.all(10), child: Text('Owner', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
-                 Padding(padding: EdgeInsets.all(10), child: Text('Link / doc', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
-                 Padding(padding: EdgeInsets.all(10), child: Text('Review date', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
-                 Padding(padding: EdgeInsets.all(10), child: Text('Status', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
-                 SizedBox.shrink(),
-               ],
-             ),
-             for (var i = 0; i < safeRows.length; i++)
-               TableRow(
-                 children: [
-                   Padding(
-                     padding: const EdgeInsets.all(4),
-                     child: VoiceTextFormField(
-                       initialValue: safeRows[i].name,
-                       decoration: _fieldDecoration('Runbook'),
-                       onChanged: (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: v.trim(), owner: copy[i].owner, documentLink: copy[i].documentLink, reviewDate: copy[i].reviewDate, status: copy[i].status); onChanged(copy); },
-                     ),
+     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+       _RegisterTable(
+         columns: const [
+           _RegisterColumnSpec('Runbook', 200),
+           _RegisterColumnSpec('Owner', 150),
+           _RegisterColumnSpec('Link / doc', 220),
+           _RegisterColumnSpec('Review date', 150),
+           _RegisterColumnSpec('Status', 130),
+           _RegisterColumnSpec('Action', 140),
+         ],
+         rowCells: [
+           for (var i = 0; i < safeRows.length; i++)
+             [
+               _RegisterCellView(label: 'Runbook', value: safeRows[i].name),
+               _RegisterCellView(label: 'Owner', value: safeRows[i].owner),
+               _RegisterCellView(label: 'Link / doc', value: safeRows[i].documentLink),
+               _RegisterCellView(label: 'Review date', value: safeRows[i].reviewDate),
+               _RegisterCellView(label: 'Status', value: safeRows[i].status),
+               Row(mainAxisSize: MainAxisSize.min, children: [
+                 _RowEditButton(onPressed: () => _openEditDialog(context, i, safeRows), tooltip: 'Edit runbook'),
+                 const SizedBox(width: 8),
+                 if (safeRows.length > 1)
+                   IconButton(
+                     onPressed: () { final copy = [...safeRows]..removeAt(i); onChanged(copy); },
+                     icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF9CA3AF)),
+                     tooltip: 'Remove row',
                    ),
-                   Padding(
-                     padding: const EdgeInsets.all(4),
-                     child: VoiceTextFormField(
-                       initialValue: safeRows[i].owner,
-                       decoration: _fieldDecoration('Owner'),
-                       onChanged: (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: copy[i].name, owner: v.trim(), documentLink: copy[i].documentLink, reviewDate: copy[i].reviewDate, status: copy[i].status); onChanged(copy); },
-                     ),
-                   ),
-                   Padding(
-                     padding: const EdgeInsets.all(4),
-                     child: VoiceTextFormField(
-                       initialValue: safeRows[i].documentLink,
-                       decoration: _fieldDecoration('Link / doc'),
-                       onChanged: (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: copy[i].name, owner: copy[i].owner, documentLink: v.trim(), reviewDate: copy[i].reviewDate, status: copy[i].status); onChanged(copy); },
-                     ),
-                   ),
-                   Padding(
-                     padding: const EdgeInsets.all(4),
-                     child: VoiceTextFormField(
-                       initialValue: safeRows[i].reviewDate,
-                       decoration: _fieldDecoration('Review date'),
-                       onChanged: (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: copy[i].name, owner: copy[i].owner, documentLink: copy[i].documentLink, reviewDate: v.trim(), status: copy[i].status); onChanged(copy); },
-                     ),
-                   ),
-                   Padding(
-                     padding: const EdgeInsets.all(4),
-                     child: VoiceTextFormField(
-                       initialValue: safeRows[i].status,
-                       decoration: _fieldDecoration('Status'),
-                       onChanged: (v) { final copy = [...safeRows]; copy[i] = _RunbookEntry(name: copy[i].name, owner: copy[i].owner, documentLink: copy[i].documentLink, reviewDate: copy[i].reviewDate, status: v.trim()); onChanged(copy); },
-                     ),
-                   ),
-                   Padding(
-                     padding: const EdgeInsets.all(4),
-                     child: safeRows.length <= 1
-                         ? const SizedBox.shrink()
-                         : IconButton(
-                             onPressed: () { final copy = [...safeRows]..removeAt(i); onChanged(copy); },
-                             icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF9CA3AF)),
-                             tooltip: 'Remove row',
-                           ),
-                   ),
-                 ],
-               ),
-           ],
-         ),
+               ]),
+             ],
+         ],
        ),
        const SizedBox(height: 8),
        Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: () => onChanged([...safeRows, const _RunbookEntry(name: '', owner: '', documentLink: '', reviewDate: '', status: 'Draft')]), icon: const Icon(Icons.add), label: const Text('Add runbook'))),
@@ -2018,29 +1914,71 @@ class _WatchRegisterCard extends StatelessWidget {
  const _WatchRegisterCard({required this.rows, required this.onChanged});
  final List<_WatchItemEntry> rows;
  final ValueChanged<List<_WatchItemEntry>> onChanged;
+
+ Future<void> _openEditDialog(BuildContext context, int i, List<_WatchItemEntry> safeRows) async {
+   final result = await _showRowEditDialog(
+     context,
+     title: safeRows[i].item.isEmpty ? 'Edit watch item' : 'Edit: ${safeRows[i].item}',
+     fields: [
+       _EditFieldSpec(label: 'Risk / watch item', initialValue: safeRows[i].item, multiline: true, hintText: 'Risk / watch item'),
+       _EditFieldSpec(label: 'Owner', initialValue: safeRows[i].owner, hintText: 'Owner'),
+       _EditFieldSpec(label: 'Severity', initialValue: safeRows[i].severity, hintText: 'Severity', options: const ['Low', 'Medium', 'High', 'Critical']),
+       _EditFieldSpec(label: 'Signal', initialValue: safeRows[i].signal, multiline: true, hintText: 'Signal / early-warning indicator'),
+       _EditFieldSpec(label: 'Response', initialValue: safeRows[i].response, multiline: true, hintText: 'Response plan'),
+     ],
+   );
+   if (result == null) return;
+   final copy = [...safeRows];
+   copy[i] = _WatchItemEntry(
+     item: result[0] ?? copy[i].item,
+     owner: result[1] ?? copy[i].owner,
+     severity: result[2] ?? copy[i].severity,
+     signal: result[3] ?? copy[i].signal,
+     response: result[4] ?? copy[i].response,
+   );
+   onChanged(copy);
+ }
+
  @override
  Widget build(BuildContext context) {
- final safeRows = rows.isEmpty ? const [_WatchItemEntry(item: '', owner: '', severity: 'Medium', signal: '', response: '')] : rows;
- return _RegisterShell(
- title: 'Risk watchlist register',
- child: Column(children: [
- for (var i = 0; i < safeRows.length; i++)
- Padding(
- padding: const EdgeInsets.only(bottom: 12),
- child: _RegisterRow(
- onRemove: safeRows.length <= 1 ? null : () { final copy = [...safeRows]..removeAt(i); onChanged(copy); },
- children: [
- _registerField('Risk / watch item', safeRows[i].item, (v) { final copy = [...safeRows]; copy[i] = _WatchItemEntry(item: v.trim(), owner: copy[i].owner, severity: copy[i].severity, signal: copy[i].signal, response: copy[i].response); onChanged(copy); }),
- _registerField('Owner', safeRows[i].owner, (v) { final copy = [...safeRows]; copy[i] = _WatchItemEntry(item: copy[i].item, owner: v.trim(), severity: copy[i].severity, signal: copy[i].signal, response: copy[i].response); onChanged(copy); }),
- _registerField('Severity', safeRows[i].severity, (v) { final copy = [...safeRows]; copy[i] = _WatchItemEntry(item: copy[i].item, owner: copy[i].owner, severity: v.trim(), signal: copy[i].signal, response: copy[i].response); onChanged(copy); }),
- _registerField('Signal', safeRows[i].signal, (v) { final copy = [...safeRows]; copy[i] = _WatchItemEntry(item: copy[i].item, owner: copy[i].owner, severity: copy[i].severity, signal: v.trim(), response: copy[i].response); onChanged(copy); }),
- _registerField('Response', safeRows[i].response, (v) { final copy = [...safeRows]; copy[i] = _WatchItemEntry(item: copy[i].item, owner: copy[i].owner, severity: copy[i].severity, signal: copy[i].signal, response: v.trim()); onChanged(copy); }),
- ],
- ),
- ),
- Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: () => onChanged([...safeRows, const _WatchItemEntry(item: '', owner: '', severity: 'Medium', signal: '', response: '')]), icon: const Icon(Icons.add), label: const Text('Add watch item'))),
- ]),
- );
+   final safeRows = rows.isEmpty ? const [_WatchItemEntry(item: '', owner: '', severity: 'Medium', signal: '', response: '')] : rows;
+   return _RegisterShell(
+     title: 'Risk watchlist register',
+     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+       _RegisterTable(
+         columns: const [
+           _RegisterColumnSpec('Risk / watch item', 260),
+           _RegisterColumnSpec('Owner', 150),
+           _RegisterColumnSpec('Severity', 120),
+           _RegisterColumnSpec('Signal', 230),
+           _RegisterColumnSpec('Response', 260),
+           _RegisterColumnSpec('Action', 140),
+         ],
+         rowCells: [
+           for (var i = 0; i < safeRows.length; i++)
+             [
+               _RegisterCellView(label: 'Risk / watch item', value: safeRows[i].item, multiline: true),
+               _RegisterCellView(label: 'Owner', value: safeRows[i].owner),
+               _RegisterCellView(label: 'Severity', value: safeRows[i].severity),
+               _RegisterCellView(label: 'Signal', value: safeRows[i].signal, multiline: true),
+               _RegisterCellView(label: 'Response', value: safeRows[i].response, multiline: true),
+               Row(mainAxisSize: MainAxisSize.min, children: [
+                 _RowEditButton(onPressed: () => _openEditDialog(context, i, safeRows), tooltip: 'Edit watch item'),
+                 const SizedBox(width: 8),
+                 if (safeRows.length > 1)
+                   IconButton(
+                     onPressed: () { final copy = [...safeRows]..removeAt(i); onChanged(copy); },
+                     icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF9CA3AF)),
+                     tooltip: 'Remove row',
+                   ),
+               ]),
+             ],
+         ],
+       ),
+       const SizedBox(height: 8),
+       Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: () => onChanged([...safeRows, const _WatchItemEntry(item: '', owner: '', severity: 'Medium', signal: '', response: '')]), icon: const Icon(Icons.add), label: const Text('Add watch item'))),
+     ]),
+   );
  }
 }
 
@@ -2048,30 +1986,75 @@ class _ObservabilityRegisterCard extends StatelessWidget {
  const _ObservabilityRegisterCard({required this.rows, required this.onChanged});
  final List<_ObservabilityEntry> rows;
  final ValueChanged<List<_ObservabilityEntry>> onChanged;
+
+ Future<void> _openEditDialog(BuildContext context, int i, List<_ObservabilityEntry> safeRows) async {
+   final result = await _showRowEditDialog(
+     context,
+     title: safeRows[i].component.isEmpty ? 'Edit component' : 'Edit: ${safeRows[i].component}',
+     fields: [
+       _EditFieldSpec(label: 'Component', initialValue: safeRows[i].component, hintText: 'Component'),
+       _EditFieldSpec(label: 'Logs', initialValue: safeRows[i].logs, hintText: 'Logs'),
+       _EditFieldSpec(label: 'Metrics', initialValue: safeRows[i].metrics, hintText: 'Metrics'),
+       _EditFieldSpec(label: 'Alerts', initialValue: safeRows[i].alerts, hintText: 'Alerts'),
+       _EditFieldSpec(label: 'Dashboard', initialValue: safeRows[i].dashboardLink, hintText: 'Dashboard link'),
+       _EditFieldSpec(label: 'Owner', initialValue: safeRows[i].owner, hintText: 'Owner'),
+     ],
+   );
+   if (result == null) return;
+   final copy = [...safeRows];
+   copy[i] = _ObservabilityEntry(
+     component: result[0] ?? copy[i].component,
+     logs: result[1] ?? copy[i].logs,
+     metrics: result[2] ?? copy[i].metrics,
+     alerts: result[3] ?? copy[i].alerts,
+     dashboardLink: result[4] ?? copy[i].dashboardLink,
+     owner: result[5] ?? copy[i].owner,
+   );
+   onChanged(copy);
+ }
+
  @override
  Widget build(BuildContext context) {
- final safeRows = rows.isEmpty ? const [_ObservabilityEntry(component: '', logs: '', metrics: '', alerts: '', dashboardLink: '', owner: '')] : rows;
- return _RegisterShell(
- title: 'Observability matrix',
- child: Column(children: [
- for (var i = 0; i < safeRows.length; i++)
- Padding(
- padding: const EdgeInsets.only(bottom: 12),
- child: _RegisterRow(
- onRemove: safeRows.length <= 1 ? null : () { final copy = [...safeRows]..removeAt(i); onChanged(copy); },
- children: [
- _registerField('Component', safeRows[i].component, (v) { final copy = [...safeRows]; copy[i] = _ObservabilityEntry(component: v.trim(), logs: copy[i].logs, metrics: copy[i].metrics, alerts: copy[i].alerts, dashboardLink: copy[i].dashboardLink, owner: copy[i].owner); onChanged(copy); }),
- _registerField('Logs', safeRows[i].logs, (v) { final copy = [...safeRows]; copy[i] = _ObservabilityEntry(component: copy[i].component, logs: v.trim(), metrics: copy[i].metrics, alerts: copy[i].alerts, dashboardLink: copy[i].dashboardLink, owner: copy[i].owner); onChanged(copy); }),
- _registerField('Metrics', safeRows[i].metrics, (v) { final copy = [...safeRows]; copy[i] = _ObservabilityEntry(component: copy[i].component, logs: copy[i].logs, metrics: v.trim(), alerts: copy[i].alerts, dashboardLink: copy[i].dashboardLink, owner: copy[i].owner); onChanged(copy); }),
- _registerField('Alerts', safeRows[i].alerts, (v) { final copy = [...safeRows]; copy[i] = _ObservabilityEntry(component: copy[i].component, logs: copy[i].logs, metrics: copy[i].metrics, alerts: v.trim(), dashboardLink: copy[i].dashboardLink, owner: copy[i].owner); onChanged(copy); }),
- _registerField('Dashboard', safeRows[i].dashboardLink, (v) { final copy = [...safeRows]; copy[i] = _ObservabilityEntry(component: copy[i].component, logs: copy[i].logs, metrics: copy[i].metrics, alerts: copy[i].alerts, dashboardLink: v.trim(), owner: copy[i].owner); onChanged(copy); }),
- _registerField('Owner', safeRows[i].owner, (v) { final copy = [...safeRows]; copy[i] = _ObservabilityEntry(component: copy[i].component, logs: copy[i].logs, metrics: copy[i].metrics, alerts: copy[i].alerts, dashboardLink: copy[i].dashboardLink, owner: v.trim()); onChanged(copy); }),
- ],
- ),
- ),
- Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: () => onChanged([...safeRows, const _ObservabilityEntry(component: '', logs: '', metrics: '', alerts: '', dashboardLink: '', owner: '')]), icon: const Icon(Icons.add), label: const Text('Add component'))),
- ]),
- );
+   final safeRows = rows.isEmpty ? const [_ObservabilityEntry(component: '', logs: '', metrics: '', alerts: '', dashboardLink: '', owner: '')] : rows;
+   return _RegisterShell(
+     title: 'Observability matrix',
+     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+       _RegisterTable(
+         columns: const [
+           _RegisterColumnSpec('Component', 180),
+           _RegisterColumnSpec('Logs', 140),
+           _RegisterColumnSpec('Metrics', 140),
+           _RegisterColumnSpec('Alerts', 140),
+           _RegisterColumnSpec('Dashboard', 200),
+           _RegisterColumnSpec('Owner', 150),
+           _RegisterColumnSpec('Action', 140),
+         ],
+         rowCells: [
+           for (var i = 0; i < safeRows.length; i++)
+             [
+               _RegisterCellView(label: 'Component', value: safeRows[i].component),
+               _RegisterCellView(label: 'Logs', value: safeRows[i].logs),
+               _RegisterCellView(label: 'Metrics', value: safeRows[i].metrics),
+               _RegisterCellView(label: 'Alerts', value: safeRows[i].alerts),
+               _RegisterCellView(label: 'Dashboard', value: safeRows[i].dashboardLink),
+               _RegisterCellView(label: 'Owner', value: safeRows[i].owner),
+               Row(mainAxisSize: MainAxisSize.min, children: [
+                 _RowEditButton(onPressed: () => _openEditDialog(context, i, safeRows), tooltip: 'Edit component'),
+                 const SizedBox(width: 8),
+                 if (safeRows.length > 1)
+                   IconButton(
+                     onPressed: () { final copy = [...safeRows]..removeAt(i); onChanged(copy); },
+                     icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF9CA3AF)),
+                     tooltip: 'Remove row',
+                   ),
+               ]),
+             ],
+         ],
+       ),
+       const SizedBox(height: 8),
+       Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: () => onChanged([...safeRows, const _ObservabilityEntry(component: '', logs: '', metrics: '', alerts: '', dashboardLink: '', owner: '')]), icon: const Icon(Icons.add), label: const Text('Add component'))),
+     ]),
+   );
  }
 }
 
@@ -2079,30 +2062,75 @@ class _ResidualActionRegisterCard extends StatelessWidget {
  const _ResidualActionRegisterCard({required this.rows, required this.onChanged});
  final List<_ResidualActionEntry> rows;
  final ValueChanged<List<_ResidualActionEntry>> onChanged;
+
+ Future<void> _openEditDialog(BuildContext context, int i, List<_ResidualActionEntry> safeRows) async {
+   final result = await _showRowEditDialog(
+     context,
+     title: safeRows[i].action.isEmpty ? 'Edit residual action' : 'Edit: ${safeRows[i].action}',
+     fields: [
+       _EditFieldSpec(label: 'Residual action', initialValue: safeRows[i].action, multiline: true, hintText: 'Residual action'),
+       _EditFieldSpec(label: 'Owner', initialValue: safeRows[i].owner, hintText: 'Owner'),
+       _EditFieldSpec(label: 'Due date', initialValue: safeRows[i].dueDate, hintText: 'Due date (YYYY-MM-DD)'),
+       _EditFieldSpec(label: 'Destination team', initialValue: safeRows[i].destinationTeam, hintText: 'Destination team'),
+       _EditFieldSpec(label: 'Status', initialValue: safeRows[i].status, hintText: 'Status', options: const ['Open', 'In progress', 'Deferred', 'Closed']),
+       _EditFieldSpec(label: 'Handoff note', initialValue: safeRows[i].handoffNote, multiline: true, hintText: 'Handoff note'),
+     ],
+   );
+   if (result == null) return;
+   final copy = [...safeRows];
+   copy[i] = _ResidualActionEntry(
+     action: result[0] ?? copy[i].action,
+     owner: result[1] ?? copy[i].owner,
+     dueDate: result[2] ?? copy[i].dueDate,
+     destinationTeam: result[3] ?? copy[i].destinationTeam,
+     status: result[4] ?? copy[i].status,
+     handoffNote: result[5] ?? copy[i].handoffNote,
+   );
+   onChanged(copy);
+ }
+
  @override
  Widget build(BuildContext context) {
- final safeRows = rows.isEmpty ? const [_ResidualActionEntry(action: '', owner: '', dueDate: '', destinationTeam: '', status: 'Open', handoffNote: '')] : rows;
- return _RegisterShell(
- title: 'Residual action register',
- child: Column(children: [
- for (var i = 0; i < safeRows.length; i++)
- Padding(
- padding: const EdgeInsets.only(bottom: 12),
- child: _RegisterRow(
- onRemove: safeRows.length <= 1 ? null : () { final copy = [...safeRows]..removeAt(i); onChanged(copy); },
- children: [
- _registerField('Action', safeRows[i].action, (v) { final copy = [...safeRows]; copy[i] = _ResidualActionEntry(action: v.trim(), owner: copy[i].owner, dueDate: copy[i].dueDate, destinationTeam: copy[i].destinationTeam, status: copy[i].status, handoffNote: copy[i].handoffNote); onChanged(copy); }),
- _registerField('Owner', safeRows[i].owner, (v) { final copy = [...safeRows]; copy[i] = _ResidualActionEntry(action: copy[i].action, owner: v.trim(), dueDate: copy[i].dueDate, destinationTeam: copy[i].destinationTeam, status: copy[i].status, handoffNote: copy[i].handoffNote); onChanged(copy); }),
- _registerField('Due date', safeRows[i].dueDate, (v) { final copy = [...safeRows]; copy[i] = _ResidualActionEntry(action: copy[i].action, owner: copy[i].owner, dueDate: v.trim(), destinationTeam: copy[i].destinationTeam, status: copy[i].status, handoffNote: copy[i].handoffNote); onChanged(copy); }),
- _registerField('Destination team', safeRows[i].destinationTeam, (v) { final copy = [...safeRows]; copy[i] = _ResidualActionEntry(action: copy[i].action, owner: copy[i].owner, dueDate: copy[i].dueDate, destinationTeam: v.trim(), status: copy[i].status, handoffNote: copy[i].handoffNote); onChanged(copy); }),
- _registerField('Status', safeRows[i].status, (v) { final copy = [...safeRows]; copy[i] = _ResidualActionEntry(action: copy[i].action, owner: copy[i].owner, dueDate: copy[i].dueDate, destinationTeam: copy[i].destinationTeam, status: v.trim(), handoffNote: copy[i].handoffNote); onChanged(copy); }),
- _registerField('Handoff note', safeRows[i].handoffNote, (v) { final copy = [...safeRows]; copy[i] = _ResidualActionEntry(action: copy[i].action, owner: copy[i].owner, dueDate: copy[i].dueDate, destinationTeam: copy[i].destinationTeam, status: copy[i].status, handoffNote: v.trim()); onChanged(copy); }),
- ],
- ),
- ),
- Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: () => onChanged([...safeRows, const _ResidualActionEntry(action: '', owner: '', dueDate: '', destinationTeam: '', status: 'Open', handoffNote: '')]), icon: const Icon(Icons.add), label: const Text('Add residual action'))),
- ]),
- );
+   final safeRows = rows.isEmpty ? const [_ResidualActionEntry(action: '', owner: '', dueDate: '', destinationTeam: '', status: 'Open', handoffNote: '')] : rows;
+   return _RegisterShell(
+     title: 'Residual action register',
+     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+       _RegisterTable(
+         columns: const [
+           _RegisterColumnSpec('Residual action', 240),
+           _RegisterColumnSpec('Owner', 150),
+           _RegisterColumnSpec('Due date', 140),
+           _RegisterColumnSpec('Destination team', 160),
+           _RegisterColumnSpec('Status', 120),
+           _RegisterColumnSpec('Handoff note', 250),
+           _RegisterColumnSpec('Action', 140),
+         ],
+         rowCells: [
+           for (var i = 0; i < safeRows.length; i++)
+             [
+               _RegisterCellView(label: 'Residual action', value: safeRows[i].action, multiline: true),
+               _RegisterCellView(label: 'Owner', value: safeRows[i].owner),
+               _RegisterCellView(label: 'Due date', value: safeRows[i].dueDate),
+               _RegisterCellView(label: 'Destination team', value: safeRows[i].destinationTeam),
+               _RegisterCellView(label: 'Status', value: safeRows[i].status),
+               _RegisterCellView(label: 'Handoff note', value: safeRows[i].handoffNote, multiline: true),
+               Row(mainAxisSize: MainAxisSize.min, children: [
+                 _RowEditButton(onPressed: () => _openEditDialog(context, i, safeRows), tooltip: 'Edit residual action'),
+                 const SizedBox(width: 8),
+                 if (safeRows.length > 1)
+                   IconButton(
+                     onPressed: () { final copy = [...safeRows]..removeAt(i); onChanged(copy); },
+                     icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF9CA3AF)),
+                     tooltip: 'Remove row',
+                   ),
+               ]),
+             ],
+         ],
+       ),
+       const SizedBox(height: 8),
+       Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: () => onChanged([...safeRows, const _ResidualActionEntry(action: '', owner: '', dueDate: '', destinationTeam: '', status: 'Open', handoffNote: '')]), icon: const Icon(Icons.add), label: const Text('Add residual action'))),
+     ]),
+   );
  }
 }
 
@@ -2119,21 +2147,330 @@ class _RegisterShell extends StatelessWidget {
  );
 }
 
-class _RegisterRow extends StatelessWidget {
- const _RegisterRow({required this.children, this.onRemove});
- final List<Widget> children;
- final VoidCallback? onRemove;
- @override
- Widget build(BuildContext context) => Container(
- padding: const EdgeInsets.all(12),
- decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E7EB))),
- child: Column(children: [
- Wrap(spacing: 8, runSpacing: 8, children: [...children, if (onRemove != null) IconButton(onPressed: onRemove, icon: const Icon(Icons.delete_outline))]),
- ]),
- );
+/// Column definition for a register table built by [_RegisterTable].
+class _RegisterColumnSpec {
+ const _RegisterColumnSpec(this.label, this.width);
+ final String label;
+ final double width;
 }
 
-Widget _registerField(String label, String initialValue, ValueChanged<String> onChanged) => SizedBox(width: 180, child: VoiceTextFormField(initialValue: initialValue, decoration: _fieldDecoration(label), onChanged: onChanged));
+/// Read-only register table with a navy header row, zebra body rows and a
+/// horizontal scrollbar when the columns overflow the available width.
+///
+/// Body cells are supplied per row ([rowCells]) and are rendered inside a
+/// 6px padded, vertically-centered cell. The table intentionally hosts NO
+/// inline editors — the only way to edit a row is the gold
+/// [_RowEditButton] placed in the trailing Action column, which opens the
+/// row-level edit dialog built by [_showRowEditDialog].
+class _RegisterTable extends StatelessWidget {
+ const _RegisterTable({required this.columns, required this.rowCells});
+ final List<_RegisterColumnSpec> columns;
+ final List<List<Widget>> rowCells;
+
+ @override
+ Widget build(BuildContext context) {
+   final minWidth = columns.fold<double>(0, (total, c) => total + c.width);
+   return SingleChildScrollView(
+     scrollDirection: Axis.horizontal,
+     child: ConstrainedBox(
+       constraints: BoxConstraints(minWidth: minWidth),
+       child: ClipRRect(
+         borderRadius: BorderRadius.circular(12),
+         child: Table(
+           columnWidths: {
+             for (var i = 0; i < columns.length; i++) i: FixedColumnWidth(columns[i].width),
+           },
+           border: TableBorder.all(color: const Color(0xFFE5E7EB), width: 1),
+           defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+           children: [
+             TableRow(
+               decoration: const BoxDecoration(color: Color(0xFF0F172A)),
+               children: [
+                 for (final c in columns)
+                   Padding(
+                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                     child: Text(
+                       c.label,
+                       style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.4),
+                     ),
+                   ),
+               ],
+             ),
+             for (var r = 0; r < rowCells.length; r++)
+               TableRow(
+                 decoration: BoxDecoration(color: r.isEven ? Colors.white : const Color(0xFFFAFBFC)),
+                 children: [
+                   for (final cell in rowCells[r]) Padding(padding: const EdgeInsets.all(6), child: cell),
+                 ],
+               ),
+           ],
+         ),
+       ),
+     ),
+   );
+ }
+}
+
+/// Read-only value-preview cell rendered inside register tables.
+///
+/// Shows the row's stored value (dark, w500) or a grey placeholder using
+/// [label] when the cell is empty. It deliberately contains NO
+/// OpenEditorButton and NO inline editing affordance — the only way to
+/// edit a row is via the gold [_RowEditButton] in the Action column,
+/// which opens [_showRowEditDialog]. That dialog hosts the
+/// [VoiceTextFormField]s which embed the OpenEditorButton, so the
+/// "Open Editor" affordance exists exclusively inside the popup modal.
+class _RegisterCellView extends StatelessWidget {
+ const _RegisterCellView({
+   required this.label,
+   required this.value,
+   this.multiline = false,
+ });
+
+ final String label;
+ final String value;
+ final bool multiline;
+
+ @override
+ Widget build(BuildContext context) {
+   final hasValue = value.trim().isNotEmpty;
+   return Container(
+     width: double.infinity,
+     constraints: BoxConstraints(minHeight: multiline ? 64 : 40),
+     padding: EdgeInsets.symmetric(
+       horizontal: 10,
+       vertical: multiline ? 10 : 8,
+     ),
+     decoration: BoxDecoration(
+       color: Colors.white,
+       borderRadius: BorderRadius.circular(10),
+       border: Border.all(color: const Color(0xFFE5E7EB)),
+     ),
+     child: Text(
+       hasValue ? value : label,
+       style: TextStyle(
+         fontSize: 13,
+         fontWeight: hasValue ? FontWeight.w500 : FontWeight.w400,
+         color: hasValue ? const Color(0xFF111827) : const Color(0xFF9CA3AF),
+         fontFamily: 'Inter',
+         height: 1.35,
+       ),
+     ),
+   );
+ }
+}
+
+/// Compact gold "Edit" button that lives in the Action column of each
+/// register table row. Tapping it triggers the row-level edit popup
+/// (built by [_showRowEditDialog]) so the user can edit every field of
+/// the row at once.
+///
+/// Visual identity follows the project's OpenEditorButton gradient
+/// (#FFB800 -> #F59E0B) so the button is immediately recognisable as
+/// the project's "open editor" affordance, now consolidated into the
+/// Action column instead of above every cell.
+class _RowEditButton extends StatelessWidget {
+ const _RowEditButton({required this.onPressed, this.tooltip = 'Edit row'});
+ final VoidCallback onPressed;
+ final String tooltip;
+
+ @override
+ Widget build(BuildContext context) {
+   return Tooltip(
+     message: tooltip,
+     child: Container(
+       decoration: BoxDecoration(
+         gradient: const LinearGradient(
+           colors: [Color(0xFFFFB800), Color(0xFFF59E0B)],
+           begin: Alignment.topCenter,
+           end: Alignment.bottomCenter,
+         ),
+         borderRadius: BorderRadius.circular(8),
+         boxShadow: [
+           BoxShadow(
+             color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+             blurRadius: 6,
+             offset: const Offset(0, 2),
+           ),
+         ],
+       ),
+       child: Material(
+         type: MaterialType.transparency,
+         child: InkWell(
+           borderRadius: BorderRadius.circular(8),
+           onTap: onPressed,
+           child: const Padding(
+             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+             child: Row(
+               mainAxisSize: MainAxisSize.min,
+               children: [
+                 Icon(Icons.edit_outlined, size: 14, color: Color(0xFF111827)),
+                 SizedBox(width: 4),
+                 Text(
+                   'Edit',
+                   style: TextStyle(
+                     fontSize: 11,
+                     fontWeight: FontWeight.w700,
+                     color: Color(0xFF111827),
+                   ),
+                 ),
+               ],
+             ),
+           ),
+         ),
+       ),
+     ),
+   );
+ }
+}
+
+/// Specification for a single field inside the row-level edit dialog
+/// opened by [_showRowEditDialog]. Each spec becomes a labelled
+/// [VoiceTextFormField] (which embeds the OpenEditorButton) inside the
+/// popup — or, when [options] is provided, a dropdown selector.
+class _EditFieldSpec {
+ const _EditFieldSpec({
+   required this.label,
+   required this.initialValue,
+   this.multiline = false,
+   this.hintText,
+   this.options,
+ });
+ final String label;
+ final String initialValue;
+ final bool multiline;
+ final String? hintText;
+ final List<String>? options;
+}
+
+/// Opens a modal edit dialog for an entire register row.
+///
+/// [title] is shown at the top of the dialog. [fields] is the ordered
+/// list of fields to edit — one labelled [VoiceTextFormField] per free-text
+/// spec (or a dropdown when the spec carries [options]). The dialog returns
+/// a `Map<int, String>` mapping field index to the trimmed value, or
+/// `null` when the user cancels. The caller maps the indices back to the
+/// appropriate fields on the row's data model.
+Future<Map<int, String>?> _showRowEditDialog(
+ BuildContext context, {
+ required String title,
+ required List<_EditFieldSpec> fields,
+}) async {
+ final controllers = <TextEditingController?>[
+   for (final f in fields)
+     f.options == null ? TextEditingController(text: f.initialValue) : null,
+ ];
+ // Seed dropdown fields: empty values fall back to the first option so a
+ // fresh row gets a sensible default; custom stored values are preserved.
+ final dropdownValues = <String>[
+   for (final f in fields)
+     f.options == null
+         ? ''
+         : (f.initialValue.trim().isEmpty ? f.options!.first : f.initialValue.trim()),
+ ];
+ // Ensure a stored custom value (not among the preset options) still
+ // appears as a selectable dropdown item.
+ final effectiveOptions = <List<String>>[
+   for (final f in fields)
+     f.options == null
+         ? const <String>[]
+         : (f.options!.contains(f.initialValue.trim()) || f.initialValue.trim().isEmpty
+             ? f.options!
+             : <String>[f.initialValue.trim(), ...f.options!]),
+ ];
+ final result = await showDialog<Map<int, String>?>(
+   context: context,
+   barrierDismissible: true,
+   builder: (dialogContext) => StatefulBuilder(
+     builder: (dialogContext, setDialogState) => AlertDialog(
+       backgroundColor: Colors.white,
+       surfaceTintColor: Colors.white,
+       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+       title: Row(
+         children: [
+           const Icon(Icons.edit_note_rounded, color: Color(0xFFF59E0B)),
+           const SizedBox(width: 8),
+           Expanded(
+             child: Text(
+               title,
+               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+             ),
+           ),
+         ],
+       ),
+       content: SizedBox(
+         width: 540,
+         child: SingleChildScrollView(
+           child: Column(
+             mainAxisSize: MainAxisSize.min,
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               for (var i = 0; i < fields.length; i++) ...[
+                 if (i > 0) const SizedBox(height: 14),
+                 Text(
+                   fields[i].label,
+                   style: const TextStyle(
+                     fontSize: 12,
+                     fontWeight: FontWeight.w600,
+                     color: Color(0xFF374151),
+                   ),
+                 ),
+                 const SizedBox(height: 6),
+                 if (fields[i].options != null)
+                   DropdownButtonFormField<String>(
+                     initialValue: dropdownValues[i],
+                     decoration: _fieldDecoration(fields[i].hintText ?? fields[i].label),
+                     items: [
+                       for (final option in effectiveOptions[i])
+                         DropdownMenuItem(value: option, child: Text(option)),
+                     ],
+                     onChanged: (value) {
+                       if (value == null) return;
+                       setDialogState(() => dropdownValues[i] = value);
+                     },
+                   )
+                 else
+                   VoiceTextFormField(
+                     controller: controllers[i],
+                     maxLines: fields[i].multiline ? 4 : 1,
+                     decoration: _fieldDecoration(fields[i].hintText ?? fields[i].label),
+                     autofocus: i == 0,
+                   ),
+               ],
+             ],
+           ),
+         ),
+       ),
+       actions: [
+         TextButton(
+           onPressed: () => Navigator.of(dialogContext).pop(null),
+           child: const Text('Cancel'),
+         ),
+         FilledButton(
+           onPressed: () {
+             final map = <int, String>{};
+             for (var i = 0; i < fields.length; i++) {
+               map[i] = fields[i].options != null
+                   ? dropdownValues[i].trim().isEmpty ? fields[i].options!.first : dropdownValues[i].trim()
+                   : controllers[i]!.text.trim();
+             }
+             Navigator.of(dialogContext).pop(map);
+           },
+           style: FilledButton.styleFrom(
+             backgroundColor: const Color(0xFFF59E0B),
+             foregroundColor: Colors.white,
+           ),
+           child: const Text('Save'),
+         ),
+       ],
+     ),
+   ),
+ );
+ for (final c in controllers) {
+   c?.dispose();
+ }
+ return result;
+}
 InputDecoration _fieldDecoration(String hintText)=>InputDecoration(hintText:hintText,isDense:true,border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),borderSide:const BorderSide(color: Color(0xFFE5E7EB))),enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),borderSide:const BorderSide(color: Color(0xFFE5E7EB))));
 class _StatusChip extends StatelessWidget { const _StatusChip({required this.label,required this.color,this.background}); final String label; final Color color; final Color? background; @override Widget build(BuildContext context)=>Container(padding:const EdgeInsets.symmetric(horizontal:10,vertical:6),decoration: BoxDecoration(color:background??color.withValues(alpha: 0.12),borderRadius: BorderRadius.circular(999)),child: Text(label,style: TextStyle(fontSize:11,fontWeight:FontWeight.w600,color:color))); }
 class _Debouncer { _Debouncer({Duration? delay}):delay=delay??const Duration(milliseconds:700); final Duration delay; Timer? _timer; void run(void Function() action){_timer?.cancel();_timer=Timer(delay,action);} void dispose(){_timer?.cancel();} }

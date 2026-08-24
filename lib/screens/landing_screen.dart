@@ -8,6 +8,7 @@ import 'package:ndu_project/screens/use_cases_screen.dart';
 import 'package:ndu_project/screens/how_it_works_screen.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
+import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/widgets/sign_in_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -338,12 +339,15 @@ class _LandingScreenState extends State<LandingScreen>
  final width = MediaQuery.of(context).size.width;
  final bool isTablet = width >= 900 && width < 1200;
  final bool isMobile = width < 700;Widget buildLogo() {
- // Constrain both height and width for the new wide wordmark logo
+ // Canonical NDU squircle brand asset. The landing page has a black
+ // background, so pass onDarkBackground: true for the gold hairline
+ // treatment that keeps the near-black squircle visible.
  final h = isDesktop ? 50.0 : isTablet ? 40.0 : 35.0;
- return Image.asset(
-      'assets/images/Logo.png',
+ return AppLogo(
       height: h,
-      fit: BoxFit.contain,
+      onDarkBackground: true,
+      enableTapToDashboard: false,
+      semanticLabel: 'NDU Project',
     );
   }
 

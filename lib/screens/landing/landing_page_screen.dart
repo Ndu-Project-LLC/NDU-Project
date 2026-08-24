@@ -15,6 +15,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/widgets/sign_in_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -134,13 +135,14 @@ class _LandingPageScreenState extends State<LandingPageScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Logo
-                      Row(children: [
-                        Container(width: 32, height: 32, decoration: BoxDecoration(gradient: const LinearGradient(colors: [_gold, _goldDeep]), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.trending_up, color: Color(0xFF0A0E1A), size: 18)),
-                        const SizedBox(width: 10),
-                        const Text('NDU', style: TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
-                        const Text(' Project', style: TextStyle(color: _gold, fontSize: 18, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
-                      ]),
+                      // Logo — canonical NDU squircle brand asset
+                      // (dark page background → gold hairline treatment).
+                      const AppLogo(
+                        height: 40,
+                        onDarkBackground: true,
+                        enableTapToDashboard: false,
+                        semanticLabel: 'NDU Project',
+                      ),
                       // Nav items (desktop)
                       if (MediaQuery.sizeOf(context).width > 900)
                         Row(children: [
@@ -1316,7 +1318,7 @@ class _FooterSection extends StatelessWidget {
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             // Brand column
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-              Row(mainAxisSize: MainAxisSize.min, children: [Container(width: 28, height: 28, decoration: BoxDecoration(gradient: const LinearGradient(colors: [_gold, _goldDeep]), borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.trending_up, color: Color(0xFF0A0E1A), size: 16)), const SizedBox(width: 8), const Text('NDU', style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily)), const Text(' Project', style: TextStyle(color: _gold, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily))]),
+              AppLogo(height: 34, onDarkBackground: true, enableTapToDashboard: false, semanticLabel: 'NDU Project'),
               const SizedBox(height: 12),
               const Text('The Project Delivery Operating System', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily)),
               const SizedBox(height: 16),

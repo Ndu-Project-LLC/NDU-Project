@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
+import 'package:ndu_project/widgets/app_logo.dart';
 
 /// Splash screen shown only on native mobile apps (iOS/Android)
 /// NEVER shown on web platform
@@ -128,45 +129,13 @@ class _SplashScreenState extends State<SplashScreen>
  child: Column(
  mainAxisAlignment: MainAxisAlignment.center,
  children: [
- // NDU Project Logo
- Container(
- width: 120,
- height: 120,
- decoration: BoxDecoration(
- color: Colors.black,
- borderRadius: BorderRadius.circular(24),
- ),
- child: const Center(
- child: Text(
- 'NDU',
- style: TextStyle(
- color: Color(0xFFFFD700),
- fontSize: 36,
- fontWeight: FontWeight.w900,
- letterSpacing: 2,
- ),
- ),
- ),
- ),
- const SizedBox(height: 24),
- const Text(
- 'NDUPROJECT',
- style: TextStyle(
- color: Colors.black,
- fontSize: 20,
- fontWeight: FontWeight.w700,
- letterSpacing: 4,
- ),
- ),
- const SizedBox(height: 8),
- const Text(
- 'INITIATE. DELIVER. ITERATE.',
- style: TextStyle(
- color: Colors.black87,
- fontSize: 11,
- fontWeight: FontWeight.w500,
- letterSpacing: 2,
- ),
+ // NDU Project Logo — canonical squircle brand asset
+ // (contains the wordmark + "Navigate. Deliver. Upgrade." tagline,
+ // so the old three-line text placeholder is redundant).
+ AppLogo(
+ height: 90,
+ enableTapToDashboard: false,
+ semanticLabel: 'NDU Project',
  ),
  ],
  ),

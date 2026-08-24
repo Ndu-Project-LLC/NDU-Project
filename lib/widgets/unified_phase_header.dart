@@ -379,7 +379,7 @@ class _CircleNavButton extends StatelessWidget {
   const _CircleNavButton({
     required this.icon,
     required this.iconSize,
-  }) : onTap = null : enabled = true;
+  }) : onTap = null, enabled = true;
 
   final IconData icon;
   final double iconSize;

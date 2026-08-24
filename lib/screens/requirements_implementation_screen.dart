@@ -4415,7 +4415,7 @@ class _ApprovalGateData {
 
 class _TableColumn {  const _TableColumn({
     required this.label,
-  }) : flex = 1 : alignment = Alignment.centerLeft;
+  }) : flex = 1, alignment = Alignment.centerLeft;
 
  final String label;
  final int flex;

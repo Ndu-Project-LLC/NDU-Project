@@ -1464,7 +1464,7 @@ class _ScopeTrackingHeader extends StatelessWidget {
  const _ScopeTrackingHeader({
  required this.onBack,
  required this.onForward,
- }) : onRegenerateAll = null : isRegenerating = false;
+ }) : onRegenerateAll = null, isRegenerating = false;
 
  final VoidCallback onBack;
  final VoidCallback onForward;

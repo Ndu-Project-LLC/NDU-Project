@@ -167,8 +167,8 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   ],
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
-                  collapsible: true,
-                  defaultCollapsed: false,
+                  isCollapsible: true,
+                  initiallyCollapsed: false,
                 ),
               ),
               // Tab content

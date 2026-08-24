@@ -5045,7 +5045,7 @@ class _NumberInputCell extends StatefulWidget {
  required this.value,
  required this.fieldKey,
  required this.onChanged,
- }) : prefix = null : suffix = null;
+ }) : prefix = null, suffix = null;
 
  final double value;
  final String fieldKey;

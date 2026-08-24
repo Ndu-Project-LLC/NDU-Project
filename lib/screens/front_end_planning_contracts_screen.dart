@@ -2459,7 +2459,7 @@ class _ContractDateField extends StatelessWidget {
 
 class _ContractHeader extends StatelessWidget {  const _ContractHeader({
     required this.title,
-  }) : onBack = null : onForward = null : onCreateContract = null;
+  }) : onBack = null, onForward = null, onCreateContract = null;
 
  final String title;
  final VoidCallback? onBack;
@@ -2850,7 +2850,7 @@ class _CollapsibleAiTextCard extends StatefulWidget {  const _CollapsibleAiTextC
     required this.sectionLabel,
     required this.hintText,
     this.subtitle,
-  }) : minLines = 3 : maxLines = 8 : initiallyExpanded = false;
+  }) : minLines = 3, maxLines = 8, initiallyExpanded = false;
 
  final String title;
  final String? subtitle;

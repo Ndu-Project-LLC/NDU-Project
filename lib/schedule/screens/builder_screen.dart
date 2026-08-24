@@ -1233,7 +1233,7 @@ class _ActionChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-  }) : primary = false : enabled = true;
+  }) : primary = false, enabled = true;
 
   @override
   Widget build(BuildContext context) {

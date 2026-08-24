@@ -544,8 +544,8 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  return DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFF0F172A)),
  headingRowHeight: 48,
- dataRowMinHeight: 56,
- dataRowMaxHeight: 72,
+ dataRowMinHeight: 64,
+ dataRowMaxHeight: 96,
  columnSpacing: 24,
  horizontalMargin: 16,
  headingTextStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5),
@@ -555,7 +555,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  DataColumn(label: Text('Description')),
  DataColumn(label: Text('Status')),
  DataColumn(label: Text('Readiness')),
- if (true) DataColumn(label: Text('Actions')),
+ DataColumn(label: Text('Action')),
  ],
  rows: _snapshotMetrics.asMap().entries.map((entry) {
  final idx = entry.key;
@@ -564,37 +564,58 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  return DataRow(
  color: WidgetStateProperty.all(idx.isEven ? Colors.white : const Color(0xFFFAFBFC)),
  cells: [
- DataCell(_isEditingSnapshot
- ? VoiceTextFormField(
- initialValue: metric.title,
- decoration: _inputDecoration('Metric'),
- onChanged: (v) => _updateSnapshotMetric(metric.copyWith(title: v)),
- )
- : Row(children: [
+ // Metric — read-only value preview (accent bar + title)
+ DataCell(Row(children: [
  Container(width: 4, height: 32, decoration: BoxDecoration(color: metric.accent.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(2))),
  const SizedBox(width: 12),
- ConstrainedBox(constraints: const BoxConstraints(maxWidth: 200), child: Text(metric.title.isEmpty ? 'Untitled' : metric.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF111827)), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis)),
+ Expanded(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 220), child: _FinalizeCellView(label: 'Metric', value: metric.title.isEmpty ? 'Untitled' : metric.title))),
+ ])),
+ // Description — read-only value preview
+ DataCell(ConstrainedBox(constraints: const BoxConstraints(maxWidth: 320), child: _FinalizeCellView(label: 'Description', value: metric.subtitle, multiline: true))),
+ // Status — read-only chip preview
+ DataCell(_FinalizeCellView(
+ label: 'Status',
+ value: metric.value,
+ child: metric.value.isEmpty
+ ? const Text('Not set', style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w400, fontFamily: 'Inter'))
+ : Container(
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+ decoration: BoxDecoration(
+ color: const Color(0xFF22C55E).withValues(alpha: 0.1),
+ borderRadius: BorderRadius.circular(20),
+ border: Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.3)),
+ ),
+ child: Row(mainAxisSize: MainAxisSize.min, children: [
+ const Icon(Icons.check_circle, size: 12, color: Color(0xFF22C55E)),
+ const SizedBox(width: 4),
+ Text(metric.value, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF22C55E))),
  ]),
  ),
- DataCell(_isEditingSnapshot
- ? VoiceTextFormField(
- initialValue: metric.subtitle,
- decoration: _inputDecoration('Description'),
- onChanged: (v) => _updateSnapshotMetric(metric.copyWith(subtitle: v)),
- )
- : ConstrainedBox(constraints: const BoxConstraints(maxWidth: 300), child: Text(metric.subtitle.isEmpty ? '—' : metric.subtitle, style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis))),
- DataCell(_isEditingSnapshot
- ? VoiceTextFormField(
- initialValue: metric.value,
- decoration: _inputDecoration('Status'),
- onChanged: (v) => _updateSnapshotMetric(metric.copyWith(value: v)),
- )
- : Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: (metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: (metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)).withValues(alpha: 0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(metric.value.isEmpty ? Icons.radio_button_unchecked : Icons.check_circle, size: 12, color: metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)), const SizedBox(width: 4), Text(metric.value.isEmpty ? 'Not set' : metric.value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)))]))),
- DataCell(Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withValues(alpha: 0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(hasData ? Icons.lock : Icons.lock_outline, size: 12, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)), const SizedBox(width: 4), Text(hasData ? 'Saved' : 'Empty', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)))]))),
- if (true) DataCell(Row(
+ )),
+ // Readiness — read-only chip preview
+ DataCell(_FinalizeCellView(
+ label: 'Readiness',
+ value: hasData ? 'Saved' : 'Empty',
+ child: Container(
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+ decoration: BoxDecoration(
+ color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withValues(alpha: 0.1),
+ borderRadius: BorderRadius.circular(20),
+ border: Border.all(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withValues(alpha: 0.3)),
+ ),
+ child: Row(mainAxisSize: MainAxisSize.min, children: [
+ Icon(hasData ? Icons.lock : Icons.lock_outline, size: 12, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)),
+ const SizedBox(width: 4),
+ Text(hasData ? 'Saved' : 'Empty', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF))),
+ ]),
+ ),
+ )),
+ // Action — Edit button (opens modal) + Delete button
+ DataCell(Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- if (_isEditingSnapshot)
+ _FinalizeRowEditButton(onPressed: () => _openSnapshotMetricEditDialog(metric), tooltip: 'Edit metric'),
+ const SizedBox(width: 8),
  IconButton(
  icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 18),
  tooltip: 'Delete',
@@ -606,6 +627,26 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  );
  }).toList(),
  );
+ }
+
+ Future<void> _openSnapshotMetricEditDialog(_SnapshotMetric metric) async {
+ final result = await _showFinalizeRowEditDialog(
+ context,
+ title: metric.title.isEmpty ? 'Edit metric' : 'Edit: ${metric.title}',
+ fields: [
+ _FinalizeEditFieldSpec(label: 'Metric', initialValue: metric.title, hintText: 'Metric'),
+ _FinalizeEditFieldSpec(label: 'Description', initialValue: metric.subtitle, multiline: true, hintText: 'Description'),
+ _FinalizeEditFieldSpec(label: 'Status', initialValue: metric.value, hintText: 'Status'),
+ ],
+ );
+ if (result == null) return;
+ setState(() {
+ _updateSnapshotMetric(metric.copyWith(
+ title: result[0] ?? metric.title,
+ subtitle: result[1] ?? metric.subtitle,
+ value: result[2] ?? metric.value,
+ ));
+ });
  }
 
   Widget _buildSnapshotReadOnlyRow(_SnapshotMetric metric) {
@@ -968,8 +1009,8 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
           ),
           const SizedBox(height: 16),
           _buildTableHeader(
-            const ['Checklist item', 'Owner', 'Due date', 'Status', ''],
-            columnWidths: const [4, 2, 2, 2, 1],
+            const ['Checklist item', 'Owner', 'Due date', 'Status', 'Action'],
+            columnWidths: const [4, 2, 2, 2, 2],
           ),
           const SizedBox(height: 12),
           if (_checklist.isEmpty)
@@ -993,68 +1034,115 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
   }
 
   Widget _buildChecklistRow(_ChecklistItem item) {
+    final statusColor = _checklistStatusColor(item.status);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           Expanded(
             flex: 4,
-            child: VoiceTextFormField(
-              key: ValueKey('checklist-title-${item.id}'),
-              initialValue: item.title,
-              decoration: _inputDecoration('Checklist item'),
-              maxLines: 2,
-              onChanged: (value) =>
-                  _updateChecklistItem(item.copyWith(title: value)),
-            ),
+            child: _FinalizeCellView(label: 'Checklist item', value: item.title, multiline: true),
           ),
           const SizedBox(width: 12),
           Expanded(
             flex: 2,
-            child: VoiceTextFormField(
-              key: ValueKey('checklist-owner-${item.id}'),
-              initialValue: item.owner,
-              decoration: _inputDecoration('Owner'),
-              onChanged: (value) =>
-                  _updateChecklistItem(item.copyWith(owner: value)),
-            ),
+            child: _FinalizeCellView(label: 'Owner', value: item.owner),
           ),
           const SizedBox(width: 12),
           Expanded(
             flex: 2,
-            child: VoiceTextFormField(
-              key: ValueKey('checklist-date-${item.id}'),
-              initialValue: item.dueDate,
-              decoration: _inputDecoration('Due date'),
-              onChanged: (value) =>
-                  _updateChecklistItem(item.copyWith(dueDate: value)),
-            ),
+            child: _FinalizeCellView(label: 'Due date', value: item.dueDate.isEmpty ? '—' : item.dueDate),
           ),
           const SizedBox(width: 12),
           Expanded(
             flex: 2,
-            child: DropdownButtonFormField<String>(
-              initialValue: item.status,
-              decoration: _inputDecoration('Status', dense: true),
-              items: _checklistStatuses
-                  .map((status) =>
-                      DropdownMenuItem(value: status, child: Text(status)))
-                  .toList(),
-              onChanged: (value) {
-                if (value == null) return;
-                _updateChecklistItem(item.copyWith(status: value),
-                    notify: true);
-              },
+            child: _FinalizeCellView(
+              label: 'Status',
+              value: item.status,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(_checklistStatusIcon(item.status), size: 12, color: statusColor),
+                  const SizedBox(width: 4),
+                  Text(item.status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
+                ]),
+              ),
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
-            onPressed: () => _deleteChecklistItem(item.id),
+          Expanded(
+            flex: 2,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                _FinalizeRowEditButton(onPressed: () => _openChecklistEditDialog(item), tooltip: 'Edit checklist item'),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
+                  tooltip: 'Delete',
+                  onPressed: () => _deleteChecklistItem(item.id),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _openChecklistEditDialog(_ChecklistItem item) async {
+    final result = await _showFinalizeRowEditDialog(
+      context,
+      title: item.title.isEmpty ? 'Edit checklist item' : 'Edit: ${item.title}',
+      fields: [
+        _FinalizeEditFieldSpec(label: 'Checklist item', initialValue: item.title, multiline: true, hintText: 'Checklist item'),
+        _FinalizeEditFieldSpec(label: 'Owner', initialValue: item.owner, hintText: 'Owner'),
+        _FinalizeEditFieldSpec(label: 'Due date', initialValue: item.dueDate, hintText: 'Due date (YYYY-MM-DD)'),
+        _FinalizeEditFieldSpec(label: 'Status', initialValue: item.status, hintText: 'Status'),
+      ],
+    );
+    if (result == null) return;
+    setState(() {
+      _updateChecklistItem(item.copyWith(
+        title: result[0] ?? item.title,
+        owner: result[1] ?? item.owner,
+        dueDate: result[2] ?? item.dueDate,
+        status: result[3] ?? item.status,
+      ), notify: true);
+    });
+  }
+
+  Color _checklistStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'done':
+        return const Color(0xFF22C55E);
+      case 'in progress':
+        return const Color(0xFFF59E0B);
+      case 'blocked':
+        return const Color(0xFFEF4444);
+      case 'not started':
+      default:
+        return const Color(0xFF9CA3AF);
+    }
+  }
+
+  IconData _checklistStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'done':
+        return Icons.check_circle;
+      case 'in progress':
+        return Icons.timelapse;
+      case 'blocked':
+        return Icons.error_outline;
+      case 'not started':
+      default:
+        return Icons.radio_button_unchecked;
+    }
   }
 
   Widget _buildSignOffPanel() {
@@ -1106,78 +1194,54 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
   }
 
   Widget _buildSignOffRow(_SignOffItem item) {
+    final statusColor = _signOffStatusColor(item.status);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           Expanded(
             flex: 3,
-            child: VoiceTextFormField(
-              key: ValueKey('signoff-name-${item.id}'),
-              initialValue: item.name,
-              decoration: _inputDecoration('Stakeholder'),
-              onChanged: (value) =>
-                  _updateSignOffItem(item.copyWith(name: value)),
-            ),
+            child: _FinalizeCellView(label: 'Stakeholder', value: item.name),
           ),
           const SizedBox(width: 12),
           Expanded(
             flex: 3,
-            child: VoiceTextFormField(
-              key: ValueKey('signoff-role-${item.id}'),
-              initialValue: item.role,
-              decoration: _inputDecoration('Role'),
-              onChanged: (value) =>
-                  _updateSignOffItem(item.copyWith(role: value)),
+            child: _FinalizeCellView(label: 'Role', value: item.role.isEmpty ? '—' : item.role),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: _FinalizeCellView(
+              label: 'Status',
+              value: item.status,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(_signOffStatusIcon(item.status), size: 12, color: statusColor),
+                  const SizedBox(width: 4),
+                  Text(item.status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
+                ]),
+              ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             flex: 2,
-            child: DropdownButtonFormField<String>(
-              initialValue: item.status,
-              decoration: _inputDecoration('Status', dense: true),
-              items: _signOffStatuses
-                  .map((status) =>
-                      DropdownMenuItem(value: status, child: Text(status)))
-                  .toList(),
-              onChanged: (value) {
-                if (value == null) return;
-                _updateSignOffItem(item.copyWith(status: value), notify: true);
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 2,
-            child: VoiceTextFormField(
-              key: ValueKey('signoff-date-${item.id}'),
-              initialValue: item.decisionDate,
-              decoration: _inputDecoration('Decision date'),
-              onChanged: (value) =>
-                  _updateSignOffItem(item.copyWith(decisionDate: value)),
-            ),
+            child: _FinalizeCellView(label: 'Decision date', value: item.decisionDate.isEmpty ? '—' : item.decisionDate),
           ),
           const SizedBox(width: 8),
           Expanded(
             flex: 2,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                IconButton(
-                  icon:
-                      const Icon(Icons.edit_outlined, color: Color(0xFFFFC812)),
-                  tooltip: 'Edit',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                            'Editing ${item.name.isEmpty ? "sign-off" : item.name}…'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                ),
+                _FinalizeRowEditButton(onPressed: () => _openSignOffEditDialog(item), tooltip: 'Edit sign-off'),
+                const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.delete_outline,
                       color: Color(0xFFEF4444)),
@@ -1190,6 +1254,56 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _openSignOffEditDialog(_SignOffItem item) async {
+    final result = await _showFinalizeRowEditDialog(
+      context,
+      title: item.name.isEmpty ? 'Edit sign-off' : 'Edit: ${item.name}',
+      fields: [
+        _FinalizeEditFieldSpec(label: 'Stakeholder', initialValue: item.name, hintText: 'Stakeholder name'),
+        _FinalizeEditFieldSpec(label: 'Role', initialValue: item.role, hintText: 'Role'),
+        _FinalizeEditFieldSpec(label: 'Status', initialValue: item.status, hintText: 'Status'),
+        _FinalizeEditFieldSpec(label: 'Decision date', initialValue: item.decisionDate, hintText: 'Decision date (YYYY-MM-DD)'),
+      ],
+    );
+    if (result == null) return;
+    setState(() {
+      _updateSignOffItem(item.copyWith(
+        name: result[0] ?? item.name,
+        role: result[1] ?? item.role,
+        status: result[2] ?? item.status,
+        decisionDate: result[3] ?? item.decisionDate,
+      ), notify: true);
+    });
+  }
+
+  Color _signOffStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return const Color(0xFF22C55E);
+      case 'rejected':
+        return const Color(0xFFEF4444);
+      case 'deferred':
+        return const Color(0xFFF59E0B);
+      case 'pending':
+      default:
+        return const Color(0xFF9CA3AF);
+    }
+  }
+
+  IconData _signOffStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return Icons.check_circle;
+      case 'rejected':
+        return Icons.cancel;
+      case 'deferred':
+        return Icons.schedule;
+      case 'pending':
+      default:
+        return Icons.hourglass_top;
+    }
   }
 
   Widget _buildClosureInsights(BuildContext context) {
@@ -2435,4 +2549,245 @@ class _Debouncer {
   void dispose() {
     _timer?.cancel();
   }
+}
+
+
+/// Read-only value-preview cell rendered inside finalize tables.
+///
+/// Shows the row's stored value (dark, w500) or a grey placeholder using
+/// [label] when the cell is empty. It deliberately contains NO
+/// [OpenEditorButton] and NO inline editing affordance — the only way to
+/// edit a row is via the gold [_FinalizeRowEditButton] in the Action
+/// column, which opens [_showFinalizeRowEditDialog]. That dialog hosts the
+/// [VoiceTextFormField]s which embed the OpenEditorButton, so the
+/// "Open Editor" affordance exists exclusively inside the popup modal.
+class _FinalizeCellView extends StatelessWidget {
+  const _FinalizeCellView({
+    required this.label,
+    required this.value,
+    this.multiline = false,
+    this.child,
+  });
+
+  final String label;
+  final String value;
+  final bool multiline;
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasValue = value.trim().isNotEmpty;
+    return Container(
+      width: double.infinity,
+      constraints: BoxConstraints(minHeight: multiline ? 64 : 40),
+      padding: EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: multiline ? 10 : 8,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: child ??
+          Text(
+            hasValue ? value : label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: hasValue ? FontWeight.w500 : FontWeight.w400,
+              color: hasValue ? const Color(0xFF111827) : const Color(0xFF9CA3AF),
+              fontFamily: 'Inter',
+              height: 1.35,
+            ),
+          ),
+    );
+  }
+}
+
+/// Compact gold "Edit" button that lives in the Action column of each
+/// finalize table row. Tapping it triggers the row-level edit popup
+/// (built by [_showFinalizeRowEditDialog]) so the user can edit every
+/// field of the row at once.
+///
+/// Visual identity follows the project's OpenEditorButton gradient
+/// (`#FFB800 → #F59E0B`) so the button is immediately recognisable as
+/// the project's "open editor" affordance, now consolidated into the
+/// Action column.
+class _FinalizeRowEditButton extends StatelessWidget {
+  const _FinalizeRowEditButton({required this.onPressed, this.tooltip = 'Edit row'});
+  final VoidCallback onPressed;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFB800), Color(0xFFF59E0B)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: onPressed,
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.edit_outlined, size: 14, color: Color(0xFF111827)),
+                  SizedBox(width: 4),
+                  Text(
+                    'Edit',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Specification for a single field inside the row-level edit dialog
+/// opened by [_showFinalizeRowEditDialog]. Each spec becomes a labelled
+/// [VoiceTextFormField] (which embeds the OpenEditorButton) inside
+/// the popup, so the user can edit every column of the row at once.
+class _FinalizeEditFieldSpec {
+  const _FinalizeEditFieldSpec({
+    required this.label,
+    required this.initialValue,
+    this.multiline = false,
+    this.hintText,
+  });
+  final String label;
+  final String initialValue;
+  final bool multiline;
+  final String? hintText;
+}
+
+/// Opens a modal edit dialog for an entire finalize table row.
+///
+/// [title] is shown at the top of the dialog. [fields] is the ordered
+/// list of fields to edit — one [VoiceTextFormField] per field, labelled
+/// with the spec's [label]. The dialog returns a `Map<int, String>`
+/// mapping field index → trimmed text. Returns `null` if the user
+/// cancels. The caller maps the indices back to the appropriate fields
+/// on the row's data model.
+Future<Map<int, String>?> _showFinalizeRowEditDialog(
+  BuildContext context, {
+  required String title,
+  required List<_FinalizeEditFieldSpec> fields,
+}) async {
+  final controllers = [
+    for (final f in fields) TextEditingController(text: f.initialValue),
+  ];
+  final result = await showDialog<Map<int, String>?>(
+    context: context,
+    barrierDismissible: true,
+    builder: (dialogContext) => AlertDialog(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      title: Row(
+        children: [
+          const Icon(Icons.edit_note_rounded, color: Color(0xFFF59E0B)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 520,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var i = 0; i < fields.length; i++) ...[
+                if (i > 0) const SizedBox(height: 14),
+                Text(
+                  fields[i].label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                VoiceTextFormField(
+                  controller: controllers[i],
+                  maxLines: fields[i].multiline ? 4 : 1,
+                  decoration: InputDecoration(
+                    hintText: fields[i].hintText ?? fields[i].label,
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF4338CA), width: 1.5),
+                    ),
+                  ),
+                  autofocus: i == 0,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(null),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final map = <int, String>{};
+            for (var i = 0; i < controllers.length; i++) {
+              map[i] = controllers[i].text.trim();
+            }
+            Navigator.of(dialogContext).pop(map);
+          },
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFFF59E0B),
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Save'),
+        ),
+      ],
+    ),
+  );
+  for (final c in controllers) {
+    c.dispose();
+  }
+  return result;
 }

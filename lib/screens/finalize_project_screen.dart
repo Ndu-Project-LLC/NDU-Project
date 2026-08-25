@@ -1320,20 +1320,12 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
               message: 'Add risks, coverage, and warranty notes to close out.',
             )
           else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _insights.length,
-              itemBuilder: (context, i) => RepaintBoundary(
-                key: ValueKey('insight_row_$i'),
-                child: Padding(
-                  padding: EdgeInsets.only(
-                      bottom: i < _insights.length - 1 ? 16 : 0),
-                  child: _VerticalInsightCard(
-                    item: _insights[i],
-                    onChanged: _updateInsight,
-                    onDelete: () => _deleteInsight(_insights[i].id),
-                  ),
+            LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                  child: _buildInsightsDataTable(),
                 ),
               ),
             ),
@@ -1355,6 +1347,68 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildInsightsDataTable() {
+    return DataTable(
+      headingRowColor: WidgetStateProperty.all(const Color(0xFF0F172A)),
+      headingRowHeight: 48,
+      dataRowMinHeight: 64,
+      dataRowMaxHeight: 96,
+      columnSpacing: 24,
+      horizontalMargin: 16,
+      headingTextStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5),
+      dataTextStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF1E293B)),
+      columns: const [
+        DataColumn(label: Text('Insight')),
+        DataColumn(label: Text('Detail')),
+        DataColumn(label: Text('Action')),
+      ],
+      rows: _insights.asMap().entries.map((entry) {
+        final idx = entry.key;
+        final item = entry.value;
+        return DataRow(
+          color: WidgetStateProperty.all(idx.isEven ? Colors.white : const Color(0xFFFAFBFC)),
+          cells: [
+            // Insight title — read-only value preview
+            DataCell(ConstrainedBox(constraints: const BoxConstraints(maxWidth: 300), child: _FinalizeCellView(label: 'Insight title', value: item.title, multiline: true))),
+            // Detail — read-only value preview
+            DataCell(ConstrainedBox(constraints: const BoxConstraints(maxWidth: 460), child: _FinalizeCellView(label: 'Detail — risk, coverage, or warranty commitment', value: item.detail, multiline: true))),
+            // Action — Edit button (opens modal) + Delete button
+            DataCell(Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _FinalizeRowEditButton(onPressed: () => _openInsightEditDialog(item), tooltip: 'Edit insight'),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 18),
+                  tooltip: 'Delete',
+                  onPressed: () => _deleteInsight(item.id),
+                ),
+              ],
+            )),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  Future<void> _openInsightEditDialog(_InsightItem item) async {
+    final result = await _showFinalizeRowEditDialog(
+      context,
+      title: item.title.isEmpty ? 'Edit insight' : 'Edit: ${item.title}',
+      fields: [
+        _FinalizeEditFieldSpec(label: 'Insight title', initialValue: item.title, hintText: 'Insight title'),
+        _FinalizeEditFieldSpec(label: 'Detail', initialValue: item.detail, multiline: true, hintText: 'Risk, coverage, or warranty commitment'),
+      ],
+    );
+    if (result == null) return;
+    setState(() {
+      _updateInsight(item.copyWith(
+        title: result[0] ?? item.title,
+        detail: result[1] ?? item.detail,
+      ));
+    });
   }
 
   Widget _buildPremiumActionBar(BuildContext context) {
@@ -1866,298 +1920,6 @@ class _CurrentUserProfileChip extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-/// World-class vertical insight card with rich visual hierarchy.
-class _VerticalInsightCard extends StatefulWidget {
-  const _VerticalInsightCard({
-    required this.item,
-    required this.onChanged,
-    required this.onDelete,
-  });
-
-  final _InsightItem item;
-  final ValueChanged<_InsightItem> onChanged;
-  final VoidCallback onDelete;
-
-  @override
-  State<_VerticalInsightCard> createState() => _VerticalInsightCardState();
-}
-
-class _VerticalInsightCardState extends State<_VerticalInsightCard> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasTitle = widget.item.title.trim().isNotEmpty;
-    final hasDetail = widget.item.detail.trim().isNotEmpty;
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color:
-                _isHovered ? const Color(0xFFFEF3C7) : const Color(0xFFE5E7EB),
-            width: _isHovered ? 1.5 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: _isHovered
-                  ? const Color(0xFFB8860B).withValues(alpha: 0.06)
-                  : Colors.black.withValues(alpha: 0.03),
-              blurRadius: _isHovered ? 16 : 8,
-              offset: Offset(0, _isHovered ? 6 : 2),
-            ),
-          ],
-        ),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // ── Accent bar ──
-              Container(
-                width: 5,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFFB8860B),
-                      const Color(0xFFB8860B).withValues(alpha: 0.6),
-                    ],
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    bottomLeft: Radius.circular(16),
-                  ),
-                ),
-              ),
-              // ── Content ──
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ── Header row: icon + title + delete ──
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            margin: const EdgeInsets.only(top: 2),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  const Color(0xFFB8860B)
-                                      .withValues(alpha: 0.12),
-                                  const Color(0xFFB8860B)
-                                      .withValues(alpha: 0.08),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.lightbulb_outline_rounded,
-                              size: 16,
-                              color: hasTitle
-                                  ? const Color(0xFFB8860B)
-                                  : const Color(0xFF9CA3AF),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: VoiceTextFormField(
-                              key: ValueKey('insight-title-${widget.item.id}'),
-                              initialValue: widget.item.title,
-                              decoration: const InputDecoration(
-                                hintText: 'Insight title',
-                                hintStyle: TextStyle(
-                                  color: Color(0xFF9CA3AF),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                border: InputBorder.none,
-                                isDense: true,
-                                contentPadding:
-                                    EdgeInsets.symmetric(vertical: 6),
-                              ),
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: hasTitle
-                                    ? FontWeight.w700
-                                    : FontWeight.w600,
-                                color: hasTitle
-                                    ? const Color(0xFF111827)
-                                    : const Color(0xFF9CA3AF),
-                                letterSpacing: -0.2,
-                              ),
-                              onChanged: (value) => widget.onChanged(
-                                  widget.item.copyWith(title: value)),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          // ── Status indicator ──
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: hasTitle && hasDetail
-                                  ? const Color(0xFFD1FAE5)
-                                      .withValues(alpha: 0.6)
-                                  : const Color(0xFFFEF3C7)
-                                      .withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: hasTitle && hasDetail
-                                    ? const Color(0xFFA7F3D0)
-                                    : const Color(0xFFFDE68A),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  hasTitle && hasDetail
-                                      ? Icons.check_circle_rounded
-                                      : Icons.edit_note_rounded,
-                                  size: 12,
-                                  color: hasTitle && hasDetail
-                                      ? const Color(0xFF059669)
-                                      : const Color(0xFFD97706),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  hasTitle && hasDetail ? 'Complete' : 'Draft',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: hasTitle && hasDetail
-                                        ? const Color(0xFF059669)
-                                        : const Color(0xFFD97706),
-                                    letterSpacing: 0.2,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      // ── Detail field ──
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color:
-                                const Color(0xFFE5E7EB).withValues(alpha: 0.6),
-                          ),
-                        ),
-                        child: VoiceTextFormField(
-                          key: ValueKey('insight-detail-${widget.item.id}'),
-                          initialValue: widget.item.detail,
-                          decoration: const InputDecoration(
-                            hintText:
-                                'Describe the risk, coverage need, or warranty detail…',
-                            hintStyle: TextStyle(
-                              color: Color(0xFF9CA3AF),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                          maxLines: 4,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: hasDetail
-                                ? const Color(0xFF1F2937)
-                                : const Color(0xFF9CA3AF),
-                            height: 1.55,
-                          ),
-                          onChanged: (value) => widget
-                              .onChanged(widget.item.copyWith(detail: value)),
-                        ),
-                      ),
-                      // ── Footer: meta + delete ──
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          // Character / word count
-                          const Icon(Icons.text_fields_rounded,
-                              size: 12, color: Color(0xFF9CA3AF)),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${widget.item.detail.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length} words',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF9CA3AF),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const Spacer(),
-                          // Delete button
-                          InkWell(
-                            onTap: widget.onDelete,
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: _isHovered
-                                    ? const Color(0xFFFEF2F2)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.delete_outline_rounded,
-                                    size: 14,
-                                    color: _isHovered
-                                        ? const Color(0xFFEF4444)
-                                        : const Color(0xFF9CA3AF),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Remove',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: _isHovered
-                                          ? const Color(0xFFEF4444)
-                                          : const Color(0xFF9CA3AF),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

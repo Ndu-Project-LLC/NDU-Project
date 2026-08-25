@@ -204,22 +204,6 @@ class _StartUpPlanningDetailScreenState
  _debouncer.run(() => _save(showToast: false));
  }
 
- Future<void> _pickDate(
- DateTime? current,
- ValueChanged<DateTime?> onPicked,
- ) async {
- final now = DateTime.now();
- final picked = await showDatePicker(
- context: context,
- initialDate: current ?? now,
- firstDate: DateTime(now.year - 3),
- lastDate: DateTime(now.year + 5),
- );
- if (picked == null) return;
- setState(() => onPicked(picked));
- _scheduleSave();
- }
-
  Future<void> _attachFile() async {
  final projectId = ProjectDataHelper.getData(context).projectId;
  if (projectId == null || projectId.isEmpty) {
@@ -642,7 +626,6 @@ class _StartUpPlanningDetailScreenState
  setState(() => _state = state);
  _scheduleSave();
  },
- onPickDate: _pickDate,
  );
  case _PageType.devops:
  return _DevOpsPageBody(
@@ -659,7 +642,6 @@ class _StartUpPlanningDetailScreenState
  setState(() => _state = state);
  _scheduleSave();
  },
- onPickDate: _pickDate,
  );
  }
  }
@@ -1139,21 +1121,18 @@ class _OperationsPageBody extends StatelessWidget {
  Widget build(BuildContext context) {
  final data = state.operations;
  return Column(children: [
- _ServiceOwnershipTable(
- primaryOwner: state.primaryOwner,
- onPrimaryOwnerChanged: (v) { state.primaryOwner = v.trim(); onChanged(state); },
- opsOwner: data.opsOwner,
- onOpsOwnerChanged: (v) { data.opsOwner = v.trim(); onChanged(state); },
- engineeringOwner: data.engineeringOwner,
- onEngineeringOwnerChanged: (v) { data.engineeringOwner = v.trim(); onChanged(state); },
- supportHours: data.supportHours,
- onSupportHoursChanged: (v) { data.supportHours = v.trim(); onChanged(state); },
- sla: data.sla,
- slo: data.slo,
- onSlaSloChanged: (v) { final parts = v.split('|'); data.sla = parts.first.trim(); data.slo = parts.length > 1 ? parts[1].trim() : ''; onChanged(state); },
- rto: data.rto,
- rpo: data.rpo,
- onRtoRpoChanged: (v) { final parts = v.split('|'); data.rto = parts.first.trim(); data.rpo = parts.length > 1 ? parts[1].trim() : ''; onChanged(state); },
+ _SectionFieldsCard(
+ title: 'Service and ownership',
+ fields: [
+ _SectionFieldSpec('Document owner', state.primaryOwner, (v) { state.primaryOwner = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Ops owner', data.opsOwner, (v) { data.opsOwner = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Engineering owner', data.engineeringOwner, (v) { data.engineeringOwner = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Support hours', data.supportHours, (v) { data.supportHours = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('SLA', data.sla, (v) { data.sla = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('SLO', data.slo, (v) { data.slo = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('RTO', data.rto, (v) { data.rto = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('RPO', data.rpo, (v) { data.rpo = v.trim(); onChanged(state); }),
+ ],
  ),
  const SizedBox(height: 16),
  _RunbookRegisterCard(rows: data.runbookRegister, onChanged: (rows) { data.runbookRegister = rows; onChanged(state); }),
@@ -1168,23 +1147,22 @@ class _OperationsPageBody extends StatelessWidget {
 }
 
 class _HypercarePageBody extends StatelessWidget {
- const _HypercarePageBody({required this.state, required this.onChanged, required this.onPickDate});
+ const _HypercarePageBody({required this.state, required this.onChanged});
  final _PlanningPageState state;
  final ValueChanged<_PlanningPageState> onChanged;
- final Future<void> Function(DateTime?, ValueChanged<DateTime?>) onPickDate;
  @override
  Widget build(BuildContext context) {
  final data = state.hypercare;
  return Column(children: [
- _SimpleFormCard(
+ _SectionFieldsCard(
  title: 'Projected hypercare window',
- children: [
- _SimpleField(label: 'Document owner', initialValue: state.primaryOwner, onChanged: (v) { state.primaryOwner = v.trim(); onChanged(state); }),
- _DateButton(label: 'Start date', value: data.startDate, onTap: () => onPickDate(data.startDate, (picked) => data.startDate = picked)),
- _DateButton(label: 'End date', value: data.endDate, onTap: () => onPickDate(data.endDate, (picked) => data.endDate = picked)),
- _SimpleField(label: 'Hypercare lead', initialValue: data.hypercareLead, onChanged: (v) { data.hypercareLead = v.trim(); onChanged(state); }),
- _SimpleField(label: 'Support lead', initialValue: data.supportLead, onChanged: (v) { data.supportLead = v.trim(); onChanged(state); }),
- _SimpleField(label: 'War-room channel', initialValue: data.warRoomChannel, onChanged: (v) { data.warRoomChannel = v.trim(); onChanged(state); }),
+ fields: [
+ _SectionFieldSpec('Document owner', state.primaryOwner, (v) { state.primaryOwner = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Start date', data.startDate == null ? '' : DateFormat('yyyy-MM-dd').format(data.startDate!), (v) { final parsed = DateTime.tryParse(v.trim()); if (parsed != null) { data.startDate = parsed; onChanged(state); } }, hint: 'YYYY-MM-DD'),
+ _SectionFieldSpec('End date', data.endDate == null ? '' : DateFormat('yyyy-MM-dd').format(data.endDate!), (v) { final parsed = DateTime.tryParse(v.trim()); if (parsed != null) { data.endDate = parsed; onChanged(state); } }, hint: 'YYYY-MM-DD'),
+ _SectionFieldSpec('Hypercare lead', data.hypercareLead, (v) { data.hypercareLead = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Support lead', data.supportLead, (v) { data.supportLead = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('War-room channel', data.warRoomChannel, (v) { data.warRoomChannel = v.trim(); onChanged(state); }),
  ],
  ),
  const SizedBox(height: 16),
@@ -1194,7 +1172,7 @@ class _HypercarePageBody extends StatelessWidget {
  const SizedBox(height: 16),
  _ChecklistCard(title: 'Exit criteria register', items: data.exitCriteria, onChanged: (items) { data.exitCriteria = items; onChanged(state); }),
  const SizedBox(height: 16),
- _SimpleFieldBlock(label: 'Communication plan', initialValue: data.communicationSteps.join('\n'), onChanged: (v) { data.communicationSteps = v.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(); onChanged(state); }),
+ _StringListTableCard(title: 'Communication plan', columnLabel: 'Communication step', items: data.communicationSteps, onChanged: (list) { data.communicationSteps = list.where((e) => e.trim().isNotEmpty).toList(); onChanged(state); }),
  const SizedBox(height: 16),
  SwitchListTile.adaptive(value: data.handoverReady, title: const Text('Ready to exit hypercare'), onChanged: (v) { data.handoverReady = v; onChanged(state); }),
  ]);
@@ -1209,15 +1187,15 @@ class _DevOpsPageBody extends StatelessWidget {
  Widget build(BuildContext context) {
  final data = state.devops;
  return Column(children: [
- _SimpleFormCard(
+ _SectionFieldsCard(
  title: 'Release ownership and controls',
- children: [
- _SimpleField(label: 'Document owner', initialValue: state.primaryOwner, onChanged: (v) { state.primaryOwner = v.trim(); onChanged(state); }),
- _SimpleField(label: 'Release owner', initialValue: data.releaseOwner, onChanged: (v) { data.releaseOwner = v.trim(); onChanged(state); }),
- _SimpleField(label: 'Platform owner', initialValue: data.platformOwner, onChanged: (v) { data.platformOwner = v.trim(); onChanged(state); }),
- _SimpleField(label: 'Environment topology', initialValue: data.environmentTopology, onChanged: (v) { data.environmentTopology = v.trim(); onChanged(state); }),
- _SimpleField(label: 'Deployment strategy', initialValue: data.deploymentStrategy, onChanged: (v) { data.deploymentStrategy = v.trim(); onChanged(state); }),
- _SimpleField(label: 'Rollback strategy', initialValue: data.rollbackStrategy, onChanged: (v) { data.rollbackStrategy = v.trim(); onChanged(state); }),
+ fields: [
+ _SectionFieldSpec('Document owner', state.primaryOwner, (v) { state.primaryOwner = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Release owner', data.releaseOwner, (v) { data.releaseOwner = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Platform owner', data.platformOwner, (v) { data.platformOwner = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Environment topology', data.environmentTopology, (v) { data.environmentTopology = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Deployment strategy', data.deploymentStrategy, (v) { data.deploymentStrategy = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Rollback strategy', data.rollbackStrategy, (v) { data.rollbackStrategy = v.trim(); onChanged(state); }),
  ],
  ),
  const SizedBox(height: 16),
@@ -1227,7 +1205,15 @@ class _DevOpsPageBody extends StatelessWidget {
  const SizedBox(height: 16),
  _ChecklistCard(title: 'Release controls register', items: data.releaseChecklist, onChanged: (items) { data.releaseChecklist = items; onChanged(state); }),
  const SizedBox(height: 16),
- _SimpleFieldBlock(label: 'DORA baseline', initialValue: 'Deployment frequency: ${data.doraDeploymentFrequency}\nLead time: ${data.doraLeadTime}\nChange failure rate: ${data.doraChangeFailureRate}\nRestore time: ${data.doraRestoreTime}', onChanged: (v) { final lines = v.split('\n'); data.doraDeploymentFrequency = lines.isNotEmpty ? lines[0].replaceFirst('Deployment frequency:', '').trim() : ''; data.doraLeadTime = lines.length > 1 ? lines[1].replaceFirst('Lead time:', '').trim() : ''; data.doraChangeFailureRate = lines.length > 2 ? lines[2].replaceFirst('Change failure rate:', '').trim() : ''; data.doraRestoreTime = lines.length > 3 ? lines[3].replaceFirst('Restore time:', '').trim() : ''; onChanged(state); }),
+ _SectionFieldsCard(
+ title: 'DORA baseline',
+ fields: [
+ _SectionFieldSpec('Deployment frequency', data.doraDeploymentFrequency, (v) { data.doraDeploymentFrequency = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Lead time', data.doraLeadTime, (v) { data.doraLeadTime = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Change failure rate', data.doraChangeFailureRate, (v) { data.doraChangeFailureRate = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Restore time', data.doraRestoreTime, (v) { data.doraRestoreTime = v.trim(); onChanged(state); }),
+ ],
+ ),
  const SizedBox(height: 16),
  SwitchListTile.adaptive(value: data.devOpsApproved, title: const Text('DevOps readiness approved'), onChanged: (v) { data.devOpsApproved = v; onChanged(state); }),
  ]);
@@ -1235,23 +1221,22 @@ class _DevOpsPageBody extends StatelessWidget {
 }
 
 class _CloseOutPageBody extends StatelessWidget {
- const _CloseOutPageBody({required this.state, required this.onChanged, required this.onPickDate});
+ const _CloseOutPageBody({required this.state, required this.onChanged});
  final _PlanningPageState state;
  final ValueChanged<_PlanningPageState> onChanged;
- final Future<void> Function(DateTime?, ValueChanged<DateTime?>) onPickDate;
  @override
  Widget build(BuildContext context) {
  final data = state.closeout;
  return Column(children: [
- _SimpleFormCard(
+ _SectionFieldsCard(
  title: 'Close-out ownership',
- children: [
- _SimpleField(label: 'Document owner', initialValue: state.primaryOwner, onChanged: (v) { state.primaryOwner = v.trim(); onChanged(state); }),
- _DateButton(label: 'Target close date', value: data.targetCloseDate, onTap: () => onPickDate(data.targetCloseDate, (picked) => data.targetCloseDate = picked)),
- _SimpleField(label: 'Delivery owner', initialValue: data.deliveryOwner, onChanged: (v) { data.deliveryOwner = v.trim(); onChanged(state); }),
- _SimpleField(label: 'Support owner', initialValue: data.supportOwner, onChanged: (v) { data.supportOwner = v.trim(); onChanged(state); }),
- _SimpleField(label: 'Benefits owner', initialValue: data.benefitsOwner, onChanged: (v) { data.benefitsOwner = v.trim(); onChanged(state); }),
- _DateButton(label: 'Benefits review date', value: data.benefitsReviewDate, onTap: () => onPickDate(data.benefitsReviewDate, (picked) => data.benefitsReviewDate = picked)),
+ fields: [
+ _SectionFieldSpec('Document owner', state.primaryOwner, (v) { state.primaryOwner = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Target close date', data.targetCloseDate == null ? '' : DateFormat('yyyy-MM-dd').format(data.targetCloseDate!), (v) { final parsed = DateTime.tryParse(v.trim()); if (parsed != null) { data.targetCloseDate = parsed; onChanged(state); } }, hint: 'YYYY-MM-DD'),
+ _SectionFieldSpec('Delivery owner', data.deliveryOwner, (v) { data.deliveryOwner = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Support owner', data.supportOwner, (v) { data.supportOwner = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Benefits owner', data.benefitsOwner, (v) { data.benefitsOwner = v.trim(); onChanged(state); }),
+ _SectionFieldSpec('Benefits review date', data.benefitsReviewDate == null ? '' : DateFormat('yyyy-MM-dd').format(data.benefitsReviewDate!), (v) { final parsed = DateTime.tryParse(v.trim()); if (parsed != null) { data.benefitsReviewDate = parsed; onChanged(state); } }, hint: 'YYYY-MM-DD'),
  ],
  ),
  const SizedBox(height: 16),
@@ -1263,140 +1248,11 @@ class _CloseOutPageBody extends StatelessWidget {
  const SizedBox(height: 16),
  _ResidualActionRegisterCard(rows: data.residualRegister, onChanged: (rows) { data.residualRegister = rows; onChanged(state); }),
  const SizedBox(height: 16),
- _SimpleFieldBlock(label: 'Lessons learned', initialValue: data.lessonsLearned.join('\n'), onChanged: (v) { data.lessonsLearned = v.split('\n'); onChanged(state); }),
+ _StringListTableCard(title: 'Lessons learned', columnLabel: 'Lesson', items: data.lessonsLearned, onChanged: (list) { data.lessonsLearned = list; onChanged(state); }),
  const SizedBox(height: 16),
  SwitchListTile.adaptive(value: data.closeoutApproved, title: const Text('Close-out approved'), onChanged: (v) { data.closeoutApproved = v; onChanged(state); }),
  ]);
  }
-}
-
-class _SimpleFormCard extends StatelessWidget {
- const _SimpleFormCard({required this.title, required this.children});
- final String title;
- final List<Widget> children;
- @override
- Widget build(BuildContext context) => Container(
- width: double.infinity,
- padding: const EdgeInsets.all(18),
- decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE5E7EB))),
- child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)), const SizedBox(height: 12), Wrap(spacing: 12, runSpacing: 12, children: children)]),
- );
-}
-
-class _ServiceOwnershipTable extends StatelessWidget {
- const _ServiceOwnershipTable({
-   required this.primaryOwner, required this.onPrimaryOwnerChanged,
-   required this.opsOwner, required this.onOpsOwnerChanged,
-   required this.engineeringOwner, required this.onEngineeringOwnerChanged,
-   required this.supportHours, required this.onSupportHoursChanged,
-   required this.sla, required this.slo, required this.onSlaSloChanged,
-   required this.rto, required this.rpo, required this.onRtoRpoChanged,
- });
- final String primaryOwner, opsOwner, engineeringOwner, supportHours, sla, slo, rto, rpo;
- final ValueChanged<String> onPrimaryOwnerChanged, onOpsOwnerChanged, onEngineeringOwnerChanged, onSupportHoursChanged, onSlaSloChanged, onRtoRpoChanged;
-
- @override
- Widget build(BuildContext context) {
-   final fields = [
-     ('Document owner', primaryOwner, onPrimaryOwnerChanged),
-     ('Ops owner', opsOwner, onOpsOwnerChanged),
-     ('Engineering owner', engineeringOwner, onEngineeringOwnerChanged),
-     ('Support hours', supportHours, onSupportHoursChanged),
-     ('SLA / SLO', '$sla${slo.isNotEmpty ? ' | $slo' : ''}', onSlaSloChanged),
-     ('RTO / RPO', '$rto${rpo.isNotEmpty ? ' | $rpo' : ''}', onRtoRpoChanged),
-   ];
-   return Container(
-     width: double.infinity,
-     padding: const EdgeInsets.all(18),
-     decoration: BoxDecoration(
-       color: Colors.white,
-       borderRadius: BorderRadius.circular(16),
-       border: Border.all(color: const Color(0xFFE5E7EB)),
-     ),
-     child: Column(
-       crossAxisAlignment: CrossAxisAlignment.start,
-       children: [
-         const Text('Service and ownership', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-         const SizedBox(height: 12),
-         Table(
-           columnWidths: const {0: FlexColumnWidth(1.2), 1: FlexColumnWidth(2)},
-           border: const TableBorder(
-             horizontalInside: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-             verticalInside: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-             top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-             bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-             left: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-             right: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-           ),
-           children: [
-             const TableRow(
-               decoration: BoxDecoration(color: Color(0xFFF9FAFB)),
-               children: [
-                 Padding(padding: EdgeInsets.all(10), child: Text('Field', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
-                 Padding(padding: EdgeInsets.all(10), child: Text('Value', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))),
-               ],
-             ),
-             for (final f in fields)
-               TableRow(
-                 children: [
-                   Padding(padding: const EdgeInsets.all(10), child: Text(f.$1, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151)))),
-                   Padding(
-                     padding: const EdgeInsets.all(6),
-                     child: VoiceTextFormField(
-                       initialValue: f.$2,
-                       decoration: _fieldDecoration(f.$1),
-                       onChanged: f.$3,
-                     ),
-                   ),
-                 ],
-               ),
-           ],
-         ),
-       ],
-     ),
-   );
- }
-}
-
-class _SimpleField extends StatelessWidget {
- const _SimpleField({required this.label, required this.initialValue, required this.onChanged});
- final String label;
- final String initialValue;
- final ValueChanged<String> onChanged;
- @override
- Widget build(BuildContext context) => SizedBox(
- width: 280,
- child: VoiceTextFormField(initialValue: initialValue, decoration: _fieldDecoration(label), onChanged: onChanged),
- );
-}
-
-class _SimpleFieldBlock extends StatelessWidget {
- const _SimpleFieldBlock({required this.label, required this.initialValue, required this.onChanged});
- final String label;
- final String initialValue;
- final ValueChanged<String> onChanged;
- @override
- Widget build(BuildContext context) => Container(
- width: double.infinity,
- padding: const EdgeInsets.all(18),
- decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE5E7EB))),
- child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)), const SizedBox(height: 12), VoiceTextFormField(initialValue: initialValue, maxLines: null, decoration: _fieldDecoration(label), onChanged: onChanged)]),
- );
-}
-
-class _DateButton extends StatelessWidget {
- const _DateButton({required this.label, required this.value, required this.onTap});
- final String label;
- final DateTime? value;
- final VoidCallback onTap;
- @override
- Widget build(BuildContext context) => SizedBox(
- width: 280,
- child: OutlinedButton(
- onPressed: onTap,
- child: Text('$label: ${_formatDate(value)}'),
- ),
- );
 }
 
 class _ChecklistTableCard extends StatelessWidget {
@@ -2129,6 +1985,137 @@ class _ResidualActionRegisterCard extends StatelessWidget {
        ),
        const SizedBox(height: 8),
        Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: () => onChanged([...safeRows, const _ResidualActionEntry(action: '', owner: '', dueDate: '', destinationTeam: '', status: 'Open', handoffNote: '')]), icon: const Icon(Icons.add), label: const Text('Add residual action'))),
+     ]),
+   );
+ }
+}
+
+/// Specification for one Field|Value row inside a [_SectionFieldsCard].
+/// Each row is edited through its own gold Edit button, which opens a
+/// [_showRowEditDialog] modal hosting the row's value as a
+/// [VoiceTextFormField] (with the embedded OpenEditorButton).
+class _SectionFieldSpec {
+ const _SectionFieldSpec(this.label, this.value, this.onChanged, {this.hint});
+ final String label;
+ final String value;
+ final ValueChanged<String> onChanged;
+ final String? hint;
+}
+
+/// Read-only Field|Value|Action table for section-level metadata such as
+/// "Service and ownership", "Projected hypercare window", "Release
+/// ownership and controls", "Close-out ownership", and the "DORA baseline".
+///
+/// Every value cell is a read-only [_RegisterCellView] preview; the only
+/// way to edit a row is the gold [_RowEditButton] in the Action column,
+/// which opens a row-level edit modal. No inline editors — and therefore
+/// no OpenEditorButton — are visible under the table itself.
+class _SectionFieldsCard extends StatelessWidget {
+ const _SectionFieldsCard({required this.title, required this.fields});
+ final String title;
+ final List<_SectionFieldSpec> fields;
+
+ Future<void> _openFieldEditDialog(BuildContext context, _SectionFieldSpec field) async {
+   final result = await _showRowEditDialog(
+     context,
+     title: 'Edit: ${field.label}',
+     fields: [
+       _EditFieldSpec(label: field.label, initialValue: field.value, hintText: field.hint ?? field.label),
+     ],
+   );
+   if (result == null) return;
+   final v = result[0];
+   if (v != null && v != field.value) field.onChanged(v);
+ }
+
+ @override
+ Widget build(BuildContext context) {
+   return _RegisterShell(
+     title: title,
+     child: _RegisterTable(
+       columns: const [
+         _RegisterColumnSpec('Field', 220),
+         _RegisterColumnSpec('Value', 460),
+         _RegisterColumnSpec('Action', 140),
+       ],
+       rowCells: [
+         for (final f in fields)
+           [
+             Padding(
+               padding: const EdgeInsets.symmetric(horizontal: 4),
+               child: Text(f.label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+             ),
+             _RegisterCellView(label: f.hint ?? f.label, value: f.value),
+             _RowEditButton(onPressed: () => _openFieldEditDialog(context, f), tooltip: 'Edit ${f.label.toLowerCase()}'),
+           ],
+       ],
+     ),
+   );
+ }
+}
+
+/// Read-only numbered-item table for string lists such as the hypercare
+/// "Communication plan" and the close-out "Lessons learned".
+///
+/// Rows are (# | item | Action). Each row is edited via its gold
+/// [_RowEditButton] (opening a [_showRowEditDialog] modal with the item as
+/// a multiline [VoiceTextFormField]); rows can be added and removed.
+class _StringListTableCard extends StatelessWidget {
+ const _StringListTableCard({required this.title, required this.columnLabel, required this.items, required this.onChanged});
+ final String title;
+ final String columnLabel;
+ final List<String> items;
+ final ValueChanged<List<String>> onChanged;
+
+ Future<void> _openEditDialog(BuildContext context, int i, List<String> safeItems) async {
+   final result = await _showRowEditDialog(
+     context,
+     title: safeItems[i].trim().isEmpty ? 'Edit $columnLabel' : 'Edit $columnLabel ${i + 1}',
+     fields: [
+       _EditFieldSpec(label: columnLabel, initialValue: safeItems[i], multiline: true, hintText: columnLabel),
+     ],
+   );
+   if (result == null) return;
+   final copy = [...safeItems];
+   copy[i] = result[0] ?? copy[i];
+   onChanged(copy);
+ }
+
+ @override
+ Widget build(BuildContext context) {
+   final safeItems = items.isEmpty ? [''] : items;
+   return _RegisterShell(
+     title: title,
+     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+       _RegisterTable(
+         columns: [
+           const _RegisterColumnSpec('#', 56),
+           _RegisterColumnSpec(columnLabel, 620),
+           const _RegisterColumnSpec('Action', 140),
+         ],
+         rowCells: [
+           for (var i = 0; i < safeItems.length; i++)
+             [
+               Align(
+                 alignment: Alignment.centerLeft,
+                 child: Text('${i + 1}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF6B7280))),
+               ),
+               _RegisterCellView(label: columnLabel, value: safeItems[i], multiline: true),
+               Row(mainAxisSize: MainAxisSize.min, children: [
+                 _RowEditButton(onPressed: () => _openEditDialog(context, i, safeItems), tooltip: 'Edit $columnLabel'),
+                 const SizedBox(width: 8),
+                 if (safeItems.length > 1)
+                   IconButton(
+                     onPressed: () { final copy = [...safeItems]..removeAt(i); onChanged(copy); },
+                     icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF9CA3AF)),
+                     tooltip: 'Remove row',
+                   ),
+               ]),
+             ],
+         ],
+       ),
+       const SizedBox(height: 8),
+       Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: () => onChanged([...safeItems, '']), icon: const Icon(Icons.add), label: Text('Add ${columnLabel.toLowerCase()}'))),
      ]),
    );
  }

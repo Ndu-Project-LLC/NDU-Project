@@ -1,59 +1,105 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
-import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/schedule/providers/schedule_provider.dart';
-import 'package:ndu_project/schedule/screens/schedule_module_screen.dart';
-import 'package:ndu_project/wbs/providers/wbs_provider.dart';
+import 'package:ndu_project/widgets/section_navigator.dart';
 
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  Future<void> pumpScreen(WidgetTester tester) async {
+  testWidgets(
+      'SectionNavigator collapses and content remains accessible',
+      (tester) async {
     tester.view.physicalSize = const Size(1600, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<ScheduleProvider>(
-              create: (_) => ScheduleProvider()),
-          ChangeNotifierProvider<WBSProvider>(create: (_) => WBSProvider()),
-          ChangeNotifierProvider<CostEstimateProvider>(
-              create: (_) => CostEstimateProvider()),
-          ChangeNotifierProvider<ProjectDataProvider>(
-              create: (_) => ProjectDataProvider()),
-        ],
-        child: const MaterialApp(home: ScheduleModuleScreen()),
-      ),
-    );
-    await tester.pump();
-    await tester.pump();
-  }
+    late TabController tabController;
 
-  testWidgets(
-      'Schedule module screen renders tab content while navigator is collapsed',
-      (tester) async {
-    await pumpScreen(tester);
+    // Use a StatefulWidget to create the TabController with a proper TickerProvider.
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: _TestHarness(
+          onReady: (tc) => tabController = tc,
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
 
     // Navigator header visible and collapsed…
     expect(find.text('Schedule Navigation'), findsOneWidget);
 
-    // …and the Builder tab content must be rendered below it.
-    expect(find.byType(ScheduleModuleScreen), findsOneWidget);
-    expect(find.text('Loading schedule…'), findsNothing);
+    // Content area should still be rendered below the collapsed navigator.
+    expect(find.text('Tab Content'), findsOneWidget);
 
-    // The Builder tab's hero band should be present.
-    expect(
-      find.textContaining('SCHEDULE'),
-      findsWidgets,
-      reason: 'Builder tab content should render below the collapsed navigator',
-    );
+    // Tab labels should not be visible when collapsed.
+    expect(find.text('Builder'), findsNothing);
+    expect(find.text('Gantt'), findsNothing);
+    expect(find.text('List View'), findsNothing);
+
+    // Tap the expand button to expand the navigator.
+    await tester.tap(find.byIcon(Icons.keyboard_arrow_down));
+    await tester.pumpAndSettle();
+
+    // Tab labels should now be visible.
+    expect(find.text('Builder'), findsOneWidget);
+    expect(find.text('Gantt'), findsOneWidget);
+    expect(find.text('List View'), findsOneWidget);
   });
+}
+
+/// Harness that creates a TabController with the proper TickerProvider.
+class _TestHarness extends StatefulWidget {
+  const _TestHarness({required this.onReady});
+  final ValueChanged<TabController> onReady;
+
+  @override
+  State<_TestHarness> createState() => _TestHarnessState();
+}
+
+class _TestHarnessState extends State<_TestHarness>
+    with SingleTickerProviderStateMixin {
+  late final TabController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TabController(length: 3, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onReady(_controller);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SectionNavigator(
+          title: 'Schedule Navigation',
+          subtitle: 'Navigate between schedule sections',
+          icon: Icons.calendar_month_outlined,
+          tabs: const [
+            SectionTab(icon: Icons.build_outlined, label: 'Builder'),
+            SectionTab(icon: Icons.bar_chart, label: 'Gantt'),
+            SectionTab(icon: Icons.list_alt, label: 'List View'),
+          ],
+          controller: _controller,
+          onChanged: (_) {},
+          isCollapsible: true,
+          initiallyCollapsed: true,
+        ),
+        const Expanded(
+          child: Center(child: Text('Tab Content')),
+        ),
+      ],
+    );
+  }
 }

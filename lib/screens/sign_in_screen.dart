@@ -145,8 +145,14 @@ class _SignInScreenState extends State<SignInScreen> {
       }
       _navigateAfterSignIn();
     } on FirebaseAuthException catch (e) {
-      // #8: Record failed attempt
-      final locked = await AccountLockoutService.recordFailedAttempt();
+      // #8: Record failed attempt — but ONLY for credential-related failures.
+      // Network errors, Firebase misconfiguration, popup blocks, etc. must
+      // never count toward the lockout, otherwise a transient outage (or a
+      // failed Firebase init at startup) locks users out of their accounts
+      // even when they type the correct password. The policy lives in
+      // [AccountLockoutService.recordFailedAttemptForCode].
+      final locked =
+          await AccountLockoutService.recordFailedAttemptForCode(e.code);
       // #9: Log failed sign-in
       await SecurityAuditLogger.logFailedSignIn(
         email: _emailController.text.trim(),
@@ -156,7 +162,7 @@ class _SignInScreenState extends State<SignInScreen> {
       if (locked) {
         _showSnack('Too many failed attempts. Account locked for 15 minutes.',
             Colors.red);
-      } else {
+      } else if (AccountLockoutService.isCredentialErrorCode(e.code)) {
         final attempts = await AccountLockoutService.getAttemptCount();
         final remaining = AccountLockoutService.maxAttempts - attempts;
         _showSnack(
@@ -165,28 +171,18 @@ class _SignInScreenState extends State<SignInScreen> {
               : friendly,
           Colors.red,
         );
+      } else {
+        _showSnack(friendly, Colors.red);
       }
     } catch (e) {
-      // #8: Record failed attempt
-      final locked = await AccountLockoutService.recordFailedAttempt();
-      // #9: Log failed sign-in
+      // #9: Log unexpected failure for diagnosis, but do NOT record it as a
+      // failed login attempt — these are infrastructure/app errors (network,
+      // Firebase not initialized, etc.), not brute-force signals.
       await SecurityAuditLogger.logFailedSignIn(
         email: _emailController.text.trim(),
         reason: e.toString(),
       );
-      if (locked) {
-        _showSnack('Too many failed attempts. Account locked for 15 minutes.',
-            Colors.red);
-      } else {
-        final attempts = await AccountLockoutService.getAttemptCount();
-        final remaining = AccountLockoutService.maxAttempts - attempts;
-        _showSnack(
-          remaining > 0
-              ? 'Sign in failed. $remaining attempt${remaining == 1 ? '' : 's'} remaining.'
-              : 'Sign in failed: $e',
-          Colors.red,
-        );
-      }
+      _showSnack('Sign in failed: $e', Colors.red);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

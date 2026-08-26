@@ -1450,89 +1450,91 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                   BorderRadius.vertical(top: Radius.circular(12)),
               border: Border(bottom: BorderSide(color: _kBorderColor)),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: VoiceTextField(
-                    controller: widget.titleController,
-                    focusNode: widget.titleFocusNode,
-                    maxLines: 1,
-                    enableVoice: false,
-                    enableKazAi: false,
-                    enableDocxImport: false,
-                    enableTextFormatting: false,
-                    decoration: InputDecoration(
-                      hintText: 'Goal ${widget.goalIndex + 1} Title',
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: _kPrimaryText,
-                        overflow: TextOverflow.ellipsis),
+                VoiceTextField(
+                  controller: widget.titleController,
+                  focusNode: widget.titleFocusNode,
+                  maxLines: 3,
+                  enableVoice: false,
+                  enableKazAi: false,
+                  enableDocxImport: false,
+                  enableTextFormatting: false,
+                  decoration: InputDecoration(
+                    hintText: 'Goal ${widget.goalIndex + 1} Title',
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
                   ),
+                  style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: _kPrimaryText),
                 ),
-                const SizedBox(width: 8),
-                // Priority badge pill
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: priorityBg,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: priorityColor,
-                        ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    // Priority badge pill
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: priorityBg,
+                        borderRadius: BorderRadius.circular(999),
                       ),
-                      const SizedBox(width: 4),
-                      PopupMenuButton<String>(
-                        initialValue: widget.priority,
-                        onSelected: widget.onPriorityChanged,
-                        offset: const Offset(0, 28),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              widget.priority,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: priorityColor,
-                              ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: priorityColor,
                             ),
-                            const SizedBox(width: 2),
-                            const Icon(Icons.keyboard_arrow_down_rounded,
-                                size: 14, color: _kSecondaryText),
-                          ],
-                        ),
-                        itemBuilder: (context) => _kPriorityOptions
-                            .map((option) => PopupMenuItem(
-                                value: option, child: Text(option)))
-                            .toList(),
+                          ),
+                          const SizedBox(width: 4),
+                          PopupMenuButton<String>(
+                            initialValue: widget.priority,
+                            onSelected: widget.onPriorityChanged,
+                            offset: const Offset(0, 28),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  widget.priority,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: priorityColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                const Icon(Icons.keyboard_arrow_down_rounded,
+                                    size: 14, color: _kSecondaryText),
+                              ],
+                            ),
+                            itemBuilder: (context) => _kPriorityOptions
+                                .map((option) => PopupMenuItem(
+                                    value: option, child: Text(option)))
+                                .toList(),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 4),
-                // Delete/trash button
-                InkWell(
-                  onTap: widget.onClear,
-                  borderRadius: BorderRadius.circular(4),
-                  child: const Padding(
-                    padding: EdgeInsets.all(4),
-                    child: Icon(Icons.delete_outline_rounded,
-                        size: 18, color: _kSecondaryText),
-                  ),
+                    ),
+                    const SizedBox(width: 4),
+                    // Delete/trash button
+                    InkWell(
+                      onTap: widget.onClear,
+                      borderRadius: BorderRadius.circular(4),
+                      child: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Icon(Icons.delete_outline_rounded,
+                            size: 18, color: _kSecondaryText),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -158,6 +158,8 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                   subtitle: 'Navigate between project control sections',
                   icon: Icons.dashboard_outlined,
                   backgroundColor: Colors.white,
+                  isCollapsible: true,
+                  initiallyCollapsed: true,
                   tabs: const [
                     SectionTab(icon: Icons.dashboard_outlined, label: 'Dashboard'),
                     SectionTab(icon: Icons.account_tree_outlined, label: 'Scope Tracking'),

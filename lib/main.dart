@@ -117,24 +117,64 @@ void main() async {
   // Firebase must be ready before widgets touch Auth or Firestore. Letting the
   // app continue while initialization is still pending can crash Flutter web
   // with a FirebaseException/JavaScriptObject interop type error.
+  //
+  // Initialization failures are NOT silent: initializeFirebase() records the
+  // failure in [FirebaseBootstrap] so MyApp can show a persistent warning
+  // banner with a Retry action — sign-in and cloud data cannot work without
+  // Firebase, so users must be told why.
+  await initializeFirebase();
+
+  // KAZ AI always uses the server-side Firebase proxy. No OpenAI credential
+  // is loaded into the Flutter application.
+  ApiKeyManager.initializeApiKey();
+  // Tune image raster cache for web — default 100 MB / 1000 images is
+  // excessive for a project-management app where most images are small
+  // avatars, icons, and section banners. 50 MB / 500 images is plenty and
+  // frees ~50 MB of memory for the actual app state.
+  // (No-op on mobile — these only have effect on web.)
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024;
+  PaintingBinding.instance.imageCache.maximumSize = 500;
+
+  // Warm common local stores in background to reduce first-navigation latency.
+  unawaited(UserPreferencesService.warmUp());
+  unawaited(UserPreferencesService.loadCountryCurrency());
+  unawaited(ProjectNavigationService.instance.warmUp());
+
+  // #6: Start session manager (auto-logout after 30 minutes of inactivity)
+  // The timer is reset on any user interaction via the Listener widget in MyApp.
+  SessionManager.instance.start();
+
+  runApp(const MyApp());
+}
+
+/// Tracks whether Firebase bootstrapping succeeded, so the UI can warn users
+/// instead of failing silently (sign-in and cloud data need Firebase).
+class FirebaseBootstrap {
+  static bool initFailed = false;
+}
+
+/// Initializes Firebase and Firestore settings. Returns true on success.
+/// Safe to call repeatedly: used by both app startup and the Retry action on
+/// the outage banner shown when initialization fails.
+Future<bool> initializeFirebase() async {
   try {
     // Firebase.initializeApp() can hang indefinitely in some browser
     // environments (e.g. when Firebase CDN is slow, IndexedDB is locked,
     // or during hot restart with a stale connection). Run it with a hard
     // timeout so app startup is never blocked by a stuck Firebase init.
-    // On hot restart, Firebase.initializeApp() can hang indefinitely because
-    // the Firebase SDK maintains a stale connection to IndexedDB/Firestore.
-    // Throwing a TimeoutException (caught by the outer try/catch) lets
-    // startup proceed without Firebase — the app degrades gracefully by
-    // showing an error screen rather than sitting on an infinite spinner.
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(
-      const Duration(seconds: 10),
-      onTimeout: () => throw TimeoutException(
-        'Firebase.initializeApp() timed out after 10s',
-      ),
-    );
+    // Throwing a TimeoutException (caught below) lets startup proceed without
+    // Firebase — the app degrades gracefully with a warning banner instead of
+    // sitting on an infinite spinner.
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw TimeoutException(
+          'Firebase.initializeApp() timed out after 10s',
+        ),
+      );
+    }
 
     // Configure Firestore to prevent INTERNAL ASSERTION FAILED errors on web.
     // Disabling persistence avoids IndexedDB cache corruption which causes
@@ -160,36 +200,39 @@ void main() async {
       // sessions. 40 MB is the SDK default and comfortably holds ~1k documents.
       cacheSizeBytes: kIsWeb ? 40 * 1024 * 1024 : Settings.CACHE_SIZE_UNLIMITED,
     );
+    FirebaseBootstrap.initFailed = false;
+    return true;
   } catch (error, stack) {
     debugPrint('Firebase init error: $error');
     debugPrint(stack.toString());
+    FirebaseBootstrap.initFailed = true;
+    return false;
   }
-
-  // KAZ AI always uses the server-side Firebase proxy. No OpenAI credential
-  // is loaded into the Flutter application.
-  ApiKeyManager.initializeApiKey();
-  // Tune image raster cache for web — default 100 MB / 1000 images is
-  // excessive for a project-management app where most images are small
-  // avatars, icons, and section banners. 50 MB / 500 images is plenty and
-  // frees ~50 MB of memory for the actual app state.
-  // (No-op on mobile — these only have effect on web.)
-  PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024;
-  PaintingBinding.instance.imageCache.maximumSize = 500;
-
-  // Warm common local stores in background to reduce first-navigation latency.
-  unawaited(UserPreferencesService.warmUp());
-  unawaited(UserPreferencesService.loadCountryCurrency());
-  unawaited(ProjectNavigationService.instance.warmUp());
-
-  // #6: Start session manager (auto-logout after 30 minutes of inactivity)
-  // The timer is reset on any user interaction via the Listener widget in MyApp.
-  SessionManager.instance.start();
-
-  runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  /// Whether Firebase finished initializing successfully. When false, a
+  /// persistent banner warns the user that sign-in / cloud data may not work.
+  late bool _firebaseReady;
+
+  @override
+  void initState() {
+    super.initState();
+    _firebaseReady = !FirebaseBootstrap.initFailed;
+  }
+
+  Future<void> _retryFirebaseInit() async {
+    final ok = await initializeFirebase();
+    if (!mounted) return;
+    setState(() => _firebaseReady = ok);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -252,7 +295,17 @@ class MyApp extends StatelessWidget {
                     // be invisible" warning from DecoratedBox wrappers.
                     child: Material(
                       type: MaterialType.transparency,
-                      child: child ?? const SizedBox.shrink(),
+                      child: Column(
+                        children: [
+                          // Persistent warning when Firebase failed to start —
+                          // without it, broken sign-in looks like a bug to users.
+                          if (!_firebaseReady)
+                            _FirebaseOutageBanner(onRetry: _retryFirebaseInit),
+                          Expanded(
+                            child: child ?? const SizedBox.shrink(),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -267,6 +320,74 @@ class MyApp extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// Amber banner shown across the top of every screen while Firebase has not
+/// initialized. Explains WHY sign-in/cloud features are broken and offers a
+/// one-tap Retry so transient network issues can be recovered in place.
+class _FirebaseOutageBanner extends StatefulWidget {
+  const _FirebaseOutageBanner({required this.onRetry});
+
+  final Future<void> Function() onRetry;
+
+  @override
+  State<_FirebaseOutageBanner> createState() => _FirebaseOutageBannerState();
+}
+
+class _FirebaseOutageBannerState extends State<_FirebaseOutageBanner> {
+  bool _retrying = false;
+
+  Future<void> _handleRetry() async {
+    if (_retrying) return;
+    setState(() => _retrying = true);
+    try {
+      await widget.onRetry();
+    } finally {
+      if (mounted) setState(() => _retrying = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.amber.shade700,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              const Icon(Icons.cloud_off, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Cloud connection unavailable — sign-in and synced data may '
+                  'not work until Firebase reconnects.',
+                  style: TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 10),
+              TextButton.icon(
+                onPressed: _retrying ? null : _handleRetry,
+                icon: _retrying
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.refresh, color: Colors.white, size: 18),
+                label: Text(_retrying ? 'Retrying…' : 'Retry',
+                    style: const TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

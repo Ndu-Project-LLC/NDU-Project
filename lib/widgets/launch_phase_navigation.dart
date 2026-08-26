@@ -37,16 +37,16 @@ class LaunchPhaseNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final backButton = OutlinedButton.icon(
       onPressed: onBack,
-      icon: const Icon(Icons.arrow_back, size: 18, color: _kAccentColor),
+      icon: const Icon(Icons.arrow_back, size: 16, color: _kAccentColor),
       label: Text(
         backLabel,
         overflow: TextOverflow.ellipsis,
-        style:
-            const TextStyle(fontWeight: FontWeight.w600, color: _kAccentColor),
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _kAccentColor),
       ),
       style: OutlinedButton.styleFrom(
-        side: const BorderSide(color: _kAccentColor),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        side: const BorderSide(color: _kAccentColor, width: 1.2),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
@@ -55,16 +55,17 @@ class LaunchPhaseNavigation extends StatelessWidget {
       onPressed: () {
         _handleNextTap(context);
       },
-      icon: const Icon(Icons.arrow_forward, size: 18),
+      icon: const Icon(Icons.arrow_forward, size: 16),
       label: Text(
         nextLabel,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w600),
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
       ),
       style: ElevatedButton.styleFrom(
         backgroundColor: _kAccentColor,
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         elevation: 0,
       ),
@@ -78,7 +79,7 @@ class LaunchPhaseNavigation extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               backButton,
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
               Align(alignment: Alignment.centerRight, child: nextButton),
             ],
           );

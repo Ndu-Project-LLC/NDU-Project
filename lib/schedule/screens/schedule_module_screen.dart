@@ -164,6 +164,26 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
 
         // ---- Context banner data ----
         final projectName = schedule.projectName;
+        final data = ProjectDataHelper.getData(context, listen: false);
+
+        // Keep the schedule's delivery model in sync with the project's
+        // Project Details methodology selection (Waterfall / Agile / Hybrid)
+        // so methodology-dependent views (badge, agile hints, sync imports)
+        // always reflect the current choice.
+        final resolvedMethodology =
+            ProjectDataHelper.resolvedProjectMethodology(data);
+        final resolvedDeliveryModel =
+            ProjectDataHelper.deliveryModelForMethodology(resolvedMethodology);
+        if (schedule.basis.deliveryModel.toUpperCase() !=
+            resolvedDeliveryModel) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context
+                  .read<ScheduleProvider>()
+                  .syncDeliveryModel(resolvedDeliveryModel);
+            }
+          });
+        }
         final wbs = wbsProvider.wbs;
         final wbsCounts = wbs != null ? countNodes(wbs) : null;
         final wbsNodeCount = wbsCounts != null
@@ -177,7 +197,6 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                 (s, l) => s + _effectiveScheduleContextLineTotal(l))
             : 0.0;
 
-        final data = ProjectDataHelper.getData(context, listen: false);
         final fepMilestones = data.keyMilestones
             .where((m) => m.name.trim().isNotEmpty)
             .toList();
@@ -232,7 +251,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
                   isCollapsible: true,
-                  initiallyCollapsed: false,
+                  initiallyCollapsed: true,
                 ),
               ),
               // ── Context banner (drawn from WBS + Cost Estimate) ───────

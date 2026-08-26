@@ -102,9 +102,7 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
  // resolved methodology and persist it for next time.
  final helperProjectData = ProjectDataHelper.getData(context, listen: false);
  final resolvedMethodology = ProjectDataHelper.resolvedProjectMethodology(helperProjectData);
- final resolvedFramework = resolvedMethodology == ProjectMethodology.agile
-     ? WBSFramework.agile
-     : WBSFramework.waterfallDeliverable;
+ final resolvedFramework = WBSProvider.frameworkForMethodology(resolvedMethodology);
  provider.setup(
  projectName: projectName,
  framework: resolvedFramework,
@@ -164,14 +162,24 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
         }
 
         final projectData = projectProvider.projectData;
-        final projectName = (projectData.projectName).trim().isNotEmpty
-            ? projectData.projectName
-            : wbs.projectName;
-        final solutionsCount = projectData.potentialSolutions.length;
-        final businessCasePreview =
-            _clamp((projectData.businessCase).trim(), max: 50);
         final fm = wbs.framework;
         final totalNodes = countAllNodes(wbs.level0);
+
+        // Keep the WBS methodology/framework in sync with the project's
+        // Project Details selection (Waterfall / Agile / Hybrid) so the
+        // header badge and level labels always reflect the current choice.
+        final resolvedMethodology =
+            ProjectDataHelper.resolvedProjectMethodology(projectData);
+        final expectedFramework =
+            WBSProvider.frameworkForMethodology(resolvedMethodology);
+        if (wbs.methodology != resolvedMethodology ||
+            wbs.framework != expectedFramework) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.read<WBSProvider>().syncMethodology(resolvedMethodology);
+            }
+          });
+        }
 
         return ResponsiveScaffold(
           activeItemLabel: 'Work Breakdown Structure',
@@ -238,7 +246,7 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
               ),
               // Navigation footer
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
                 child: LaunchPhaseNavigation(
                   backLabel: PlanningPhaseNavigation.backLabel('work_breakdown_structure'),
                   nextLabel: PlanningPhaseNavigation.nextLabel('work_breakdown_structure'),
@@ -251,12 +259,6 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
         );
       },
     );
-  }
-
-  /// Clamp a string to [max] characters, appending an ellipsis if truncated.
-  String _clamp(String value, {int max = 50}) {
-    if (value.length <= max) return value;
-    return '${value.substring(0, max)}…';
   }
 }
 

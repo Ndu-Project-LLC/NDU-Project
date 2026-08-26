@@ -61,6 +61,17 @@ class ProjectDataHelper {
     }
   }
 
+  /// Maps a resolved [ProjectMethodology] to the schedule/cost delivery
+  /// model vocabulary ('AGILE' / 'WATERFALL' / 'HYBRID'). Single source of
+  /// truth used by the Schedule and Cost Estimate module screens.
+  static String deliveryModelForMethodology(ProjectMethodology method) {
+    return switch (method) {
+      ProjectMethodology.agile => 'AGILE',
+      ProjectMethodology.hybrid => 'HYBRID',
+      ProjectMethodology.waterfall => 'WATERFALL',
+    };
+  }
+
   static ProjectMethodology resolvedProjectMethodology(ProjectDataModel data) {
     final management = data.designManagementData;
     if (management != null) return management.methodology;

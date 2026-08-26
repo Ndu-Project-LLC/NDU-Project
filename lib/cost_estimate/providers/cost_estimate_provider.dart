@@ -29,7 +29,13 @@ const String _legacyOwnerEmail = 'you@ndu.project';
 /// fallback also covers accounts whose email is attached to the identity
 /// provider but has not been copied onto the top-level user record.
 String get currentUserEmail {
-  final user = FirebaseAuth.instance.currentUser;
+  final User? user;
+  try {
+    user = FirebaseAuth.instance.currentUser;
+  } catch (_) {
+    // Firebase not initialized (e.g. tests) — fall back to empty identity.
+    return '';
+  }
   final primaryEmail = user?.email?.trim() ?? '';
   if (primaryEmail.isNotEmpty) return primaryEmail;
 
@@ -84,7 +90,12 @@ class CostEstimateProvider extends ChangeNotifier {
   /// restores the owner's access grant when loading older saved estimates.
   void _syncAuthenticatedOwner() {
     final estimate = _estimate;
-    final ownerEmail = currentUserEmail;
+    final String ownerEmail;
+    try {
+      ownerEmail = currentUserEmail;
+    } catch (_) {
+      return;
+    }
     if (estimate == null || ownerEmail.isEmpty) return;
 
     var changed = false;
@@ -297,8 +308,12 @@ class CostEstimateProvider extends ChangeNotifier {
 
     if (importedLines.isEmpty) return false;
 
+    // Recompute totals from the imported lines — the dashboard KPIs read
+    // `estimate.totals`, so lines alone would leave Cost Baseline at $0.
+    final totals = ComputeUtils.computeTotals(importedLines);
     _estimate = estimate.copyWith(
       lines: importedLines,
+      totals: totals,
       updatedAt: DateTime.now(),
     );
     notifyListeners();

@@ -391,6 +391,31 @@ class WBSProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
+  /// Maps a project methodology to the default WBS framework used at setup.
+  /// Agile and Hybrid both use the agile breakdown (Epic → Feature → Story
+  /// → Task); Hybrid additionally allows per-node waterfall methodology.
+  /// Pure Waterfall → Deliverable-Based waterfall.
+  static WBSFramework frameworkForMethodology(ProjectMethodology methodology) {
+    return methodology == ProjectMethodology.waterfall
+        ? WBSFramework.waterfallDeliverable
+        : WBSFramework.agile;
+  }
+
+  /// Re-syncs the WBS methodology/framework with the project's current
+  /// Project Details selection (Waterfall / Agile / Hybrid). Existing nodes
+  /// are kept intact — only the document-level methodology and framework
+  /// (which drive the header badge and level labels) are updated.
+  void syncMethodology(ProjectMethodology methodology) {
+    if (_isLoadingFromStorage || _wbs == null) return;
+    final framework = frameworkForMethodology(methodology);
+    if (_wbs!.methodology == methodology && _wbs!.framework == framework) {
+      return;
+    }
+    _wbs = _wbs!.copyWith(methodology: methodology, framework: framework);
+    notifyListeners();
+    _saveToStorage();
+  }
+
   // ---- Node operations ----
 
   /// Add a child node at any level under [parentId].

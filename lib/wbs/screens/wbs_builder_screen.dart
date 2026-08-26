@@ -293,21 +293,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                         _buildMethodologyBadge(wbs.methodology),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(fm.iconData, size: 13, color: const Color(0xFF9CA3AF)),
-                        const SizedBox(width: 5),
-                        Text(
-                          summary.isNotEmpty
-                              ? '${fm.label} · $summary · $totalNodes nodes'
-                              : '${fm.label} · $totalNodes nodes',
-                          style: const TextStyle(
-                              color: Color(0xFF6B7280), fontSize: 13,
-                              fontWeight: FontWeight.w500),
-                        ),
-                      ],
-                    ),
+
                   ],
                 ),
               ),

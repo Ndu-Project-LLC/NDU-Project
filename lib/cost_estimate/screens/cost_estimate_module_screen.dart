@@ -128,6 +128,22 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
 
         // ---- Context banner data ----
         final projectData = projectProvider.projectData;
+
+        // Auto-populate from the Initiation Phase: if the estimate has no
+        // lines yet and the project captured initial cost items, import them.
+        // Checked on every build (not just initState) so late-arriving
+        // project data (async Firebase load) still seeds the dashboard.
+        if (estimate.lines.isEmpty && projectData.costEstimateItems.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              provider.importFromProjectCostEstimateItems(
+                  projectData.costEstimateItems);
+              // Non-destructive: seeds stakeholder/BOE/review info from the
+              // central ProjectDataModel where the estimate sections are empty.
+              provider.ensureSeededFromProjectData(projectData);
+            }
+          });
+        }
         final projectName = (projectData.projectName).trim().isNotEmpty
             ? projectData.projectName
             : estimate.projectName;
@@ -168,7 +184,7 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
                   isCollapsible: true,
-                  initiallyCollapsed: false,
+                  initiallyCollapsed: true,
                 ),
               ),
               // Tab content

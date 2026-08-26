@@ -210,13 +210,6 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
                       children: [
                         PlanningPhaseHeader(
                             title: 'Cost Estimate', onExportPdf: _exportPdf),
-                        const SizedBox(height: 16),
-                        _TopUtilityBar(
-                          onBack: () => PlanningPhaseNavigation.goToPrevious(
-                              context, 'cost_estimate'),
-                          onForward: () => PlanningPhaseNavigation.goToNext(
-                              context, 'cost_estimate'),
-                        ),
                         const SizedBox(height: 24),
                         const PlanningAiNotesCard(
                           title: 'Notes',
@@ -2588,61 +2581,6 @@ Current Cost Items: ${pd.costEstimateItems.map((e) => "${e.title} (${e.costType}
             projectData.planningNotes['planning_cost_estimate_notes'] ??
                 'No data recorded.'),
       ],
-    );
-  }
-}
-
-class _TopUtilityBar extends StatelessWidget {
-  const _TopUtilityBar({required this.onBack, required this.onForward});
-
-  final VoidCallback onBack;
-  final VoidCallback onForward;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        children: [
-          _circleButton(icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
-          const SizedBox(width: 12),
-          _circleButton(
-              icon: Icons.arrow_forward_ios_rounded, onTap: onForward),
-          const SizedBox(width: 20),
-          const Text(
-            'Cost Estimate',
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF111827)),
-          ),
-          const Spacer(),
-          const SizedBox(width: 8),
-          const _UserChip(name: '', role: ''),
-        ],
-      ),
-    );
-  }
-
-  Widget _circleButton({required IconData icon, VoidCallback? onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Icon(icon, size: 18, color: const Color(0xFF6B7280)),
-      ),
     );
   }
 }
@@ -7314,83 +7252,6 @@ class _DialogLabel extends StatelessWidget {
       label,
       style: const TextStyle(
           fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
-    );
-  }
-}
-
-class _UserChip extends StatelessWidget {
-  const _UserChip({required this.name, required this.role});
-
-  final String name;
-  final String role;
-
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = FirebaseAuthService.displayNameOrEmail(
-        fallback: name.isNotEmpty ? name : 'User');
-    final email = user?.email ?? '';
-    final primary = displayName.isNotEmpty
-        ? displayName
-        : (email.isNotEmpty ? email : name);
-    final photoUrl = user?.photoURL ?? '';
-
-    return RepaintBoundary(
-      child: StreamBuilder<bool>(
-        stream: UserService.watchAdminStatus(),
-        builder: (context, snapshot) {
-          final isAdmin = snapshot.data ?? UserService.isAdminEmail(email);
-          final resolvedRole = isAdmin ? 'Admin' : 'Member';
-          final roleText = role.isNotEmpty ? role : resolvedRole;
-
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: const Color(0xFFE5E7EB),
-                  backgroundImage:
-                      photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-                  child: photoUrl.isEmpty
-                      ? Text(
-                          primary.isNotEmpty ? primary[0].toUpperCase() : 'U',
-                          style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF374151)),
-                        )
-                      : null,
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      primary,
-                      style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF111827)),
-                    ),
-                    Text(
-                      roleText,
-                      style: const TextStyle(
-                          fontSize: 11, color: Color(0xFF6B7280)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      ),
     );
   }
 }

@@ -13,7 +13,27 @@ class GanttScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ScheduleProvider>(
       builder: (context, provider, _) {
-        final schedule = provider.schedule!;
+        final schedule = provider.schedule;
+        if (schedule == null) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(48),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(LightModeColors.accent),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading schedule...',
+                    style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         final allActivities = _flatten(schedule.activities);
         final rows = _buildRows(allActivities);
 

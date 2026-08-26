@@ -415,7 +415,27 @@ class _BuilderScreenState extends State<BuilderScreen> {
   Widget build(BuildContext context) {
     return Consumer3<ScheduleProvider, WBSProvider, CostEstimateProvider>(
       builder: (context, provider, wbsProvider, costProvider, _) {
-        final schedule = provider.schedule!;
+        final schedule = provider.schedule;
+        if (schedule == null) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(48),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(LightModeColors.accent),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading schedule...',
+                    style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         final root = schedule.activities[0];
         final wbs = wbsProvider.wbs;
         final wbsCounts = wbs != null ? countNodes(wbs) : null;
@@ -636,15 +656,14 @@ class _BuilderScreenState extends State<BuilderScreen> {
               // ═══════════════════════════════════════════════════════════════
               // ACTIVITY TREE (full width, scrollable on narrow screens)
               // ═══════════════════════════════════════════════════════════════
-              OverflowBox(
-                alignment: Alignment.center,
-                maxWidth: MediaQuery.of(context).size.width,
+              SizedBox(
+                width: double.infinity,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   clipBehavior: Clip.none,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      minWidth: MediaQuery.of(context).size.width,
+                      minWidth: MediaQuery.of(context).size.width - 40,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -707,15 +726,14 @@ class _BuilderScreenState extends State<BuilderScreen> {
               const SizedBox(height: 28),
               // Sample activity table (preview of what Gantt/List will show)
               // Break out of parent horizontal padding, scrollable on narrow screens
-              OverflowBox(
-                alignment: Alignment.center,
-                maxWidth: MediaQuery.of(context).size.width,
+              SizedBox(
+                width: double.infinity,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   clipBehavior: Clip.none,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      minWidth: MediaQuery.of(context).size.width,
+                      minWidth: MediaQuery.of(context).size.width - 40,
                     ),
                     child: _SampleActivityTable(schedule: schedule),
                   ),

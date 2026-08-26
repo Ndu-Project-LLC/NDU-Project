@@ -974,6 +974,23 @@ class AccountLockoutService {
   static const String _attemptsKey = 'failed_login_attempts';
   static const String _lockoutKey = 'lockout_until';
 
+  /// Error codes that indicate the submitted credentials were wrong and
+  /// should therefore count toward the account-lockout counter.
+  ///
+  /// Any OTHER failure (network errors, Firebase misconfiguration, popup
+  /// blocks, server throttling, …) must NOT be recorded — otherwise a transient
+  /// outage locks users out of their accounts even when they type the correct
+  /// password.
+  static const Set<String> credentialErrorCodes = {
+    'invalid-credential',
+    'wrong-password',
+    'user-not-found',
+  };
+
+  /// Whether [code] represents a genuine wrong-credentials failure.
+  static bool isCredentialErrorCode(String? code) =>
+      code != null && credentialErrorCodes.contains(code);
+
   /// Record a failed login attempt and check if the account should be locked
   static Future<bool> recordFailedAttempt() async {
     final prefs = await SharedPreferences.getInstance();
@@ -1022,4 +1039,15 @@ class AccountLockoutService {
 
   /// Get max attempts before lockout
   static int get maxAttempts => _maxAttempts;
+
+  /// Records the failure ONLY when [errorCode] indicates bad credentials.
+  /// Returns true if the account is now locked (i.e. this was a credential
+  /// error AND it pushed the counter past [maxAttempts]).
+  ///
+  /// This is the single policy entry point screens should call from their
+  /// sign-in error handlers so infrastructure failures never lock users out.
+  static Future<bool> recordFailedAttemptForCode(String? errorCode) async {
+    if (!isCredentialErrorCode(errorCode)) return false;
+    return recordFailedAttempt();
+  }
 }

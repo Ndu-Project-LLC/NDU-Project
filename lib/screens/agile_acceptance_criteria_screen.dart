@@ -564,7 +564,6 @@ class _AgileAcceptanceCriteriaScreenState
             )
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: filtered.length,
               itemBuilder: (context, i) => _buildTemplateTile(filtered[i]),
@@ -776,7 +775,6 @@ class _AgileAcceptanceCriteriaScreenState
             )
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: t.criteria.length,
               itemBuilder: (context, i) => _buildCriterionRow(i, t.criteria[i]),

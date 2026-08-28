@@ -80,7 +80,6 @@ class ContractsTableWidget extends StatelessWidget {
           ),
           // Table Rows
           ListView.builder(
-            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: contracts.length,
             itemBuilder: (context, index) {

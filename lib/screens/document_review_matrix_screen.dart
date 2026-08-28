@@ -519,7 +519,6 @@ class _DocumentReviewMatrixScreenState
 
   Widget _buildTableRows() {
     return ListView.builder(
-      shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _filteredDocuments.length,
       itemBuilder: (ctx, i) => _buildTableRow(_filteredDocuments[i], i),

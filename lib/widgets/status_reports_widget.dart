@@ -202,7 +202,6 @@ class _StatusReportsWidgetState extends State<StatusReportsWidget> {
                   ),
                 ),
                 ListView.builder(
-                  shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _reports.length,
                   itemBuilder: (context, index) {

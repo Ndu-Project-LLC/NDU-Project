@@ -690,7 +690,6 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                                 : 'No epics yet. Click "Sync from WBS" to pull them from your WBS, or "AI Generate" to let AI suggest some.')
                           else
                             ListView.builder(
-                              shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                               itemCount: _epics.length,
                               itemBuilder: (context, i) =>
@@ -717,7 +716,6 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                               _buildEmptyState('No features yet for this epic.')
                             else
                               ListView.builder(
-                                shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
                                 itemCount: _features.length,
                                 itemBuilder: (context, i) =>

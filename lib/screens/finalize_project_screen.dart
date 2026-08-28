@@ -1020,7 +1020,6 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
             )
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _checklist.length,
               itemBuilder: (context, idx) => RepaintBoundary(
@@ -1165,7 +1164,6 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
             )
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _signOffs.length,
               itemBuilder: (context, idx) => RepaintBoundary(

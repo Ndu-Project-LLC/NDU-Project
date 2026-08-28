@@ -616,7 +616,6 @@ class _TrackableItemsCard extends StatelessWidget {
             )
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: trackableItems.length,
               itemBuilder: (context, index) {
@@ -770,7 +769,6 @@ class _TrackingTimelineCard extends StatelessWidget {
             )
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: events.length,
               itemBuilder: (context, index) {

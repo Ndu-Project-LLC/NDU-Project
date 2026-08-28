@@ -829,7 +829,6 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
                 color: Color(0xFF111827))),
         const SizedBox(height: 16),
         ListView.builder(
-          shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: _recognitions.length,
           itemBuilder: (context, index) {

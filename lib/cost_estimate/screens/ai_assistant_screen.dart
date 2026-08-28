@@ -192,7 +192,6 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
           const SizedBox(height: 24),
           // Action grid
           GridView.builder(
-            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,

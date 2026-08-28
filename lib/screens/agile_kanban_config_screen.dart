@@ -396,7 +396,6 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
           ),
           const SizedBox(height: 12),
           ReorderableListView.builder(
-            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _columns.length,
             onReorder: _moveColumn,

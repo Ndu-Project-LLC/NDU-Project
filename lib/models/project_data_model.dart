@@ -9382,6 +9382,14 @@ class InterfaceEntry {
   final String dataFlow; // Bidirectional, A→B, B→A
   final String protocol; // API, File Transfer, Manual, Email, Shared DB
 
+  // Interface Management Plan fields (from document)
+  final String interfaceClassification; // Internal, External
+  final String dependencies; // Deliverable, Schedule, Resource, Procurement, Technical
+  final String conflictResolution; // Conflict resolution process description
+  final String escalationPath; // Escalation procedures
+  final String assumptions; // Assumptions affecting interfaces
+  final String changeImpacts; // Change impacts description
+
   InterfaceEntry({
     String? id,
     this.boundary = '',
@@ -9398,6 +9406,12 @@ class InterfaceEntry {
     this.criticality = '',
     this.dataFlow = '',
     this.protocol = '',
+    this.interfaceClassification = '',
+    this.dependencies = '',
+    this.conflictResolution = '',
+    this.escalationPath = '',
+    this.assumptions = '',
+    this.changeImpacts = '',
   }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
 
   InterfaceEntry copyWith({
@@ -9415,6 +9429,12 @@ class InterfaceEntry {
     String? criticality,
     String? dataFlow,
     String? protocol,
+    String? interfaceClassification,
+    String? dependencies,
+    String? conflictResolution,
+    String? escalationPath,
+    String? assumptions,
+    String? changeImpacts,
   }) {
     return InterfaceEntry(
       id: id,
@@ -9432,6 +9452,12 @@ class InterfaceEntry {
       criticality: criticality ?? this.criticality,
       dataFlow: dataFlow ?? this.dataFlow,
       protocol: protocol ?? this.protocol,
+      interfaceClassification: interfaceClassification ?? this.interfaceClassification,
+      dependencies: dependencies ?? this.dependencies,
+      conflictResolution: conflictResolution ?? this.conflictResolution,
+      escalationPath: escalationPath ?? this.escalationPath,
+      assumptions: assumptions ?? this.assumptions,
+      changeImpacts: changeImpacts ?? this.changeImpacts,
     );
   }
 
@@ -9451,6 +9477,12 @@ class InterfaceEntry {
         'criticality': criticality,
         'dataFlow': dataFlow,
         'protocol': protocol,
+        'interfaceClassification': interfaceClassification,
+        'dependencies': dependencies,
+        'conflictResolution': conflictResolution,
+        'escalationPath': escalationPath,
+        'assumptions': assumptions,
+        'changeImpacts': changeImpacts,
       };
 
   factory InterfaceEntry.fromJson(Map<String, dynamic> json) {
@@ -9470,6 +9502,12 @@ class InterfaceEntry {
       criticality: json['criticality']?.toString() ?? '',
       dataFlow: json['dataFlow']?.toString() ?? '',
       protocol: json['protocol']?.toString() ?? '',
+      interfaceClassification: json['interfaceClassification']?.toString() ?? '',
+      dependencies: json['dependencies']?.toString() ?? '',
+      conflictResolution: json['conflictResolution']?.toString() ?? '',
+      escalationPath: json['escalationPath']?.toString() ?? '',
+      assumptions: json['assumptions']?.toString() ?? '',
+      changeImpacts: json['changeImpacts']?.toString() ?? '',
     );
   }
 

@@ -916,7 +916,6 @@ class _ApprovedVendorsSection extends StatelessWidget {
               border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: approvedVendors.length,
               itemBuilder: (context, i) => RepaintBoundary(
@@ -1010,7 +1009,6 @@ class _VendorDataTable extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: ListView.builder(
-        shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: vendors.length,
         itemBuilder: (context, i) => RepaintBoundary(

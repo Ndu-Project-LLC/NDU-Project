@@ -476,7 +476,6 @@ class _DeliverablesRoadmapDetailedScreenState
 
   Widget _buildTableRows() {
     return ListView.builder(
-      shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _filteredDeliverables.length,
       itemBuilder: (ctx, i) => _buildTableRow(_filteredDeliverables[i], i),

@@ -596,7 +596,6 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
   Widget _buildQuickStatsGrid(ExecutionDashboardSnapshot snapshot) {
     return GridView.count(
       crossAxisCount: 2,
-      shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,

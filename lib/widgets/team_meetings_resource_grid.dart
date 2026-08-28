@@ -573,7 +573,6 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
         ),
         // Table Rows
         ListView.builder(
-          shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: _meetings.length,
           itemBuilder: (context, index) {
@@ -1010,7 +1009,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
           width: 300,
           child: StatefulBuilder(
             builder: (context, setDialogState) => ListView.builder(
-              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: widget.availableRoles.length,
               itemBuilder: (context, index) {
                 final role = widget.availableRoles[index];
@@ -1309,7 +1308,7 @@ class _MultiSelectCell extends StatelessWidget {
           width: 300,
           child: StatefulBuilder(
             builder: (context, setState) => ListView.builder(
-              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: availableRoles.length,
               itemBuilder: (context, index) {
                 final role = availableRoles[index];

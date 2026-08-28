@@ -360,7 +360,6 @@ class _DeliverablesRoadmapOverviewScreenState
 
   Widget _buildCategoryDeliverables(List<AggregatedDeliverable> deliverables) {
     return ListView.builder(
-      shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: deliverables.length,
       itemBuilder: (ctx, i) => _buildDeliverableTile(

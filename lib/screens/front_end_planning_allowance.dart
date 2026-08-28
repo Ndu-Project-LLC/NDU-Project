@@ -1336,7 +1336,6 @@ class _FrontEndPlanningAllowanceScreenState
  else
  ListView.separated(
  physics: const NeverScrollableScrollPhysics(),
- shrinkWrap: true,
  itemCount: _allowanceItems.length,
  separatorBuilder: (_, __) =>
  const SizedBox(height: 12),

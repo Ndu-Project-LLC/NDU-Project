@@ -451,7 +451,6 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                 ),
                 const SizedBox(height: 4),
                 ListView.builder(
-                  shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: rows.length,
                   itemBuilder: (context, idx) {
@@ -890,7 +889,6 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                   ),
                 ),
                 ListView.builder(
-                  shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: allSignals.length,
                   itemBuilder: (context, idx) {
@@ -1288,7 +1286,6 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                   ),
                 ),
                 ListView.builder(
-                  shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _actionRows.length,
                   itemBuilder: (context, idx) {

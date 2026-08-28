@@ -1304,7 +1304,7 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 220),
                   child: ListView.builder(
-                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: widget.currentStaffing.length,
                     itemBuilder: (ctx, i) {
                       final req = widget.currentStaffing[i];
@@ -1373,7 +1373,7 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 220),
                   child: ListView.builder(
-                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: widget.suggestedAdditions.length,
                     itemBuilder: (ctx, i) {
                       final add = widget.suggestedAdditions[i];
@@ -1701,7 +1701,7 @@ class _StaffingRequirementDialogState
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: ListView.builder(
-                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: _userSuggestions.length,
                     itemBuilder: (ctx, i) {
                       final user = _userSuggestions[i];
@@ -2640,7 +2640,7 @@ class _OrganizationRolesResponsibilitiesScreenState
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 460),
                   child: ListView.builder(
-                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: predefined.length,
                     itemBuilder: (context, index) {
                       final role = predefined[index];
@@ -3479,7 +3479,6 @@ class _RolesTable extends StatelessWidget {
                     )
                   else
                     ListView.builder(
-                      shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: roles.length,
                       itemBuilder: (context, i) {
@@ -3936,7 +3935,6 @@ class _StaffingPlanTable extends StatelessWidget {
                   )
                 else
                   ListView.builder(
-                    shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: requirements.length,
                     itemBuilder: (context, i) => Container(

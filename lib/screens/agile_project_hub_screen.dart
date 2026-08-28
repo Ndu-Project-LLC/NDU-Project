@@ -758,7 +758,6 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
         ),
         const SizedBox(height: 20),
         ListView.separated(
-          shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: _sections.length,
           separatorBuilder: (_, __) => const SizedBox(height: 20),

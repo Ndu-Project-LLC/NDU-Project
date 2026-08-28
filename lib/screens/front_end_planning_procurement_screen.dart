@@ -5092,7 +5092,7 @@ class _FrontEndPlanningProcurementScreenState
  : ConstrainedBox(
  constraints: const BoxConstraints(maxHeight: 360),
  child: ListView.separated(
- shrinkWrap: true,
+ physics: const NeverScrollableScrollPhysics(),
  itemCount: approvedVendors.length,
  separatorBuilder: (_, __) =>
  const Divider(height: 12, thickness: 0.5),
@@ -8319,7 +8319,6 @@ class _VendorGrid extends StatelessWidget {
  return LayoutBuilder(
  builder: (context, constraints) {
  return GridView.builder(
- shrinkWrap: true,
  physics: const NeverScrollableScrollPhysics(),
  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
  crossAxisCount: 3,

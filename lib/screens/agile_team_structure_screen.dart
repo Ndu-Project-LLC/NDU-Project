@@ -539,7 +539,6 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
                                 'No teams defined yet. Add your first squad.')
                           else
                             ListView.builder(
-                              shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                               itemCount: _teams.length,
                               itemBuilder: (context, i) =>

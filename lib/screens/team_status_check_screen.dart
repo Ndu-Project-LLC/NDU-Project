@@ -360,7 +360,6 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
               'Team members can submit weekly status updates here')
         else
           ListView.builder(
-            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _statusEntries.length,
             itemBuilder: (context, index) {

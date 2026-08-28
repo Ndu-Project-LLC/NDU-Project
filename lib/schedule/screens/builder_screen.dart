@@ -462,34 +462,6 @@ class _BuilderScreenState extends State<BuilderScreen> {
                     ? 'LOCKED'
                     : (root.children.isEmpty ? 'EMPTY' : 'DRAFT'),
                 statusLive: !schedule.isLocked && root.children.isNotEmpty,
-                contextChips: [
-                  TreasuryHeroChip(
-                    icon: Icons.account_tree_outlined,
-                    label: 'WBS Nodes',
-                    value: wbsCounts != null
-                        ? '${wbsCounts.level1 + wbsCounts.level2 + 1}'
-                        : '—',
-                  ),
-                  TreasuryHeroChip(
-                    icon: Icons.attach_money,
-                    label: 'Cost Estimate',
-                    value: estimate != null
-                        ? formatCurrency(costTotal, currency)
-                        : '—',
-                  ),
-                  TreasuryHeroChip(
-                    icon: Icons.calendar_month_outlined,
-                    label: 'Timeline',
-                    value: root.startDate != null && root.endDate != null
-                        ? '${DateFormat('MMM d').format(root.startDate!)} — ${DateFormat('MMM d, y').format(root.endDate!)}'
-                        : 'Not set',
-                  ),
-                  TreasuryHeroChip(
-                    icon: Icons.flag_outlined,
-                    label: 'Activities',
-                    value: '${root.children.length}',
-                  ),
-                ],
                 actions: [
                   TreasuryHeroAction(
                     icon: Icons.add_rounded,
@@ -573,21 +545,6 @@ class _BuilderScreenState extends State<BuilderScreen> {
                     root, schedule, costTotal, currency, estimate),
               ),
               const SizedBox(height: 20),
-              // ═══════════════════════════════════════════════════════════════
-              // INTEGRATED SCHEDULE METHODOLOGY — 12-step process guide
-              // World-class centerpiece: WBS → EWPs → Procurement → CWPs →
-              // Sequence → Durations → CPM → Contracts → Resources → Gantt →
-              // Readiness → Baseline. With NDU-specific scoping notes.
-              // ═══════════════════════════════════════════════════════════════
-              IntegratedScheduleMethodology(
-                wbsDepth: 2,
-                ewpLevel: 3,
-                procurementLevel: 3,
-                cwpDepthFrom: 2,
-                cwpDepthTo: 8,
-                deliveryModel: schedule.basis.deliveryModel.toUpperCase(),
-              ),
-              const SizedBox(height: 18),
               // ═══════════════════════════════════════════════════════════════
               // ESTIMATE BASIS — assumptions / methods / data sources
               // ═══════════════════════════════════════════════════════════════

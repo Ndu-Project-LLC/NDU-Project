@@ -5894,7 +5894,7 @@ class _ProjectSelectionDialogState extends State<_ProjectSelectionDialog> {
                 ),
                 child: Scrollbar(
                   child: ListView(
-                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     children: [
                       for (int i = 0; i < widget.solutions.length; i++)
                         _ProjectOptionCard(

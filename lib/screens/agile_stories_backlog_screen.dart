@@ -256,7 +256,6 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                                 'No features found for this epic. Define features first in Epics & Features.')
                           else
                             ListView.builder(
-                              shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                               itemCount: _visibleFeatures.length,
                               itemBuilder: (context, i) =>
@@ -422,7 +421,6 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
               )
             else
               ListView.builder(
-                shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: stories.length,
                 itemBuilder: (context, i) =>

@@ -4079,7 +4079,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  : ConstrainedBox(
  constraints: const BoxConstraints(maxHeight: 420),
  child: ListView.separated(
- shrinkWrap: true,
+ physics: const NeverScrollableScrollPhysics(),
  itemCount: contractors.length,
  separatorBuilder: (_, __) =>
  const Divider(height: 12, thickness: 0.5),

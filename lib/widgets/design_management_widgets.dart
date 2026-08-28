@@ -63,7 +63,6 @@ class DesignSpecificationsCard extends StatelessWidget {
             )
           else
             ListView.separated(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: specifications.length,
               separatorBuilder: (context, index) => const Divider(height: 1),

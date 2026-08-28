@@ -825,7 +825,6 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             )
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _workPackages.length,
               itemBuilder: (context, index) => RepaintBoundary(
@@ -1537,7 +1536,6 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             )
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _acceptanceCheckpoints.length,
               itemBuilder: (context, index) => RepaintBoundary(
@@ -1995,7 +1993,6 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             )
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _acceptanceTags.length,
               itemBuilder: (context, index) => RepaintBoundary(
@@ -2434,7 +2431,6 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             )
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _scopeChanges.length,
               itemBuilder: (context, index) => RepaintBoundary(

@@ -177,7 +177,6 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
             )
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: workflowSteps.length,
               itemBuilder: (context, i) {

@@ -1703,7 +1703,6 @@ class _ChatBubble extends StatelessWidget {
                     data: message.text,
                     styleSheet: markdownStyle,
                     selectable: true,
-                    shrinkWrap: true,
                   ),
                 ),
                 if (showAvatar)
@@ -1758,7 +1757,6 @@ class _ChatBubble extends StatelessWidget {
                         height: 1.4),
                   ),
                   selectable: true,
-                  shrinkWrap: true,
                 ),
               ),
             ],

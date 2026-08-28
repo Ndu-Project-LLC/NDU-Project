@@ -480,7 +480,6 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
           _buildBlockerHeader(),
           const Divider(height: 1, color: _kBorder),
           ListView.builder(
-            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _blockers.length,
             itemBuilder: (context, index) => RepaintBoundary(

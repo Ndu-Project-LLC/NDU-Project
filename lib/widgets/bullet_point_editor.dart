@@ -110,7 +110,6 @@ class _BulletPointEditorState extends State<BulletPointEditor> {
           const SizedBox(height: 12),
         ],
         ListView.separated(
-          shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: _controllers.length,
           separatorBuilder: (ctx, i) => const SizedBox(height: 8),

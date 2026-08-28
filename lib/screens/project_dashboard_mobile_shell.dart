@@ -780,7 +780,6 @@ class _ProjectDashboardMobileShellState
  // ── Stat Cards Grid (2×2) ────────────────────
  GridView.count(
  crossAxisCount: 2,
- shrinkWrap: true,
  physics: const NeverScrollableScrollPhysics(),
  mainAxisSpacing: _Tokens.gridGutter,
  crossAxisSpacing: _Tokens.gridGutter,

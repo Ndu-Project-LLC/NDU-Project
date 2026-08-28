@@ -571,7 +571,7 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
                 // Use a Column with explicit children (not ListView.builder)
                 // so the rows render correctly inside the parent
                 // SingleChildScrollView. Previously used
-                // ListView.builder(shrinkWrap: true, physics: NeverScrollable)
+                // ListView.builder(physics: const NeverScrollableScrollPhysics(), physics: NeverScrollable)
                 // which silently reported 0 height in this nested context,
                 // making all body rows invisible even though rowCount > 0.
                 if (rows.isEmpty)

@@ -892,7 +892,6 @@ class _ExecutionWorkPackagesScreenState
                   _buildResourceConflictBanner(workPackages),
                   // Package list
                   ListView.builder(
-                    shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: filtered.length,
                     itemBuilder: (context, i) {

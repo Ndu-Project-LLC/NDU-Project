@@ -1056,7 +1056,6 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
             _buildTableView(filtered)
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: filtered.length,
               itemBuilder: (context, index) =>
@@ -1812,7 +1811,6 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
         _aggregateCard(crsWithImpact),
         const SizedBox(height: 20),
         ListView.builder(
-          shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: crsWithImpact.length,
           itemBuilder: (context, index) =>
@@ -1990,7 +1988,6 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                       letterSpacing: 1)),
               const SizedBox(height: 12),
               GridView.count(
-                  shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: 3,
                   crossAxisSpacing: 8,
@@ -2445,7 +2442,6 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
           )
         else
           ListView.builder(
-            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: filtered.length,
             itemBuilder: (context, index) {
@@ -3595,7 +3591,6 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
           final cols = c.maxWidth > 1100 ? 3 : (c.maxWidth > 700 ? 2 : 1);
           final dims = draft.all;
           return GridView.builder(
-            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: cols,
@@ -4778,7 +4773,6 @@ class _ImplementationTabState extends State<_ImplementationTab> {
             )
           else
             ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: tasks.length,
               itemBuilder: (context, index) => _taskCard(tasks[index], cr.id),
@@ -4835,7 +4829,6 @@ class _ImplementationTabState extends State<_ImplementationTab> {
           Builder(builder: (context) {
             final reversed = baselineHistory.reversed.toList();
             return ListView.builder(
-              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: reversed.length,
               itemBuilder: (context, index) =>

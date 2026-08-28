@@ -93,7 +93,7 @@ class TreasuryHeroBand extends StatelessWidget {
     required this.subtitle,
     required this.statusLabel,
     required this.statusLive,
-    required this.contextChips,
+    this.contextChips = const [],
     required this.actions,
   });
 

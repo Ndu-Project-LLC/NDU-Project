@@ -168,6 +168,10 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
     if (pid == null) {
       // No project context — show defaults instead of spinning forever.
       _applyDefaultConfig();
+      // Without this the name/entry/exit controllers are never created,
+      // so every column row renders with an empty fallback controller
+      // ("Column name" placeholder) even though the defaults have names.
+      _rebuildCtrls();
       if (mounted) setState(() => _isLoading = false);
       return;
     }

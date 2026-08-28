@@ -613,6 +613,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  label: 'Create Portfolio',
  onPressed: _navigateToPortfolio,
  ),
+ _viewTeammatesButton(),
  _profileAvatar(user, displayName, initials),
  ],
  ),
@@ -789,6 +790,25 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  const SizedBox(width: 8),
  Icon(icon ?? Icons.keyboard_arrow_right, size: 20),
  ],
+ ),
+ );
+ }
+
+ Widget _viewTeammatesButton() {
+ return OutlinedButton.icon(
+ onPressed: () {
+ context.push('/program-teammates');
+ },
+ icon: const Icon(Icons.people_outline, size: 18),
+ label: const Text('View Teammates'),
+ style: OutlinedButton.styleFrom(
+ foregroundColor: _emerald,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+ side: const BorderSide(color: _emerald),
+ padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(12)),
+ textStyle: const TextStyle(fontWeight: FontWeight.w600),
  ),
  );
  }

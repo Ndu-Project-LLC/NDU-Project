@@ -16,6 +16,8 @@ import 'package:ndu_project/screens/mobile_dashboard_screen.dart';
 import 'package:ndu_project/screens/auth/mobile_forgot_password_screen.dart';
 import 'package:ndu_project/screens/project_dashboard_screen.dart';
 import 'package:ndu_project/screens/program_dashboard_screen.dart';
+import 'package:ndu_project/screens/program_teammates_screen.dart';
+import 'package:ndu_project/screens/invitation_accept_screen.dart';
 import 'package:ndu_project/screens/portfolio_dashboard_screen.dart';
 import 'package:ndu_project/screens/launch_checklist_screen.dart';
 import 'package:ndu_project/screens/home_screen.dart';
@@ -257,6 +259,8 @@ class AppRoutes {
 
   static const dashboard = 'dashboard';
   static const programDashboard = 'program-dashboard';
+  static const programTeammates = 'program-teammates';
+  static const invitationAccept = 'invitation-accept';
   static const portfolioDashboard = 'portfolio-dashboard';
   static const launchChecklist = 'launch-checklist';
 
@@ -766,6 +770,23 @@ class AppRouter {
         pageBuilder: (context, state) {
           final programId = state.uri.queryParameters['programId'];
           return shimmerTransitionPage(state: state, child: ProgramDashboardScreen(programId: programId));
+        },
+      ),
+      GoRoute(
+        name: AppRoutes.programTeammates,
+        path: '/${AppRoutes.programTeammates}',
+        pageBuilder: (context, state) =>
+            shimmerTransitionPage(state: state, child: const ProgramTeammatesScreen()),
+      ),
+      GoRoute(
+        name: AppRoutes.invitationAccept,
+        path: '/${AppRoutes.invitationAccept}',
+        pageBuilder: (context, state) {
+          final invitationId = state.uri.queryParameters['id'] ?? '';
+          return shimmerTransitionPage(
+            state: state,
+            child: InvitationAcceptScreen(invitationId: invitationId),
+          );
         },
       ),
       GoRoute(

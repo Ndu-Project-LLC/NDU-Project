@@ -508,13 +508,13 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                   .where((s) => s.toLowerCase() == statusStr.toLowerCase())
                   .isNotEmpty
               ? _changeStatuses
-                  .firstWhere((s) => s.toLowerCase() == statusStr.toLowerCase())
+                  .where((s) => s.toLowerCase() == statusStr.toLowerCase()).firstOrNull!
               : 'Open';
           final matchedType = _changeTypes
                   .where((t) => t.toLowerCase() == changeType.toLowerCase())
                   .isNotEmpty
-              ? _changeTypes.firstWhere(
-                  (t) => t.toLowerCase() == changeType.toLowerCase())
+              ? _changeTypes.where(
+                  (t) => t.toLowerCase() == changeType.toLowerCase()).firstOrNull!
               : 'Scope';
           return _ScopeChangeItem(
             id: _newId(),
@@ -524,8 +524,8 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             impactLevel: _impactLevels
                     .where((i) => i.toLowerCase() == impactLevel.toLowerCase())
                     .isNotEmpty
-                ? _impactLevels.firstWhere(
-                    (i) => i.toLowerCase() == impactLevel.toLowerCase())
+                ? _impactLevels.where(
+                    (i) => i.toLowerCase() == impactLevel.toLowerCase()).firstOrNull!
                 : 'Medium',
             requestedBy: requestedBy,
             status: matchedStatus,

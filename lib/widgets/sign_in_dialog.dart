@@ -32,6 +32,24 @@ class _SignInDialogState extends State<SignInDialog> {
   bool _rememberMe = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadStoredCredentials();
+  }
+
+  /// Prefill with the last used email and the remember-me preference so
+  /// returning users are one tap away from signing in.
+  Future<void> _loadStoredCredentials() async {
+    final email = await FirebaseAuthService.getLastEmail();
+    final rememberMe = await FirebaseAuthService.getRememberMe();
+    if (!mounted) return;
+    setState(() {
+      if (email.isNotEmpty) _emailController.text = email;
+      _rememberMe = rememberMe;
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -53,6 +71,8 @@ class _SignInDialogState extends State<SignInDialog> {
         rememberMe: _rememberMe,
       );
       if (!mounted) return;
+      // Remember this device's email for the next launch.
+      await FirebaseAuthService.setLastEmail(_emailController.text.trim());
       await cred.user?.reload();
       if (!mounted) return;
       _navigateAfterSignIn();

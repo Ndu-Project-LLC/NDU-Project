@@ -5132,10 +5132,12 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                     _compareBVersion != null &&
                     _compareAVersion != _compareBVersion)
                   _buildDiffTable(
-                    history.firstWhere(
-                        (b) => b.version == _compareAVersion),
-                    history.firstWhere(
-                        (b) => b.version == _compareBVersion),
+                    history.where(
+                            (b) => b.version == _compareAVersion).firstOrNull ??
+                        history.first,
+                    history.where(
+                            (b) => b.version == _compareBVersion).firstOrNull ??
+                        history.first,
                   )
                 else if (_compareAVersion != null &&
                     _compareBVersion != null &&

@@ -1176,8 +1176,9 @@ class _InterfaceRegisterRow extends StatelessWidget {
     if (confirm != true) return;
 
     final data = ProjectDataHelper.getData(context);
-    final entryToDelete = data.interfaceEntries.firstWhere((e) => e.id == id);
-    final entries = data.interfaceEntries.where((e) => e.id != id).toList();
+    final entryToDelete = data.interfaceEntries.where((e) => e.id == id).firstOrNull;
+if (entryToDelete == null) return;
+final entries = data.interfaceEntries.where((e) => e.id != id).toList();
     final logEntries =
         List<InterfaceChangeLogEntry>.from(data.interfaceChangeLog);
     logEntries.add(InterfaceChangeLogEntry(

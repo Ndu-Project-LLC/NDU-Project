@@ -320,7 +320,9 @@ class SubscriptionPricingConfig {
       );
 
   TierPricingConfig tier(PricingTierId id) =>
-      tiers[id] ?? TierPricingConfig.defaults.firstWhere((t) => t.id == id);
+      tiers[id] ??
+      TierPricingConfig.defaults.where((t) => t.id == id).firstOrNull ??
+      TierPricingConfig.defaults.first;
 
   Map<String, dynamic> toFirestore() => {
         'currencyCode': currencyCode,

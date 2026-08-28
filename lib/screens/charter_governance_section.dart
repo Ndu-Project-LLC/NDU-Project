@@ -189,10 +189,10 @@ class CharterStakeholdersShort extends StatelessWidget {
  data!.preferredSolutionAnalysis?.solutionAnalyses ?? [];
  SolutionAnalysisItem? matchedAnalysis;
  try {
- matchedAnalysis = analysisItems.firstWhere(
+ matchedAnalysis = analysisItems.where(
  (a) => a.solutionTitle.trim().toLowerCase() ==
  preferredSolution.title.trim().toLowerCase(),
- );
+ ).firstOrNull;
  } catch (_) {
  matchedAnalysis = analysisItems.isNotEmpty
  ? analysisItems.first

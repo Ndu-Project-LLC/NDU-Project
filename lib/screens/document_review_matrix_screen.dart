@@ -1340,7 +1340,7 @@ class _AssignReviewerDialogState extends State<_AssignReviewerDialog> {
               setState(() {
                 _selectedUserId = v!;
                 _selectedUserName =
-                    _teamMembers.firstWhere((m) => m['id'] == v)['name']!;
+                    _teamMembers.where((m) => m['id'] == v).firstOrNull?['name'] ?? _selectedUserName;
               });
             },
           ),

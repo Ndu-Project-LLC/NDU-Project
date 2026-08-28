@@ -211,8 +211,9 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   void approveStep(String crId, {String? comments}) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
-    final steps = cr.approvalSteps;
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+if (cr == null) return;
+final steps = cr.approvalSteps;
     final idx = cr.currentStepIndex;
     if (idx >= steps.length) return;
 
@@ -260,7 +261,9 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   void rejectCR(String crId, {String? reason}) {
-    _updateCR(crId, _changeRequests.firstWhere((c) => c.id == crId).copyWith(
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+    if (cr == null) return;
+    _updateCR(crId, cr.copyWith(
       status: CMStatus.rejected,
     ));
     _addAudit('CR Rejected', reason ?? 'No reason provided', crId);
@@ -268,7 +271,9 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   void returnForRevision(String crId, {String? comments}) {
-    _updateCR(crId, _changeRequests.firstWhere((c) => c.id == crId).copyWith(
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+    if (cr == null) return;
+    _updateCR(crId, cr.copyWith(
       status: CMStatus.returned,
     ));
     _addAudit('CR Returned', comments ?? 'Returned for revision', crId);
@@ -276,9 +281,9 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   void implementCR(String crId, {String? notes}) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
-
-    // Check if re-baseline is needed
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+if (cr == null) return;
+// Check if re-baseline is needed
     if (cr.triggersRebaseline) {
       _createBaselineRevision(cr);
     }
@@ -293,8 +298,9 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   void closeCR(String crId, {String? closureNotes}) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
-    _updateCR(crId, cr.copyWith(
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+if (cr == null) return;
+_updateCR(crId, cr.copyWith(
       status: CMStatus.closed,
       closedAt: DateTime.now(),
       closureNotes: closureNotes,
@@ -329,8 +335,9 @@ class ChangeManagementProvider extends ChangeNotifier {
     String? owner,
     DateTime? dueDate,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
-    final dims = cr.impact.all;
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+if (cr == null) return;
+final dims = cr.impact.all;
     if (dimensionIndex < 0 || dimensionIndex >= dims.length) return;
     final existing = dims[dimensionIndex];
     final updated = existing.copyWith(
@@ -352,8 +359,9 @@ class ChangeManagementProvider extends ChangeNotifier {
   /// Bulk-replaces the CR's impact assessment (used by the Impact Detail
   /// tab's Save button which posts the whole grid in one transaction).
   void saveImpactAssessment(String crId, FullImpactAssessment assessment) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
-    _updateCR(crId, cr.copyWith(impact: assessment));
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+if (cr == null) return;
+_updateCR(crId, cr.copyWith(impact: assessment));
     _addAudit(
       'Impact Assessment Saved',
       '${cr.crNumber} • composite ${assessment.compositeImpactScore.toStringAsFixed(2)}',
@@ -371,8 +379,9 @@ class ChangeManagementProvider extends ChangeNotifier {
     required String decisionMakerName,
     DateTime? dueDate,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
-    final stepId = 'step_${cr.approvalSteps.length + 1}_${DateTime.now().millisecondsSinceEpoch}';
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+if (cr == null) return;
+final stepId = 'step_${cr.approvalSteps.length + 1}_${DateTime.now().millisecondsSinceEpoch}';
     final newStep = CMApprovalStep(
       id: stepId,
       roleLabel: role.label,
@@ -401,8 +410,9 @@ class ChangeManagementProvider extends ChangeNotifier {
     String? escalationReason,
     String? delegatedFrom,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
-    final stepIndex = cr.approvalSteps.indexWhere((s) => s.id == stepId);
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+if (cr == null) return;
+final stepIndex = cr.approvalSteps.indexWhere((s) => s.id == stepId);
     if (stepIndex == -1) return;
 
     final updatedSteps = cr.approvalSteps.asMap().map((i, s) {
@@ -447,8 +457,9 @@ class ChangeManagementProvider extends ChangeNotifier {
   /// is closed as either approved (→ triggers re-baseline if scope change
   /// exceeds threshold) or rejected (→ audit entry only).
   void finalizeApproval(String crId) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
-    if (cr.approvalSteps.isEmpty) return;
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+if (cr == null) return;
+if (cr.approvalSteps.isEmpty) return;
     final allTerminal = cr.approvalSteps.every((s) => s.isTerminal);
     if (!allTerminal) return;
 
@@ -496,8 +507,9 @@ class ChangeManagementProvider extends ChangeNotifier {
     String? assignee,
     DateTime? dueDate,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
-    final task = ImplementationTask(
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+if (cr == null) return;
+final task = ImplementationTask(
       id: 'task_${DateTime.now().millisecondsSinceEpoch}',
       workPackageId: workPackageId,
       workPackageName: workPackageName,
@@ -524,8 +536,9 @@ class ChangeManagementProvider extends ChangeNotifier {
     String? assignee,
     DateTime? dueDate,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
-    final updatedTasks = cr.implementationTasks.map((t) {
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+if (cr == null) return;
+final updatedTasks = cr.implementationTasks.map((t) {
       if (t.id != taskId) return t;
       return t.copyWith(
         status: status ?? t.status,
@@ -540,10 +553,13 @@ class ChangeManagementProvider extends ChangeNotifier {
     final allDone = updatedTasks.isNotEmpty &&
         updatedTasks.every((t) => t.status == ImplementationStatus.done);
     if (allDone && cr.status == CMStatus.approved) {
-      _updateCR(crId, _changeRequests.firstWhere((c) => c.id == crId).copyWith(
-        status: CMStatus.implemented,
-        implementedAt: DateTime.now(),
-      ));
+      final latest = _changeRequests.where((c) => c.id == crId).firstOrNull;
+      if (latest != null) {
+        _updateCR(crId, latest.copyWith(
+          status: CMStatus.implemented,
+          implementedAt: DateTime.now(),
+        ));
+      }
     }
 
     _addAudit(
@@ -558,7 +574,8 @@ class ChangeManagementProvider extends ChangeNotifier {
   /// CR's cost impact, and writes a re-baseline audit entry. Returns the
   /// new revision version number.
   int applyToBaseline(String crId) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.where((c) => c.id == crId).firstOrNull;
+    if (cr == null) return -1;
     final previousBAC = _currentBAC;
     final costImpact = cr.impact.totalCostImpact;
     final revisedBAC = previousBAC + costImpact;

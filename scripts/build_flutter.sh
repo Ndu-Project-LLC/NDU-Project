@@ -1,10 +1,23 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-export PATH="/tmp/flutter-sdk/bin:$PATH"
-cd /home/z/my-project
+# Resolve project root relative to this script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
+
+# Use system Flutter if available, otherwise check /tmp
+if ! command -v flutter &> /dev/null; then
+    if [ -d "/tmp/flutter-sdk/bin" ]; then
+        export PATH="/tmp/flutter-sdk/bin:$PATH"
+    else
+        echo "ERROR: Flutter not found. Install Flutter or ensure /tmp/flutter-sdk exists."
+        exit 1
+    fi
+fi
 
 echo "=== Starting Flutter Web Build ==="
+echo "Project root: $PROJECT_ROOT"
 flutter --version
 
 echo "=== Installing dependencies ==="

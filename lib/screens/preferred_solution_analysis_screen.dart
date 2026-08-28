@@ -260,12 +260,15 @@ class _PreferredSolutionAnalysisScreenState
 
   Future<void> _loadAnalysis() async {
     // Business Case lock — once a preferred solution has been selected,
-    // this screen is view-only. Block AI generation.
+    // this screen is view-only. AI generation is blocked, but the page must
+    // still DISPLAY the information already captured in the Business Case
+    // (risks, stakeholders, IT and infrastructure considerations), so the
+    // analysis is populated from project data instead of returning empty.
     if (BusinessCaseLockHelper.isBusinessCaseLocked(
         ProjectDataHelper.getData(context))) {
       if (mounted) {
-        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
         setState(() => _isLoading = false);
+        _enrichAnalysisFromProjectData();
       }
       return;
     }

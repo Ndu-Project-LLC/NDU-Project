@@ -927,6 +927,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: VoiceTextField(
+                readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                 controller: _riskControllers[index][r],
                 minLines: 1,
                 maxLines: 2,
@@ -1432,6 +1433,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                       children: [
                         const SizedBox(height: 8),
                         VoiceTextField(
+                          readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                           controller: _notesController,
                           style:
                               TextStyle(fontSize: 14, color: Colors.grey[600]),
@@ -1722,6 +1724,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                 border: Border.all(color: Colors.grey.shade300),
               ),
               child: VoiceTextField(
+                readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                 controller: _notesController,
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
                 decoration: const InputDecoration(
@@ -1779,6 +1782,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                       ),
                       const SizedBox(height: 8),
                       VoiceTextField(
+                        readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                         controller: TextEditingController(text: ''),
                         style: const TextStyle(
                             fontSize: 13, color: Colors.black54),
@@ -2033,6 +2037,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                 children: [
                   const SizedBox(height: 8),
                   VoiceTextField(
+                    readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                     controller: controller,
                     minLines: 2,
                     maxLines: null,

@@ -920,6 +920,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  border: Border.all(color: const Color(0xFFFDE68A)),
  ),
  child: VoiceTextField(
+ readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
  controller: _organisationContextController,
  keyboardType: TextInputType.multiline,
  style: const TextStyle(
@@ -981,6 +982,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  border: Border.all(color: gray200),
  ),
  child: VoiceTextField(
+ readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
  controller: _notesController,
  keyboardType: TextInputType.multiline,
  style: const TextStyle(
@@ -1819,6 +1821,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  const SizedBox(height: 8),
  // Build bullet list with yellow dots from controller text
  VoiceTextField(
+ readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
  controller: controller,
  minLines: 2,
  maxLines: null,

@@ -36,6 +36,7 @@ import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/utils/business_case_lock_helper.dart';
 
 enum _MissingItConsiderationsAction { manual, autoFill, skip }
 
@@ -478,6 +479,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
                         border: Border.all(color: const Color(0xFFDCE3EE)),
                       ),
                       child: VoiceTextField(
+                        readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                         controller: _notesController,
                         minLines: 3,
                         maxLines: 6,
@@ -690,6 +692,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
                   ],
                 ),
                 VoiceTextField(
+                  readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                   controller: _techControllers[index],
                   minLines: 4,
                   maxLines: null,
@@ -1464,6 +1467,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
         controller: _reviewScrollController,
         padding: EdgeInsets.all(AppBreakpoints.pagePadding(context)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          BusinessCaseLockHelper.lockBanner(ProjectDataHelper.getData(context)),
           Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
             const EditableContentText(
                 contentKey: 'it_considerations_heading',
@@ -1509,6 +1513,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.grey.withValues(alpha: 0.3))),
             child: VoiceTextField(
+              readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
               controller: _notesController,
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               decoration: InputDecoration(
@@ -1808,6 +1813,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFFE4E7EC))),
             child: VoiceTextField(
+              readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
               controller: controller,
               minLines: 3,
               maxLines: null,

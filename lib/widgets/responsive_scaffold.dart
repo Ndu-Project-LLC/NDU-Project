@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
-import 'package:ndu_project/widgets/global_save_bar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
+
+/// Bottom padding reserved for the floating chat bubble FAB
+/// (the floating Save pill was removed per user request).
+const double kFloatingBottomReservedHeight = 96.0;
 
 /// A responsive scaffold that adapts sidebar behavior based on screen size.
 /// - Desktop/Tablet: Shows sidebar in a Row layout with draggable handle
@@ -155,14 +158,9 @@ class _MobileScaffold extends StatelessWidget {
                 child: body,
               ),
             ),
-            // Global Save pill — bottom-left, opposite the chat bubble FAB.
-            // Persists the current page's in-memory project state to
-            // Firestore immediately (drains the autosave debounce timer).
-            const Positioned(
-              bottom: 24,
-              left: 24,
-              child: GlobalSaveBar(),
-            ),
+            // Global Save pill removed per user request — the floating pill
+            // took up screen space. Auto-save (2s debounce) + flush-on-navigate
+            // keep persistence working without it.
             // NOTE: Activity Log button removed from here — it's already
             // rendered by PlanningPhaseHeader/UnifiedPhaseHeader. Having
             // both caused a duplicate Activity Log button on every screen.
@@ -222,14 +220,8 @@ class _DesktopScaffold extends StatelessWidget {
                       child: body,
                     ),
                   ),
-                  // Global Save pill — bottom-left, opposite the chat bubble
-                  // FAB at bottom-right. Drains the autosave debounce and
-                  // writes the current page's state to Firestore immediately.
-                  const Positioned(
-                    bottom: 24,
-                    left: 24,
-                    child: GlobalSaveBar(),
-                  ),
+                  // Global Save pill removed per user request — auto-save
+                  // keeps persistence working without it.
                   // NOTE: Activity Log button removed from here — it's
                   // already rendered by PlanningPhaseHeader/
                   // UnifiedPhaseHeader. Having both caused a duplicate

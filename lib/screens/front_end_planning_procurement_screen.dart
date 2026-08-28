@@ -8309,27 +8309,24 @@ class _VendorGrid extends StatelessWidget {
  final ValueChanged<VendorModel> onEditVendor;
  final ValueChanged<String> onDeleteVendor;
 
- @override
+  @override
  Widget build(BuildContext context) {
- final isMobile = AppBreakpoints.isMobile(context);
- // Compact card grid: fixed 3 columns, childAspectRatio 3.6 keeps each
- // card short enough to fit name + status + category + rating + actions
- // without the large vertical gaps the previous LayoutBuilder-driven
- // mainAxisExtent (220–240px) was producing.
+ // Auto-height card grid: column count adapts to width, but there is NO
+ // fixed aspect ratio — each card grows vertically to fit its content,
+ // so long vendor names/emails/rows wrap instead of overflowing (the old
+ // GridView childAspectRatio 3.6 clipped every card by ~54px).
  return LayoutBuilder(
  builder: (context, constraints) {
- return GridView.builder(
- physics: const NeverScrollableScrollPhysics(),
- gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
- crossAxisCount: 3,
- childAspectRatio: 3.6,
- mainAxisSpacing: 12,
- crossAxisSpacing: 12,
- ),
- itemCount: vendors.length,
- itemBuilder: (_, index) {
- final vendor = vendors[index];
- return Container(
+ final double width = constraints.maxWidth;
+ final int columns = width > 980 ? 3 : (width > 640 ? 2 : 1);
+ final double cardWidth = (width - ((columns - 1) * 12)) / columns;
+ return Wrap(
+ spacing: 12,
+ runSpacing: 12,
+ children: vendors.map((vendor) {
+ return SizedBox(
+ width: cardWidth,
+ child: Container(
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(14),
@@ -8387,14 +8384,14 @@ class _VendorGrid extends StatelessWidget {
  ),
  ],
  ),
+ ),
  );
- },
+ }).toList(),
  );
  },
  );
  }
 }
-
 class _VendorActionsMenu extends StatelessWidget {
  const _VendorActionsMenu({
  required this.vendor,

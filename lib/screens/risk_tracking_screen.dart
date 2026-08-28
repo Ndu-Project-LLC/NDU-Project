@@ -310,16 +310,10 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
                 title: 'Risk Tracking',
                 showNavigationButtons: false, onExportPdf: _exportPdf),
             ),            const SizedBox(height: 16),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding),
-              child: _buildHeader(isNarrow),
-            ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding),
-              child: _buildStatsRow(isNarrow),
-            ),
-            const SizedBox(height: 24),            _buildRiskRegister(),
+            // "EXECUTION SAFETY / Risk Tracking" hero header and the
+            // four stat cards (Active risks / Mitigation coverage /
+            // Escalations / Exposure score) removed per user request.
+            const SizedBox(height: 8),            _buildRiskRegister(),
             const SizedBox(height: 20),
             _buildMitigationPanel(),
             const SizedBox(height: 20),

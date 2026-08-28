@@ -481,8 +481,8 @@ class _LongLeadEquipmentOrderingScreenState
  onPressed: () => context.push('/specialized-design'),icon: const Icon(Icons.arrow_forward, size: 18),
  label: const Text('Next: Specialized design'),
  style: ElevatedButton.styleFrom(
- backgroundColor: Colors.black87,
- foregroundColor: Colors.white,
+ backgroundColor: const Color(0xFFFFC812),
+ foregroundColor: Colors.black87,
  padding:
  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
  shape: RoundedRectangleBorder(
@@ -515,8 +515,8 @@ class _LongLeadEquipmentOrderingScreenState
  onPressed: () => context.push('/specialized-design'),icon: const Icon(Icons.arrow_forward, size: 18),
  label: const Text('Next: Specialized design'),
  style: ElevatedButton.styleFrom(
- backgroundColor: Colors.black87,
- foregroundColor: Colors.white,
+ backgroundColor: const Color(0xFFFFC812),
+ foregroundColor: Colors.black87,
  padding:
  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
  shape: RoundedRectangleBorder(

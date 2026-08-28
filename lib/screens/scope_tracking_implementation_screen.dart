@@ -301,10 +301,9 @@ class _ScopeTrackingImplementationScreenState
                         const SizedBox(height: 16),
                         _buildPageHeader(context),
                         const SizedBox(height: 20),
-                        _buildFilterChips(context),
-                        const SizedBox(height: 24),
-                        _buildStatsRow(isNarrow),
-                        const SizedBox(height: 24),
+                        // Status filter chip row and the three summary
+                        // stat cards (Scope Adherence / Identified Creep /
+                        // Implementation Gap) removed per user request.
                         _buildScopeTable(),
                         const SizedBox(height: 24),
                         _buildFooterNavigation(context),

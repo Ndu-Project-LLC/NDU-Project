@@ -622,7 +622,8 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  children: [
  SizedBox(
  width: 260,
- child: VoiceTextField(
+ // Plain search field — no Open Editor button on the toolbar.
+ child: TextField(
  controller: _searchController,
  decoration: InputDecoration(
  prefixIcon: const Icon(Icons.search),
@@ -680,7 +681,8 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  padding: const EdgeInsets.only(top: 16),
  child: Column(
  children: [
- VoiceTextField(
+ // Plain search field — no Open Editor button on the toolbar.
+ TextField(
  controller: _searchController,
  decoration: InputDecoration(
  prefixIcon: const Icon(Icons.search),
@@ -1188,10 +1190,33 @@ class _LessonDialogState extends State<_LessonDialog> {
  _phaseController.text = 'Planning';
  _statusController.text = 'Draft';
  _submittedByController.text =
- FirebaseAuth.instance.currentUser?.displayName ?? '';
+ _currentUserName();
  _selectedDate = DateTime.now();
  _dateController.text = _formatDate(_selectedDate!);
  }
+ // Auto-populate Submitted By from the signed-in user when the record
+ // carries no submitter (never leaves it blank).
+ if (_submittedByController.text.trim().isEmpty) {
+ _submittedByController.text = _currentUserName();
+ }
+ }
+
+ /// Resolves the signed-in user's display name: displayName first, then a
+ /// prettified email local part (e.g. 'chungu.chama' -> 'Chungu Chama').
+ String _currentUserName() {
+ final user = FirebaseAuth.instance.currentUser;
+ if (user == null) return '';
+ final name = user.displayName?.trim() ?? '';
+ if (name.isNotEmpty) return name;
+ final email = user.email?.trim() ?? '';
+ if (email.isEmpty) return '';
+ final local = email.split('@').first;
+ return local
+ .split(RegExp(r'[._\-+]+'))
+ .where((p) => p.isNotEmpty)
+ .map((p) =>
+ p[0].toUpperCase() + p.substring(1).toLowerCase())
+ .join(' ');
  }
 
  @override
@@ -1322,10 +1347,13 @@ class _LessonDialogState extends State<_LessonDialog> {
  ),
  const SizedBox(width: 12),
  Expanded(
- child: VoiceTextFormField(
+ // Auto-populated from the signed-in user — plain field, no
+ // Open Editor button.
+ child: TextFormField(
  controller: _submittedByController,
  decoration: _inputDecoration('Submitted By',
  hintText: 'e.g. Emily Johnson'),
+ readOnly: true,
  textInputAction: TextInputAction.next,
  validator: (value) =>
  (value == null || value.trim().isEmpty)
@@ -1336,7 +1364,8 @@ class _LessonDialogState extends State<_LessonDialog> {
  ],
  ),
  const SizedBox(height: 16),
- VoiceTextFormField(
+ // Plain date field — calendar picker only, no Open Editor button.
+ TextFormField(
  controller: _dateController,
  decoration: _inputDecoration('Date', hintText: 'YYYY-MM-DD')
  .copyWith(

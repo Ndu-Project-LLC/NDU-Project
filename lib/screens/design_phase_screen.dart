@@ -25,6 +25,7 @@ import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/widgets/design_readiness_card.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/web_utils.dart';
 import 'package:ndu_project/utils/file_upload_helper.dart';
 import 'package:ndu_project/widgets/design_phase_stable_shell.dart';
@@ -173,16 +174,8 @@ Future<void> _loadProgress(String projectId) async {
  }
  }
 
- Widget _buildDesignDashboard(double padding) {
- if (_progress == null) return const SizedBox.shrink();
-
- // Use the new Readiness Card
- // Note: _progress is technically DesignPhaseProgress (typedef for DesignReadinessModel)
- return Padding(
- padding: EdgeInsets.symmetric(horizontal: padding, vertical: 16),
- child: DesignReadinessCard(readiness: _progress!),
- );
- }
+// DesignReadinessCard panel removed per user request.
+ Widget _buildDesignDashboard(double padding) => const SizedBox.shrink();
 
  @override
  void dispose() {
@@ -368,11 +361,8 @@ Future<void> _loadProgress(String projectId) async {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- // Move Design Dashboard inside scroll view
- if (_projectId != null) ...[
- _buildDesignDashboard(padding),
- const SizedBox(height: 16),
- ],
+ // Design readiness / Project Progress panel removed per user
+ // request (took up too much screen space).
  const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Design',
@@ -458,8 +448,8 @@ Future<void> _loadProgress(String projectId) async {
  padding: EdgeInsets.all(padding),
  children: [
  // ── 1. Design Readiness Progress Card ──────────────────────────
- if (_showProgressCard) _buildReadinessProgressCard(),
- if (_showProgressCard) const SizedBox(height: 20),
+ // Project Progress / Blocking items panel removed per user request
+ // (it took up too much screen space).
 
  // ── 2. Notes Section ───────────────────────────────────────────
  _buildStableNotesCard(),
@@ -2824,10 +2814,57 @@ Future<void> _loadProgress(String projectId) async {
  final nameController = TextEditingController();
  final roleController = TextEditingController();
  final emailController = TextEditingController();
+ final provider = context.read<ProjectDataProvider>();
+
+ // Known-credential suggestions: existing project collaborators first
+ // (full name/role/email), then registered/invited users from Firestore.
+ List<Map<String, String>> suggestions = [];
+ Timer? suggestDebounce;
+
+ void fillFromSuggestion(Map<String, String> s) {
+ nameController.text = s['name'] ?? '';
+ roleController.text = s['role'] ?? roleController.text;
+ emailController.text = s['email'] ?? '';
+ suggestions = [];
+ }
+
+ Future<void> refreshSuggestions(String query) async {
+ final q = query.trim().toLowerCase();
+ if (q.isEmpty) {
+ suggestions = [];
+ return;
+ }
+ final matches = <Map<String, String>>[];
+ final seen = <String>{};
+ bool addMatch(String name, String role, String email) {
+ final key = name.toLowerCase();
+ if (name.isEmpty || !seen.add(key)) return false;
+ if (!(name.toLowerCase().contains(q) ||
+ email.toLowerCase().contains(q))) {
+ return false;
+ }
+ matches.add({'name': name, 'role': role, 'email': email});
+ return true;
+ }
+
+ for (final m in provider.projectData.teamMembers) {
+ addMatch(m.name.trim(), m.role.trim(), m.email.trim());
+ }
+ try {
+ final users = await UserService.searchUsers(q);
+ for (final u in users) {
+ addMatch(u.displayName.trim(), '', u.email.trim());
+ }
+ } catch (_) {
+ // Directory lookup is best-effort; local matches already collected.
+ }
+ suggestions = matches.take(6).toList();
+ }
 
  showDialog(
  context: context,
- builder: (ctx) => AlertDialog(
+ builder: (ctx) => StatefulBuilder(
+ builder: (ctx, setModalState) => AlertDialog(
  title: const Text('Add Collaborator'),
  content: SizedBox(
  width: 400,
@@ -2838,8 +2875,82 @@ Future<void> _loadProgress(String projectId) async {
  controller: nameController,
  decoration: const InputDecoration(
  labelText: 'Name *',
+ hintText: 'Type to search invited users',
  isDense: true,
  border: OutlineInputBorder(),
+ ),
+ onChanged: (value) {
+ suggestDebounce?.cancel();
+ suggestDebounce = Timer(
+ const Duration(milliseconds: 250),
+ () => refreshSuggestions(value)
+ .then((_) {
+ if (ctx.mounted) setModalState(() {});
+ }),
+ );
+ },
+ ),
+ // Credential pull-down: matching invited/registered users.
+ if (suggestions.isNotEmpty)
+ Container(
+ margin: const EdgeInsets.only(top: 6),
+ decoration: BoxDecoration(
+ border: Border.all(color: Colors.grey.shade300),
+ borderRadius: BorderRadius.circular(8),
+ ),
+ child: Column(
+ children: [
+ for (final s in suggestions)
+ InkWell(
+ onTap: () => setModalState(
+ () => fillFromSuggestion(s)),
+ child: Container(
+ width: double.infinity,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 12, vertical: 10),
+ decoration: BoxDecoration(
+ border: Border(
+ bottom: BorderSide(
+ color: Colors.grey.shade200)),
+ ),
+ child: Row(
+ children: [
+ const Icon(Icons.person_outline,
+ size: 18, color: Color(0xFFB8860B)),
+ const SizedBox(width: 8),
+ Expanded(
+ child: Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: [
+ Text(s['name'] ?? '',
+ maxLines: 1,
+ overflow: TextOverflow.ellipsis,
+ style: const TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w600)),
+ if ((s['email'] ?? '').isNotEmpty)
+ Text(s['email']!,
+ maxLines: 1,
+ overflow: TextOverflow.ellipsis,
+ style: TextStyle(
+ fontSize: 11,
+ color: Colors.grey[600])),
+ ],
+ ),
+ ),
+ if ((s['role'] ?? '').isNotEmpty)
+ Text(s['role']!,
+ maxLines: 1,
+ overflow: TextOverflow.ellipsis,
+ style: TextStyle(
+ fontSize: 11,
+ color: Colors.grey[600])),
+ ],
+ ),
+ ),
+ ),
+ ],
  ),
  ),
  const SizedBox(height: 12),
@@ -2893,6 +3004,7 @@ Future<void> _loadProgress(String projectId) async {
  child: const Text('Add'),
  ),
  ],
+ ),
  ),
  );
  }

@@ -1427,6 +1427,41 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _showDeliverableDialog(null, -1);
  }
 
+ /// Parses a Due/Gate value into a DateTime for the date picker.
+ /// Accepts 'd MMM yyyy' (e.g. '12 Sep 2026') and ISO 'yyyy-MM-dd'.
+ /// Returns null for gate labels like 'Gate 1' (picker then defaults to today).
+ static DateTime? _tryParseDialogDate(String value) {
+ final text = value.trim();
+ if (text.isEmpty) return null;
+ final iso = DateTime.tryParse(text);
+ if (iso != null) return iso;
+ const months = [
+ 'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+ 'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
+ ];
+ final parts = text.split(RegExp(r'[\s\-\/]+'));
+ if (parts.length != 3) return null;
+ final monthIdx = months.indexOf(parts[1].toLowerCase().substring(0, 3));
+ if (monthIdx == -1) return null;
+ final day = int.tryParse(parts[0]);
+ final year = int.tryParse(parts[2]);
+ if (day == null || year == null) return null;
+ try {
+ return DateTime(year, monthIdx + 1, day);
+ } catch (_) {
+ return null;
+ }
+ }
+
+ /// Formats a picked date as 'd MMM yyyy' for the Due/Gate field.
+ static String _formatDialogDate(DateTime date) {
+ const months = [
+ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+ 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+ ];
+ return '${date.day} ${months[date.month - 1]} ${date.year}';
+ }
+
  void _showEditDeliverableDialog(
  DesignDeliverableRegisterItem row, int index) {
  _showDeliverableDialog(row, index);
@@ -1484,10 +1519,27 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  decoration: const InputDecoration(labelText: 'Status'),
  ),
  const SizedBox(height: 16),
- VoiceTextField(
+ TextFormField(
  controller: dueCtl,
- decoration:
- const InputDecoration(labelText: 'Due / Gate'),
+ readOnly: true,
+ decoration: const InputDecoration(
+ labelText: 'Due / Gate',
+ hintText: 'Pick a date',
+ suffixIcon: Icon(Icons.calendar_today_outlined),
+ ),
+ onTap: () async {
+ final picked = await showDatePicker(
+ context: ctx,
+ initialDate: _tryParseDialogDate(dueCtl.text) ??
+ DateTime.now(),
+ firstDate: DateTime(2000),
+ lastDate: DateTime(2100),
+ );
+ if (picked != null) {
+ setModalState(() => dueCtl.text =
+ _formatDialogDate(picked));
+ }
+ },
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(

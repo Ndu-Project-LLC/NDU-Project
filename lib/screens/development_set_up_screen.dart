@@ -649,7 +649,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  Expanded(flex: 3, child: Text('ACCESS URL', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
  SizedBox(width: 120, child: Text('OWNER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
  SizedBox(width: 110, child: Text('TARGET', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
- SizedBox(width: 60, child: Text('', style: TextStyle(fontSize: 10))),
+ SizedBox(width: 96, child: Text('', style: TextStyle(fontSize: 10))),
  ],
  ),
  ),
@@ -676,7 +676,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  SizedBox(width: 120, child: Text(item.owner, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)))),
  SizedBox(width: 110, child: Text(item.targetDate, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
  SizedBox(
- width: 60,
+ width: 96,
  child: Row(
  children: [
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF64748B)), onPressed: () => _openEnvDialog(existing: item), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 28, minHeight: 28)),
@@ -778,7 +778,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  Expanded(flex: 3, child: Text('TRIGGER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
  Expanded(flex: 3, child: Text('GATE CRITERIA', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
  SizedBox(width: 130, child: Text('OWNER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
- SizedBox(width: 60, child: Text('', style: TextStyle(fontSize: 10))),
+ SizedBox(width: 96, child: Text('', style: TextStyle(fontSize: 10))),
  ],
  ),
  ),
@@ -805,7 +805,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  Expanded(flex: 3, child: Text(item.gateCriteria, style: const TextStyle(fontSize: 12, color: Color(0xFF475569)), overflow: TextOverflow.ellipsis)),
  SizedBox(width: 130, child: Text(item.owner, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)))),
  SizedBox(
- width: 60,
+ width: 96,
  child: Row(
  children: [
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF64748B)), onPressed: () => _openCicdDialog(existing: item), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 28, minHeight: 28)),
@@ -905,7 +905,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  SizedBox(width: 70, child: Text('STATUS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
  SizedBox(width: 110, child: Text('EXPIRY', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
  SizedBox(width: 120, child: Text('OWNER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
- SizedBox(width: 60, child: Text('', style: TextStyle(fontSize: 10))),
+ SizedBox(width: 96, child: Text('', style: TextStyle(fontSize: 10))),
  ],
  ),
  ),
@@ -933,7 +933,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  SizedBox(width: 110, child: Text(item.expiry, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
  SizedBox(width: 120, child: Text(item.owner, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)))),
  SizedBox(
- width: 60,
+ width: 96,
  child: Row(
  children: [
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF64748B)), onPressed: () => _openToolDialog(existing: item), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 28, minHeight: 28)),
@@ -1035,7 +1035,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  SizedBox(width: 110, child: Text('STATUS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
  SizedBox(width: 130, child: Text('APPROVER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
  SizedBox(width: 120, child: Text('TARGET', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
- SizedBox(width: 60, child: Text('', style: TextStyle(fontSize: 10))),
+ SizedBox(width: 96, child: Text('', style: TextStyle(fontSize: 10))),
  ],
  ),
  ),
@@ -1062,7 +1062,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  SizedBox(width: 130, child: Text(item.approver, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)))),
  SizedBox(width: 120, child: Text(item.targetDate, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)))),
  SizedBox(
- width: 60,
+ width: 96,
  child: Row(
  children: [
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF64748B)), onPressed: () => _openQualityDialog(existing: item), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 28, minHeight: 28)),
@@ -1242,7 +1242,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  Expanded(flex: 3, child: Text('EVIDENCE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
  SizedBox(width: 130, child: Text('OWNER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
  SizedBox(width: 110, child: Text('REVIEW', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8))),
- SizedBox(width: 60, child: Text('', style: TextStyle(fontSize: 10))),
+ SizedBox(width: 96, child: Text('', style: TextStyle(fontSize: 10))),
  ],
  ),
  ),
@@ -1269,7 +1269,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  SizedBox(width: 130, child: Text(item.owner, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)))),
  SizedBox(width: 110, child: Text(item.reviewDate, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
  SizedBox(
- width: 60,
+ width: 96,
  child: Row(
  children: [
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF64748B)), onPressed: () => _openSecurityDialog(existing: item), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 28, minHeight: 28)),

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:ndu_project/widgets/global_save_bar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
+
+/// Bottom padding reserved for the floating chat bubble FAB
+/// (the floating Save pill was removed per user request).
+const double kFloatingBottomReservedHeight = 96.0;
 
 class DesignPhaseStableShell extends StatelessWidget {
   const DesignPhaseStableShell({
@@ -74,14 +77,8 @@ class DesignPhaseStableShell extends StatelessWidget {
                       ),
                     ),
                     const KazAiChatBubble(positioned: true),
-                    // Global Save pill — bottom-left, opposite the chat
-                    // bubble FAB at bottom-right. Persists the current
-                    // page's in-memory project state to Firestore.
-                    const Positioned(
-                      bottom: 24,
-                      left: 24,
-                      child: GlobalSaveBar(),
-                    ),
+                    // Global Save pill removed per user request — auto-save
+                    // keeps persistence working without it.
                   ],
                 ),
               ),
@@ -132,13 +129,8 @@ class DesignPhaseStableShell extends StatelessWidget {
                           ),
                         ),
                         const KazAiChatBubble(positioned: true),
-                        // Global Save pill — bottom-left, opposite the chat
-                        // bubble FAB at bottom-right.
-                        const Positioned(
-                          bottom: 24,
-                          left: 24,
-                          child: GlobalSaveBar(),
-                        ),
+                        // Global Save pill removed per user request —
+                        // auto-save keeps persistence working without it.
                       ],
                     ),
                   ),

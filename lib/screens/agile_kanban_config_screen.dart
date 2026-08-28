@@ -9,6 +9,8 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/screens/agile_kanban_board_screen.dart'
+    show KanbanBoardPanel;
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -154,10 +156,20 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
 
   Future<void> _loadData() async {
     final pid = _projectId;
-    if (pid == null) return;
+    if (pid == null) {
+      // No project context — show defaults instead of spinning forever.
+      _applyDefaultConfig();
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
     setState(() => _isLoading = true);
     try {
-      final data = await AgileWireframeService.loadKanbanConfig(pid);
+      // Timeout guard: a stalled Firestore get() must never leave the
+      // configuration page stuck on the loading spinner.
+      final data = await AgileWireframeService.loadKanbanConfig(pid).timeout(
+        const Duration(seconds: 12),
+        onTimeout: () => <String, dynamic>{},
+      );
       if (!mounted) return;
       final rawCols = data['columns'] as List?;
       if (rawCols != null && rawCols.isNotEmpty) {
@@ -165,28 +177,15 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
             .map((e) => _KanbanColumn.fromJson(e as Map<String, dynamic>))
             .toList();
       } else {
-        _columns = _defaultColumns
-            .map((name) => _KanbanColumn(
-                  name: name,
-                  wipLimit: name == 'In Progress' ? 3 : 0,
-                ))
-            .toList();
+        _applyDefaultConfig();
       }
       final rawCos = data['classesOfService'] as List?;
-      if (rawCols != null && rawCos != null && rawCos.isNotEmpty) {
+      if (rawCos != null && rawCos.isNotEmpty) {
         _cosList = rawCos
             .map((e) => _ClassOfService.fromJson(e as Map<String, dynamic>))
             .toList();
-      } else {
-        _cosList = _cosOptions.map((name) {
-          final sla = switch (name) {
-            'Expedite' => 4,
-            'Fixed Date' => 48,
-            'Intangible' => 72,
-            _ => 24,
-          };
-          return _ClassOfService(name: name, slaHours: sla);
-        }).toList();
+      } else if (_cosList.isEmpty) {
+        _applyDefaultClassesOfService();
       }
       _nextSprintReviewDays =
           (data['nextSprintReviewDays'] as num?)?.toInt() ?? 7;
@@ -197,6 +196,30 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
       debugPrint('Error: $e');
     }
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  /// Default workflow columns (used when no saved config exists).
+  void _applyDefaultConfig() {
+    _columns = _defaultColumns
+        .map((name) => _KanbanColumn(
+              name: name,
+              wipLimit: name == 'In Progress' ? 3 : 0,
+            ))
+        .toList();
+    _applyDefaultClassesOfService();
+  }
+
+  /// Default classes of service with canonical SLA targets.
+  void _applyDefaultClassesOfService() {
+    _cosList = _cosOptions.map((name) {
+      final sla = switch (name) {
+        'Expedite' => 4,
+        'Fixed Date' => 48,
+        'Intangible' => 72,
+        _ => 24,
+      };
+      return _ClassOfService(name: name, slaHours: sla);
+    }).toList();
   }
 
   void _rebuildCtrls() {
@@ -329,6 +352,8 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                         else ...[
                           _buildColumnsSection(),
                           const SizedBox(height: 24),
+                          _buildBoardSection(),
+                          const SizedBox(height: 24),
                           _buildClassesOfService(),
                           const SizedBox(height: 24),
                           _buildSettingsSection(),
@@ -451,7 +476,9 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                         const SizedBox(width: 8),
                         SizedBox(
                           width: 90,
-                          child: VoiceTextField(
+                          // Plain numeric field — no Open Editor button
+                          // (it overflowed the 90px column by ~56px).
+                          child: TextField(
                             controller: TextEditingController.fromValue(
                               TextEditingValue(
                                 text: col.wipLimit.toString(),
@@ -530,6 +557,54 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
               );
             },
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Live Kanban Board — the same existing board widget used by the
+  /// Kanban Board screen, driven by the workflow columns saved above.
+  Widget _buildBoardSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: _kBorder),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('Kanban Board',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _kHeadline)),
+              const Spacer(),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Text('LIVE',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFB8860B),
+                        letterSpacing: 0.8)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+              'Execution board using the workflow columns configured above. '
+              'Drag stories between columns, then Save Board.',
+              style: TextStyle(fontSize: 12, color: _kMuted)),
+          const SizedBox(height: 16),
+          const KanbanBoardPanel(),
         ],
       ),
     );

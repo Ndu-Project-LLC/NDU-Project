@@ -735,7 +735,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF111827),
+                color: Color(0xFFFFC107),
               ),
             ),
             const Spacer(),

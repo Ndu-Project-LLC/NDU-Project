@@ -661,64 +661,73 @@ class _BuilderScreenState extends State<BuilderScreen> {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   clipBehavior: Clip.none,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minWidth: MediaQuery.of(context).size.width - 40,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 30,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                color: TreasuryTokens.brandSoft,
-                                borderRadius: BorderRadius.circular(9),
-                                border: Border.all(
-                                    color: TreasuryTokens.brand.withValues(alpha: 0.3)),
+                  // IntrinsicWidth gives the subtree a BOUNDED width
+                  // (max of minWidth and intrinsic content width). Without it
+                  // the horizontal scroll view passes unbounded width down
+                  // and the Expanded inside _ActivityNode's Row throws
+                  // "RenderFlex children have non-zero flex but incoming
+                  // width constraints are unbounded", which poisons the whole
+                  // layout pass and renders the tab content BLANK.
+                  child: IntrinsicWidth(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: MediaQuery.of(context).size.width - 40,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: TreasuryTokens.brandSoft,
+                                  borderRadius: BorderRadius.circular(9),
+                                  border: Border.all(
+                                      color: TreasuryTokens.brand.withValues(alpha: 0.3)),
+                                ),
+                                child: const Icon(Icons.account_tree_rounded,
+                                    size: 16, color: TreasuryTokens.brandDeep),
                               ),
-                              child: const Icon(Icons.account_tree_rounded,
-                                  size: 16, color: TreasuryTokens.brandDeep),
-                            ),
-                            const SizedBox(width: 10),
-                            const Text('Activity Tree',
-                                style: TextStyle(
-                                    color: TreasuryTokens.ink,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.1)),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: TreasuryTokens.surfaceAlt,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: TreasuryTokens.hairline),
+                              const SizedBox(width: 10),
+                              const Text('Activity Tree',
+                                  style: TextStyle(
+                                      color: TreasuryTokens.ink,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.1)),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: TreasuryTokens.surfaceAlt,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: TreasuryTokens.hairline),
+                                ),
+                                child: Text(
+                                    '${root.children.length} L1 · ${_countTotalActivities(root)} total',
+                                    style: const TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: TreasuryTokens.muted,
+                                        letterSpacing: 0.3)),
                               ),
-                              child: Text(
-                                  '${root.children.length} L1 · ${_countTotalActivities(root)} total',
-                                  style: const TextStyle(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: TreasuryTokens.muted,
-                                      letterSpacing: 0.3)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        _ActivityNode(
-                            activity: root,
-                            isRoot: true,
-                            provider: provider,
-                            isLocked: schedule.isLocked),
-                        ...root.children.map((child) => _ActivityNode(
-                            activity: child,
-                            provider: provider,
-                            isLocked: schedule.isLocked)),
-                      ],
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          _ActivityNode(
+                              activity: root,
+                              isRoot: true,
+                              provider: provider,
+                              isLocked: schedule.isLocked),
+                          ...root.children.map((child) => _ActivityNode(
+                              activity: child,
+                              provider: provider,
+                              isLocked: schedule.isLocked)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -731,11 +740,17 @@ class _BuilderScreenState extends State<BuilderScreen> {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   clipBehavior: Clip.none,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minWidth: MediaQuery.of(context).size.width - 40,
+                  // IntrinsicWidth bounds the subtree width (see Activity Tree
+                  // note above) — _SampleActivityTable's header Row uses a
+                  // Spacer and its root Container used to force
+                  // width: double.infinity, both fatal under unbounded width.
+                  child: IntrinsicWidth(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: MediaQuery.of(context).size.width - 40,
+                      ),
+                      child: _SampleActivityTable(schedule: schedule),
                     ),
-                    child: _SampleActivityTable(schedule: schedule),
                   ),
                 ),
               ),
@@ -1505,16 +1520,14 @@ class _ActivityNode extends StatelessWidget {
       onTap: () => _showActivityEditDialog(context),
       child: Container(
         margin: EdgeInsets.only(bottom: 8, left: isRoot ? 0 : 24),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: TreasuryTokens.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border(
-            left: BorderSide(color: domainColor, width: 3),
-            top: const BorderSide(color: TreasuryTokens.hairline, width: 1),
-            right: const BorderSide(color: TreasuryTokens.hairline, width: 1),
-            bottom: const BorderSide(color: TreasuryTokens.hairline, width: 1),
-          ),
+          // Uniform border only: a per-side colored Border + borderRadius
+          // throws "A borderRadius can only be given on borders with uniform
+          // colors" during paint. The domain accent is drawn as an inner 3px
+          // stripe below instead, clipped to the rounded corners.
+          border: Border.all(color: TreasuryTokens.hairline),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -1529,8 +1542,24 @@ class _ActivityNode extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
-          children: [
+        clipBehavior: Clip.antiAlias,
+        child: IntrinsicHeight(
+          // IntrinsicHeight gives the Row a bounded height even when this node
+          // sits inside the vertically-unbounded Builder scroll view — required
+          // because CrossAxisAlignment.stretch (below) needs a bounded cross
+          // extent, and it makes the 3px accent stripe span the full row.
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+            // Domain accent stripe (replaces the old non-uniform left border)
+            Container(width: 3, color: domainColor),
+            // Original padded content
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                child: Row(
+                  children: [
             // Domain icon tile
             Container(
               width: 30,
@@ -1712,7 +1741,12 @@ class _ActivityNode extends StatelessWidget {
                 padding: const EdgeInsets.all(4),
               ),
             ],
-          ],
+                  ],
+                ),
+              ),
+            ),
+            ],
+          ),
         ),
       ),
     );
@@ -2059,7 +2093,11 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
+      // NOTE: no width: double.infinity here — this widget sits inside a
+      // horizontal SingleChildScrollView where max width is unbounded; an
+      // infinite width request throws "BoxConstraints forces an infinite
+      // width". The IntrinsicWidth wrapper in the parent section provides a
+      // bounded width (>= screen width - 40) instead.
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),

@@ -192,6 +192,9 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
   }
 
   void _showMoveSheet(AgileTask story) {
+    // Columns can be transiently empty while board config re-syncs; never
+    // throw "Bad state: No element" from a tap handler.
+    if (_columns.isEmpty) return;
     final currentCol = _columns.firstWhere(
       (c) => c.id == story.workflowState,
       orElse: () => _columns.first,

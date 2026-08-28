@@ -30,7 +30,11 @@ class AgileRoadmapScreen extends StatefulWidget {
 }
 
 class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+  // TickerProviderStateMixin (NOT SingleTickerProviderStateMixin): this State
+  // creates TWO tickers — the TabController and the fade AnimationController
+  // — and SingleTickerProviderStateMixin asserts when a second ticker is
+  // created, crashing the whole screen ("multiple tickers were created").
   late TabController _tabController;
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;

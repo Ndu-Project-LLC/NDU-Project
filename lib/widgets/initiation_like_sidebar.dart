@@ -1916,21 +1916,32 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               ))
           .toList();
 
-      // Find the selected solution or use the first one
+      // Find the selected solution or use the first one. The stored
+      // selection title may reference a solutions list that is empty
+      // (e.g. cleared after the analysis was finalized), so fall back to
+      // a synthesized item instead of throwing "Bad state: No element".
+      final safeSolutions = solutions.isNotEmpty
+          ? solutions
+          : [
+              AiSolutionItem(
+                title: projectData?.projectName ?? 'Preferred Solution',
+                description: projectData?.businessCase ?? '',
+              ),
+            ];
       AiSolutionItem selectedSolution;
       if (preferredAnalysis?.selectedSolutionTitle != null) {
-        selectedSolution = solutions.firstWhere(
+        selectedSolution = safeSolutions.firstWhere(
           (s) => s.title == preferredAnalysis!.selectedSolutionTitle,
-          orElse: () => solutions.first,
+          orElse: () => safeSolutions.first,
         );
       } else {
-        selectedSolution = solutions.first;
+        selectedSolution = safeSolutions.first;
       }
 
       context.push('/project-decision-summary', extra: ProjectDecisionSummaryScreen(
             projectName: projectData?.projectName ?? 'Untitled Project',
             selectedSolution: selectedSolution,
-            allSolutions: solutions,
+            allSolutions: safeSolutions,
             businessCase: projectData?.businessCase ?? '',
             notes: preferredAnalysis?.workingNotes ?? '',
           ));

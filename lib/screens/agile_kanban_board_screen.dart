@@ -558,11 +558,18 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
                       BoxDecoration(color: col.accent, shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 8),
-                Text(col.title,
-                    style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: _kHeadline)),
+                // Flexible + ellipsis: narrow embedded columns (5 across)
+                // must never push the count/WIP badges out of the header.
+                Flexible(
+                  child: Text(col.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: _kHeadline)),
+                ),
                 const SizedBox(width: 6),
                 Container(
                   padding:

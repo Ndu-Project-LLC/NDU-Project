@@ -65,7 +65,14 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
   Future<void> _loadData() async {
     final pid = _projectId;
     if (pid == null) {
-      if (mounted) setState(() => _isLoading = false);
+      // No project context — still show the default workflow columns so the
+      // embedded board renders an (empty) board instead of a blank 640px box.
+      if (mounted) {
+        setState(() {
+          _columns = _buildColumnsFromConfig(const {});
+          _isLoading = false;
+        });
+      }
       return;
     }
     setState(() => _isLoading = true);

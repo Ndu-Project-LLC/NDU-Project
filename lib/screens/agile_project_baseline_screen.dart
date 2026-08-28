@@ -1852,6 +1852,7 @@ class _ApproverAutocomplete extends StatelessWidget {
  ),
  child: ListView.separated(
  padding: const EdgeInsets.symmetric(vertical: 6),
+ shrinkWrap: true,
  physics: const NeverScrollableScrollPhysics(),
  itemCount: list.length,
  separatorBuilder: (_, __) =>

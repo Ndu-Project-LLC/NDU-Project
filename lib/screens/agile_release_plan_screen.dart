@@ -170,6 +170,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                                 'No release plans yet. Create your first release.')
                           else
                             ListView.builder(
+                              shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                               itemCount: _plans.length,
                               itemBuilder: (context, i) =>
@@ -851,6 +852,7 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
                     )
                   else
                     ListView.builder(
+                      shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: _epics.length,
                       itemBuilder: (context, epicIdx) {

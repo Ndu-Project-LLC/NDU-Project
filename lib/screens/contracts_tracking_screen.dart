@@ -861,6 +861,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
             ),
             // Table rows sorted by urgency (soonest expiry first)
             ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _sortedRenewalLanes.length,
               itemBuilder: (context, index) {
@@ -1100,6 +1101,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
             ),
             // Table rows
             ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _approvalCheckpoints.length,
               itemBuilder: (context, index) {

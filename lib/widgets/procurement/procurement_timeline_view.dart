@@ -134,6 +134,7 @@ class _TimelineList extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ListView.builder(
+            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: sorted.length,
             itemBuilder: (context, i) {
@@ -306,6 +307,7 @@ class _TrackingTimelineCard extends StatelessWidget {
                   )
                 else
                   ListView.builder(
+                    shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: item!.events.length,
                     itemBuilder: (context, i) {

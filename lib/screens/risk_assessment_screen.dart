@@ -1139,6 +1139,7 @@ class _MetricsWrap extends StatelessWidget {
         return GridView.count(
         crossAxisCount: 2,
         childAspectRatio: 1.35,
+        shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,

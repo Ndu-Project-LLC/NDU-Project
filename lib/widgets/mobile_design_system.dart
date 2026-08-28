@@ -363,6 +363,7 @@ class MobileDesignSystem {
   }) {
     final columns = AppBreakpoints.gridColumns(context);
     return GridView.builder(
+      shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: columns,

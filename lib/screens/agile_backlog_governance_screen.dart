@@ -594,6 +594,7 @@ class _AgileBacklogGovernanceScreenState
           const SizedBox(height: 8),
           if (_showDoRChecklist) ...[
             ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _doRItems.length,
               itemBuilder: (context, i) => _buildChecklistRow(
@@ -661,6 +662,7 @@ class _AgileBacklogGovernanceScreenState
           const SizedBox(height: 8),
           if (_showDoDChecklist) ...[
             ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _doDItems.length,
               itemBuilder: (context, i) => _buildChecklistRow(
@@ -781,6 +783,7 @@ class _AgileBacklogGovernanceScreenState
               style: TextStyle(fontSize: 12, color: _kMuted)),
           const SizedBox(height: 12),
           ListView.builder(
+            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _waItems.length,
             itemBuilder: (context, i) => _buildChecklistRow(

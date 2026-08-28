@@ -240,6 +240,7 @@ class _ProjectActivitiesLogScreenState
  ),
  )
  : ListView.builder(
+ shrinkWrap: true,
  physics: const NeverScrollableScrollPhysics(),
  itemCount: visibleOptions.length,
  itemBuilder: (context, index) {

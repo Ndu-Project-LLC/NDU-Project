@@ -608,6 +608,7 @@ class _SolutionSection extends StatelessWidget {
             style: TextStyle(color: _textSecondary, fontSize: 16, height: 1.6, fontFamily: appFontFamily)),
           const SizedBox(height: 40),
           // Capability grid
+          GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 4, crossAxisSpacing: 20, mainAxisSpacing: 20, childAspectRatio: 1.0, children: caps.map((c) => _capCard(c.$1, c.$2, c.$3, c.$4)).toList()),
           GridView.count(physics: const NeverScrollableScrollPhysics(), crossAxisCount: 4, crossAxisSpacing: 20, mainAxisSpacing: 20, childAspectRatio: 1.0, children: caps.map((c) => _capCard(c.$1, c.$2, c.$3, c.$4)).toList()),
           const SizedBox(height: 40),
           // Comparison table

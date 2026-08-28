@@ -706,6 +706,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
                               ),
                             )
                           : ListView.separated(
+                              shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                               itemCount: filtered.length,
                               separatorBuilder: (_, __) => const Divider(

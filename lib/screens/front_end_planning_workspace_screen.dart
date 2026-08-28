@@ -837,6 +837,7 @@ class _ListEditorCard extends StatelessWidget {
             )
           else
             ReorderableListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               buildDefaultDragHandles: false,
               padding: const EdgeInsets.all(8),

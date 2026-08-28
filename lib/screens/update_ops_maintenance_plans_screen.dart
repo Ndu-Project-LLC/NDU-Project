@@ -709,6 +709,7 @@ class _UpdateOpsMaintenancePlansScreenState
                 ),
               ),
               ListView.builder(
+                shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: filtered.length,
                 itemBuilder: (context, i) {
@@ -818,6 +819,7 @@ class _UpdateOpsMaintenancePlansScreenState
                 message: 'No coverage items yet.')
           else
             ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _coverage.length,
               itemBuilder: (context, i) => RepaintBoundary(
@@ -919,6 +921,7 @@ class _UpdateOpsMaintenancePlansScreenState
                 message: 'No ops signals yet.')
           else
             ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _signals.length,
               itemBuilder: (context, i) => RepaintBoundary(
@@ -1011,6 +1014,7 @@ class _UpdateOpsMaintenancePlansScreenState
                 message: 'No maintenance windows yet.')
           else
             ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _maintenanceWindows.length,
               itemBuilder: (context, i) => RepaintBoundary(

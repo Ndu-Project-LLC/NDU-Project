@@ -323,6 +323,7 @@ class _DeliverableRoadmapAgileMapOutScreenState
           ? const _EmptySection(
               message: 'Create sprints in Roadmap Overview to see waves here.')
           : ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: waves.length,
               itemBuilder: (context, i) => _WaveRow(
@@ -344,6 +345,7 @@ class _DeliverableRoadmapAgileMapOutScreenState
               children: [
                 _VelocityHeader(),
                 ListView.builder(
+                  shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _sprints.length,
                   itemBuilder: (context, i) => _VelocityRow(
@@ -367,6 +369,7 @@ class _DeliverableRoadmapAgileMapOutScreenState
               message:
                   'No dependencies defined. Add dependencies when creating deliverables.')
           : ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: deps.length,
               itemBuilder: (context, i) => _DependencyRow(link: deps[i]),
@@ -398,6 +401,7 @@ class _DeliverableRoadmapAgileMapOutScreenState
           ? const _EmptySection(
               message: 'Create sprints with end dates to see milestones.')
           : ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: milestones.length,
               itemBuilder: (context, i) =>

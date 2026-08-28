@@ -5092,6 +5092,7 @@ class _FrontEndPlanningProcurementScreenState
  : ConstrainedBox(
  constraints: const BoxConstraints(maxHeight: 360),
  child: ListView.separated(
+ shrinkWrap: true,
  physics: const NeverScrollableScrollPhysics(),
  itemCount: approvedVendors.length,
  separatorBuilder: (_, __) =>

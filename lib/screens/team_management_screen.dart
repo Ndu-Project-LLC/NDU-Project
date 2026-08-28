@@ -584,6 +584,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  )
  else
  GridView.builder(
+ shrinkWrap: true,
  physics: const NeverScrollableScrollPhysics(),
  itemCount: members.length,
  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

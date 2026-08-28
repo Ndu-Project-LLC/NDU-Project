@@ -674,6 +674,7 @@ class _EvmSummaryCard extends StatelessWidget {
           const SizedBox(height: 16),
           GridView.count(
             crossAxisCount: 4,
+            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             childAspectRatio: 2.4,
             crossAxisSpacing: 12,

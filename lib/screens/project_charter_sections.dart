@@ -902,6 +902,7 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
                              constraints: const BoxConstraints(maxHeight: 220),
                              child: ListView.builder(
                                padding: EdgeInsets.zero,
+                               shrinkWrap: true,
                                physics: const NeverScrollableScrollPhysics(),
                                itemCount: options.length,
                                itemBuilder: (c, i) {

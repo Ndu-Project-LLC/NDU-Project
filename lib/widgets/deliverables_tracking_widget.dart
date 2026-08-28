@@ -274,6 +274,7 @@ class _DeliverablesTrackingWidgetState
         ),
         // Table Rows
         ListView.builder(
+          shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: _deliverables.length,
           itemBuilder: (context, index) {

@@ -2191,6 +2191,7 @@ class _SearchableOptionListState extends State<_SearchableOptionList> {
  border: Border.all(color: _border.withValues(alpha: 0.3), width: 1),
  ),
  child: ListView.separated(
+ shrinkWrap: true,
  physics: const NeverScrollableScrollPhysics(),
  padding: const EdgeInsets.symmetric(vertical: 4),
  itemCount: filtered.length,

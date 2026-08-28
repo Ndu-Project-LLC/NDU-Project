@@ -234,6 +234,7 @@ class _AggregatedBusinessSystemsCardState
     }
     return GridView.count(
       crossAxisCount: 2,
+      shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 10,
       crossAxisSpacing: 10,

@@ -1668,6 +1668,7 @@ class _GoalsCard extends StatelessWidget {
  )
  else
  ListView.separated(
+ shrinkWrap: true,
  physics: const NeverScrollableScrollPhysics(),
  itemCount: items.length,
  separatorBuilder: (_, __) => const Divider(height: 1),

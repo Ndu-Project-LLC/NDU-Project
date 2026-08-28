@@ -315,6 +315,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
                             : 'No sprints defined. Create your first sprint.')
                       else
                         ListView.builder(
+                          shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _filteredSprints.length,
                           itemBuilder: (context, i) =>
@@ -685,6 +686,7 @@ class _AssignFeaturesDialogState extends State<_AssignFeaturesDialog> {
                       color: _kHeadline)),
               const SizedBox(height: 8),
               ListView.builder(
+                shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: widget.assigned.length,
                 itemBuilder: (context, i) =>
@@ -700,6 +702,7 @@ class _AssignFeaturesDialogState extends State<_AssignFeaturesDialog> {
                       color: _kHeadline)),
               const SizedBox(height: 8),
               ListView.builder(
+                shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: widget.unassigned.length,
                 itemBuilder: (context, i) =>

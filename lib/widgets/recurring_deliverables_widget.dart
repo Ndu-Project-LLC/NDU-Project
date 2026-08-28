@@ -204,6 +204,7 @@ class _RecurringDeliverablesWidgetState
                   ),
                 ),
                 ListView.builder(
+                  shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _recurring.length,
                   itemBuilder: (context, index) {

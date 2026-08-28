@@ -1071,8 +1071,8 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
           else ...[
             _buildTableHeader(),
             ListView.builder(
-              shrinkWrap: false,
-              physics: const ClampingScrollPhysics(),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: displayRows.length,
               itemBuilder: (context, index) {
                 final row = displayRows[index];

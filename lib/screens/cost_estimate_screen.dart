@@ -3072,6 +3072,7 @@ class _OverviewRollupCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: rows.length,
               itemBuilder: (context, i) {
@@ -3887,6 +3888,7 @@ class _SourceImportsTab extends StatelessWidget {
         _ReconciliationReportCard(report: reconciliationReport),
         const SizedBox(height: 18),
         ListView.builder(
+          shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: sourceSummaries.length,
           itemBuilder: (context, i) => Padding(
@@ -4114,6 +4116,7 @@ class _SourceDetailList extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: rows.length,
               itemBuilder: (context, i) {
@@ -4382,6 +4385,7 @@ class _ContingencyRiskPanel extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: rows.length,
               itemBuilder: (context, i) {
@@ -4610,6 +4614,7 @@ class _CbsTreeWorkspace extends StatelessWidget {
             )
           else
             ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: tree.children.length,
               itemBuilder: (context, i) => _CbsTreeTile(node: tree.children[i]),
@@ -4862,6 +4867,7 @@ class _CbsTreeTileState extends State<_CbsTreeTile> {
         ),
         if (_expanded && hasChildren)
           ListView.builder(
+            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: node.children.length,
             itemBuilder: (context, i) => _CbsTreeTile(node: node.children[i]),
@@ -5538,6 +5544,7 @@ class _CostCategoryList extends StatelessWidget {
     }
 
     return ListView.builder(
+      shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: items.length,
       itemBuilder: (context, i) {
@@ -5589,6 +5596,7 @@ class _SupersededCostList extends StatelessWidget {
     }
 
     return ListView.builder(
+      shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: items.length,
       itemBuilder: (context, i) {
@@ -7782,6 +7790,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
                             )
                           : ListView.separated(
                               padding: const EdgeInsets.all(24),
+                              shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                               itemCount: _suggestions.length,
                               separatorBuilder: (_, __) =>

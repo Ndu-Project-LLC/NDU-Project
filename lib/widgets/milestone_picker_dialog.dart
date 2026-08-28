@@ -99,6 +99,7 @@ class _MilestonePickerDialogState extends State<MilestonePickerDialog> {
                     ),
                   )
                 : ListView.builder(
+                    shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: sorted.length,

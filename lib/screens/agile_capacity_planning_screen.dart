@@ -544,6 +544,7 @@ class _AgileCapacityPlanningScreenState
             )
           else
             ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _leaveEntries.length,
               itemBuilder: (context, i) => _buildLeaveRow(i, _leaveEntries[i]),
@@ -661,6 +662,7 @@ class _AgileCapacityPlanningScreenState
             )
           else
             ListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _holidays.length,
               itemBuilder: (context, i) => _buildHolidayRow(i, _holidays[i]),

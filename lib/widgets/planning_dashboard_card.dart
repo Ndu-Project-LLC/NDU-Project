@@ -150,6 +150,7 @@ class PlanningDashboardCard extends StatelessWidget {
             )
           else if (onReorder != null)
             ReorderableListView.builder(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               buildDefaultDragHandles: false,
               itemCount: items.length,
@@ -187,6 +188,7 @@ class PlanningDashboardCard extends StatelessWidget {
             )
           else
             ListView.separated(
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: items.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),

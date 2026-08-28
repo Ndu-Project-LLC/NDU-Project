@@ -5072,6 +5072,7 @@ class _FilterableCreatableDropdownFieldState
                   ),
                   child: ListView.separated(
                     padding: const EdgeInsets.symmetric(vertical: 6),
+                    shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: list.length,
                     separatorBuilder: (_, __) =>
@@ -5284,6 +5285,7 @@ class _RequirementMultiSelectFieldState
                               ),
                             )
                           : ListView.builder(
+                              shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                               itemCount: filtered.length,
                               itemBuilder: (context, index) {

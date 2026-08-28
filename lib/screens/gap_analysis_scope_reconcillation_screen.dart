@@ -1183,6 +1183,7 @@ class _GapRegisterCard extends StatelessWidget {
                             ),
                           ),
                           ListView.builder(
+                            shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: _sortedEntries.length,
                             itemBuilder: (context, idx) {
@@ -1617,6 +1618,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                             ),
                           ),
                           ListView.builder(
+                            shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: rootCauseThemes.length,
                             itemBuilder: (context, idx) {
@@ -1714,6 +1716,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                             ),
                           ),
                           ListView.builder(
+                            shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: mitigationConfidence.length,
                             itemBuilder: (context, idx) {
@@ -2793,6 +2796,7 @@ class _ReconciliationPlanningCard extends StatelessWidget {
                             ),
                           ),
                           ListView.builder(
+                            shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: plans.length,
                             itemBuilder: (context, idx) {
@@ -3217,6 +3221,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
                             ),
                           ),
                           ListView.builder(
+                            shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: impacts.length,
                             itemBuilder: (context, idx) {
@@ -5441,6 +5446,7 @@ class _WorkflowBoardColumn extends StatelessWidget {
                 ),
               if (items.isNotEmpty)
                 ListView.builder(
+                  shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: items.length,
                   itemBuilder: (context, idx) {

@@ -711,7 +711,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
                   scrollDirection: Axis.horizontal,
                   clipBehavior: Clip.none,
                   // IntrinsicWidth bounds the subtree width (see Activity Tree
-                  // note above) — _SampleActivityTable's header Row uses a
+                  // note above) — _ActivityScheduleTable's header Row uses a
                   // Spacer and its root Container used to force
                   // width: double.infinity, both fatal under unbounded width.
                   child: IntrinsicWidth(
@@ -719,7 +719,12 @@ class _BuilderScreenState extends State<BuilderScreen> {
                       constraints: BoxConstraints(
                         minWidth: MediaQuery.of(context).size.width - 40,
                       ),
-                      child: _SampleActivityTable(schedule: schedule),
+                      child: _ActivityScheduleTable(
+                      schedule: schedule,
+                      rootActivity: root,
+                      onImportFromWorkPackages: () =>
+                          _createActivitiesFromPackages(autoMode: true),
+                    ),
                     ),
                   ),
                 ),
@@ -750,7 +755,11 @@ class _BuilderScreenState extends State<BuilderScreen> {
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
-                        'The table above shows a sample schedule for reference. Add your own activities via the Add Activity button to populate the Gantt and List View tabs. Each row maps to an EWP, CWP, or activity in your delivery model.',
+                        'The Activity Schedule above is populated from your WBS '
+                        'and Work Packages. Use the action pills at the top of '
+                        'the page to import more activities, or tap "Add '
+                        'activity" below the table. Each row maps to an EWP, '
+                        'CWP, or activity in your delivery model.',
                         style: TextStyle(
                             color: TreasuryTokens.inkSoft,
                             fontSize: 12,
@@ -1809,24 +1818,47 @@ class _ActivityNode extends StatelessWidget {
 /// Interactive sample activity table with inline editing, add-row, and KAZ AI
 /// generation. Demonstrates the full columnar view (ID, Name, Duration, Start,
 /// Finish, Predecessors, Resources) that the Gantt and List View tabs render.
-class _SampleActivityTable extends StatefulWidget {
+/// Activity Schedule table — renders the SAME WBS-derived activities that the
+/// Activity Tree above renders, but in a columnar view (ID, Name, Duration,
+/// Start, Finish, Predecessors, Resources). Each row also shows its WBS Code
+/// and Level chips when linked to a WBS node.
+///
+/// Includes an "Add activity" popup dialog (which calls the real
+/// ScheduleProvider.addActivity when a schedule is bound, falling back to a
+/// draft row otherwise) and KAZ AI generation for new activities.
+///
+/// When the schedule has no real activities yet (root has no children), a
+/// prominent empty-state card with a CTA replaces the table to guide the user
+/// toward importing from WBS / Work Packages.
+class _ActivityScheduleTable extends StatefulWidget {
   final Schedule schedule;
-  const _SampleActivityTable({required this.schedule});
+  final ScheduleActivity rootActivity;
+  final VoidCallback? onImportFromWorkPackages;
+
+  const _ActivityScheduleTable({
+    required this.schedule,
+    required this.rootActivity,
+    this.onImportFromWorkPackages,
+  });
 
   @override
-  State<_SampleActivityTable> createState() => _SampleActivityTableState();
+  State<_ActivityScheduleTable> createState() => _ActivityScheduleTableState();
 }
 
-class _SampleActivityTableState extends State<_SampleActivityTable> {
-  late List<_SampleRow> _rows;
+class _ActivityScheduleTableState extends State<_ActivityScheduleTable> {
+  /// User-added or AI-generated draft rows (NOT persisted to the schedule).
+  /// They render below the real WBS-derived activities and can be removed
+  /// inline. Real activities (from `rootActivity`) cannot be removed here —
+  /// they're managed via the Activity Tree or Work Packages module.
+  late List<_ActivityRow> _draftRows;
   bool _isGenerating = false;
-  int _nextId = 8;
+  int _nextId = 1;
 
   @override
   void initState() {
     super.initState();
-    _rows = _sampleRows(
-        widget.schedule.projectName, widget.schedule.basis.deliveryModel);
+    _draftRows = [];
+    _nextId = _computeNextId();
   }
 
   @override
@@ -1834,13 +1866,46 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
     super.dispose();
   }
 
-  
+  /// Compute the next draft-row ID by looking at existing activity codes &
+  /// draft-row IDs, so newly added rows don't collide with WBS-derived ones.
+  int _computeNextId() {
+    int max = 0;
+    for (final r in _flattenActivities()) {
+      final n = int.tryParse(r.id) ?? 0;
+      if (n > max) max = n;
+    }
+    for (final r in _draftRows) {
+      final n = int.tryParse(r.id) ?? 0;
+      if (n > max) max = n;
+    }
+    return max + 1;
+  }
+
+  String _formatDate(DateTime d) =>
+      '${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}/${d.year.toString().substring(2)}';
+
+  /// Walk the activity tree depth-first and produce a flat list of rows.
+  /// Excludes the root (Level 0) — only real child activities are shown.
+  List<_ActivityRow> _flattenActivities() {
+    final rows = <_ActivityRow>[];
+    void walk(ScheduleActivity node) {
+      for (final c in node.children) {
+        rows.add(_ActivityRow.fromActivity(c));
+        walk(c);
+      }
+    }
+    walk(widget.rootActivity);
+    return rows;
+  }
+
+
 
   Future<void> _showAddSampleDialog(BuildContext context) async {
     final nameCtrl = TextEditingController();
     final durationCtrl = TextEditingController();
-    final startCtrl = TextEditingController(text: '01/06/26');
-    final finishCtrl = TextEditingController(text: '01/30/26');
+    final startCtrl = TextEditingController(text: _formatDate(DateTime.now()));
+    final finishCtrl = TextEditingController(
+        text: _formatDate(DateTime.now().add(const Duration(days: 30))));
     final predsCtrl = TextEditingController();
     final resourcesCtrl = TextEditingController();
 
@@ -1916,32 +1981,32 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                     ),
                   );
                 } else {
-                  // Fallback to local sample rows when no real schedule is set up
+                  // Fallback to local draft rows when no real schedule is set up
                   setState(() {
-                    _rows.add(_SampleRow(
-                      (_nextId++).toString(),
-                      nameCtrl.text.trim(),
-                      durationCtrl.text.trim().isNotEmpty ? durationCtrl.text.trim() : '—',
-                      startCtrl.text.trim().isNotEmpty ? startCtrl.text.trim() : '—',
-                      finishCtrl.text.trim().isNotEmpty ? finishCtrl.text.trim() : '—',
-                      predsCtrl.text.trim().isNotEmpty ? predsCtrl.text.trim() : '—',
-                      resourcesCtrl.text.trim().isNotEmpty ? resourcesCtrl.text.trim() : '—',
-                      ScheduleDomain.execution.color,
+                    _draftRows.add(_ActivityRow.draft(
+                      id: (_nextId++).toString(),
+                      name: nameCtrl.text.trim(),
+                      duration: durationCtrl.text.trim().isNotEmpty ? durationCtrl.text.trim() : '—',
+                      start: startCtrl.text.trim().isNotEmpty ? startCtrl.text.trim() : '—',
+                      finish: finishCtrl.text.trim().isNotEmpty ? finishCtrl.text.trim() : '—',
+                      predecessors: predsCtrl.text.trim().isNotEmpty ? predsCtrl.text.trim() : '—',
+                      resources: resourcesCtrl.text.trim().isNotEmpty ? resourcesCtrl.text.trim() : '—',
+                      domainColor: ScheduleDomain.execution.color,
                     ));
                   });
                 }
               } catch (e) {
-                // If provider isn't available, fall back to sample rows
+                // If provider isn't available, fall back to draft rows
                 setState(() {
-                  _rows.add(_SampleRow(
-                    (_nextId++).toString(),
-                    nameCtrl.text.trim(),
-                    durationCtrl.text.trim().isNotEmpty ? durationCtrl.text.trim() : '—',
-                    startCtrl.text.trim().isNotEmpty ? startCtrl.text.trim() : '—',
-                    finishCtrl.text.trim().isNotEmpty ? finishCtrl.text.trim() : '—',
-                    predsCtrl.text.trim().isNotEmpty ? predsCtrl.text.trim() : '—',
-                    resourcesCtrl.text.trim().isNotEmpty ? resourcesCtrl.text.trim() : '—',
-                    ScheduleDomain.execution.color,
+                  _draftRows.add(_ActivityRow.draft(
+                    id: (_nextId++).toString(),
+                    name: nameCtrl.text.trim(),
+                    duration: durationCtrl.text.trim().isNotEmpty ? durationCtrl.text.trim() : '—',
+                    start: startCtrl.text.trim().isNotEmpty ? startCtrl.text.trim() : '—',
+                    finish: finishCtrl.text.trim().isNotEmpty ? finishCtrl.text.trim() : '—',
+                    predecessors: predsCtrl.text.trim().isNotEmpty ? predsCtrl.text.trim() : '—',
+                    resources: resourcesCtrl.text.trim().isNotEmpty ? resourcesCtrl.text.trim() : '—',
+                    domainColor: ScheduleDomain.execution.color,
                   ));
                 });
               }
@@ -1962,9 +2027,9 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
     resourcesCtrl.dispose();
   }
 
-  void _removeRow(int index) {
-    if (index < 0 || index >= _rows.length) return;
-    setState(() => _rows.removeAt(index));
+  void _removeDraftRow(int index) {
+    if (index < 0 || index >= _draftRows.length) return;
+    setState(() => _draftRows.removeAt(index));
   }
 
   Future<void> _generateWithKazAi() async {
@@ -1974,16 +2039,17 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
     try {
       final projectName = widget.schedule.projectName;
       final deliveryModel = widget.schedule.basis.deliveryModel;
-      final existingCount = _rows.length;
+      final realRows = _flattenActivities();
+      final existingCount = realRows.length + _draftRows.length;
 
       final ai = OpenAiServiceSecure();
       final result = await ai.generateCompletion(
         'You are a project schedule expert. Generate 3-5 additional schedule '
         'activities for a project called "$projectName" using the '
-        '$deliveryModel delivery model. The existing $existingCount activities '
-        'cover engineering, procurement, execution, construction, and '
-        'commissioning. Suggest realistic follow-on or parallel activities '
-        'with typical durations and resource assignments.\n\n'
+        '$deliveryModel delivery model. There are already $existingCount '
+        'activities covering engineering, procurement, execution, '
+        'construction, and commissioning. Suggest realistic follow-on or '
+        'parallel activities with typical durations and resource assignments.\n\n'
         'Return the result as a pipe-delimited table with columns:\n'
         'ID|Activity Name|Duration|Start|Finish|Predecessors|Resources\n'
         'Use sequential IDs starting at $_nextId. Dates should be in MM/DD/YY format, '
@@ -2027,15 +2093,15 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
           final predecessors = parts[5];
           final resources = parts[6];
           final domainColor = domains[_nextId % domains.length];
-          _rows.add(_SampleRow(
-            (_nextId++).toString(),
-            name,
-            duration,
-            start,
-            finish,
-            predecessors,
-            resources,
-            domainColor,
+          _draftRows.add(_ActivityRow.draft(
+            id: (_nextId++).toString(),
+            name: name,
+            duration: duration,
+            start: start,
+            finish: finish,
+            predecessors: predecessors,
+            resources: resources,
+            domainColor: domainColor,
           ));
         }
       });
@@ -2062,6 +2128,11 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
 
   @override
   Widget build(BuildContext context) {
+    final realRows = _flattenActivities();
+    final allRows = [...realRows, ..._draftRows];
+    final hasAny = allRows.isNotEmpty;
+    final wbsLinkedCount = realRows.where((r) => r.wbsLinked).length;
+
     return Container(
       // NOTE: no width: double.infinity here — this widget sits inside a
       // horizontal SingleChildScrollView where max width is unbounded; an
@@ -2091,11 +2162,37 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                 const Icon(Icons.table_chart,
                     size: 16, color: LightModeColors.accent),
                 const SizedBox(width: 8),
-                const Text('Sample Activity Schedule',
+                const Text('Activity Schedule',
                     style: TextStyle(
                         color: Color(0xFF1A1D1F),
                         fontSize: 14,
                         fontWeight: FontWeight.w700)),
+                const SizedBox(width: 8),
+                if (wbsLinkedCount > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: TreasuryTokens.infoSoft,
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(
+                          color:
+                              TreasuryTokens.info.withValues(alpha: 0.25)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.account_tree_outlined,
+                            size: 10, color: TreasuryTokens.info),
+                        const SizedBox(width: 3),
+                        Text('$wbsLinkedCount WBS linked',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: TreasuryTokens.info)),
+                      ],
+                    ),
+                  ),
                 const Spacer(),
                 // KAZ AI generate button
                 AnimatedContainer(
@@ -2154,7 +2251,7 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: const Color(0xFFE4E7EC)),
                   ),
-                  child: Text('${_rows.length} activities',
+                  child: Text('${allRows.length} activities',
                       style: const TextStyle(
                           color: Color(0xFF495057),
                           fontSize: 11,
@@ -2164,304 +2261,470 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
             ),
           ),
           const Divider(color: Color(0xFFE4E7EC), height: 1),
-          // Data table
-          FullScreenTableWrapper(
-            title: 'Schedule Builder Activities',
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: buildNduDataTable(
-                context: context,
-                zebra: false,
-                headingRowColor: const Color(0xFFF9FAFB),
-                headingRowHeight: 48,
-                dataRowMinHeight: 52,
-                dataRowMaxHeight: 52,
-                columnSpacing: 24,
-                horizontalMargin: 16,
-                autoWrapCells: false,
-                columns: const [
-                  DataColumn(
-                      label: Text('ID',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Name',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Duration',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Start',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Finish',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Predecessors',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Resources',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(label: SizedBox(width: 32)),
-                ],
-                rows: [
-                  // Data rows
-                  ..._rows.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final r = entry.value;
-                    return DataRow(
-                      cells: [
-                        DataCell(Text(r.id,
-                            style: const TextStyle(
-                                color: Color(0xFF495057),
-                                fontSize: 11,
-                                fontFamily: appFontFamily,
-                                fontWeight: FontWeight.bold))),
-                        DataCell(Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                  color: Color(r.domainColor),
-                                  shape: BoxShape.circle),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(r.name,
-                                style: const TextStyle(
-                                    color: Color(0xFF1A1D1F),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500)),
-                          ],
-                        )),
-                        DataCell(Text(r.duration,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(Text(r.start,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(Text(r.finish,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(Text(r.predecessors,
-                            style: const TextStyle(
-                                color: Color(0xFF495057),
-                                fontSize: 11,
-                                fontFamily: appFontFamily))),
-                        DataCell(Text(r.resources,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline,
-                                size: 16, color: Color(0xFF9CA3AF)),
-                            onPressed: () => _removeRow(i),
-                            tooltip: 'Remove activity',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(
-                                minWidth: 28, minHeight: 28),
-                          ),
+          // Empty state when no activities exist
+          if (!hasAny) _buildEmptyState(),
+          // Data table when there are activities (real or draft)
+          if (hasAny)
+            FullScreenTableWrapper(
+              title: 'Schedule Builder Activities',
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: buildNduDataTable(
+                  context: context,
+                  zebra: false,
+                  headingRowColor: const Color(0xFFF9FAFB),
+                  headingRowHeight: 48,
+                  dataRowMinHeight: 52,
+                  dataRowMaxHeight: 52,
+                  columnSpacing: 24,
+                  horizontalMargin: 16,
+                  autoWrapCells: false,
+                  columns: const [
+                    DataColumn(
+                        label: Text('ID',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Name',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Duration',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Start',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Finish',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Predecessors',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Resources',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(label: SizedBox(width: 32)),
+                  ],
+                  rows: [
+                    // Data rows — real WBS-derived activities + user draft rows
+                    ...allRows.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final r = entry.value;
+                      final isDraft = i >= realRows.length;
+                      final draftIdx = i - realRows.length;
+                      return DataRow(
+                        color: WidgetStateProperty.all(
+                          isDraft ? const Color(0xFFFFFBEB) : null,
                         ),
-                      ],
-                    );
-                  }),
-                  // Replace inline add row with a single button that opens the
-                  // Add Activity modal so items are added via a popup.
-                  DataRow(cells: [
-                    DataCell(Container()),
-                    DataCell(FilledButton.icon(
-                      onPressed: () => _showAddSampleDialog(context),
-                      icon: const Icon(Icons.add_rounded, size: 16),
-                      label: const Text('Add activity'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: LightModeColors.accent.withValues(alpha: 0.06),
-                        foregroundColor: LightModeColors.accent,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      ),
-                    )),
-                    DataCell(Container()),
-                    DataCell(Container()),
-                    DataCell(Container()),
-                    DataCell(Container()),
-                    DataCell(Container()),
-                    DataCell(Container()),
-                  ]),
-                ],
+                        cells: [
+                          DataCell(Text(r.id,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057),
+                                  fontSize: 11,
+                                  fontFamily: appFontFamily,
+                                  fontWeight: FontWeight.bold))),
+                          DataCell(Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                    color: Color(r.domainColor),
+                                    shape: BoxShape.circle),
+                              ),
+                              const SizedBox(width: 6),
+                              if (r.level > 0)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: Color(r.domainColor)
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: Color(r.domainColor)
+                                            .withValues(alpha: 0.35))),
+                                  child: Text('L${r.level}',
+                                      style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(r.domainColor),
+                                          letterSpacing: 0.3)),
+                                ),
+                              if (r.wbsLinked && r.wbsCode.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: TreasuryTokens.infoSoft,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: TreasuryTokens.info
+                                            .withValues(alpha: 0.3)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.account_tree_outlined,
+                                          size: 9, color: TreasuryTokens.info),
+                                      const SizedBox(width: 3),
+                                      Text(r.wbsCode,
+                                          style: TextStyle(
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: TreasuryTokens.info,
+                                              fontFamily: appFontFamily,
+                                              letterSpacing: 0.2)),
+                                    ],
+                                  ),
+                                )
+                              else if (isDraft)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF7E0),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: const Color(0xFFFDE68A)),
+                                  ),
+                                  child: const Text('DRAFT',
+                                      style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF92400E),
+                                          letterSpacing: 0.4)),
+                                ),
+                              Flexible(
+                                child: Text(r.name,
+                                    style: const TextStyle(
+                                        color: Color(0xFF1A1D1F),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500),
+                                    overflow: TextOverflow.ellipsis),
+                              ),
+                            ],
+                          )),
+                          DataCell(Text(r.duration,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(Text(r.start,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(Text(r.finish,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(Text(r.predecessors,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057),
+                                  fontSize: 11,
+                                  fontFamily: appFontFamily))),
+                          DataCell(Text(r.resources,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(
+                            isDraft
+                                ? IconButton(
+                                    icon: const Icon(Icons.remove_circle_outline,
+                                        size: 16, color: Color(0xFFEF4444)),
+                                    onPressed: () => _removeDraftRow(draftIdx),
+                                    tooltip: 'Remove draft row',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(
+                                        minWidth: 28, minHeight: 28),
+                                  )
+                                : const Icon(Icons.lock_outline,
+                                    size: 14, color: Color(0xFFCBD5E1)),
+                          ),
+                        ],
+                      );
+                    }),
+                    // Replace inline add row with a single button that opens the
+                    // Add Activity modal so items are added via a popup.
+                    DataRow(cells: [
+                      DataCell(Container()),
+                      DataCell(FilledButton.icon(
+                        onPressed: () => _showAddSampleDialog(context),
+                        icon: const Icon(Icons.add_rounded, size: 16),
+                        label: const Text('Add activity'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: LightModeColors.accent.withValues(alpha: 0.06),
+                          foregroundColor: LightModeColors.accent,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        ),
+                      )),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                    ]),
+                  ],
+                ),
+              ),
+              tableBuilder: (fsContext) => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: buildNduDataTable(
+                  context: fsContext,
+                  zebra: false,
+                  headingRowColor: const Color(0xFFF9FAFB),
+                  headingRowHeight: 48,
+                  dataRowMinHeight: 52,
+                  dataRowMaxHeight: 52,
+                  columnSpacing: 24,
+                  horizontalMargin: 16,
+                  autoWrapCells: false,
+                  columns: const [
+                    DataColumn(
+                        label: Text('ID',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Name',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Duration',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Start',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Finish',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Predecessors',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Resources',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(label: SizedBox(width: 32)),
+                  ],
+                  rows: [
+                    // Data rows — real WBS-derived activities + user draft rows
+                    ...allRows.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final r = entry.value;
+                      final isDraft = i >= realRows.length;
+                      final draftIdx = i - realRows.length;
+                      return DataRow(
+                        color: WidgetStateProperty.all(
+                          isDraft ? const Color(0xFFFFFBEB) : null,
+                        ),
+                        cells: [
+                          DataCell(Text(r.id,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057),
+                                  fontSize: 11,
+                                  fontFamily: appFontFamily,
+                                  fontWeight: FontWeight.bold))),
+                          DataCell(Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                    color: Color(r.domainColor),
+                                    shape: BoxShape.circle),
+                              ),
+                              const SizedBox(width: 6),
+                              if (r.level > 0)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: Color(r.domainColor)
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: Color(r.domainColor)
+                                            .withValues(alpha: 0.35))),
+                                  child: Text('L${r.level}',
+                                      style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(r.domainColor),
+                                          letterSpacing: 0.3)),
+                                ),
+                              if (r.wbsLinked && r.wbsCode.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: TreasuryTokens.infoSoft,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: TreasuryTokens.info
+                                            .withValues(alpha: 0.3)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.account_tree_outlined,
+                                          size: 9, color: TreasuryTokens.info),
+                                      const SizedBox(width: 3),
+                                      Text(r.wbsCode,
+                                          style: TextStyle(
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: TreasuryTokens.info,
+                                              fontFamily: appFontFamily,
+                                              letterSpacing: 0.2)),
+                                    ],
+                                  ),
+                                )
+                              else if (isDraft)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF7E0),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: const Color(0xFFFDE68A)),
+                                  ),
+                                  child: const Text('DRAFT',
+                                      style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF92400E),
+                                          letterSpacing: 0.4)),
+                                ),
+                              Flexible(
+                                child: Text(r.name,
+                                    style: const TextStyle(
+                                        color: Color(0xFF1A1D1F),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500),
+                                    overflow: TextOverflow.ellipsis),
+                              ),
+                            ],
+                          )),
+                          DataCell(Text(r.duration,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(Text(r.start,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(Text(r.finish,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(Text(r.predecessors,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057),
+                                  fontSize: 11,
+                                  fontFamily: appFontFamily))),
+                          DataCell(Text(r.resources,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(
+                            isDraft
+                                ? IconButton(
+                                    icon: const Icon(Icons.remove_circle_outline,
+                                        size: 16, color: Color(0xFFEF4444)),
+                                    onPressed: () => _removeDraftRow(draftIdx),
+                                    tooltip: 'Remove draft row',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(
+                                        minWidth: 28, minHeight: 28),
+                                  )
+                                : const Icon(Icons.lock_outline,
+                                    size: 14, color: Color(0xFFCBD5E1)),
+                          ),
+                        ],
+                      );
+                    }),
+                    DataRow(cells: [
+                      DataCell(Container()),
+                      DataCell(FilledButton.icon(
+                        onPressed: () => _showAddSampleDialog(context),
+                        icon: const Icon(Icons.add_rounded, size: 16),
+                        label: const Text('Add activity'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: LightModeColors.accent.withValues(alpha: 0.06),
+                          foregroundColor: LightModeColors.accent,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        ),
+                      )),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                    ]),
+                  ],
+                ),
               ),
             ),
-            tableBuilder: (fsContext) => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: buildNduDataTable(
-                context: fsContext,
-                zebra: false,
-                headingRowColor: const Color(0xFFF9FAFB),
-                headingRowHeight: 48,
-                dataRowMinHeight: 52,
-                dataRowMaxHeight: 52,
-                columnSpacing: 24,
-                horizontalMargin: 16,
-                autoWrapCells: false,
-                columns: const [
-                  DataColumn(
-                      label: Text('ID',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Name',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Duration',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Start',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Finish',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Predecessors',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Resources',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(label: SizedBox(width: 32)),
-                ],
-                rows: [
-                  // Data rows
-                  ..._rows.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final r = entry.value;
-                    return DataRow(
-                      cells: [
-                        DataCell(Text(r.id,
-                            style: const TextStyle(
-                                color: Color(0xFF495057),
-                                fontSize: 11,
-                                fontFamily: appFontFamily,
-                                fontWeight: FontWeight.bold))),
-                        DataCell(Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                  color: Color(r.domainColor),
-                                  shape: BoxShape.circle),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(r.name,
-                                style: const TextStyle(
-                                    color: Color(0xFF1A1D1F),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500)),
-                          ],
-                        )),
-                        DataCell(Text(r.duration,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(Text(r.start,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(Text(r.finish,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(Text(r.predecessors,
-                            style: const TextStyle(
-                                color: Color(0xFF495057),
-                                fontSize: 11,
-                                fontFamily: appFontFamily))),
-                        DataCell(Text(r.resources,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline,
-                                size: 16, color: Color(0xFF9CA3AF)),
-                            onPressed: () => _removeRow(i),
-                            tooltip: 'Remove activity',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(
-                                minWidth: 28, minHeight: 28),
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-                  DataRow(cells: [
-                    DataCell(Container()),
-                    DataCell(FilledButton.icon(
-                      onPressed: () => _showAddSampleDialog(context),
-                      icon: const Icon(Icons.add_rounded, size: 16),
-                      label: const Text('Add activity'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: LightModeColors.accent.withValues(alpha: 0.06),
-                        foregroundColor: LightModeColors.accent,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      ),
-                    )),
-                    DataCell(Container()),
-                    DataCell(Container()),
-                    DataCell(Container()),
-                    DataCell(Container()),
-                    DataCell(Container()),
-                    DataCell(Container()),
-                  ]),
-                ],
-              ),
-            ),
-          ),
-          // Footnote
-          if (_rows.length <= 7)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+          // Footnote — adapts to whether there are real activities or just drafts
+          if (allRows.length <= 7)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Row(
                 children: [
-                  Icon(Icons.edit_outlined, size: 12, color: Color(0xFF9CA3AF)),
-                  SizedBox(width: 6),
-                  Text(
-                    'Type an activity name and press Enter or tap + to add. '
-                    'Use KAZ AI to auto-generate realistic schedule activities.',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+                  const Icon(Icons.edit_outlined,
+                      size: 12, color: Color(0xFF9CA3AF)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      realRows.isEmpty
+                          ? 'No WBS-derived activities yet. Use the action pills '
+                              'at the top of the page to import from Work '
+                              'Packages, or tap "Add activity" below to add a '
+                              'custom row. KAZ AI can also auto-generate.'
+                          : 'Locked rows (lock icon) are WBS-derived activities — '
+                              'manage them via the Activity Tree or Work Packages '
+                              'module. Draft rows can be removed inline. Use '
+                              'KAZ AI to auto-generate more.',
+                      style: const TextStyle(
+                          fontSize: 11, color: Color(0xFF9CA3AF), height: 1.4),
+                    ),
                   ),
                 ],
               ),
@@ -2471,62 +2734,81 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
     );
   }
 
-  List<_SampleRow> _sampleRows(String projectName, String deliveryModel) {
-    return [
-      _SampleRow('1', 'Engineering — Process Design', '20 d', '01/06/26',
-          '01/30/26', '—', 'Process Eng (2)', ScheduleDomain.engineering.color),
-      _SampleRow(
-          '2',
-          'Procurement — Long-Lead Vessels',
-          '45 d',
-          '02/02/26',
-          '03/20/26',
-          '1FS',
-          'Buyer, Expediter',
-          ScheduleDomain.procurement.color),
-      _SampleRow('3', 'Execution — Fabrication Phase A', '60 d', '03/23/26',
-          '05/22/26', '2FS', 'Fab Shop (6)', ScheduleDomain.execution.color),
-      _SampleRow(
-          '4',
-          'Construction — Site Mobilization',
-          '10 d',
-          '05/25/26',
-          '06/05/26',
-          '3FS-5d',
-          'Site Sup (3)',
-          ScheduleDomain.construction.color),
-      _SampleRow(
-          '5',
-          'Construction — Mechanical Install',
-          '35 d',
-          '06/08/26',
-          '07/17/26',
-          '4FS',
-          'Mech Crew (8)',
-          ScheduleDomain.construction.color),
-      _SampleRow(
-          '6',
-          'Commissioning — Cold Commissioning',
-          '15 d',
-          '07/20/26',
-          '08/07/26',
-          '5FS',
-          'Commissioning Eng (2)',
-          ScheduleDomain.commissioning.color),
-      _SampleRow(
-          '7',
-          'Commissioning — Hot Commissioning & Handover',
-          '12 d',
-          '08/10/26',
-          '08/22/26',
-          '6FS',
-          'Commissioning Eng (2)',
-          ScheduleDomain.commissioning.color),
-    ];
+  /// World-class empty state — shown when no real or draft activities exist.
+  /// Replaces the table with a prominent, helpful CTA card.
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: TreasuryTokens.brandSoft,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                  color: TreasuryTokens.brand.withValues(alpha: 0.3)),
+            ),
+            child: Icon(Icons.account_tree_outlined,
+                size: 30, color: TreasuryTokens.brandDeep),
+          ),
+          const SizedBox(height: 14),
+          const Text('No activities yet',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: TreasuryTokens.ink)),
+          const SizedBox(height: 6),
+          const Text(
+            'Your Activity Schedule is empty. Populate it from your WBS and '
+            'Work Packages, or add a custom activity below.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                fontSize: 12.5,
+                color: TreasuryTokens.muted,
+                height: 1.55,
+                fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 18),
+          if (widget.onImportFromWorkPackages != null)
+            FilledButton.icon(
+              onPressed: widget.onImportFromWorkPackages,
+              icon: const Icon(Icons.work_outline, size: 16),
+              label: const Text('Import from Work Packages'),
+              style: FilledButton.styleFrom(
+                backgroundColor: TreasuryTokens.brand,
+                foregroundColor: TreasuryTokens.ink,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                textStyle: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+            ),
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: _isGenerating ? null : _generateWithKazAi,
+            icon: const Icon(Icons.auto_awesome, size: 14),
+            label: const Text('Generate with KAZ AI'),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF92400E),
+              textStyle: const TextStyle(
+                  fontSize: 12.5, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
-class _SampleRow {
+/// A single activity row in the Activity Schedule table. Holds either a
+/// real WBS-derived [ScheduleActivity] (when constructed via [fromActivity])
+/// or a draft row added by the user / KAZ AI (when constructed via [draft]).
+class _ActivityRow {
   final String id;
   final String name;
   final String duration;
@@ -2535,8 +2817,77 @@ class _SampleRow {
   final String predecessors;
   final String resources;
   final int domainColor;
-  const _SampleRow(this.id, this.name, this.duration, this.start, this.finish,
-      this.predecessors, this.resources, this.domainColor);
+  final int level;
+  final String wbsCode;
+  final bool wbsLinked;
+
+  const _ActivityRow._({
+    required this.id,
+    required this.name,
+    required this.duration,
+    required this.start,
+    required this.finish,
+    required this.predecessors,
+    required this.resources,
+    required this.domainColor,
+    required this.level,
+    required this.wbsCode,
+    required this.wbsLinked,
+  });
+
+  /// Build a row from a real [ScheduleActivity] derived from the WBS tree.
+  factory _ActivityRow.fromActivity(ScheduleActivity a) {
+    final depLabel = a.dependencies.isEmpty
+        ? '—'
+        : a.dependencies
+            .map((d) => '${d.activityId}${d.type.short}')
+            .join(', ');
+    return _ActivityRow._(
+      id: a.code.isNotEmpty ? a.code : a.id,
+      name: a.name,
+      duration: formatDuration(a.duration, a.durationUnit),
+      start: formatDate(a.startDate),
+      finish: formatDate(a.endDate),
+      predecessors: depLabel,
+      resources: a.owner?.isNotEmpty == true ? a.owner! : '—',
+      domainColor: a.domain.color,
+      level: a.level,
+      wbsCode: a.wbsCode ?? '',
+      wbsLinked: a.wbsNodeId != null && a.wbsNodeId!.isNotEmpty,
+    );
+  }
+
+  /// Build a draft row from user input / KAZ AI output.
+  const factory _ActivityRow.draft({
+    required String id,
+    required String name,
+    required String duration,
+    required String start,
+    required String finish,
+    required String predecessors,
+    required String resources,
+    required int domainColor,
+  }) = _DraftActivityRow;
+}
+
+/// Concrete draft-row subclass (kept separate so the const factory above
+/// can produce a const instance — required because [String] fields aren't
+/// const-constructable via the private all-required constructor alone).
+class _DraftActivityRow extends _ActivityRow {
+  const _DraftActivityRow({
+    required super.id,
+    required super.name,
+    required super.duration,
+    required super.start,
+    required super.finish,
+    required super.predecessors,
+    required super.resources,
+    required super.domainColor,
+  }) : super._(
+          level: 0,
+          wbsCode: '',
+          wbsLinked: false,
+        );
 }
 
 /// Interactive Gantt-style timeline visualization showing all activities as

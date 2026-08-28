@@ -33,11 +33,11 @@ void main() {
       ProjectLifecycleStage.values,
     );
     expect(
-      assessment.stage(ProjectLifecycleStage.wbs).state,
+      assessment.stage(ProjectLifecycleStage.wbs)!.state,
       LifecycleStageState.blocked,
     );
     expect(
-      assessment.stage(ProjectLifecycleStage.schedule).state,
+      assessment.stage(ProjectLifecycleStage.schedule)!.state,
       LifecycleStageState.blocked,
     );
   });
@@ -192,12 +192,12 @@ void main() {
       controls: controls,
     );
 
-    expect(assessment.stage(ProjectLifecycleStage.scope).state,
+    expect(assessment.stage(ProjectLifecycleStage.scope)!.state,
         LifecycleStageState.ready);
-    expect(assessment.stage(ProjectLifecycleStage.wbs).state,
+    expect(assessment.stage(ProjectLifecycleStage.wbs)!.state,
         LifecycleStageState.ready);
-    expect(assessment.stage(ProjectLifecycleStage.schedule).completion, 1);
-    expect(assessment.stage(ProjectLifecycleStage.resources).state,
+    expect(assessment.stage(ProjectLifecycleStage.schedule)!.completion, 1);
+    expect(assessment.stage(ProjectLifecycleStage.resources)!.state,
         LifecycleStageState.ready);
     expect(assessment.traceability.single.activityCount, 1);
     expect(assessment.traceability.single.hasDates, isTrue);
@@ -207,9 +207,9 @@ void main() {
     expect(assessment.timePhasedBudget.single.amount, 50000);
     expect(assessment.timePhasedBaselineReady, isTrue);
     expect(assessment.evmReady, isTrue);
-    expect(assessment.stage(ProjectLifecycleStage.cost).state,
+    expect(assessment.stage(ProjectLifecycleStage.cost)!.state,
         LifecycleStageState.ready);
-    expect(assessment.stage(ProjectLifecycleStage.controls).state,
+    expect(assessment.stage(ProjectLifecycleStage.controls)!.state,
         LifecycleStageState.ready);
   });
 }

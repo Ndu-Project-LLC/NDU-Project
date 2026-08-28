@@ -984,7 +984,6 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(10),
         border: const Border(
           left: BorderSide(color: _kAccent, width: 3),
         ),

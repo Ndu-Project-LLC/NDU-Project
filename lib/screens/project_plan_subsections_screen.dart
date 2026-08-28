@@ -2010,8 +2010,11 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  }
 
  void _deleteTask(String taskId) async {
- final task =
- _tasks.firstWhere((t) => t.id == taskId, orElse: () => _tasks.first);
+ // The task may already be gone (list re-synced between render and
+ // tap); bail out instead of throwing "Bad state: No element".
+ final idx = _tasks.indexWhere((t) => t.id == taskId);
+ if (idx == -1) return;
+ final task = _tasks[idx];
 
  final confirmed = await showDialog<bool>(
  context: context,

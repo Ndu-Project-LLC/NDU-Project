@@ -55,7 +55,6 @@ class SsherSectionCard extends StatelessWidget {
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
  decoration: BoxDecoration(
  color: headerTint,
- borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
  border: Border(bottom: BorderSide(color: headerBorder)),
  ),
  child: LayoutBuilder(builder: (context, constraints) {

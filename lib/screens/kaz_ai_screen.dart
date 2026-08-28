@@ -493,7 +493,6 @@ class KazAiScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
         border: Border(left: BorderSide(color: color, width: 4)),
       ),
       child: Row(

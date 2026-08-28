@@ -517,9 +517,9 @@ class CharterApprovalService {
     if (preferredSolution != null) {
       final titleNeedle = preferredSolution.title.trim().toLowerCase();
       try {
-        matched = rows.firstWhere(
+        matched = rows.where(
           (r) => r.solutionTitle.trim().toLowerCase() == titleNeedle,
-        );
+        ).firstOrNull;
       } catch (_) {
         matched = null;
       }

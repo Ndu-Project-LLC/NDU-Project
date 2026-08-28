@@ -46,10 +46,6 @@ class DashboardBottomNavBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: _Tokens.surfaceContainerLowest,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(12),
-          topRight: Radius.circular(12),
-        ),
         border: const Border(
           top: BorderSide(color: _Tokens.outlineVariant, width: 1),
         ),

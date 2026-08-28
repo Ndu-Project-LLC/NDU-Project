@@ -69,7 +69,7 @@ class _AgileAcceptanceCriteriaScreenState
   AcceptanceCriteriaTemplate? get _selectedTemplate {
     if (_selectedTemplateId == null) return null;
     try {
-      return _templates.firstWhere((t) => t.id == _selectedTemplateId);
+      return _templates.where((t) => t.id == _selectedTemplateId).firstOrNull;
     } catch (_) {
       return null;
     }

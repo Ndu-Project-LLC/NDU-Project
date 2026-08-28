@@ -1141,7 +1141,6 @@ class _KanbanColumn extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
                       border: Border(
                         left: BorderSide(color: c.accent ?? color, width: 3),
                       ),

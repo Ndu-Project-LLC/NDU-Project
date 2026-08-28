@@ -61,7 +61,12 @@ class PreferredSolutionAnalysisScreen extends StatefulWidget {
 
 class _PreferredSolutionAnalysisScreenState
     extends State<PreferredSolutionAnalysisScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+  // TickerProviderStateMixin (NOT SingleTickerProviderStateMixin): when the
+  // solution list updates, the old TabController is disposed and a NEW one is
+  // created on the same vsync. SingleTickerProviderStateMixin asserts on the
+  // second createTicker call ("multiple tickers were created") and crashes
+  // the screen, so a multi-ticker provider is required here.
   static const String _finalSelectionWarning =
       'This selection will form the basis of the entire project and cannot be changed once confirmed. Please ensure you have reviewed all options carefully.';
   static const Set<String> _authorizedSelectionRoles = {

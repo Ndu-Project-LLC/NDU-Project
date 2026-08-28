@@ -1551,10 +1551,6 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
         border: Border(
           top:
               BorderSide(color: const Color(0xFFE2E8F0).withValues(alpha: 0.5)),

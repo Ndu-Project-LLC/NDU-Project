@@ -645,7 +645,6 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(8),
         border: Border(
           left: BorderSide(color: color, width: 3),
         ),

@@ -552,7 +552,10 @@ class _TeamTrainingAndBuildingScreenState
  'team_training_template_$templateId';
 
  String _templateTextForButton(
- _ResourceButtonSpec spec, ProjectDataModel data) {
+ _ResourceButtonSpec? spec, ProjectDataModel data) {
+ if (spec == null) {
+ return 'Orientation template will appear here once the resource buttons are configured.';
+ }
  final saved = data.planningNotes[_templateDraftNoteKey(spec.id)]?.trim();
  if (saved != null && saved.isNotEmpty) {
  return saved;
@@ -900,8 +903,9 @@ class _TeamTrainingAndBuildingScreenState
  .toList(),
  onChanged: (v) {
  if (v == null) return;
- final doc = existingDocs.firstWhere((d) => d.url == v);
- setDialogState(() {
+ final doc = existingDocs.where((d) => d.url == v).firstOrNull;
+if (doc == null) return;
+setDialogState(() {
  selectedExistingDocUrl = v;
  attachedFile = doc.name;
  attachedFileUrl = doc.url;
@@ -1208,13 +1212,13 @@ class _TeamTrainingAndBuildingScreenState
  onChanged: (v) {
  if (v == null) return;
  final doc =
- existingDocs.firstWhere((d) => d.url == v);
+ existingDocs.where((d) => d.url == v).firstOrNull;
  setDialogState(() {
  selectedExistingDocUrl = v;
- attachedFile = doc.name;
- attachedFileUrl = doc.url;
- attachedFileStoragePath = doc.storagePath;
- manualUrlController.text = doc.url;
+ attachedFile = doc?.name ?? '';
+ attachedFileUrl = doc?.url ?? '';
+ attachedFileStoragePath = doc?.storagePath;
+ manualUrlController.text = doc?.url ?? v;
  });
  },
  decoration: const InputDecoration(
@@ -2013,13 +2017,13 @@ $notesText
  Future<void> _addOnboardingTemplate(BuildContext context) async {
  final data = ProjectDataHelper.getData(context);
  final welcomeSpec =
- _resourceButtons.firstWhere((button) => button.id == 'welcome');
+ _resourceButtons.where((button) => button.id == 'welcome').firstOrNull;
  final projectSpec = _resourceButtons
- .firstWhere((button) => button.id == 'project_onboarding');
+ .where((button) => button.id == 'project_onboarding').firstOrNull;
  final teamSpec =
- _resourceButtons.firstWhere((button) => button.id == 'team_vacation');
+ _resourceButtons.where((button) => button.id == 'team_vacation').firstOrNull;
  final meetingsSpec =
- _resourceButtons.firstWhere((button) => button.id == 'meetings');
+ _resourceButtons.where((button) => button.id == 'meetings').firstOrNull;
 
  final template = [
  TrainingActivity(

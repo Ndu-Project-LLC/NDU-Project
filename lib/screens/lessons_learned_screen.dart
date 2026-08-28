@@ -1135,6 +1135,21 @@ class _LessonDialogState extends State<_LessonDialog> {
  final TextEditingController _submittedByController = TextEditingController();
  final TextEditingController _dateController = TextEditingController();
 
+ // Canonical option sets. Existing records may hold custom values, so any
+ // current value not in the list is still surfaced as the first option.
+ static const List<String> _categoryOptions = <String>[
+ 'Process', 'Technical', 'Planning', 'Cost', 'Schedule', 'Quality',
+ 'Risk', 'Resources', 'Communication', 'Procurement', 'Stakeholder',
+ 'Safety', 'Commercial', 'Other',
+ ];
+ static const List<String> _phaseOptions = <String>[
+ 'Initiation', 'Front-End Planning', 'Planning', 'Design', 'Execution',
+ 'Monitoring & Control', 'Closure', 'Operations',
+ ];
+ static const List<String> _statusOptions = <String>[
+ 'Draft', 'In Review', 'Approved', 'Rejected', 'Archived',
+ ];
+
  String _selectedType = 'Success';
  String _selectedImpact = 'Medium';
  bool _highlightRow = false;
@@ -1166,6 +1181,16 @@ class _LessonDialogState extends State<_LessonDialog> {
  );
  } catch (e) { debugPrint('Error: $e'); }
  }
+ } else {
+ // New entry: pre-select canonical values, prefill the submitter with
+ // the signed-in user and default the date to today.
+ _categoryController.text = 'Process';
+ _phaseController.text = 'Planning';
+ _statusController.text = 'Draft';
+ _submittedByController.text =
+ FirebaseAuth.instance.currentUser?.displayName ?? '';
+ _selectedDate = DateTime.now();
+ _dateController.text = _formatDate(_selectedDate!);
  }
  }
 
@@ -1278,29 +1303,13 @@ class _LessonDialogState extends State<_LessonDialog> {
  Row(
  children: [
  Expanded(
- child: VoiceTextFormField(
- controller: _categoryController,
- decoration: _inputDecoration('Category',
- hintText: 'e.g. Process'),
- textInputAction: TextInputAction.next,
- validator: (value) =>
- (value == null || value.trim().isEmpty)
- ? 'Please add a category.'
- : null,
- ),
+ child: _dropdownField(
+ 'Category', _categoryController, _categoryOptions),
  ),
  const SizedBox(width: 12),
  Expanded(
- child: VoiceTextFormField(
- controller: _phaseController,
- decoration: _inputDecoration('Phase',
- hintText: 'e.g. Planning'),
- textInputAction: TextInputAction.next,
- validator: (value) =>
- (value == null || value.trim().isEmpty)
- ? 'Please add a phase.'
- : null,
- ),
+ child: _dropdownField(
+ 'Phase', _phaseController, _phaseOptions),
  ),
  ],
  ),
@@ -1308,16 +1317,8 @@ class _LessonDialogState extends State<_LessonDialog> {
  Row(
  children: [
  Expanded(
- child: VoiceTextFormField(
- controller: _statusController,
- decoration: _inputDecoration('Status',
- hintText: 'e.g. In Review'),
- textInputAction: TextInputAction.next,
- validator: (value) =>
- (value == null || value.trim().isEmpty)
- ? 'Please provide a status.'
- : null,
- ),
+ child: _dropdownField(
+ 'Status', _statusController, _statusOptions),
  ),
  const SizedBox(width: 12),
  Expanded(
@@ -1397,6 +1398,35 @@ class _LessonDialogState extends State<_LessonDialog> {
  ),
  ),
  );
+ }
+
+ /// Correct input type for enumerated fields: a dropdown, not free text.
+ /// Keeps any existing custom value selectable so older records still edit
+ /// cleanly.
+ Widget _dropdownField(
+   String label,
+   TextEditingController controller,
+   List<String> baseOptions,
+ ) {
+   final String current = controller.text.trim();
+   final List<String> options =
+       (current.isEmpty || baseOptions.contains(current))
+           ? baseOptions
+           : <String>[current, ...baseOptions];
+   return DropdownButtonFormField<String>(
+     initialValue: current.isEmpty ? baseOptions.first : current,
+     decoration: _inputDecoration(label),
+     icon: const Icon(Icons.keyboard_arrow_down_rounded),
+     items: <DropdownMenuItem<String>>[
+       for (final String o in options)
+         DropdownMenuItem<String>(value: o, child: Text(o)),
+     ],
+     onChanged: (String? value) {
+       if (value != null) {
+         setState(() => controller.text = value);
+       }
+     },
+   );
  }
 
  InputDecoration _inputDecoration(String label, {String? hintText}) {

@@ -1339,8 +1339,9 @@ class _AssignReviewerDialogState extends State<_AssignReviewerDialog> {
             onChanged: (v) {
               setState(() {
                 _selectedUserId = v!;
-                _selectedUserName =
-                    _teamMembers.firstWhere((m) => m['id'] == v)['name']!;
+                final member =
+                    _teamMembers.where((m) => m['id'] == v).firstOrNull;
+                _selectedUserName = member?['name'] as String? ?? '';
               });
             },
           ),

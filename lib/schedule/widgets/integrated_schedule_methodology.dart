@@ -497,7 +497,6 @@ class _PhaseHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
       decoration: BoxDecoration(
         color: phase.accentSoft,
-        borderRadius: BorderRadius.circular(10),
         border: Border(
           left: BorderSide(color: phase.accent, width: 3),
         ),

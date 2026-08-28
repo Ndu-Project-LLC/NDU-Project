@@ -748,7 +748,6 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(10),
         border: Border(
           left: BorderSide(color: sentimentColor, width: 3),
         ),

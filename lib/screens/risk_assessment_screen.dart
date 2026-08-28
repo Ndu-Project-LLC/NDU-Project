@@ -854,10 +854,6 @@ class _RiskNotesCard extends StatelessWidget {
  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
  decoration: const BoxDecoration(
  color: Color(0xFFFAFAFA),
- borderRadius: BorderRadius.only(
- topLeft: Radius.circular(16),
- topRight: Radius.circular(16),
- ),
  border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
  ),
  child: Row(

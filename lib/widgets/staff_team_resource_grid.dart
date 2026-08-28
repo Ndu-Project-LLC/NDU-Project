@@ -150,8 +150,6 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                     padding: const EdgeInsets.fromLTRB(28, 24, 28, 20),
                     decoration: const BoxDecoration(
                       color: Color(0xFFF8FAFC),
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(24)),
                       border:
                           Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
                     ),
@@ -443,8 +441,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                     decoration: const BoxDecoration(
                       color: Color(0xFFF8FAFC),
                       border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
-                      borderRadius:
-                          BorderRadius.vertical(bottom: Radius.circular(24)),
+
                     ),
                     child: Row(
                       children: [

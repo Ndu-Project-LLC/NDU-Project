@@ -774,7 +774,6 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(10),
         border: Border(
           left: BorderSide(color: col.color, width: 3),
         ),
@@ -944,7 +943,6 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(10),
         border: Border(
           left: BorderSide(color: sentimentColor, width: 3),
         ),

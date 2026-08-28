@@ -302,8 +302,9 @@ class ProjectControlsProvider extends ChangeNotifier {
   }
 
   void updateWorkPackage(String id, WorkPackageControl updated) {
-    final oldWp = _state.workPackages.firstWhere((w) => w.id == id);
-    _state = _state.copyWith(
+    final oldWp = _state.workPackages.where((w) => w.id == id).firstOrNull;
+if (oldWp == null) return;
+_state = _state.copyWith(
       workPackages: _state.workPackages
           .map((w) => w.id == id ? updated : w)
           .toList(),
@@ -356,13 +357,15 @@ class ProjectControlsProvider extends ChangeNotifier {
         'Change request status updated to ${status.label}');
     notifyListeners();
     _saveToFirestore();
-    final updated = _state.changeRequests.firstWhere((cr) => cr.id == id);
-    ProjectControlsFirestoreService.instance.saveChangeRequest(updated);
+    final updated = _state.changeRequests.where((cr) => cr.id == id).firstOrNull;
+if (updated == null) return;
+ProjectControlsFirestoreService.instance.saveChangeRequest(updated);
   }
 
   void approveChangeStep(String changeId) {
-    final cr = _state.changeRequests.firstWhere((c) => c.id == changeId);
-    if (cr.approval == null) return;
+    final cr = _state.changeRequests.where((c) => c.id == changeId).firstOrNull;
+if (cr == null) return;
+if (cr.approval == null) return;
     final steps = cr.approval!.steps;
     final currentIdx = cr.approval!.currentStepIndex;
     if (currentIdx >= steps.length) return;
@@ -406,8 +409,9 @@ class ProjectControlsProvider extends ChangeNotifier {
         'Change approval step ${currentIdx + 1} approved');
     notifyListeners();
     _saveToFirestore();
-    final updated = _state.changeRequests.firstWhere((c) => c.id == changeId);
-    ProjectControlsFirestoreService.instance.saveChangeRequest(updated);
+    final updated = _state.changeRequests.where((c) => c.id == changeId).firstOrNull;
+if (updated == null) return;
+ProjectControlsFirestoreService.instance.saveChangeRequest(updated);
   }
 
   void rejectChangeRequest(String id, String reason) {
@@ -422,8 +426,9 @@ class ProjectControlsProvider extends ChangeNotifier {
         'Change request rejected: $reason');
     notifyListeners();
     _saveToFirestore();
-    final updated = _state.changeRequests.firstWhere((cr) => cr.id == id);
-    ProjectControlsFirestoreService.instance.saveChangeRequest(updated);
+    final updated = _state.changeRequests.where((cr) => cr.id == id).firstOrNull;
+if (updated == null) return;
+ProjectControlsFirestoreService.instance.saveChangeRequest(updated);
   }
 
   // ─── Baseline Management ────────────────────────────────────────────
@@ -568,7 +573,8 @@ class ProjectControlsProvider extends ChangeNotifier {
 
   void closeRiskItem(String id) {
     final existing =
-        _state.risksAndIssues.firstWhere((r) => r.id == id);
+        _state.risksAndIssues.where((r) => r.id == id).firstOrNull;
+    if (existing == null) return;
     updateRiskItem(id, existing.copyWith(status: RiskStatus.closed));
   }
 

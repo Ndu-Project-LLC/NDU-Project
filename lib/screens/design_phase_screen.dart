@@ -1384,7 +1384,6 @@ Future<void> _loadProgress(String projectId) async {
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
  decoration: const BoxDecoration(
  color: Colors.white,
- borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
  border: Border(bottom: BorderSide(color: Color(0xFFE4E7EC))),
  ),
  child: Row(
@@ -1521,9 +1520,7 @@ Future<void> _loadProgress(String projectId) async {
  decoration: const BoxDecoration(
  color: Color(0xFFFAFBFD),
  border: Border(right: BorderSide(color: Color(0xFFE4E7EC))),
- borderRadius: BorderRadius.only(
- bottomLeft: Radius.circular(16),
- ),
+
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -2991,10 +2988,6 @@ Future<void> _loadProgress(String projectId) async {
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
  color: Colors.grey.shade50,
- borderRadius: const BorderRadius.only(
- topLeft: Radius.circular(16),
- topRight: Radius.circular(16),
- ),
  border: Border(
  bottom: BorderSide(color: Colors.grey.shade200),
  ),

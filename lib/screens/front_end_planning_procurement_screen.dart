@@ -31,6 +31,7 @@ import 'package:ndu_project/models/procurement/procurement_ui_extensions.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/procurement/procurement_items_list_view.dart';
+import 'package:ndu_project/widgets/procurement/procurement_section_error_card.dart';
 import 'package:ndu_project/widgets/procurement/procurement_vendor_management.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -4159,22 +4160,37 @@ class _FrontEndPlanningProcurementScreenState
  final psa = data.preferredSolutionAnalysis;
  SolutionAnalysisItem? selectedSolution;
  if (psa != null && psa.isSelectionFinalized) {
+ // Null-safe resolution: the stored selection (id/index/title) may
+ // reference an analyses list that is empty or has been re-synced.
+ // Every lookup below must tolerate a missing/empty list — throwing
+ // here used to surface "Bad state: No element" on the Procurement
+ // page error screen (the analyses list lives in a separate document
+ // section that can legitimately be empty while the selection flags
+ // are already persisted).
  final byId = psa.selectedSolutionId;
  final byIndex = psa.selectedSolutionIndex;
  final byTitle = psa.selectedSolutionTitle;
+ final analyses = psa.solutionAnalyses;
  if (byId != null && byId.isNotEmpty) {
- selectedSolution = psa.solutionAnalyses.firstWhere(
- (s) => s.solutionTitle == byTitle,
- orElse: () => psa.solutionAnalyses.first,
+ selectedSolution = analyses
+ .cast<SolutionAnalysisItem?>()
+ .firstWhere(
+ (s) => s != null &&
+ (byTitle != null &&
+ byTitle.isNotEmpty &&
+ s.solutionTitle == byTitle),
+ orElse: () => null,
  );
  } else if (byIndex != null &&
  byIndex >= 0 &&
- byIndex < psa.solutionAnalyses.length) {
- selectedSolution = psa.solutionAnalyses[byIndex];
+ byIndex < analyses.length) {
+ selectedSolution = analyses[byIndex];
  } else if (byTitle != null && byTitle.isNotEmpty) {
- selectedSolution = psa.solutionAnalyses.firstWhere(
- (s) => s.solutionTitle == byTitle,
- orElse: () => psa.solutionAnalyses.first,
+ selectedSolution = analyses
+ .cast<SolutionAnalysisItem?>()
+ .firstWhere(
+ (s) => s != null && s.solutionTitle == byTitle,
+ orElse: () => null,
  );
  }
  }
@@ -5574,6 +5590,22 @@ class _FrontEndPlanningProcurementScreenState
  );
  }
 
+ /// Build-path safety net: if a data-driven section throws (e.g. a
+ /// "Bad state: No element" from unexpected Firestore data), isolate the
+ /// failure to that section instead of blanking the entire page.
+ Widget _safeSection(String label, Widget Function() builder) {
+ try {
+ return builder();
+ } catch (err, stack) {
+ debugPrint('Procurement section "$label" build error: $err\n$stack');
+ return ProcurementSectionErrorCard(
+ label: label,
+ message: err.toString(),
+ onRetry: () async => setState(() {}),
+ );
+ }
+ }
+
  @override
  Widget build(BuildContext context) {
  final projectData = ProjectDataHelper.getData(context);
@@ -5669,7 +5701,7 @@ class _FrontEndPlanningProcurementScreenState
  const SizedBox(height: 24),
  AnimatedSwitcher(
  duration: const Duration(milliseconds: 250),
- child: _buildTabContent(),
+ child: _safeSection('Procurement tabs', _buildTabContent),
  ),
  const SizedBox(height: 12),
  Align(

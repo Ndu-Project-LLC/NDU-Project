@@ -3721,9 +3721,11 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  .toList(),
  onChanged: (value) {
  if (value == null) return;
- final match = scopes.firstWhere(
- (scope) => scope.id == value,
- orElse: () => scopes.first);
+ // Null-safe: scopes can be empty while data re-syncs; never throw
+ // "Bad state: No element" from a dropdown callback.
+ final idx = scopes.indexWhere((scope) => scope.id == value);
+ if (idx == -1) return;
+ final match = scopes[idx];
  setState(() {
  selected = match;
  final next = _trackingStatusForScope(match.id, notes);

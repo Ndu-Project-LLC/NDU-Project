@@ -907,7 +907,6 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
           decoration: selected
               ? BoxDecoration(
                   color: primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
                   border: Border(left: BorderSide(color: primary, width: 3)),
                 )
               : null,

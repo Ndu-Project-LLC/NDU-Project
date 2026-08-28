@@ -127,7 +127,6 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  return Container(
  decoration: BoxDecoration(
  color: Colors.white,
- borderRadius: BorderRadius.circular(12),
  border: Border(
  left: leftBorder != null
  ? BorderSide(color: leftBorder, width: 4)

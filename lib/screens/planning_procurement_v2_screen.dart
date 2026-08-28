@@ -37,6 +37,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/procurement/procurement_section_error_card.dart';
 class PlanningProcurementV2Screen extends StatefulWidget {
  const PlanningProcurementV2Screen({super.key});
 
@@ -164,6 +165,22 @@ class _PlanningProcurementV2ScreenState
  super.dispose();
  }
 
+ /// Build-path safety net: if a data-driven section throws (e.g. a
+ /// "Bad state: No element" from unexpected Firestore data), isolate the
+ /// failure to that section instead of blanking the entire page.
+ Widget _safeSection(String label, Widget Function() builder) {
+ try {
+ return builder();
+ } catch (err, stack) {
+ debugPrint('Procurement section "$label" build error: $err\n$stack');
+ return ProcurementSectionErrorCard(
+ label: label,
+ message: err.toString(),
+ onRetry: () async => setState(() {}),
+ );
+ }
+ }
+
  @override
  Widget build(BuildContext context) {
  final isMobile = AppBreakpoints.isMobile(context);
@@ -196,11 +213,11 @@ class _PlanningProcurementV2ScreenState
  children: [
  PlanningPhaseHeader(title: 'Procurement', onExportPdf: _exportPdf),
  const SizedBox(height: 16),
- _buildHeader(context),
+ _safeSection('Overview header', () => _buildHeader(context)),
  const SizedBox(height: 24),
  _buildTabBar(),
  const SizedBox(height: 24),
- _buildTabContent(),
+ _safeSection(_tabLabels[_selectedTab], _buildTabContent),
  const SizedBox(height: 96),
  ],
  ),

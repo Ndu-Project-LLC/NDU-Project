@@ -4635,7 +4635,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                               final rec = ProjectDataHelper.getData(context)
                                   .frontEndPlanning
                                   .scenarioMatrixItems
-                                  .firstWhere((r) => r.id == match.id);
+                                  .where((r) => r.id == match.id).firstOrNull;
                               _openEditDialog(context, record: rec);
                             },
                             icon: const Icon(Icons.edit, size: 18),

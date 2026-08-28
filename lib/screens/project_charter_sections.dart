@@ -1917,7 +1917,6 @@ class CharterRisks extends StatelessWidget {
  const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
  decoration: BoxDecoration(
  color: Colors.white,
- borderRadius: BorderRadius.circular(8),
  border: Border(
  left: BorderSide(color: borderColor, width: 4),
  ),

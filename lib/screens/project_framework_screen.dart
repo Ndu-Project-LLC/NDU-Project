@@ -610,8 +610,9 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
 
  void _deleteGoal(int goalId) {
  setState(() {
- final goal = _goals.firstWhere((g) => g.id == goalId);
- goal.nameController.removeListener(_onFieldChanged);
+ final goal = _goals.where((g) => g.id == goalId).firstOrNull;
+if (goal == null) return;
+goal.nameController.removeListener(_onFieldChanged);
  goal.controller.removeListener(_onFieldChanged);
  goal.dispose();
  _goals.removeWhere((g) => g.id == goalId);
@@ -1446,8 +1447,7 @@ class _MobileProjectInfoSection extends StatelessWidget {
                         bottom: BorderSide(
                           color: _Tokens.surfaceContainerLow, width: 1),
                       ),
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(10)),
+
                     ),
                     child: Row(
                       children: [

@@ -835,7 +835,6 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.red.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
               border: const Border(
                 left: BorderSide(color: Colors.red, width: 3),
               ),
@@ -896,7 +895,6 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(10),
         border: Border(
           left: BorderSide(color: e.color, width: 4),
         ),

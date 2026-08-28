@@ -38,7 +38,6 @@ class PremiumEditDialog extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               decoration: const BoxDecoration(
                 color: Color(0xFFF9FAFB),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
               ),
               child: Row(
@@ -87,8 +86,6 @@ class PremiumEditDialog extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
                 color: Color(0xFFF9FAFB),
-                borderRadius:
-                    BorderRadius.vertical(bottom: Radius.circular(20)),
                 border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
               ),
               child: Row(

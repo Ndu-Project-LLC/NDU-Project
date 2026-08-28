@@ -904,7 +904,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  Container(
  padding: const EdgeInsets.fromLTRB(28, 12, 28, 20),
- decoration: const BoxDecoration(color: Color(0xFFF9FAFB), borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)), border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1))),
+ decoration: const BoxDecoration(color: Color(0xFFF9FAFB),  border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1))),
  child: Row(
  mainAxisAlignment: MainAxisAlignment.end,
  children: [

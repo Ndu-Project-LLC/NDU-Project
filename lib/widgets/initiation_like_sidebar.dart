@@ -2055,7 +2055,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                     border: const Border(
                       left: BorderSide(width: 4, color: activeColor),
                     ),
-                    borderRadius: BorderRadius.circular(8),
+
                   )
                 : null,
             child: Row(
@@ -2123,7 +2123,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                     border: const Border(
                       left: BorderSide(width: 4, color: activeColor),
                     ),
-                    borderRadius: BorderRadius.circular(8),
+
                   )
                 : null,
             child: Row(
@@ -2193,7 +2193,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                   border: const Border(
                     left: BorderSide(width: 4, color: activeColor),
                   ),
-                  borderRadius: BorderRadius.circular(8),
+
                 )
               : null,
           child: Row(
@@ -2266,7 +2266,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                     border: const Border(
                       left: BorderSide(width: 3, color: activeColor),
                     ),
-                    borderRadius: BorderRadius.circular(8),
+
                   )
                 : null,
             child: Row(
@@ -2335,7 +2335,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                   border: const Border(
                     left: BorderSide(width: 4, color: activeColor),
                   ),
-                  borderRadius: BorderRadius.circular(8),
+
                 )
               : null,
           child: Row(

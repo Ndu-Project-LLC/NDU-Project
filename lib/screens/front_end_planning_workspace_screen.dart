@@ -775,8 +775,6 @@ class _ListEditorCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.05),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
               border: Border(
                 bottom: BorderSide(color: color.withValues(alpha: 0.1)),
               ),

@@ -1446,8 +1446,6 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
               color: Color(0xFFF9FAFB),
-              borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(12)),
               border: Border(bottom: BorderSide(color: _kBorderColor)),
             ),
             child: Column(

@@ -909,7 +909,6 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                           color: idx.isEven
                               ? Colors.white
                               : const Color(0xFFFAFBFD),
-                          borderRadius: BorderRadius.circular(6),
                           border: Border(
                             left: BorderSide(color: sevColor, width: 3),
                             top: const BorderSide(color: Color(0xFFF3F4F6)),

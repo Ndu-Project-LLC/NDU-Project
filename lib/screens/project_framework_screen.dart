@@ -1447,8 +1447,7 @@ class _MobileProjectInfoSection extends StatelessWidget {
                         bottom: BorderSide(
                           color: _Tokens.surfaceContainerLow, width: 1),
                       ),
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(10)),
+
                     ),
                     child: Row(
                       children: [

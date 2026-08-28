@@ -4589,8 +4589,6 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
                 color: Color(0xFFF9FAFB),
-                borderRadius:
-                    BorderRadius.vertical(bottom: Radius.circular(16)),
                 border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
               ),
               child: Row(

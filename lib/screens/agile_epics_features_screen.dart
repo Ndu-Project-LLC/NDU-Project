@@ -127,6 +127,10 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
         _hasAttemptedAutoSync = true;
         await _syncFromWbs(silentIfNoWbs: true);
       }
+      // Auto-generate features for epics that have no features yet
+      if (_epics.isNotEmpty && !_isGenerating && !_isSyncing) {
+        await _generateFeaturesForAllEpics();
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -357,6 +361,93 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
       }
     }
     if (mounted) setState(() => _isGenerating = false);
+  }
+
+  /// Auto-generate features for all epics using AI on page load.
+  /// Uses the overall project context to generate relevant features for each epic.
+  Future<void> _generateFeaturesForAllEpics() async {
+    final pid = _projectId;
+    if (pid == null || _epics.isEmpty) return;
+    
+    setState(() => _isGenerating = true);
+    try {
+      final projectData = ProjectDataHelper.getData(context);
+      final contextText = ProjectDataHelper.buildProjectContextScan(
+        projectData,
+        sectionLabel: 'Features Generation',
+      );
+      final openai = OpenAiServiceSecure();
+      
+      for (final epic in _epics) {
+        // Skip epics that already have features
+        final existingFeatures = await EpicFeatureService.loadFeatures(pid, epic.id);
+        if (existingFeatures.isNotEmpty) continue;
+        
+        final result = await openai.generateCompletion(
+          'Based on this project context and the epic below, suggest 2-3 agile features.\n\n'
+          'Project Context:\n$contextText\n\n'
+          'Epic Title: ${epic.title}\n'
+          'Epic Description: ${epic.description}\n'
+          'Epic Theme: ${epic.theme}\n\n'
+          'For each feature provide: title, description, priority (critical/high/medium/low), and story point estimate. '
+          'Return ONLY a valid JSON array with keys: title, description, priority, storyPointEstimate.',
+          maxTokens: 800,
+          temperature: 0.5,
+        );
+        
+        final features = _parseFeatureGeneration(result);
+        for (final feature in features) {
+          feature.epicId = epic.id;
+          await EpicFeatureService.saveFeature(
+            projectId: pid,
+            epicId: epic.id,
+            feature: feature,
+          );
+        }
+      }
+      
+      // Reload features for the currently selected epic
+      if (_selectedEpicId != null) {
+        await _loadFeatures();
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Features auto-generated for epics.'),
+            backgroundColor: Color(0xFF059669),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Feature generation failed: ${e.toString()}')),
+        );
+      }
+    }
+    if (mounted) setState(() => _isGenerating = false);
+  }
+
+  List<Feature> _parseFeatureGeneration(String text) {
+    try {
+      final data = _extractJsonArray(text);
+      if (data == null) return [];
+      return data.map<Feature>((json) {
+        if (json is Map) {
+          return Feature(
+            title: (json['title'] ?? '').toString(),
+            description: (json['description'] ?? '').toString(),
+            priority: (json['priority'] ?? 'medium').toString(),
+            storyPointEstimate:
+                double.tryParse((json['storyPointEstimate'] ?? '1').toString()) ?? 1,
+          );
+        }
+        return Feature(title: 'Generated Feature');
+      }).toList();
+    } catch (e) {
+      return [];
+    }
   }
 
   List<Epic> _parseEpicGeneration(String text) {

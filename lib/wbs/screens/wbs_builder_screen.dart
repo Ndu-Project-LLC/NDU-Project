@@ -1278,14 +1278,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white,
-            isRoot ? accentColor.withValues(alpha: 0.02) : const Color(0xFFFAFBFC),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
             color: isRoot
@@ -1312,14 +1305,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      accentColor.withValues(alpha: 0.15),
-                      accentColor.withValues(alpha: 0.05),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                       color: accentColor.withValues(alpha: 0.3), width: 1),

@@ -5558,16 +5558,12 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const AdminEditToggle(),
  SingleChildScrollView(
- padding: const EdgeInsets.symmetric(
- horizontal: 32, vertical: 24),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- _ContractingTopBar(
- onBack: _goToPreviousSection,
- onForward: _navigateToProcurement,
- ),
- const SizedBox(height: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32, vertical: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 24),
  PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Contracting',
@@ -5972,95 +5968,6 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  ],
  ),
- ),
- );
- }
-}
-
-class _ContractingTopBar extends StatelessWidget {
- const _ContractingTopBar({required this.onBack, required this.onForward});
-
- final VoidCallback onBack;
- final VoidCallback onForward;
-
- @override
- Widget build(BuildContext context) {
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(20),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
- child: Row(
- children: [
- _circleButton(icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
- const SizedBox(width: 12),
- _circleButton(
- icon: Icons.arrow_forward_ios_rounded, onTap: onForward),
- const Spacer(),
- const _ContractingUserBadge(),
- ],
- ),
- );
- }
-
- Widget _circleButton({required IconData icon, required VoidCallback onTap}) {
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(999),
- child: Container(
- width: 36,
- height: 36,
- decoration: BoxDecoration(
- color: Colors.white,
- shape: BoxShape.circle,
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
- ),
- );
- }
-}
-
-class _ContractingUserBadge extends StatelessWidget {
- const _ContractingUserBadge();
-
- @override
- Widget build(BuildContext context) {
- final projectName = ProjectDataHelper.getData(context).projectName.trim();
- final displayName = projectName.isEmpty ? 'Contracting Team' : projectName;
- final roleLabel = projectName.isEmpty ? 'Contracting' : 'Contracting Plan';
-
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(999),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- const CircleAvatar(
- radius: 16,
- backgroundColor: Color(0xFFD1D5DB),
- child: Icon(Icons.person, size: 18, color: Color(0xFF374151)),
- ),
- const SizedBox(width: 10),
- Text(
- displayName,
- style: const TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w600,
- color: Color(0xFF111827)),
- ),
- const SizedBox(width: 6),
- Text(
- roleLabel,
- style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
- ),
- ],
  ),
  );
  }

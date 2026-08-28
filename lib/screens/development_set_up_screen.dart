@@ -9,7 +9,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -47,9 +46,6 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  static const List<String> _qualityStatusOptions = [
  'Planned', 'Not Started', 'In Progress', 'Active', 'Completed', 'Waived',
  ];
-
- // ── Filter chips ───────────────────────────────────────────────────────
- final Set<String> _selectedFilters = {'All registers'};
 
  // ── CRUD data lists ────────────────────────────────────────────────────
  List<_EnvProvisionItem> _envItems = [];
@@ -492,14 +488,10 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
 
  // ── Build ──────────────────────────────────────────────────────────────
 
- @override
- Widget build(BuildContext context) {
- final isMobile = AppBreakpoints.isMobile(context);
- final padding = AppBreakpoints.pagePadding(context);
- final provider = ProjectDataInherited.maybeOf(context);
- final projectData = provider?.projectData ?? ProjectDataModel();
+ @override  Widget build(BuildContext context) {
+    final padding = AppBreakpoints.pagePadding(context);
 
- return ResponsiveScaffold(
+    return ResponsiveScaffold(
  activeItemLabel: 'Development Set Up',
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
@@ -508,334 +500,32 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  if (_isLoading) const LinearProgressIndicator(minHeight: 2),
- if (_isLoading) const SizedBox(height: 16),
- PlanningPhaseHeader(
- title: 'Development Set Up', onExportPdf: _exportPdf),
- const SizedBox(height: 16),
- _buildHeroHeader(isMobile: isMobile),
- const SizedBox(height: 24),
- _buildFilterChips(),
- const SizedBox(height: 20),
- _buildStatsRow(),
- const SizedBox(height: 20),
- _buildFrameworkGuidePanel(),
- const SizedBox(height: 24),
- _buildEnvProvisionRegister(),
- const SizedBox(height: 20),
- _buildCicdPipelineRegister(),
- const SizedBox(height: 20),
- _buildDevToolsRegister(),
- const SizedBox(height: 20),
- _buildQualityGatesRegister(),
- const SizedBox(height: 20),
- _buildSecurityBaselineRegister(),
- const SizedBox(height: 20),
- _buildApprovalGatesPanel(),
- const SizedBox(height: 24),
- LaunchPhaseNavigation(
- backLabel: PlanningPhaseNavigation.backLabel('development_set_up'),
- nextLabel: PlanningPhaseNavigation.nextLabel('development_set_up'),
- onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'development_set_up'),
- onNext: () => PlanningPhaseNavigation.goToNext(context, 'development_set_up'),
- ),
+        if (_isLoading) const SizedBox(height: 16),
+        PlanningPhaseHeader(
+          title: 'Development Set Up', onExportPdf: _exportPdf),
+        const SizedBox(height: 16),
+        _buildFrameworkGuidePanel(),
+        const SizedBox(height: 24),
+        _buildEnvProvisionRegister(),
+        const SizedBox(height: 20),
+        _buildCicdPipelineRegister(),
+        const SizedBox(height: 20),
+        _buildDevToolsRegister(),
+        const SizedBox(height: 20),
+        _buildQualityGatesRegister(),
+        const SizedBox(height: 20),
+        _buildSecurityBaselineRegister(),
+        const SizedBox(height: 20),
+        _buildApprovalGatesPanel(),
+        const SizedBox(height: 24),
+        LaunchPhaseNavigation(
+          backLabel: PlanningPhaseNavigation.backLabel('development_set_up'),
+          nextLabel: PlanningPhaseNavigation.nextLabel('development_set_up'),
+          onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'development_set_up'),
+          onNext: () => PlanningPhaseNavigation.goToNext(context, 'development_set_up'),
+        ),
  ],
  ),
- ),
- );
- }
-
- // ══════════════════════════════════════════════════════════════════════════
- // HERO HEADER
- // ══════════════════════════════════════════════════════════════════════════
-
- Widget _buildHeroHeader({required bool isMobile}) {
- return Container(
- width: double.infinity,
- padding: const EdgeInsets.all(28),
- decoration: BoxDecoration(
- gradient: const LinearGradient(
- begin: Alignment.topLeft,
- end: Alignment.bottomRight,
- colors: [
- Color(0xFF0F172A),
- Color(0xFF102A43),
- Color(0xFF1E3A5F),
- ],
- ),
- borderRadius: BorderRadius.circular(24),
- boxShadow: const [
- BoxShadow(
- color: Color(0x180F172A),
- blurRadius: 28,
- offset: Offset(0, 16),
- ),
- ],
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- LayoutBuilder(
- builder: (context, constraints) {
- final stacked = constraints.maxWidth < 760;
- final titleBlock = Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Development Environment Setup',
- style: TextStyle(
- fontSize: isMobile ? 24 : 28,
- fontWeight: FontWeight.w800,
- color: Colors.white,
- height: 1.1,
- ),
- ),
- const SizedBox(height: 8),
- Text(
- 'Prepare environments, tooling, pipelines, quality gates, and security baselines so execution can start without blockers. Content aligns with PMI PMBOK 7th Ed., ISO/IEC 12207, and SAFe 6.0 standards for $_selectedMethodology methodology.',
- style: TextStyle(
- fontSize: 14,
- color: Colors.white.withValues(alpha: 0.84),
- height: 1.5,
- ),
- ),
- ],
- ),
- );
- final badge = _buildDarkBadge(
- label: 'DEV SETUP CONTROL',
- icon: Icons.settings_suggest_outlined,
- );
-
- if (stacked) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Container(
- width: 48,
- height: 48,
- decoration: BoxDecoration(
- color: Colors.white.withValues(alpha: 0.10),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(
- color: Colors.white.withValues(alpha: 0.14),
- ),
- ),
- child: const Icon(
- Icons.settings_suggest_outlined,
- color: Colors.white,
- ),
- ),
- const SizedBox(width: 14),
- titleBlock,
- ],
- ),
- const SizedBox(height: 14),
- badge,
- ],
- );
- }
-
- return Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Container(
- width: 48,
- height: 48,
- decoration: BoxDecoration(
- color: Colors.white.withValues(alpha: 0.10),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(
- color: Colors.white.withValues(alpha: 0.14),
- ),
- ),
- child: const Icon(
- Icons.settings_suggest_outlined,
- color: Colors.white,
- ),
- ),
- const SizedBox(width: 14),
- titleBlock,
- const SizedBox(width: 16),
- badge,
- ],
- );
- },
- ),
- const SizedBox(height: 18),
- Wrap(
- spacing: 10,
- runSpacing: 10,
- children: [
- _buildMetricPill('Environments', '${_envItems.length}'),
- _buildMetricPill('Pipeline Stages', '${_cicdItems.length}'),
- _buildMetricPill('Licensed Tools', '${_toolItems.length}'),
- _buildMetricPill('Quality Gates', '${_qualityItems.length}'),
- _buildMetricPill('Security Controls', '${_securityItems.length}'),
- _buildMetricPill('Methodology', _selectedMethodology, highlight: true),
- ],
- ),
- ],
- ),
- );
- }
-
- Widget _buildDarkBadge({required String label, required IconData icon}) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
- decoration: BoxDecoration(
- color: const Color(0xFFFFC812),
- borderRadius: BorderRadius.circular(8),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(icon, size: 16, color: Colors.black),
- const SizedBox(width: 8),
- Text(
- label,
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w800,
- color: Colors.black,
- letterSpacing: 0.8,
- ),
- ),
- ],
- ),
- );
- }
-
- Widget _buildMetricPill(String label, String value, {bool highlight = false}) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
- decoration: BoxDecoration(
- color: highlight
- ? const Color(0xFFD97706).withValues(alpha: 0.20)
- : Colors.white.withValues(alpha: 0.10),
- borderRadius: BorderRadius.circular(8),
- border: Border.all(
- color: highlight
- ? const Color(0xFFD97706).withValues(alpha: 0.30)
- : Colors.white.withValues(alpha: 0.14),
- ),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Text(
- value,
- style: TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w800,
- color: highlight ? const Color(0xFFFFC812) : Colors.white,
- ),
- ),
- const SizedBox(width: 6),
- Text(
- label,
- style: TextStyle(
- fontSize: 11,
- color: Colors.white.withValues(alpha: 0.70),
- ),
- ),
- ],
- ),
- );
- }
-
- // ══════════════════════════════════════════════════════════════════════════
- // FILTER CHIPS
- // ══════════════════════════════════════════════════════════════════════════
-
- Widget _buildFilterChips() {
- const filters = ['All registers', 'Environments', 'CI/CD', 'Tooling', 'Quality', 'Security'];
- return Wrap(
- spacing: 10,
- runSpacing: 10,
- children: filters.map((filter) {
- final selected = _selectedFilters.contains(filter);
- return ChoiceChip(
- label: Text(filter, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: selected ? Colors.white : const Color(0xFF475569))),
- selected: selected,
- selectedColor: const Color(0xFF111827),
- backgroundColor: Colors.white,
- shape: const StadiumBorder(side: BorderSide(color: Color(0xFFE5E7EB))),
- onSelected: (value) {
- setState(() {
- if (value) {
- if (filter == 'All registers') {
- _selectedFilters..clear()..add(filter);
- } else {
- _selectedFilters..remove('All registers')..add(filter);
- }
- } else {
- _selectedFilters.remove(filter);
- if (_selectedFilters.isEmpty) _selectedFilters.add('All registers');
- }
- });
- },
- );
- }).toList(),
- );
- }
-
- // ══════════════════════════════════════════════════════════════════════════
- // STATS ROW
- // ══════════════════════════════════════════════════════════════════════════
-
- Widget _buildStatsRow() {
- final envReady = _envItems.where((e) => e.status == 'Provisioned').length;
- final pipelineReady = _cicdItems.where((e) => e.status == 'Ready').length;
- final toolsActive = _toolItems.where((e) => e.status == 'Active').length;
- final secInProgress = _securityItems.where((e) => e.status == 'In Progress' || e.status == 'Not Started').length;
- final stats = [
- _StatCardData('Environments Ready', '$envReady/${_envItems.length}', 'Provisioned spaces', const Color(0xFFFFC812)),
- _StatCardData('Pipeline Stages', '$pipelineReady/${_cicdItems.length}', 'Ready stages', const Color(0xFF10B981)),
- _StatCardData('Active Tools', '$toolsActive', 'Licensed and active', const Color(0xFFF97316)),
- _StatCardData('Security Pending', '$secInProgress', secInProgress > 0 ? 'Require attention' : 'All complete', const Color(0xFFB8860B)),
- ];
- return LayoutBuilder(
- builder: (context, constraints) {
- final isNarrow = constraints.maxWidth < 700;
- if (isNarrow) {
- return Column(
- children: [
- for (int i = 0; i < stats.length; i++) ...[
- SizedBox(width: double.infinity, child: _buildStatCard(stats[i])),
- if (i < stats.length - 1) const SizedBox(height: 12),
- ],
- ],
- );
- }
- return Row(
- children: [
- for (int i = 0; i < stats.length; i++) ...[
- Expanded(child: _buildStatCard(stats[i])),
- if (i < stats.length - 1) const SizedBox(width: 12),
- ],
- ],
- );
- },
- );
- }
-
- Widget _buildStatCard(_StatCardData data) {
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(data.value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: data.color)),
- const SizedBox(height: 6),
- Text(data.label, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
- const SizedBox(height: 6),
- Text(data.supporting, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: data.color)),
- ],
  ),
  );
  }
@@ -1902,18 +1592,6 @@ class _PanelShell extends StatelessWidget {
  ),
  );
  }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// STAT CARD DATA
-// ════════════════════════════════════════════════════════════════════════════
-
-class _StatCardData {
- final String label;
- final String value;
- final String supporting;
- final Color color;
- const _StatCardData(this.label, this.value, this.supporting, this.color);
 }
 
 // ════════════════════════════════════════════════════════════════════════════

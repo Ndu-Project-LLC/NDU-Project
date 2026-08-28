@@ -75,25 +75,20 @@ class ProjectFrameworkNextScreen extends StatefulWidget {
 
 class _ProjectFrameworkNextScreenState
     extends State<ProjectFrameworkNextScreen> {
-  final List<TextEditingController> _goalTitleControllers =
-      List.generate(3, (_) => TextEditingController());
-  final List<TextEditingController> _goalDescControllers =
-      List.generate(3, (_) => TextEditingController());
-  final List<TextEditingController> _goalYearControllers =
-      List.generate(3, (_) => TextEditingController());
-  final List<String> _goalIds = List.generate(3, (_) => '');
-  final List<List<String>> _goalMilestoneIds =
-      List.generate(3, (_) => <String>[]);
-  final List<String> _goalPriorities =
-      List.generate(3, (_) => 'Medium Priority');
+  final List<TextEditingController> _goalTitleControllers = [];
+  final List<TextEditingController> _goalDescControllers = [];
+  final List<TextEditingController> _goalYearControllers = [];
+  final List<String> _goalIds = [];
+  final List<List<String>> _goalMilestoneIds = [];
+  final List<String> _goalPriorities = [];
   final DateFormat _dateFormat = DateFormat('MMM d, y');
   late final OpenAiServiceSecure _openAi;
   final Set<int> _regeneratingMilestoneSuggestions = <int>{};
 
   // FocusNodes for auto-save on blur
-  final List<FocusNode> _titleFocusNodes = List.generate(3, (_) => FocusNode());
-  final List<FocusNode> _descFocusNodes = List.generate(3, (_) => FocusNode());
-  final List<FocusNode> _yearFocusNodes = List.generate(3, (_) => FocusNode());
+  final List<FocusNode> _titleFocusNodes = [];
+  final List<FocusNode> _descFocusNodes = [];
+  final List<FocusNode> _yearFocusNodes = [];
 
   String _potentialSolution = '';
   String _projectObjective = '';
@@ -114,7 +109,7 @@ class _ProjectFrameworkNextScreenState
     if (!mounted) return;
 
     final planningGoals = <PlanningGoal>[];
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < _goalTitleControllers.length; i++) {
       planningGoals.add(PlanningGoal(
         id: _goalIds[i].trim().isNotEmpty ? _goalIds[i] : null,
         goalNumber: i + 1,
@@ -164,12 +159,33 @@ class _ProjectFrameworkNextScreenState
         );
       }
 
-      // Populate from planning goals (preferred) - only if they have actual content
+      // Determine how many goals we need (at least 3, or more from saved data)
+      int goalCount = 3;
       final hasPlanningGoalContent = projectData.planningGoals.any(
         (g) => g.title.isNotEmpty || g.description.isNotEmpty,
       );
+      if (hasPlanningGoalContent && projectData.planningGoals.length > goalCount) {
+        goalCount = projectData.planningGoals.length;
+      } else if (!hasPlanningGoalContent && projectData.projectGoals.length > goalCount) {
+        goalCount = projectData.projectGoals.length;
+      }
+
+      // Initialize dynamic lists with the required number of goals
+      for (int i = 0; i < goalCount; i++) {
+        _goalTitleControllers.add(TextEditingController());
+        _goalDescControllers.add(TextEditingController());
+        _goalYearControllers.add(TextEditingController());
+        _goalIds.add('');
+        _goalMilestoneIds.add(<String>[]);
+        _goalPriorities.add('Medium Priority');
+        _titleFocusNodes.add(FocusNode());
+        _descFocusNodes.add(FocusNode());
+        _yearFocusNodes.add(FocusNode());
+      }
+
+      // Populate from planning goals (preferred) - only if they have actual content
       if (hasPlanningGoalContent) {
-        for (int i = 0; i < projectData.planningGoals.length && i < 3; i++) {
+        for (int i = 0; i < projectData.planningGoals.length && i < _goalTitleControllers.length; i++) {
           final goal = projectData.planningGoals[i];
           _goalIds[i] = goal.id;
           _goalTitleControllers[i].text = goal.title;
@@ -181,7 +197,7 @@ class _ProjectFrameworkNextScreenState
         }
       } else if (projectData.projectGoals.isNotEmpty) {
         // Fallback to project goals
-        for (int i = 0; i < projectData.projectGoals.length && i < 3; i++) {
+        for (int i = 0; i < projectData.projectGoals.length && i < _goalTitleControllers.length; i++) {
           final goal = projectData.projectGoals[i];
           _goalTitleControllers[i].text = goal.name;
           _goalDescControllers[i].text = goal.description;
@@ -226,12 +242,12 @@ class _ProjectFrameworkNextScreenState
               : '');
 
       // Setup nomenclature listeners
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < _goalTitleControllers.length; i++) {
         _setupGoalNomenclature(i);
       }
 
       // Setup focus listeners for auto-save on blur
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < _goalTitleControllers.length; i++) {
         _titleFocusNodes[i].addListener(() {
           if (!_titleFocusNodes[i].hasFocus) _saveData();
         });
@@ -280,6 +296,49 @@ class _ProjectFrameworkNextScreenState
         }
       }
     });
+  }
+
+  void _addGoal() {
+    setState(() {
+      final idx = _goalTitleControllers.length;
+      _goalTitleControllers.add(TextEditingController());
+      _goalDescControllers.add(TextEditingController());
+      _goalYearControllers.add(TextEditingController());
+      _goalIds.add('');
+      _goalMilestoneIds.add(<String>[]);
+      _goalPriorities.add('Medium Priority');
+      _titleFocusNodes.add(FocusNode());
+      _descFocusNodes.add(FocusNode());
+      _yearFocusNodes.add(FocusNode());
+
+      // Add listeners for real-time title updates
+      _goalTitleControllers.last.addListener(() {
+        if (mounted) setState(() {});
+      });
+
+      // Auto-save listeners
+      _goalTitleControllers.last.addListener(_onFieldChanged);
+      _goalDescControllers.last.addListener(_onFieldChanged);
+      _goalYearControllers.last.addListener(_onFieldChanged);
+
+      // Focus listeners for auto-save on blur
+      _titleFocusNodes.last.addListener(() {
+        if (!_titleFocusNodes.last.hasFocus) _saveData();
+      });
+      _descFocusNodes.last.addListener(() {
+        if (!_descFocusNodes.last.hasFocus) _saveData();
+      });
+      _yearFocusNodes.last.addListener(() {
+        if (!_yearFocusNodes.last.hasFocus) _saveData();
+      });
+
+      // Setup nomenclature for the new goal
+      _setupGoalNomenclature(idx);
+
+      // Switch to the new goal tab
+      _currentFilter = 'Goal ${idx + 1}';
+    });
+    _saveData();
   }
 
   void _clearGoal(int index) {
@@ -332,7 +391,7 @@ class _ProjectFrameworkNextScreenState
 
   // ignore: unused_element
   bool _areAllGoalsFilled() {
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < _goalTitleControllers.length; i++) {
       if (_goalTitleControllers[i].text.trim().isEmpty ||
           _goalDescControllers[i].text.trim().isEmpty ||
           _goalYearControllers[i].text.trim().isEmpty) {
@@ -345,7 +404,7 @@ class _ProjectFrameworkNextScreenState
   void _navigateToNext() async {
     // Validation removed to match top navigation behavior
 
-    final planningGoals = List.generate(3, (i) {
+    final planningGoals = List.generate(_goalTitleControllers.length, (i) {
       return PlanningGoal(
         id: _goalIds[i].trim().isNotEmpty ? _goalIds[i] : null,
         goalNumber: i + 1,
@@ -730,30 +789,16 @@ class _ProjectFrameworkNextScreenState
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildFilterPill(
-                label: 'Goal 1',
-                value: 'Goal 1',
-                isActive: _currentFilter == 'Goal 1',
-                activeColor: _kAccentColor,
-                activeBgColor: _kLightYellow,
-              ),
-              const SizedBox(width: 8),
-              _buildFilterPill(
-                label: 'Goal 2',
-                value: 'Goal 2',
-                isActive: _currentFilter == 'Goal 2',
-                activeColor: const Color(0xFFFFC812),
-                activeBgColor: _kLightBlue,
-              ),
-              const SizedBox(width: 8),
-              _buildFilterPill(
-                label: 'Goal 3',
-                value: 'Goal 3',
-                isActive: _currentFilter == 'Goal 3',
-                activeColor: _kAccentColor,
-                activeBgColor: _kLightYellow,
-              ),
-              const SizedBox(width: 8),
+              for (int i = 0; i < _goalTitleControllers.length; i++) ...[
+                _buildFilterPill(
+                  label: 'Goal ${i + 1}',
+                  value: 'Goal ${i + 1}',
+                  isActive: _currentFilter == 'Goal ${i + 1}',
+                  activeColor: i % 2 == 0 ? _kAccentColor : const Color(0xFFFFC812),
+                  activeBgColor: i % 2 == 0 ? _kLightYellow : _kLightBlue,
+                ),
+                const SizedBox(width: 8),
+              ],
               _buildFilterPill(
                 label: 'View All',
                 value: 'View All',
@@ -792,7 +837,7 @@ class _ProjectFrameworkNextScreenState
         const SizedBox(height: 16),
         // Goal cards
         if (isMobile || _currentFilter != 'View All')
-          ...List.generate(3, (i) {
+          ...List.generate(_goalTitleControllers.length, (i) {
             if (_currentFilter != 'View All' &&
                 _currentFilter != 'Goal ${i + 1}') {
               return const SizedBox.shrink();
@@ -803,17 +848,33 @@ class _ProjectFrameworkNextScreenState
             );
           })
         else
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: List.generate(3, (i) {
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(right: i < 2 ? 12 : 0),
-                  child: _buildGoalCard(i),
-                ),
+          Wrap(
+            spacing: 12,
+            runSpacing: 16,
+            children: List.generate(_goalTitleControllers.length, (i) {
+              return SizedBox(
+                width: 350,
+                child: _buildGoalCard(i),
               );
             }),
           ),
+        const SizedBox(height: 16),
+        // Add Goal button
+        Center(
+          child: OutlinedButton.icon(
+            onPressed: _addGoal,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Add Goal'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _kAccentColor,
+              side: const BorderSide(color: _kAccentColor),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+          ),
+        ),
       ],
     );
   }

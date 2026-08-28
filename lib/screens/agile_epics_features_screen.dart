@@ -324,8 +324,20 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
           ),
         );
       }
+    } finally {
+      // ALWAYS clear the syncing flag — early returns above (no WBS,
+      // waterfall methodology, project mismatch) previously skipped the
+      // reset and left the screen stuck on "Syncing…" forever.
+      if (mounted) {
+        if (!silentIfNoWbs) setState(() => _isSyncing = false);
+        // silent auto-sync: let _loadData() (awaited above) drive the flag
+        // off via its own state update; force-clear on the next microtask
+        // just in case nothing else did.
+        Future<void>.microtask(() {
+          if (mounted && _isSyncing) setState(() => _isSyncing = false);
+        });
+      }
     }
-    if (mounted) setState(() => _isSyncing = false);
   }
 
   void _addEpic() {

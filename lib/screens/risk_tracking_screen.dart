@@ -206,6 +206,44 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
 
  String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
 
+ /// Risk category options: the standard execution-risk taxonomy plus the
+ /// category values already present in this screen's data (mitigation plans
+ /// use Integrations/Compliance/Data team/Cybersecurity/Finance/General and
+ /// risk signals use Leading/Lagging).
+ static const List<String> _riskCategoryOptions = [
+   'Scope',
+   'Schedule',
+   'Cost',
+   'Technical',
+   'Resource',
+   'External',
+   'Compliance',
+   'Quality',
+   'Safety',
+   'Stakeholder',
+   'Integrations',
+   'Data team',
+   'Cybersecurity',
+   'Finance',
+   'General',
+   'Leading',
+   'Lagging',
+ ];
+
+ /// Auto-assigns the next sequential risk id (R-001, R-002, ...) by scanning
+ /// the numeric suffixes of the risk ids already in the register.
+ String _nextRiskId() {
+   var max = 0;
+   for (final r in _risks) {
+     final m = RegExp(r'^R-(\d+)$').firstMatch(r.id.trim());
+     if (m != null) {
+       final v = int.tryParse(m.group(1)!);
+       if (v != null && v > max) max = v;
+     }
+   }
+   return 'R-${(max + 1).toString().padLeft(3, '0')}';
+ }
+
  @override
  void initState() {
  super.initState();
@@ -1865,7 +1903,6 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  // ─── CRUD: Risk Register ─────────────────────────────────────────────────
 
  void _openAddRiskDialog() {
- final idController = TextEditingController();
  final titleController = TextEditingController();
  final ownerController = TextEditingController();
  final probabilityController = TextEditingController();
@@ -1873,6 +1910,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  final formKey = GlobalKey<FormState>();
  var selectedImpact = 'High';
  var selectedStatus = 'Mitigating';
+ var selectedCategory = 'Technical';
 
  showDialog(
  context: context,
@@ -1888,16 +1926,6 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  mainAxisSize: MainAxisSize.min,
  children: [
  VoiceTextFormField(
- controller: idController,
- decoration: const InputDecoration(
- labelText: 'Risk ID', hintText: 'e.g., R-050'),
- validator: (value) =>
- value == null || value.trim().isEmpty
- ? 'Enter an ID'
- : null,
- ),
- const SizedBox(height: 12),
- VoiceTextFormField(
  controller: titleController,
  decoration:
  const InputDecoration(labelText: 'Risk title'),
@@ -1910,6 +1938,21 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  VoiceTextFormField(
  controller: ownerController,
  decoration: const InputDecoration(labelText: 'Owner'),
+ ),
+ const SizedBox(height: 12),
+ DropdownButtonFormField<String>(
+ initialValue: selectedCategory,
+ items: _riskCategoryOptions
+ .map((category) => DropdownMenuItem(
+ value: category, child: Text(category)))
+ .toList(),
+ onChanged: (value) {
+ if (value != null) {
+ setDialogState(() => selectedCategory = value);
+ }
+ },
+ decoration:
+ const InputDecoration(labelText: 'Category'),
  ),
  const SizedBox(height: 12),
  VoiceTextFormField(
@@ -1973,7 +2016,8 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  setState(() {
  _risks.add(
  _RiskItem(
- idController.text.trim(),
+ // Risk ids are auto-assigned internally (R-001, R-002, ...).
+ _nextRiskId(),
  titleController.text.trim(),
  ownerController.text.trim().isEmpty
  ? 'TBD'
@@ -1986,9 +2030,18 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  nextReviewController.text.trim().isEmpty
  ? 'TBD'
  : nextReviewController.text.trim(),
+ selectedCategory,
  ),
  );
  });
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text('Risk added successfully.'),
+ behavior: SnackBarBehavior.floating,
+ backgroundColor: Color(0xFF111827),
+ duration: Duration(seconds: 3),
+ ),
+ );
  Navigator.of(context).pop();
  }
  },
@@ -2000,7 +2053,6 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  );
  },
  ).then((_) {
- idController.dispose();
  titleController.dispose();
  ownerController.dispose();
  probabilityController.dispose();
@@ -2016,6 +2068,10 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  final formKey = GlobalKey<FormState>();
  var selectedImpact = risk.impact;
  var selectedStatus = risk.status;
+ var selectedCategory =
+     _riskCategoryOptions.contains(risk.category)
+         ? risk.category
+         : 'Technical';
 
  showDialog(
  context: context,
@@ -2065,6 +2121,15 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  decoration: const InputDecoration(labelText: 'Status'),
  ),
  const SizedBox(height: 12),
+ DropdownButtonFormField<String>(
+ initialValue: selectedCategory,
+ items: _riskCategoryOptions
+ .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+ .toList(),
+ onChanged: (v) { if (v != null) setDialogState(() => selectedCategory = v); },
+ decoration: const InputDecoration(labelText: 'Category'),
+ ),
+ const SizedBox(height: 12),
  VoiceTextFormField(
  controller: nextReviewController,
  decoration: const InputDecoration(labelText: 'Next review'),
@@ -2089,6 +2154,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  selectedImpact,
  selectedStatus,
  nextReviewController.text.trim(),
+ selectedCategory,
  );
  }
  });
@@ -2820,7 +2886,8 @@ class _EscalationReadiness {
 
 class _RiskItem {
   const _RiskItem(this.id, this.title, this.owner, this.probability,
-      this.impact, this.status, this.nextReview);
+      this.impact, this.status, this.nextReview,
+      [this.category = 'Technical']);
 
   final String id;
   final String title;
@@ -2829,6 +2896,10 @@ class _RiskItem {
   final String impact;
   final String status;
   final String nextReview;
+
+  /// Standard risk taxonomy (Scope/Schedule/Cost/...) used by the
+  /// add/edit dialogs; defaults to 'Technical'.
+  final String category;
 }
 
 class _RiskSignal {

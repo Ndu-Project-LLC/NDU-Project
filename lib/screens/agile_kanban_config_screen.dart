@@ -37,11 +37,10 @@ const List<String> _cosOptions = [
   'Intangible',
 ];
 
-/// Monotonic unique-id source. The previous fallback
-/// (`DateTime.now().microsecondsSinceEpoch`) produced IDENTICAL ids when
-/// several rows were constructed inside the same microsecond (the 5 default
-/// workflow columns are built in one synchronous loop), which duplicated the
-/// ReorderableListView child GlobalKeys and blanked the page on rebuild.
+/// Monotonic unique-id source for serialized Kanban rows. The previous
+/// fallback (`DateTime.now().microsecondsSinceEpoch`) produced IDENTICAL ids
+/// when several rows were constructed inside the same microsecond, which
+/// broke keyed rebuilds and blanked the page on rebuild.
 int _kanbanRowIdCounter = 0;
 String _nextKanbanRowId() =>
     '${DateTime.now().microsecondsSinceEpoch}_${_kanbanRowIdCounter++}';
@@ -127,11 +126,8 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
   bool _isSaving = false;
   Timer? _autoSaveDebounce;
 
-  // Controllers for notes
+  // Controller for notes
   final TextEditingController _notesCtrl = TextEditingController();
-  final Map<String, TextEditingController> _nameCtrls = {};
-  final Map<String, TextEditingController> _entryCtrls = {};
-  final Map<String, TextEditingController> _exitCtrls = {};
 
   String? get _projectId {
     try {
@@ -151,15 +147,6 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
   void dispose() {
     _autoSaveDebounce?.cancel();
     _notesCtrl.dispose();
-    for (final c in _nameCtrls.values) {
-      c.dispose();
-    }
-    for (final c in _entryCtrls.values) {
-      c.dispose();
-    }
-    for (final c in _exitCtrls.values) {
-      c.dispose();
-    }
     super.dispose();
   }
 
@@ -168,10 +155,6 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
     if (pid == null) {
       // No project context — show defaults instead of spinning forever.
       _applyDefaultConfig();
-      // Without this the name/entry/exit controllers are never created,
-      // so every column row renders with an empty fallback controller
-      // ("Column name" placeholder) even though the defaults have names.
-      _rebuildCtrls();
       if (mounted) setState(() => _isLoading = false);
       return;
     }
@@ -204,7 +187,6 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
           (data['nextSprintReviewDays'] as num?)?.toInt() ?? 7;
       _enableSwimlanes = data['enableSwimlanes'] as bool? ?? true;
       _notesCtrl.text = data['notes'] as String? ?? '';
-      _rebuildCtrls();
     } catch (e) {
       debugPrint('Error: $e');
     }
@@ -235,26 +217,6 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
     }).toList();
   }
 
-  void _rebuildCtrls() {
-    for (final c in _nameCtrls.values) {
-      c.dispose();
-    }
-    for (final c in _entryCtrls.values) {
-      c.dispose();
-    }
-    for (final c in _exitCtrls.values) {
-      c.dispose();
-    }
-    _nameCtrls.clear();
-    _entryCtrls.clear();
-    _exitCtrls.clear();
-    for (final col in _columns) {
-      _nameCtrls[col.id] = TextEditingController(text: col.name);
-      _entryCtrls[col.id] = TextEditingController(text: col.entryCriteria);
-      _exitCtrls[col.id] = TextEditingController(text: col.exitCriteria);
-    }
-  }
-
   void _scheduleAutoSave() {
     _autoSaveDebounce?.cancel();
     _autoSaveDebounce =
@@ -267,10 +229,6 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
     try {
       final pid = _projectId;
       if (pid == null) return;
-      for (final col in _columns) {
-        col.entryCriteria = _entryCtrls[col.id]?.text ?? '';
-        col.exitCriteria = _exitCtrls[col.id]?.text ?? '';
-      }
       await AgileWireframeService.saveKanbanConfig(
         projectId: pid,
         data: {
@@ -292,33 +250,6 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
       debugPrint('Error: $e');
     }
     if (mounted) setState(() => _isSaving = false);
-  }
-
-  void _addColumn() {
-    setState(() {
-      _columns.add(_KanbanColumn(name: 'New Column'));
-      _rebuildCtrls();
-    });
-    _scheduleAutoSave();
-  }
-
-  void _removeColumn(int index) {
-    if (_columns.length <= 2) return;
-    final col = _columns[index];
-    _nameCtrls.remove(col.id)?.dispose();
-    _entryCtrls.remove(col.id)?.dispose();
-    _exitCtrls.remove(col.id)?.dispose();
-    setState(() => _columns.removeAt(index));
-    _scheduleAutoSave();
-  }
-
-  void _moveColumn(int oldIndex, int newIndex) {
-    setState(() {
-      if (newIndex > oldIndex) newIndex--;
-      final col = _columns.removeAt(oldIndex);
-      _columns.insert(newIndex, col);
-    });
-    _scheduleAutoSave();
   }
 
   @override
@@ -363,8 +294,6 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                         if (_isLoading)
                           const Center(child: CircularProgressIndicator())
                         else ...[
-                          _buildColumnsSection(),
-                          const SizedBox(height: 24),
                           _buildBoardSection(),
                           const SizedBox(height: 24),
                           _buildClassesOfService(),
@@ -402,182 +331,9 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
     );
   }
 
-  Widget _buildColumnsSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: _kBorder),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text('Workflow Columns',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: _kHeadline)),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: _addColumn,
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Add Column'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Define the workflow stages and WIP limits that the execution Kanban board will use. Drag to reorder.',
-            style: TextStyle(fontSize: 13, color: _kMuted),
-          ),
-          const SizedBox(height: 12),
-          ReorderableListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _columns.length,
-            onReorder: _moveColumn,
-            proxyDecorator: (child, index, animation) => Material(
-              elevation: 2,
-              borderRadius: BorderRadius.circular(8),
-              child: child,
-            ),
-            itemBuilder: (context, index) {
-              final col = _columns[index];
-              return Container(
-                key: ValueKey(col.id),
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _kBorder),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        ReorderableDragStartListener(
-                          index: index,
-                          child: const Icon(Icons.drag_handle,
-                              color: _kMuted, size: 20),
-                        ),
-                        const SizedBox(width: 8),
-                        Text('${index + 1}.',
-                            style:
-                                const TextStyle(fontSize: 13, color: _kMuted)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: VoiceTextField(
-                            controller:
-                                _nameCtrls[col.id] ?? TextEditingController(),
-                            decoration: const InputDecoration(
-                              hintText: 'Column name',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600, fontSize: 13),
-                            onChanged: (v) {
-                              col.name = v;
-                              _scheduleAutoSave();
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 90,
-                          // Plain numeric field — no Open Editor button
-                          // (it overflowed the 90px column by ~56px).
-                          child: TextField(
-                            controller: TextEditingController.fromValue(
-                              TextEditingValue(
-                                text: col.wipLimit.toString(),
-                                selection:
-                                    const TextSelection.collapsed(offset: 999),
-                              ),
-                            ),
-                            decoration: const InputDecoration(
-                              hintText: 'WIP',
-                              border: OutlineInputBorder(),
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 6),
-                            ),
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(fontSize: 12),
-                            onChanged: (v) {
-                              col.wipLimit = int.tryParse(v) ?? 0;
-                              _scheduleAutoSave();
-                            },
-                          ),
-                        ),
-                        if (_columns.length > 2)
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline,
-                                size: 16, color: Colors.red),
-                            onPressed: () => _removeColumn(index),
-                            constraints: const BoxConstraints(
-                                minWidth: 28, minHeight: 28),
-                            padding: EdgeInsets.zero,
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: VoiceTextField(
-                            controller:
-                                _entryCtrls[col.id] ?? TextEditingController(),
-                            decoration: const InputDecoration(
-                              hintText: 'Entry criteria',
-                              border: OutlineInputBorder(),
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 6),
-                              labelText: 'Entry',
-                            ),
-                            style: const TextStyle(fontSize: 11),
-                            maxLines: 1,
-                            onChanged: (_) => _scheduleAutoSave(),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: VoiceTextField(
-                            controller:
-                                _exitCtrls[col.id] ?? TextEditingController(),
-                            decoration: const InputDecoration(
-                              hintText: 'Exit criteria',
-                              border: OutlineInputBorder(),
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 6),
-                              labelText: 'Exit',
-                            ),
-                            style: const TextStyle(fontSize: 11),
-                            maxLines: 1,
-                            onChanged: (_) => _scheduleAutoSave(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   /// Live Kanban Board — the same existing board widget used by the
-  /// Kanban Board screen, driven by the workflow columns saved above.
+  /// Kanban Board screen, driven by the workflow columns from the saved
+  /// Kanban configuration.
   Widget _buildBoardSection() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -614,8 +370,9 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
           ),
           const SizedBox(height: 4),
           const Text(
-              'Execution board using the workflow columns configured above. '
-              'Drag stories between columns, then Save Board.',
+              'Execution board using the workflow columns from the saved '
+              'Kanban configuration. Drag stories between columns, then '
+              'Save Board.',
               style: TextStyle(fontSize: 12, color: _kMuted)),
           const SizedBox(height: 16),
           const KanbanBoardPanel(),

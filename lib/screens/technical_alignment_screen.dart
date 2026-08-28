@@ -24,7 +24,6 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/design_phase_stable_shell.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
-import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -981,18 +980,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return;
  }
 
- setState(() {
- _constraints.add(
- ConstraintRow(
- constraint: '',
- guardrail: '',
- owner: '',
- status: 'Draft',
- ),
- );
- _editingConstraintRows.add(_constraints.length - 1);
- _scheduleSave();
- });
+ _openAddConstraintDialog();
  }
 
  void _addMappingRow() {
@@ -1001,17 +989,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return;
  }
 
- setState(() {
- _mappings.add(
- RequirementMappingRow(
- requirement: '',
- approach: '',
- status: 'Draft',
- ),
- );
- _editingMappingRows.add(_mappings.length - 1);
- _scheduleSave();
- });
+ _openAddMappingDialog();
  }
 
  void _addDependencyRow() {
@@ -1020,18 +998,368 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return;
  }
 
- setState(() {
- _dependencies.add(
- DependencyDecisionRow(
- item: '',
- detail: '',
- owner: '',
- status: 'Draft',
+ _openAddDependencyDialog();
+ }
+
+ /// Owner options for the 'Add constraint' / 'Add dependency' modals:
+ /// the standard governance roles plus owners already present in the
+ /// register data and the active project's team members.
+ List<String> _registerOwnerOptions() {
+ final provider = ProjectDataInherited.maybeOf(context);
+ final teamOwners =
+ (provider?.projectData.teamMembers ?? const [])
+ .map((m) => m.name.trim())
+ .where((n) => n.isNotEmpty);
+ return <String>{
+ 'Architecture',
+ 'Business Analyst',
+ 'Engineering',
+ 'Operations',
+ 'QA Lead',
+ 'Compliance',
+ 'Field Ops',
+ 'Facilities',
+ for (final c in _constraints)
+ if (c.owner.trim().isNotEmpty) c.owner.trim(),
+ for (final d in _dependencies)
+ if (d.owner.trim().isNotEmpty) d.owner.trim(),
+ ...teamOwners,
+ }.toList();
+ }
+
+ /// Shared decoration for the register 'Add …' modal fields: white fill,
+ /// rounded-12 border, yellow focus ring (matches the inline editors).
+ InputDecoration _techAlignDialogFieldDecoration({String? hint}) {
+ return InputDecoration(
+ hintText: hint,
+ filled: true,
+ fillColor: Colors.white,
+ contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+ border: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(12),
+ borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
+ ),
+ enabledBorder: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(12),
+ borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
+ ),
+ focusedBorder: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(12),
+ borderSide: const BorderSide(color: Color(0xFFFFC812), width: 1.5),
  ),
  );
- _editingDependencyRows.add(_dependencies.length - 1);
- _scheduleSave();
+ }
+
+ /// Opens the shared 'Add …' modal dialog used by the constraint, mapping,
+ /// and dependency registers. Returns a map of field index → trimmed value,
+ /// or null when the user cancels. This replaces the old behaviour of
+ /// inserting blank inline rows into the tables.
+ Future<Map<int, String>?> _showAddRegisterDialog({
+ required String title,
+ required List<_TechAlignDialogFieldSpec> fields,
+ }) async {
+ final formKey = GlobalKey<FormState>();
+ final controllers = [
+ for (final f in fields) TextEditingController(text: f.initialValue ?? ''),
+ ];
+
+ final result = await showDialog<Map<int, String>>(
+ context: context,
+ barrierDismissible: true,
+ builder: (dialogContext) => StatefulBuilder(
+ builder: (dialogContext, setDialogState) => AlertDialog(
+ backgroundColor: Colors.white,
+ surfaceTintColor: Colors.white,
+ shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+ insetPadding:
+ const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+ titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+ contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+ actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+ title: Row(
+ children: [
+ Container(
+ padding: const EdgeInsets.all(8),
+ decoration: BoxDecoration(
+ color: const Color(0xFFFFC812).withValues(alpha: 0.14),
+ borderRadius: BorderRadius.circular(10),
+ ),
+ child: const Icon(Icons.add_circle_outline,
+ size: 20, color: Color(0xFFB8860B)),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: Text(
+ title,
+ style: const TextStyle(
+ fontSize: 17,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF141414)),
+ ),
+ ),
+ ],
+ ),
+ content: Form(
+ key: formKey,
+ child: SizedBox(
+ width: 480,
+ child: SingleChildScrollView(
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ for (var i = 0; i < fields.length; i++) ...[
+ if (i > 0) const SizedBox(height: 16),
+ Row(
+ children: [
+ Icon(fields[i].icon,
+ size: 14, color: const Color(0xFFB8860B)),
+ const SizedBox(width: 6),
+ Text(
+ fields[i].isRequired
+ ? '${fields[i].label} *'
+ : fields[i].label,
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF374151)),
+ ),
+ ],
+ ),
+ const SizedBox(height: 6),
+ if (fields[i].options != null) ...[
+ Builder(builder: (_) {
+ final options = fields[i].options!;
+ final raw = controllers[i].text;
+ final selected =
+ raw.isEmpty || !options.contains(raw)
+ ? options.first
+ : raw;
+ return DropdownButtonFormField<String>(
+ initialValue: selected,
+ isExpanded: true,
+ decoration: _techAlignDialogFieldDecoration(
+ hint: fields[i].hint),
+ items: options
+ .map((v) => DropdownMenuItem(
+ value: v,
+ child: Text(v,
+ style:
+ const TextStyle(fontSize: 13))))
+ .toList(),
+ validator: (v) =>
+ fields[i].isRequired &&
+ (v == null || v.isEmpty)
+ ? '${fields[i].label} is required'
+ : null,
+ onChanged: (v) {
+ if (v == null) return;
+ setDialogState(() => controllers[i].text = v);
+ },
+ );
+ }),
+ ] else
+ TextFormField(
+ controller: controllers[i],
+ maxLines: fields[i].multiline ? 3 : 1,
+ minLines: fields[i].multiline ? 2 : 1,
+ autofocus: i == 0,
+ style: const TextStyle(fontSize: 13),
+ decoration: _techAlignDialogFieldDecoration(
+ hint: fields[i].hint),
+ validator: (v) =>
+ fields[i].isRequired &&
+ (v == null || v.trim().isEmpty)
+ ? '${fields[i].label} is required'
+ : null,
+ ),
+ ],
+ ],
+ ),
+ ),
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.of(dialogContext).pop(null),
+ child: const Text('Cancel',
+ style: TextStyle(color: Color(0xFF6B7280))),
+ ),
+ FilledButton(
+ onPressed: () {
+ if (!(formKey.currentState?.validate() ?? false)) return;
+ final values = <int, String>{
+ for (var i = 0; i < controllers.length; i++)
+ i: controllers[i].text.trim(),
+ };
+ Navigator.of(dialogContext).pop(values);
+ },
+ style: FilledButton.styleFrom(
+ backgroundColor: const Color(0xFFFFC812),
+ foregroundColor: const Color(0xFF141414),
+ padding:
+ const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(14)),
+ textStyle: const TextStyle(
+ fontWeight: FontWeight.w700, fontSize: 14),
+ ),
+ child: const Text('Add'),
+ ),
+ ],
+ ),
+ ),
+ );
+
+ for (final c in controllers) {
+ c.dispose();
+ }
+ return result;
+ }
+
+ void _showRegisterAddedSnackBar(String label) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text('$label added.'),
+ behavior: SnackBarBehavior.floating,
+ backgroundColor: const Color(0xFF111827),
+ duration: const Duration(seconds: 3),
+ ),
+ );
+ }
+
+ /// Opens the polished 'Add constraint' modal and appends a fully
+ /// populated row to the Constraints & guardrails register.
+ Future<void> _openAddConstraintDialog() async {
+ final ownerOptions = _registerOwnerOptions();
+ final result = await _showAddRegisterDialog(
+ title: 'Add constraint',
+ fields: [
+ const _TechAlignDialogFieldSpec(
+ label: 'Constraint',
+ hint: 'e.g., All integrations must go through the API gateway',
+ icon: Icons.policy_outlined,
+ isRequired: true,
+ ),
+ const _TechAlignDialogFieldSpec(
+ label: 'Guardrail',
+ hint:
+ 'Describe the guardrail that keeps this constraint from drifting',
+ icon: Icons.shield_outlined,
+ isRequired: true,
+ multiline: true,
+ ),
+ _TechAlignDialogFieldSpec(
+ label: 'Owner',
+ icon: Icons.person_outline,
+ options: ownerOptions,
+ initialValue: ownerOptions.first,
+ ),
+ const _TechAlignDialogFieldSpec(
+ label: 'Status',
+ icon: Icons.flag_outlined,
+ options: ['Approved', 'In review', 'Draft', 'Blocked'],
+ initialValue: 'Draft',
+ ),
+ ],
+ );
+ if (result == null || !mounted) return;
+ setState(() {
+ _constraints.add(ConstraintRow(
+ constraint: result[0] ?? '',
+ guardrail: result[1] ?? '',
+ owner: result[2] ?? '',
+ status: result[3] ?? 'Draft',
+ ));
  });
+ _scheduleSave();
+ _showRegisterAddedSnackBar('Constraint');
+ }
+
+ /// Opens the polished 'Add mapping' modal and appends a fully populated
+ /// row to the requirement-to-solution mapping register.
+ Future<void> _openAddMappingDialog() async {
+ final result = await _showAddRegisterDialog(
+ title: 'Add mapping',
+ fields: [
+ const _TechAlignDialogFieldSpec(
+ label: 'Requirement',
+ hint: 'e.g., Offline data capture in the field',
+ icon: Icons.assignment_outlined,
+ isRequired: true,
+ ),
+ const _TechAlignDialogFieldSpec(
+ label: 'Technical approach',
+ hint: 'Describe how the solution addresses the requirement',
+ icon: Icons.swap_horiz,
+ isRequired: true,
+ multiline: true,
+ ),
+ const _TechAlignDialogFieldSpec(
+ label: 'Status',
+ icon: Icons.flag_outlined,
+ options: ['Aligned', 'In review', 'Draft'],
+ initialValue: 'Draft',
+ ),
+ ],
+ );
+ if (result == null || !mounted) return;
+ setState(() {
+ _mappings.add(RequirementMappingRow(
+ requirement: result[0] ?? '',
+ approach: result[1] ?? '',
+ status: result[2] ?? 'Draft',
+ ));
+ });
+ _scheduleSave();
+ _showRegisterAddedSnackBar('Mapping');
+ }
+
+ /// Opens the polished 'Add dependency' modal and appends a fully
+ /// populated row to the dependency & decision watchlist.
+ Future<void> _openAddDependencyDialog() async {
+ final ownerOptions = _registerOwnerOptions();
+ final result = await _showAddRegisterDialog(
+ title: 'Add dependency',
+ fields: [
+ const _TechAlignDialogFieldSpec(
+ label: 'Dependency / decision',
+ hint: 'e.g., Vendor API contract approval',
+ icon: Icons.account_tree_outlined,
+ isRequired: true,
+ ),
+ const _TechAlignDialogFieldSpec(
+ label: 'Detail',
+ hint: 'What must land before build, and who unblocks it',
+ icon: Icons.notes_outlined,
+ isRequired: true,
+ multiline: true,
+ ),
+ _TechAlignDialogFieldSpec(
+ label: 'Owner',
+ icon: Icons.person_outline,
+ options: ownerOptions,
+ initialValue: ownerOptions.first,
+ ),
+ const _TechAlignDialogFieldSpec(
+ label: 'Status',
+ icon: Icons.flag_outlined,
+ options: ['Pending', 'In review', 'Draft', 'Approved'],
+ initialValue: 'Pending',
+ ),
+ ],
+ );
+ if (result == null || !mounted) return;
+ setState(() {
+ _dependencies.add(DependencyDecisionRow(
+ item: result[0] ?? '',
+ detail: result[1] ?? '',
+ owner: result[2] ?? '',
+ status: result[3] ?? 'Pending',
+ ));
+ });
+ _scheduleSave();
+ _showRegisterAddedSnackBar('Dependency');
  }
 
  void _toggleEditingRow(Set<int> editingRows, int index) {
@@ -2318,8 +2646,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addConstraintRow,
  ),
  const SizedBox(height: 16),
- _wrapScrollableTableWithExpand(
- title: 'Constraint And Guardrail Register',
+ _buildScrollableTableSection(
  columns: const [
  _TableColumn(label: 'Constraint', flex: 3, minWidth: 260),
  _TableColumn(label: 'Guardrail', flex: 5, minWidth: 400),
@@ -2391,8 +2718,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addMappingRow,
  ),
  const SizedBox(height: 16),
- _wrapScrollableTableWithExpand(
- title: 'Requirement To Solution Mapping',
+ _buildScrollableTableSection(
  columns: const [
  _TableColumn(label: 'Requirement Area', flex: 3, minWidth: 260),
  _TableColumn(
@@ -2463,8 +2789,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addDependencyRow,
  ),
  const SizedBox(height: 16),
- _wrapScrollableTableWithExpand(
- title: 'Dependency And Decision Watchlist',
+ _buildScrollableTableSection(
  columns: const [
  _TableColumn(
  label: 'Dependency / Decision', flex: 3, minWidth: 260),
@@ -3971,8 +4296,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addConstraintRow,
  ),
  const SizedBox(height: 16),
- _wrapScrollableTableWithExpand(
- title: 'Constraints & guardrails',
+ _buildScrollableTableSection(
  columns: const [
  _TableColumn(label: 'Constraint', flex: 3, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Guardrail', flex: 5, minWidth: 400, alignment: Alignment.center),
@@ -4038,8 +4362,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addMappingRow,
  ),
  const SizedBox(height: 16),
- _wrapScrollableTableWithExpand(
- title: 'Requirements → solution mapping',
+ _buildScrollableTableSection(
  columns: const [
  _TableColumn(label: 'Requirement', flex: 3, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Technical approach', flex: 5, minWidth: 460, alignment: Alignment.center),
@@ -4104,8 +4427,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addDependencyRow,
  ),
  const SizedBox(height: 16),
- _wrapScrollableTableWithExpand(
- title: 'Dependencies & decisions',
+ _buildScrollableTableSection(
  columns: const [
  _TableColumn(label: 'Dependency or decision', flex: 4, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Detail', flex: 5, minWidth: 380, alignment: Alignment.center),
@@ -4421,30 +4743,21 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- /// Wraps the scrollable table header + body in a [FullScreenTableWrapper]
- /// so the table can be expanded to a full-screen view. Pass the same
- /// [columns] used by both the header and the body, and a [bodyBuilder]
- /// that returns either the body widget or the empty-state widget for the
- /// given [BuildContext].
- Widget _wrapScrollableTableWithExpand({
- required String title,
+ /// Renders the scrollable table header + body at natural height — always
+ /// fully expanded. (The previous expand-to-full-screen toggle around the
+ /// constraint / mapping / dependency tables was removed: the tables now
+ /// simply wrap their row count, with no fixed-height viewport.)
+ Widget _buildScrollableTableSection({
  required List<_TableColumn> columns,
  required WidgetBuilder bodyBuilder,
  }) {
- Widget buildInner(BuildContext bc) {
  return Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  _buildScrollableTableHeader(columns: columns),
  const SizedBox(height: 10),
- bodyBuilder(bc),
+ bodyBuilder(context),
  ],
- );
- }
- return FullScreenTableWrapper(
- title: title,
- tableBuilder: buildInner,
- child: buildInner(context),
  );
  }
 
@@ -5934,6 +6247,30 @@ List<_TraceabilityItem> _defaultTraceabilityItems() => [
  'Release checklist, support story completion, and production telemetry review.',
  ),
  ];
+
+ /// Field spec for one input inside the technical-alignment 'Add …' modal
+ /// dialogs (shared by the constraint, mapping, and dependency registers).
+ /// When [options] is non-null the field renders as a dropdown, otherwise
+ /// as a text field.
+ class _TechAlignDialogFieldSpec {
+ const _TechAlignDialogFieldSpec({
+ required this.label,
+ this.hint,
+ this.icon = Icons.edit_outlined,
+ this.isRequired = false,
+ this.multiline = false,
+ this.options,
+ this.initialValue,
+ });
+
+ final String label;
+ final String? hint;
+ final IconData icon;
+ final bool isRequired;
+ final bool multiline;
+ final List<String>? options;
+ final String? initialValue;
+ }
 
 class _TableColumn {
  const _TableColumn({

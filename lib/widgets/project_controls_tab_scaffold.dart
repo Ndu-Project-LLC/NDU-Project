@@ -504,7 +504,7 @@ class PcKpiTrend {
 
 /// Renders a responsive `Wrap` of KPI cards built from [kpis].
 ///
-/// 4 columns when width > 1100, 2 columns when > 720, else 1 column.
+/// 3 columns when width > 1100, 2 columns when > 760, else 1 column.
 class PcKpiStrip extends StatelessWidget {
   const PcKpiStrip({
     super.key,
@@ -520,8 +520,8 @@ class PcKpiStrip extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, c) {
         final cols = c.maxWidth > 1100
-            ? 4
-            : c.maxWidth > 720
+            ? 3
+            : c.maxWidth > 760
                 ? 2
                 : 1;
         final cardW = (c.maxWidth - spacing * (cols - 1)) / cols;
@@ -551,7 +551,8 @@ class _PcKpiCard extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
           width: cardWidth,
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+          constraints: const BoxConstraints(minHeight: 120),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           decoration: BoxDecoration(
             color: PcPalette.surface,
             borderRadius: BorderRadius.circular(16),
@@ -637,18 +638,18 @@ class _PcKpiCard extends StatelessWidget {
                           ),
                       ],
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
                     Text(
                       spec.label.toUpperCase(),
                       style: const TextStyle(
                         color: PcPalette.inkMuted,
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
+                        letterSpacing: 0.5,
                         fontFamily: appFontFamily,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -657,7 +658,7 @@ class _PcKpiCard extends StatelessWidget {
                             spec.value,
                             style: const TextStyle(
                               color: PcPalette.inkPrimary,
-                              fontSize: 24,
+                              fontSize: 22,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.5,
                               height: 1.1,
@@ -707,7 +708,7 @@ class _PcKpiCard extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
                       spec.sub,
                       style: const TextStyle(

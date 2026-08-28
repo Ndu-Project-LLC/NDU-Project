@@ -64,12 +64,12 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
  bool _isLoadingCompliance = false;
 
  static const List<_StatItem> _defaultOverviewStats = [
- _StatItem('Team Members', '5 active', Icons.people, Color(0xFFFFC812)),
- _StatItem('Assets Pending', '12 items', Icons.inventory, Colors.orange),
+ _StatItem('Team Members', '5 active', Icons.people, Color(0xFFF59E0B)),
+ _StatItem('Assets Pending', '12 items', Icons.inventory, Color(0xFFF59E0B)),
  _StatItem(
- 'Total Salvage Value', '\$73,350', Icons.attach_money, Colors.green),
- _StatItem('Disposal Progress', '68%', Icons.pie_chart, Color(0xFFB8860B)),
- _StatItem('Compliance Score', '94/100', Icons.verified, Color(0xFFD97706)),
+ 'Total Salvage Value', '\$73,350', Icons.attach_money, Color(0xFFF59E0B)),
+ _StatItem('Disposal Progress', '68%', Icons.pie_chart, Color(0xFFF59E0B)),
+ _StatItem('Compliance Score', '94/100', Icons.verified, Color(0xFFF59E0B)),
  ];
 
  static const List<_StatItem> _defaultInventoryStats = [
@@ -5662,15 +5662,15 @@ Execution snapshot:
  '\$58,200',
  'Based on current market valuations for salvageable assets.',
  Icons.trending_up,
- Colors.green),
+ Color(0xFFF59E0B)),
  const _InsightCard(
  'Environmental Impact',
  '12.5 tons',
  'CO2 emissions avoided through proper recycling.',
  Icons.eco,
- Color(0xFFD97706)),
+ Color(0xFFF59E0B)),
  const _InsightCard('Average Disposal Time', '18 days',
- '23% faster than industry benchmark.', Icons.speed, Color(0xFFFFC812)),
+ '23% faster than industry benchmark.', Icons.speed, Color(0xFFF59E0B)),
  ];
 
  if (isNarrow) {

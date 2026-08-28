@@ -22,6 +22,7 @@ import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/screens/project_charter_sections.dart';
 import 'package:ndu_project/screens/charter_governance_section.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spotlight_walkthrough.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
@@ -40,6 +41,16 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  ProjectDataModel? _projectData;
  bool _isGenerating = false;
  late final OpenAiServiceSecure _openAi;
+
+ // ── Project Manager spotlight walkthrough ───────────────────────────
+ // Replaces the old yellow instructional banner: when no manager is
+ // assigned we highlight the actual "Project Manager" card inside the
+ // meta info scroll with a punched-through spotlight overlay.
+ final GlobalKey _pmCardKey = GlobalKey();
+ final GlobalKey<CharterMetaInfoScrollState> _pmMetaSectionKey =
+ GlobalKey<CharterMetaInfoScrollState>();
+ bool _pmSpotlightDismissed = false;
+
  @override
  void initState() {
  super.initState();
@@ -493,10 +504,43 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
     });
   }
 
+ /// Invoked by the spotlight walkthrough's "Assign Manager Now" CTA.
+ /// Opens the SAME assign dialog the Project Manager card opens (single
+ /// write path), then refreshes the local snapshot so the spotlight and
+ /// the stats/meta cards react to the newly assigned manager.
+ Future<void> _assignManagerFromSpotlight() async {
+ // Dismiss the spotlight first so the dialog opens on an unobstructed UI.
+ if (mounted && !_pmSpotlightDismissed) {
+ setState(() => _pmSpotlightDismissed = true);
+ }
+ final state = _pmMetaSectionKey.currentState;
+ if (state != null) {
+ await state.showAssignManagerDialog();
+ }
+ // The dialog persists via ProjectDataHelper.updateAndSave; re-read the
+ // provider so this screen's snapshot (and thus the spotlight condition,
+ // stats grid and Next gate) reflect the new manager immediately.
+ if (!mounted) return;
+ final provider = ProjectDataInherited.read(context);
+ setState(() {
+ _projectData = provider.projectData;
+ });
+ }
+
  @override
  Widget build(BuildContext context) {
  final pagePadding = AppBreakpoints.pagePadding(context);
  final isMobile = AppBreakpoints.isMobile(context);
+
+ // ── Spotlight trigger condition ────────────────────────────────────
+ // Same condition the old yellow banner used (no Project Manager),
+ // additionally gated on: not generating (card not in tree yet), not
+ // approved/locked (card is disabled then) and not dismissed this visit.
+ final showPmSpotlight = !_isGenerating &&
+ !_pmSpotlightDismissed &&
+ _projectData != null &&
+ _projectData!.charterProjectManagerName.trim().isEmpty &&
+ !CharterLockHelper.isFepLocked(_projectData);
 
  return ResponsiveScaffold(
  activeItemLabel: 'Project Charter',
@@ -557,26 +601,15 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  CharterDashboardStats(data: _projectData),
  const SizedBox(height: 24),
 
- // ─── 2b. Assign Manager Walkthrough (only when no PM) ───
- if (_projectData != null &&
- _projectData!.charterProjectManagerName.trim().isEmpty) ...[
- AssignManagerWalkthrough(
- onAssignTapped: () {
- // Trigger the meta info scroll's assign dialog via a key or public method
- // For simplicity, show a snackbar directing user to the card below
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text('Tap the "PROJECT MANAGER" card below to assign a manager.'),
- behavior: SnackBarBehavior.floating,
- ),
- );
- },
- ),
- const SizedBox(height: 16),
- ],
-
  // ─── 3. Meta Info Horizontal Scroll ───
- CharterMetaInfoScroll(data: _projectData),
+ // The Project Manager card carries [_pmCardKey] so the spotlight
+ // walkthrough below can highlight it. The old yellow "Assign your
+ // Project Manager" banner was removed in favour of the spotlight.
+ CharterMetaInfoScroll(
+ key: _pmMetaSectionKey,
+ data: _projectData,
+ pmCardKey: _pmCardKey,
+ ),
  const SizedBox(height: 24),
 
  // ─── 4. Project Definition Bento (2-col grid) ───
@@ -747,6 +780,34 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  right: 0,
  bottom: 0,
  child: CharterFloatingApprovalBar(data: _projectData),
+ ),
+
+ // ─── Project Manager Spotlight Walkthrough ───
+ // Replaces the old yellow instructional banner. Punches a hole around
+ // the real "Project Manager" card; taps inside the highlight fall
+ // through to the card, taps outside / Got it / ✕ dismiss it.
+ if (showPmSpotlight)
+ Positioned.fill(
+ child: SpotlightWalkthrough(
+ targetKey: _pmCardKey,
+ steps: const [
+ SpotlightStep(
+ icon: Icons.person_add_alt_1,
+ badgeLabel: 'Required',
+ title: 'Assign your Project Manager',
+ description:
+ 'Before you can move forward in the Project Charter, you need to assign a Project Manager. Here\'s how:',
+ bullets: [
+ 'Tap the highlighted "PROJECT MANAGER" card',
+ 'Enter the manager\'s name in the dialog',
+ 'Click "Assign" — you\'re all set!',
+ ],
+ ),
+ ],
+ primaryLabel: 'Assign Manager Now',
+ onPrimary: _assignManagerFromSpotlight,
+ onDismiss: () => setState(() => _pmSpotlightDismissed = true),
+ ),
  ),
  ],
  ),

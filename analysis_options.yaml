@@ -65,6 +65,9 @@ analyzer:
     - lib/utils/role_descriptions.dart
     - lib/routing/platform_router_web.dart
     - lib/routing/platform_router_web_stub.dart
+    - android/**
+    - ios/**
+    - web/**
 
 linter:
   # The lint rules applied to this project can be customized in the

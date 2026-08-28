@@ -4092,8 +4092,8 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
     return LayoutBuilder(
       builder: (context, c) {
         final cols = c.maxWidth > 1100
-            ? 4
-            : c.maxWidth > 720
+            ? 3
+            : c.maxWidth > 760
                 ? 2
                 : 1;
         const spacing = 14.0;
@@ -4158,7 +4158,8 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
           width: cardWidth,
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+          constraints: const BoxConstraints(minHeight: 120),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           decoration: BoxDecoration(
             color: _surface,
             borderRadius: BorderRadius.circular(16),
@@ -4241,23 +4242,23 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
                     Text(
                       label.toUpperCase(),
                       style: const TextStyle(
                         color: _inkMuted,
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 1.1,
+                        letterSpacing: 0.5,
                         fontFamily: appFontFamily,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       value,
                       style: const TextStyle(
                         color: _inkPrimary,
-                        fontSize: 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.5,
                         fontFamily: appFontFamily,
@@ -4268,7 +4269,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                       sub,
                       style: const TextStyle(
                         color: _inkSecondary,
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                         fontFamily: appFontFamily,
                       ),

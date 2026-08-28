@@ -127,10 +127,20 @@ class _LeftRightConnectorPainter extends CustomPainter {
   }
 }
 
-class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
+class _WBSBuilderScreenState extends State<WBSBuilderScreen>
+    with TickerProviderStateMixin {
   final Set<String> _expanded = {};
   bool _kazAiLoading = false;
   _SimpleAxis _simpleAxis = _SimpleAxis.topDown;
+
+  /// Node currently highlighted with the yellow selection border.
+  /// Tap a card to select it; the state persists across scroll rebuilds
+  /// because the whole tree renders inside one SingleChildScrollView.
+  String? _selectedNodeId;
+
+  /// Shared constants for the 12-16px spacing rhythm + depth guides.
+  static const double _kNodeGap = 12;
+  static const Color _kGuideColor = Color(0xFFFFC107);
 
   @override
   Widget build(BuildContext context) {
@@ -300,48 +310,57 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          // Action buttons
-          Row(
+          // Action toolbar — consistent 40px control heights, tooltips,
+          // and tidy 10px gaps. Wraps on narrow widths instead of overflow.
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               // Generate WBS button (prominent)
-              _kazAiLoading
-                  ? const SizedBox(
+              if (_kazAiLoading)
+                const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Center(
+                    child: SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : FilledButton.icon(
+                    ),
+                  ),
+                )
+              else
+                Tooltip(
+                  message:
+                      'Generate Level 1 ${fm.level1Label}s with KAZ AI',
+                  child: FilledButton.icon(
                       onPressed: () =>
                           _generateWithKazAi(context, provider, wbs),
                       icon: const Icon(Icons.auto_awesome, size: 16),
                       label: Text('Generate ${fm.level1Label}'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFC107),
-                        foregroundColor: const Color(0xFF1A1D1F),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-              const SizedBox(width: 8),
+                      style: _toolbarFilledStyle()),
+                ),
               if (WBSTemplates.templates[wbs.framework]!.isNotEmpty)
-                OutlinedButton.icon(
-                  onPressed: () => _showTemplatesDialog(
-                      context, provider, wbs.framework, wbs.level0.id),
-                  icon: const Icon(Icons.auto_awesome, size: 14),
-                  label: const Text('Templates'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF1A1D1F),
-                    side: const BorderSide(color: Color(0xFFE4E7EC)),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                Tooltip(
+                  message:
+                      'Start from a ready-made ${wbs.framework.label} template',
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showTemplatesDialog(
+                        context, provider, wbs.framework, wbs.level0.id),
+                    icon: const Icon(Icons.auto_awesome, size: 14),
+                    label: const Text('Templates'),
+                    style: _toolbarOutlinedStyle(),
                   ),
                 ),
               // View mode toggle
-              SegmentedButton<bool>(
+              Tooltip(
+                message: provider.viewModeSimple
+                    ? 'Switch to the full hierarchy editor'
+                    : 'Switch to a simplified diagram view',
+                child: SizedBox(
+                  height: 40,
+                  child: SegmentedButton<bool>(
                 segments: const [
                   ButtonSegment(
                       value: false,
@@ -374,10 +393,15 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                     return const BorderSide(color: Color(0xFFD1D5DB));
                   }),
                 ),
+                ),
+                ),
               ),
               if (provider.viewModeSimple) ...[
-                const SizedBox(width: 8),
-                SegmentedButton<_SimpleAxis>(
+                Tooltip(
+                  message: 'Diagram orientation',
+                  child: SizedBox(
+                    height: 40,
+                    child: SegmentedButton<_SimpleAxis>(
                   segments: const [
                     ButtonSegment(
                       value: _SimpleAxis.topDown,
@@ -415,34 +439,52 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                       return const BorderSide(color: Color(0xFFD1D5DB));
                     }),
                   ),
+                  ),
+                ),
                 ),
               ],
-              const SizedBox(width: 12),
-              FilledButton.icon(
-                onPressed: () {
-                  if (wbs.level0.children.length >= 3) {
-                    _showLevel1CapMessage(context);
-                    return;
-                  }
-                  _showAddNodeDialog(
-                      context, provider, 1, fm.level1Label,
-                      parentId: wbs.level0.id);
-                },
-                icon: const Icon(Icons.add, size: 16),
-                label: Text('Add ${fm.level1Label}'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: LightModeColors.accent,
-                  foregroundColor: LightModeColors.lightOnPrimary,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
+              Tooltip(
+                message: 'Add a new Level 1 ${fm.level1Label}',
+                child: FilledButton.icon(
+                  onPressed: () {
+                    if (wbs.level0.children.length >= 3) {
+                      _showLevel1CapMessage(context);
+                      return;
+                    }
+                    _showAddNodeDialog(
+                        context, provider, 1, fm.level1Label,
+                        parentId: wbs.level0.id);
+                  },
+                  icon: const Icon(Icons.add, size: 16),
+                  label: Text('Add ${fm.level1Label}'),
+                  style: _toolbarFilledStyle(hPadding: 16),
                 ),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  /// Consistent toolbar button style: 40px tall, 10px corner radius.
+  ButtonStyle _toolbarFilledStyle({double hPadding = 14}) {
+    return FilledButton.styleFrom(
+      backgroundColor: const Color(0xFFFFC107),
+      foregroundColor: const Color(0xFF1A1D1F),
+      minimumSize: const Size(0, 40),
+      padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    );
+  }
+
+  ButtonStyle _toolbarOutlinedStyle() {
+    return OutlinedButton.styleFrom(
+      foregroundColor: const Color(0xFF1A1D1F),
+      side: const BorderSide(color: Color(0xFFE4E7EC)),
+      minimumSize: const Size(0, 40),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );
   }
 
@@ -1038,8 +1080,18 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
           if (node.children.isEmpty)
             _buildEmptyState(context, provider, fm)
           else
-            Padding(
-              padding: const EdgeInsets.only(left: 20, top: 8),
+            Container(
+              // Level-1 depth guide: thin vertical spine under the root card.
+              margin: const EdgeInsets.only(left: 20, top: 12),
+              padding: const EdgeInsets.only(left: 10),
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(
+                    color: _kGuideColor.withValues(alpha: 0.18),
+                    width: 2,
+                  ),
+                ),
+              ),
               child: _buildChildrenList(context, provider, costProvider,
                   node.children, fm, depth + 1),
             ),
@@ -1071,7 +1123,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
         final canAddChild = depth < fm.maxDepth;
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.only(bottom: _kNodeGap),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1122,38 +1174,54 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                   ),
                 ],
               ),
-              // Children (when expanded)
-              if (isExpanded && child.children.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(left: 44, top: 6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: child.children.asMap().entries.map((grandEntry) {
-                      final grand = grandEntry.value;
-                      final isLastGrand =
-                          grandEntry.key == child.children.length - 1;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: _buildRecursiveChild(context, provider,
-                            costProvider, grand, fm, depth + 1,
-                            isLast: isLastGrand),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              // Add child button (when expanded)
-              if (isExpanded && canAddChild)
-                Padding(
-                  padding: const EdgeInsets.only(left: 44, top: 2),
-                  child: _buildAddChildButton(
-                      context, provider, child, fm, depth + 1),
-                ),
-              // Linked cost lines panel
-              if (isExpanded)
-                Padding(
-                  padding: const EdgeInsets.only(left: 44, top: 4),
-                  child: _buildLinkedCostLinesPanel(child, costProvider),
-                ),
+              // Children + add-child button + cost panel — wrapped in an
+              // AnimatedSize so expanding/collapsing glides open/closed
+              // (~200ms). Expand state lives in `_expanded` (State-level),
+              // so it persists while the user scrolls.
+              AnimatedSize(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                alignment: Alignment.topLeft,
+                      child: !isExpanded
+                    ? const SizedBox(width: double.infinity)
+                    : Container(
+                        // Depth guide: one thin vertical line per level.
+                        margin: const EdgeInsets.only(left: 44, top: 12),
+                        padding: const EdgeInsets.only(left: 12, bottom: 2),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              color: _kGuideColor.withValues(alpha: 0.18),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ...child.children.asMap().entries.map((grandEntry) {
+                              final grand = grandEntry.value;
+                              final isLastGrand =
+                                  grandEntry.key == child.children.length - 1;
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.only(bottom: _kNodeGap),
+                                child: _buildRecursiveChild(context, provider,
+                                    costProvider, grand, fm, depth + 1,
+                                    isLast: isLastGrand),
+                              );
+                            }),
+                            if (canAddChild)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: _buildAddChildButton(
+                                    context, provider, child, fm, depth + 1),
+                              ),
+                            _buildLinkedCostLinesPanel(child, costProvider),
+                          ],
+                        ),
+                      ),
+              ),
             ],
           ),
         );
@@ -1221,33 +1289,53 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
             ),
           ],
         ),
-        if (isExpanded && node.children.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(left: 44, top: 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: node.children.asMap().entries.map((entry) {
-                final c = entry.value;
-                final isLastChild = entry.key == node.children.length - 1;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: _buildRecursiveChild(
-                      context, provider, costProvider, c, fm, depth + 1,
-                      isLast: isLastChild),
-                );
-              }).toList(),
-            ),
-          ),
-        if (isExpanded && canAddChild)
-          Padding(
-            padding: const EdgeInsets.only(left: 44, top: 2),
-            child: _buildAddChildButton(context, provider, node, fm, depth + 1),
-          ),
-        if (isExpanded)
-          Padding(
-            padding: const EdgeInsets.only(left: 44, top: 4),
-            child: _buildLinkedCostLinesPanel(node, costProvider),
-          ),
+        // Children + add-child button + cost panel — animated expand/collapse
+        // (~200ms). Expand state lives in `_expanded`, persisting across
+        // scroll rebuilds.
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          alignment: Alignment.topLeft,
+          child: !isExpanded
+              ? const SizedBox(width: double.infinity)
+              : Container(
+                  // Depth guide: thin vertical line for this level.
+                  margin: const EdgeInsets.only(left: 44, top: 12),
+                  padding: const EdgeInsets.only(left: 12, bottom: 2),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      left: BorderSide(
+                        color: _kGuideColor.withValues(alpha: 0.18),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...node.children.asMap().entries.map((entry) {
+                        final c = entry.value;
+                        final isLastChild =
+                            entry.key == node.children.length - 1;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: _kNodeGap),
+                          child: _buildRecursiveChild(
+                              context, provider, costProvider, c, fm,
+                              depth + 1,
+                              isLast: isLastChild),
+                        );
+                      }),
+                      if (canAddChild)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: _buildAddChildButton(
+                              context, provider, node, fm, depth + 1),
+                        ),
+                      _buildLinkedCostLinesPanel(node, costProvider),
+                    ],
+                  ),
+                ),
+        ),
       ],
     );
   }
@@ -1274,28 +1362,43 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     final accentColor = isRoot
         ? LightModeColors.accent
         : levelColor(depth, LightModeColors.accent);
+    final isSelected = _selectedNodeId == node.id;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-            color: isRoot
-                ? accentColor.withValues(alpha: 0.25)
-                : const Color(0xFFE8EBF0),
-            width: isRoot ? 1.5 : 1),
-        boxShadow: [
-          BoxShadow(
-            color: isRoot
-                ? accentColor.withValues(alpha: 0.08)
-                : Colors.black.withValues(alpha: 0.04),
-            blurRadius: isRoot ? 16 : 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
+    return _HoverBuilder(
+      builder: (context, hovered) => AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+              color: isSelected
+                  ? _kGuideColor
+                  : isRoot
+                      ? accentColor.withValues(alpha: 0.25)
+                      : const Color(0xFFE8EBF0),
+              width: isSelected ? 2 : (isRoot ? 1.5 : 1)),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? _kGuideColor.withValues(alpha: 0.16)
+                  : hovered
+                      ? Colors.black.withValues(alpha: 0.08)
+                      : isRoot
+                          ? accentColor.withValues(alpha: 0.08)
+                          : Colors.black.withValues(alpha: 0.04),
+              blurRadius: isSelected || hovered ? 18 : (isRoot ? 16 : 8),
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => setState(() => _selectedNodeId = node.id),
+            borderRadius: BorderRadius.circular(14),
+            child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Top row: code badge + name + badges
@@ -1521,8 +1624,11 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
               ],
             ],
           ),
-        ],
+          ],
+        ),
       ),
+      ),
+    ),
     );
   }
 
@@ -1546,17 +1652,16 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     String? tooltip,
     Color color = const Color(0xFF6B7280),
   }) {
+    // Subtle small icon action: borderless, gentle hover tint, tooltip.
     final btn = InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFFE4E7EC)),
-        ),
-        child: Icon(icon, size: 14, color: color),
+      borderRadius: BorderRadius.circular(8),
+      hoverColor: color.withValues(alpha: 0.08),
+      splashColor: color.withValues(alpha: 0.06),
+      child: SizedBox(
+        width: 28,
+        height: 28,
+        child: Icon(icon, size: 15, color: color),
       ),
     );
     if (tooltip != null) return Tooltip(message: tooltip, child: btn);
@@ -2104,4 +2209,26 @@ class _TreeBranchPainter extends CustomPainter {
   @override
   bool shouldRepaint(_TreeBranchPainter old) =>
       old.isLast != isLast || old.color != color;
+}
+
+/// Local hover-state helper (MouseRegion) used by the advanced-view node
+/// cards to animate elevation/border on hover — same pattern as the Epics &
+/// Features screen's epic cards.
+class _HoverBuilder extends StatefulWidget {
+  const _HoverBuilder({required this.builder});
+  final Widget Function(BuildContext context, bool hovered) builder;
+  @override
+  State<_HoverBuilder> createState() => _HoverBuilderState();
+}
+
+class _HoverBuilderState extends State<_HoverBuilder> {
+  bool _hovered = false;
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: widget.builder(context, _hovered),
+    );
+  }
 }

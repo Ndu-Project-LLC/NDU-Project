@@ -1227,11 +1227,22 @@ class _GapRegisterCard extends StatelessWidget {
     return sorted;
   }
 
+  /// Auto-assigns the next sequential gap id (e.g. GAP-001, GAP-002) by
+  /// scanning the numeric suffixes of the ids already present in the register.
+  String _generateNextGapId(List<_GapEntry> entries) {
+    var max = 0;
+    for (final e in entries) {
+      final m = RegExp(r'^GAP-(\d+)$').firstMatch(e.id.trim());
+      if (m != null) {
+        final v = int.tryParse(m.group(1)!);
+        if (v != null && v > max) max = v;
+      }
+    }
+    return 'GAP-${(max + 1).toString().padLeft(3, '0')}';
+  }
+
   void _showGapEntryEditor(BuildContext context, {_GapEntry? existing}) {
     final isEdit = existing != null;
-    final idController = TextEditingController(
-        text: existing?.id ??
-            'GAP-${DateTime.now().millisecondsSinceEpoch % 10000}');
     final titleController = TextEditingController(text: existing?.title ?? '');
     final ownerController = TextEditingController(text: existing?.owner ?? '');
     final nextStepController =
@@ -1257,14 +1268,6 @@ class _GapRegisterCard extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  VoiceTextField(
-                    controller: idController,
-                    decoration: const InputDecoration(
-                      labelText: 'Gap ID *',
-                      isDense: true,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   VoiceTextField(
                     controller: titleController,
                     decoration: const InputDecoration(
@@ -1403,7 +1406,10 @@ class _GapRegisterCard extends StatelessWidget {
                 final entry = _GapEntry(
                   uid: existing?.uid ??
                       DateTime.now().microsecondsSinceEpoch.toString(),
-                  id: idController.text.trim(),
+                  // Gap ids are generated internally (GAP-001, GAP-002, ...)
+                  // so the register keeps stable identifiers without asking
+                  // the user to type one.
+                  id: existing?.id ?? _generateNextGapId(entries),
                   title: titleController.text.trim(),
                   stage: selectedStage,
                   owner: ownerController.text.trim(),
@@ -1426,7 +1432,6 @@ class _GapRegisterCard extends StatelessWidget {
         ),
       ),
     ).then((_) {
-      idController.dispose();
       titleController.dispose();
       ownerController.dispose();
       nextStepController.dispose();

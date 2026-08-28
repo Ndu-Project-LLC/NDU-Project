@@ -130,7 +130,6 @@ class _TechnicalDevelopmentScreenState
  @override
  void initState() {
  super.initState();
- _standardsChips = _defaultStandards();
  _workstreams = _defaultWorkstreams();
  _readinessItems = _defaultReadinessItems();
  _buildComponents = _defaultBuildComponents();
@@ -237,7 +236,6 @@ class _TechnicalDevelopmentScreenState
  'Production readiness now covers software build packs, fabrication packages, integration proving, mock venue rehearsals, and release controls before tools integration begins.';
  _approachController.text =
  'Run mixed software and physical workstreams in parallel, freeze interfaces early, validate prototypes before procurement, and push only after quality, safety, and rollback checks are complete.';
- _standardsChips = _defaultStandards();
  _workstreams = _defaultWorkstreams();
  _readinessItems = _defaultReadinessItems();
  _buildComponents = _defaultBuildComponents();
@@ -247,7 +245,7 @@ class _TechnicalDevelopmentScreenState
  } else {
  _notesController.text = data['notes']?.toString() ?? '';
  _approachController.text = data['approach']?.toString() ?? '';
- _standardsChips = chips.isEmpty ? _defaultStandards() : chips;
+ _standardsChips = chips;
  _workstreams =
  workstreams.isEmpty ? _defaultWorkstreams() : workstreams;
  _readinessItems =
@@ -306,18 +304,6 @@ class _TechnicalDevelopmentScreenState
  }
 
  // ─── Default data generators ──────────────────────────────────────────
-
- List<_ChipItem> _defaultStandards() {
- return [
- _ChipItem(id: _newId(), label: 'Coding guidelines signed off'),
- _ChipItem(id: _newId(), label: 'Fabrication tolerances locked'),
- _ChipItem(id: _newId(), label: 'Interface freeze before sprint cut-off'),
- _ChipItem(
- id: _newId(),
- label: 'Safety protocols cleared for site assembly',
- ),
- ];
- }
 
  List<_WorkstreamItem> _defaultWorkstreams() {
  return [
@@ -533,8 +519,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildRiskSignalsPanel(),
  const SizedBox(height: 20),
  _buildReadinessChecklistPanel(),
- const SizedBox(height: 20),
- _buildStandardsGatesPanel(),
  const SizedBox(height: 20),
  _buildDocumentationPanel(),
  const SizedBox(height: 24),
@@ -1488,80 +1472,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
                                   ),
  ],
  ),
- ),
- ],
- ),
- );
- }
-
- // ─── Standards Gates Panel ────────────────────────────────────────────
-
- Widget _buildStandardsGatesPanel() {
- return _PanelShell(
- title: 'Technical standards gates',
- subtitle: 'Active quality gates spanning software and physical controls',
- trailing: TextButton.icon(
- onPressed: _addStandardChip,
- icon: const Icon(Icons.add_rounded, size: 16),
- label: const Text('Add standard'),
- style: TextButton.styleFrom(
- foregroundColor: const Color(0xFF4154F1),
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
- ),
- ),
- child: Wrap(
- spacing: 8,
- runSpacing: 8,
- children: [
- ..._standardsChips.map(_buildEditableChip),
- ],
- ),
- );
- }
-
- Widget _buildEditableChip(_ChipItem chip) {
- final isActive = chip.label.toLowerCase().contains('signed') ||
- chip.label.toLowerCase().contains('active') ||
- chip.label.toLowerCase().contains('cleared') ||
- chip.label.toLowerCase().contains('locked');
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
- decoration: BoxDecoration(
- color: isActive
- ? const Color(0xFFECFDF5)
- : const Color(0xFFF3F4F6),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(
- color: isActive
- ? const Color(0xFF059669).withValues(alpha: 0.3)
- : const Color(0xFFD1D5DB),
- ),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(
- isActive ? Icons.check_circle_rounded : Icons.pending_actions_rounded,
- size: 14,
- color: isActive ? const Color(0xFF059669) : const Color(0xFF9CA3AF),
- ),
- const SizedBox(width: 6),
- InkWell(
- onTap: () => _openStandardsChipDialog(existing: chip),
- child: Text(chip.label,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: isActive
- ? const Color(0xFF059669)
- : const Color(0xFF6B7280),
- )),
- ),
- const SizedBox(width: 4),
- InkWell(
- onTap: () => _deleteStandardChipWithConfirm(chip),
- child: const Icon(Icons.close, size: 14, color: Color(0xFF9CA3AF)),
  ),
  ],
  ),
@@ -2762,68 +2672,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  ],
  ),
- );
- }
-
- // ─── CRUD: Standards Chips ────────────────────────────────────────────
-
- void _addStandardChip() {
- _openStandardsChipDialog();
- }
-
- void _deleteStandardChipWithConfirm(_ChipItem chip) {
- setState(() => _standardsChips.removeWhere((item) => item.id == chip.id));
- _scheduleSave();
- _logActivity('Deleted standards chip', details: {'itemId': chip.id});
-    showDeleteSuccessSnackBar(context, itemLabel: 'Chip Item');
- }
-
- Future<void> _openStandardsChipDialog({_ChipItem? existing}) async {
- final controller = TextEditingController(text: existing?.label ?? '');
- final saved = await showDialog<bool>(
- context: context,
- builder: (dialogContext) => AlertDialog(
- title: Text(existing == null
- ? 'Add quality standard'
- : 'Edit quality standard'),
- content: SizedBox(
- width: 420,
- child: VoiceTextField(
- controller: controller,
- decoration: const InputDecoration(
- labelText: 'Standard / quality code',
- border: OutlineInputBorder(),
- ),
- ),
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(false),
- child: const Text('Cancel'),
- ),
- ElevatedButton(
- onPressed: () => Navigator.of(dialogContext).pop(true),
- child: Text(existing == null ? 'Add standard' : 'Save changes'),
- ),
- ],
- ),
- );
- if (saved != true) return;
- final item =
- _ChipItem(id: existing?.id ?? _newId(), label: controller.text.trim());
- setState(() {
- if (existing == null) {
- _standardsChips.add(item);
- } else {
- final index =
- _standardsChips.indexWhere((entry) => entry.id == existing.id);
- if (index != -1) _standardsChips[index] = item;
- }
- });
- _scheduleSave();
- _logActivity(
- existing == null ? 'Added standards chip' : 'Edited standards chip',
- details: {'itemId': item.id},
  );
  }
 

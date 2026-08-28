@@ -64,7 +64,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
     'Not started',
     'In progress',
     'Blocked',
-    'Done'
+    'Complete'
   ];
   static const List<String> _signOffStatuses = [
     'Pending',
@@ -1120,6 +1120,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
   Color _checklistStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'done':
+      case 'complete':
         return const Color(0xFF22C55E);
       case 'in progress':
         return const Color(0xFFF59E0B);
@@ -1134,6 +1135,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
   IconData _checklistStatusIcon(String status) {
     switch (status.toLowerCase()) {
       case 'done':
+      case 'complete':
         return Icons.check_circle;
       case 'in progress':
         return Icons.timelapse;
@@ -1764,17 +1766,247 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
       showDeleteSuccessSnackBar(context, itemLabel: 'Snapshot Metric');
   }
 
-  void _addChecklistItem() {
+  /// Formats a date as YYYY-MM-DD (the format used for due dates in
+  /// this screen's persisted data).
+  static String _formatIsoDate(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
+
+  /// Shared InputDecoration for the finalize 'Add …' modal dialogs:
+  /// white fill, rounded-12 border, yellow focus ring.
+  InputDecoration _finalizeDialogFieldDecoration({String? hintText}) {
+    return InputDecoration(
+      hintText: hintText,
+      isDense: true,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFFFC812), width: 1.5),
+      ),
+    );
+  }
+
+  /// Opens the polished 'Add checklist item' modal. This replaces the old
+  /// behaviour of appending blank inline rows into the checklist table —
+  /// rows are now only ever appended fully populated from the modal.
+  Future<void> _addChecklistItem() async {
+    final titleController = TextEditingController();
+    final ownerController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    var selectedStatus = _checklistStatuses.first;
+    DateTime? selectedDueDate;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24)),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFC812).withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.add_task_rounded,
+                    size: 20, color: Color(0xFFB8860B)),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Add checklist item',
+                style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF141414)),
+              ),
+            ],
+          ),
+          content: Form(
+            key: formKey,
+            child: SizedBox(
+              width: 480,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Checklist item *',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151))),
+                    const SizedBox(height: 6),
+                    VoiceTextFormField(
+                      controller: titleController,
+                      maxLines: 2,
+                      autofocus: true,
+                      decoration:
+                          _finalizeDialogFieldDecoration(
+                              hintText: 'e.g., Final deployment review'),
+                      validator: (v) =>
+                          v == null || v.trim().isEmpty
+                              ? 'Checklist item is required'
+                              : null,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Owner',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151))),
+                    const SizedBox(height: 6),
+                    VoiceTextFormField(
+                      controller: ownerController,
+                      decoration: _finalizeDialogFieldDecoration(
+                          hintText: 'e.g., Project Manager'),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Due date',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151))),
+                    const SizedBox(height: 6),
+                    InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () async {
+                        final now = DateTime.now();
+                        final picked = await showDatePicker(
+                          context: dialogContext,
+                          initialDate: selectedDueDate ?? now,
+                          firstDate: DateTime(now.year - 5),
+                          lastDate: DateTime(now.year + 10),
+                        );
+                        if (picked != null) {
+                          setDialogState(() => selectedDueDate = picked);
+                        }
+                      },
+                      child: InputDecorator(
+                        decoration: _finalizeDialogFieldDecoration(
+                          hintText: 'Select due date',
+                        ).copyWith(
+                          suffixIcon: const Icon(
+                              Icons.calendar_today_outlined,
+                              size: 18,
+                              color: Color(0xFF9CA3AF)),
+                        ),
+                        child: Text(
+                          selectedDueDate == null
+                              ? ''
+                              : _formatIsoDate(selectedDueDate!),
+                          style: const TextStyle(
+                              fontSize: 13, color: Color(0xFF111827)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Status',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151))),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedStatus,
+                      isExpanded: true,
+                      decoration: _finalizeDialogFieldDecoration(),
+                      items: _checklistStatuses
+                          .map((s) => DropdownMenuItem(
+                              value: s,
+                              child: Text(s,
+                                  style: const TextStyle(fontSize: 13))))
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) {
+                          setDialogState(() => selectedStatus = v);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel',
+                  style: TextStyle(color: Color(0xFF6B7280))),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (!(formKey.currentState?.validate() ?? false)) return;
+                Navigator.of(dialogContext).pop(true);
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFFFC812),
+                foregroundColor: const Color(0xFF141414),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+                textStyle: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 14),
+              ),
+              child: const Text('Add'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final title = titleController.text.trim();
+    final owner = ownerController.text.trim();
+    titleController.dispose();
+    ownerController.dispose();
+
+    if (confirmed != true || !mounted) return;
+
+    String dueDateText = '';
+    if (selectedDueDate != null) {
+      dueDateText = _formatIsoDate(selectedDueDate!);
+    }
+
     setState(() {
       _checklist.add(_ChecklistItem(
         id: _newId(),
-        title: '',
-        owner: '',
-        dueDate: '',
-        status: _checklistStatuses.first,
+        title: title,
+        owner: owner,
+        dueDate: dueDateText,
+        status: selectedStatus,
       ));
     });
     _scheduleSave();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Checklist item added.'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Color(0xFF111827),
+        duration: Duration(seconds: 3),
+      ),
+    );
   }
 
   void _updateChecklistItem(_ChecklistItem item, {bool notify = false}) {

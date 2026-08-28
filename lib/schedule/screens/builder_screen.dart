@@ -451,35 +451,48 @@ class _BuilderScreenState extends State<BuilderScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ═══════════════════════════════════════════════════════════════
-              // TREASURY HERO BAND — world-class command surface
+              // SLIM HEADER ROW — compact page title + primary actions.
+              // (Yellow hero band removed; Add Activity / Setup Timeline kept)
               // ═══════════════════════════════════════════════════════════════
-              TreasuryHeroBand(
-                eyebrow: 'SCHEDULE · BUILDER',
-                title: schedule.projectName,
-                subtitle:
-                    '${schedule.basis.deliveryModel} delivery · ${root.children.length} Level 1 activities · ${schedule.status.label}',
-                statusLabel: schedule.isLocked
-                    ? 'LOCKED'
-                    : (root.children.isEmpty ? 'EMPTY' : 'DRAFT'),
-                statusLive: !schedule.isLocked && root.children.isNotEmpty,
-                actions: [
-                  TreasuryHeroAction(
-                    icon: Icons.add_rounded,
-                    label: 'Add Activity',
-                    primary: true,
-                    onTap: schedule.isLocked
-                        ? () {}
-                        : () => _showAddDialog(context, provider, root.id, 1),
-                  ),
-                  if (!schedule.isLocked)
-                    TreasuryHeroAction(
-                      icon: Icons.date_range_rounded,
-                      label: 'Setup Timeline',
-                      primary: false,
-                      onTap: () =>
-                          _showTimelineSetupDialog(context, provider, root),
+              Container(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+                decoration: BoxDecoration(
+                  color: TreasuryTokens.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: TreasuryTokens.hairline),
+                ),
+                child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    const Text(
+                      'Schedule',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: TreasuryTokens.ink,
+                      ),
                     ),
-                ],
+                    TreasuryHeroAction(
+                      icon: Icons.add_rounded,
+                      label: 'Add Activity',
+                      primary: true,
+                      onTap: schedule.isLocked
+                          ? () {}
+                          : () => _showAddDialog(context, provider, root.id, 1),
+                    ),
+                    if (!schedule.isLocked)
+                      TreasuryHeroAction(
+                        icon: Icons.date_range_rounded,
+                        label: 'Setup Timeline',
+                        primary: false,
+                        onTap: () =>
+                            _showTimelineSetupDialog(context, provider, root),
+                      ),
+                  ],
+                ),
               ),
               const SizedBox(height: 14),
               // —— Secondary action row (overflow actions) ——

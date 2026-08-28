@@ -1378,7 +1378,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: const [
           BoxShadow(
               blurRadius: 20, offset: Offset(0, 18), color: Color(0x11000000)),
@@ -1448,7 +1448,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
@@ -1523,7 +1523,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
@@ -1607,7 +1607,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
@@ -1656,7 +1656,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
@@ -2270,7 +2270,7 @@ class _AccountPlanCard extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).scaffoldBackgroundColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -2389,7 +2389,7 @@ class _BillingPaymentCard extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).scaffoldBackgroundColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -2597,7 +2597,7 @@ class _LegalTermsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -2940,8 +2940,8 @@ class _InsightBadge extends StatelessWidget {
                   fontWeight: FontWeight.w500)),
           const SizedBox(height: 4),
           Text(badge.value,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   fontSize: 16,
                   fontWeight: FontWeight.w700)),
         ],
@@ -3397,7 +3397,7 @@ class _BillingHeroBanner extends StatelessWidget {
                     children: [
                       Text(price,
                           style: theme.textTheme.displaySmall?.copyWith(
-                              color: Colors.white,
+                              color: Theme.of(context).scaffoldBackgroundColor,
                               fontWeight: FontWeight.w800)),
                       const SizedBox(width: 4),
                       Text(period,
@@ -3484,8 +3484,8 @@ class _BillingStatBadge extends StatelessWidget {
                   fontWeight: FontWeight.w500)),
           const SizedBox(height: 4),
           Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   fontSize: 16,
                   fontWeight: FontWeight.w700)),
         ],
@@ -3542,7 +3542,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
@@ -3740,7 +3740,7 @@ class _PaymentMethodsCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
@@ -3909,7 +3909,7 @@ class _InvoicesCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
@@ -5516,7 +5516,7 @@ class _RbacCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.withValues(alpha: 0.16)),
         boxShadow: const [
@@ -5589,8 +5589,8 @@ class _AccessStat extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   fontSize: 24,
                   fontWeight: FontWeight.w900)),
           const SizedBox(height: 4),
@@ -5917,7 +5917,7 @@ class _FeatureChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: accent.withValues(alpha: 0.3)),
       ),

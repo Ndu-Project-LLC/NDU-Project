@@ -37,6 +37,15 @@ const List<String> _cosOptions = [
   'Intangible',
 ];
 
+/// Monotonic unique-id source. The previous fallback
+/// (`DateTime.now().microsecondsSinceEpoch`) produced IDENTICAL ids when
+/// several rows were constructed inside the same microsecond (the 5 default
+/// workflow columns are built in one synchronous loop), which duplicated the
+/// ReorderableListView child GlobalKeys and blanked the page on rebuild.
+int _kanbanRowIdCounter = 0;
+String _nextKanbanRowId() =>
+    '${DateTime.now().microsecondsSinceEpoch}_${_kanbanRowIdCounter++}';
+
 class _KanbanColumn {
   String id;
   String name;
@@ -50,7 +59,7 @@ class _KanbanColumn {
     this.wipLimit = 0,
     this.entryCriteria = '',
     this.exitCriteria = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? _nextKanbanRowId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -82,7 +91,7 @@ class _ClassOfService {
     this.name = 'Standard',
     this.slaHours = 24,
     this.description = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? _nextKanbanRowId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -761,7 +770,9 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
               const SizedBox(width: 8),
               SizedBox(
                 width: 100,
-                child: VoiceTextField(
+                // Plain numeric field — no Open Editor button (it
+                // overflowed the 100px box by 14px).
+                child: TextField(
                   controller: TextEditingController.fromValue(
                     TextEditingValue(
                       text: _nextSprintReviewDays.toString(),

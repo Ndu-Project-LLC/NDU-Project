@@ -257,7 +257,10 @@ class _OpenEditorButtonState extends State<OpenEditorButton> {
 
     if (selected == null) return;
     if (!mounted) return;
-    final match = enabledActions.firstWhere((a) => a.id == selected);
+    // Defensive: actions may change while the menu is open - never crash
+    // with "Bad state: No element" (firstWhere without orElse).
+    final match = enabledActions.where((a) => a.id == selected).firstOrNull;
+    if (match == null) return;
     match.onTap();
   }
 

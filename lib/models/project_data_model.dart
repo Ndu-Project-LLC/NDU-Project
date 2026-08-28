@@ -1421,9 +1421,9 @@ class ProjectDataModel {
   PotentialSolution? get preferredSolution {
     if (preferredSolutionId == null) return null;
     try {
-      return potentialSolutions.firstWhere(
+      return potentialSolutions.where(
         (s) => s.id == preferredSolutionId,
-      );
+      ).firstOrNull;
     } catch (e) {
       return null;
     }

@@ -5135,10 +5135,10 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
                     _compareBVersion != null &&
                     _compareAVersion != _compareBVersion)
                   _buildDiffTable(
-                    history.firstWhere(
-                        (b) => b.version == _compareAVersion),
-                    history.firstWhere(
-                        (b) => b.version == _compareBVersion),
+                    history.where(
+                        (b) => b.version == _compareAVersion).firstOrNull,
+                    history.where(
+                        (b) => b.version == _compareBVersion).firstOrNull,
                   )
                 else if (_compareAVersion != null &&
                     _compareBVersion != null &&
@@ -5404,7 +5404,11 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
     );
   }
 
-  Widget _buildDiffTable(BaselineSnapshot a, BaselineSnapshot b) {
+  Widget _buildDiffTable(BaselineSnapshot? a, BaselineSnapshot? b) {
+    // Defensive: the compared versions may no longer exist in history.
+    if (a == null || b == null) {
+      return const SizedBox.shrink();
+    }
     final rows = <_DiffRow>[
       _DiffRow('Version', 'v${a.version}', 'v${b.version}'),
       _DiffRow('Type', a.type.label, b.type.label),

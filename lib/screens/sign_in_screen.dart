@@ -35,12 +35,21 @@ class _SignInScreenState extends State<SignInScreen> {
   void initState() {
     super.initState();
     _loadRememberMePreference();
+    _loadLastEmail();
   }
 
   Future<void> _loadRememberMePreference() async {
     final rememberMe = await FirebaseAuthService.getRememberMe();
     if (mounted) {
       setState(() => _rememberMe = rememberMe);
+    }
+  }
+
+  /// Prefill the email with the last one used on this device.
+  Future<void> _loadLastEmail() async {
+    final email = await FirebaseAuthService.getLastEmail();
+    if (mounted && email.isNotEmpty && _emailController.text.isEmpty) {
+      setState(() => _emailController.text = email);
     }
   }
 
@@ -80,6 +89,8 @@ class _SignInScreenState extends State<SignInScreen> {
       if (!mounted) return;
       // #8: Reset failed attempts on successful login
       await AccountLockoutService.resetAttempts();
+      // Remember this device's email for the next launch.
+      await FirebaseAuthService.setLastEmail(_emailController.text.trim());
       // #9: Log successful sign-in
       await SecurityAuditLogger.logSignIn(email: _emailController.text.trim());
       // #6: Start session manager

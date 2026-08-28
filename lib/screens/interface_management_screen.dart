@@ -3762,7 +3762,7 @@ class _SectionCard extends StatelessWidget {
 class _SectionSubcard extends StatelessWidget {
   const _SectionSubcard({
     required this.title,
-    required this.subtitle,
+    this.subtitle = '',
     required this.child,
   });
 
@@ -3787,10 +3787,12 @@ class _SectionSubcard extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF111827))),
-          const SizedBox(height: 4),
-          Text(subtitle,
-              style: const TextStyle(
-                  fontSize: 11, color: Color(0xFF6B7280), height: 1.3)),
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(subtitle,
+                style: const TextStyle(
+                    fontSize: 11, color: Color(0xFF6B7280), height: 1.3)),
+          ],
           const SizedBox(height: 12),
           child,
         ],

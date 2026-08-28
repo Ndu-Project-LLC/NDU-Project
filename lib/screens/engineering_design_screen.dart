@@ -1889,7 +1889,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Engineering',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [

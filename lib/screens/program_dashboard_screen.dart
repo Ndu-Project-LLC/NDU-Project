@@ -775,7 +775,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  onPressed: onPressed,
  style: OutlinedButton.styleFrom(
  foregroundColor: _primary,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  side: const BorderSide(color: _outlineVariant),
  elevation: 0,
  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),

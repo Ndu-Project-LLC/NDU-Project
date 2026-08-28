@@ -5084,7 +5084,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Widget _buildMobileScaffold(BuildContext context) {
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: Drawer(
  width: MediaQuery.sizeOf(context).width * 0.88,
  child: const SafeArea(
@@ -5531,7 +5531,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
 
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: null,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SafeArea(

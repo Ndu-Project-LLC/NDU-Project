@@ -1684,7 +1684,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           title: const Text('Quick Change Request',
               style: TextStyle(
                   color: Color(0xFF1A1D1F),
@@ -3812,7 +3812,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlgState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           title: const Text('Add Approval Step',
               style: TextStyle(
                   color: Color(0xFF1A1D1F),
@@ -3918,7 +3918,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Row(children: [
           Icon(decision.icon, color: decision.color, size: 18),
           const SizedBox(width: 8),
@@ -4507,7 +4507,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: const Text('Apply to Baseline?',
             style: TextStyle(
                 color: Color(0xFF1A1D1F),
@@ -4549,7 +4549,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: const Text('Rollback Baseline?',
             style: TextStyle(
                 color: Color(0xFF1A1D1F),

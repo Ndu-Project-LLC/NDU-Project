@@ -390,7 +390,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Contracts Tracking',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(padding),

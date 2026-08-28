@@ -582,7 +582,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  final sidebarWidth = AppBreakpoints.sidebarWidth(context);
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  top: true,
  child: Stack(
@@ -634,7 +634,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
 
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: _buildMobileDrawer(),
  floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
  floatingActionButton: FloatingActionButton(
@@ -794,7 +794,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  onPressed: _openBusinessCase,
  style: OutlinedButton.styleFrom(
  foregroundColor: const Color(0xFF6B7280),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  side: const BorderSide(color: Color(0xFFD1D5DB)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12)),

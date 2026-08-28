@@ -10,6 +10,17 @@ import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/utils/text_sanitizer.dart';
 import 'package:ndu_project/widgets/open_editor_button.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Returns true if the 'Open Editor' button should be hidden app-wide.
+Future<bool> isOpenEditorDisabled() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('pref_disable_open_editor') ?? false;
+  } catch (_) {
+    return false;
+  }
+}
 
 /// Debouncer utility to limit API calls while typing
 class _Debouncer {
@@ -92,6 +103,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
   bool _voiceAvailable = true;
   bool _isImportingDoc = false;
   bool _isRewriting = false;
+  bool _openEditorDisabled = false;
   final VoiceInputService _voiceService = VoiceInputService.instance;
   StreamSubscription<VoiceResult>? _voiceResultSub;
   StreamSubscription<VoiceStatus>? _voiceStatusSub;
@@ -190,9 +202,15 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
     _controller.addListener(_onTextChanged);
     _focusNode.addListener(_handleFocusChanged);
     _initVoice();
+    _loadOpenEditorDisabled();
     if (_aiEnabled && _autoGenerateEnabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoGenerate());
     }
+  }
+
+  Future<void> _loadOpenEditorDisabled() async {
+    final disabled = await isOpenEditorDisabled();
+    if (mounted) setState(() => _openEditorDisabled = disabled);
   }
 
   Future<void> _initVoice() async {
@@ -690,15 +708,17 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
                 }
               },
             ),
-            const SizedBox(width: 8),
-            OpenEditorButton(
-              actions: _buildEditorActions(),
-              isLoading: _isListening ||
-                  _loading ||
-                  _isRewriting ||
-                  _isImportingDoc ||
-                  _autoGenerating,
-            ),
+            if (!_openEditorDisabled) ...[
+              const SizedBox(width: 8),
+              OpenEditorButton(
+                actions: _buildEditorActions(),
+                isLoading: _isListening ||
+                    _loading ||
+                    _isRewriting ||
+                    _isImportingDoc ||
+                    _autoGenerating,
+              ),
+            ],
           ],
         ),
         const SizedBox(height: 8),

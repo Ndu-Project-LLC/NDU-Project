@@ -771,7 +771,7 @@ class _ProjectActivitiesLogScreenState
  : filteredActivities.sublist(startIndex, endIndex);
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Stack(
  children: [

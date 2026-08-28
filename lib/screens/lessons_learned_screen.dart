@@ -289,7 +289,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  Widget build(BuildContext context) {
  final sidebarWidth = AppBreakpoints.sidebarWidth(context);
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: Stack(
  children: [
  SafeArea(
@@ -369,7 +369,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  icon: const Icon(Icons.arrow_back, size: 16),
  label: Text(PlanningPhaseNavigation.backLabel('lessons_learned')),
  style: ElevatedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: const Color(0xFF374151),
  elevation: 0,
  side: const BorderSide(color: Color(0xFFD1D5DB)),

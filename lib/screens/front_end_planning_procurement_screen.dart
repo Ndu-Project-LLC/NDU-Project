@@ -5729,7 +5729,7 @@ class _FrontEndPlanningProcurementScreenState
 
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: isMobile
  ? Drawer(
  child: InitiationLikeSidebar(
@@ -6917,7 +6917,7 @@ class _ProcurementItemCard extends StatelessWidget {
  child: LinearProgressIndicator(
  value: item.progress.clamp(0, 1).toDouble(),
  minHeight: 6,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
  ),
  ),
@@ -7270,7 +7270,7 @@ class _UpdateButton extends StatelessWidget {
  );
  },
  style: ElevatedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: const Color(0xFF1F2937),
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

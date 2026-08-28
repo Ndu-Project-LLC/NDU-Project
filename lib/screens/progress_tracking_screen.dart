@@ -400,7 +400,7 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Progress Tracking',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -567,7 +567,7 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
       shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       selectedColor: const Color(0xFFFFF8E1),
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       side: BorderSide(
         color: selected ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0),
       ),

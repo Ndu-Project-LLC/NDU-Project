@@ -285,7 +285,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
     final double horizontalPadding = AppBreakpoints.isMobile(context) ? 20 : 40;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2467,7 +2467,7 @@ Future<Map<int, String>?> _showFinalizeRowEditDialog(
     context: context,
     barrierDismissible: true,
     builder: (dialogContext) => AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       surfaceTintColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       title: Row(

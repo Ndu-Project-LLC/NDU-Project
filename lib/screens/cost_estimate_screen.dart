@@ -189,7 +189,7 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
         _benefitCountForPreferred(projectData.costAnalysisData, preferredTitle);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -553,7 +553,7 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
         description: forecastTotal == 0
             ? 'No forecast costs yet'
             : 'Planning estimate and budget inputs',
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         accentColor: const Color(0xFF111827),
         descriptionColor: const Color(0xFF6B7280),
         badgeLabel: forecastTotal == 0 ? null : 'Forecast',
@@ -3400,7 +3400,7 @@ class _BoeSummaryCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: pct,
               minHeight: 4,
-              backgroundColor: Colors.white,
+              backgroundColor: const Color(0xFFE5E7EB),
               valueColor:
                   const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
             ),
@@ -3436,7 +3436,7 @@ class _BoeSummaryCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: pct,
               minHeight: 4,
-              backgroundColor: Colors.white,
+              backgroundColor: const Color(0xFFE5E7EB),
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
@@ -3725,7 +3725,7 @@ class _ContractStrategyCard extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: pct,
                         minHeight: 6,
-                        backgroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                         valueColor: AlwaysStoppedAnimation<Color>(
                             _contractStatusColor(status)),
                       ),
@@ -6513,7 +6513,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 760, maxHeight: 820),
         child: Column(
@@ -7682,7 +7682,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
         child: Column(

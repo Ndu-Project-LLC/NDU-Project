@@ -733,7 +733,7 @@ class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Design Deliverables',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [

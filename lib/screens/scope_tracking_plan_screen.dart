@@ -302,7 +302,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  final double horizontalPadding = isMobile ? 20 : 24;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,7 +598,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  },
  selectedColor: const Color(0xFFFDE68A),
  checkmarkColor: const Color(0xFF92400E),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  side: BorderSide(
  color: selected ? const Color(0xFFF59E0B) : const Color(0xFFE5E7EB),
  ),

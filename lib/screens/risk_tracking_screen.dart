@@ -297,7 +297,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Risk Tracking',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 0, vertical: padding),

@@ -806,7 +806,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
 
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: isMobile
  ? Drawer(
  width: AppBreakpoints.sidebarWidth(context),

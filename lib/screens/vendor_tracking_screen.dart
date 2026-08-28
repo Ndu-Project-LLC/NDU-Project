@@ -166,7 +166,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Vendor Tracking',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(padding),

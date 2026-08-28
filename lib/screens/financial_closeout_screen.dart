@@ -132,7 +132,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: '7. Financial Closeout',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(

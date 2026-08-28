@@ -580,7 +580,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
       final sidebarWidth = AppBreakpoints.sidebarWidth(context);
       return Scaffold(
         key: _scaffoldKey,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         drawer: null,
         body: SafeArea(
           top: true,
@@ -636,7 +636,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
       debugPrint('RiskIdentification build error: $e');
       debugPrint(stack.toString());
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
           child: Center(
             child: Padding(
@@ -673,7 +673,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         : (_solutions.length > 3 ? 3 : _solutions.length);
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: UnsavedChangesGuard(
         isDirty: () => _hasUnsavedChanges || _autoSaveTimer?.isActive == true,
         onSave: _flushSaveNow,
@@ -794,7 +794,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                   onPressed: _handleNextPressed,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF6B7280),
-                    backgroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                     side: const BorderSide(color: Color(0xFFD1D5DB)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),

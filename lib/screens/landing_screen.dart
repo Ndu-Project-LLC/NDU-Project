@@ -5240,7 +5240,7 @@ class _LandingScreenState extends State<LandingScreen>
  onPressed: () => _launchExternalLink(
  'https://calendar.app.google/aGQDFPpmEK9eDh5W6'),
  style: ElevatedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: const Color(0xFF111827),
  padding: const EdgeInsets.symmetric(
  horizontal: 22, vertical: 14),
@@ -5299,7 +5299,7 @@ class _LandingScreenState extends State<LandingScreen>
  onPressed: () => _launchExternalLink(
  'https://calendar.app.google/aGQDFPpmEK9eDh5W6'),
  style: ElevatedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: const Color(0xFF111827),
  padding: const EdgeInsets.symmetric(
  horizontal: 22, vertical: 14),

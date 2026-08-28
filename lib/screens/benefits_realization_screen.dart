@@ -134,7 +134,7 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: '9. Benefits Realization',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(

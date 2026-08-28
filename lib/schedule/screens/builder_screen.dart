@@ -868,7 +868,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: Color(0xFFE4E7EC)),
@@ -1020,7 +1020,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: Color(0xFFE4E7EC))),
@@ -1097,7 +1097,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: const BorderSide(color: Color(0xFFE4E7EC))),
@@ -1131,7 +1131,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: Color(0xFFE4E7EC))),
@@ -1248,7 +1248,7 @@ class _ActionChip extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         foregroundColor:
             disabled ? const Color(0xFF9CA3AF) : const Color(0xFF1A1D1F),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         side: BorderSide(
             color:
                 disabled ? const Color(0xFFE4E7EC) : const Color(0xFFE4E7EC)),
@@ -1834,7 +1834,7 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: Color(0xFFE4E7EC))),

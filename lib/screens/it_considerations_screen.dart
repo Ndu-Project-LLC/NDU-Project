@@ -354,7 +354,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
     final sidebarWidth = AppBreakpoints.sidebarWidth(context);
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: null,
       body: SafeArea(
         top: true,
@@ -394,7 +394,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: _buildMobileDrawer(),
       body: SafeArea(
         child: Column(
@@ -537,7 +537,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
                   label: const Text('Back'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF374151),
-                    backgroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                     side: const BorderSide(color: Color(0xFFD1D5DB)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),

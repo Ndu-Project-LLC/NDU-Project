@@ -222,7 +222,7 @@ class _TeamMeetingsScreenState extends State<TeamMeetingsScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Team Meetings',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
  padding: EdgeInsets.symmetric(

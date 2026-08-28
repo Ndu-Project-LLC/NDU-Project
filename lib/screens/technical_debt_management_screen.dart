@@ -73,7 +73,7 @@ class _TechnicalDebtManagementScreenState
 
  return ResponsiveScaffold(
  activeItemLabel: 'Technical Debt Management',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
  padding: EdgeInsets.all(padding),

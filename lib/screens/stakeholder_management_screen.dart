@@ -287,7 +287,7 @@ class _StakeholderManagementScreenState
     // --- Mobile layout ---
     if (isMobile) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         drawer: Drawer(
           width: sidebarWidth,
           child: const SafeArea(
@@ -326,7 +326,7 @@ class _StakeholderManagementScreenState
 
     // --- Desktop layout ---
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         top: true,
         child: Row(
@@ -2740,7 +2740,7 @@ class _EngagementSection extends StatelessWidget {
                             style: TextStyle(
                                 fontSize: 13, fontWeight: FontWeight.w600)),
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: Colors.white,
+                          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                           foregroundColor: const Color(0xFF1F2937),
                           side: const BorderSide(color: Color(0xFFE5E7EB)),
                           padding: const EdgeInsets.symmetric(
@@ -5684,7 +5684,7 @@ class _AudienceTemplateGroup extends StatelessWidget {
                             fontSize: 12, fontWeight: FontWeight.w600)),
                     avatar: const Icon(Icons.description_outlined,
                         size: 14, color: Color(0xFF6B7280)),
-                    backgroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                     side: const BorderSide(color: Color(0xFFE5E7EB)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),

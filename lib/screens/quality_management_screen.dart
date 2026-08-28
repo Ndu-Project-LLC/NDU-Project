@@ -393,7 +393,7 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  // Mobile: Scaffold with drawer → full-width content
  if (isMobile) {
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: const MobileSidebarDrawer(
  sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Quality Management',
@@ -471,7 +471,7 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
 
  // Desktop/Tablet: Row with sidebar
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,

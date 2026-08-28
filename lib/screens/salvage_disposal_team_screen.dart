@@ -893,7 +893,7 @@ void _applyDefaults() {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Salvage and/or Disposal Plan',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
  padding: EdgeInsets.all(padding),

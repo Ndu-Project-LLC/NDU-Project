@@ -1268,7 +1268,7 @@ Security Training:
  final charterLocked =
  ProjectDataHelper.isCharterApproved(context, listen: true);
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,

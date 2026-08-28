@@ -555,7 +555,7 @@ Opportunity generation constraints:
 
     return Scaffold(
       // Ensure white background as requested
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1050,7 +1050,7 @@ Opportunity generation constraints:
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddOpportunityDialog(),
@@ -1659,7 +1659,7 @@ class _OpportunityDialogState extends State<_OpportunityDialog> {
                                 }
                               });
                             },
-                            backgroundColor: Colors.white,
+                            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                             selectedColor: const Color(0xFFFFF8E1),
                             checkmarkColor: const Color(0xFFFFC812),
                             side: BorderSide(

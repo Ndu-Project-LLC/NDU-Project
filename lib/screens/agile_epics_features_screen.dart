@@ -598,25 +598,20 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  const MobileSidebarHamburger(
-                    sidebar: InitiationLikeSidebar(
-                      activeItemLabel:
-                          'Agile Delivery Model - Epics & Features',
-                    ),
-                  ),
-                  SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: hp, vertical: 32),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        PlanningPhaseHeader(
-                            title: 'Epics & Features Planning',
-                            onBack: () => PlanningPhaseNavigation.goToPrevious(
-                                context, 'agile_epics_features'),
-                            onForward: () => PlanningPhaseNavigation.goToNext(
-                                context, 'agile_epics_features'),
-                            onExportPdf: _exportPdf),
-                        const SizedBox(height: 32),
+                  Positioned.fill(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(horizontal: hp, vertical: 32),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          PlanningPhaseHeader(
+                              title: 'Epics & Features Planning',
+                              onBack: () => PlanningPhaseNavigation.goToPrevious(
+                                  context, 'agile_epics_features'),
+                              onForward: () => PlanningPhaseNavigation.goToNext(
+                                  context, 'agile_epics_features'),
+                              onExportPdf: _exportPdf),
+                          const SizedBox(height: 32),
                         if (_isLoading)
                           const Center(child: CircularProgressIndicator())
                         else ...[
@@ -628,7 +623,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                                     style: TextStyle(
                                         fontSize: 15, color: _kMuted)),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 16),
                               OutlinedButton.icon(
                                 onPressed: _isSyncing ? null : _syncFromWbs,
                                 icon: _isSyncing
@@ -739,6 +734,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                         const SizedBox(height: 40),
                       ],
                     ),
+                  ),
                   ),
                   const Positioned(
                     right: 24,

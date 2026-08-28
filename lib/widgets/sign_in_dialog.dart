@@ -191,7 +191,7 @@ class _SignInDialogState extends State<SignInDialog> {
     }
 
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       clipBehavior: Clip.antiAlias,
@@ -266,7 +266,7 @@ class _SignInDialogState extends State<SignInDialog> {
                     side: const BorderSide(color: fieldBorder, width: 1.5),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
-                    backgroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   ),
                 ),
               ),

@@ -103,7 +103,7 @@ class _ExecutionPlanSolutionsScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: 'Executive Plan Strategy',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:

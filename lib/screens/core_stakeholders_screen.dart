@@ -304,7 +304,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  final sidebarWidth = AppBreakpoints.sidebarWidth(context);
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: isMobile ? _buildMobileDrawer() : null,
  body: SafeArea(
  top: true,

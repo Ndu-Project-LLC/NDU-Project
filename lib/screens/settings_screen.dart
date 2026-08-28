@@ -85,6 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   static const _prefFontSize = 'pref_font_size';
   static const _prefCompactMode = 'pref_compact_mode';
   static const _prefReduceAnimations = 'pref_reduce_animations';
+  static const _prefDisableOpenEditor = 'pref_disable_open_editor';
 
   // ── Preference state ──
   String _language = 'English';
@@ -98,6 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   String _fontSize = 'medium'; // 'small', 'medium', 'large'
   bool _compactMode = false;
   bool _reduceAnimations = false;
+  bool _disableOpenEditor = false;
   bool _twoFactorEnabled = false;
   bool _twoFactorLoading = true;
   bool _passwordLoginEnabled = true;
@@ -126,6 +128,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       _fontSize = prefs.getString(_prefFontSize) ?? 'medium';
       _compactMode = prefs.getBool(_prefCompactMode) ?? false;
       _reduceAnimations = prefs.getBool(_prefReduceAnimations) ?? false;
+      _disableOpenEditor = prefs.getBool(_prefDisableOpenEditor) ?? false;
     });
     // Load 2FA status
     try {
@@ -206,7 +209,6 @@ class _SettingsScreenState extends State<SettingsScreen>
 
     return ResponsiveScaffold(
       activeItemLabel: 'Settings',
-      backgroundColor: Colors.white,
       appBarTitle: 'Settings',
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: Column(
@@ -292,8 +294,8 @@ class _SettingsScreenState extends State<SettingsScreen>
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          color: Colors.white,
-          border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+          color: Theme.of(context).cardTheme.color ?? Colors.white,
+          border: Border.all(color: Theme.of(context).dividerTheme.color ?? Colors.grey.withValues(alpha: 0.12)),
           boxShadow: const [
             BoxShadow(
                 blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -335,13 +337,15 @@ class _SettingsScreenState extends State<SettingsScreen>
         child: Row(
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 20, color: Colors.black54),
+              Icon(icon, size: 20, color: theme.iconTheme.color),
               const SizedBox(width: 12),
             ],
             Expanded(
               child: Text(label,
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w500)),
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: theme.textTheme.bodyLarge?.color)),
             ),
             Switch(
               value: value,
@@ -365,7 +369,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         child: Row(
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 20, color: Colors.black54),
+              Icon(icon, size: 20, color: theme.iconTheme.color),
               const SizedBox(width: 12),
             ],
             Expanded(
@@ -792,6 +796,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                     setState(() => _reduceAnimations = v);
                     _setPref(_prefReduceAnimations, v);
                   }, icon: Icons.animation),
+                  const SizedBox(height: 8),
+                  toggleRow('Disable Open Editor', _disableOpenEditor, (v) {
+                    setState(() => _disableOpenEditor = v);
+                    _setPref(_prefDisableOpenEditor, v);
+                  }, icon: Icons.edit_off_outlined),
                 ],
               ),
               const SizedBox(height: 20),
@@ -2220,7 +2229,7 @@ class _TopAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 56,
-      color: Colors.white,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: const Row(
         children: [
           Expanded(
@@ -2700,7 +2709,7 @@ class _AccountActionsSection extends StatelessWidget {
               }
             },
             style: OutlinedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               side: const BorderSide(color: Color(0xFFC0C6D6)),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(

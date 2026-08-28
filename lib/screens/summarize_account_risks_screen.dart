@@ -68,7 +68,7 @@ class _SummarizeAccountRisksScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: '8. Project Performance Review',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(

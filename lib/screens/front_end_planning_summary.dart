@@ -213,7 +213,7 @@ class _FrontEndPlanningSummaryScreenState
 
  return ResponsiveScaffold(
  activeItemLabel: 'Details',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: Stack(
  children: [
  const AdminEditToggle(),
@@ -294,7 +294,7 @@ class _FrontEndPlanningSummaryScreenState
 
  return Scaffold(
  key: _mobileScaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: Drawer(
  width: MediaQuery.sizeOf(context).width * 0.88,
  child: const SafeArea(

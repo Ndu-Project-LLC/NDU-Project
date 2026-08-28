@@ -124,7 +124,7 @@ class _TeamTrainingAndBuildingScreenState
  // --- Mobile layout ---
  if (isMobile) {
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: Drawer(
  width: sidebarWidth,
  child: const SafeArea(
@@ -153,7 +153,7 @@ class _TeamTrainingAndBuildingScreenState
 
  // --- Desktop layout ---
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  top: true,
  child: Row(

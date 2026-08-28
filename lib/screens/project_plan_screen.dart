@@ -277,7 +277,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
     final double horizontalPadding = isMobile ? 16 : 36;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

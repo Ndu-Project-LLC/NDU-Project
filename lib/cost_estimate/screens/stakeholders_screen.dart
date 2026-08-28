@@ -437,7 +437,7 @@ class StakeholdersScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           title: const Text('Add stakeholder',
               style: TextStyle(color: Color(0xFF1A1D1F))),
           content: Column(
@@ -512,7 +512,7 @@ class StakeholdersScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           title: const Text('Grant access',
               style: TextStyle(color: Color(0xFF1A1D1F))),
           content: Column(

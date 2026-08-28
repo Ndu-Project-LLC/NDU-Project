@@ -143,7 +143,7 @@ class ExecutionActionBar extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             foregroundColor: const Color(0xFF475569),
             side: const BorderSide(color: Color(0xFFE2E8F0)),
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             padding: EdgeInsets.symmetric(
               horizontal: compact ? 14 : 16,
               vertical: compact ? 11 : 12,

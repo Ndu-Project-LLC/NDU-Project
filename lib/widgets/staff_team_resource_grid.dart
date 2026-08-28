@@ -133,7 +133,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
         barrierColor: Colors.black54,
         builder: (ctx) => StatefulBuilder(
           builder: (ctx, setModalState) => Dialog(
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24)),
             elevation: 24,

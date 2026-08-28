@@ -159,7 +159,7 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
           appBarTitle: 'Cost Estimate',
           breadcrumbPhase: 'Planning Phase',
           breadcrumbTitle: 'Cost Estimate',
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
               // ── World-class Section Navigator (always visible, pinned) ─

@@ -141,7 +141,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       title: Text(
         widget.editingLine != null ? 'Edit cost line' : 'Add cost line',
         style: const TextStyle(color: Color(0xFF1A1D1F)),
@@ -634,7 +634,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
                         normalize(n.path).contains(q))
                     .toList();
             return AlertDialog(
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
               title: const Row(

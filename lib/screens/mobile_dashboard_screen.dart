@@ -28,7 +28,7 @@ class MobileDashboardScreen extends StatelessWidget {
  appBar: AppBar(
  title: const Text('NDU mobile lightspeed'),
  elevation: 0,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: const Color(0xFF111827),
  actions: const [
  Padding(

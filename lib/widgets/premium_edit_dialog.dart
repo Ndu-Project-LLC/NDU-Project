@@ -26,7 +26,7 @@ class PremiumEditDialog extends StatelessWidget {
       shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 12,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 550),
         child: Column(

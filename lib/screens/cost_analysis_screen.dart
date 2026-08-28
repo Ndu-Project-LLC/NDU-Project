@@ -922,9 +922,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       final name = row.itemController.text.trim();
       final description = row.descriptionController.text.trim().toLowerCase();
       final assumptions = row.assumptionsController.text.trim();
-      final hasName = name.isNotEmpty && name.toLowerCase() != 'name';
-      final hasDescription =
-          description.isNotEmpty && !description.startsWith('lorem ipsum');
+      final hasName = name.isNotEmpty;
+      final hasDescription = description.isNotEmpty;
       final hasAssumptions = assumptions.isNotEmpty;
       final hasCost = row.currentCost() > 0;
       return hasName || hasDescription || hasAssumptions || hasCost;
@@ -1390,9 +1389,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           final name = row.itemName.trim();
           final description = row.description.trim().toLowerCase();
           final assumptions = row.assumptions.trim();
-          final hasName = name.isNotEmpty && name.toLowerCase() != 'name';
-          final hasDescription =
-              description.isNotEmpty && !description.startsWith('lorem ipsum');
+          final hasName = name.isNotEmpty;
+          final hasDescription = description.isNotEmpty;
           final hasAssumptions = assumptions.isNotEmpty;
           final hasText = hasName || hasDescription || hasAssumptions;
           final hasCost = _parseCurrencyInput(row.cost) > 0;
@@ -1581,7 +1579,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       onWillPop: _confirmExit,
       child: Scaffold(
         key: _scaffoldKey,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         drawer: isMobile ? _buildMobileDrawer() : null,
         body: SafeArea(
           top: true,
@@ -6290,9 +6288,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       final desc = row.descriptionController.text.trim();
       final assumptions = row.assumptionsController.text.trim();
       final cost = row.currentCost();
-      final hasName = name.isNotEmpty && name.toLowerCase() != 'name';
-      final hasDesc =
-          desc.isNotEmpty && !desc.toLowerCase().startsWith('lorem ipsum');
+      final hasName = name.isNotEmpty;
+      final hasDesc = desc.isNotEmpty;
       final hasAssumptions = assumptions.isNotEmpty;
       return hasName || hasDesc || hasAssumptions || cost > 0;
     }
@@ -8002,10 +7999,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       final row = rows[j];
       if (j < targetLen) {
         final it = filtered[j];
-        row.itemController.text = it.item.isEmpty ? 'Name' : it.item;
-        row.descriptionController.text = it.description.isEmpty
-            ? 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum...'
-            : it.description;
+        row.itemController.text = it.item;
+        row.descriptionController.text = it.description;
         row.applyBaseline(
             cost: it.estimatedCost,
             roiPercent: it.roiPercent,
@@ -8212,10 +8207,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     // Add to Step 3 breakdown as a new row with baseline derived from AI
     final row = _CostRow(currencyProvider: () => _currency);
     _attachRowDirtyListeners(row);
-    row.itemController.text = item.item.isEmpty ? 'Name' : item.item;
-    row.descriptionController.text = item.description.isEmpty
-        ? 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum...'
-        : item.description;
+    row.itemController.text = item.item;
+    row.descriptionController.text = item.description;
     row.applyBaseline(
         cost: item.estimatedCost,
         roiPercent: item.roiPercent,
@@ -8393,7 +8386,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
-                hintText: 'Lorem ipsum ...'),
+                hintText: 'Enter description...'),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
             minLines: 1,
           ),
@@ -8496,7 +8489,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 isDense: true,
-                hintText: 'Lorem ipsum...'),
+                hintText: 'Enter description...'),
             minLines: 2),
         const SizedBox(height: 10),
         const Text('Return On Investment',
@@ -9340,10 +9333,8 @@ class _BenefitCategorySummary {
 }
 
 class _CostRow {
-  final TextEditingController itemController =
-      TextEditingController(text: 'Name');
-  final TextEditingController descriptionController = TextEditingController(
-      text: 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum...');
+  final TextEditingController itemController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
   final TextEditingController costController = TextEditingController();
   final TextEditingController roiController = TextEditingController();
   final TextEditingController npvController = TextEditingController();

@@ -450,7 +450,7 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Tools Integration',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [

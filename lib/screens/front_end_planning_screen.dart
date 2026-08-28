@@ -61,7 +61,7 @@ class _FrontEndPlanningScreenState extends State<FrontEndPlanningScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Project Summary',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [

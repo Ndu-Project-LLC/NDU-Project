@@ -83,7 +83,7 @@ class _IdentifyStaffOpsTeamScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: 'Identify and Staff Ops Team',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(padding),

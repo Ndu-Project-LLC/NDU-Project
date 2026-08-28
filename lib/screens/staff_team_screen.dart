@@ -366,7 +366,7 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
     final double horizontalPadding = isMobile ? 20 : 40;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SafeArea(
         child: isMobile

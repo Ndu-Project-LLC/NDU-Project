@@ -237,7 +237,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  final searchedIssues = _searchIssues(issueItems);
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,

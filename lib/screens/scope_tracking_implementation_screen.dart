@@ -272,7 +272,7 @@ class _ScopeTrackingImplementationScreenState
     final isNarrow = MediaQuery.sizeOf(context).width < 980;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

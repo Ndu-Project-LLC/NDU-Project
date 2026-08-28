@@ -186,7 +186,7 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
           appBarTitle: 'Work Breakdown Structure',
           breadcrumbPhase: 'Planning Phase',
           breadcrumbTitle: 'WBS',
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           floatingActionButton: const KazAiChatBubble(positioned: false),
           body: Column(
             children: [

@@ -315,8 +315,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  final padding = AppBreakpoints.pagePadding(context);
 
  return ResponsiveScaffold(
- activeItemLabel: 'Backend Design',
- backgroundColor: Colors.white,
+ activeItemLabel: 'Backend Design',  // Theme-aware background handled by ResponsiveScaffold
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
  padding: EdgeInsets.all(padding),

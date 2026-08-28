@@ -798,7 +798,7 @@ class _RequirementsImplementationScreenState
  duration: const Duration(milliseconds: 120),
  curve: Curves.easeOutCubic,
  child: Dialog(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  insetPadding: const EdgeInsets.symmetric(
  horizontal: 24, vertical: 24),
  shape: RoundedRectangleBorder(
@@ -1962,7 +1962,7 @@ class _RequirementsImplementationScreenState
  ),
  selected: selected,
  selectedColor: const Color(0xFF111827),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  shape: const StadiumBorder(
  side: BorderSide(color: Color(0xFFE5E7EB)),
  ),

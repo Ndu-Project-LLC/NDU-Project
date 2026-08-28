@@ -483,7 +483,7 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
     final double horizontalPadding = AppBreakpoints.isMobile(context) ? 20 : 32;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

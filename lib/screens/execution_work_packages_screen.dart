@@ -871,7 +871,7 @@ class _ExecutionWorkPackagesScreenState
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Work Packages',
       appBarTitle: 'Execution Work Packages',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: workPackages.isEmpty

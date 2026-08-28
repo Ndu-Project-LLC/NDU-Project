@@ -132,12 +132,12 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
 
         // ── Loading state while Firestore data loads ───────────────
         if (!provider.isLoaded) {
-          return const ResponsiveScaffold(
+          return ResponsiveScaffold(
             activeItemLabel: 'Project Controls',
             appBarTitle: 'Project Controls',
             breadcrumbPhase: 'Execution Phase',
             breadcrumbTitle: 'Project Controls',
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             body: PageShimmerSkeleton(),
           );
         }
@@ -147,7 +147,7 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
           appBarTitle: 'Project Controls',
           breadcrumbPhase: 'Execution Phase',
           breadcrumbTitle: 'Project Controls',
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
               // ── World-class Section Navigator ─────────────────────────
@@ -157,7 +157,7 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                   title: 'Project Controls Navigation',
                   subtitle: 'Navigate between project control sections',
                   icon: Icons.dashboard_outlined,
-                  backgroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   isCollapsible: true,
                   initiallyCollapsed: true,
                   tabs: const [
@@ -177,9 +177,8 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                 ),
               ),
               // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ──────────
-              const CrossSectionSyncCard(
+              CrossSectionSyncCard(
                 currentSection: CrossSection.projectControls,
-                backgroundColor: Colors.white,
               ),
               // Tab content
               Expanded(

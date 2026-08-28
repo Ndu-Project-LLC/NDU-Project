@@ -275,7 +275,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
                           : RefreshIndicator(
                               onRefresh: _loadData,
                               color: _blue,
-                              backgroundColor: Colors.white,
+                              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                               strokeWidth: 3,
                               child: SingleChildScrollView(
                                 physics: const AlwaysScrollableScrollPhysics(),

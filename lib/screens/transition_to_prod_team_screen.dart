@@ -74,7 +74,7 @@ class _TransitionToProdTeamScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: '2. Deployment Transfer, Certification & Release',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(

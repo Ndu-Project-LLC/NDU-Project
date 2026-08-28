@@ -244,7 +244,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  selected: roleController.text == role,
  onSelected: (_) => setState(() => roleController.text = role),
  selectedColor: const Color(0xFFFFF3CD),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Color(0xFFE5E7EB))),
  ),
  )
@@ -446,7 +446,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  (provider) => provider.projectData.frontEndPlanning.staffingRows,
  );
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SafeArea(
  child: Row(
@@ -841,7 +841,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  icon: const Icon(Icons.add, size: 16),
  label: const Text('Add Requirement'),
  style: ElevatedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: const Color(0xFF111827),
  elevation: 0,
  side: const BorderSide(color: Color(0xFFE5E7EB)),

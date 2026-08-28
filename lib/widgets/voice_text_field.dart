@@ -7,6 +7,17 @@ import 'package:ndu_project/services/docx_import_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/open_editor_button.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Returns true if the 'Open Editor' button should be hidden app-wide.
+Future<bool> isOpenEditorDisabled() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('pref_disable_open_editor') ?? false;
+  } catch (_) {
+    return false;
+  }
+}
 
 /// A drop-in replacement for [TextField] that adds a microphone button
 /// for voice-to-text input.
@@ -160,6 +171,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
   bool _voiceAvailable = true;
   bool _isImportingDoc = false;
   bool _isGeneratingAi = false;
+  bool _openEditorDisabled = false;
 
   /// Generates AI content for this field using OpenAiServiceSecure.
   Future<void> _generateWithKazAi() async {
@@ -237,6 +249,12 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     super.initState();
     _controller = widget.controller ?? TextEditingController();
     _checkAvailability();
+    _loadOpenEditorDisabled();
+  }
+
+  Future<void> _loadOpenEditorDisabled() async {
+    final disabled = await isOpenEditorDisabled();
+    if (mounted) setState(() => _openEditorDisabled = disabled);
   }
 
   @override
@@ -367,7 +385,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       kazAiEnabled: kazAiEnabled,
     );
     final anyLoading = _isListening || _isGeneratingAi || _isImportingDoc;
-    final hasActions = actions.any((a) => a.enabled);
+    final hasActions = !_openEditorDisabled && actions.any((a) => a.enabled);
 
     // Strip inline suffix icons (KAZ AI sparkle, clear content) unless
     // explicitly allowed — these actions are surfaced via Open Editor instead.
@@ -868,6 +886,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
   bool _voiceAvailable = true;
   bool _isImportingDoc = false;
   bool _isGeneratingAi = false;
+  bool _openEditorDisabled = false;
 
   Future<void> _generateWithKazAi() async {
     if (_isGeneratingAi) return;
@@ -943,6 +962,12 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     _controller =
         widget.controller ?? TextEditingController(text: widget.initialValue);
     _checkAvailability();
+    _loadOpenEditorDisabled();
+  }
+
+  Future<void> _loadOpenEditorDisabled() async {
+    final disabled = await isOpenEditorDisabled();
+    if (mounted) setState(() => _openEditorDisabled = disabled);
   }
 
   @override
@@ -1077,7 +1102,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
       kazAiEnabled: kazAiEnabled,
     );
     final anyLoading = _isListening || _isGeneratingAi || _isImportingDoc;
-    final hasActions = actions.any((a) => a.enabled);
+    final hasActions = !_openEditorDisabled && actions.any((a) => a.enabled);
 
     final textField = TextFormField(
       controller: _controller,

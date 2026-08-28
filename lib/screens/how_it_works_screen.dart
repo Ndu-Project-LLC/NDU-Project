@@ -960,7 +960,7 @@ class HowItWorksScreen extends StatelessWidget {
                 label: const Text('Start Your Project',
                     style: TextStyle(fontWeight: FontWeight.w700)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   foregroundColor: const Color(0xFF064E3B),
                   padding: const EdgeInsets.symmetric(
                       horizontal: 24, vertical: 14),

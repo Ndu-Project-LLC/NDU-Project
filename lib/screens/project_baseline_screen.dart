@@ -681,7 +681,7 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  final double horizontalPadding = isMobile ? 18 : 32;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Stack(
  children: [

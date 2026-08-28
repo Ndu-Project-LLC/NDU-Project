@@ -118,7 +118,7 @@ class _ExecutionPhasePageState extends State<ExecutionPhasePage> {
     return ResponsiveScaffold(
       activeItemLabel: widget.title,
       appBarTitle: widget.title,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: horizontalPadding,

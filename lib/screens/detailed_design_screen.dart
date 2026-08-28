@@ -437,7 +437,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Design Specifications',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(padding),

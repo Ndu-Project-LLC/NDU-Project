@@ -105,7 +105,7 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
     final bottomPadding = isMobile ? 24.0 : 120.0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

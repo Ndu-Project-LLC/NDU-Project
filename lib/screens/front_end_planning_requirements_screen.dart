@@ -646,7 +646,7 @@ class _FrontEndPlanningRequirementsScreenState
 
     return Scaffold(
       // Ensure white background as requested
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1263,7 +1263,7 @@ class _FrontEndPlanningRequirementsScreenState
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: Drawer(
         width: MediaQuery.sizeOf(context).width * 0.88,
         child: const SafeArea(
@@ -1748,7 +1748,7 @@ class _FrontEndPlanningRequirementsScreenState
           builder: (context, setLocalState) {
             final inset = MediaQuery.of(context).viewInsets.bottom;
             return Dialog(
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               insetPadding: EdgeInsets.fromLTRB(
                 16,
                 24,
@@ -2126,7 +2126,7 @@ class _FrontEndPlanningRequirementsScreenState
         label: const Text('Import CSV',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           foregroundColor: const Color(0xFFFFC812),
           side: const BorderSide(color: Color(0xFFFFC812)),
           shape:
@@ -2146,7 +2146,7 @@ class _FrontEndPlanningRequirementsScreenState
         label: const Text('Template',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           foregroundColor: const Color(0xFFFFC812),
           side: const BorderSide(color: Color(0xFFFFC812)),
           shape:
@@ -3234,7 +3234,7 @@ class _RequirementCard extends StatelessWidget {
                                 if (row.summarySource.isNotEmpty)
                                   _RequirementSummaryChip(
                                     label: row.summarySource,
-                                    backgroundColor: Colors.white,
+                                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                                     textColor: const Color(0xFF475569),
                                     icon: Icons.link_rounded,
                                   ),

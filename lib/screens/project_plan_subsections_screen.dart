@@ -314,7 +314,7 @@ class _Level1ScheduleScreenState
  final horizontalPadding = isMobile ? 20.0 : 32.0;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -2054,7 +2054,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  final horizontalPadding = isMobile ? 20.0 : 32.0;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -4003,7 +4003,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  final horizontalPadding = isMobile ? 20.0 : 32.0;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -5001,7 +5001,7 @@ class _ProjectPlanSectionScreen extends StatelessWidget {
  final horizontalPadding = isMobile ? 20.0 : 32.0;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,

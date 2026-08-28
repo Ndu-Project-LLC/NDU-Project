@@ -34,7 +34,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  appBar: PreferredSize(
  preferredSize: const Size.fromHeight(84),
  child: SafeArea(

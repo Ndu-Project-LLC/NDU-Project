@@ -645,7 +645,7 @@ class _PreferredSolutionAnalysisScreenState
     final sidebarWidth = AppBreakpoints.sidebarWidth(context);
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: isMobile
           ? const Drawer(
               child: InitiationLikeSidebar(
@@ -5860,7 +5860,7 @@ class _ProjectSelectionDialogState extends State<_ProjectSelectionDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 640),
@@ -6104,9 +6104,9 @@ class _PreferredSolutionComparisonScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final pagePadding = AppBreakpoints.pagePadding(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         titleSpacing: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
@@ -7520,9 +7520,9 @@ class _PreferredSolutionDetailsScreenState
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF374151)),

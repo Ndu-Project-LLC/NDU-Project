@@ -76,7 +76,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
     return ResponsiveScaffold(
       activeItemLabel:
           '10. Team Demobilization & Operations/Production Transition',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: Column(
         children: [

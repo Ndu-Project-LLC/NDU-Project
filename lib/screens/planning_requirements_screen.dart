@@ -1092,7 +1092,7 @@ $requirementsList
  @override
  Widget build(BuildContext context) {
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1885,7 +1885,7 @@ $requirementsList
  icon: const Icon(Icons.upload_file_outlined, size: 18),
  label: const Text('Import CSV', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
  style: OutlinedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: const Color(0xFFFFC812),
  side: const BorderSide(color: Color(0xFFFFC812)),
  shape: RoundedRectangleBorder(
@@ -1903,7 +1903,7 @@ $requirementsList
   icon: const Icon(Icons.download, size: 18),
   label: const Text('Template', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
   style: OutlinedButton.styleFrom(
-  backgroundColor: Colors.white,
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
   foregroundColor: const Color(0xFFFFC812),
   side: const BorderSide(color: Color(0xFFFFC812)),
   shape: RoundedRectangleBorder(
@@ -1924,7 +1924,7 @@ $requirementsList
   _scheduleAutoSave(showSnack: false);
   },
   style: OutlinedButton.styleFrom(
-  backgroundColor: Colors.white,
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
   foregroundColor: const Color(0xFF111827),
   side: const BorderSide(color: Color(0xFFE5E7EB)),
   shape: RoundedRectangleBorder(

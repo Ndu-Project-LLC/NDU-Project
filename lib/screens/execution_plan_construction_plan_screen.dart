@@ -39,7 +39,7 @@ class ExecutionPlanConstructionPlanScreen extends StatelessWidget {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Execution Plan - Construction Plan',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
  padding: EdgeInsets.symmetric(

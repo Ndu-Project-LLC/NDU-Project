@@ -419,7 +419,7 @@ class _SignInScreenState extends State<SignInScreen> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         top: true,
         child: SingleChildScrollView(
@@ -488,7 +488,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                   color: fieldBorder, width: 1.5),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
-                              backgroundColor: Colors.white,
+                              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                             ),
                           ),
                         ),

@@ -2024,7 +2024,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  icon: const Icon(Icons.schedule, size: 16),
  label: const Text('Activity'),
  style: OutlinedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: _kGray700,
  side: const BorderSide(color: _kBorder),
  padding:

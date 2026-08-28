@@ -348,7 +348,7 @@ class _UpdateOpsMaintenancePlansScreenState
     final projectId = provider?.projectData.projectId;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
@@ -894,7 +894,7 @@ class _UpdateOpsMaintenancePlansScreenState
             child: LinearProgressIndicator(
               value: item.progress,
               minHeight: 10,
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               valueColor: AlwaysStoppedAnimation<Color>(item.color),
             ),
           ),

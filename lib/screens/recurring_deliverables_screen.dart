@@ -257,7 +257,7 @@ class _RecurringDeliverablesScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: 'Recurring Deliverables',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(

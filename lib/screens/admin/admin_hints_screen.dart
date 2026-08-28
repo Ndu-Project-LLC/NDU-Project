@@ -763,7 +763,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
           selected: selected == option,
           onSelected: (_) => onSelected(option),
           selectedColor: _colorForCategory(option).withValues(alpha: 0.14),
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           side: BorderSide(
             color: selected == option
                 ? _colorForCategory(option).withValues(alpha: 0.35)

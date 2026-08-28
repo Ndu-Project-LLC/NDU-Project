@@ -69,7 +69,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: '6. Hypercare & Warranty Support',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(

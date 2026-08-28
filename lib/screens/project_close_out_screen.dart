@@ -86,7 +86,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: widget.activeItemLabel,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(

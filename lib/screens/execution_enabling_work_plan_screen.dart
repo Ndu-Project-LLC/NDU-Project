@@ -100,7 +100,7 @@ class _ExecutionEnablingWorkPlanScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Enabling Work Plan',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:

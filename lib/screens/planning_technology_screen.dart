@@ -912,7 +912,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  );
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Stack(
  children: [

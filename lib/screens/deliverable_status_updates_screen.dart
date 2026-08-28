@@ -177,7 +177,7 @@ class _DeliverableStatusUpdatesScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: 'Deliverable Status Updates',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(

@@ -1261,7 +1261,7 @@ class _ProjectCard extends StatelessWidget {
  borderRadius: BorderRadius.circular(6),
  child: LinearProgressIndicator(
  value: info.progress,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  valueColor: AlwaysStoppedAnimation<Color>(info.stageColor),
  minHeight: 6,
  ),

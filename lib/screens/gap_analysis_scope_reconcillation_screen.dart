@@ -77,7 +77,7 @@ class _GapAnalysisScopeReconcillationScreenState
     final double horizontalPadding = isMobile ? 20 : 32;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -4481,7 +4481,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                 });
               },
               selectedColor: const Color(0xFF111827),
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               labelStyle: TextStyle(
                 color: selected ? Colors.white : const Color(0xFF475569),
                 fontWeight: FontWeight.w600,

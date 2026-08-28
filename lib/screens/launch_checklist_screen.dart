@@ -574,7 +574,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Launch Checklist',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(

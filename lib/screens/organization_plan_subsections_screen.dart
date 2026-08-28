@@ -718,7 +718,7 @@ class _OrganizationStaffingPlanScreenState
     ];
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2974,7 +2974,7 @@ class _OrganizationRaciMatrixScreenState
     final horizontalPadding = isMobile ? 20.0 : 32.0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -3156,7 +3156,7 @@ class _PlanningSubsectionScreenState extends State<_PlanningSubsectionScreen> {
     final horizontalPadding = isMobile ? 20.0 : 32.0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

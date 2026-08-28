@@ -455,7 +455,7 @@ class _StartUpPlanningDetailScreenState
  final readiness = _state.readiness(widget.config);
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1285,7 +1285,7 @@ class _ChecklistTableCard extends StatelessWidget {
  barrierDismissible: false,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  surfaceTintColor: Colors.white,
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(18),
@@ -2370,7 +2370,7 @@ Future<Map<int, String>?> _showRowEditDialog(
    barrierDismissible: true,
    builder: (dialogContext) => StatefulBuilder(
      builder: (dialogContext, setDialogState) => AlertDialog(
-       backgroundColor: Colors.white,
+       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
        surfaceTintColor: Colors.white,
        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
        title: Row(

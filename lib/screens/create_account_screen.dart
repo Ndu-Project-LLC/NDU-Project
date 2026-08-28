@@ -479,7 +479,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         top: true,
         child: SingleChildScrollView(
@@ -549,7 +549,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                   color: Colors.grey.shade300, width: 1.5),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
-                              backgroundColor: Colors.white,
+                              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                             ),
                           ),
                         ),

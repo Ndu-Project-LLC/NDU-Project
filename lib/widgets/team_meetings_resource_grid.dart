@@ -80,7 +80,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
         builder: (ctx, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           title: Row(
             children: [
               Container(

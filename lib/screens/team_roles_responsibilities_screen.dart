@@ -306,7 +306,7 @@ class _TeamRolesResponsibilitiesScreenState
  final projectId = provider?.projectData.projectId;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,

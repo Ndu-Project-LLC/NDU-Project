@@ -186,7 +186,7 @@ class _PlanningProcurementV2ScreenState
  final isMobile = AppBreakpoints.isMobile(context);
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,7 +330,7 @@ class _PlanningProcurementV2ScreenState
  color: selected ? Colors.white : const Color(0xFF111827),
  fontWeight: FontWeight.w600,
  ),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12),
  side: BorderSide(

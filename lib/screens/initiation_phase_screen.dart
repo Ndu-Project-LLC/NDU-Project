@@ -1321,7 +1321,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  final sidebarWidth = AppBreakpoints.sidebarWidth(context);
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: null,
  body: SafeArea(
  top: true,
@@ -1616,7 +1616,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  onPressed: _handleSkipPressed,
  style: OutlinedButton.styleFrom(
  foregroundColor: const Color(0xFF111827),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  side: const BorderSide(color: Color(0xFFE5E7EB)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12),
@@ -1897,7 +1897,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  return Scaffold(
  key: _scaffoldKey,
  drawer: _buildMobileDrawer(),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButtonLocation: draftMode
  ? FloatingActionButtonLocation.centerDocked
  : FloatingActionButtonLocation.endFloat,

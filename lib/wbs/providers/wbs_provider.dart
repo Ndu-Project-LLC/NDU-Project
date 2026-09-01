@@ -24,7 +24,7 @@ class WBSProvider extends ChangeNotifier {
   WBS? _wbs;
   bool _setupComplete = false;
   bool _isLoadingFromStorage = true;
-  bool _viewModeSimple = false;
+  bool _viewModeSimple = true;
   String _activeProjectId = 'default';
 
   /// Dedup guard for [ensureProjectLoaded] so concurrent callers (e.g. the
@@ -60,7 +60,7 @@ class WBSProvider extends ChangeNotifier {
         final data = jsonDecode(raw) as Map<String, dynamic>;
         final state = data['state'] as Map<String, dynamic>? ?? {};
         _setupComplete = state['setupComplete'] as bool? ?? false;
-        _viewModeSimple = state['viewModeSimple'] as bool? ?? false;
+        // View mode intentionally resets to Simple on every page load.
         if (state['wbs'] != null) {
           _wbs = _wbsFromJson(state['wbs'] as Map<String, dynamic>);
           _activeProjectId =
@@ -162,8 +162,7 @@ class WBSProvider extends ChangeNotifier {
               _wbs = legacyWbs;
               _setupComplete =
                   legacyState['setupComplete'] as bool? ?? false;
-              _viewModeSimple = legacyState['viewModeSimple'] as bool? ??
-                  _viewModeSimple;
+              // View mode intentionally resets to Simple on every page load.
               _activeProjectId = projectId;
               notifyListeners();
               return;
@@ -179,7 +178,7 @@ class WBSProvider extends ChangeNotifier {
       final data = jsonDecode(raw) as Map<String, dynamic>;
       final state = data['state'] as Map<String, dynamic>? ?? {};
       _setupComplete = state['setupComplete'] as bool? ?? false;
-      _viewModeSimple = state['viewModeSimple'] as bool? ?? _viewModeSimple;
+      // View mode intentionally resets to Simple on every page load.
       _wbs = state['wbs'] != null
           ? _wbsFromJson(state['wbs'] as Map<String, dynamic>)
           : null;
@@ -197,7 +196,6 @@ class WBSProvider extends ChangeNotifier {
         'state': {
           'wbs': _wbs != null ? _wbsToJson(_wbs!) : null,
           'setupComplete': _setupComplete,
-          'viewModeSimple': _viewModeSimple,
         },
       };
       final key = _storageKeyForProject(_wbs?.projectId ?? _activeProjectId);

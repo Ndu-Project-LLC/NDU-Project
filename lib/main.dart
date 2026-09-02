@@ -114,14 +114,11 @@ void main() async {
     );
   };
 
-  // Firebase must be ready before widgets touch Auth or Firestore. Letting the
-  // app continue while initialization is still pending can crash Flutter web
-  // with a FirebaseException/JavaScriptObject interop type error.
-  //
-  // Initialization failures are NOT silent: initializeFirebase() records the
-  // failure in [FirebaseBootstrap] so MyApp can show a persistent warning
-  // banner with a Retry action — sign-in and cloud data cannot work without
-  // Firebase, so users must be told why.
+  // Firebase must be ready before providers or routes touch Auth/Firestore.
+  // Initialization itself is bounded by a timeout; keeping this ordering
+  // prevents providers from racing Firebase and triggering a false global
+  // cloud-outage state.
+
   await initializeFirebase();
 
   // KAZ AI always uses the server-side Firebase proxy. No OpenAI credential
@@ -136,9 +133,12 @@ void main() async {
   PaintingBinding.instance.imageCache.maximumSize = 500;
 
   // Warm common local stores in background to reduce first-navigation latency.
-  unawaited(UserPreferencesService.warmUp());
-  unawaited(UserPreferencesService.loadCountryCurrency());
-  unawaited(ProjectNavigationService.instance.warmUp());
+  // These tasks intentionally run concurrently and never block the first frame.
+  unawaited(Future.wait<void>([
+    UserPreferencesService.warmUp(),
+    UserPreferencesService.loadCountryCurrency(),
+    ProjectNavigationService.instance.warmUp(),
+  ]));
 
   // #6: Start session manager (auto-logout after 30 minutes of inactivity)
   // The timer is reset on any user interaction via the Listener widget in MyApp.
@@ -181,17 +181,11 @@ Future<bool> initializeFirebase() async {
     // the "Unexpected state" assertion in Firestore SDK 12.x Watch system.
     final firestore = FirebaseFirestore.instance;
     if (kIsWeb) {
-      // clearPersistence() can hang indefinitely in some browser environments
-      // (e.g. when IndexedDB is locked by a stale service worker, or when
-      // the tab is in the background). Run it with a hard timeout so app
-      // startup is never blocked by a stuck IndexedDB cleanup.
-      await firestore.clearPersistence().timeout(
-        const Duration(seconds: 3),
-        onTimeout: () {
-          debugPrint(
-              '[main] firestore.clearPersistence() timed out after 3s — continuing startup.');
-        },
-      );
+      // Avoid clearing IndexedDB on every startup. It invalidates the local
+      // Firestore cache and forces a full network reload, which makes every
+      // launch and first navigation slower. The capped cache settings below
+      // already prevent unbounded growth.
+      debugPrint('[main] Keeping the Firestore web cache for faster startup.');
     }
     firestore.settings = const Settings(
       persistenceEnabled: !kIsWeb,
@@ -226,6 +220,15 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _firebaseReady = !FirebaseBootstrap.initFailed;
+    if (FirebaseBootstrap.initFailed) {
+      // Give the non-blocking bootstrap a chance to complete before showing
+      // the warning banner, without delaying the first frame.
+      Future<void>.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          setState(() => _firebaseReady = !FirebaseBootstrap.initFailed);
+        }
+      });
+    }
   }
 
   Future<void> _retryFirebaseInit() async {
@@ -269,9 +272,9 @@ class _MyAppState extends State<MyApp> {
             provider: projectProvider,
             child: Listener(
               // #6: Reset session timer on any pointer interaction (mouse/touch)
-              onPointerDown: (_) => SessionManager.instance.resetTimer(),
-              onPointerMove: (_) => SessionManager.instance.resetTimer(),
-              onPointerUp: (_) => SessionManager.instance.resetTimer(),
+              onPointerDown: (_) => SessionManager.instance.recordActivity(),
+              onPointerMove: (_) => SessionManager.instance.recordActivity(),
+              onPointerUp: (_) => SessionManager.instance.recordActivity(),
               child: MaterialApp.router(
                 title: AppStrings.appName,
                 debugShowCheckedModeBanner: false,
@@ -279,9 +282,9 @@ class _MyAppState extends State<MyApp> {
                 darkTheme: darkTheme,
                 themeMode: themeProvider.themeMode,
                 routerConfig: AppRouter.main,
-                // Smooth cross-fade when toggling themes
-                themeAnimationDuration: const Duration(milliseconds: 300),
-                themeAnimationCurve: Curves.easeInOut,
+                // Keep theme changes responsive on large screens and web.
+                themeAnimationDuration: Duration.zero,
+                themeAnimationCurve: Curves.linear,
                 // Performance optimizations
                 builder: (context, child) {
                   final media =

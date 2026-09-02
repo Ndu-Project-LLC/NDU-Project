@@ -128,7 +128,6 @@ String _convertHint(double usdAmount, String currency) {
 /// When the currency is not USD, tells the AI to convert all values.
 String _currencyConversionInstruction(String currency) {
   if (currency.toUpperCase() == 'USD') return '';
-  final rate = _usdToCurrencyRates[currency.toUpperCase()] ?? 1.0;
   return '\n- All monetary amounts MUST be expressed in $currency. Convert from USD equivalents using realistic exchange rates (1 USD ≈ ${_usdRateHint(currency)} $currency). Do NOT simply reuse USD numerical values — $currency has a different purchasing power and exchange rate. For example, if USD amount would be 10,000, the amount in $currency should be approximately ${_convertHint(10000, currency)}. Apply this conversion to every monetary amount in your response.';
 }
 
@@ -551,7 +550,7 @@ class OpenAiServiceSecure {
 
     return _runSerialized(() async {
       final uri = OpenAiConfig.chatUri();
-      final headers = OpenAiConfig.headers();
+      final headers = await OpenAiConfig.authenticatedHeaders();
 
       final body = jsonEncode(OpenAiConfig.wrapBody({
         'model': OpenAiConfig.model,
@@ -601,7 +600,7 @@ class OpenAiServiceSecure {
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = _fepSectionPrompt(section: section, context: trimmedContext);
     final body = jsonEncode(OpenAiConfig.wrapBody({
@@ -680,7 +679,7 @@ class OpenAiServiceSecure {
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = '''
 You are a senior editor for an enterprise project management workspace. Rewrite the user's existing text for the "$section" section so that it is clearer, more professional, and grammatically correct.
@@ -767,7 +766,7 @@ ${_escape(trimmedText)}
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -1108,7 +1107,7 @@ ${_escape(trimmedText)}
     if (!OpenAiConfig.isConfigured) return {'in': [], 'out': []};
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -1167,7 +1166,7 @@ ${_escape(trimmedText)}
     if (!OpenAiConfig.isConfigured) return {'risks': [], 'constraints': []};
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -1246,7 +1245,7 @@ ${_escape(trimmedText)}
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = _buildMitigationPrompt(trimmedRisks, context);
 
@@ -1348,7 +1347,7 @@ ${_escape(trimmedText)}
     if (!OpenAiConfig.isConfigured) return {};
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -1422,7 +1421,7 @@ ${_escape(trimmedText)}
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = '''
 You are a senior project manager. Based on the project context below, generate a list of specific, actionable items for the "$section" section.
@@ -1510,7 +1509,7 @@ Rules:
     if (!OpenAiConfig.isConfigured) return '';
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = '''
 You are a senior project planning assistant. Using the project context below, write a concise project objective summary.
@@ -1579,7 +1578,7 @@ Return ONLY valid JSON: {"objective": "..." }
     if (!OpenAiConfig.isConfigured) return {};
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final fieldLines = fields.entries
         .map((entry) => '- ${entry.key}: ${entry.value}'.trim())
@@ -1997,7 +1996,7 @@ $trimmedContext
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -2082,7 +2081,7 @@ Use concise professional language. Status should use In progress, Pending, In re
     if (!OpenAiConfig.isConfigured) return {};
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -2137,7 +2136,7 @@ Use concise professional language. Status must be one of: Approved, Aligned, Rea
     if (!OpenAiConfig.isConfigured) return SpecializedDesignData();
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -2337,7 +2336,7 @@ Return JSON with:
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': temperature,
@@ -2397,7 +2396,7 @@ Return JSON with:
     if (!OpenAiConfig.isConfigured) throw const OpenAiNotConfiguredException();
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -2642,7 +2641,7 @@ $c
     final scaleConstraints = _scaleFinancialConstraints(projectScale);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = _singleItemEstimatePrompt(
       itemName: trimmed,
@@ -2913,7 +2912,7 @@ $scaleConstraints
     final scaleConstraints = _scaleFinancialConstraints(projectScale);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -2998,7 +2997,7 @@ $scaleConstraints
     if (!OpenAiConfig.isConfigured) throw const OpenAiNotConfiguredException();
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -3324,7 +3323,7 @@ $domainHints
     String contextNotes = '',
   }) async {
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.7,
@@ -3384,7 +3383,7 @@ $domainHints
     if (!OpenAiConfig.isConfigured) throw const OpenAiNotConfiguredException();
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.6,
@@ -3559,7 +3558,7 @@ $domainHints
     required bool includeResponseFormat,
   }) async {
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final payload = {
       'model': OpenAiConfig.model,
       'temperature': 0.7,
@@ -3710,7 +3709,7 @@ $domainHints
     if (!OpenAiConfig.isConfigured) throw const OpenAiNotConfiguredException();
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -3800,7 +3799,7 @@ $domainHints
         _financialDomainHints(context: contextNotes, solutions: solutions);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.45,
@@ -5285,7 +5284,7 @@ Domain guardrail: $guardrails
 
     final scaleHint = _projectScaleLabel(detectedScale);
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.4,
@@ -5632,7 +5631,7 @@ $domainHints
   }) async {
     if (!OpenAiConfig.isConfigured) throw const OpenAiNotConfiguredException();
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.6,
@@ -5695,7 +5694,7 @@ Return plain text only.'''
 
     final scaleHint = _projectScaleLabel(detectedScale);
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final list = solutions
         .map((s) =>
             '{"title":"${_escape(s.title)}","description":"${_escape(s.description)}"}')
@@ -6071,7 +6070,7 @@ Return ONLY JSON.
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.4,
@@ -6281,7 +6280,7 @@ Remember: Return ONLY a JSON object with key "savings_scenarios".
     if (!OpenAiConfig.isConfigured) return _fallbackInfrastructure(solutions);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -6465,7 +6464,7 @@ Context notes (optional): $notes
     if (!OpenAiConfig.isConfigured) return _fallbackStakeholders(solutions);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -6836,7 +6835,7 @@ Context notes (optional): $notes
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final existingRisksText = existingRisks.isEmpty
         ? 'None yet'
@@ -6965,7 +6964,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -7039,7 +7038,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -7053,8 +7052,8 @@ $escaped
         },
         {
           'role': 'user',
-          'content': _ssherCategoryPlanPrompt(
-              trimmedContext, normalizedCategory),
+          'content':
+              _ssherCategoryPlanPrompt(trimmedContext, normalizedCategory),
         },
       ],
     }));
@@ -7266,7 +7265,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -7350,7 +7349,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -7364,8 +7363,8 @@ $escaped
         },
         {
           'role': 'user',
-          'content': _qualityAssistantPrompt(
-              trimmedContext, normalizedCategory),
+          'content':
+              _qualityAssistantPrompt(trimmedContext, normalizedCategory),
         },
       ],
     }));
@@ -7384,12 +7383,10 @@ $escaped
       if (content.isNotEmpty) {
         final parsed = _decodeJsonSafely(content);
         if (parsed != null) {
-          final insights = (parsed['insights'] ??
-                  parsed['summary'] ??
-                  parsed['text'] ??
-                  '')
-              .toString()
-              .trim();
+          final insights =
+              (parsed['insights'] ?? parsed['summary'] ?? parsed['text'] ?? '')
+                  .toString()
+                  .trim();
           final applicableRaw = parsed['applicable'];
           final applicable = applicableRaw is bool
               ? applicableRaw
@@ -7413,7 +7410,8 @@ $escaped
       }
     }
 
-    return _fallbackQualityAssistantInsights(trimmedContext, normalizedCategory);
+    return _fallbackQualityAssistantInsights(
+        trimmedContext, normalizedCategory);
   }
 
   String _normalizeQualityCategory(String category) {
@@ -7577,14 +7575,12 @@ $escaped
   String _fallbackQualityCategorySummary(String context, String category) {
     final projectName = _extractProjectName(context);
     final assetName = projectName.isEmpty ? 'this project' : projectName;
-    final isSoftware =
-        context.toLowerCase().contains('software') ||
-            context.toLowerCase().contains('agile') ||
-            context.toLowerCase().contains('app');
-    final isConstruction =
-        context.toLowerCase().contains('construction') ||
-            context.toLowerCase().contains('civil') ||
-            context.toLowerCase().contains('infrastructure');
+    final isSoftware = context.toLowerCase().contains('software') ||
+        context.toLowerCase().contains('agile') ||
+        context.toLowerCase().contains('app');
+    final isConstruction = context.toLowerCase().contains('construction') ||
+        context.toLowerCase().contains('civil') ||
+        context.toLowerCase().contains('infrastructure');
 
     switch (category) {
       case 'plan':
@@ -7667,10 +7663,9 @@ $escaped
       String context, String category) {
     final projectName = _extractProjectName(context);
     final assetName = projectName.isEmpty ? 'this project' : projectName;
-    final isSoftware =
-        context.toLowerCase().contains('software') ||
-            context.toLowerCase().contains('agile') ||
-            context.toLowerCase().contains('app');
+    final isSoftware = context.toLowerCase().contains('software') ||
+        context.toLowerCase().contains('agile') ||
+        context.toLowerCase().contains('app');
 
     String insights;
     bool applicable;
@@ -7881,7 +7876,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -7940,7 +7935,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -8008,7 +8003,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -8124,7 +8119,7 @@ $escaped
     final staffingGuidance = _scaleStaffingCostGuidance(projectScale);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -8339,7 +8334,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -8519,7 +8514,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -8733,7 +8728,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -10084,7 +10079,7 @@ Context notes (optional): $notes
     final count = minCount < 3 ? 3 : minCount;
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.6,
@@ -10183,7 +10178,7 @@ Return JSON in this format:
     if (!OpenAiConfig.isConfigured) return [];
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -10343,7 +10338,7 @@ Additional Context: $contextNotes
     final durationGuidance = _scaleDurationGuidance(projectScale);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -10466,7 +10461,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.6,
@@ -10607,7 +10602,7 @@ Return ONLY valid JSON.
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.6,
@@ -10785,7 +10780,7 @@ Return ONLY valid JSON.
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.45,
@@ -11270,7 +11265,7 @@ Return ONLY valid JSON in this exact structure:
   }) async {
     if (!OpenAiConfig.isConfigured) return [];
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -11324,7 +11319,7 @@ Return ONLY JSON: {"items":[...]}'''
   }) async {
     if (!OpenAiConfig.isConfigured) return [];
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -11378,7 +11373,7 @@ Return ONLY JSON: {"items":[...]}'''
   }) async {
     if (!OpenAiConfig.isConfigured) return [];
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -11511,7 +11506,7 @@ Return ONLY JSON: {"items":[...]}'''
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -11685,7 +11680,7 @@ $escaped
         : '0';
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -11808,7 +11803,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final tasksText = completedTasks.join('\n');
 
@@ -11906,7 +11901,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12008,7 +12003,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12111,7 +12106,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12217,7 +12212,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12321,7 +12316,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12429,7 +12424,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12533,7 +12528,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12667,7 +12662,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = '''
 Based on this goal description, generate a concise, impactful title in the format "G$goalNumber [ACTION_KEYWORD]".
@@ -12775,7 +12770,7 @@ IMPORTANT RULES:
 
     try {
       final uri = OpenAiConfig.chatUri();
-      final headers = OpenAiConfig.headers();
+      final headers = await OpenAiConfig.authenticatedHeaders();
 
       final body = jsonEncode(OpenAiConfig.wrapBody({
         'model': OpenAiConfig.model,

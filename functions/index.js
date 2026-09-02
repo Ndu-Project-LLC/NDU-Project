@@ -126,7 +126,7 @@ function setCorsHeaders(req, res) {
 // (transformToClaudeFormat removed — project uses OpenAI, not Claude/Anthropic)
 
 function getRequestOrigin(req) {
-  return req.headers.origin || APP_BASE_URL;
+  return req.headers.origin || getCorsAllowedOrigins().find((origin) => typeof origin === 'string') || 'https://ndu-d3f60.web.app';
 }
 
 function getPayPalBaseUrl(clientId) {
@@ -301,22 +301,26 @@ exports.openaiProxy = functions
       
       // The app sends OpenAI-format requests directly — no transformation needed.
       // Just forward the payload as-is to OpenAI's Chat Completions API.
-      const rawPayload = req.body.payload || req.body;
+      const rawPayload = req.body?.payload || req.body || {};
+      if (!Array.isArray(rawPayload.messages) || rawPayload.messages.length === 0) {
+        res.status(400).json({ error: 'Request must include a non-empty messages array.' });
+        return;
+      }
 
       // Ensure the payload has the required fields for OpenAI Chat Completions
       const openaiBody = {
         model: rawPayload.model || 'gpt-4o',
         messages: rawPayload.messages || [],
         temperature: rawPayload.temperature ?? 0.7,
-        max_tokens: rawPayload.max_tokens || rawPayload.max_completion_tokens || 2000,
+        max_tokens: rawPayload.max_tokens ?? rawPayload.max_completion_tokens ?? 2000,
         stream: false,
       };
       
       // Copy over any additional fields the client may have sent
       if (rawPayload.response_format) openaiBody.response_format = rawPayload.response_format;
-      if (rawPayload.top_p) openaiBody.top_p = rawPayload.top_p;
-      if (rawPayload.frequency_penalty) openaiBody.frequency_penalty = rawPayload.frequency_penalty;
-      if (rawPayload.presence_penalty) openaiBody.presence_penalty = rawPayload.presence_penalty;
+      if (rawPayload.top_p != null) openaiBody.top_p = rawPayload.top_p;
+      if (rawPayload.frequency_penalty != null) openaiBody.frequency_penalty = rawPayload.frequency_penalty;
+      if (rawPayload.presence_penalty != null) openaiBody.presence_penalty = rawPayload.presence_penalty;
 
       // Forward the request to OpenAI Chat Completions API
       const openaiUrl = 'https://api.openai.com/v1/chat/completions';

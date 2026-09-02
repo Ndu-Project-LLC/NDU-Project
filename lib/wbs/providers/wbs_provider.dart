@@ -9,7 +9,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart' hide EstimationMethod;
+import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart'
+    hide EstimationMethod;
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
@@ -60,7 +61,8 @@ class WBSProvider extends ChangeNotifier {
         final data = jsonDecode(raw) as Map<String, dynamic>;
         final state = data['state'] as Map<String, dynamic>? ?? {};
         _setupComplete = state['setupComplete'] as bool? ?? false;
-        // View mode intentionally resets to Simple on every page load.
+        // View mode is session-only; always start in Simple mode.
+        _viewModeSimple = true;
         if (state['wbs'] != null) {
           _wbs = _wbsFromJson(state['wbs'] as Map<String, dynamic>);
           _activeProjectId =
@@ -160,9 +162,9 @@ class WBSProvider extends ChangeNotifier {
                 _wbsFromJson(legacyState['wbs'] as Map<String, dynamic>);
             if (legacyWbs.projectId == projectId) {
               _wbs = legacyWbs;
-              _setupComplete =
-                  legacyState['setupComplete'] as bool? ?? false;
-              // View mode intentionally resets to Simple on every page load.
+              _setupComplete = legacyState['setupComplete'] as bool? ?? false;
+              // View mode is session-only; keep the Simple default.
+              _viewModeSimple = true;
               _activeProjectId = projectId;
               notifyListeners();
               return;
@@ -178,7 +180,8 @@ class WBSProvider extends ChangeNotifier {
       final data = jsonDecode(raw) as Map<String, dynamic>;
       final state = data['state'] as Map<String, dynamic>? ?? {};
       _setupComplete = state['setupComplete'] as bool? ?? false;
-      // View mode intentionally resets to Simple on every page load.
+      // View mode is session-only; keep the Simple default.
+      _viewModeSimple = true;
       _wbs = state['wbs'] != null
           ? _wbsFromJson(state['wbs'] as Map<String, dynamic>)
           : null;
@@ -196,6 +199,7 @@ class WBSProvider extends ChangeNotifier {
         'state': {
           'wbs': _wbs != null ? _wbsToJson(_wbs!) : null,
           'setupComplete': _setupComplete,
+          'viewModeSimple': _viewModeSimple,
         },
       };
       final key = _storageKeyForProject(_wbs?.projectId ?? _activeProjectId);
@@ -307,7 +311,8 @@ class WBSProvider extends ChangeNotifier {
         if (node.scheduleActivityId != null &&
             node.scheduleActivityId!.isNotEmpty)
           'scheduleActivityId': node.scheduleActivityId,
-        if (node.percentComplete != null) 'percentComplete': node.percentComplete,
+        if (node.percentComplete != null)
+          'percentComplete': node.percentComplete,
         if (node.actualCost != null) 'actualCost': node.actualCost,
         if (node.plannedStart != null)
           'plannedStart': node.plannedStart!.toIso8601String(),

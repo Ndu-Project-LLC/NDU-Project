@@ -566,7 +566,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
     try {
       final uri = OpenAiConfig.chatUri();
       // Use centralized headers() — the server-side proxy adds Authorization.
-      final headers = OpenAiConfig.headers();
+      final headers = await OpenAiConfig.authenticatedHeaders();
 
       // Build full conversation history for multi-turn context
       final messages = <Map<String, String>>[
@@ -738,8 +738,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         title: const Text('Clear AI Chat History'),
         content: const Text(
             'This will permanently delete all conversation history with KAZ AI. This action cannot be undone.'),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -773,8 +772,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         title: const Text('Clear Support Chat History'),
         content: const Text(
             'This will permanently delete all support chat history. This action cannot be undone.'),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -1262,7 +1260,8 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
             controller: _ticketSubjectController,
             decoration: InputDecoration(
               hintText: 'Brief description of your issue',
-              hintStyle: const TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
+              hintStyle:
+                  const TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
               filled: true,
               fillColor: const Color(0xFFF8FAFC),
               border: OutlineInputBorder(
@@ -1275,7 +1274,8 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFFFABD00), width: 1.5),
+                borderSide:
+                    const BorderSide(color: Color(0xFFFABD00), width: 1.5),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1297,7 +1297,8 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
             maxLines: 4,
             decoration: InputDecoration(
               hintText: 'Provide additional context about your issue...',
-              hintStyle: const TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
+              hintStyle:
+                  const TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
               filled: true,
               fillColor: const Color(0xFFF8FAFC),
               border: OutlineInputBorder(
@@ -1310,7 +1311,8 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFFFABD00), width: 1.5),
+                borderSide:
+                    const BorderSide(color: Color(0xFFFABD00), width: 1.5),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1346,8 +1348,8 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
             decoration: BoxDecoration(
               color: const Color(0xFFFABD00).withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(14),
-              border:
-                  Border.all(color: const Color(0xFFFABD00).withValues(alpha: 0.2)),
+              border: Border.all(
+                  color: const Color(0xFFFABD00).withValues(alpha: 0.2)),
             ),
             child: const Row(
               crossAxisAlignment: CrossAxisAlignment.start,

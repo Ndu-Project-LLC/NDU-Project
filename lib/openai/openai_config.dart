@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:ndu_project/services/api_config_secure.dart';
 // Use relative import to ensure the library is part of this compilation unit
@@ -33,6 +34,29 @@ class OpenAiConfig {
 
   /// Model used for OpenAI API requests — GPT-4o.
   static String get model => SecureAPIConfig.model;
+
+  /// The Firebase proxy requires a signed-in Firebase user. The client adds
+  /// the current user's ID token in [headers] before making an AI request.
+  static Future<Map<String, String>> authenticatedHeaders() async {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw const OpenAiAuthenticationRequiredException();
+      }
+      final token = await user.getIdToken();
+      if (token == null || token.trim().isEmpty) {
+        throw const OpenAiAuthenticationRequiredException();
+      }
+      headers['Authorization'] = 'Bearer $token';
+      return headers;
+    } catch (error) {
+      if (error is OpenAiAuthenticationRequiredException) rethrow;
+      throw OpenAiAuthenticationRequiredException(error.toString());
+    }
+  }
 
   /// OpenAI API version (kept for backward compat).
   static String get openaiApiVersion => SecureAPIConfig.openaiApiVersion;
@@ -67,8 +91,8 @@ class OpenAiConfig {
     } else if (result.containsKey('system')) {
       final system = result.remove('system');
       final messages = List<Map<String, dynamic>>.from(
-        (result['messages'] as List? ?? []).map((m) =>
-            Map<String, dynamic>.from(m as Map)),
+        (result['messages'] as List? ?? [])
+            .map((m) => Map<String, dynamic>.from(m as Map)),
       );
       messages.insert(0, {'role': 'system', 'content': system});
       result['messages'] = messages;
@@ -96,7 +120,8 @@ class OpenAiConfig {
     }
 
     // Ensure model is set
-    if (!result.containsKey('model') || (result['model'] as String?)?.isEmpty == true) {
+    if (!result.containsKey('model') ||
+        (result['model'] as String?)?.isEmpty == true) {
       result['model'] = model;
     }
 
@@ -127,7 +152,8 @@ class OpenAiConfig {
           if (messageContent is String) return messageContent;
           if (messageContent is List) {
             return messageContent
-                .map((e) => e is Map<String, dynamic> ? (e['text'] ?? '') : (e ?? ''))
+                .map((e) =>
+                    e is Map<String, dynamic> ? (e['text'] ?? '') : (e ?? ''))
                 .join();
           }
         }
@@ -148,7 +174,8 @@ class OpenAiConfig {
               if (item is Map<String, dynamic>) {
                 final type = item['type'];
                 final text = item['text'];
-                if (text is String && (type == 'output_text' || type == 'text')) {
+                if (text is String &&
+                    (type == 'output_text' || type == 'text')) {
                   buffer.write(text);
                 }
               }
@@ -170,6 +197,16 @@ class OpenAiConfig {
     // Function proxy) — so CORS is never a concern. No warning needed.
     return null;
   }
+}
+
+class OpenAiAuthenticationRequiredException implements Exception {
+  final String? details;
+  const OpenAiAuthenticationRequiredException([this.details]);
+
+  @override
+  String toString() => details == null || details!.isEmpty
+      ? 'Please sign in before using AI.'
+      : 'Unable to authenticate AI request: $details';
 }
 
 class OpenAiNotConfiguredException implements Exception {
@@ -205,17 +242,19 @@ class OpenAiAutocompleteService {
     }
 
     final uri = OpenAiConfig.responsesUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final payload = {
       'model': OpenAiConfig.model,
       'temperature': _temperature,
       'max_tokens': 300,
-      'system': 'You help business analysts finish their writing. Provide up to $maxSuggestions polished continuation suggestions that extend the user\'s draft. Do not repeat the existing text, do not number or bullet responses, and avoid placeholders. Return each suggestion on its own line.',
+      'system':
+          'You help business analysts finish their writing. Provide up to $maxSuggestions polished continuation suggestions that extend the user\'s draft. Do not repeat the existing text, do not number or bullet responses, and avoid placeholders. Return each suggestion on its own line.',
       'messages': [
         {
           'role': 'user',
-          'content': 'Field: $fieldName\nCurrent draft: """${_escape(currentText)}"""\nAdditional context: """${_escape(context)}"""\nReturn up to $maxSuggestions unique continuations, each on its own line.'
+          'content':
+              'Field: $fieldName\nCurrent draft: """${_escape(currentText)}"""\nAdditional context: """${_escape(context)}"""\nReturn up to $maxSuggestions unique continuations, each on its own line.'
         }
       ],
     };
@@ -223,24 +262,30 @@ class OpenAiAutocompleteService {
     try {
       final warn = OpenAiConfig.configurationWarning();
       if (warn != null) {
-        debugPrint('OpenAI configuration warning: $warn (endpoint=${OpenAiConfig.baseEndpoint})');
+        debugPrint(
+            'OpenAI configuration warning: $warn (endpoint=${OpenAiConfig.baseEndpoint})');
       }
       final response = await _client
-          .post(uri, headers: headers, body: jsonEncode(OpenAiConfig.wrapBody(payload)))
+          .post(uri,
+              headers: headers,
+              body: jsonEncode(OpenAiConfig.wrapBody(payload)))
           .timeout(_timeout);
 
       if (response.statusCode == 429) {
         throw Exception('OpenAI rate limit reached. Please try again shortly.');
       }
       if (response.statusCode == 401) {
-        throw Exception('OpenAI API key not accepted. Please check the key in Settings or contact support.');
+        throw Exception(
+            'OpenAI API key not accepted. Please check the key in Settings or contact support.');
       }
       if (response.statusCode == 403) {
         final body = response.body;
         if (body.contains('unsupported_country_region_territory')) {
-          throw Exception('OpenAI is not available in your region. Please use a VPN or contact support.');
+          throw Exception(
+              'OpenAI is not available in your region. Please use a VPN or contact support.');
         }
-        throw Exception('OpenAI access denied (${response.statusCode}). Please check your API key.');
+        throw Exception(
+            'OpenAI access denied (${response.statusCode}). Please check your API key.');
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
@@ -248,7 +293,8 @@ class OpenAiAutocompleteService {
         );
       }
 
-      final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       final combined = OpenAiConfig.extractContent(data).trim();
       final suggestions = combined
           .split('\n')
@@ -303,18 +349,21 @@ class OpenAiDiagramService {
   }) async {
     if (!OpenAiConfig.isConfigured) {
       // Fallback: single-node diagram using section name
-      return DiagramModel(nodes: [DiagramNode(id: 'start', label: section)], edges: const []);
+      return DiagramModel(
+          nodes: [DiagramNode(id: 'start', label: section)], edges: const []);
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
-    final prompt = _diagramPrompt(section: section, context: contextText, refinementHint: refinementHint);
+    final prompt = _diagramPrompt(
+        section: section, context: contextText, refinementHint: refinementHint);
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
       'max_tokens': maxTokens,
-      'system': '''You are an expert strategic planning architect specializing in executive-level project visualization. Your diagrams are exceptional because they:
+      'system':
+          '''You are an expert strategic planning architect specializing in executive-level project visualization. Your diagrams are exceptional because they:
 1. Show REASONING and LOGIC, not just process steps
 2. Illustrate strategic thinking with decision criteria and branching paths
 3. Highlight dependencies, risks, and validation checkpoints
@@ -333,11 +382,15 @@ Always return ONLY a valid JSON object with nodes and edges arrays.''',
     }));
 
     try {
-      final response = await http.post(uri, headers: headers, body: body).timeout(const Duration(seconds: 16));
+      final response = await http
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 16));
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw Exception('OpenAI diagram error ${response.statusCode}: ${response.body}');
+        throw Exception(
+            'OpenAI diagram error ${response.statusCode}: ${response.body}');
       }
-      final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       final content = OpenAiConfig.extractContent(data);
       // Extract JSON from the response (may be wrapped in markdown code block)
       final jsonStr = _extractJson(content);
@@ -367,10 +420,15 @@ Always return ONLY a valid JSON object with nodes and edges arrays.''',
     return text.trim();
   }
 
-  String _diagramPrompt({required String section, required String context, String? refinementHint}) {
+  String _diagramPrompt(
+      {required String section,
+      required String context,
+      String? refinementHint}) {
     final s = _sanitize(section);
     final c = _sanitize(context);
-    final hintLine = refinementHint != null ? '\nUser Refinement: ${_refinementHintText(refinementHint)}\n' : '';
+    final hintLine = refinementHint != null
+        ? '\nUser Refinement: ${_refinementHintText(refinementHint)}\n'
+        : '';
     return '''
 You are generating a REASONING DIAGRAM for the "$s" section. This must be an exceptional, thought-provoking visual that demonstrates strategic thinking—NOT a generic flowchart.
 
@@ -441,7 +499,8 @@ Generate a diagram that demonstrates STRATEGIC REASONING for executing this plan
         .where((e) => e.from.isNotEmpty && e.to.isNotEmpty)
         .toList();
     if (nodes.isEmpty) {
-      return const DiagramModel(nodes: [DiagramNode(id: 'start', label: 'Start')], edges: []);
+      return const DiagramModel(
+          nodes: [DiagramNode(id: 'start', label: 'Start')], edges: []);
     }
     return DiagramModel(nodes: nodes, edges: edges);
   }
@@ -468,18 +527,34 @@ Generate a diagram that demonstrates STRATEGIC REASONING for executing this plan
     final sectionLower = section.toLowerCase();
 
     // Executive Plan Outline specific fallback
-    if (sectionLower.contains('executive') || sectionLower.contains('outline')) {
+    if (sectionLower.contains('executive') ||
+        sectionLower.contains('outline')) {
       return const DiagramModel(
         nodes: [
-          DiagramNode(id: 'objectives', label: 'Define Strategic Objectives', type: 'objective'),
-          DiagramNode(id: 'assess', label: 'Assess Current State', type: 'analysis'),
-          DiagramNode(id: 'gaps', label: 'Identify Capability Gaps', type: 'analysis'),
-          DiagramNode(id: 'decision', label: 'Feasibility Check', type: 'decision'),
-          DiagramNode(id: 'approach', label: 'Select Execution Approach', type: 'action'),
-          DiagramNode(id: 'resources', label: 'Allocate Resources', type: 'action'),
-          DiagramNode(id: 'validate', label: 'Stakeholder Validation', type: 'validation'),
-          DiagramNode(id: 'plan', label: 'Finalize Execution Plan', type: 'milestone'),
-          DiagramNode(id: 'outcomes', label: 'Defined Success Metrics', type: 'output'),
+          DiagramNode(
+              id: 'objectives',
+              label: 'Define Strategic Objectives',
+              type: 'objective'),
+          DiagramNode(
+              id: 'assess', label: 'Assess Current State', type: 'analysis'),
+          DiagramNode(
+              id: 'gaps', label: 'Identify Capability Gaps', type: 'analysis'),
+          DiagramNode(
+              id: 'decision', label: 'Feasibility Check', type: 'decision'),
+          DiagramNode(
+              id: 'approach',
+              label: 'Select Execution Approach',
+              type: 'action'),
+          DiagramNode(
+              id: 'resources', label: 'Allocate Resources', type: 'action'),
+          DiagramNode(
+              id: 'validate',
+              label: 'Stakeholder Validation',
+              type: 'validation'),
+          DiagramNode(
+              id: 'plan', label: 'Finalize Execution Plan', type: 'milestone'),
+          DiagramNode(
+              id: 'outcomes', label: 'Defined Success Metrics', type: 'output'),
         ],
         edges: [
           DiagramEdge(from: 'objectives', to: 'assess', label: 'drives'),
@@ -498,11 +573,18 @@ Generate a diagram that demonstrates STRATEGIC REASONING for executing this plan
     if (sectionLower.contains('strategy')) {
       return const DiagramModel(
         nodes: [
-          DiagramNode(id: 'vision', label: 'Strategic Vision', type: 'objective'),
-          DiagramNode(id: 'analyze', label: 'Market Analysis', type: 'analysis'),
-          DiagramNode(id: 'options', label: 'Evaluate Options', type: 'decision'),
-          DiagramNode(id: 'select', label: 'Strategy Selection', type: 'action'),
-          DiagramNode(id: 'implement', label: 'Implementation Roadmap', type: 'milestone'),
+          DiagramNode(
+              id: 'vision', label: 'Strategic Vision', type: 'objective'),
+          DiagramNode(
+              id: 'analyze', label: 'Market Analysis', type: 'analysis'),
+          DiagramNode(
+              id: 'options', label: 'Evaluate Options', type: 'decision'),
+          DiagramNode(
+              id: 'select', label: 'Strategy Selection', type: 'action'),
+          DiagramNode(
+              id: 'implement',
+              label: 'Implementation Roadmap',
+              type: 'milestone'),
         ],
         edges: [
           DiagramEdge(from: 'vision', to: 'analyze', label: 'guides'),
@@ -516,11 +598,16 @@ Generate a diagram that demonstrates STRATEGIC REASONING for executing this plan
     // Default reasoning-based fallback
     return DiagramModel(
       nodes: [
-        DiagramNode(id: 'start', label: 'Define $section Goals', type: 'objective'),
-        const DiagramNode(id: 'analyze', label: 'Analyze Requirements', type: 'analysis'),
-        const DiagramNode(id: 'evaluate', label: 'Evaluate Approaches', type: 'decision'),
-        const DiagramNode(id: 'plan', label: 'Develop Action Plan', type: 'action'),
-        const DiagramNode(id: 'validate', label: 'Validation Checkpoint', type: 'validation'),
+        DiagramNode(
+            id: 'start', label: 'Define $section Goals', type: 'objective'),
+        const DiagramNode(
+            id: 'analyze', label: 'Analyze Requirements', type: 'analysis'),
+        const DiagramNode(
+            id: 'evaluate', label: 'Evaluate Approaches', type: 'decision'),
+        const DiagramNode(
+            id: 'plan', label: 'Develop Action Plan', type: 'action'),
+        const DiagramNode(
+            id: 'validate', label: 'Validation Checkpoint', type: 'validation'),
         DiagramNode(id: 'outcome', label: '$section Complete', type: 'output'),
       ],
       edges: const [

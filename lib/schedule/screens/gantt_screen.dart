@@ -390,9 +390,11 @@ class _GanttRow extends StatelessWidget {
     return Column(
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
               width: leftColWidth,
+              constraints: const BoxConstraints(minHeight: 76),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: const BoxDecoration(
                 border: Border(
@@ -419,24 +421,25 @@ class _GanttRow extends StatelessWidget {
                                 fontSize: 10,
                                 fontFamily: appFontFamily,
                                 fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(row.name,
-                              style: const TextStyle(
-                                  color: Color(0xFF1A1D1F),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500),
-                              overflow: TextOverflow.ellipsis),
-                        ),
                       ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3, left: 14),
+                      child: Text(
+                        row.name,
+                        softWrap: true,
+                        style: const TextStyle(
+                            color: Color(0xFF1A1D1F),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500),
+                      ),
                     ),
                     if (_subtitleText().isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4, left: 20),
                         child: Text(
                           _subtitleText(),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                          softWrap: true,
                           style: const TextStyle(
                             color: Color(0xFF6B7280),
                             fontSize: 10,
@@ -450,7 +453,7 @@ class _GanttRow extends StatelessWidget {
             ),
             Container(
               width: timelineWidth,
-              height: 36,
+              constraints: const BoxConstraints(minHeight: 76),
               color: Colors.white,
               child: Stack(
                 children: [

@@ -3201,9 +3201,12 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
               children: [
                 const Divider(color: Color(0xFFF3F4F6), height: 1),
                 Container(
-                  height: 44,
+                  // Let long activity names expand the row instead of clipping
+                  // them. The timeline area stretches with the label column.
+                  constraints: const BoxConstraints(minHeight: 60),
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // ── Activity label (fixed width) ──
                       SizedBox(
@@ -3237,8 +3240,7 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                                         color: Color(0xFF1A1D1F),
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
+                                    softWrap: true,
                                   ),
                                 ],
                               ),

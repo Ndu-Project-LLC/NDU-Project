@@ -13,7 +13,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
+import 'package:ndu_project/widgets/launch_modal.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -374,8 +374,103 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
     );
   }
 
-  void _addTeam() {
-    setState(() => _teams.add(TeamRow()));
+  Future<void> _addTeam() async {
+    final nameController = TextEditingController();
+    final countController = TextEditingController(text: '1');
+    final roleController = TextEditingController();
+    final skillsController = TextEditingController();
+    String? nameError;
+
+    final team = await showDialog<TeamRow>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => LaunchModalShell(
+          icon: Icons.groups_outlined,
+          accent: _kAccent,
+          title: 'Add Squad / Team',
+          subtitle: 'Define the squad’s purpose, size, and capabilities.',
+          body: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LaunchModalTextField(
+                label: 'Squad / Team Name',
+                controller: nameController,
+                hint: 'e.g. Product Discovery Squad',
+                suffixIcon: nameError == null
+                    ? null
+                    : const Icon(Icons.error_outline,
+                        color: Colors.red, size: 18),
+              ),
+              if (nameError != null) ...[
+                const SizedBox(height: 4),
+                Text(nameError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12)),
+              ],
+              const LaunchModalFieldGap(),
+              LaunchModalTextField(
+                label: 'Count',
+                controller: countController,
+                keyboardType: TextInputType.number,
+                hint: 'e.g. 6',
+              ),
+              const LaunchModalFieldGap(),
+              LaunchModalTextField(
+                label: 'Primary Role / Focus',
+                controller: roleController,
+                maxLines: 2,
+                hint: 'What does this squad own?',
+              ),
+              const LaunchModalFieldGap(),
+              LaunchModalTextField(
+                label: 'Key Skills / Cross-functional Coverage',
+                controller: skillsController,
+                maxLines: 3,
+                hint: 'List the capabilities needed by this squad.',
+              ),
+            ],
+          ),
+          actions: [
+            LaunchModalCancelButton(
+              label: 'Cancel',
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
+            LaunchModalPrimaryButton(
+              label: 'Add Team',
+              icon: Icons.add,
+              onPressed: () {
+                final name = nameController.text.trim();
+                if (name.isEmpty) {
+                  setDialogState(
+                      () => nameError = 'Enter a squad or team name.');
+                  return;
+                }
+                Navigator.pop(
+                  dialogContext,
+                  TeamRow(
+                    name: name,
+                    count: countController.text.trim().isEmpty
+                        ? '1'
+                        : countController.text.trim(),
+                    role: roleController.text.trim(),
+                    skills: skillsController.text.trim(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+
+    nameController.dispose();
+    countController.dispose();
+    roleController.dispose();
+    skillsController.dispose();
+
+    if (!mounted || team == null) return;
+    setState(() => _teams.add(team));
     _scheduleAutoSave();
   }
 

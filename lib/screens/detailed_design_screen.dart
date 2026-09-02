@@ -9,6 +9,7 @@ import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/detailed_design_table_widget.dart';
@@ -48,8 +49,8 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
   bool _isAutoGenerating = false;
   String _methodology = 'Hybrid'; // Waterfall | Hybrid | Agile
 
-  // ── Security & compliance controls (local) ──
-  final List<_SecurityControl> _securityControls = const [
+  // ── Security & compliance controls ──
+  final List<_SecurityControl> _securityControls = [
     _SecurityControl(
       id: 'SEC-001',
       requirement: 'Authentication & authorization controls',
@@ -75,6 +76,93 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       status: 'Defined',
     ),
   ];
+
+  void _addSecurityControl() async {
+    final result = await _showSecurityControlDialog();
+    if (result == null) return;
+    setState(() => _securityControls.add(result));
+  }
+
+  void _editSecurityControl(int index) async {
+    final result = await _showSecurityControlDialog(_securityControls[index]);
+    if (result == null) return;
+    setState(() => _securityControls[index] = result);
+  }
+
+  Future<_SecurityControl?> _showSecurityControlDialog([
+    _SecurityControl? existing,
+  ]) async {
+    final id = TextEditingController(text: existing?.id ?? '');
+    final requirement =
+        TextEditingController(text: existing?.requirement ?? '');
+    final standard = TextEditingController(text: existing?.standard ?? '');
+    var status = existing?.status ?? 'Pending';
+    final result = await showDialog<_SecurityControl>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(existing == null
+              ? 'Add security control'
+              : 'Edit security control'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                    controller: id,
+                    decoration: const InputDecoration(labelText: 'Control ID')),
+                TextField(
+                    controller: requirement,
+                    decoration:
+                        const InputDecoration(labelText: 'Requirement')),
+                TextField(
+                    controller: standard,
+                    decoration: const InputDecoration(
+                        labelText: 'Standard / reference')),
+                DropdownButtonFormField<String>(
+                  initialValue: _safeDropdownValue(status,
+                      const ['Defined', 'In Progress', 'Pending', 'Verified']),
+                  decoration: const InputDecoration(labelText: 'Status'),
+                  items: const ['Defined', 'In Progress', 'Pending', 'Verified']
+                      .map((value) =>
+                          DropdownMenuItem(value: value, child: Text(value)))
+                      .toList(),
+                  onChanged: (value) =>
+                      setDialogState(() => status = value ?? status),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () {
+                if (requirement.text.trim().isEmpty) return;
+                Navigator.pop(
+                    dialogContext,
+                    _SecurityControl(
+                      id: id.text.trim().isEmpty
+                          ? 'SEC-${_securityControls.length + 1}'
+                              .padLeft(7, '0')
+                          : id.text.trim(),
+                      requirement: requirement.text.trim(),
+                      standard: standard.text.trim(),
+                      status: status,
+                    ));
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+    id.dispose();
+    requirement.dispose();
+    standard.dispose();
+    return result;
+  }
 
   // ── Non-functional requirements (local) ──
   final List<_NFRItem> _nfrItems = const [
@@ -467,8 +555,10 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
             LaunchPhaseNavigation(
               backLabel: PlanningPhaseNavigation.backLabel('detailed_design'),
               nextLabel: PlanningPhaseNavigation.nextLabel('detailed_design'),
-              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'detailed_design'),
-              onNext: () => PlanningPhaseNavigation.goToNext(context, 'detailed_design'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(
+                  context, 'detailed_design'),
+              onNext: () =>
+                  PlanningPhaseNavigation.goToNext(context, 'detailed_design'),
             ),
           ],
         ),
@@ -584,7 +674,9 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                   pattern: pattern,
                   onEdit: () =>
                       _showArchPatternEditor(entry: pattern, index: index),
-                  onDelete: () {
+                  onDelete: () async {
+                    if (!await _confirmDelete('architecture pattern')) return;
+                    if (!mounted) return;
                     setState(() {
                       _archPatterns.removeAt(index);
                     });
@@ -607,6 +699,10 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
     'Deprecated',
   ];
 
+  static String _safeDropdownValue(String? value, List<String> options) {
+    return value != null && options.contains(value) ? value : options.first;
+  }
+
   static const List<MapEntry<IconData, Color>> _archIconOptions = [
     MapEntry(Icons.hub_outlined, Color(0xFFB8860B)),
     MapEntry(Icons.router_outlined, Color(0xFFFFC812)),
@@ -625,9 +721,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
     final nameController = TextEditingController(text: entry?.name ?? '');
     final descController =
         TextEditingController(text: entry?.description ?? '');
-    var selectedStatus = _archStatusOptions.contains(entry?.status)
-        ? entry!.status
-        : _archStatusOptions.first;
+    var selectedStatus = _safeDropdownValue(entry?.status, _archStatusOptions);
     var selectedIconIndex = 0;
     if (entry != null) {
       final match = _archIconOptions.indexWhere(
@@ -970,14 +1064,135 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       headerIcon: Icons.shield_outlined,
       headerIconColor: const Color(0xFFDC2626),
       child: Column(
-        children: _securityControls.map((control) {
-          return _SecurityControlCard(control: control);
-        }).toList(),
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              onPressed: _addSecurityControl,
+              icon: const Icon(Icons.add),
+              label: const Text('Add control'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ..._securityControls.asMap().entries.map((entry) {
+            return _SecurityControlCard(
+              control: entry.value,
+              onEdit: () => _editSecurityControl(entry.key),
+              onDelete: () =>
+                  setState(() => _securityControls.removeAt(entry.key)),
+            );
+          }),
+        ],
       ),
     );
   }
 
   // ── NON-FUNCTIONAL REQUIREMENTS SECTION ───────────────────────
+
+  void _addNfrItem() async {
+    final result = await _showNfrDialog();
+    if (result == null) return;
+    setState(() => _nfrItems.add(result));
+  }
+
+  void _editNfrItem(int index) async {
+    final result = await _showNfrDialog(_nfrItems[index]);
+    if (result == null) return;
+    setState(() => _nfrItems[index] = result);
+  }
+
+  Future<_NFRItem?> _showNfrDialog([_NFRItem? existing]) async {
+    final id = TextEditingController(text: existing?.id ?? '');
+    final requirement =
+        TextEditingController(text: existing?.requirement ?? '');
+    final target = TextEditingController(text: existing?.target ?? '');
+    var category = existing?.category ?? 'Performance';
+    var status = existing?.status ?? 'Draft';
+    final result = await showDialog<_NFRItem>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(existing == null ? 'Add NFR' : 'Edit NFR'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                    controller: id,
+                    decoration: const InputDecoration(labelText: 'NFR ID')),
+                DropdownButtonFormField<String>(
+                  initialValue: _safeDropdownValue(category, const [
+                    'Performance',
+                    'Scalability',
+                    'Availability',
+                    'Recoverability',
+                    'Maintainability'
+                  ]),
+                  decoration: const InputDecoration(labelText: 'Category'),
+                  items: const [
+                    'Performance',
+                    'Scalability',
+                    'Availability',
+                    'Recoverability',
+                    'Maintainability'
+                  ]
+                      .map((value) =>
+                          DropdownMenuItem(value: value, child: Text(value)))
+                      .toList(),
+                  onChanged: (value) =>
+                      setDialogState(() => category = value ?? category),
+                ),
+                TextField(
+                    controller: requirement,
+                    decoration:
+                        const InputDecoration(labelText: 'Requirement')),
+                TextField(
+                    controller: target,
+                    decoration: const InputDecoration(labelText: 'Target')),
+                DropdownButtonFormField<String>(
+                  initialValue: _safeDropdownValue(
+                      status, const ['Draft', 'Specified', 'Verified']),
+                  decoration: const InputDecoration(labelText: 'Status'),
+                  items: const ['Draft', 'Specified', 'Verified']
+                      .map((value) =>
+                          DropdownMenuItem(value: value, child: Text(value)))
+                      .toList(),
+                  onChanged: (value) =>
+                      setDialogState(() => status = value ?? status),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () {
+                if (requirement.text.trim().isEmpty) return;
+                Navigator.pop(
+                    dialogContext,
+                    _NFRItem(
+                      id: id.text.trim().isEmpty
+                          ? 'NFR-${_nfrItems.length + 1}'.padLeft(8, '0')
+                          : id.text.trim(),
+                      category: category,
+                      requirement: requirement.text.trim(),
+                      target: target.text.trim(),
+                      status: status,
+                    ));
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+    id.dispose();
+    requirement.dispose();
+    target.dispose();
+    return result;
+  }
 
   Widget _buildNFRSection() {
     return ExecutionPanelShell(
@@ -989,11 +1204,177 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       headerIcon: Icons.speed_outlined,
       headerIconColor: const Color(0xFFD97706),
       child: Column(
-        children: _nfrItems.map((item) {
-          return _NFRCard(item: item);
-        }).toList(),
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              onPressed: _addNfrItem,
+              icon: const Icon(Icons.add),
+              label: const Text('Add NFR'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ..._nfrItems.asMap().entries.map((entry) => _NFRCard(
+                item: entry.value,
+                onEdit: () => _editNfrItem(entry.key),
+                onDelete: () async {
+                  if (!await _confirmDelete('NFR')) return;
+                  if (!mounted) return;
+                  setState(() => _nfrItems.removeAt(entry.key));
+                },
+              )),
+        ],
       ),
     );
+  }
+
+  Future<bool> _confirmDelete(String itemType) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => LaunchModalShell(
+        icon: Icons.delete_outline_rounded,
+        accent: const Color(0xFFDC2626),
+        title: 'Delete $itemType?',
+        subtitle: 'This action cannot be undone.',
+        body: Text(
+          'Are you sure you want to remove this $itemType? Any unsaved content will be permanently lost.',
+          style: const TextStyle(
+              fontSize: 14, color: Color(0xFF4B5563), height: 1.5),
+        ),
+        actions: [
+          LaunchModalCancelButton(
+            label: 'Keep it',
+            onPressed: () => Navigator.pop(dialogContext, false),
+          ),
+          LaunchModalDangerButton(
+            label: 'Delete',
+            onPressed: () => Navigator.pop(dialogContext, true),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
+  void _addAdrRecord() async {
+    final result = await _showAdrDialog();
+    if (result == null) return;
+    setState(() => _adrRecords.add(result));
+  }
+
+  void _editAdrRecord(int index) async {
+    final result = await _showAdrDialog(_adrRecords[index]);
+    if (result == null) return;
+    setState(() => _adrRecords[index] = result);
+  }
+
+  Future<_ADRecord?> _showAdrDialog([_ADRecord? existing]) async {
+    final id = TextEditingController(text: existing?.id ?? '');
+    final title = TextEditingController(text: existing?.title ?? '');
+    final contextController =
+        TextEditingController(text: existing?.context ?? '');
+    final decision = TextEditingController(text: existing?.decision ?? '');
+    var status = existing?.status ?? 'Proposed';
+    String? titleError;
+    final result = await showDialog<_ADRecord>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => LaunchModalShell(
+          icon: Icons.gavel_outlined,
+          accent: const Color(0xFFD97706),
+          title: existing == null
+              ? 'Add architecture decision'
+              : 'Edit architecture decision',
+          subtitle: 'Capture the decision, rationale, and lifecycle status.',
+          body: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LaunchModalTextField(
+                label: 'ADR ID',
+                controller: id,
+                hint: 'e.g. ADR-0001',
+              ),
+              const LaunchModalFieldGap(),
+              LaunchModalTextField(
+                label: 'Decision Title',
+                controller: title,
+                hint: 'What decision is being recorded?',
+              ),
+              if (titleError != null) ...[
+                const SizedBox(height: 4),
+                Text(titleError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12)),
+              ],
+              const LaunchModalFieldGap(),
+              LaunchModalTextField(
+                label: 'Context',
+                controller: contextController,
+                maxLines: 3,
+                hint: 'Why was this decision needed?',
+              ),
+              const LaunchModalFieldGap(),
+              LaunchModalTextField(
+                label: 'Decision',
+                controller: decision,
+                maxLines: 3,
+                hint: 'What was decided and why?',
+              ),
+              const LaunchModalFieldGap(),
+              LaunchModalDropdown<String>(
+                label: 'Status',
+                value: _safeDropdownValue(status,
+                    const ['Proposed', 'Accepted', 'Deprecated', 'Superseded']),
+                items: const [
+                  'Proposed',
+                  'Accepted',
+                  'Deprecated',
+                  'Superseded'
+                ],
+                onChanged: (value) =>
+                    setDialogState(() => status = value ?? status),
+              ),
+            ],
+          ),
+          actions: [
+            LaunchModalCancelButton(
+              label: 'Cancel',
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
+            LaunchModalPrimaryButton(
+              label: 'Save',
+              icon: Icons.check,
+              onPressed: () {
+                final trimmedTitle = title.text.trim();
+                if (trimmedTitle.isEmpty) {
+                  setDialogState(() => titleError = 'Enter a decision title.');
+                  return;
+                }
+                Navigator.pop(
+                  dialogContext,
+                  _ADRecord(
+                    id: id.text.trim().isEmpty
+                        ? 'ADR-${_adrRecords.length + 1}'.padLeft(8, '0')
+                        : id.text.trim(),
+                    title: trimmedTitle,
+                    context: contextController.text.trim(),
+                    decision: decision.text.trim(),
+                    status: status,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+    id.dispose();
+    title.dispose();
+    contextController.dispose();
+    decision.dispose();
+    return result;
   }
 
   // ── DESIGN DECISION LOG / ADR SECTION ─────────────────────────
@@ -1008,9 +1389,26 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       headerIcon: Icons.gavel_outlined,
       headerIconColor: const Color(0xFFB8860B),
       child: Column(
-        children: _adrRecords.map((record) {
-          return _ADRecordCard(record: record);
-        }).toList(),
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              onPressed: _addAdrRecord,
+              icon: const Icon(Icons.add),
+              label: const Text('Add ADR'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ..._adrRecords.asMap().entries.map((entry) => _ADRecordCard(
+                record: entry.value,
+                onEdit: () => _editAdrRecord(entry.key),
+                onDelete: () async {
+                  if (!await _confirmDelete('architecture decision')) return;
+                  if (!mounted) return;
+                  setState(() => _adrRecords.removeAt(entry.key));
+                },
+              )),
+        ],
       ),
     );
   }
@@ -1470,8 +1868,14 @@ class _ArchitecturePatternCard extends StatelessWidget {
 }
 
 class _SecurityControlCard extends StatelessWidget {
-  const _SecurityControlCard({required this.control});
+  const _SecurityControlCard({
+    required this.control,
+    required this.onEdit,
+    required this.onDelete,
+  });
   final _SecurityControl control;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -1528,6 +1932,16 @@ class _SecurityControlCard extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            tooltip: 'Edit control',
+            onPressed: onEdit,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, size: 18),
+            tooltip: 'Delete control',
+            onPressed: onDelete,
+          ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
@@ -1547,8 +1961,14 @@ class _SecurityControlCard extends StatelessWidget {
 }
 
 class _NFRCard extends StatelessWidget {
-  const _NFRCard({required this.item});
+  const _NFRCard({
+    required this.item,
+    required this.onEdit,
+    required this.onDelete,
+  });
   final _NFRItem item;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -1619,6 +2039,16 @@ class _NFRCard extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            tooltip: 'Edit NFR',
+            onPressed: onEdit,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, size: 18),
+            tooltip: 'Delete NFR',
+            onPressed: onDelete,
+          ),
           ExecutionStatusBadge(label: item.status),
         ],
       ),
@@ -1627,8 +2057,14 @@ class _NFRCard extends StatelessWidget {
 }
 
 class _ADRecordCard extends StatelessWidget {
-  const _ADRecordCard({required this.record});
+  const _ADRecordCard({
+    required this.record,
+    required this.onEdit,
+    required this.onDelete,
+  });
   final _ADRecord record;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -1664,6 +2100,16 @@ class _ADRecordCard extends StatelessWidget {
                 child: Text(record.title,
                     style: const TextStyle(
                         fontSize: 14, fontWeight: FontWeight.w800)),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                tooltip: 'Edit ADR',
+                onPressed: onEdit,
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, size: 18),
+                tooltip: 'Delete ADR',
+                onPressed: onDelete,
               ),
               Container(
                 padding:

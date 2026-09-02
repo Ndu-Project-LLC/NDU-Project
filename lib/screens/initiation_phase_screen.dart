@@ -138,6 +138,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
 
   bool _notesSuggestLoading = false;
   bool _businessSuggestLoading = false;
+  bool _businessAutoSuggestionRequested = false;
 
   List<String> _notesSuggestions = [];
   List<String> _businessSuggestions = [];
@@ -213,6 +214,10 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
     if (!mounted) return;
     if (!_businessFocusNode.hasFocus) {
       _businessDebounce?.cancel();
+    } else {
+      // Allow one fresh automatic request each time the user returns to the
+      // field; manual Refresh remains available for another attempt.
+      _businessAutoSuggestionRequested = false;
     }
     setState(() {});
   }
@@ -282,7 +287,9 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
 
   void _scheduleBusinessSuggestions(String value) {
     _businessDebounce?.cancel();
-    if (!_businessFocusNode.hasFocus) return;
+    if (!_businessFocusNode.hasFocus || _businessAutoSuggestionRequested) {
+      return;
+    }
     if (!_canRequestBusinessSuggestions(value)) {
       setState(() {
         _businessSuggestions = [];
@@ -347,6 +354,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
     if (!_businessFocusNode.hasFocus || !_canRequestBusinessSuggestions(text)) {
       return;
     }
+    _businessAutoSuggestionRequested = true;
     if (!_businessSuggestLoading &&
         text == _businessLastQuery &&
         _businessSuggestions.isNotEmpty) {
@@ -486,8 +494,10 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
   void _retryNotesSuggestions() =>
       _fetchNotesSuggestions(_notesController.text.trim());
 
-  void _retryBusinessSuggestions() =>
-      _fetchBusinessSuggestions(_businessCaseController.text.trim());
+  void _retryBusinessSuggestions() {
+    _businessAutoSuggestionRequested = false;
+    _fetchBusinessSuggestions(_businessCaseController.text.trim());
+  }
 
   /// Post-skip handler — called by [SkipBusinessCaseAffordance] after the
   /// user confirms the skip in [SkipBusinessCaseDialog].

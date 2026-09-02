@@ -5629,22 +5629,30 @@ $domainHints
     required String solutionDescription,
     String notes = '',
   }) async {
-    if (!OpenAiConfig.isConfigured) throw const OpenAiNotConfiguredException();
-    final uri = OpenAiConfig.chatUri();
-    final headers = await OpenAiConfig.authenticatedHeaders();
-    final body = jsonEncode(OpenAiConfig.wrapBody({
-      'model': OpenAiConfig.model,
-      'temperature': 0.6,
-      'max_completion_tokens': 1200,
-      'messages': [
-        {
-          'role': 'system',
-          'content':
-              'You are a project strategist. Write a concise, executive-ready business case. Use short paragraphs or bullets. No markdown headings.'
-        },
-        {
-          'role': 'user',
-          'content': '''
+    final fallback = _fallbackBusinessCase(
+      projectName: projectName,
+      solutionTitle: solutionTitle,
+      solutionDescription: solutionDescription,
+      notes: notes,
+    );
+    if (!OpenAiConfig.isConfigured) return fallback;
+
+    try {
+      final uri = OpenAiConfig.chatUri();
+      final headers = await OpenAiConfig.authenticatedHeaders();
+      final body = jsonEncode(OpenAiConfig.wrapBody({
+        'model': OpenAiConfig.model,
+        'temperature': 0.6,
+        'max_completion_tokens': 1200,
+        'messages': [
+          {
+            'role': 'system',
+            'content':
+                'You are a project strategist. Write a concise, executive-ready business case. Use short paragraphs or bullets. No markdown headings.'
+          },
+          {
+            'role': 'user',
+            'content': '''
 Project: ${_escape(projectName)}
 Solution title: ${_escape(solutionTitle)}
 Solution description: ${_escape(solutionDescription)}
@@ -5652,20 +5660,72 @@ Notes: ${notes.trim().isEmpty ? 'None' : _escape(notes)}
 
 Include: problem statement, proposed solution, benefits, risks, success metrics, and a brief recommendation.
 Return plain text only.'''
-        }
-      ],
-    }));
+          }
+        ],
+      }));
 
-    final response = await _client
-        .post(uri, headers: headers, body: body)
-        .timeout(const Duration(seconds: 18));
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('OpenAI error ${response.statusCode}: ${response.body}');
+      final response = await _client
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 18));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(
+            'OpenAI error ${response.statusCode}: ${response.body}');
+      }
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final content = _stripAsterisks(OpenAiConfig.extractContent(data)).trim();
+      if (content.isEmpty) throw const FormatException('Empty AI response');
+      return content;
+    } catch (error) {
+      // Business-case generation must remain usable during provider outages,
+      // expired auth sessions, quota exhaustion, or malformed responses.
+      debugPrint(
+          'Business case AI unavailable; using editable local draft: $error');
+      return fallback;
     }
-    final data =
-        jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-    final content = OpenAiConfig.extractContent(data);
-    return _stripAsterisks(content).trim();
+  }
+
+  String _fallbackBusinessCase({
+    required String projectName,
+    required String solutionTitle,
+    required String solutionDescription,
+    required String notes,
+  }) {
+    final name =
+        projectName.trim().isEmpty ? 'This project' : projectName.trim();
+    final title = solutionTitle.trim().isEmpty
+        ? 'the proposed solution'
+        : solutionTitle.trim();
+    final description = solutionDescription.trim().isEmpty
+        ? 'The solution details require confirmation from the project team.'
+        : solutionDescription.trim();
+    final context = notes.trim().isEmpty
+        ? 'Additional project assumptions and evidence are to be confirmed.'
+        : notes.trim();
+
+    return '''Problem statement
+$name requires a clear, agreed approach to address the need described in the project context. The current notes should be validated with stakeholders before approval.
+
+Proposed solution
+$title: $description
+
+Expected benefits
+- Aligns stakeholders around the stated project need and intended outcome.
+- Provides a basis for defining scope, ownership, delivery checkpoints, and success measures.
+- Creates an editable starting point for validating value, risks, and feasibility.
+
+Risks and assumptions
+- The current context may not include all operational, technical, financial, or compliance constraints.
+- Benefits, costs, dependencies, and delivery dates must be validated before commitment.
+- Key assumptions: $context
+
+Success metrics
+- Stakeholder-approved scope and acceptance criteria.
+- Measurable progress against agreed milestones and budget controls.
+- Demonstrable improvement against the baseline outcome selected by the project team.
+
+Recommendation
+Use this draft as a starting point, confirm the assumptions with the relevant subject-matter experts, and update the business case before final approval.''';
   }
 
   Future<List<BenefitLineItemInput>> generateBenefitLineItems({

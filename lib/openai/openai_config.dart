@@ -230,6 +230,12 @@ class OpenAiAutocompleteService {
   static const Duration _timeout = Duration(seconds: 12);
   static const double _temperature = 0.35;
 
+  // Autocomplete is intentionally conservative: it is a convenience feature,
+  // and must not consume the quota needed by full AI actions while a user types.
+  static const Duration _requestCooldown = Duration(seconds: 20);
+  static const String _autocompleteModel = 'gpt-4o-mini';
+  DateTime? _lastRequestAt;
+
   Future<List<String>> fetchSuggestions({
     required String fieldName,
     required String currentText,
@@ -237,15 +243,24 @@ class OpenAiAutocompleteService {
     int maxSuggestions = 3,
   }) async {
     if (currentText.trim().isEmpty) return const [];
+    final fallback = _fallbackSuggestions(currentText, maxSuggestions);
     if (!OpenAiConfig.isConfigured) {
-      throw const OpenAiNotConfiguredException();
+      return fallback;
     }
 
     final uri = OpenAiConfig.responsesUri();
-    final headers = await OpenAiConfig.authenticatedHeaders();
+    final now = DateTime.now();
+    if (_lastRequestAt != null &&
+        now.difference(_lastRequestAt!) < _requestCooldown) {
+      return fallback;
+    }
+    _lastRequestAt = now;
 
     final payload = {
-      'model': OpenAiConfig.model,
+      // Lets the proxy isolate low-value autocomplete traffic from full AI
+      // actions, so typing cannot exhaust the user's substantive AI quota.
+      'purpose': 'autocomplete',
+      'model': _autocompleteModel,
       'temperature': _temperature,
       'max_tokens': 300,
       'system':
@@ -260,6 +275,7 @@ class OpenAiAutocompleteService {
     };
 
     try {
+      final headers = await OpenAiConfig.authenticatedHeaders();
       final warn = OpenAiConfig.configurationWarning();
       if (warn != null) {
         debugPrint(
@@ -272,7 +288,9 @@ class OpenAiAutocompleteService {
           .timeout(_timeout);
 
       if (response.statusCode == 429) {
-        throw Exception('OpenAI rate limit reached. Please try again shortly.');
+        debugPrint(
+            'OpenAI autocomplete rate limited; using local suggestions.');
+        return fallback;
       }
       if (response.statusCode == 401) {
         throw Exception(
@@ -288,6 +306,16 @@ class OpenAiAutocompleteService {
             'OpenAI access denied (${response.statusCode}). Please check your API key.');
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
+        final responseText = response.body.toLowerCase();
+        final isTransient = response.statusCode == 408 ||
+            response.statusCode >= 500 ||
+            responseText.contains('rate limit') ||
+            responseText.contains('resource-exhausted');
+        if (isTransient) {
+          debugPrint(
+              'OpenAI autocomplete temporarily unavailable (${response.statusCode}); using local suggestions.');
+          return fallback;
+        }
         throw Exception(
           'OpenAI request failed (${response.statusCode}): ${response.body}',
         );
@@ -307,9 +335,26 @@ class OpenAiAutocompleteService {
 
       return _fallbackSuggestions(currentText, maxSuggestions);
     } on TimeoutException {
-      throw Exception('OpenAI request timed out. Please retry in a moment.');
-    } on FormatException catch (e) {
-      throw Exception('Failed to parse OpenAI response: $e');
+      debugPrint('OpenAI autocomplete timed out; using local suggestions.');
+      return fallback;
+    } on FormatException {
+      debugPrint(
+          'OpenAI autocomplete response was invalid; using local suggestions.');
+      return fallback;
+    } catch (error) {
+      // Network failures are non-fatal for inline autocomplete. Preserve
+      // authentication/configuration errors, but keep the editor useful when
+      // the remote provider is temporarily unavailable.
+      final message = error.toString().toLowerCase();
+      if (message.contains('authentication') ||
+          message.contains('sign in') ||
+          message.contains('api key') ||
+          message.contains('access denied')) {
+        return fallback;
+      }
+      debugPrint(
+          'OpenAI autocomplete failed: $error; using local suggestions.');
+      return fallback;
     }
   }
 

@@ -125,6 +125,11 @@ function setCorsHeaders(req, res) {
 
 // (transformToClaudeFormat removed — project uses OpenAI, not Claude/Anthropic)
 
+function rawPayloadPurpose(body) {
+  const payload = body?.payload || body || {};
+  return payload?.purpose === 'autocomplete' ? 'autocomplete' : 'full';
+}
+
 function getRequestOrigin(req) {
   return req.headers.origin || getCorsAllowedOrigins().find((origin) => typeof origin === 'string') || 'https://ndu-d3f60.web.app';
 }
@@ -286,11 +291,17 @@ exports.openaiProxy = functions
       return;
     }
 
+    const rawPayload = req.body?.payload || req.body || {};
+
     try {
-      // Per-user rate limit: 30 OpenAI calls/hour per authenticated user
-      // (gpt-4o completions are non-trivially expensive; protects against a single
-      // compromised account draining credits before it can be suspended).
-      await checkRateLimit(decodedToken.uid, 'openai_proxy', 30);
+      // Keep inline autocomplete traffic in a separate, tighter bucket so it
+      // cannot consume the quota reserved for substantive AI actions.
+      const requestPurpose = rawPayloadPurpose(req.body);
+      const rateLimitAction = requestPurpose === 'autocomplete'
+          ? 'openai_autocomplete'
+          : 'openai_proxy';
+      const rateLimit = requestPurpose === 'autocomplete' ? 12 : 30;
+      await checkRateLimit(decodedToken.uid, rateLimitAction, rateLimit);
 
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
@@ -301,7 +312,6 @@ exports.openaiProxy = functions
       
       // The app sends OpenAI-format requests directly — no transformation needed.
       // Just forward the payload as-is to OpenAI's Chat Completions API.
-      const rawPayload = req.body?.payload || req.body || {};
       if (!Array.isArray(rawPayload.messages) || rawPayload.messages.length === 0) {
         res.status(400).json({ error: 'Request must include a non-empty messages array.' });
         return;
@@ -335,12 +345,31 @@ exports.openaiProxy = functions
       });
       
       const data = await openaiResponse.json();
+
+      // Preserve provider throttling semantics so clients can back off instead
+      // of treating a temporary quota limit as a permanent server failure.
+      if (openaiResponse.status === 429) {
+        const retryAfter = openaiResponse.headers.get('retry-after');
+        if (retryAfter) res.set('Retry-After', retryAfter);
+        res.status(429).json(data);
+        return;
+      }
       
       // Return OpenAI's response to the client
       res.status(openaiResponse.status).json(data);
       
     } catch (error) {
       console.error('OpenAI proxy error:', error);
+      if ((error instanceof functions.https.HttpsError &&
+          error.code === 'resource-exhausted') ||
+          error?.code === 'resource-exhausted') {
+        res.set('Retry-After', '60');
+        res.status(429).json({
+          error: 'Rate limit exceeded',
+          message: error.message,
+        });
+        return;
+      }
       res.status(500).json({ 
         error: 'Failed to process request',
         message: error.message 

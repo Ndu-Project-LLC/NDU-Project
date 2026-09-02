@@ -31,14 +31,27 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
   final _siteContextCtrl = TextEditingController();
 
   final _actions = [
-    ('suggest', 'Suggest WBS split', Icons.auto_awesome,
-        'Full Level 1 + Level 2 from global/regional/local projects',
-        LightModeColors.accent),
-    ('expand', 'Expand a node', Icons.search,
-        'Level 2 children for a selected Level 1 node',
-        const Color(0xFFFFC812)),
-    ('validate', 'Validate WBS', Icons.shield,
-        'Review against best practices', const Color(0xFFB8860B)),
+    (
+      'suggest',
+      'Suggest WBS split',
+      Icons.auto_awesome,
+      'Full Level 1 + Level 2 from global/regional/local projects',
+      LightModeColors.accent
+    ),
+    (
+      'expand',
+      'Expand a node',
+      Icons.search,
+      'Level 2 children for a selected Level 1 node',
+      const Color(0xFFFFC812)
+    ),
+    (
+      'validate',
+      'Validate WBS',
+      Icons.shield,
+      'Review against best practices',
+      const Color(0xFFB8860B)
+    ),
   ];
 
   @override
@@ -54,7 +67,8 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
     if (wbs == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('WBS not initialized yet. Please try again.')),
+          const SnackBar(
+              content: Text('WBS not initialized yet. Please try again.')),
         );
       }
       return;
@@ -99,9 +113,8 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
         industry: _industryCtrl.text.trim().isEmpty
             ? null
             : _industryCtrl.text.trim(),
-        region: _regionCtrl.text.trim().isEmpty
-            ? null
-            : _regionCtrl.text.trim(),
+        region:
+            _regionCtrl.text.trim().isEmpty ? null : _regionCtrl.text.trim(),
         siteContext: _siteContextCtrl.text.trim().isEmpty
             ? null
             : _siteContextCtrl.text.trim(),
@@ -110,7 +123,8 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
 
       setState(() {
         _suggestions =
-            (result['suggestions'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+            (result['suggestions'] as List?)?.cast<Map<String, dynamic>>() ??
+                [];
         _disclaimer = result['disclaimer'] ?? '';
         _usedFallback = result['usedFallback'] ?? false;
         _loading = false;
@@ -131,7 +145,8 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Maximum 3 top-level WBS items. Remove one first to add another.'),
+            content: Text(
+                'Maximum 3 top-level WBS items. Remove one first to add another.'),
             backgroundColor: Color(0xFFEF4444),
           ),
         );
@@ -203,302 +218,295 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.auto_awesome,
-                      color: LightModeColors.accent, size: 20),
-                  SizedBox(width: 8),
-                  Text('AI WBS Generator',
-                      style: TextStyle(
-                          color: Color(0xFF1A1D1F),
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFC812).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text('KAZ AI',
-                    style: TextStyle(
-                        color: Color(0xFFFFC812),
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Disclaimer
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: LightModeColors.accent.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: LightModeColors.accent.withValues(alpha: 0.4)),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.warning_amber,
-                    color: LightModeColors.accent, size: 16),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'All AI-generated WBS nodes must be validated by a qualified SME before baseline.',
-                    style: TextStyle(
-                        color: Color(0xFF6B7280), fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Context inputs
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE4E7EC)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return RepaintBoundary(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.location_on,
-                        color: LightModeColors.accent, size: 14),
-                    SizedBox(width: 6),
-                    Text('PROJECT CONTEXT (IMPROVES AI SUGGESTIONS)',
+                    Icon(Icons.auto_awesome,
+                        color: LightModeColors.accent, size: 20),
+                    SizedBox(width: 8),
+                    Text('AI WBS Generator',
                         style: TextStyle(
-                            color: LightModeColors.accent,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1)),
+                            color: Color(0xFF1A1D1F),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold)),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                          'Industry', _industryCtrl,
-                          'e.g. Manufacturing, Oil & Gas'),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildTextField(
-                          'Region', _regionCtrl,
-                          'e.g. East Africa, Southeast Asia'),
-                    ),
-                  ],
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFC812).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text('KAZ AI',
+                      style: TextStyle(
+                          color: Color(0xFFFFC812),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold)),
                 ),
-                const SizedBox(height: 8),
-                _buildTextField(
-                    'Site-specific context', _siteContextCtrl,
-                    'e.g. Greenfield site, existing grid connection...',
-                    maxLines: 3),
               ],
             ),
-          ),
-          const SizedBox(height: 16),
-          // Action grid
-          Row(
-            children: _actions.map((a) {
-              final isActive = _activeAction == a.$1;
-              return Expanded(
-                child: Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: _loading ? null : () => _runAction(a.$1),
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? a.$5.withValues(alpha: 0.08)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isActive
-                                ? a.$5
-                                : const Color(0xFFE4E7EC),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(a.$3, color: a.$5, size: 20),
-                            const SizedBox(height: 8),
-                            Text(a.$2,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                    color: Color(0xFF1A1D1F),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 2),
-                            Text(a.$4,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                    color: Color(0xFF6B7280),
-                                    fontSize: 11)),
-                          ],
-                        ),
-                      ),
+            const SizedBox(height: 16),
+            // Disclaimer
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: LightModeColors.accent.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: LightModeColors.accent.withValues(alpha: 0.4)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.warning_amber,
+                      color: LightModeColors.accent, size: 16),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'All AI-generated WBS nodes must be validated by a qualified SME before baseline.',
+                      style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                     ),
                   ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 24),
-          // Loading
-          if (_loading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(48),
-                child: Column(
-                  children: [
-                    CircularProgressIndicator(
-                        color: LightModeColors.accent),
-                    SizedBox(height: 12),
-                    Text('KAZ AI is analyzing similar projects...',
-                        style: TextStyle(
-                            color: Color(0xFF6B7280), fontSize: 13)),
-                  ],
-                ),
+                ],
               ),
             ),
-          // Results
-          if (!_loading && _suggestions.isNotEmpty) ...[
-            if (_usedFallback)
-              Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFFE4E7EC)),
-                ),
-                child: const Text(
-                  '⚠️ Used KAZ AI fallback response (live model unavailable).',
-                  style: TextStyle(color: Color(0xFF6B7280), fontSize: 11),
-                ),
-              ),
-            ..._suggestions.map((s) => _buildSuggestionCard(s)),
-            if (_disclaimer.isNotEmpty)
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: LightModeColors.accent.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                      color: LightModeColors.accent
-                          .withValues(alpha: 0.4)),
-                ),
-                child: Text(_disclaimer,
-                    style: const TextStyle(
-                        color: Color(0xFFD97706), fontSize: 12)),
-              ),
-          ],
-          // Empty state when no results and not loading
-          if (!_loading && _suggestions.isEmpty && _activeAction != null) ...[
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            // Context inputs
             Container(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFFE4E7EC)),
-              ),
-              child: const Column(
-                children: [
-                  Icon(Icons.lightbulb_outline,
-                      color: Color(0xFF9CA3AF), size: 32),
-                  SizedBox(height: 8),
-                  Text('No suggestions returned for this action.',
-                      style:
-                          TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
-                  SizedBox(height: 4),
-                  Text('Try refining the project context inputs above.',
-                      style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
               ),
-            ),
-          ],
-          if (!_loading && _activeAction == null) ...[
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF9FAFB),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE4E7EC)),
-              ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
-                      Icon(Icons.tips_and_updates,
-                          color: LightModeColors.accent, size: 18),
-                      SizedBox(width: 8),
-                      Text('How the AI WBS Generator works',
+                      Icon(Icons.location_on,
+                          color: LightModeColors.accent, size: 14),
+                      SizedBox(width: 6),
+                      Text('PROJECT CONTEXT (IMPROVES AI SUGGESTIONS)',
                           style: TextStyle(
-                              color: Color(0xFF1A1D1F),
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700)),
+                              color: LightModeColors.accent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1)),
                     ],
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'KAZ AI compares your project against historical global, regional, and local projects. The more context you provide (industry, region, site-specific notes), the more accurate the suggested Level 1 / Level 2 decomposition.',
-                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField('Industry', _industryCtrl,
+                            'e.g. Manufacturing, Oil & Gas'),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildTextField('Region', _regionCtrl,
+                            'e.g. East Africa, Southeast Asia'),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Pick one of the three actions above to begin. Suggestions appear as cards — review, then click "Add to WBS" to merge them into your tree.',
-                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
-                  ),
+                  const SizedBox(height: 8),
+                  _buildTextField('Site-specific context', _siteContextCtrl,
+                      'e.g. Greenfield site, existing grid connection...',
+                      maxLines: 3),
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+            // Action grid
+            Row(
+              children: _actions.map((a) {
+                final isActive = _activeAction == a.$1;
+                return Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _loading ? null : () => _runAction(a.$1),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? a.$5.withValues(alpha: 0.08)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isActive ? a.$5 : const Color(0xFFE4E7EC),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(a.$3, color: a.$5, size: 20),
+                              const SizedBox(height: 8),
+                              Text(a.$2,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      color: Color(0xFF1A1D1F),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 2),
+                              Text(a.$4,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      color: Color(0xFF6B7280), fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 24),
+            // Loading
+            if (_loading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(48),
+                  child: Column(
+                    children: [
+                      CircularProgressIndicator(color: LightModeColors.accent),
+                      SizedBox(height: 12),
+                      Text('KAZ AI is analyzing similar projects...',
+                          style: TextStyle(
+                              color: Color(0xFF6B7280), fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ),
+            // Results
+            if (!_loading && _suggestions.isNotEmpty) ...[
+              if (_usedFallback)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFE4E7EC)),
+                  ),
+                  child: const Text(
+                    '⚠️ Used KAZ AI fallback response (live model unavailable).',
+                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 11),
+                  ),
+                ),
+              ..._suggestions.map((s) => _buildSuggestionCard(s)),
+              if (_disclaimer.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: LightModeColors.accent.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                        color: LightModeColors.accent.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(_disclaimer,
+                      style: const TextStyle(
+                          color: Color(0xFFD97706), fontSize: 12)),
+                ),
+            ],
+            // Empty state when no results and not loading
+            if (!_loading && _suggestions.isEmpty && _activeAction != null) ...[
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE4E7EC)),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(Icons.lightbulb_outline,
+                        color: Color(0xFF9CA3AF), size: 32),
+                    SizedBox(height: 8),
+                    Text('No suggestions returned for this action.',
+                        style:
+                            TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+                    SizedBox(height: 4),
+                    Text('Try refining the project context inputs above.',
+                        style:
+                            TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+                  ],
+                ),
+              ),
+            ],
+            if (!_loading && _activeAction == null) ...[
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE4E7EC)),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.tips_and_updates,
+                            color: LightModeColors.accent, size: 18),
+                        SizedBox(width: 8),
+                        Text('How the AI WBS Generator works',
+                            style: TextStyle(
+                                color: Color(0xFF1A1D1F),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'KAZ AI compares your project against historical global, regional, and local projects. The more context you provide (industry, region, site-specific notes), the more accurate the suggested Level 1 / Level 2 decomposition.',
+                      style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Pick one of the three actions above to begin. Suggestions appear as cards — review, then click "Add to WBS" to merge them into your tree.',
+                      style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildTextField(
-      String label, TextEditingController ctrl, String hint,
+  Widget _buildTextField(String label, TextEditingController ctrl, String hint,
       {int maxLines = 1}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -539,7 +547,8 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
   }
 
   Widget _buildSuggestionCard(Map<String, dynamic> s) {
-    final children = (s['children'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final children =
+        (s['children'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final aiSource = s['aiSource'] as String?;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

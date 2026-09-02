@@ -152,6 +152,19 @@ class SessionManager {
     });
   }
 
+  /// Records activity without creating a new timer on every pointer-move.
+  /// Pointer events can arrive dozens of times per frame while dragging.
+  void recordActivity() {
+    if (!_isEnabled) return;
+    final now = DateTime.now();
+    if (_lastActivity != null &&
+        now.difference(_lastActivity!) < const Duration(seconds: 1)) {
+      _lastActivity = now;
+      return;
+    }
+    resetTimer();
+  }
+
   /// Get the last activity time (for display in UI)
   DateTime? get lastActivity => _lastActivity;
 

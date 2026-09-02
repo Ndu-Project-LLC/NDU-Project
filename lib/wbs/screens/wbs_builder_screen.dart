@@ -66,7 +66,8 @@ class _TopDownConnectorPainter extends CustomPainter {
     }
     const firstAnchor = 72.0;
     final lastX = size.width - 72.0;
-    canvas.drawLine(const Offset(firstAnchor, 12.0), Offset(lastX, 12.0), paint);
+    canvas.drawLine(
+        const Offset(firstAnchor, 12.0), Offset(lastX, 12.0), paint);
     for (int i = 0; i < childCount; i++) {
       final x = 72.0 + (144.0 * i);
       canvas.drawLine(Offset(x, 12.0), Offset(x, size.height), paint);
@@ -225,6 +226,8 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
     if (counts.level6 > 0) levelParts.add('${counts.level6} ${fm.level6Label}');
     if (counts.level7 > 0) levelParts.add('${counts.level7} ${fm.level7Label}');
     if (counts.level8 > 0) levelParts.add('${counts.level8} ${fm.level8Label}');
+    // Keep the summary computation local for future header metrics.
+    // ignore: unused_local_variable
     final summary = levelParts.join(' · ');
 
     return Container(
@@ -303,7 +306,6 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                         _buildMethodologyBadge(wbs.methodology),
                       ],
                     ),
-
                   ],
                 ),
               ),
@@ -332,8 +334,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                 )
               else
                 Tooltip(
-                  message:
-                      'Generate Level 1 ${fm.level1Label}s with KAZ AI',
+                  message: 'Generate Level 1 ${fm.level1Label}s with KAZ AI',
                   child: FilledButton.icon(
                       onPressed: () =>
                           _generateWithKazAi(context, provider, wbs),
@@ -361,39 +362,49 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                 child: SizedBox(
                   height: 40,
                   child: SegmentedButton<bool>(
-                segments: const [
-                  ButtonSegment(
-                      value: false,
-                      label: Text('Advanced', style: TextStyle(fontSize: 12))),
-                  ButtonSegment(
-                      value: true,
-                      label: Text('Simple', style: TextStyle(fontSize: 12))),
-                ],
-                selected: {provider.viewModeSimple},
-                onSelectionChanged: (v) => provider.setViewMode(v.first),
-                style: ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                  textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                  backgroundColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return const Color(0xFFFFC812); // Yellow theme
-                    }
-                    return Colors.white;
-                  }),
-                  foregroundColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return const Color(0xFF111827);
-                    }
-                    return const Color(0xFF374151);
-                  }),
-                  side: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return const BorderSide(color: Color(0xFFFFC812));
-                    }
-                    return const BorderSide(color: Color(0xFFD1D5DB));
-                  }),
-                ),
-                ),
+                    showSelectedIcon: true,
+                    segments: const [
+                      ButtonSegment(
+                          value: false,
+                          label:
+                              Text('Advanced', style: TextStyle(fontSize: 12))),
+                      ButtonSegment(
+                          value: true,
+                          label:
+                              Text('Simple', style: TextStyle(fontSize: 12))),
+                    ],
+                    // Simple is the safe, readable default. Existing provider
+                    // state remains respected after the user changes modes.
+                    selected: {provider.viewModeSimple},
+                    onSelectionChanged: (v) => provider.setViewMode(v.first),
+                    style: ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      padding: WidgetStateProperty.all(
+                          const EdgeInsets.symmetric(horizontal: 14)),
+                      textStyle: WidgetStateProperty.all(const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w600)),
+                      backgroundColor:
+                          WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return const Color(0xFFFFC812); // Yellow theme
+                        }
+                        return Colors.white;
+                      }),
+                      foregroundColor:
+                          WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return const Color(0xFF111827);
+                        }
+                        return const Color(0xFF374151);
+                      }),
+                      side: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return const BorderSide(color: Color(0xFFFFC812));
+                        }
+                        return const BorderSide(color: Color(0xFFD1D5DB));
+                      }),
+                    ),
+                  ),
                 ),
               ),
               if (provider.viewModeSimple) ...[
@@ -402,45 +413,50 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                   child: SizedBox(
                     height: 40,
                     child: SegmentedButton<_SimpleAxis>(
-                  segments: const [
-                    ButtonSegment(
-                      value: _SimpleAxis.topDown,
-                      icon: Icon(Icons.south, size: 14),
-                      label: Text('Top Down', style: TextStyle(fontSize: 12)),
+                      segments: const [
+                        ButtonSegment(
+                          value: _SimpleAxis.topDown,
+                          icon: Icon(Icons.south, size: 14),
+                          label:
+                              Text('Top Down', style: TextStyle(fontSize: 12)),
+                        ),
+                        ButtonSegment(
+                          value: _SimpleAxis.leftRight,
+                          icon: Icon(Icons.east, size: 14),
+                          label: Text('Left Right',
+                              style: TextStyle(fontSize: 12)),
+                        ),
+                      ],
+                      selected: {_simpleAxis},
+                      onSelectionChanged: (v) =>
+                          setState(() => _simpleAxis = v.first),
+                      style: ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                        textStyle: WidgetStateProperty.all(const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w600)),
+                        backgroundColor:
+                            WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return const Color(0xFFFFC812); // Yellow theme
+                          }
+                          return Colors.white;
+                        }),
+                        foregroundColor:
+                            WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return const Color(0xFF111827);
+                          }
+                          return const Color(0xFF374151);
+                        }),
+                        side: WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return const BorderSide(color: Color(0xFFFFC812));
+                          }
+                          return const BorderSide(color: Color(0xFFD1D5DB));
+                        }),
+                      ),
                     ),
-                    ButtonSegment(
-                      value: _SimpleAxis.leftRight,
-                      icon: Icon(Icons.east, size: 14),
-                      label: Text('Left Right', style: TextStyle(fontSize: 12)),
-                    ),
-                  ],
-                  selected: {_simpleAxis},
-                  onSelectionChanged: (v) =>
-                      setState(() => _simpleAxis = v.first),
-                  style: ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                    textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                    backgroundColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return const Color(0xFFFFC812); // Yellow theme
-                      }
-                      return Colors.white;
-                    }),
-                    foregroundColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return const Color(0xFF111827);
-                      }
-                      return const Color(0xFF374151);
-                    }),
-                    side: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return const BorderSide(color: Color(0xFFFFC812));
-                      }
-                      return const BorderSide(color: Color(0xFFD1D5DB));
-                    }),
                   ),
-                  ),
-                ),
                 ),
               ],
               Tooltip(
@@ -451,8 +467,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                       _showLevel1CapMessage(context);
                       return;
                     }
-                    _showAddNodeDialog(
-                        context, provider, 1, fm.level1Label,
+                    _showAddNodeDialog(context, provider, 1, fm.level1Label,
                         parentId: wbs.level0.id);
                   },
                   icon: const Icon(Icons.add, size: 16),
@@ -916,7 +931,10 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
           Expanded(
             child: Text(
               'Level 0 = Project · Level 1 = ${fm.level1Label} · Level 2 = ${fm.level2Label} · ... up to Level ${fm.maxDepth}',
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -952,16 +970,22 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
             decoration: BoxDecoration(
               color: const Color(0xFFFFF8E1),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFFFE082).withValues(alpha: 0.5)),
+              border: Border.all(
+                  color: const Color(0xFFFFE082).withValues(alpha: 0.5)),
             ),
             child: const Icon(Icons.layers, color: Color(0xFFFFC107), size: 28),
           ),
           const SizedBox(height: 16),
           Text('No ${fm.level1Label} nodes yet.',
-              style: const TextStyle(color: Color(0xFF374151), fontSize: 15, fontWeight: FontWeight.w600)),
+              style: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          const Text('Start building your work breakdown structure by adding the first level.',
-              style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13), textAlign: TextAlign.center),
+          const Text(
+              'Start building your work breakdown structure by adding the first level.',
+              style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+              textAlign: TextAlign.center),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -972,8 +996,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                     _showLevel1CapMessage(context);
                     return;
                   }
-                  _showAddNodeDialog(
-                      context, provider, 1, fm.level1Label,
+                  _showAddNodeDialog(context, provider, 1, fm.level1Label,
                       parentId: provider.wbs!.level0.id);
                 },
                 style: FilledButton.styleFrom(
@@ -1182,7 +1205,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOut,
                 alignment: Alignment.topLeft,
-                      child: !isExpanded
+                child: !isExpanded
                     ? const SizedBox(width: double.infinity)
                     : Container(
                         // Depth guide: one thin vertical line per level.
@@ -1320,8 +1343,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                         return Padding(
                           padding: const EdgeInsets.only(bottom: _kNodeGap),
                           child: _buildRecursiveChild(
-                              context, provider, costProvider, c, fm,
-                              depth + 1,
+                              context, provider, costProvider, c, fm, depth + 1,
                               isLast: isLastChild),
                         );
                       }),
@@ -1399,236 +1421,243 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
             onTap: () => setState(() => _selectedNodeId = node.id),
             borderRadius: BorderRadius.circular(14),
             child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top row: code badge + name + badges
-          Row(
-            children: [
-              // Code badge (larger, more prominent)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                      color: accentColor.withValues(alpha: 0.3), width: 1),
-                ),
-                child: Text(
-                  isRoot ? 'ROOT' : node.code,
-                  style: TextStyle(
-                      color: accentColor.withValues(alpha: 0.9),
-                      fontSize: 11,
-                      fontFamily: appFontFamily,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.3),
-                ),
-              ),
-              if (!isRoot) ...[
-                const SizedBox(width: 6),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
-                    border:
-                        Border.all(color: accentColor.withValues(alpha: 0.2)),
-                  ),
-                  child: Text(
-                    levelLabel.toUpperCase(),
-                    style: TextStyle(
-                      color: accentColor.withValues(alpha: 0.8),
-                      fontSize: 8,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top row: code badge + name + badges
+                Row(
+                  children: [
+                    // Code badge (larger, more prominent)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: accentColor.withValues(alpha: 0.3),
+                            width: 1),
+                      ),
+                      child: Text(
+                        isRoot ? 'ROOT' : node.code,
+                        style: TextStyle(
+                            color: accentColor.withValues(alpha: 0.9),
+                            fontSize: 11,
+                            fontFamily: appFontFamily,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.3),
+                      ),
                     ),
-                  ),
-                ),
-              ],
-              const SizedBox(width: 10),
-              // Name
-              Flexible(
-                child: Text(
-                  node.name,
-                  style: TextStyle(
-                    color: const Color(0xFF1A1D1F),
-                    fontSize: isRoot ? 16 : 14,
-                    fontWeight: isRoot ? FontWeight.w800 : FontWeight.w700,
-                    letterSpacing: -0.2,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ),
-              // Badges row
-              if (node.aiGenerated) ...[
-                const SizedBox(width: 6),
-                _buildBadge('AI', const Color(0xFFFFC812), 8),
-              ],
-              if (node.isWorkPackage == true && !isRoot) ...[
-                const SizedBox(width: 4),
-                _buildBadge('WP', const Color(0xFF16A34A), 8),
-              ],
-              if (isHybrid) ...[
-                const SizedBox(width: 4),
-                _buildSmallMethodologyBadge(methodology, fm),
-              ],
-              if (linkedCount > 0) ...[
-                const SizedBox(width: 4),
-                Tooltip(
-                  message:
-                      '$linkedCount cost line${linkedCount == 1 ? '' : 's'} linked',
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFC812).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                          color:
-                              const Color(0xFFFFC812).withValues(alpha: 0.25)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.attach_money,
-                            size: 10, color: Color(0xFFFFC812)),
-                        const SizedBox(width: 2),
-                        Text('$linkedCount',
-                            style: const TextStyle(
-                                color: Color(0xFFFFC812),
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700)),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-              if (childCount > 0) ...[
-                const SizedBox(width: 4),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4F6),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.account_tree,
-                          size: 10, color: Color(0xFF6B7280)),
-                      const SizedBox(width: 3),
-                      Text('$childCount',
-                          style: const TextStyle(
-                              color: Color(0xFF4B5563),
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700)),
+                    if (!isRoot) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                              color: accentColor.withValues(alpha: 0.2)),
+                        ),
+                        child: Text(
+                          levelLabel.toUpperCase(),
+                          style: TextStyle(
+                            color: accentColor.withValues(alpha: 0.8),
+                            fontSize: 8,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
                     ],
+                    const SizedBox(width: 10),
+                    // Name
+                    Flexible(
+                      child: Text(
+                        node.name,
+                        style: TextStyle(
+                          color: const Color(0xFF1A1D1F),
+                          fontSize: isRoot ? 16 : 14,
+                          fontWeight:
+                              isRoot ? FontWeight.w800 : FontWeight.w700,
+                          letterSpacing: -0.2,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
+                    // Badges row
+                    if (node.aiGenerated) ...[
+                      const SizedBox(width: 6),
+                      _buildBadge('AI', const Color(0xFFFFC812), 8),
+                    ],
+                    if (node.isWorkPackage == true && !isRoot) ...[
+                      const SizedBox(width: 4),
+                      _buildBadge('WP', const Color(0xFF16A34A), 8),
+                    ],
+                    if (isHybrid) ...[
+                      const SizedBox(width: 4),
+                      _buildSmallMethodologyBadge(methodology, fm),
+                    ],
+                    if (linkedCount > 0) ...[
+                      const SizedBox(width: 4),
+                      Tooltip(
+                        message:
+                            '$linkedCount cost line${linkedCount == 1 ? '' : 's'} linked',
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color:
+                                const Color(0xFFFFC812).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                                color: const Color(0xFFFFC812)
+                                    .withValues(alpha: 0.25)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.attach_money,
+                                  size: 10, color: Color(0xFFFFC812)),
+                              const SizedBox(width: 2),
+                              Text('$linkedCount',
+                                  style: const TextStyle(
+                                      color: Color(0xFFFFC812),
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (childCount > 0) ...[
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.account_tree,
+                                size: 10, color: Color(0xFF6B7280)),
+                            const SizedBox(width: 3),
+                            Text('$childCount',
+                                style: const TextStyle(
+                                    color: Color(0xFF4B5563),
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                // Description
+                if (node.description != null &&
+                    node.description!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.only(left: 8),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                            color: accentColor.withValues(alpha: 0.2),
+                            width: 2),
+                      ),
+                    ),
+                    child: Text(
+                      node.description!,
+                      style: const TextStyle(
+                          color: Color(0xFF6B7280), fontSize: 12, height: 1.4),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                ],
+                // Bottom row: level label + estimation + actions
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    // Level label
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: isRoot
+                            ? accentColor.withValues(alpha: 0.08)
+                            : const Color(0xFFF9FAFB),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: isRoot
+                                ? accentColor.withValues(alpha: 0.2)
+                                : const Color(0xFFE4E7EC)),
+                      ),
+                      child: Text(
+                        isRoot ? 'PROJECT ROOT' : levelLabel.toUpperCase(),
+                        style: TextStyle(
+                            color: isRoot
+                                ? accentColor.withValues(alpha: 0.7)
+                                : const Color(0xFF9CA3AF),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.6),
+                      ),
+                    ),
+                    const Spacer(),
+                    // Action buttons (larger, more touchable)
+                    _actionButton(
+                      icon: Icons.add_circle_outline,
+                      onPressed: () => _showAddNodeDialog(
+                        context,
+                        provider,
+                        isRoot ? 1 : depth + 1,
+                        fm.levelLabel(isRoot ? 1 : depth + 1),
+                        parentId: node.id,
+                      ),
+                      tooltip: 'Add child',
+                      color: levelColor(
+                          isRoot ? 1 : depth + 1, LightModeColors.accent),
+                    ),
+                    if (!isRoot) ...[
+                      const SizedBox(width: 2),
+                      _actionButton(
+                        icon: Icons.arrow_upward,
+                        onPressed: () => provider.moveNode(node.id, true),
+                        tooltip: 'Move up',
+                      ),
+                      const SizedBox(width: 2),
+                      _actionButton(
+                        icon: Icons.arrow_downward,
+                        onPressed: () => provider.moveNode(node.id, false),
+                        tooltip: 'Move down',
+                      ),
+                      const SizedBox(width: 2),
+                      _actionButton(
+                        icon: Icons.edit_outlined,
+                        onPressed: () =>
+                            _showEditNodeDialog(context, provider, node, fm),
+                        tooltip: 'Edit',
+                        color: const Color(0xFF6B7280),
+                      ),
+                      const SizedBox(width: 2),
+                      _actionButton(
+                        icon: Icons.delete_outline,
+                        onPressed: () => provider.removeNode(node.id),
+                        tooltip: 'Delete',
+                        color: const Color(0xFFEF4444),
+                      ),
+                    ],
+                  ],
                 ),
               ],
-            ],
-          ),
-          // Description
-          if (node.description != null && node.description!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.only(left: 8),
-              decoration: BoxDecoration(
-                border: Border(
-                  left: BorderSide(
-                      color: accentColor.withValues(alpha: 0.2), width: 2),
-                ),
-              ),
-              child: Text(
-                node.description!,
-                style: const TextStyle(
-                    color: Color(0xFF6B7280), fontSize: 12, height: 1.4),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
             ),
-          ],
-          // Bottom row: level label + estimation + actions
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              // Level label
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: isRoot
-                      ? accentColor.withValues(alpha: 0.08)
-                      : const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                      color: isRoot
-                          ? accentColor.withValues(alpha: 0.2)
-                          : const Color(0xFFE4E7EC)),
-                ),
-                child: Text(
-                  isRoot ? 'PROJECT ROOT' : levelLabel.toUpperCase(),
-                  style: TextStyle(
-                      color: isRoot
-                          ? accentColor.withValues(alpha: 0.7)
-                          : const Color(0xFF9CA3AF),
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6),
-                ),
-              ),
-              const Spacer(),
-              // Action buttons (larger, more touchable)
-              _actionButton(
-                icon: Icons.add_circle_outline,
-                onPressed: () => _showAddNodeDialog(
-                  context,
-                  provider,
-                  isRoot ? 1 : depth + 1,
-                  fm.levelLabel(isRoot ? 1 : depth + 1),
-                  parentId: node.id,
-                ),
-                tooltip: 'Add child',
-                color:
-                    levelColor(isRoot ? 1 : depth + 1, LightModeColors.accent),
-              ),
-              if (!isRoot) ...[
-                const SizedBox(width: 2),
-                _actionButton(
-                  icon: Icons.arrow_upward,
-                  onPressed: () => provider.moveNode(node.id, true),
-                  tooltip: 'Move up',
-                ),
-                const SizedBox(width: 2),
-                _actionButton(
-                  icon: Icons.arrow_downward,
-                  onPressed: () => provider.moveNode(node.id, false),
-                  tooltip: 'Move down',
-                ),
-                const SizedBox(width: 2),
-                _actionButton(
-                  icon: Icons.edit_outlined,
-                  onPressed: () =>
-                      _showEditNodeDialog(context, provider, node, fm),
-                  tooltip: 'Edit',
-                  color: const Color(0xFF6B7280),
-                ),
-                const SizedBox(width: 2),
-                _actionButton(
-                  icon: Icons.delete_outline,
-                  onPressed: () => provider.removeNode(node.id),
-                  tooltip: 'Delete',
-                  color: const Color(0xFFEF4444),
-                ),
-              ],
-            ],
           ),
-          ],
         ),
       ),
-      ),
-    ),
     );
   }
 
@@ -1746,8 +1775,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                     _showLevel1CapMessage(context);
                     return;
                   }
-                  _showAddNodeDialog(
-                      context, provider, 1, fm.level1Label,
+                  _showAddNodeDialog(context, provider, 1, fm.level1Label,
                       parentId: provider.wbs!.level0.id);
                 },
                 style: FilledButton.styleFrom(
@@ -1782,7 +1810,8 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
     String levelLabel, {
     String? parentId,
   }) {
-    if (level == 1 && provider.wbs != null &&
+    if (level == 1 &&
+        provider.wbs != null &&
         provider.wbs!.level0.children.length >= 3) {
       _showLevel1CapMessage(context);
       return;
@@ -1891,8 +1920,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                       FilledButton(
                         onPressed: () {
                           final wbs = provider.wbs;
-                          if (wbs != null &&
-                              wbs.level0.children.length >= 3) {
+                          if (wbs != null && wbs.level0.children.length >= 3) {
                             Navigator.pop(ctx);
                             _showLevel1CapMessage(context);
                             return;

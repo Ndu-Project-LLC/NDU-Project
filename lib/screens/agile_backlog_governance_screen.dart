@@ -476,8 +476,7 @@ class _AgileBacklogGovernanceScreenState
                             const Expanded(
                               child: Text(
                                 'Define the rules, criteria, and processes for managing the product backlog.',
-                                style: TextStyle(
-                                    fontSize: 15, color: _kMuted),
+                                style: TextStyle(fontSize: 15, color: _kMuted),
                               ),
                             ),
                             if (!_isLoading) ...[
@@ -593,26 +592,23 @@ class _AgileBacklogGovernanceScreenState
           ),
           const SizedBox(height: 8),
           if (_showDoRChecklist) ...[
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _doRItems.length,
-              itemBuilder: (context, i) => _buildChecklistRow(
-                _doRItems[i],
-                (checked) {
-                  setState(() => _doRItems[i].checked = checked);
-                  _scheduleAutoSave();
-                },
-                (label) {
-                  setState(() => _doRItems[i].label = label);
-                  _scheduleAutoSave();
-                },
-                () {
-                  setState(() => _doRItems.removeAt(i));
-                  _scheduleAutoSave();
-                },
-              ),
-            ),
+            ..._doRItems.asMap().entries.map(
+                  (entry) => _buildChecklistRow(
+                    entry.value,
+                    (checked) {
+                      setState(() => _doRItems[entry.key].checked = checked);
+                      _scheduleAutoSave();
+                    },
+                    (label) {
+                      setState(() => _doRItems[entry.key].label = label);
+                      _scheduleAutoSave();
+                    },
+                    () {
+                      setState(() => _doRItems.removeAt(entry.key));
+                      _scheduleAutoSave();
+                    },
+                  ),
+                ),
             TextButton.icon(
               onPressed: () {
                 setState(() => _doRItems.add(_ChecklistItem(label: '')));
@@ -661,26 +657,23 @@ class _AgileBacklogGovernanceScreenState
           ),
           const SizedBox(height: 8),
           if (_showDoDChecklist) ...[
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _doDItems.length,
-              itemBuilder: (context, i) => _buildChecklistRow(
-                _doDItems[i],
-                (checked) {
-                  setState(() => _doDItems[i].checked = checked);
-                  _scheduleAutoSave();
-                },
-                (label) {
-                  setState(() => _doDItems[i].label = label);
-                  _scheduleAutoSave();
-                },
-                () {
-                  setState(() => _doDItems.removeAt(i));
-                  _scheduleAutoSave();
-                },
-              ),
-            ),
+            ..._doDItems.asMap().entries.map(
+                  (entry) => _buildChecklistRow(
+                    entry.value,
+                    (checked) {
+                      setState(() => _doDItems[entry.key].checked = checked);
+                      _scheduleAutoSave();
+                    },
+                    (label) {
+                      setState(() => _doDItems[entry.key].label = label);
+                      _scheduleAutoSave();
+                    },
+                    () {
+                      setState(() => _doDItems.removeAt(entry.key));
+                      _scheduleAutoSave();
+                    },
+                  ),
+                ),
             TextButton.icon(
               onPressed: () {
                 setState(() => _doDItems.add(_ChecklistItem(label: '')));
@@ -782,26 +775,21 @@ class _AgileBacklogGovernanceScreenState
               "Team norms for communication, collaboration, and process.",
               style: TextStyle(fontSize: 12, color: _kMuted)),
           const SizedBox(height: 12),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _waItems.length,
-            itemBuilder: (context, i) => _buildChecklistRow(
-              _waItems[i],
-              (checked) {
-                setState(() => _waItems[i].checked = checked);
-                _scheduleAutoSave();
-              },
-              (label) {
-                setState(() => _waItems[i].label = label);
-                _scheduleAutoSave();
-              },
-              () {
-                setState(() => _waItems.removeAt(i));
-                _scheduleAutoSave();
-              },
-            ),
-          ),
+          ..._waItems.asMap().entries.map((entry) => _buildChecklistRow(
+                entry.value,
+                (checked) {
+                  setState(() => _waItems[entry.key].checked = checked);
+                  _scheduleAutoSave();
+                },
+                (label) {
+                  setState(() => _waItems[entry.key].label = label);
+                  _scheduleAutoSave();
+                },
+                () {
+                  setState(() => _waItems.removeAt(entry.key));
+                  _scheduleAutoSave();
+                },
+              )),
           TextButton.icon(
             onPressed: () {
               setState(() => _waItems.add(_ChecklistItem(label: '')));
@@ -912,8 +900,8 @@ class _AgileBacklogGovernanceScreenState
       screenTitle: 'Agile Backlog Governance',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName},
+          {'Solution Title': projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',

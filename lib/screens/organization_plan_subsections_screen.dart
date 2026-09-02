@@ -27,6 +27,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/raci_deliverable_matrix.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/services/user_preferences_service.dart';
 Future<void> _exportPlanningSubsectionPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
   await PdfExportHelper.exportScreenPdf(
@@ -3148,6 +3149,27 @@ class _PlanningSubsectionScreen extends StatefulWidget {
 
 class _PlanningSubsectionScreenState extends State<_PlanningSubsectionScreen> {
   bool _isTableView = false;
+  String _searchQuery = '';
+
+  List<RoleDefinition> get _filteredRoles {
+    if (_searchQuery.trim().isEmpty) return widget.config.roles;
+    final q = _searchQuery.toLowerCase();
+    return widget.config.roles.where((r) {
+      return r.title.toLowerCase().contains(q) ||
+          r.workstream.toLowerCase().contains(q) ||
+          r.description.toLowerCase().contains(q);
+    }).toList();
+  }
+
+  List<_SectionData> get _filteredSections {
+    if (_searchQuery.trim().isEmpty) return widget.config.sections;
+    final q = _searchQuery.toLowerCase();
+    return widget.config.sections.where((s) {
+      return s.title.toLowerCase().contains(q) ||
+          s.subtitle.toLowerCase().contains(q) ||
+          s.bullets.any((b) => b.text.toLowerCase().contains(q));
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -3236,9 +3258,73 @@ class _PlanningSubsectionScreenState extends State<_PlanningSubsectionScreen> {
                                 ),
                                 const SizedBox(height: 16),
                               ],
+                              // Search bar
+                              if (config.roles.isNotEmpty) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                        color: const Color(0xFFE5E7EB)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.search,
+                                          size: 18,
+                                          color: Color(0xFF6B7280)),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: TextField(
+                                          decoration: const InputDecoration(
+                                            hintText:
+                                                'Search roles by name, discipline, or description...',
+                                            border: InputBorder.none,
+                                            isDense: true,
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                    vertical: 8),
+                                          ),
+                                          style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Color(0xFF111827)),
+                                          onChanged: (value) => setState(
+                                              () => _searchQuery = value),
+                                        ),
+                                      ),
+                                      if (_searchQuery.isNotEmpty)
+                                        IconButton(
+                                          icon: const Icon(Icons.clear,
+                                              size: 16,
+                                              color: Color(0xFF6B7280)),
+                                          onPressed: () => setState(
+                                              () => _searchQuery = ''),
+                                        ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF3F4F6),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          '${_filteredRoles.length} of ${config.roles.length}',
+                                          style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFF6B7280)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
                               if (_isTableView && config.roles.isNotEmpty)
                                 _RolesTable(
-                                  roles: config.roles,
+                                  roles: _filteredRoles,
                                   onEdit: widget.onEditRole,
                                   onDelete: widget.onDeleteRole,
                                   onUpdateHeadcount:
@@ -3248,7 +3334,7 @@ class _PlanningSubsectionScreenState extends State<_PlanningSubsectionScreen> {
                                 Wrap(
                                   spacing: gap,
                                   runSpacing: gap,
-                                  children: config.sections
+                                  children: _filteredSections
                                       .map((section) => SizedBox(
                                           width: halfWidth,
                                           child: _SectionCard(data: section)))
@@ -5345,7 +5431,7 @@ class _LockedCostPlaceholder extends StatelessWidget {
   }
 }
 
-class _EstimatedCostTable extends StatelessWidget {
+class _EstimatedCostTable extends StatefulWidget {
   const _EstimatedCostTable({
     required this.requirements,
     required this.onEdit,
@@ -5355,8 +5441,51 @@ class _EstimatedCostTable extends StatelessWidget {
   final void Function(int index, StaffingRequirement req) onEdit;
 
   @override
+  State<_EstimatedCostTable> createState() => _EstimatedCostTableState();
+}
+
+class _EstimatedCostTableState extends State<_EstimatedCostTable> {
+  late String _selectedCurrency;
+
+  static const List<Map<String, String>> _currencies = [
+    {'code': 'USD', 'symbol': '\$', 'name': 'US Dollar'},
+    {'code': 'EUR', 'symbol': '€', 'name': 'Euro'},
+    {'code': 'GBP', 'symbol': '£', 'name': 'British Pound'},
+    {'code': 'ZAR', 'symbol': 'R', 'name': 'South African Rand'},
+    {'code': 'KES', 'symbol': 'KSh', 'name': 'Kenyan Shilling'},
+    {'code': 'NGN', 'symbol': '₦', 'name': 'Nigerian Naira'},
+    {'code': 'GHS', 'symbol': 'GH₵', 'name': 'Ghanaian Cedi'},
+    {'code': 'TZS', 'symbol': 'TSh', 'name': 'Tanzanian Shilling'},
+    {'code': 'UGX', 'symbol': 'USh', 'name': 'Ugandan Shilling'},
+    {'code': 'ETB', 'symbol': 'Br', 'name': 'Ethiopian Birr'},
+    {'code': 'INR', 'symbol': '₹', 'name': 'Indian Rupee'},
+    {'code': 'AED', 'symbol': 'د.إ', 'name': 'UAE Dirham'},
+    {'code': 'SAR', 'symbol': '﷼', 'name': 'Saudi Riyal'},
+    {'code': 'CAD', 'symbol': 'C\$', 'name': 'Canadian Dollar'},
+    {'code': 'AUD', 'symbol': 'A\$', 'name': 'Australian Dollar'},
+    {'code': 'JPY', 'symbol': '¥', 'name': 'Japanese Yen'},
+    {'code': 'CNY', 'symbol': '¥', 'name': 'Chinese Yuan'},
+    {'code': 'BRL', 'symbol': 'R\$', 'name': 'Brazilian Real'},
+    {'code': 'MXN', 'symbol': 'Mex\$', 'name': 'Mexican Peso'},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCurrency = UserPreferencesService.currencyCodeSync ?? 'USD';
+  }
+
+  String get _currencySymbol {
+    final match = _currencies.firstWhere(
+      (c) => c['code'] == _selectedCurrency,
+      orElse: () => _currencies.first,
+    );
+    return match['symbol']!;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final currencyFmt = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
+    final currencyFmt = NumberFormat.currency(symbol: _currencySymbol, decimalDigits: 0);
     const columns = <_StaffingColumnDef>[
       _StaffingColumnDef('#', 48),
       _StaffingColumnDef('Position', 180),
@@ -5372,9 +5501,9 @@ class _EstimatedCostTable extends StatelessWidget {
     final contentWidth =
         columns.fold<double>(0, (sum, c) => sum + c.width) + 32;
 
-    final totalHeadcount = requirements.fold<int>(
+    final totalHeadcount = widget.requirements.fold<int>(
         0, (sum, r) => sum + (r.headcount > 0 ? r.headcount : 1));
-    final grandTotal = requirements.fold<double>(
+    final grandTotal = widget.requirements.fold<double>(
         0, (sum, r) => sum + r.estimatedTotal);
 
     return Padding(
@@ -5386,7 +5515,36 @@ class _EstimatedCostTable extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
+              // Currency selector
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedCurrency,
+                    isDense: true,
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF374151)),
+                    items: _currencies.map((c) {
+                      return DropdownMenuItem(
+                        value: c['code'],
+                        child: Text('${c['code']} (${c['symbol']})'),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _selectedCurrency = value);
+                      }
+                    },
+                  ),
+                ),
+              ),
               OutlinedButton.icon(
                 onPressed: () => _showExpanded(context),
                 icon: const Icon(Icons.fullscreen, size: 16),
@@ -5460,7 +5618,7 @@ class _EstimatedCostTable extends StatelessWidget {
                                 .toList(),
                           ),
                         ),
-                        if (requirements.isEmpty)
+                        if (widget.requirements.isEmpty)
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 36),
@@ -5476,7 +5634,7 @@ class _EstimatedCostTable extends StatelessWidget {
                             ),
                           )
                         else
-                          ...requirements.asMap().entries.map((entry) {
+                          ...widget.requirements.asMap().entries.map((entry) {
                             final i = entry.key;
                             final r = entry.value;
                             final monthly = r.monthlyCost;
@@ -5584,7 +5742,7 @@ class _EstimatedCostTable extends StatelessWidget {
                                         icon: const Icon(Icons.edit_outlined,
                                             size: 16,
                                             color: Color(0xFF6B7280)),
-                                        onPressed: () => onEdit(i, r),
+                                        onPressed: () => widget.onEdit(i, r),
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
                                       ),
@@ -5684,8 +5842,8 @@ class _EstimatedCostTable extends StatelessWidget {
               const Divider(height: 16),
               Expanded(
                 child: _EstimatedCostTable(
-                  requirements: requirements,
-                  onEdit: onEdit,
+                  requirements: widget.requirements,
+                  onEdit: widget.onEdit,
                 ),
               ),
             ],

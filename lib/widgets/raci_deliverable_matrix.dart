@@ -154,6 +154,37 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
     }
   }
 
+  /// Auto-fill empty RACI cells using roles from both the Staffing Plan
+  /// and the Roles & Responsibilities page. Existing manual assignments
+  /// are preserved — only empty cells are filled.
+  Future<void> _prefillFromRoles(BuildContext context) async {
+    setState(() => _isSeeding = true);
+    try {
+      final data = _data(context);
+      final rows = RaciMatrixSeeder.syncRoles(data);
+      await ProjectDataHelper.updateAndSave(
+        context: context,
+        checkpoint: 'organization_raci_matrix',
+        dataUpdater: (d) => d.copyWith(raciDeliverableRows: rows),
+        showSnackbar: false,
+      );
+      if (mounted) {
+        final roleCount = _columns(data).length;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'RACI auto-filled for $roleCount role${roleCount == 1 ? '' : 's'} '
+                'from Staffing Plan & Roles & Responsibilities. Existing '
+                'assignments were preserved.'),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSeeding = false);
+    }
+  }
+
   Future<void> _setCell(BuildContext context, RaciDeliverableRow row,
       String roleKey, String designation) async {
     final data = _data(context);
@@ -546,6 +577,19 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFFFC107),
             foregroundColor: const Color(0xFF1F2933),
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        ElevatedButton.icon(
+          onPressed: _isSeeding ? null : () => _prefillFromRoles(context),
+          icon: const Icon(Icons.person_add_outlined, size: 16),
+          label: const Text('Auto-fill from Roles & Responsibilities'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF10B981),
+            foregroundColor: Colors.white,
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             shape: RoundedRectangleBorder(

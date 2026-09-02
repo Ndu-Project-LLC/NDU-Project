@@ -2951,10 +2951,10 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
           _buildScrollableTableSection(
             columns: const [
               _TableColumn(
-                  label: 'Dependency / Decision', flex: 3, minWidth: 260),
-              _TableColumn(label: 'Detail', flex: 4, minWidth: 380),
-              _TableColumn(label: 'Owner', flex: 2, minWidth: 150),
-              _TableColumn(label: 'Status', flex: 2, minWidth: 140),
+                  label: 'Dependency / Decision', flex: 3, minWidth: 230),
+              _TableColumn(label: 'Detail', flex: 4, minWidth: 320),
+              _TableColumn(label: 'Owner', flex: 2, minWidth: 140),
+              _TableColumn(label: 'Status', flex: 2, minWidth: 150),
               _TableColumn(
                   label: 'Actions',
                   flex: 1,
@@ -2972,10 +2972,10 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                       _TableColumn(
                           label: 'Dependency / Decision',
                           flex: 3,
-                          minWidth: 260),
-                      _TableColumn(label: 'Detail', flex: 4, minWidth: 380),
-                      _TableColumn(label: 'Owner', flex: 2, minWidth: 150),
-                      _TableColumn(label: 'Status', flex: 2, minWidth: 140),
+                          minWidth: 230),
+                      _TableColumn(label: 'Detail', flex: 4, minWidth: 320),
+                      _TableColumn(label: 'Owner', flex: 2, minWidth: 140),
+                      _TableColumn(label: 'Status', flex: 2, minWidth: 150),
                       _TableColumn(
                           label: 'Actions',
                           flex: 1,
@@ -5291,7 +5291,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       child: Row(
         children: [
           SizedBox(
-            width: 260,
+            width: 230,
             child: _buildTableField(
               initialValue: row.item,
               hintText: 'Dependency or decision',
@@ -5304,7 +5304,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
           ),
           const SizedBox(width: 10),
           SizedBox(
-            width: 380,
+            width: 320,
             child: _buildTableField(
               initialValue: row.detail,
               hintText: 'Detail',
@@ -5456,7 +5456,9 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       items: items
           .map((status) => DropdownMenuItem(
                 value: status,
-                child: Center(child: Text(status, textAlign: TextAlign.center)),
+                child: Center(
+                    child: Text(status,
+                        textAlign: TextAlign.center, softWrap: true)),
               ))
           .toList(),
       onChanged: enabled
@@ -5511,7 +5513,9 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       items: items
           .map((owner) => DropdownMenuItem(
                 value: owner,
-                child: Center(child: Text(owner, textAlign: TextAlign.center)),
+                child: Center(
+                    child: Text(owner,
+                        textAlign: TextAlign.center, softWrap: true)),
               ))
           .toList(),
       onChanged: enabled

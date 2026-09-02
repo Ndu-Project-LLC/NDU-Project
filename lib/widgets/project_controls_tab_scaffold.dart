@@ -143,26 +143,35 @@ class _PcPageScaffoldState extends State<PcPageScaffold>
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      child: SingleChildScrollView(
-        padding: widget.padding,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: widget.maxWidth),
-            child: FadeTransition(
-              opacity: _intro,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.03),
-                  end: Offset.zero,
-                ).animate(_intro),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: widget.children,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPadding = constraints.maxWidth < 520 ? 12.0 : null;
+          final padding = horizontalPadding == null
+              ? widget.padding
+              : EdgeInsets.fromLTRB(
+                  horizontalPadding, 16, horizontalPadding, 32);
+          return SingleChildScrollView(
+            padding: padding,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: widget.maxWidth),
+                child: FadeTransition(
+                  opacity: _intro,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.03),
+                      end: Offset.zero,
+                    ).animate(_intro),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: widget.children,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -524,7 +533,11 @@ class PcKpiStrip extends StatelessWidget {
             : c.maxWidth > 760
                 ? 2
                 : 1;
-        final cardW = (c.maxWidth - spacing * (cols - 1)) / cols;
+        final availableWidth = c.maxWidth.isFinite && c.maxWidth > 0
+            ? c.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final cardW = ((availableWidth - spacing * (cols - 1)) / cols)
+            .clamp(0.0, double.infinity);
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
@@ -551,7 +564,11 @@ class _PcKpiCard extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
           width: cardWidth,
-          constraints: const BoxConstraints(minHeight: 120),
+          constraints: BoxConstraints(
+            minWidth: 0,
+            maxWidth: cardWidth,
+            minHeight: 120,
+          ),
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           decoration: BoxDecoration(
             color: PcPalette.surface,
@@ -613,8 +630,7 @@ class _PcKpiCard extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child:
-                              Icon(spec.icon, color: Colors.white, size: 20),
+                          child: Icon(spec.icon, color: Colors.white, size: 20),
                         ),
                         const Spacer(),
                         if (spec.live)

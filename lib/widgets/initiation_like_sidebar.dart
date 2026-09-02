@@ -2414,8 +2414,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                         fontWeight: FontWeight.w600,
                         color: cs.onSurface,
                         height: 1.25),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
                   );
                 },
               ),

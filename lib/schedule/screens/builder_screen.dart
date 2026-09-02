@@ -61,6 +61,25 @@ class _BuilderScreenState extends State<BuilderScreen> {
   }
 
   Future<void> _createActivitiesFromPackages({bool autoMode = false}) async {
+    try {
+      await _createActivitiesFromPackagesUnsafe(autoMode: autoMode);
+    } catch (error, stackTrace) {
+      debugPrint('Work package schedule import failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not import work packages. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _createActivitiesFromPackagesUnsafe({
+    bool autoMode = false,
+  }) async {
     final scheduleProvider = context.read<ScheduleProvider>();
     final data = ProjectDataHelper.getData(context, listen: false);
 
@@ -108,7 +127,18 @@ class _BuilderScreenState extends State<BuilderScreen> {
     }
     final packageIdSet = newPackages.map((p) => p.id).toSet();
 
-    final root = scheduleProvider.schedule!.activities[0];
+    final schedule = scheduleProvider.schedule;
+    if (schedule == null || schedule.activities.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Schedule is still loading. Please try again.'),
+          ),
+        );
+      }
+      return;
+    }
+    final root = schedule.activities.first;
     var newChildren = [...root.children];
 
     List<String> depPackageIds0(WorkPackage pkg) {
@@ -703,31 +733,23 @@ class _BuilderScreenState extends State<BuilderScreen> {
                 ),
               ),
               const SizedBox(height: 28),
-              // Sample activity table (preview of what Gantt/List will show)
-              // Break out of parent horizontal padding, scrollable on narrow screens
-              SizedBox(
-                width: double.infinity,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  clipBehavior: Clip.none,
-                  // IntrinsicWidth bounds the subtree width (see Activity Tree
-                  // note above) — _ActivityScheduleTable's header Row uses a
-                  // Spacer and its root Container used to force
-                  // width: double.infinity, both fatal under unbounded width.
-                  child: IntrinsicWidth(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth: MediaQuery.of(context).size.width - 40,
-                      ),
-                      child: _ActivityScheduleTable(
+              // Sample activity table (preview of what Gantt/List will show).
+              // Give the panel the actual bounded content width. The table
+              // owns its horizontal scroll view, so wide columns remain
+              // accessible without shrinking the panel or leaving a blank
+              // strip at the right edge of the page.
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return SizedBox(
+                    width: constraints.maxWidth,
+                    child: _ActivityScheduleTable(
                       schedule: schedule,
                       rootActivity: root,
                       onImportFromWorkPackages: () =>
                           _createActivitiesFromPackages(autoMode: true),
                     ),
-                    ),
-                  ),
-                ),
+                  );
+                },
               ),
               const SizedBox(height: 14),
               // Footer note — Treasury info card

@@ -694,8 +694,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
                     const SizedBox(height: 2),
                     Text(
                       '$traced/$total work packages trace What → Activities → When → Resources → How much → Control account',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
                       style: const TextStyle(
                           fontSize: 10, color: Color(0xFF64748B)),
                     ),
@@ -845,8 +844,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
               const SizedBox(height: 4),
               Text(
                 stage.summary,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                softWrap: true,
                 style: const TextStyle(fontSize: 9, color: Color(0xFF64748B)),
               ),
             ],

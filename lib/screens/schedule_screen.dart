@@ -1780,7 +1780,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Future<void> _importWorkPackagesFromDesignAndExecution() async {
-    final data = ProjectDataHelper.getData(context);
+    try {
+      final data = ProjectDataHelper.getData(context);
     final newPackages = <WorkPackage>[];
 
     // Import from Design Planning Document
@@ -1898,8 +1899,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       showSnackbar: false,
     );
 
-    setState(() {});
-    _showInfo('Imported ${newPackages.length} Work Packages.');
+      setState(() {});
+      _showInfo('Imported ${newPackages.length} Work Packages.');
+    } catch (error, stackTrace) {
+      debugPrint('Work package import failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        _showInfo('Could not import Work Packages. Please try again.');
+      }
+    }
   }
 
   Future<void> _generateIntegratedPackageChainsFromWbs() async {

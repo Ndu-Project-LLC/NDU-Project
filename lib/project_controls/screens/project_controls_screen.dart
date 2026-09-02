@@ -1127,6 +1127,7 @@ class _ScopeTrackingTab extends StatelessWidget {
     final isAgile = state.deliveryModel == DeliveryModel.agile;
 
     return PcTabShell(
+      showHero: false,
       eyebrow: 'Scope Tracking',
       title: 'Scope Tracking',
       subtitle:
@@ -1197,16 +1198,16 @@ class _ScopeTrackingTab extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFECFDF5),
-            Color(0xFFD1FAE5),
+            PcPalette.goldSoft,
+            Color(0xFFFFF8E1),
           ],
         ),
         border: Border.all(
-          color: PcPalette.emerald.withValues(alpha: 0.4),
+          color: PcPalette.gold.withValues(alpha: 0.4),
         ),
         boxShadow: [
           BoxShadow(
-            color: PcPalette.emerald.withValues(alpha: 0.1),
+            color: PcPalette.gold.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -1224,10 +1225,10 @@ class _ScopeTrackingTab extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
                 gradient: LinearGradient(
                   colors: [
-                    PcPalette.emerald.withValues(alpha: 0),
-                    PcPalette.emerald,
-                    const Color(0xFF059669),
-                    PcPalette.emerald.withValues(alpha: 0),
+                    PcPalette.gold.withValues(alpha: 0),
+                    PcPalette.gold,
+                    PcPalette.goldDeep,
+                    PcPalette.gold.withValues(alpha: 0),
                   ],
                 ),
               ),
@@ -1249,13 +1250,13 @@ class _ScopeTrackingTab extends StatelessWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            PcPalette.emerald.withValues(alpha: 0.95),
-                            const Color(0xFF059669),
+                            PcPalette.gold.withValues(alpha: 0.95),
+                            PcPalette.goldDeep,
                           ],
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: PcPalette.emerald.withValues(alpha: 0.3),
+                            color: PcPalette.gold.withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 6),
                           ),
@@ -1303,13 +1304,13 @@ class _ScopeTrackingTab extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(7),
                         border: Border.all(
-                          color: PcPalette.emerald.withValues(alpha: 0.3),
+                          color: PcPalette.gold.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
                         '${milestones.length} proposed',
                         style: const TextStyle(
-                          color: PcPalette.emerald,
+                          color: PcPalette.goldDeep,
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
                           fontFamily: appFontFamily,
@@ -1329,7 +1330,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                           color: Colors.white.withValues(alpha: 0.65),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: PcPalette.emerald.withValues(alpha: 0.18),
+                            color: PcPalette.gold.withValues(alpha: 0.18),
                           ),
                         ),
                         child: Row(
@@ -1340,18 +1341,18 @@ class _ScopeTrackingTab extends StatelessWidget {
                               height: 26,
                               decoration: BoxDecoration(
                                 color:
-                                    PcPalette.emerald.withValues(alpha: 0.15),
+                                    PcPalette.gold.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(7),
                                 border: Border.all(
                                   color:
-                                      PcPalette.emerald.withValues(alpha: 0.4),
+                                      PcPalette.gold.withValues(alpha: 0.4),
                                 ),
                               ),
                               child: Center(
                                 child: Text(
                                   '${entry.key + 1}',
                                   style: const TextStyle(
-                                    color: PcPalette.emerald,
+                                    color: PcPalette.goldDeep,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w800,
                                     fontFamily: appFontFamily,
@@ -1392,7 +1393,7 @@ class _ScopeTrackingTab extends StatelessWidget {
                                 content: const Text(
                                     'Milestones sent to Work Package table'),
                                 behavior: SnackBarBehavior.floating,
-                                backgroundColor: PcPalette.emerald,
+                                backgroundColor: PcPalette.goldDeep,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8)),
                               ),
@@ -1401,12 +1402,12 @@ class _ScopeTrackingTab extends StatelessWidget {
                           icon: const Icon(Icons.add_circle_outline, size: 16),
                           label: const Text('Add All to Work Package Table'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: PcPalette.emerald,
+                            foregroundColor: PcPalette.goldDeep,
                             backgroundColor: hovered
-                                ? PcPalette.emerald.withValues(alpha: 0.05)
+                                ? PcPalette.gold.withValues(alpha: 0.05)
                                 : Colors.transparent,
                             side: BorderSide(
-                              color: PcPalette.emerald
+                              color: PcPalette.gold
                                   .withValues(alpha: hovered ? 0.6 : 0.4),
                               width: 1.4,
                             ),

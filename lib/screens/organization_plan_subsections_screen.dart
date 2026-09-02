@@ -27,7 +27,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/raci_deliverable_matrix.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
-import 'package:ndu_project/services/user_preferences_service.dart';
+import 'package:ndu_project/services/currency_service.dart';
 Future<void> _exportPlanningSubsectionPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
   await PdfExportHelper.exportScreenPdf(
@@ -165,6 +165,21 @@ class _OrganizationStaffingPlanScreenState
     'Hired',
   ];
 
+  String _normalizedCurrencyCode(String code) {
+    final normalized = code.trim().toUpperCase();
+    return CurrencyService.supportedCurrencies.any((c) => c.code == normalized)
+        ? normalized
+        : 'USD';
+  }
+
+  Future<void> _saveStaffingCurrency(BuildContext context, String code) async {
+    final normalized = _normalizedCurrencyCode(code);
+    final provider = ProjectDataHelper.getProvider(context);
+    provider.updateCostBenefitCurrency(normalized);
+    if (mounted) setState(() {});
+    await provider.saveToFirebase(checkpoint: 'organization_staffing_plan');
+  }
+
   Future<void> _saveStaffing(
       BuildContext context, List<StaffingRequirement> updated) async {
     await ProjectDataHelper.saveAndNavigate(
@@ -196,6 +211,7 @@ class _OrganizationStaffingPlanScreenState
         categoryOptions: _categoryOptions,
         statusOptions: _statusOptions,
         projectLocation: projectData.location,
+        currencyCode: _normalizedCurrencyCode(projectData.costBenefitCurrency),
       ),
     );
     if (result == null) return;
@@ -220,6 +236,7 @@ class _OrganizationStaffingPlanScreenState
         categoryOptions: _categoryOptions,
         statusOptions: _statusOptions,
         projectLocation: projectData.location,
+        currencyCode: _normalizedCurrencyCode(projectData.costBenefitCurrency),
       ),
     );
     if (result == null) return;
@@ -706,6 +723,7 @@ class _OrganizationStaffingPlanScreenState
     final nduAccessCount =
         staffing.where((s) => s.nduProjectAccess).length;
     final reminders = StaffingReminderHelper.generateReminders(staffing);
+    final currencyCode = _normalizedCurrencyCode(projectData.costBenefitCurrency);
 
     final metrics = <_MetricData>[
       _MetricData('Total Positions', staffing.length.toString(),
@@ -907,6 +925,10 @@ class _OrganizationStaffingPlanScreenState
                                           _addStaffing(context),
                                       onAiSuggestDates: () =>
                                           _showAiSuggestDatesDialog(context),
+                                      currencyCode: currencyCode,
+                                      onCurrencyChanged: (code) {
+                                        _saveStaffingCurrency(context, code);
+                                      },
                                     ),
                                     // ── Tab 2: Staffing Timeline (Gantt) ──
                                     _StaffingTimelineTab(
@@ -918,6 +940,10 @@ class _OrganizationStaffingPlanScreenState
                                     _EstimatedCostTab(
                                       requirements: staffing,
                                       projectData: projectData,
+                                      currencyCode: currencyCode,
+                                      onCurrencyChanged: (code) {
+                                        _saveStaffingCurrency(context, code);
+                                      },
                                       onEdit: (i, req) =>
                                           _editStaffing(context, i, req),
                                     ),
@@ -1458,6 +1484,7 @@ class _StaffingRequirementDialog extends StatefulWidget {
     required this.categoryOptions,
     required this.statusOptions,
     required this.projectLocation,
+    required this.currencyCode,
   });
 
   final String title;
@@ -1468,6 +1495,7 @@ class _StaffingRequirementDialog extends StatefulWidget {
   final List<String> categoryOptions;
   final List<String> statusOptions;
   final String projectLocation;
+  final String currencyCode;
 
   @override
   State<_StaffingRequirementDialog> createState() =>
@@ -2064,7 +2092,7 @@ class _StaffingRequirementDialogState
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const _DialogLabel('Monthly Cost (USD)'),
+                            _DialogLabel('Monthly Cost (${widget.currencyCode})'),
                             TextField(
                               controller: _monthlyCostCtrl,
                               keyboardType:
@@ -3148,7 +3176,7 @@ class _PlanningSubsectionScreen extends StatefulWidget {
 }
 
 class _PlanningSubsectionScreenState extends State<_PlanningSubsectionScreen> {
-  bool _isTableView = false;
+  bool _isTableView = true;
   String _searchQuery = '';
 
   List<RoleDefinition> get _filteredRoles {
@@ -4325,6 +4353,8 @@ class _StaffingPlanTabContent extends StatelessWidget {
     required this.onToggleNduAccess,
     required this.onAddPosition,
     required this.onAiSuggestDates,
+    required this.currencyCode,
+    required this.onCurrencyChanged,
   });
 
   final List<StaffingRequirement> requirements;
@@ -4333,6 +4363,8 @@ class _StaffingPlanTabContent extends StatelessWidget {
   final void Function(int index, bool value) onToggleNduAccess;
   final VoidCallback onAddPosition;
   final VoidCallback onAiSuggestDates;
+  final String currencyCode;
+  final ValueChanged<String> onCurrencyChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -4347,6 +4379,33 @@ class _StaffingPlanTabContent extends StatelessWidget {
             runSpacing: 8,
             alignment: WrapAlignment.start,
             children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: currencyCode,
+                    isDense: true,
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF374151)),
+                    hint: const Text('Currency'),
+                    items: CurrencyService.supportedCurrencies
+                        .map((currency) => DropdownMenuItem<String>(
+                              value: currency.code,
+                              child: Text(
+                                  '${currency.code} (${currency.symbol})'),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) onCurrencyChanged(value);
+                    },
+                  ),
+                ),
+              ),
               OutlinedButton.icon(
                 onPressed: onAddPosition,
                 icon: const Icon(Icons.person_add_alt_1, size: 16),
@@ -5304,11 +5363,15 @@ class _EstimatedCostTab extends StatefulWidget {
   const _EstimatedCostTab({
     required this.requirements,
     required this.projectData,
+    required this.currencyCode,
+    required this.onCurrencyChanged,
     required this.onEdit,
   });
 
   final List<StaffingRequirement> requirements;
   final ProjectDataModel projectData;
+  final String currencyCode;
+  final ValueChanged<String> onCurrencyChanged;
   final void Function(int index, StaffingRequirement req) onEdit;
 
   @override
@@ -5359,6 +5422,8 @@ class _EstimatedCostTabState extends State<_EstimatedCostTab> {
 
     return _EstimatedCostTable(
       requirements: widget.requirements,
+      currencyCode: widget.currencyCode,
+      onCurrencyChanged: widget.onCurrencyChanged,
       onEdit: widget.onEdit,
     );
   }
@@ -5434,10 +5499,14 @@ class _LockedCostPlaceholder extends StatelessWidget {
 class _EstimatedCostTable extends StatefulWidget {
   const _EstimatedCostTable({
     required this.requirements,
+    required this.currencyCode,
+    required this.onCurrencyChanged,
     required this.onEdit,
   });
 
   final List<StaffingRequirement> requirements;
+  final String currencyCode;
+  final ValueChanged<String> onCurrencyChanged;
   final void Function(int index, StaffingRequirement req) onEdit;
 
   @override
@@ -5447,45 +5516,27 @@ class _EstimatedCostTable extends StatefulWidget {
 class _EstimatedCostTableState extends State<_EstimatedCostTable> {
   late String _selectedCurrency;
 
-  static const List<Map<String, String>> _currencies = [
-    {'code': 'USD', 'symbol': '\$', 'name': 'US Dollar'},
-    {'code': 'EUR', 'symbol': '€', 'name': 'Euro'},
-    {'code': 'GBP', 'symbol': '£', 'name': 'British Pound'},
-    {'code': 'ZAR', 'symbol': 'R', 'name': 'South African Rand'},
-    {'code': 'KES', 'symbol': 'KSh', 'name': 'Kenyan Shilling'},
-    {'code': 'NGN', 'symbol': '₦', 'name': 'Nigerian Naira'},
-    {'code': 'GHS', 'symbol': 'GH₵', 'name': 'Ghanaian Cedi'},
-    {'code': 'TZS', 'symbol': 'TSh', 'name': 'Tanzanian Shilling'},
-    {'code': 'UGX', 'symbol': 'USh', 'name': 'Ugandan Shilling'},
-    {'code': 'ETB', 'symbol': 'Br', 'name': 'Ethiopian Birr'},
-    {'code': 'INR', 'symbol': '₹', 'name': 'Indian Rupee'},
-    {'code': 'AED', 'symbol': 'د.إ', 'name': 'UAE Dirham'},
-    {'code': 'SAR', 'symbol': '﷼', 'name': 'Saudi Riyal'},
-    {'code': 'CAD', 'symbol': 'C\$', 'name': 'Canadian Dollar'},
-    {'code': 'AUD', 'symbol': 'A\$', 'name': 'Australian Dollar'},
-    {'code': 'JPY', 'symbol': '¥', 'name': 'Japanese Yen'},
-    {'code': 'CNY', 'symbol': '¥', 'name': 'Chinese Yuan'},
-    {'code': 'BRL', 'symbol': 'R\$', 'name': 'Brazilian Real'},
-    {'code': 'MXN', 'symbol': 'Mex\$', 'name': 'Mexican Peso'},
-  ];
-
   @override
   void initState() {
     super.initState();
-    _selectedCurrency = UserPreferencesService.currencyCodeSync ?? 'USD';
-  }
-
-  String get _currencySymbol {
-    final match = _currencies.firstWhere(
-      (c) => c['code'] == _selectedCurrency,
-      orElse: () => _currencies.first,
-    );
-    return match['symbol']!;
+    _selectedCurrency = widget.currencyCode;
   }
 
   @override
+  void didUpdateWidget(covariant _EstimatedCostTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currencyCode != widget.currencyCode &&
+        _selectedCurrency != widget.currencyCode) {
+      _selectedCurrency = widget.currencyCode;
+    }
+  }
+
+  String get _currencySymbol => CurrencyService.getSymbol(_selectedCurrency);
+
+  @override
   Widget build(BuildContext context) {
-    final currencyFmt = NumberFormat.currency(symbol: _currencySymbol, decimalDigits: 0);
+    final currencyFmt =
+        NumberFormat.currency(symbol: _currencySymbol, decimalDigits: 0);
     const columns = <_StaffingColumnDef>[
       _StaffingColumnDef('#', 48),
       _StaffingColumnDef('Position', 180),
@@ -5531,16 +5582,17 @@ class _EstimatedCostTableState extends State<_EstimatedCostTable> {
                     isDense: true,
                     style: const TextStyle(
                         fontSize: 12, color: Color(0xFF374151)),
-                    items: _currencies.map((c) {
-                      return DropdownMenuItem(
-                        value: c['code'],
-                        child: Text('${c['code']} (${c['symbol']})'),
-                      );
-                    }).toList(),
+                    items: CurrencyService.supportedCurrencies
+                        .map((currency) => DropdownMenuItem<String>(
+                              value: currency.code,
+                              child: Text(
+                                  '${currency.code} (${currency.symbol})'),
+                            ))
+                        .toList(),
                     onChanged: (value) {
-                      if (value != null) {
-                        setState(() => _selectedCurrency = value);
-                      }
+                      if (value == null) return;
+                      setState(() => _selectedCurrency = value);
+                      widget.onCurrencyChanged(value);
                     },
                   ),
                 ),
@@ -5843,6 +5895,8 @@ class _EstimatedCostTableState extends State<_EstimatedCostTable> {
               Expanded(
                 child: _EstimatedCostTable(
                   requirements: widget.requirements,
+                  currencyCode: _selectedCurrency,
+                  onCurrencyChanged: widget.onCurrencyChanged,
                   onEdit: widget.onEdit,
                 ),
               ),

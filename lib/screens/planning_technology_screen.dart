@@ -297,7 +297,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  content: SizedBox(
  width: MediaQuery.of(context).size.width * 0.82,
  child: ConstrainedBox(
- constraints: const BoxConstraints(maxWidth: 1100),
+ constraints: const BoxConstraints(maxWidth: 720),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [

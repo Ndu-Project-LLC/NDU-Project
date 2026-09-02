@@ -303,6 +303,54 @@ Security Training:
  super.dispose();
  }
 
+ List<SsherEntry> _securitySsherEntries() {
+ final entries = <SsherEntry>[];
+ for (final role in _securityRoles) {
+ final name = role.name.trim();
+ if (name.isEmpty) continue;
+ entries.add(SsherEntry(
+ id: 'security_role_${role.id}',
+ category: 'security',
+ department: 'Security',
+ teamMember: name,
+ concern: role.description.trim().isEmpty
+ ? 'Security role: $name'
+ : role.description.trim(),
+ riskLevel: 'Medium',
+ mitigation: 'Assign and review responsibilities for $name.',
+ ));
+ }
+ for (final permission in _securityPermissions) {
+ final resource = permission.resource.trim();
+ if (resource.isEmpty) continue;
+ final scope = permission.scope.trim();
+ entries.add(SsherEntry(
+ id: 'security_permission_${permission.id}',
+ category: 'security',
+ department: 'Security',
+ teamMember: '',
+ concern: scope.isEmpty ? 'Access control for $resource' : '$resource: $scope',
+ riskLevel: 'Medium',
+ mitigation: 'Restrict access to the approved security scope and review regularly.',
+ ));
+ }
+ for (final setting in _securitySettings) {
+ final key = setting.key.trim();
+ if (key.isEmpty) continue;
+ final value = setting.value.trim();
+ entries.add(SsherEntry(
+ id: 'security_setting_${key.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_')}',
+ category: 'security',
+ department: 'Security',
+ teamMember: '',
+ concern: value.isEmpty ? 'Security setting: $key' : '$key: $value',
+ riskLevel: 'Medium',
+ mitigation: 'Implement and monitor this security control.',
+ ));
+ }
+ return entries;
+ }
+
  void _syncSecurityToProvider() {
  if (!mounted || !_isSyncReady) return;
  if (_validationErrors.containsKey('security_requirements') &&
@@ -311,15 +359,30 @@ Security Training:
  _validationErrors = Map<String, String>.from(_validationErrors)
  ..remove('security_requirements');
  });
- }
- final provider = ProjectDataHelper.getProvider(context);
+ }  final provider = ProjectDataHelper.getProvider(context);
  provider.updateField(
- (data) => data.copyWith(
- frontEndPlanning: ProjectDataHelper.updateFEPField(
- current: data.frontEndPlanning,
- security: _securityNotes.text.trim(),
- ),
- ),
+ (data) {
+   final generated = _securitySsherEntries();
+   final manualEntries = data.ssherData.entries
+       .where((entry) => !entry.id.startsWith('security_role_') &&
+           !entry.id.startsWith('security_permission_') &&
+           !entry.id.startsWith('security_setting_'))
+       .toList();
+   return data.copyWith(
+     frontEndPlanning: ProjectDataHelper.updateFEPField(
+       current: data.frontEndPlanning,
+       security: _securityNotes.text.trim(),
+       securityRoles: _securityRoles,
+       securityPermissions: _securityPermissions,
+       securitySettings: _securitySettings,
+       securityAccessLogs: _securityAccessLogs,
+     ),
+     ssherData: data.ssherData.copyWith(
+       entries: [...manualEntries, ...generated],
+       securityPlan: _securityNotes.text.trim(),
+     ),
+   );
+ },
  );
  provider.saveToFirebase(checkpoint: 'fep_security');
  }

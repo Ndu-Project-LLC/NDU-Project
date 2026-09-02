@@ -109,6 +109,10 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
   void _openPotentialSolutions() async {
     final business = _businessCaseController.text.trim();
     _requireBusinessCaseBefore('Potential Solutions', () async {
+      if (_isInitiationLocked) {
+        context.push('/potential-solutions');
+        return;
+      }
       await ProjectDataHelper.saveAndNavigate(
         context: context,
         checkpoint: 'business_case',
@@ -127,7 +131,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
       context.push('/risk-identification',
           extra: RiskIdentificationScreen(
             notes: _notesController.text.trim(),
-            solutions: const [],
+            solutions: _solutionItems,
             businessCase: _businessCaseController.text.trim(),
           ));
     });
@@ -222,7 +226,24 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
     setState(() {});
   }
 
+  bool get _isInitiationLocked {
+    final data = ProjectDataHelper.getData(context);
+    return CharterLockHelper.isFepLocked(data) ||
+        BusinessCaseLockHelper.isBusinessCaseLocked(data);
+  }
+
+  List<AiSolutionItem> get _solutionItems {
+    return ProjectDataHelper.getData(context)
+        .potentialSolutions
+        .map((solution) => AiSolutionItem(
+              title: solution.title,
+              description: solution.description,
+            ))
+        .toList(growable: false);
+  }
+
   void _onNotesChanged(String value) {
+    if (_isInitiationLocked) return;
     if (_notesInvalid && _meetsNotesMinimum(value)) {
       setState(() => _notesInvalid = false);
     }
@@ -232,6 +253,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
   }
 
   void _onBusinessChanged(String value) {
+    if (_isInitiationLocked) return;
     if (_businessInvalid && _meetsBusinessMinimum(value)) {
       setState(() => _businessInvalid = false);
     }
@@ -244,6 +266,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
   }
 
   void _saveBeforeUndo() {
+    if (_isInitiationLocked) return;
     final provider = ProjectDataHelper.getProvider(context);
     provider.updateInitiationData(
       notes: _notesController.text.trim(),
@@ -597,15 +620,18 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
     if (!mounted) return;
     FocusScope.of(context).unfocus();
 
-    // Save data to provider before navigation
+    // A locked initiation phase can still be reviewed and navigated, but its
+    // saved content must not be rewritten as part of navigation.
     final provider = ProjectDataHelper.getProvider(context);
-    provider.updateInitiationData(
-      notes: notes,
-      businessCase: business,
-    );
+    if (!_isInitiationLocked) {
+      provider.updateInitiationData(
+        notes: notes,
+        businessCase: business,
+      );
 
-    // Save to Firebase
-    await provider.saveToFirebase(checkpoint: 'business_case');
+      // Save to Firebase
+      await provider.saveToFirebase(checkpoint: 'business_case');
+    }
 
     // Show a 3-second loading experience before navigation
     if (!mounted) return;
@@ -623,6 +649,10 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
   bool _isGeneratingAI = false;
 
   Future<void> _handleSkipPressed() async {
+    if (_isInitiationLocked) {
+      BusinessCaseLockHelper.showLockedToast(context, action: 'skip');
+      return;
+    }
     FocusScope.of(context).unfocus();
 
     // If business case is empty, generate it with AI
@@ -1745,6 +1775,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
           child: VoiceTextField(
             controller: _notesController,
             focusNode: _notesFocusNode,
+            readOnly: _isInitiationLocked,
             minLines: 3,
             maxLines: 5,
             onChanged: _onNotesChanged,
@@ -1783,8 +1814,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
           child: VoiceTextField(
             controller: _businessCaseController,
             focusNode: _businessFocusNode,
-            readOnly: CharterLockHelper.isFepLocked(
-                ProjectDataHelper.getData(context)),
+            readOnly: _isInitiationLocked,
             minLines: 6,
             maxLines: 10,
             onChanged: _onBusinessChanged,
@@ -1840,8 +1870,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
               VoiceTextField(
                 controller: _businessCaseController,
                 focusNode: _businessFocusNode,
-                readOnly: CharterLockHelper.isFepLocked(
-                    ProjectDataHelper.getData(context)),
+                readOnly: _isInitiationLocked,
                 minLines: 6,
                 maxLines: 10,
                 onChanged: _onBusinessChanged,
@@ -2154,8 +2183,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
               child: VoiceTextField(
                 controller: _notesController,
                 focusNode: _notesFocusNode,
-                readOnly: CharterLockHelper.isFepLocked(
-                    ProjectDataHelper.getData(context)),
+                readOnly: _isInitiationLocked,
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey[600],
@@ -2223,8 +2251,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
               child: VoiceTextField(
                 controller: _businessCaseController,
                 focusNode: _businessFocusNode,
-                readOnly: CharterLockHelper.isFepLocked(
-                    ProjectDataHelper.getData(context)),
+                readOnly: _isInitiationLocked,
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey[600],
@@ -2339,7 +2366,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
       context.push('/it-considerations',
           extra: ITConsiderationsScreen(
             notes: _notesController.text.trim(),
-            solutions: const [],
+            solutions: _solutionItems,
             businessCase: _businessCaseController.text.trim(),
           ));
     });
@@ -2350,7 +2377,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
       context.push('/infrastructure-considerations',
           extra: InfrastructureConsiderationsScreen(
             notes: _notesController.text.trim(),
-            solutions: const [],
+            solutions: _solutionItems,
             businessCase: _businessCaseController.text.trim(),
           ));
     });
@@ -2361,7 +2388,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
       context.push('/core-stakeholders',
           extra: CoreStakeholdersScreen(
             notes: _notesController.text.trim(),
-            solutions: const [],
+            solutions: _solutionItems,
             businessCase: _businessCaseController.text.trim(),
           ));
     });
@@ -2372,7 +2399,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
       context.push('/cost-analysis',
           extra: CostAnalysisScreen(
             notes: _notesController.text.trim(),
-            solutions: const [],
+            solutions: _solutionItems,
             businessCase: _businessCaseController.text.trim(),
           ));
     });
@@ -2383,7 +2410,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
       context.push('/preferred-solution-analysis',
           extra: PreferredSolutionAnalysisScreen(
             notes: _notesController.text.trim(),
-            solutions: const [],
+            solutions: _solutionItems,
             businessCase: _businessCaseController.text.trim(),
           ));
     });

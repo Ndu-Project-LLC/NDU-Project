@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
-import 'package:ndu_project/widgets/csv_import_dialog.dart';
 
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -20,14 +19,11 @@ import 'package:ndu_project/widgets/scope_tracking_table_widget.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
-import 'package:ndu_project/widgets/csv_import_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
-import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+
 enum _ScopeTab { overview, registry, traceability, baseline }
 
 const List<String> _tabLabels = [
@@ -198,7 +194,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
- content: Text('AI generation failed: $e'),
+ content: Text('AI generation failedaiErrorMessage(e)'),
  behavior: SnackBarBehavior.floating,
  ),
  );

@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // ignore_for_file: unused_element
@@ -584,7 +585,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -628,7 +629,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -672,7 +673,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -717,7 +718,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -763,7 +764,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -2465,7 +2466,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  controller.selection = TextSelection.fromPosition(TextPosition(offset: cleaned.length));
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
  }
  isGeneratingNotifier.value = false;
  },

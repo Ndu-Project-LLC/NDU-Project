@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:ndu_project/screens/staff_team_screen.dart';
-import 'package:ndu_project/screens/team_meetings_screen.dart';
-import 'package:ndu_project/screens/team_training_building_screen.dart';
-import 'package:ndu_project/screens/recognition_awards_screen.dart';
-import 'package:ndu_project/screens/team_status_check_screen.dart';
-import 'package:ndu_project/screens/team_handover_screen.dart';
-import 'package:ndu_project/screens/lessons_learned_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';

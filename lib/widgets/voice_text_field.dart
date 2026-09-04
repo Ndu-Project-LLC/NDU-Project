@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:ndu_project/services/voice_input_service.dart';
 import 'package:ndu_project/services/docx_import_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/open_editor_button.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -197,7 +198,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       debugPrint('[VoiceTextField] KAZ AI failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI failed: $e')),
+          SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')),
         );
       }
     }
@@ -909,7 +910,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI failed: $e')),
+          SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')),
         );
       }
     }

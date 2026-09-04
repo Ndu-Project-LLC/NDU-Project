@@ -435,6 +435,51 @@ class BasisOfEstimate {
           escalationAssumptions ?? this.escalationAssumptions,
     );
   }
+
+  /// Full serialization so the BOE survives a save/load round-trip.
+  Map<String, dynamic> toJson() => {
+        'scopeBasis': scopeBasis,
+        'assumptions': assumptions,
+        'constraints': constraints,
+        'exclusions': exclusions,
+        'dataSources': dataSources.map((d) => d.toJson()).toList(growable: false),
+        'methodology': methodology.map((m) => m.name).toList(growable: false),
+        'accuracyLow': accuracyRange.low,
+        'accuracyHigh': accuracyRange.high,
+        'escalationAssumptions': escalationAssumptions,
+      };
+
+  factory BasisOfEstimate.fromJson(Map<String, dynamic> json) {
+    final dataSourcesJson = json['dataSources'] as List<dynamic>?;
+    final methodologyJson = json['methodology'] as List<dynamic>?;
+    return BasisOfEstimate(
+      scopeBasis: json['scopeBasis'] as String? ?? '',
+      assumptions: (json['assumptions'] as List<dynamic>? ?? const [])
+          .map((e) => e.toString())
+          .toList(growable: false),
+      constraints: (json['constraints'] as List<dynamic>? ?? const [])
+          .map((e) => e.toString())
+          .toList(growable: false),
+      exclusions: (json['exclusions'] as List<dynamic>? ?? const [])
+          .map((e) => e.toString())
+          .toList(growable: false),
+      dataSources: dataSourcesJson != null
+          ? dataSourcesJson
+              .map((d) => BOEDataSource.fromJson(d as Map<String, dynamic>))
+              .toList(growable: false)
+          : const [],
+      methodology: methodologyJson != null
+          ? methodologyJson
+              .map((m) => EstimationMethod.values.byName(m.toString()))
+              .toList(growable: false)
+          : const [],
+      accuracyRange: (
+        low: (json['accuracyLow'] as num?)?.toInt() ?? -20,
+        high: (json['accuracyHigh'] as num?)?.toInt() ?? 30,
+      ),
+      escalationAssumptions: json['escalationAssumptions'] as String? ?? '',
+    );
+  }
 }
 
 class BOEDataSource {
@@ -447,6 +492,19 @@ class BOEDataSource {
     required this.reference,
     required this.validated,
   });
+
+  Map<String, dynamic> toJson() => {
+        'source': source.name,
+        'reference': reference,
+        'validated': validated,
+      };
+
+  factory BOEDataSource.fromJson(Map<String, dynamic> json) => BOEDataSource(
+        source: CostSourceType.values
+            .byName(json['source'] as String? ?? 'historical'),
+        reference: json['reference'] as String? ?? '',
+        validated: json['validated'] as bool? ?? false,
+      );
 }
 
 /// Computed totals from cost lines.
@@ -723,6 +781,25 @@ class Stakeholder {
     required this.sme,
     required this.includedInDevelopment,
   });
+
+  /// Full serialization so stakeholders survive a save/load round-trip.
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'email': email,
+        'role': role,
+        'sme': sme,
+        'includedInDevelopment': includedInDevelopment,
+      };
+
+  factory Stakeholder.fromJson(Map<String, dynamic> json) => Stakeholder(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        email: json['email'] as String? ?? '',
+        role: json['role'] as String? ?? '',
+        sme: json['sme'] as bool? ?? false,
+        includedInDevelopment: json['includedInDevelopment'] as bool? ?? true,
+      );
 }
 
 /// Accounting integration config.

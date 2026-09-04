@@ -1,7 +1,5 @@
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
-import 'package:ndu_project/screens/launch_checklist_screen.dart';
-import 'package:ndu_project/screens/scope_completion_screen.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';

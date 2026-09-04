@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:ndu_project/theme.dart';
 
 /// Brand-aligned colors for shimmer effects across the app.
 class ShimmerColors {

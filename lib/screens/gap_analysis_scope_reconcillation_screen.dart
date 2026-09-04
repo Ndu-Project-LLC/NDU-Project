@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:ndu_project/screens/punchlist_actions_screen.dart';
-import 'package:ndu_project/screens/scope_completion_screen.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -23,7 +21,6 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
-import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class GapAnalysisScopeReconcillationScreen extends StatefulWidget {
   const GapAnalysisScopeReconcillationScreen({
     super.key,

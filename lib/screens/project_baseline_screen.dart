@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -644,7 +645,7 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  } catch (e) {
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('AI generation failed: ${e.toString()}')),
+ SnackBar(content: Text('AI generation failedaiErrorMessage(e)')),
  );
  } finally {
  if (mounted) setState(() => _isGenerating = false);

@@ -28,7 +28,6 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/program_service.dart';
 import 'package:ndu_project/services/project_service.dart';
 import 'package:ndu_project/widgets/compact_action_button.dart';
-import 'package:ndu_project/screens/project_activities_log_screen.dart';
 import 'package:ndu_project/screens/group_into_portfolio_screen.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/app_logo.dart';

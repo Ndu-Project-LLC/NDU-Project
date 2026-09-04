@@ -3,9 +3,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/activity_log_service.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
@@ -23,7 +21,6 @@ import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 
 
-import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class TechnicalDevelopmentScreen extends StatefulWidget {
  const TechnicalDevelopmentScreen({super.key});
 

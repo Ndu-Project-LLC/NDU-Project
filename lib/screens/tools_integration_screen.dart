@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
@@ -1652,7 +1653,7 @@ showNavigationButtons: false,
  debugPrint('KAZ AI integration generation failed: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI generation failed: $e'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI generation failedaiErrorMessage(e)'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  } finally {
@@ -1681,7 +1682,7 @@ showNavigationButtons: false,
  debugPrint('KAZ AI field generation failed: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failed: $e'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  }

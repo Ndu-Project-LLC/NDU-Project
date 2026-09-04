@@ -3,7 +3,6 @@ import 'package:ndu_project/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/access_policy.dart';
-import 'package:ndu_project/screens/create_account_screen.dart';
 import 'package:ndu_project/screens/two_factor_verification_screen.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/widgets/responsive.dart';

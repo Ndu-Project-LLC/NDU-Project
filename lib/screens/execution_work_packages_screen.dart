@@ -18,7 +18,6 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/utils/wbs_to_work_item_converter.dart';
-import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class ExecutionWorkPackagesScreen extends StatefulWidget {

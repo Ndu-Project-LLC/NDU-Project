@@ -20,6 +20,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 
@@ -27,10 +28,22 @@ class AddLineDialog extends StatefulWidget {
   final CostCategory defaultCategory;
   final CostLine? editingLine;
 
+  /// When creating a NEW line (no [editingLine]), pre-select this WBS node
+  /// (its dotted code, e.g. `G1.2.1`) in the WBS Reference picker. Used by
+  /// the manual "price this work package" flow from the Cost-by-WBS view so
+  /// the user never has to hunt for the node — core functionality, no AI.
+  final String? initialWbsRef;
+
+  /// When creating a NEW line, pre-fill the description. Lets callers give
+  /// the line a sensible default tied to the work package being priced.
+  final String? initialDescription;
+
   const AddLineDialog({
     super.key,
     required this.defaultCategory,
     this.editingLine,
+    this.initialWbsRef,
+    this.initialDescription,
   });
 
   @override
@@ -60,8 +73,8 @@ class _AddLineDialogState extends State<AddLineDialog> {
     final l = widget.editingLine;
     _category = l?.category ?? widget.defaultCategory;
     _subCategory = l?.subCategory ?? '';
-    _description = l?.description ?? '';
-    _wbsRef = l?.wbsRef ?? '';
+    _description = l?.description ?? widget.initialDescription ?? '';
+    _wbsRef = l?.wbsRef ?? widget.initialWbsRef ?? '';
     _useQtyRate = l?.quantity != null && l?.rate != null;
     _quantity = l?.quantity?.toString() ?? '';
     _unit = l?.unit ?? 'hours';
@@ -71,15 +84,17 @@ class _AddLineDialogState extends State<AddLineDialog> {
     _basisSource = l?.basisSource ?? CostSourceType.historical;
     _basisReference = l?.basisReference ?? '';
     _confidence = l?.confidence ?? Confidence.med;
-    // Resolve the existing wbsRef text back to a WBS node ID so the dropdown
-    // can pre-select the right node when editing an existing line.
+    // Resolve the existing (or pre-selected) wbsRef text back to a WBS node
+    // ID so the dropdown can pre-select the right node when editing an
+    // existing line or creating one from the "price this work package" flow.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _resolveWbsNodeIdFromRef();
     });
     // Auto-populate sensible defaults from the current estimate context
     // when creating a new line (not editing). This uses the project
-    // name and class to give the user a helpful starting point.
+    // name and class to give the user a helpful starting point. Caller
+    // pre-fills (initialDescription / initialWbsRef) always win.
     if (widget.editingLine == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -92,7 +107,9 @@ class _AddLineDialogState extends State<AddLineDialog> {
                   ? '${estimate.className.label} ${_category.name}'
                   : _subCategory;
               _description = _description.isEmpty
-                  ? '${estimate.projectName} — ${_category.name} work package'
+                  ? (widget.initialDescription?.trim().isNotEmpty == true
+                      ? widget.initialDescription!.trim()
+                      : '${estimate.projectName} — ${_category.name} work package')
                   : _description;
               _basisReference = _basisReference.isEmpty
                   ? 'Context: ${estimate.projectName} · ${estimate.className.label}'
@@ -457,7 +474,9 @@ class _AddLineDialogState extends State<AddLineDialog> {
         wbsProvider.linkCostLine(_wbsNodeId!, lineId);
       }
     }
-    Navigator.of(context).pop();
+    // Return the created/edited line id so callers (e.g. the Schedule
+    // builder) can stamp the activity's costLineId and stay in sync.
+    Navigator.of(context).pop(lineId);
   }
 
   /// Build the WBS reference picker.
@@ -1109,7 +1128,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
       Navigator.of(context).pop(); // Close loading dialog
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('KAZ AI suggestion failed: $e'),
+          content: Text('KAZ AI suggestion failedaiErrorMessage(e)'),
           backgroundColor: Colors.red.shade400,
         ),
       );

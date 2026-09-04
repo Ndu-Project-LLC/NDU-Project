@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // ignore_for_file: unused_element
@@ -7,16 +8,10 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/models/user_role.dart';
-import 'package:ndu_project/providers/user_role_provider.dart';
 import 'package:ndu_project/services/design_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/design_phase_screen.dart';
-import 'package:ndu_project/screens/requirements_implementation_screen.dart';
-import 'package:ndu_project/screens/development_set_up_screen.dart';
-import 'package:ndu_project/screens/ui_ux_design_screen.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -559,7 +554,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('AI Generation failed: $e'),
+            content: Text('AI Generation failedaiErrorMessage(e)'),
             backgroundColor: Colors.red,
           ),
         );
@@ -1770,13 +1765,13 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                                       });
                                     } catch (e) {
                                       debugPrint(
-                                          'KAZ AI model generation failed: $e');
+                                          'KAZ AI model generation failedaiErrorMessage(e)');
                                       if (mounted) {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                                'KAZ AI generation failed: $e'),
+                                                'KAZ AI generation failedaiErrorMessage(e)'),
                                             backgroundColor:
                                                 const Color(0xFFDC2626),
                                           ),
@@ -1889,7 +1884,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('KAZ AI failed: $e'),
+                          content: Text('KAZ AI failedaiErrorMessage(e)'),
                           backgroundColor: const Color(0xFFDC2626),
                         ),
                       );

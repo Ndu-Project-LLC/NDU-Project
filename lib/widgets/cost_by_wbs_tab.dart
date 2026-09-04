@@ -22,7 +22,9 @@ import 'package:ndu_project/wbs/providers/wbs_cost_rollup.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/cost_estimate/widgets/add_line_dialog.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
+import 'package:ndu_project/wbs/utils/wbs_cost_coverage.dart';
 
 class CostByWBSTab extends StatelessWidget {
   const CostByWBSTab({super.key});
@@ -34,7 +36,10 @@ class CostByWBSTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wbsProvider = context.read<WBSProvider>();
+    // Watched (not read) so this tab refreshes when either the WBS tree or
+    // the Cost Estimate changes — e.g. immediately after a manual "Add cost"
+    // action below — regardless of which module screen hosts the tab.
+    final wbsProvider = context.watch<WBSProvider>();
     final wbs = wbsProvider.wbs;
     if (wbs == null) {
       return const Center(
@@ -45,10 +50,14 @@ class CostByWBSTab extends StatelessWidget {
       );
     }
 
-    final ceProvider = context.read<CostEstimateProvider>();
+    final ceProvider = context.watch<CostEstimateProvider>();
     final estimate = ceProvider.estimate;
     final currencySymbol = UserPreferencesService.currencySymbolSync;
     final allLines = estimate?.lines ?? const <CostLine>[];
+    // Leaf-level coverage: which smallest-level work packages still need a
+    // manual cost estimate (core functionality — never AI-gated).
+    final coverage =
+        computeWbsCostCoverage(root: wbs.level0, lines: allLines);
 
     // ── Canonical cost rollups (single source of truth) ──────────────
     // The provider walks the WBS tree once and returns a rollup per L1
@@ -166,7 +175,7 @@ class CostByWBSTab extends StatelessWidget {
           const SizedBox(height: 24),
           const SizedBox(height: 4),
           Text(
-              '${allLines.length} cost lines · $currencySymbol${_fmt(totalAll)} total · ${linkedPct.toStringAsFixed(0)}% linked to WBS',
+              '${allLines.length} cost lines · $currencySymbol${_fmt(totalAll)} total · ${linkedPct.toStringAsFixed(0)}% linked to WBS · ${(coverage.pricedRatio * 100).round()}% of ${coverage.totalWorkPackages} leaf work packages priced',
               style: const TextStyle(color: _textSecondary, fontSize: 13)),
           const SizedBox(height: 24),
 
@@ -325,6 +334,120 @@ class CostByWBSTab extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
+          // Work packages without cost — the core "price every leaf" flow.
+          // Manual entry only; AI is not required (and not used) here.
+          _sectionCard(
+            title:
+                'Work Packages Without Cost (${coverage.unpriced.length} of ${coverage.totalWorkPackages})',
+            child: coverage.hasUnpriced
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.edit_note,
+                              color: Color(0xFFB45309), size: 18),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Cost is estimated at the smallest level of the WBS. Price each of these work packages now — type a quantity and rate (or a lump total) and it links to the WBS automatically. No AI required.',
+                              style: TextStyle(
+                                  color: Color(0xFF92400E), fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      ...coverage.unpriced.take(8).map((wp) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 3),
+                                  decoration: BoxDecoration(
+                                      color: const Color(0xFFFEF3C7),
+                                      borderRadius: BorderRadius.circular(4)),
+                                  child: Text(wp.code,
+                                      style: const TextStyle(
+                                          color: Color(0xFF92400E),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700)),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(wp.name,
+                                          style: const TextStyle(
+                                              color: _textPrimary,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600),
+                                          overflow: TextOverflow.ellipsis),
+                                      if ((wp.description ?? '').isNotEmpty)
+                                        Text(wp.description!,
+                                            style: const TextStyle(
+                                                color: _textSecondary,
+                                                fontSize: 10),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                TextButton.icon(
+                                  onPressed: () =>
+                                      _openManualCostDialog(context, wp),
+                                  icon: const Icon(Icons.add, size: 14),
+                                  label: const Text('Add cost',
+                                      style: TextStyle(fontSize: 11)),
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    foregroundColor: const Color(0xFFB45309),
+                                    backgroundColor:
+                                        const Color(0xFFFFFBEB),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )),
+                      if (coverage.unpriced.length > 8)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            '+ ${coverage.unpriced.length - 8} more work packages — open the Cost Estimate Builder to keep pricing',
+                            style: const TextStyle(
+                                color: _textSecondary,
+                                fontSize: 11,
+                                fontStyle: FontStyle.italic),
+                          ),
+                        ),
+                    ],
+                  )
+                : const Row(
+                    children: [
+                      Icon(Icons.check_circle,
+                          color: Color(0xFF16A34A), size: 18),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Every leaf work package now has a cost estimate at its own level. Keep the estimate current as scope changes.',
+                          style: TextStyle(
+                              color: Color(0xFF166534), fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+          const SizedBox(height: 20),
+
           // Unlinked Cost Lines
           if (unlinkedLines.isNotEmpty) ...[
             _sectionCard(
@@ -475,6 +598,21 @@ class CostByWBSTab extends StatelessWidget {
           ),
           const SizedBox(height: 40),
         ],
+      ),
+    );
+  }
+
+  /// Open the manual cost-line dialog pre-linked to an unpriced work
+  /// package. Core functionality: quantity × rate (or lump total) typed by
+  /// the user, stored on the Cost Estimate and linked back to this WBS node.
+  void _openManualCostDialog(BuildContext context, UnpricedWorkPackage wp) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AddLineDialog(
+        defaultCategory: CostCategory.materials,
+        initialWbsRef: wp.code,
+        initialDescription:
+            '${wp.name} — work package cost',
       ),
     );
   }

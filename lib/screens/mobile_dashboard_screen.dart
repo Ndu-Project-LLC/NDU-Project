@@ -7,8 +7,6 @@ import 'package:ndu_project/widgets/unified_phase_header.dart';
 import '../models/program_model.dart';
 import '../services/project_service.dart';
 import '../services/program_service.dart';
-import 'project_dashboard_screen.dart';
-import 'program_dashboard_mobile_screen.dart';
 import 'package:go_router/go_router.dart';
 
 class MobileDashboardScreen extends StatelessWidget {

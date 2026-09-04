@@ -11,9 +11,9 @@ import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/download_helper.dart' as download_helper;
 import 'package:ndu_project/utils/design_planning_document.dart';
-import 'package:ndu_project/screens/design_phase_screen.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -1444,7 +1444,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  _showToast('$section generated from project context.');
  } catch (e) {
  if (!mounted) return;
- _showToast('AI generation failed for $section: ${e.toString()}');
+ _showToast('AI generation failed for $section: ${aiErrorMessage(e)}');
  } finally {
  if (mounted) {
  setState(() => _aiGenerating[key] = false);

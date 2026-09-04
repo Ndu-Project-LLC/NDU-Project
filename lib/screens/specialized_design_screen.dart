@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 // ignore_for_file: unused_element
@@ -568,7 +569,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('KAZ AI field generation failed: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failed: $e'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  }

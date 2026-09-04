@@ -22,7 +22,6 @@ import 'package:ndu_project/widgets/chart_builder_workspace.dart';
 import 'package:ndu_project/widgets/design_governance_dashboard.dart';
 import 'package:ndu_project/services/design_phase_service.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
-import 'package:ndu_project/widgets/design_readiness_card.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/user_service.dart';

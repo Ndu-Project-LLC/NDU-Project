@@ -179,6 +179,15 @@ class LaunchPhaseAiSeed {
       buf.writeln(stakeholdersSummary);
     }
 
+    // Latest-version overlay: topics repeated across phases are read from
+    // their most recent phase (e.g. planning supersedes initiation) — never
+    // re-anchor an AI prompt on a stale earlier copy.
+    final overlay = ProjectDataHelper.buildLatestTopicOverlay(projectData);
+    if (overlay.trim().isNotEmpty) {
+      buf.writeln();
+      buf.write(overlay);
+    }
+
     return buf.toString().trim();
   }
 

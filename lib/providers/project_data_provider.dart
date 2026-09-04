@@ -44,6 +44,13 @@ class ProjectDataProvider extends ChangeNotifier {
     });
   }
 
+  @override
+  void dispose() {
+    _autoSaveDebounce?.cancel();
+    _autoSaveDebounce = null;
+    super.dispose();
+  }
+
   /// Computes a rough progress percentage from the current checkpoint.
   static double _computeProgressFromCheckpoint(String checkpoint) {
     const phaseProgress = {

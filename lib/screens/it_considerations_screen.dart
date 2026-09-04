@@ -26,6 +26,7 @@ import 'package:ndu_project/screens/cost_analysis_screen.dart';
 import 'package:ndu_project/screens/preferred_solution_analysis_screen.dart';
 import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
@@ -321,12 +322,8 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
         );
       }
     } catch (e) {
-      _error = (e.toString().contains('Failed to fetch') ||
-              e.toString().contains('ClientException') ||
-              e.toString().contains('XMLHttpRequest') ||
-              e.toString().contains('Connection refused'))
-          ? 'AI assist is being set up. Please try again later or enter content manually.'
-          : e.toString();
+      debugPrint('OpenAI generation failed: $e');
+      _error = aiErrorMessage(e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to regenerate IT considerations: $e')),
@@ -1282,15 +1279,11 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
       );
       return true;
     } catch (e) {
-      _error = (e.toString().contains('Failed to fetch') ||
-              e.toString().contains('ClientException') ||
-              e.toString().contains('XMLHttpRequest') ||
-              e.toString().contains('Connection refused'))
-          ? 'AI assist is being set up. Please try again later or enter content manually.'
-          : e.toString();
+      debugPrint('OpenAI generation failed: $e');
+      _error = aiErrorMessage(e);
       if (!mounted) return false;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('AI autofill failed: $e')),
+        SnackBar(content: Text('AI autofill failedaiErrorMessage(e)')),
       );
       return false;
     } finally {
@@ -1552,10 +1545,22 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
                     const SizedBox(height: 8),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: TextButton(
-                          onPressed:
-                              _isGenerating ? null : _generateTechnologies,
-                          child: const Text('Retry')),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              if (mounted) setState(() => _error = null);
+                            },
+                            child: const Text('Dismiss'),
+                          ),
+                          TextButton(
+                              onPressed: _isGenerating
+                                  ? null
+                                  : _generateTechnologies,
+                              child: const Text('Retry')),
+                        ],
+                      ),
                     ),
                   ]),
             ),

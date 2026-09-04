@@ -1,9 +1,6 @@
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/screens/benefits_realization_screen.dart';
-import 'package:ndu_project/screens/commerce_viability_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';

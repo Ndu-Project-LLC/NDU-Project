@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
@@ -26,10 +26,10 @@ import 'package:ndu_project/widgets/ux_hardening_primitives.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // Removed AppLogo from header per request
 import 'package:ndu_project/screens/settings_screen.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/text_sanitizer.dart';
-import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/access_policy.dart';
@@ -208,7 +208,9 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
 
   TextEditingController _createRiskController({String text = ''}) {
     final cleaned = _stripLeadingBullet(text);
-    final controller = AutoBulletTextController(text: cleaned);
+    // Risk descriptions are single-item prose, so use a plain controller —
+    // no auto-bullet dots should ever appear inside these text fields.
+    final controller = TextEditingController(text: cleaned);
     controller.addListener(_onDataChanged);
     return controller;
   }
@@ -349,10 +351,16 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     );
   }
 
-  /// Called whenever any text field changes - triggers debounced auto-save
+  /// Called whenever any text field changes - triggers debounced auto-save.
+  /// Also clears a stale AI error banner: once the user is editing content
+  /// manually (or the underlying AI issue has been resolved), the earlier
+  /// failure message is no longer relevant.
   void _onDataChanged() {
     if (!mounted) return;
-    setState(() => _hasUnsavedChanges = true);
+    setState(() {
+      _hasUnsavedChanges = true;
+      _error = null;
+    });
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer(const Duration(seconds: 2), _autoSave);
   }
@@ -519,15 +527,11 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
       );
     }
     } catch (e) {
-      _error = (e.toString().contains('Failed to fetch') ||
-              e.toString().contains('ClientException') ||
-              e.toString().contains('XMLHttpRequest') ||
-              e.toString().contains('Connection refused'))
-          ? 'AI assist is being set up. Please try again later or enter content manually.'
-          : e.toString();
+      debugPrint('OpenAI risk generation failed: $e');
+      _error = aiErrorMessage(e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to regenerate risks: $e')),
+          SnackBar(content: Text(aiErrorMessage(e))),
         );
       }
     } finally {
@@ -1527,9 +1531,23 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                           const SizedBox(height: 8),
                           Align(
                             alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: _isGenerating ? null : _generateRisks,
-                              child: const Text('Retry'),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                TextButton(
+                                  onPressed: () {
+                                    if (mounted) {
+                                      setState(() => _error = null);
+                                    }
+                                  },
+                                  child: const Text('Dismiss'),
+                                ),
+                                TextButton(
+                                  onPressed:
+                                      _isGenerating ? null : _generateRisks,
+                                  child: const Text('Retry'),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -1980,7 +1998,9 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     );
   }
 
-  /// Risk text area with hint text and KAZ AI suggestion button
+  /// Risk text area with hint text. Editor actions (KAZ AI suggest, voice,
+  /// docx import, formatting) are surfaced by the Open Editor popup on the
+  /// VoiceTextField, so no separate inline KAZ AI pill is needed.
   Widget _riskTextAreaWithAI(TextEditingController controller,
       int solutionIndex, int riskIndex, String solutionTitle) {
     final hintTexts = [
@@ -2031,7 +2051,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -2058,17 +2078,6 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                     ),
                     style: const TextStyle(fontSize: 12, color: Colors.black87),
                   ),
-                ],
-              ),
-            ),
-            // KAZ AI suggestion button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  _buildKazAiButton(
-                      controller, solutionIndex, riskIndex, solutionTitle),
                 ],
               ),
             ),
@@ -2126,52 +2135,6 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         .map((c) => c.text.trim())
         .where((t) => t.isNotEmpty)
         .toList();
-  }
-
-  /// Build KAZ AI suggestion button inline
-  Widget _buildKazAiButton(TextEditingController controller, int solutionIndex,
-      int riskIndex, String solutionTitle) {
-    // Business Case lock — hide the KAZ AI button entirely when a
-    // preferred solution has been selected (view-only mode).
-    if (BusinessCaseLockHelper.isBusinessCaseLocked(
-        ProjectDataHelper.getData(context))) {
-      return const SizedBox.shrink();
-    }
-    final scheme = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: 'Get KAZ AI suggestions',
-      child: InkWell(
-        onTap: () => _showKazAiSuggestions(
-            controller, solutionIndex, riskIndex, solutionTitle),
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                scheme.primary.withValues(alpha: 0.1),
-                scheme.secondary.withValues(alpha: 0.1)
-              ],
-            ),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.auto_awesome, size: 14, color: scheme.primary),
-              const SizedBox(width: 4),
-              Text(
-                'KAZ AI',
-                style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.primary),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   /// Show KAZ AI suggestions dialog

@@ -39,8 +39,7 @@ import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
-import 'package:ndu_project/widgets/ndu_logo_banner.dart';
-import 'package:ndu_project/services/navigation_context_service.dart';
+import 'package:ndu_project/wbs/utils/wbs_cost_coverage.dart';
 import 'package:go_router/go_router.dart';
 
 class CostEstimateModuleScreen extends StatefulWidget {
@@ -396,6 +395,10 @@ class _CostDashboardTab extends StatelessWidget {
             ),
             const SizedBox(height: 22),
 
+            // ── 2b. Leaf work-package coverage KPI card ──────────────
+            _buildCoverageCard(context, lines, currencySymbol),
+            const SizedBox(height: 22),
+
             // ── 3. Two-column bento: Cost Breakdown + Composition donut ──
             if (t.costBaseline > 0) ...[
               LayoutBuilder(
@@ -481,6 +484,148 @@ class _CostDashboardTab extends StatelessWidget {
     // SectionNavigator above. Kept as a hook for future wiring.
     // ignore: avoid_print
     debugPrint('Open Builder tapped from Cost Dashboard');
+  }
+
+  /// Live coverage of leaf work packages that already carry a priced cost
+  /// line — the "price every smallest-level work package" core KPI.
+  Widget _buildCoverageCard(
+    BuildContext context,
+    List<CostLine> lines,
+    String currencySymbol,
+  ) {
+    final wbsProvider = context.watch<WBSProvider>();
+    final wbs = wbsProvider.wbs;
+    if (wbs == null) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: _surfaceAlt,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _hairline),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.account_tree_outlined,
+                size: 18, color: Color(0xFFB8860B)),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Work-package pricing coverage appears here once a WBS is set up — every leaf work package needs its own cost estimate.',
+                style:
+                    TextStyle(color: Color(0xFF64748B), fontSize: 12.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final coverage =
+        computeWbsCostCoverage(root: wbs.level0, lines: lines);
+    final pct = (coverage.pricedRatio * 100).clamp(0.0, 100.0);
+    final allPriced = !coverage.hasUnpriced && coverage.totalWorkPackages > 0;
+    final accent =
+        allPriced ? const Color(0xFF16A34A) : const Color(0xFFD97706);
+    final softAccent =
+        allPriced ? const Color(0xFFE7F8F0) : const Color(0xFFFFF3E0);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: softAccent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.fact_check_outlined,
+                    size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Work-Package Pricing Coverage',
+                      style: TextStyle(
+                          color: Color(0xFF0B1220),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Leaf work packages with a priced cost line, out of all leaf work packages in the WBS.',
+                      style: TextStyle(
+                          color: Color(0xFF64748B), fontSize: 11.5),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '${pct.toStringAsFixed(0)}%',
+                style: TextStyle(
+                    color: accent,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    fontFeatures: const [FontFeature.tabularFigures()]),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: coverage.pricedRatio,
+              minHeight: 8,
+              backgroundColor: const Color(0xFFF1F5F9),
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${coverage.pricedWorkPackages} of ${coverage.totalWorkPackages} leaf work packages priced',
+                  style: const TextStyle(
+                      color: Color(0xFF475569), fontSize: 12),
+                ),
+              ),
+              if (!allPriced)
+                Text(
+                  '${coverage.unpriced.length} still need a cost — add them in Cost by WBS or the Schedule builder.',
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                      color: Color(0xFFB45309),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600),
+                )
+              else
+                const Text(
+                  'Every leaf work package is priced at its own level ✓',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                      color: Color(0xFF166534),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   static String _fmt(double value) {

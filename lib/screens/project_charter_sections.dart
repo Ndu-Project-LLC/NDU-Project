@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/user_model.dart';
 import 'package:ndu_project/services/charter_approval_service.dart';
-import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/charter_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/charter_tech_proc_helper.dart';

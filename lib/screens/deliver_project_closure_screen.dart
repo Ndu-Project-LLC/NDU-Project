@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
@@ -10,13 +11,11 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'package:ndu_project/models/launch_phase_models.dart';
-import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
@@ -1115,7 +1114,7 @@ class _DeliverProjectClosureScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI regeneration failed: $e')),
+          SnackBar(content: Text('KAZ AI regeneration failedaiErrorMessage(e)')),
         );
       }
     } finally {
@@ -1166,7 +1165,7 @@ class _DeliverProjectClosureScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI regeneration failed: $e')),
+          SnackBar(content: Text('KAZ AI regeneration failedaiErrorMessage(e)')),
         );
       }
     } finally {
@@ -1223,7 +1222,7 @@ class _DeliverProjectClosureScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI regeneration failed: $e')),
+          SnackBar(content: Text('KAZ AI regeneration failedaiErrorMessage(e)')),
         );
       }
     } finally {
@@ -1280,7 +1279,7 @@ class _DeliverProjectClosureScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI regeneration failed: $e')),
+          SnackBar(content: Text('KAZ AI regeneration failedaiErrorMessage(e)')),
         );
       }
     } finally {
@@ -1573,7 +1572,7 @@ class _ScopeEditDialogState extends State<_ScopeEditDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI failed: $e')),
+          SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')),
         );
       }
     }

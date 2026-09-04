@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:ndu_project/routing/app_router.dart';
-import 'package:ndu_project/screens/pricing_screen.dart';
 import 'package:ndu_project/screens/partner_screen.dart';
 import 'package:ndu_project/screens/use_cases_screen.dart';
 import 'package:ndu_project/screens/how_it_works_screen.dart';

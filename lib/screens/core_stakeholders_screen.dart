@@ -23,6 +23,7 @@ import 'package:ndu_project/screens/it_considerations_screen.dart';
 import 'package:ndu_project/screens/infrastructure_considerations_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
 import 'package:ndu_project/screens/preferred_solution_analysis_screen.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
@@ -1467,15 +1468,10 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  );
  return true;
  } catch (e) {
- _error = (e.toString().contains('Failed to fetch') ||
- e.toString().contains('ClientException') ||
- e.toString().contains('XMLHttpRequest') ||
- e.toString().contains('Connection refused'))
- ? 'AI assist is being set up. Please try again later or enter content manually.'
- : e.toString();
+ _error = aiErrorMessage(e);
  if (!mounted) return false;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('AI autofill failed: $e')),
+ SnackBar(content: Text('AI autofill failed: ${aiErrorMessage(e)}')),
  );
  return false;
  } finally {
@@ -2029,15 +2025,10 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  const SnackBar(content: Text('Stakeholders regenerated successfully')),
  );
  } catch (e) {
- _error = (e.toString().contains('Failed to fetch') ||
- e.toString().contains('ClientException') ||
- e.toString().contains('XMLHttpRequest') ||
- e.toString().contains('Connection refused'))
- ? 'AI assist is being set up. Please try again later or enter content manually.'
- : e.toString();
+ _error = aiErrorMessage(e);
  if (!mounted) return;
  messenger.showSnackBar(
- SnackBar(content: Text('Failed to regenerate stakeholders: $e')),
+ SnackBar(content: Text('Failed to regenerate stakeholders: ${aiErrorMessage(e)}')),
  );
  } finally {
  if (mounted) {

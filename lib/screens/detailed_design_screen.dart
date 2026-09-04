@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
-import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
-import 'package:ndu_project/screens/vendor_tracking_screen.dart';
 import 'package:ndu_project/models/design_component.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';

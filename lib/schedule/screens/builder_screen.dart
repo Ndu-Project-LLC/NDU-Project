@@ -25,13 +25,13 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/services/schedule_cpm_service.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
-import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
@@ -44,6 +44,8 @@ import 'package:ndu_project/models/project_data_model.dart'
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
+import 'package:ndu_project/cost_estimate/widgets/add_line_dialog.dart';
+import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
 import 'package:ndu_project/schedule/widgets/integrated_schedule_methodology.dart';
 
 class BuilderScreen extends StatefulWidget {
@@ -1450,6 +1452,48 @@ class _ActivityNode extends StatelessWidget {
     required this.isLocked,
   });
 
+  /// Priced/unpriced chip shown on rows whose activity is linked to a cost
+  /// line — the visual confirmation that a pull (or manual entry) landed.
+  Widget _costStatusChip(CostLine line) {
+    final priced = isPricedCostLine(line);
+    final color = priced
+        ? const Color(0xFF16A34A)
+        : const Color(0xFFB45309);
+    final soft = priced
+        ? const Color(0xFFE7F8F0)
+        : const Color(0xFFFFF3E0);
+    final label =
+        priced ? 'Cost: \$${_fmtCostAmount(line.total)}' : 'Cost: not priced yet';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: soft,
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.attach_money, size: 12, color: color),
+          const SizedBox(width: 3),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 10.5,
+                  color: color,
+                  fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+
+  static String _fmtCostAmount(double v) =>
+      v == v.roundToDouble() ? v.round().toString() : v.toStringAsFixed(2);
+
+  static bool isPricedCostLine(CostLine? line) =>
+      line != null &&
+      (line.total > 0 ||
+          ((line.quantity ?? 0) > 0 && (line.rate ?? 0) > 0));
+
   List<Widget> _traceabilityChips() {
     final chips = <Widget>[];
     if (activity.importSource != null &&
@@ -1517,6 +1561,25 @@ class _ActivityNode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final domainColor = Color(activity.domain.color);
+    // Linked cost line for the priced/unpriced row badge (live watch so the
+    // badge updates right after a pull or a manual price edit).
+    CostLine? linkedCostLine;
+    final linkedCostId = (activity.costLineId ?? '').trim();
+    if (linkedCostId.isNotEmpty) {
+      final estimate = context.watch<CostEstimateProvider>().estimate;
+      if (estimate != null) {
+        for (final line in estimate.lines) {
+          if (line.id == linkedCostId) {
+            linkedCostLine = line;
+            break;
+          }
+        }
+      }
+    }
+    final allChips = <Widget>[
+      if (linkedCostLine != null) _costStatusChip(linkedCostLine),
+      ..._traceabilityChips(),
+    ];
     return GestureDetector(
       onTap: () => _showActivityEditDialog(context),
       child: Container(
@@ -1703,7 +1766,7 @@ class _ActivityNode extends StatelessWidget {
                   ),
                 ),
               ),
-            if (_traceabilityChips().isNotEmpty)
+            if (allChips.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(left: 8),
                 child: SizedBox(
@@ -1711,7 +1774,7 @@ class _ActivityNode extends StatelessWidget {
                   child: Wrap(
                     spacing: 6,
                     runSpacing: 6,
-                    children: _traceabilityChips(),
+                    children: allChips,
                   ),
                 ),
               ),
@@ -1727,21 +1790,13 @@ class _ActivityNode extends StatelessWidget {
                       fontWeight: FontWeight.w500),
                 ),
               ),
-            if (!isRoot && !isLocked) ...[
-              IconButton(
-                icon: const Icon(Icons.add, size: 14, color: Color(0xFF6B7280)),
-                onPressed: () {},
-                constraints: const BoxConstraints(),
-                padding: const EdgeInsets.all(4),
-              ),
-              IconButton(
+            if (!isRoot && !isLocked) ...[..._buildCostActions(context, linkedCostLine), IconButton(
                 icon: const Icon(Icons.delete_outline,
                     size: 14, color: Color(0xFFB91C1C)),
                 onPressed: () => provider.removeActivity(activity.id),
                 constraints: const BoxConstraints(),
                 padding: const EdgeInsets.all(4),
-              ),
-            ],
+              )],
                   ],
                 ),
               ),
@@ -1834,6 +1889,70 @@ class _ActivityNode extends StatelessWidget {
         ),
       ),
     );
+  }
+  /// Cost actions for this activity row: edit an existing linked cost line,
+  /// or add a new one directly on a leaf work package (core functionality —
+  /// no AI). Returns an empty list when the row should not offer cost entry.
+  List<Widget> _buildCostActions(
+    BuildContext context,
+    CostLine? linkedLine,
+  ) {
+    final canAddNew = activity.children.isEmpty;
+    if (linkedLine == null && !canAddNew) return const [];
+
+    final priced = isPricedCostLine(linkedLine);
+    final color = linkedLine == null
+        ? const Color(0xFF6B7280)
+        : (priced ? const Color(0xFF16A34A) : const Color(0xFFB45309));
+    return [
+      IconButton(
+        tooltip: linkedLine != null
+            ? (priced
+                ? 'Edit cost line for this work package'
+                : 'Edit cost line (not priced yet)')
+            : 'Add cost for this work package',
+        icon: Icon(
+          linkedLine != null
+              ? Icons.paid_outlined
+              : Icons.attach_money_outlined,
+          size: 14,
+          color: color,
+        ),
+        onPressed: () =>
+            _openCostDialog(context, linkedLine),
+        constraints: const BoxConstraints(),
+        padding: const EdgeInsets.all(4),
+      ),
+    ];
+  }
+
+  /// Open the manual cost-line dialog for this activity. New lines are
+  /// pre-linked to the activity's WBS node (when known) and pre-described
+  /// from the activity name. After save/update the activity's `costLineId`
+  /// is stamped so the Schedule ↔ Cost link is bidirectional and repeat
+  /// pulls stay idempotent.
+  Future<void> _openCostDialog(
+    BuildContext context,
+    CostLine? linkedLine,
+  ) async {
+    final savedId = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AddLineDialog(
+        defaultCategory: isScheduledPurchaseActivity(activity)
+            ? CostCategory.procurement
+            : CostCategory.materials,
+        editingLine: linkedLine,
+        initialWbsRef: activity.wbsCode,
+        initialDescription: '${activity.name} — scheduled work package cost',
+      ),
+    );
+    if (savedId == null || savedId.isEmpty) return;
+    if ((activity.costLineId ?? '') != savedId) {
+      provider.updateActivity(
+        activity.id,
+        activity.copyWith(costLineId: savedId),
+      );
+    }
   }
 }
 
@@ -2132,7 +2251,7 @@ class _ActivityScheduleTableState extends State<_ActivityScheduleTable> {
           'Added ${lines.length} AI-generated activities to the schedule.');
     } catch (e) {
       if (mounted) {
-        _showInfo('KAZ AI generation failed: $e');
+        _showInfo('KAZ AI generation failedaiErrorMessage(e)');
       }
     } finally {
       if (mounted) setState(() => _isGenerating = false);
@@ -3201,9 +3320,12 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
               children: [
                 const Divider(color: Color(0xFFF3F4F6), height: 1),
                 Container(
-                  // Let long activity names expand the row instead of clipping
-                  // them. The timeline area stretches with the label column.
-                  constraints: const BoxConstraints(minHeight: 60),
+                  // The timeline card sits inside the vertically-unbounded
+                  // Builder scroll view, so the row needs a BOUNDED height for
+                  // CrossAxisAlignment.stretch to resolve — otherwise the whole
+                  // Builder tab layout throws and renders blank (missing
+                  // schedule content). Long names ellipsize like the tree rows.
+                  height: 60,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3233,6 +3355,8 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                                         color: Color(0xFF9CA3AF),
                                         fontSize: 9,
                                         fontFamily: appFontFamily),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
                                   Text(
                                     a.name,
@@ -3240,7 +3364,9 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                                         color: Color(0xFF1A1D1F),
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600),
-                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    softWrap: false,
                                   ),
                                 ],
                               ),
@@ -3589,7 +3715,7 @@ class _TimelineKazAiButtonState extends State<_TimelineKazAiButton> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('KAZ AI failed: $e'),
+              content: Text('KAZ AI failedaiErrorMessage(e)'),
               duration: const Duration(seconds: 3)),
         );
       }

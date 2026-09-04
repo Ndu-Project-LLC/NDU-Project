@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -16,7 +17,6 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/utils/text_sanitizer.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -3930,7 +3930,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  } catch (e) {
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('AI generation failed: ${e.toString()}')),
+ SnackBar(content: Text('AI generation failedaiErrorMessage(e)')),
  );
  } finally {
  if (mounted) setState(() => _isGenerating = false);

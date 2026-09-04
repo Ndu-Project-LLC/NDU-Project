@@ -8,8 +8,6 @@ import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/models/team_management_plan.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/team_management_service.dart';
-import 'package:ndu_project/screens/design_deliverables_screen.dart';
-import 'package:ndu_project/screens/team_meetings_screen.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';

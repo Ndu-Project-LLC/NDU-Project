@@ -25,14 +25,10 @@ import 'package:provider/provider.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
-import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/services/scope_coverage_validator.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
-import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/project_controls/providers/project_controls_provider.dart';
-import 'package:ndu_project/project_controls/models/project_controls_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
-import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/services/ibr_service.dart';
 import 'package:ndu_project/routing/app_router.dart';
 

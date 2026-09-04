@@ -4,6 +4,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/services/project_intelligence_service.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
+import 'package:ndu_project/utils/latest_phase_content.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
@@ -1047,6 +1048,95 @@ class ProjectDataHelper {
 
     if (!hasContent) return '';
     return buf.toString().trim();
+  }
+
+  /// Build a compact "latest topic versions" overlay from the central
+  /// project model, using [buildLatestContextSummary] semantics.
+  ///
+  /// Product rule (voice note, 2026-09-03): a topic that appears in several
+  /// phases (e.g. Goals in Initiation AND Planning) must be read from its
+  /// MOST RECENT phase — planning auto-carries initiation forward, so an AI
+  /// prompt must not re-anchor on the stale earlier copy. This overlay lists
+  /// each recurring topic once, tagged with the phase that holds its latest
+  /// version, so downstream AI seeds can prefer it.
+  static String buildLatestTopicOverlay(ProjectDataModel data) {
+    String fmtProjectGoals() {
+      final buf = StringBuffer();
+      for (final g in data.projectGoals) {
+        final name = g.name.trim().isEmpty ? 'Goal' : g.name.trim();
+        final desc = g.description.trim();
+        if (desc.isEmpty) {
+          buf.writeln('- $name');
+        } else {
+          buf.writeln('- $name: $desc');
+        }
+      }
+      return buf.toString().trim();
+    }
+
+    String fmtPlanningGoals() {
+      final buf = StringBuffer();
+      for (final g in data.planningGoals) {
+        final title = g.title.trim().isEmpty
+            ? 'Goal ${g.goalNumber}'
+            : g.title.trim();
+        final year = g.targetYear.trim();
+        final desc = g.description.trim();
+        final suffix = [
+          if (year.isNotEmpty) 'Target: $year',
+          if (desc.isNotEmpty) desc,
+        ].join(' | ');
+        buf.writeln(suffix.isEmpty ? '- $title' : '- $title ($suffix)');
+      }
+      return buf.toString().trim();
+    }
+
+    String fmtItTechnology() {
+      final it = data.itConsiderationsData;
+      if (it == null || it.solutionITData.isEmpty) return '';
+      final buf = StringBuffer();
+      for (final s in it.solutionITData) {
+        final title = s.solutionTitle.trim();
+        final tech = s.coreTechnology.trim();
+        if (tech.isEmpty) continue;
+        buf.writeln(title.isEmpty ? '- $tech' : '- $title: $tech');
+      }
+      return buf.toString().trim();
+    }
+
+    String fmtInfra() {
+      final infra = data.infrastructureConsiderationsData;
+      if (infra == null || infra.solutionInfrastructureData.isEmpty) {
+        return '';
+      }
+      final buf = StringBuffer();
+      for (final s in infra.solutionInfrastructureData) {
+        final title = s.solutionTitle.trim();
+        final major = s.majorInfrastructure.trim();
+        if (major.isEmpty) continue;
+        buf.writeln(title.isEmpty ? '- $major' : '- $title: $major');
+      }
+      return buf.toString().trim();
+    }
+
+    final areas = <String, List<PhaseContent>>{
+      'Goals': [
+        PhaseContent.initiation(fmtProjectGoals()),
+        PhaseContent.planning(fmtPlanningGoals()),
+      ],
+      'Technology': [
+        PhaseContent.initiation(fmtItTechnology()),
+        PhaseContent.planning(data.frontEndPlanning.technology),
+      ],
+      'Infrastructure': [
+        PhaseContent.initiation(fmtInfra()),
+        PhaseContent.planning(data.frontEndPlanning.infrastructure),
+      ],
+    };
+
+    final summary = buildLatestContextSummary(areas);
+    if (summary.trim().isEmpty) return '';
+    return 'Latest topic versions (prefer the phase marked "latest" — earlier copies of the same topic are superseded):\n$summary';
   }
 
   /// Build launch-phase context by appending execution data summaries

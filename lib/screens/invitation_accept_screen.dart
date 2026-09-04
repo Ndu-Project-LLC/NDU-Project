@@ -10,7 +10,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
-import 'package:ndu_project/services/firebase_auth_service.dart';
 
 class InvitationAcceptScreen extends StatefulWidget {
   const InvitationAcceptScreen({super.key, required this.invitationId});

@@ -6,7 +6,6 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'dart:async';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';

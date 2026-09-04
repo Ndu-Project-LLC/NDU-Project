@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart'; // provides AiSolutionItem model
@@ -1497,7 +1498,7 @@ class _InfrastructureConsiderationsScreenState
  } catch (e) {
  if (!mounted) return false;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('AI autofill failed: $e')),
+ SnackBar(content: Text('AI autofill failedaiErrorMessage(e)')),
  );
  return false;
  } finally {

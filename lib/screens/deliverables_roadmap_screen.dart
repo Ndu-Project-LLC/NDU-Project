@@ -19,7 +19,6 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:go_router/go_router.dart';
 const Color _kBackground = Colors.white;
 const Color _kAccent = Color(0xFFFFC812);

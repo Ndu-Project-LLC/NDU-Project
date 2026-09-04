@@ -3,8 +3,6 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/models/user_role.dart';
 import 'package:ndu_project/providers/user_role_provider.dart';
-import 'package:ndu_project/screens/contracts_tracking_screen.dart';
-import 'package:ndu_project/screens/detailed_design_screen.dart';
 import 'package:ndu_project/services/vendor_service.dart';
 import 'package:ndu_project/services/contract_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -18,7 +16,6 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/vendors_table_widget.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';

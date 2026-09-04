@@ -11,9 +11,6 @@ import 'package:ndu_project/services/auth_nav.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/screens/ssher_stacked_screen.dart';
-import 'package:ndu_project/screens/team_management_screen.dart';
-import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
 import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/screens/lessons_learned_screen.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -24,21 +21,19 @@ import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/content_text.dart';
 import 'package:ndu_project/widgets/business_case_header.dart';
 import 'package:ndu_project/screens/preferred_solution_analysis_screen.dart';
-import 'package:ndu_project/screens/front_end_planning_summary.dart';
 import 'package:ndu_project/widgets/expanding_text_field.dart';
 import 'package:ndu_project/screens/initiation_phase_screen.dart';
-import 'package:ndu_project/screens/potential_solutions_screen.dart';
 import 'package:ndu_project/screens/risk_identification_screen.dart';
 import 'package:ndu_project/screens/it_considerations_screen.dart';
 import 'package:ndu_project/screens/infrastructure_considerations_screen.dart';
 import 'package:ndu_project/screens/core_stakeholders_screen.dart';
 import 'package:ndu_project/screens/project_decision_summary_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/access_policy.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
-import 'package:ndu_project/services/sidebar_navigation_service.dart';
 
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
@@ -8187,12 +8182,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = (e.toString().contains('Failed to fetch') ||
-                e.toString().contains('ClientException') ||
-                e.toString().contains('XMLHttpRequest') ||
-                e.toString().contains('Connection refused'))
-            ? 'AI assist is being set up. Please try again later or enter content manually.'
-            : e.toString();
+        _error = aiErrorMessage(e);
       });
     } finally {
       if (mounted) setState(() => _isGenerating = false);
@@ -8695,7 +8685,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _savingsError = e.toString();
+        _savingsError = aiErrorMessage(e);
         _clearSavingsSuggestionsForSolution(activeIndex);
       });
     } finally {
@@ -8833,11 +8823,11 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _projectValueError = e.toString();
+        _projectValueError = aiErrorMessage(e);
       });
       if (showFeedback && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to regenerate project value: $e')),
+          SnackBar(content: Text('Failed to regenerate project value: ${aiErrorMessage(e)}')),
         );
       }
     } finally {
@@ -9096,12 +9086,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = (e.toString().contains('Failed to fetch') ||
-                e.toString().contains('ClientException') ||
-                e.toString().contains('XMLHttpRequest') ||
-                e.toString().contains('Connection refused'))
-            ? 'AI assist is being set up. Please try again later or enter content manually.'
-            : e.toString();
+        _error = aiErrorMessage(e);
         _solutionLoading.remove(index);
       });
     }

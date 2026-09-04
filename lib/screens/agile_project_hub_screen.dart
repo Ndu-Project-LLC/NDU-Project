@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
-import 'package:ndu_project/screens/agile_release_plan_screen.dart';
-import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
-import 'package:ndu_project/screens/agile_team_structure_screen.dart';
 import 'package:ndu_project/screens/agile_roadmap_screen.dart';
 import 'package:ndu_project/screens/agile_dashboard_screen.dart';
 import 'package:ndu_project/screens/agile_kanban_board_screen.dart';
@@ -20,7 +16,6 @@ import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
-import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════

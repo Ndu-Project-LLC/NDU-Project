@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -939,7 +940,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('KAZ AI generation failed: $e');
  if (mounted) {
    ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failed: $e'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  } finally {
@@ -976,7 +977,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('KAZ AI field generation failed: $e');
  if (mounted) {
    ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failed: $e'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  }

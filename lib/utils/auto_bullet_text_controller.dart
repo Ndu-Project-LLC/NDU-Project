@@ -6,6 +6,9 @@ const String kListBullet = '\u2022 ';
 
 /// Mixin that adds auto-bullet functionality for *list* fields.
 /// Uses "• " (bullet + space). Do not use for prose (Notes, Scope, Value narrative).
+///
+/// An empty field always stays empty — bullets are only inserted once content
+/// is typed, so cleared/empty fields never show a stray dot.
 class AutoBulletTextController extends TextEditingController {
   AutoBulletTextController({super.text}) {
     _setupListener();
@@ -20,13 +23,9 @@ class AutoBulletTextController extends TextEditingController {
     final selection = this.selection;
     const bullet = kListBullet;
 
-    if (currentText.isEmpty) {
-      value = const TextEditingValue(
-        text: bullet,
-        selection: TextSelection.collapsed(offset: bullet.length),
-      );
-      return;
-    }
+    // Keep empty fields empty — never force a bullet dot into a cleared or
+    // untouched field. Bullets appear only when content is actually typed.
+    if (currentText.isEmpty) return;
 
     final textBeforeCursor = currentText.substring(0, selection.baseOffset);
     final lastNewlineIndex = textBeforeCursor.lastIndexOf('\n');
@@ -81,6 +80,9 @@ class RichAutoBulletTextController extends AutoBulletTextController {
 }
 
 /// Extension for *list* fields only. Prose (Notes, Scope, Value narrative) must not use this.
+///
+/// An empty field always stays empty — bullets are only inserted once content
+/// is typed, so cleared/empty fields never show a stray dot.
 extension AutoBulletExtension on TextEditingController {
   void enableAutoBullet() {
     addListener(_autoBulletListener);
@@ -95,13 +97,9 @@ extension AutoBulletExtension on TextEditingController {
     final selection = this.selection;
     const bullet = kListBullet;
 
-    if (currentText.isEmpty) {
-      value = const TextEditingValue(
-        text: bullet,
-        selection: TextSelection.collapsed(offset: bullet.length),
-      );
-      return;
-    }
+    // Keep empty fields empty — never force a bullet dot into a cleared or
+    // untouched field. Bullets appear only when content is actually typed.
+    if (currentText.isEmpty) return;
 
     final textBeforeCursor = currentText.substring(0, selection.baseOffset);
     final lastNewlineIndex = textBeforeCursor.lastIndexOf('\n');

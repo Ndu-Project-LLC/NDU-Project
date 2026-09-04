@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
-import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
-import 'package:ndu_project/screens/stakeholder_alignment_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -175,7 +174,7 @@ class _ScopeTrackingImplementationScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('AI generation failed: $e'),
+            content: Text('AI generation failedaiErrorMessage(e)'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: const Color(0xFFEF4444),
           ),

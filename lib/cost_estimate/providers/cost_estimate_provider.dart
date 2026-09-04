@@ -172,6 +172,13 @@ class CostEstimateProvider extends ChangeNotifier {
                   'access': _estimate!.access
                       .map((g) => g.toJson())
                       .toList(growable: false),
+                  // BOE + stakeholders are real estimate content — persist
+                  // them too so assumptions/constraints/exclusions and the
+                  // stakeholder list survive a save/load round-trip.
+                  'boe': _estimate!.boe.toJson(),
+                  'stakeholders': _estimate!.stakeholders
+                      .map((s) => s.toJson())
+                      .toList(growable: false),
                   'createdAt': _estimate!.createdAt.toIso8601String(),
                   'updatedAt': _estimate!.updatedAt.toIso8601String(),
                 }
@@ -208,23 +215,46 @@ class CostEstimateProvider extends ChangeNotifier {
             .toList(growable: false)
         : <AccessGrant>[];
 
+    // Restore the BOE and stakeholder list when present (records saved
+    // before these were persisted fall back to the class defaults).
+    final className = _parseEstimateClass(json['className'] as String?);
+    final boeJson = json['boe'] as Map<String, dynamic>?;
+    BasisOfEstimate boe;
+    try {
+      boe = boeJson != null
+          ? BasisOfEstimate.fromJson(boeJson)
+          : emptyBOE(className);
+    } catch (_) {
+      // A corrupt BOE block must never prevent the estimate from loading.
+      boe = emptyBOE(className);
+    }
+    final stakeholdersJson = json['stakeholders'] as List<dynamic>?;
+    List<Stakeholder> stakeholders;
+    try {
+      stakeholders = stakeholdersJson != null
+          ? stakeholdersJson
+              .map((s) => Stakeholder.fromJson(s as Map<String, dynamic>))
+              .toList(growable: false)
+          : <Stakeholder>[];
+    } catch (_) {
+      stakeholders = <Stakeholder>[];
+    }
+
     return CostEstimate(
       id: json['id'] as String,
       projectId: json['projectId'] as String? ?? 'default',
       projectName: json['projectName'] as String,
-      className: EstimateClass.values
-          .byName(json['className'] as String? ?? 'class3'),
+      className: className,
       deliveryModel: DeliveryModel.values
           .byName(json['deliveryModel'] as String? ?? 'waterfall'),
       status: EstimateStatus.values
           .byName(json['status'] as String? ?? 'draft'),
       currency: json['currency'] as String? ?? 'USD',
       lines: lines,
-      boe: emptyBOE(EstimateClass.values
-          .byName(json['className'] as String? ?? 'class3')),
+      boe: boe,
       totals: totals,
       access: access,
-      stakeholders: [],
+      stakeholders: stakeholders,
       aiSuggestions: [],
       createdAt: json['createdAt'] is String
           ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
@@ -233,6 +263,29 @@ class CostEstimateProvider extends ChangeNotifier {
           ? DateTime.tryParse(json['updatedAt'] as String) ?? DateTime.now()
           : DateTime.now(),
     );
+  }
+
+  /// Tolerant [EstimateClass] parse for persisted records.
+  ///
+  /// Legacy/current saves store the class using `EstimateClass.name` — but
+  /// that getter is overridden to return the human label (e.g.
+  /// `'Budget Authorization'`), NOT the Dart enum identifier (`'class3'`).
+  /// `EstimateClass.values.byName` only understands identifiers, so strict
+  /// parsing threw and the WHOLE estimate failed to reload (silent data
+  /// loss on every cold start). Accept both representations and fall back
+  /// to Class 3 when the value is unrecognized.
+  static EstimateClass _parseEstimateClass(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return EstimateClass.class3;
+    final trimmed = raw.trim();
+    try {
+      return EstimateClass.values.byName(trimmed);
+    } catch (_) {
+      // Fall through to display-name matching.
+    }
+    for (final c in EstimateClass.values) {
+      if (c.name == trimmed) return c;
+    }
+    return EstimateClass.class3;
   }
 
   // ---- Setup ----
@@ -365,6 +418,128 @@ class CostEstimateProvider extends ChangeNotifier {
       default:
         return CostSourceType.historical;
     }
+  }
+
+  // ---- Scheduled purchases → Cost Estimate ----
+
+  /// True when [line] already represents a scheduled purchase described by
+  /// [candidate] — either through the explicit activity link
+  /// (`costLineId == candidate.activityCostLineId`) or through an identical
+  /// in-schedule line (same WBS ref AND same description).
+  static bool isPurchaseLine(
+      ScheduledPurchaseCandidate candidate, CostLine line) {
+    if (candidate.activityCostLineId != null &&
+        candidate.activityCostLineId!.isNotEmpty &&
+        line.id == candidate.activityCostLineId) {
+      return true;
+    }
+    final ref = (candidate.wbsRef ?? '').trim();
+    final title = candidate.title.trim();
+    if (ref.isNotEmpty) {
+      return (line.wbsRef ?? '').trim() == ref &&
+          line.description.trim() == title &&
+          line.inSchedule;
+    }
+    return line.description.trim() == title &&
+        line.inSchedule &&
+        (line.wbsRef ?? '').trim().isEmpty;
+  }
+
+  /// Whether any existing line already represents [candidate].
+  bool isScheduledPurchaseRepresented(ScheduledPurchaseCandidate candidate) {
+    final estimate = _estimate;
+    if (estimate == null) return false;
+    return estimate.lines
+        .any((l) => isPurchaseLine(candidate, l));
+  }
+
+  /// Pull scheduled purchases into the Cost Estimate as procurement cost
+  /// lines. CORE functionality: no AI involved — this is plain data movement
+  /// from the Schedule (which already holds the purchase work packages) into
+  /// the estimate, exactly as the product owner described in the 2026-09-03
+  /// voice note ("where there was a cost and go buy CPE or buy this … you put
+  /// them into the cost estimate").
+  ///
+  /// Pulled lines are created with an explicit link to their schedule
+  /// activity via the returned [ScheduledPurchasePullResult.addedByActivityId]
+  /// map so callers can stamp `ScheduleActivity.costLineId` afterwards.
+  /// Lines start at $0 (quantity 1, lump sum) because the schedule does not
+  /// store money — the user prices each one in the Cost Estimate Builder /
+  /// Cost-by-WBS view, where they show up as "not yet priced".
+  ///
+  /// Idempotent: purchases already represented in the estimate (linked by
+  /// activity costLineId, or same WBS ref + description) are never duplicated.
+  ScheduledPurchasePullResult pullScheduledPurchases(
+      List<ScheduledPurchaseCandidate> candidates) {
+    final estimate = _estimate;
+    if (estimate == null || candidates.isEmpty) {
+      return ScheduledPurchasePullResult.empty;
+    }
+
+    final newLines = [...estimate.lines];
+    final addedByActivityId = <String, String>{};
+    var alreadyInEstimate = 0;
+
+    for (final candidate in candidates) {
+      final existingCostLineId =
+          (candidate.activityCostLineId ?? '').trim();
+      // Linked to an existing line? Skip.
+      if (existingCostLineId.isNotEmpty &&
+          estimate.lines.any((l) => l.id == existingCostLineId)) {
+        alreadyInEstimate++;
+        continue;
+      }
+      // Already represented by an identical in-schedule line? Skip.
+      if (estimate.lines.any((l) => isPurchaseLine(candidate, l))) {
+        alreadyInEstimate++;
+        continue;
+      }
+
+      final title = candidate.title.trim().isEmpty
+          ? 'Scheduled purchase'
+          : candidate.title.trim();
+      final line = CostLine(
+        id: newId('line'),
+        category: CostCategory.procurement,
+        subCategory: 'Scheduled purchase',
+        description: title,
+        wbsRef:
+            (candidate.wbsRef ?? '').trim().isEmpty
+                ? null
+                : candidate.wbsRef!.trim(),
+        quantity: 1,
+        unit: 'lump',
+        rate: null,
+        total: 0,
+        inSchedule: true,
+        basisSource: CostSourceType.historical,
+        aiGenerated: false,
+      );
+      newLines.add(line);
+      addedByActivityId[candidate.activityId] = line.id;
+    }
+
+    if (addedByActivityId.isEmpty) {
+      return ScheduledPurchasePullResult(
+        pulled: 0,
+        alreadyInEstimate: alreadyInEstimate,
+        addedByActivityId: const {},
+      );
+    }
+
+    final totals = ComputeUtils.computeTotals(newLines);
+    _estimate = estimate.copyWith(
+      lines: newLines,
+      totals: totals,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return ScheduledPurchasePullResult(
+      pulled: addedByActivityId.length,
+      alreadyInEstimate: alreadyInEstimate,
+      addedByActivityId: addedByActivityId,
+    );
   }
 
   /// Pick the best project name: the explicit one if it's been customised,
@@ -874,4 +1049,57 @@ class CostEstimateProvider extends ChangeNotifier {
     _saveToStorage();
     return true;
   }
+}
+
+/// Lightweight description of a purchase already scheduled in the Schedule
+/// module that the Cost Estimate should carry. Constructed by the Schedule
+/// UI from its activities (see `lib/schedule/utils/schedule_purchase_cost.dart`)
+/// — no schedule-model dependency here keeps the provider import-safe.
+class ScheduledPurchaseCandidate {
+  /// `ScheduleActivity.id` — used to stamp `ScheduleActivity.costLineId` after
+  /// the pull so repeat pulls stay idempotent.
+  final String activityId;
+
+  /// `ScheduleActivity.name` — becomes the cost-line description.
+  final String title;
+
+  /// `ScheduleActivity.wbsCode` — links the line to the same WBS node the
+  /// scheduled work package is attached to.
+  final String? wbsRef;
+
+  /// `ScheduleActivity.costLineId` when the activity is already linked.
+  final String? activityCostLineId;
+
+  const ScheduledPurchaseCandidate({
+    required this.activityId,
+    required this.title,
+    this.wbsRef,
+    this.activityCostLineId,
+  });
+}
+
+/// Result of [CostEstimateProvider.pullScheduledPurchases].
+class ScheduledPurchasePullResult {
+  /// Number of new procurement cost lines created.
+  final int pulled;
+
+  /// Purchases that were already represented — nothing created for them.
+  final int alreadyInEstimate;
+
+  /// `ScheduleActivity.id` → new `CostLine.id` for every line created, so the
+  /// caller can stamp the activity's `costLineId` and keep future pulls
+  /// idempotent.
+  final Map<String, String> addedByActivityId;
+
+  const ScheduledPurchasePullResult({
+    required this.pulled,
+    required this.alreadyInEstimate,
+    required this.addedByActivityId,
+  });
+
+  static const empty = ScheduledPurchasePullResult(
+    pulled: 0,
+    alreadyInEstimate: 0,
+    addedByActivityId: <String, String>{},
+  );
 }

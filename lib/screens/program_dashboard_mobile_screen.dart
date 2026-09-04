@@ -13,11 +13,9 @@ import '../services/portfolio_service.dart';
 import '../services/program_service.dart';
 import '../services/project_service.dart';
 import '../services/project_navigation_service.dart';
-import '../services/navigation_context_service.dart';
 import '../utils/navigation_route_resolver.dart';
 import '../providers/project_data_provider.dart';
 import '../screens/initiation_phase_screen.dart';
-import '../screens/portfolio_dashboard_screen.dart';
 import '../routing/app_router.dart';
 
 // ---------------------------------------------------------------------------

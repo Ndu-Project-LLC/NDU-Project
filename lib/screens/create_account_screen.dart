@@ -5,7 +5,6 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/elevated_auth_container.dart';
-import 'package:ndu_project/screens/sign_in_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/services/security_services.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -480,7 +479,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         top: true,
         child: SingleChildScrollView(
@@ -550,7 +549,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                   color: Colors.grey.shade300, width: 1.5),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
-                              backgroundColor: Colors.white,
+                              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                             ),
                           ),
                         ),
@@ -706,9 +705,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             const SizedBox(height: 8),
                             SizedBox(
                               height: 52,
-                              child: VoiceTextField(
-                                enableKazAi: false,
-                                enableTextFormatting: false,
+                              child: TextField(
                                 controller: _passwordController,
                                 obscureText: !_isPasswordVisible,
                                 style: const TextStyle(fontSize: 15),
@@ -761,9 +758,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             const SizedBox(height: 8),
                             SizedBox(
                               height: 52,
-                              child: VoiceTextField(
-                                enableKazAi: false,
-                                enableTextFormatting: false,
+                              child: TextField(
                                 controller: _confirmPasswordController,
                                 obscureText: !_isConfirmPasswordVisible,
                                 style: const TextStyle(fontSize: 15),

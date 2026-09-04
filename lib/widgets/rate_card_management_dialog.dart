@@ -366,7 +366,7 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF7E6),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFBFDBFE)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -483,7 +483,7 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
 
   Color _getTierColor(String tier) {
     switch (tier) {
-      case 'Global': return const Color(0xFF7C3AED);
+      case 'Global': return const Color(0xFFB8860B);
       case 'Regional': return const Color(0xFFD97706);
       case 'National': return const Color(0xFF059669);
       case 'Local': return const Color(0xFFD97706);

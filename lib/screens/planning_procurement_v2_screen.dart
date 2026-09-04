@@ -15,6 +15,7 @@ import 'package:ndu_project/services/planning_contracting_service.dart';
 import 'package:ndu_project/services/procurement_seeding_service.dart';
 import 'package:ndu_project/services/procurement_service.dart';
 import 'package:ndu_project/services/procurement_workflow_service.dart';
+import 'package:ndu_project/services/integrated_work_package_service.dart';
 import 'package:ndu_project/services/schedule_linkage_service.dart';
 import 'package:ndu_project/services/vendor_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -37,6 +38,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/procurement/procurement_section_error_card.dart';
 class PlanningProcurementV2Screen extends StatefulWidget {
  const PlanningProcurementV2Screen({super.key});
 
@@ -113,11 +115,15 @@ class _PlanningProcurementV2ScreenState
  Map<String, List<ProcurementWorkflowStep>> _scopeWorkflowOverrides = const {};
 
  List<VendorModel> _vendors = const [];
- final Set<String> _selectedVendorIds = {};
- bool _approvedOnly = false;
- bool _preferredOnly = false;
- bool _listView = true;
- String _categoryFilter = 'All Categories';
+ final Set<String> _selectedVendorIds = {};  bool _approvedOnly = false;
+  bool _preferredOnly = false;
+  bool _listView = true;
+  String _categoryFilter = 'All Categories';
+  String _itemSearchQuery = '';
+  String _itemCategoryFilter = 'All Categories';
+  String _itemStatusFilter = 'All Statuses';
+  String? _syncingItemId;
+
 
  final List<VendorHealthMetric> _vendorHealthMetrics = const [];
  final List<VendorOnboardingTask> _vendorOnboardingTasks = const [];
@@ -164,12 +170,28 @@ class _PlanningProcurementV2ScreenState
  super.dispose();
  }
 
+ /// Build-path safety net: if a data-driven section throws (e.g. a
+ /// "Bad state: No element" from unexpected Firestore data), isolate the
+ /// failure to that section instead of blanking the entire page.
+ Widget _safeSection(String label, Widget Function() builder) {
+ try {
+ return builder();
+ } catch (err, stack) {
+ debugPrint('Procurement section "$label" build error: $err\n$stack');
+ return ProcurementSectionErrorCard(
+ label: label,
+ message: err.toString(),
+ onRetry: () async => setState(() {}),
+ );
+ }
+ }
+
  @override
  Widget build(BuildContext context) {
  final isMobile = AppBreakpoints.isMobile(context);
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,11 +218,11 @@ class _PlanningProcurementV2ScreenState
  children: [
  PlanningPhaseHeader(title: 'Procurement', onExportPdf: _exportPdf),
  const SizedBox(height: 16),
- _buildHeader(context),
+ _safeSection('Overview header', () => _buildHeader(context)),
  const SizedBox(height: 24),
  _buildTabBar(),
  const SizedBox(height: 24),
- _buildTabContent(),
+ _safeSection(_tabLabels[_selectedTab], _buildTabContent),
  const SizedBox(height: 96),
  ],
  ),
@@ -313,7 +335,7 @@ class _PlanningProcurementV2ScreenState
  color: selected ? Colors.white : const Color(0xFF111827),
  fontWeight: FontWeight.w600,
  ),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12),
  side: BorderSide(
@@ -485,12 +507,11 @@ class _PlanningProcurementV2ScreenState
  value: '${overdueItems.length}',
  icon: Icons.schedule_outlined,
  ),
- const SizedBox(height: 12),
- OutlinedButton.icon(
- onPressed: () {},
- icon: const Icon(Icons.sync, size: 16),
- label: const Text('Sync Schedule'),
- ),
+ const SizedBox(height: 12),      OutlinedButton.icon(
+        onPressed: _syncProcurementSchedule,
+        icon: const Icon(Icons.sync, size: 16),
+        label: const Text('Sync Schedule'),
+      ),
  ],
  ),
  ),
@@ -533,20 +554,290 @@ class _PlanningProcurementV2ScreenState
  );
  }
 
+ List<ProcurementItemModel> get _filteredItems {
+ final query = _itemSearchQuery.trim().toLowerCase();
+ return _items.where((item) {
+ if (query.isNotEmpty &&
+ !'${item.name} ${item.description} ${item.category} ${item.responsibleMember}'
+ .toLowerCase()
+ .contains(query)) {
+ return false;
+ }
+ if (_itemCategoryFilter != 'All Categories' &&
+ item.category != _itemCategoryFilter) {
+ return false;
+ }
+ if (_itemStatusFilter != 'All Statuses' &&
+ item.status.label != _itemStatusFilter) {
+ return false;
+ }
+ return true;
+ }).toList(growable: false);
+ }
+
+ List<String> get _itemCategoryOptions {
+ final categories = _items
+ .map((item) => item.category.trim())
+ .where((category) => category.isNotEmpty)
+ .toSet()
+ .toList()
+ ..sort();
+ return ['All Categories', ...categories];
+ }
+
+ List<String> get _itemStatusOptions => [
+ 'All Statuses',
+ ...ProcurementItemStatus.values.map((status) => status.label),
+ ];
+
+ List<WorkItem> _flattenWbsItems(List<WorkItem> roots) {
+ final result = <WorkItem>[];
+ void visit(WorkItem item) {
+ result.add(item);
+ for (final child in item.children) {
+ visit(child);
+ }
+ }
+ for (final root in roots) {
+ visit(root);
+ }
+ return result;
+ }
+
+ Future<WorkItem?> _pickWbsItem(ProcurementItemModel item) async {
+ final options = _flattenWbsItems(ProjectDataHelper.getData(context).wbsTree)
+ .where((node) => node.id.trim().isNotEmpty)
+ .toList(growable: false);
+ if (options.isEmpty) {
+ _showProcurementMessage('Create a WBS item before linking procurement.');
+ return null;
+ }
+
+ return showDialog<WorkItem>(
+ context: context,
+ builder: (dialogContext) {
+ final queryController = TextEditingController();
+ return StatefulBuilder(
+ builder: (context, setDialogState) {
+ final query = queryController.text.trim().toLowerCase();
+ final filtered = options.where((node) {
+ if (query.isEmpty) return true;
+ return '${node.wbsCode} ${node.title} ${node.description}'
+ .toLowerCase()
+ .contains(query);
+ }).toList(growable: false);
+ return AlertDialog(
+ title: Text('Link "${item.name}" to WBS'),
+ content: SizedBox(
+ width: 520,
+ height: 460,
+ child: Column(
+ children: [
+ TextField(
+ controller: queryController,
+ onChanged: (_) => setDialogState(() {}),
+ decoration: const InputDecoration(
+ prefixIcon: Icon(Icons.search),
+ hintText: 'Search WBS items',
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ Expanded(
+ child: filtered.isEmpty
+ ? const Center(child: Text('No matching WBS items.'))
+ : ListView.builder(
+ itemCount: filtered.length,
+ itemBuilder: (context, index) {
+ final node = filtered[index];
+ return ListTile(
+ leading: const Icon(Icons.account_tree_outlined),
+ title: Text(node.title.trim().isEmpty ? 'Untitled WBS item' : node.title),
+ subtitle: Text(node.wbsCode.trim().isEmpty ? node.id : node.wbsCode),
+ onTap: () => Navigator.of(dialogContext).pop(node),
+ );
+ },
+ ),
+ ),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.of(dialogContext).pop(),
+ child: const Text('Cancel'),
+ ),
+ ],
+ );
+ },
+ );
+ },
+ );
+ }
+
+ void _showProcurementMessage(String message) {
+ if (!mounted) return;
+ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+ }
+
+ Future<void> _pullProcurementItemToWbsAndCost(ProcurementItemModel item) async {
+ if (_syncingItemId != null) return;
+ if (item.id.trim().isEmpty || _projectId.trim().isEmpty) {
+ _showProcurementMessage('This procurement item cannot be linked yet.');
+ return;
+ }
+
+ final wbsItem = await _pickWbsItem(item);
+ if (wbsItem == null || !mounted) return;
+
+ setState(() => _syncingItemId = item.id);
+ try {
+ final provider = ProjectDataHelper.getProvider(context);
+ final currentData = provider.projectData;
+ final packageId = 'procurement_${item.id}';
+ final costLineId = 'src_procurement_${item.id}';
+ final existingPackage = currentData.workPackages.firstWhere(
+ (package) =>
+ package.id == packageId || package.procurementItemIds.contains(item.id),
+ orElse: () => WorkPackage(id: packageId),
+ );
+ final linkedPackage = existingPackage.copyWith(
+ wbsItemId: wbsItem.id,
+ wbsLevel2Id: wbsItem.id,
+ wbsLevel2Title: wbsItem.title,
+ packageCode: wbsItem.wbsCode,
+ packageClassification: IntegratedWorkPackageService.procurementPackage,
+ title: item.name.trim(),
+ description: item.description.trim(),
+ type: 'procurement',
+ phase: item.projectPhase.trim().isEmpty ? 'planning' : item.projectPhase,
+ status: item.status == ProcurementItemStatus.cancelled ? 'cancelled' : 'planned',
+ owner: item.responsibleMember.trim(),
+ discipline: item.category.trim(),
+ budgetedCost: item.budget,
+ actualCost: item.spent,
+ vendorIds: item.vendorId == null || item.vendorId!.trim().isEmpty
+ ? existingPackage.vendorIds
+ : <String>[item.vendorId!.trim()],
+ contractIds: item.contractId == null || item.contractId!.trim().isEmpty
+ ? existingPackage.contractIds
+ : <String>[item.contractId!.trim()],
+ procurementItemIds: <String>{...existingPackage.procurementItemIds, item.id}.toList(),
+ milestoneIds: item.linkedMilestoneId == null || item.linkedMilestoneId!.trim().isEmpty
+ ? existingPackage.milestoneIds
+ : <String>[item.linkedMilestoneId!.trim()],
+ procurementBreakdown: existingPackage.procurementBreakdown.copyWith(
+ category: item.category,
+ scopeDefinition: item.description,
+ deliveryDate: item.requiredByDate?.toIso8601String() ??
+ item.estimatedDelivery?.toIso8601String() ?? '',
+ requiredByMilestoneId: item.linkedMilestoneId ?? '',
+ vendorScope: item.responsibleMember,
+ ),
+ notes: item.comments.trim().isEmpty ? item.notes : item.comments,
+ );
+
+ final updatedPackages = [
+ ...currentData.workPackages.where((package) =>
+ package.id != existingPackage.id &&
+ !package.procurementItemIds.contains(item.id)),
+ linkedPackage,
+ ];
+
+ final existingCost = currentData.costEstimateItems.firstWhere(
+ (cost) => cost.id == costLineId ||
+ (cost.source == 'project_procurement_item' &&
+ cost.reconciliationReference == 'procurement:${item.id}'),
+ orElse: () => CostEstimateItem(id: costLineId),
+ );
+ existingCost
+ ..title = item.name.trim()
+ ..notes = [item.category, item.description, item.comments]
+ .map((value) => value.trim())
+ .where((value) => value.isNotEmpty)
+ .join(' | ')
+ ..amount = item.budget
+ ..costType = 'direct'
+ ..source = 'project_procurement_item'
+ ..costState = 'forecast'
+ ..isBaseline = false
+ ..wbsItemId = wbsItem.id
+ ..workPackageId = linkedPackage.id
+ ..workPackageTitle = item.name.trim()
+ ..phase = item.projectPhase.trim().isEmpty ? 'planning' : item.projectPhase
+ ..estimatingMethod = 'bottoms_up'
+ ..estimatingBasis = 'Pulled from procurement item'
+ ..scheduleActivityId = item.linkedMilestoneId ?? ''
+ ..contractId = item.contractId ?? ''
+ ..reconciliationReference = 'procurement:${item.id}';
+
+ final updatedCosts = [
+ ...currentData.costEstimateItems.where((cost) =>
+ cost.id != existingCost.id &&
+ !(cost.source == 'project_procurement_item' &&
+ cost.reconciliationReference == 'procurement:${item.id}')),
+ existingCost,
+ ];
+
+ await ProjectDataHelper.updateAndSave(
+ context: context,
+ checkpoint: 'procurement',
+ dataUpdater: (data) => data.copyWith(
+ workPackages: updatedPackages,
+ costEstimateItems: updatedCosts,
+ ),
+ showSnackbar: false,
+ );
+ await ProcurementService.updateItemScheduleLink(
+ _projectId,
+ item.id,
+ wbsId: wbsItem.id,
+ milestoneId: item.linkedMilestoneId,
+ requiredByDate: item.requiredByDate,
+ );
+ if (!mounted) return;
+ _showProcurementMessage('${item.name} is linked to WBS and Cost Estimate.');
+ } catch (error) {
+ if (mounted) _showProcurementMessage('Unable to link procurement item: $error');
+ } finally {
+ if (mounted) setState(() => _syncingItemId = null);
+ }
+ }
+
+ Future<void> _syncProcurementSchedule() async {
+ try {
+ await ScheduleLinkageService.checkAndSyncOnOpen(context);
+ if (mounted) {
+ setState(() {});
+ _showProcurementMessage('Schedule-linked procurement dates refreshed.');
+ }
+ } catch (error) {
+ _showProcurementMessage('Unable to sync schedule links: $error');
+ }
+ }
+
  Widget _buildItemsTab() {
  final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
  return ProcurementItemsListView(
- items: _items,
+ items: _filteredItems,
  trackableItems: _trackableItems,
  selectedIndex: _selectedTrackableIndex,
- onSelectTrackable: (index) =>
- setState(() => _selectedTrackableIndex = index),
+ onSelectTrackable: (index) => setState(() => _selectedTrackableIndex = index),
  currencyFormat: currencyFormat,
  onAddItem: _openAddItemDialog,
  onEditItem: (item) => _openEditItemDialog(item),
  onDeleteItem: (item) => _removeItem(item),
+ onSearchChanged: (value) => setState(() => _itemSearchQuery = value),
+ onCategoryChanged: (value) => setState(() => _itemCategoryFilter = value),
+ onStatusChanged: (value) => setState(() => _itemStatusFilter = value),
+ categoryOptions: _itemCategoryOptions,
+ statusOptions: _itemStatusOptions,
+ selectedCategory: _itemCategoryFilter,
+ selectedStatus: _itemStatusFilter,
+ onPullToWbsCost: _pullProcurementItemToWbsAndCost,
  );
  }
+
 
  List<Widget> _buildDialogContextChips() {
  final data = ProjectDataHelper.getData(context);
@@ -1496,10 +1787,10 @@ class _PlanningProcurementV2ScreenState
  }
 
  final palette = <Color>[
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  const Color(0xFF10B981),
  const Color(0xFFF59E0B),
- const Color(0xFF6D28D9),
+ const Color(0xFFB8860B),
  const Color(0xFFEF4444),
  ];
  final categoryEntries = categoryTotals.entries.toList()
@@ -2396,9 +2687,9 @@ class _ApprovalStatusBadge extends StatelessWidget {
  break;
  case 'pending':
  default:
- background = const Color(0xFFDBEAFE);
- border = const Color(0xFF93C5FD);
- foreground = const Color(0xFF1D4ED8);
+ background = const Color(0xFFFEF3C7);
+ border = const Color(0xFFFFC812);
+ foreground = const Color(0xFFFFC812);
  break;
  }
 

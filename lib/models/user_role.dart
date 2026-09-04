@@ -8,11 +8,11 @@ enum SiteRole {
 
   /// Manages users, permissions, and system configurations while supporting
   /// overall platform governance. Limited site control beyond projects.
-  admin('Admin', 4, Color(0xFF8B5CF6)),
+  admin('Admin', 4, Color(0xFFB8860B)),
 
   /// Creates, modifies, and manages content, projects, or data within
   /// assigned areas of the platform. Project, program, and portfolio managers.
-  editor('Editor', 3, Color(0xFF3B82F6)),
+  editor('Editor', 3, Color(0xFFFFC812)),
 
   /// Engages with the platform to execute tasks, collaborate, and utilize
   /// available features based on assigned access. Regular project users.
@@ -381,11 +381,14 @@ class UserProfile {
 
   /// Get initials for avatar
   String get initials {
-    final parts = displayName.trim().split(' ');
+    final trimmed = displayName.trim();
+    if (trimmed.isEmpty) return '?';
+    final parts = trimmed.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return trimmed[0].toUpperCase();
     if (parts.length >= 2) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
-    return displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+    return parts[0][0].toUpperCase();
   }
 
   Map<String, dynamic> toMap() => {

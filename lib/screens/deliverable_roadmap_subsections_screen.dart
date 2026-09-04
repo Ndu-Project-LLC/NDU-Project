@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/roadmap_deliverable.dart';
 import '../models/roadmap_sprint.dart';
@@ -12,13 +11,11 @@ import '../widgets/responsive.dart';
 import '../widgets/planning_ai_notes_card.dart';
 import '../widgets/launch_phase_navigation.dart';
 import '../utils/planning_phase_navigation.dart';
-import '../services/firebase_auth_service.dart';
-import '../services/user_service.dart';
 import '../widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
-const Color _kBackground = Color(0xFFF9FAFC);
+const Color _kBackground = Colors.white;
 const Color _kHeadline = Color(0xFF111827);
 const Color _kMuted = Color(0xFF6B7280);
 const Color _kCardBorder = Color(0xFFE5E7EB);
@@ -196,18 +193,14 @@ class _DeliverableRoadmapAgileMapOutScreenState
                         final halfWidth = twoCol ? (width - gap) / 2 : width;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            PlanningPhaseHeader(
+                          children: [                            PlanningPhaseHeader(
                                 title: 'Agile Map Out',
+                                onBack: () =>
+                                    PlanningPhaseNavigation.goToPrevious(
+                                        context, 'agile_map_out'),
+                                onForward: () => PlanningPhaseNavigation.goToNext(
+                                        context, 'agile_map_out'),
                                 onExportPdf: _exportPdf),
-                            const SizedBox(height: 16),
-                            _TopHeader(
-                              onBack: () =>
-                                  PlanningPhaseNavigation.goToPrevious(
-                                      context, 'agile_map_out'),
-                              onForward: () => PlanningPhaseNavigation.goToNext(
-                                  context, 'agile_map_out'),
-                            ),
                             const SizedBox(height: 12),
                             const Text(
                               'Delivery waves, velocity, dependencies & milestones',
@@ -302,7 +295,7 @@ class _DeliverableRoadmapAgileMapOutScreenState
         _MetricCard(
             label: 'Total Sprints',
             value: '${_sprints.length}',
-            accent: const Color(0xFF8B5CF6)),
+            accent: const Color(0xFFB8860B)),
         _MetricCard(
             label: 'Est. Velocity',
             value: '$_avgVelocity pts/sprint',
@@ -310,7 +303,7 @@ class _DeliverableRoadmapAgileMapOutScreenState
         _MetricCard(
             label: 'Total Story Points',
             value: '$_totalPoints',
-            accent: const Color(0xFF2563EB)),
+            accent: const Color(0xFFFFC812)),
         _MetricCard(
             label: 'Progress',
             value: _totalPoints > 0
@@ -479,123 +472,6 @@ class _Milestone {
 
 // ── Widgets ──────────────────────────────────────────────────
 
-class _TopHeader extends StatelessWidget {
-  const _TopHeader({required this.onBack, required this.onForward});
-  final VoidCallback onBack;
-  final VoidCallback onForward;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _CircleBtn(icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
-        const SizedBox(width: 12),
-        _CircleBtn(icon: Icons.arrow_forward_ios_rounded, onTap: onForward),
-        const SizedBox(width: 16),
-        const Text('Agile Map Out',
-            style: TextStyle(
-                fontSize: 22, fontWeight: FontWeight.w700, color: _kHeadline)),
-        const Spacer(),
-        const SizedBox(width: 12),
-        const _UserChip(),
-      ],
-    );
-  }
-}
-
-class _CircleBtn extends StatelessWidget {
-  const _CircleBtn({required this.icon, this.onTap});
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: Color(0xFFE5E7EB)),
-        ),
-        child: Icon(icon, size: 16, color: _kMuted),
-      ),
-    );
-  }
-}
-
-class _UserChip extends StatelessWidget {
-  const _UserChip();
-
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName =
-        FirebaseAuthService.displayNameOrEmail(fallback: 'User');
-    final email = user?.email ?? '';
-
-    return RepaintBoundary(
-      child: StreamBuilder<bool>(
-        stream: UserService.watchAdminStatus(),
-        builder: (context, snapshot) {
-          final isAdmin = snapshot.data ?? UserService.isAdminEmail(email);
-          final role = isAdmin ? 'Admin' : 'Member';
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Color(0xFFE5E7EB)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: const Color(0xFFE5E7EB),
-                  backgroundImage: user?.photoURL != null
-                      ? NetworkImage(user!.photoURL!)
-                      : null,
-                  child: user?.photoURL == null
-                      ? Text(
-                          displayName.isNotEmpty
-                              ? displayName[0].toUpperCase()
-                              : 'U',
-                          style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF374151)),
-                        )
-                      : null,
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(displayName,
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w600)),
-                    Text(role,
-                        style: const TextStyle(
-                            fontSize: 10, color: Color(0xFF6B7280))),
-                  ],
-                ),
-                const SizedBox(width: 6),
-                const Icon(Icons.keyboard_arrow_down,
-                    size: 18, color: Color(0xFF9CA3AF)),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
 class _MetricCard extends StatelessWidget {
   const _MetricCard(
       {required this.label, required this.value, required this.accent});
@@ -612,7 +488,7 @@ class _MetricCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kCardBorder),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 6)),
         ],
@@ -646,7 +522,7 @@ class _SectionCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kCardBorder),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 6)),
         ],
@@ -708,7 +584,7 @@ class _WaveRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFC),
+        color: const Color(0xFFF9FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _kCardBorder),
       ),
@@ -721,7 +597,7 @@ class _WaveRow extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
+                  color: const Color(0xFFB8860B).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 alignment: Alignment.center,
@@ -730,7 +606,7 @@ class _WaveRow extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF8B5CF6),
+                    color: Color(0xFFB8860B),
                   ),
                 ),
               ),
@@ -756,7 +632,7 @@ class _WaveRow extends StatelessWidget {
               value: progress / 100,
               backgroundColor: const Color(0xFFE5E7EB),
               valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+                  const AlwaysStoppedAnimation<Color>(Color(0xFFB8860B)),
               minHeight: 6,
             ),
           ),
@@ -773,7 +649,7 @@ class _WaveRow extends StatelessWidget {
                 style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF8B5CF6)),
+                    color: Color(0xFFB8860B)),
               ),
             ],
           ),
@@ -1005,7 +881,7 @@ class _MilestoneRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFC),
+        color: const Color(0xFFF9FAFC),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _kCardBorder),
       ),
@@ -1017,7 +893,7 @@ class _MilestoneRow extends StatelessWidget {
             decoration: BoxDecoration(
               color: (isComplete
                       ? const Color(0xFF10B981)
-                      : const Color(0xFF2563EB))
+                      : const Color(0xFFFFC812))
                   .withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -1026,7 +902,7 @@ class _MilestoneRow extends StatelessWidget {
               size: 16,
               color: isComplete
                   ? const Color(0xFF10B981)
-                  : const Color(0xFF2563EB),
+                  : const Color(0xFFFFC812),
             ),
           ),
           const SizedBox(width: 10),

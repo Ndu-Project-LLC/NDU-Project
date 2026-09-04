@@ -5,8 +5,20 @@ import 'package:flutter/services.dart';
 import 'package:ndu_project/services/voice_input_service.dart';
 import 'package:ndu_project/services/docx_import_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/open_editor_button.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Returns true if the 'Open Editor' button should be hidden app-wide.
+Future<bool> isOpenEditorDisabled() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('pref_disable_open_editor') ?? false;
+  } catch (_) {
+    return false;
+  }
+}
 
 /// A drop-in replacement for [TextField] that adds a microphone button
 /// for voice-to-text input.
@@ -69,6 +81,7 @@ class VoiceTextField extends StatefulWidget {
     this.enableKazAi = true,
     this.kazAiLabel,
     this.enableTextFormatting = true,
+    this.allowInlineSuffix = false,
   });
 
   final TextEditingController? controller;
@@ -141,6 +154,11 @@ class VoiceTextField extends StatefulWidget {
   /// Whether to show the text formatting toolbar for multi-line fields.
   final bool enableTextFormatting;
 
+  /// Whether to allow inline suffix icons (KAZ AI sparkle, clear content)
+  /// inside the text field. Defaults to false — these actions are surfaced
+  /// via the Open Editor button instead.
+  final bool allowInlineSuffix;
+
   @override
   State<VoiceTextField> createState() => _VoiceTextFieldState();
 }
@@ -154,6 +172,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
   bool _voiceAvailable = true;
   bool _isImportingDoc = false;
   bool _isGeneratingAi = false;
+  bool _openEditorDisabled = false;
 
   /// Generates AI content for this field using OpenAiServiceSecure.
   Future<void> _generateWithKazAi() async {
@@ -179,7 +198,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       debugPrint('[VoiceTextField] KAZ AI failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI failed: $e')),
+          SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')),
         );
       }
     }
@@ -231,6 +250,12 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     super.initState();
     _controller = widget.controller ?? TextEditingController();
     _checkAvailability();
+    _loadOpenEditorDisabled();
+  }
+
+  Future<void> _loadOpenEditorDisabled() async {
+    final disabled = await isOpenEditorDisabled();
+    if (mounted) setState(() => _openEditorDisabled = disabled);
   }
 
   @override
@@ -361,12 +386,20 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       kazAiEnabled: kazAiEnabled,
     );
     final anyLoading = _isListening || _isGeneratingAi || _isImportingDoc;
-    final hasActions = actions.any((a) => a.enabled);
+    final hasActions = !_openEditorDisabled && actions.any((a) => a.enabled);
+
+    // Strip inline suffix icons (KAZ AI sparkle, clear content) unless
+    // explicitly allowed — these actions are surfaced via Open Editor instead.
+    final effectiveDecoration = widget.allowInlineSuffix
+        ? (widget.decoration ?? const InputDecoration())
+        : (widget.decoration ?? const InputDecoration()).copyWith(
+            suffixIcon: null,
+          );
 
     final textField = TextField(
       controller: _controller,
       focusNode: widget.focusNode,
-      decoration: widget.decoration ?? const InputDecoration(),
+      decoration: effectiveDecoration,
       keyboardType: widget.keyboardType,
       textInputAction: widget.textInputAction,
       textCapitalization: widget.textCapitalization,
@@ -423,7 +456,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
             runSpacing: 8,
             children: [
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: OpenEditorButton(
                   actions: actions,
                   isLoading: anyLoading,
@@ -475,7 +508,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
           icon: Icons.upload_file,
           label: 'Import from .docx / .doc',
           tooltip: widget.docxImportTooltip,
-          accent: const Color(0xFF0EA5E9),
+          accent: const Color(0xFFFFC812),
           onTap: _importDocument,
         ),
       if (kazAiEnabled && _controller.text.isNotEmpty)
@@ -854,6 +887,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
   bool _voiceAvailable = true;
   bool _isImportingDoc = false;
   bool _isGeneratingAi = false;
+  bool _openEditorDisabled = false;
 
   Future<void> _generateWithKazAi() async {
     if (_isGeneratingAi) return;
@@ -876,7 +910,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI failed: $e')),
+          SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')),
         );
       }
     }
@@ -929,6 +963,12 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     _controller =
         widget.controller ?? TextEditingController(text: widget.initialValue);
     _checkAvailability();
+    _loadOpenEditorDisabled();
+  }
+
+  Future<void> _loadOpenEditorDisabled() async {
+    final disabled = await isOpenEditorDisabled();
+    if (mounted) setState(() => _openEditorDisabled = disabled);
   }
 
   @override
@@ -1063,7 +1103,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
       kazAiEnabled: kazAiEnabled,
     );
     final anyLoading = _isListening || _isGeneratingAi || _isImportingDoc;
-    final hasActions = actions.any((a) => a.enabled);
+    final hasActions = !_openEditorDisabled && actions.any((a) => a.enabled);
 
     final textField = TextFormField(
       controller: _controller,
@@ -1131,7 +1171,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
             runSpacing: 8,
             children: [
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: OpenEditorButton(
                   actions: actions,
                   isLoading: anyLoading,
@@ -1183,7 +1223,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
           icon: Icons.upload_file,
           label: 'Import from .docx / .doc',
           tooltip: widget.docxImportTooltip,
-          accent: const Color(0xFF0EA5E9),
+          accent: const Color(0xFFFFC812),
           onTap: _importDocument,
         ),
       if (kazAiEnabled && _controller.text.isNotEmpty)

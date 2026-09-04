@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/ai_error_message.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:convert';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
@@ -8,8 +10,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'package:ndu_project/models/launch_phase_models.dart';
-import 'package:ndu_project/screens/benefits_realization_screen.dart';
-import 'package:ndu_project/screens/financial_closeout_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -67,7 +67,7 @@ class _SummarizeAccountRisksScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: '8. Project Performance Review',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -94,10 +94,10 @@ class _SummarizeAccountRisksScreenState
             _buildNext90DaysPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Financial Closeout',
-              nextLabel: 'Next: Benefits Realization',
-              onBack: () => FinancialCloseoutScreen.open(context),
-              onNext: () => BenefitsRealizationScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('summarize_account_risks'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('summarize_account_risks'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'summarize_account_risks'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'summarize_account_risks'),
             ),
             const SizedBox(height: 48),
           ],
@@ -229,7 +229,7 @@ class _SummarizeAccountRisksScreenState
               label: 'Milestones Done',
               value: '$completedMilestones',
               icon: Icons.flag_outlined,
-              color: const Color(0xFF2563EB),
+              color: const Color(0xFFFFC812),
               delta:
                   '${milestones.isEmpty ? 0 : (completedMilestones / milestones.length * 100).round()}% complete',
             ),
@@ -714,7 +714,7 @@ class _SummarizeAccountRisksScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -757,7 +757,7 @@ class _SummarizeAccountRisksScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -801,7 +801,7 @@ class _SummarizeAccountRisksScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1053,7 +1053,7 @@ class _SummarizeAccountRisksScreenState
             pw.Text(
                 '$projectName — Generated ${now.toLocal().toIso8601String()}',
                 style:
-                    pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                    const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
             pw.SizedBox(height: 16),
 
             // Highlights
@@ -1067,7 +1067,7 @@ class _SummarizeAccountRisksScreenState
                 data: _highlights.map((h) => [h.title, h.details]).toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1087,7 +1087,7 @@ class _SummarizeAccountRisksScreenState
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1107,7 +1107,7 @@ class _SummarizeAccountRisksScreenState
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1138,7 +1138,7 @@ class _SummarizeAccountRisksScreenState
   pw.Widget _pdfCell(String text) {
     return pw.Padding(
         padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(text, style: pw.TextStyle(fontSize: 9)));
+        child: pw.Text(text, style: const pw.TextStyle(fontSize: 9)));
   }
 
   String _s(dynamic v) => (v ?? '').toString().trim();

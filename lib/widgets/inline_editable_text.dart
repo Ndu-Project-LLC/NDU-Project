@@ -258,11 +258,11 @@ class _InlineEditableTextState extends State<InlineEditableText> {
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Color(0xFF0EA5E9),
+                            color: Color(0xFFFFC812),
                           ),
                         )
                       : const Icon(Icons.upload_file,
-                          size: 16, color: Color(0xFF0EA5E9)),
+                          size: 16, color: Color(0xFFFFC812)),
                   onPressed: _isImportingDoc ? null : _importDocument,
                   tooltip: 'Import from .docx / .doc',
                   padding: EdgeInsets.zero,
@@ -284,15 +284,15 @@ class _InlineEditableTextState extends State<InlineEditableText> {
               hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5),
+                borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5),
+                borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 6),

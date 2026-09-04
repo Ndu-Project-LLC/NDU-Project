@@ -13,6 +13,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:ndu_project/project_controls/models/change_management_models.dart';
+import 'package:ndu_project/utils/iterable_extensions.dart';
 
 const String _currentUser = 'you@ndu.project';
 
@@ -211,7 +212,11 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   void approveStep(String crId, {String? comments}) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('approveStep: CR not found: $crId');
+      return;
+    }
     final steps = cr.approvalSteps;
     final idx = cr.currentStepIndex;
     if (idx >= steps.length) return;
@@ -260,7 +265,12 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   void rejectCR(String crId, {String? reason}) {
-    _updateCR(crId, _changeRequests.firstWhere((c) => c.id == crId).copyWith(
+    final crForUpdate = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (crForUpdate == null) {
+      debugPrint('rejectCR: CR not found: $crId');
+      return;
+    }
+    _updateCR(crId, crForUpdate.copyWith(
       status: CMStatus.rejected,
     ));
     _addAudit('CR Rejected', reason ?? 'No reason provided', crId);
@@ -268,7 +278,12 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   void returnForRevision(String crId, {String? comments}) {
-    _updateCR(crId, _changeRequests.firstWhere((c) => c.id == crId).copyWith(
+    final crForReturn = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (crForReturn == null) {
+      debugPrint('returnForRevision: CR not found: $crId');
+      return;
+    }
+    _updateCR(crId, crForReturn.copyWith(
       status: CMStatus.returned,
     ));
     _addAudit('CR Returned', comments ?? 'Returned for revision', crId);
@@ -276,7 +291,11 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   void implementCR(String crId, {String? notes}) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('implementCR: CR not found: $crId');
+      return;
+    }
 
     // Check if re-baseline is needed
     if (cr.triggersRebaseline) {
@@ -293,7 +312,11 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   void closeCR(String crId, {String? closureNotes}) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('closeCR: CR not found: $crId');
+      return;
+    }
     _updateCR(crId, cr.copyWith(
       status: CMStatus.closed,
       closedAt: DateTime.now(),
@@ -329,7 +352,11 @@ class ChangeManagementProvider extends ChangeNotifier {
     String? owner,
     DateTime? dueDate,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('updateImpactDimension: CR not found: $crId');
+      return;
+    }
     final dims = cr.impact.all;
     if (dimensionIndex < 0 || dimensionIndex >= dims.length) return;
     final existing = dims[dimensionIndex];
@@ -352,7 +379,11 @@ class ChangeManagementProvider extends ChangeNotifier {
   /// Bulk-replaces the CR's impact assessment (used by the Impact Detail
   /// tab's Save button which posts the whole grid in one transaction).
   void saveImpactAssessment(String crId, FullImpactAssessment assessment) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('saveImpactAssessment: CR not found: $crId');
+      return;
+    }
     _updateCR(crId, cr.copyWith(impact: assessment));
     _addAudit(
       'Impact Assessment Saved',
@@ -371,7 +402,11 @@ class ChangeManagementProvider extends ChangeNotifier {
     required String decisionMakerName,
     DateTime? dueDate,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('addApprovalStep: CR not found: $crId');
+      return;
+    }
     final stepId = 'step_${cr.approvalSteps.length + 1}_${DateTime.now().millisecondsSinceEpoch}';
     final newStep = CMApprovalStep(
       id: stepId,
@@ -401,7 +436,11 @@ class ChangeManagementProvider extends ChangeNotifier {
     String? escalationReason,
     String? delegatedFrom,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('recordApprovalDecision: CR not found: $crId');
+      return;
+    }
     final stepIndex = cr.approvalSteps.indexWhere((s) => s.id == stepId);
     if (stepIndex == -1) return;
 
@@ -447,7 +486,11 @@ class ChangeManagementProvider extends ChangeNotifier {
   /// is closed as either approved (→ triggers re-baseline if scope change
   /// exceeds threshold) or rejected (→ audit entry only).
   void finalizeApproval(String crId) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('finalizeApproval: CR not found: $crId');
+      return;
+    }
     if (cr.approvalSteps.isEmpty) return;
     final allTerminal = cr.approvalSteps.every((s) => s.isTerminal);
     if (!allTerminal) return;
@@ -496,7 +539,11 @@ class ChangeManagementProvider extends ChangeNotifier {
     String? assignee,
     DateTime? dueDate,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('addImplementationTask: CR not found: $crId');
+      return;
+    }
     final task = ImplementationTask(
       id: 'task_${DateTime.now().millisecondsSinceEpoch}',
       workPackageId: workPackageId,
@@ -524,7 +571,11 @@ class ChangeManagementProvider extends ChangeNotifier {
     String? assignee,
     DateTime? dueDate,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('updateImplementationTask: CR not found: $crId');
+      return;
+    }
     final updatedTasks = cr.implementationTasks.map((t) {
       if (t.id != taskId) return t;
       return t.copyWith(
@@ -540,10 +591,13 @@ class ChangeManagementProvider extends ChangeNotifier {
     final allDone = updatedTasks.isNotEmpty &&
         updatedTasks.every((t) => t.status == ImplementationStatus.done);
     if (allDone && cr.status == CMStatus.approved) {
-      _updateCR(crId, _changeRequests.firstWhere((c) => c.id == crId).copyWith(
-        status: CMStatus.implemented,
-        implementedAt: DateTime.now(),
-      ));
+      final crForImpl = _changeRequests.firstOrNull((c) => c.id == crId);
+      if (crForImpl != null) {
+        _updateCR(crId, crForImpl.copyWith(
+          status: CMStatus.implemented,
+          implementedAt: DateTime.now(),
+        ));
+      }
     }
 
     _addAudit(
@@ -558,7 +612,11 @@ class ChangeManagementProvider extends ChangeNotifier {
   /// CR's cost impact, and writes a re-baseline audit entry. Returns the
   /// new revision version number.
   int applyToBaseline(String crId) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('applyToBaseline: CR not found: $crId');
+      return _baselineHistory.length + 1; // no-op fallback
+    }
     final previousBAC = _currentBAC;
     final costImpact = cr.impact.totalCostImpact;
     final revisedBAC = previousBAC + costImpact;

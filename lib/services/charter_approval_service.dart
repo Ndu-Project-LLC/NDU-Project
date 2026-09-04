@@ -27,6 +27,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -384,7 +385,30 @@ class CharterApprovalService {
       deepLinkUrl: deepLinkUrl,
     );
 
-    // 1. Try to queue to Firestore.
+    // 1. Try to send via Cloud Function (Resend email).
+    try {
+      final callable = FirebaseFunctions.instance.httpsCallable(
+          'sendCharterApprovalEmail');
+      await callable.call({
+        'toEmail': approver.email,
+        'toName': approver.name,
+        'projectName': projectName,
+        'projectId': data.projectId ?? '',
+        'approverRole': approver.role,
+        'deepLinkUrl': deepLinkUrl ?? '',
+        'isFallback': approver.isFallback,
+      });
+      return (
+        result: CharterEmailSendResult.queued,
+        mailtoUri: null,
+        error: null,
+      );
+    } catch (e) {
+      debugPrint('CharterApprovalService: Cloud Function failed: $e');
+      // Fall through to Firestore queue as backup.
+    }
+
+    // 2. Fallback: queue to Firestore for backend worker pickup.
     try {
       await _firestore.collection(_emailsCollection).add({
         'toEmail': approver.email,
@@ -408,7 +432,7 @@ class CharterApprovalService {
       // Fall through to mailto.
     }
 
-    // 2. Fallback: build a mailto: URI.
+    // 3. Final fallback: build a mailto: URI.
     final mailto = Uri(
       scheme: 'mailto',
       path: approver.email,
@@ -493,9 +517,9 @@ class CharterApprovalService {
     if (preferredSolution != null) {
       final titleNeedle = preferredSolution.title.trim().toLowerCase();
       try {
-        matched = rows.firstWhere(
+        matched = rows.where(
           (r) => r.solutionTitle.trim().toLowerCase() == titleNeedle,
-        );
+        ).firstOrNull;
       } catch (_) {
         matched = null;
       }

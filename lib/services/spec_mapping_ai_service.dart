@@ -322,11 +322,7 @@ class SpecMappingAiService {
     required List<DesignSpecificationPlanRow> specifications,
     required List<AiMappingSuggestion> acceptedSuggestions,
   }) {
-    final updatedSpecs = Map<String, DesignSpecificationPlanRow>.fromIterable(
-      specifications,
-      key: (spec) => (spec as DesignSpecificationPlanRow).id,
-      value: (spec) => spec,
-    );
+    final updatedSpecs = { for (var spec in specifications) (spec as DesignSpecificationPlanRow).id : spec };
 
     for (final suggestion in acceptedSuggestions) {
       final spec = updatedSpecs[suggestion.sourceId];

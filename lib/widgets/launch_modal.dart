@@ -73,7 +73,7 @@ class LaunchModalShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color effectiveAccent = accent ?? _kModalAccent;
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
@@ -495,7 +495,7 @@ class LaunchModalCancelButton extends StatelessWidget {
       onPressed: onPressed ?? () => Navigator.of(context).maybePop(),
       style: OutlinedButton.styleFrom(
         foregroundColor: _kModalTextSecondary,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         side: const BorderSide(color: _kModalBorder),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

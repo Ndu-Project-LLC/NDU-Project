@@ -9,14 +9,12 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
-import 'package:ndu_project/widgets/unified_phase_header.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:math' as math;
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
@@ -856,10 +854,6 @@ class _RiskNotesCard extends StatelessWidget {
  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
  decoration: const BoxDecoration(
  color: Color(0xFFFAFAFA),
- borderRadius: BorderRadius.only(
- topLeft: Radius.circular(16),
- topRight: Radius.circular(16),
- ),
  border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
  ),
  child: Row(
@@ -968,7 +962,7 @@ class _OutlinedButton extends StatelessWidget {
  return OutlinedButton(
  onPressed: onPressed,
  style: OutlinedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  side: const BorderSide(color: Color(0xFFE5E7EB)),
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

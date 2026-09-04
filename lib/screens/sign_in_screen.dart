@@ -3,7 +3,6 @@ import 'package:ndu_project/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/access_policy.dart';
-import 'package:ndu_project/screens/create_account_screen.dart';
 import 'package:ndu_project/screens/two_factor_verification_screen.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -35,12 +34,21 @@ class _SignInScreenState extends State<SignInScreen> {
   void initState() {
     super.initState();
     _loadRememberMePreference();
+    _loadLastEmail();
   }
 
   Future<void> _loadRememberMePreference() async {
     final rememberMe = await FirebaseAuthService.getRememberMe();
     if (mounted) {
       setState(() => _rememberMe = rememberMe);
+    }
+  }
+
+  /// Prefill the email with the last one used on this device.
+  Future<void> _loadLastEmail() async {
+    final email = await FirebaseAuthService.getLastEmail();
+    if (mounted && email.isNotEmpty && _emailController.text.isEmpty) {
+      setState(() => _emailController.text = email);
     }
   }
 
@@ -80,6 +88,8 @@ class _SignInScreenState extends State<SignInScreen> {
       if (!mounted) return;
       // #8: Reset failed attempts on successful login
       await AccountLockoutService.resetAttempts();
+      // Remember this device's email for the next launch.
+      await FirebaseAuthService.setLastEmail(_emailController.text.trim());
       // #9: Log successful sign-in
       await SecurityAuditLogger.logSignIn(email: _emailController.text.trim());
       // #6: Start session manager
@@ -145,8 +155,14 @@ class _SignInScreenState extends State<SignInScreen> {
       }
       _navigateAfterSignIn();
     } on FirebaseAuthException catch (e) {
-      // #8: Record failed attempt
-      final locked = await AccountLockoutService.recordFailedAttempt();
+      // #8: Record failed attempt — but ONLY for credential-related failures.
+      // Network errors, Firebase misconfiguration, popup blocks, etc. must
+      // never count toward the lockout, otherwise a transient outage (or a
+      // failed Firebase init at startup) locks users out of their accounts
+      // even when they type the correct password. The policy lives in
+      // [AccountLockoutService.recordFailedAttemptForCode].
+      final locked =
+          await AccountLockoutService.recordFailedAttemptForCode(e.code);
       // #9: Log failed sign-in
       await SecurityAuditLogger.logFailedSignIn(
         email: _emailController.text.trim(),
@@ -156,7 +172,7 @@ class _SignInScreenState extends State<SignInScreen> {
       if (locked) {
         _showSnack('Too many failed attempts. Account locked for 15 minutes.',
             Colors.red);
-      } else {
+      } else if (AccountLockoutService.isCredentialErrorCode(e.code)) {
         final attempts = await AccountLockoutService.getAttemptCount();
         final remaining = AccountLockoutService.maxAttempts - attempts;
         _showSnack(
@@ -165,28 +181,18 @@ class _SignInScreenState extends State<SignInScreen> {
               : friendly,
           Colors.red,
         );
+      } else {
+        _showSnack(friendly, Colors.red);
       }
     } catch (e) {
-      // #8: Record failed attempt
-      final locked = await AccountLockoutService.recordFailedAttempt();
-      // #9: Log failed sign-in
+      // #9: Log unexpected failure for diagnosis, but do NOT record it as a
+      // failed login attempt — these are infrastructure/app errors (network,
+      // Firebase not initialized, etc.), not brute-force signals.
       await SecurityAuditLogger.logFailedSignIn(
         email: _emailController.text.trim(),
         reason: e.toString(),
       );
-      if (locked) {
-        _showSnack('Too many failed attempts. Account locked for 15 minutes.',
-            Colors.red);
-      } else {
-        final attempts = await AccountLockoutService.getAttemptCount();
-        final remaining = AccountLockoutService.maxAttempts - attempts;
-        _showSnack(
-          remaining > 0
-              ? 'Sign in failed. $remaining attempt${remaining == 1 ? '' : 's'} remaining.'
-              : 'Sign in failed: $e',
-          Colors.red,
-        );
-      }
+      _showSnack('Sign in failed: $e', Colors.red);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -412,7 +418,7 @@ class _SignInScreenState extends State<SignInScreen> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         top: true,
         child: SingleChildScrollView(
@@ -467,7 +473,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                     child: CircularProgressIndicator(
                                         strokeWidth: 2),
                                   )
-                                : _GoogleLogo(size: 20),
+                                : const _GoogleLogo(size: 20),
                             label: const Text(
                               'Continue with Google',
                               style: TextStyle(
@@ -477,11 +483,11 @@ class _SignInScreenState extends State<SignInScreen> {
                               ),
                             ),
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(
+                              side: const BorderSide(
                                   color: fieldBorder, width: 1.5),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
-                              backgroundColor: Colors.white,
+                              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                             ),
                           ),
                         ),
@@ -489,7 +495,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         // OR divider
                         Row(
                           children: [
-                            Expanded(
+                            const Expanded(
                                 child:
                                     Divider(color: fieldBorder, height: 1)),
                             Padding(
@@ -503,7 +509,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                     fontWeight: FontWeight.w600,
                                   )),
                             ),
-                            Expanded(
+                            const Expanded(
                                 child:
                                     Divider(color: fieldBorder, height: 1)),
                           ],
@@ -558,8 +564,8 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Wrap(
-                          alignment: WrapAlignment.spaceBetween,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(
                               mainAxisSize: MainAxisSize.min,
@@ -584,6 +590,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 ),
                               ],
                             ),
+                            const SizedBox(width: 16),
                             GestureDetector(
                               onTap: () async {
                                 final email = _emailController.text.trim();

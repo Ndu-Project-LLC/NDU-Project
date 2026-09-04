@@ -17,7 +17,6 @@ import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
 import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -430,7 +429,7 @@ class _FrontEndPlanningWorkspaceScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           const AdminEditToggle(),
@@ -775,8 +774,6 @@ class _ListEditorCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.05),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
               border: Border(
                 bottom: BorderSide(color: color.withValues(alpha: 0.1)),
               ),
@@ -840,8 +837,8 @@ class _ListEditorCard extends StatelessWidget {
           else
             ReorderableListView.builder(
               shrinkWrap: true,
-              buildDefaultDragHandles: false,
               physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
               padding: const EdgeInsets.all(8),
               itemCount: items.length,
               onReorder: onReorder ?? (oldIndex, newIndex) {},

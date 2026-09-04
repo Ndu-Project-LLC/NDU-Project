@@ -75,12 +75,12 @@ class _AiMappingSuggestionsDialogState
             // Header
             _buildHeader(),
             
-            Divider(height: 1),
+            const Divider(height: 1),
             
             // Filters toolbar
             _buildFiltersToolbar(filteredSuggestions.length),
             
-            Divider(height: 1),
+            const Divider(height: 1),
             
             // Suggestions list
             Expanded(
@@ -106,7 +106,7 @@ class _AiMappingSuggestionsDialogState
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF4154F1).withOpacity(0.1),
+              color: const Color(0xFF4154F1).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -176,11 +176,11 @@ class _AiMappingSuggestionsDialogState
           // Confidence filter dropdown
           DropdownButton<double>(
             value: _confidenceFilter,
-            items: [
-              const DropdownMenuItem(value: 0.0, child: Text('All confidence')),
-              const DropdownMenuItem(value: 0.7, child: Text('High (≥70%)')),
-              const DropdownMenuItem(value: 0.4, child: Text('Medium (≥40%)')),
-              const DropdownMenuItem(value: 0.25, child: Text('Low (≥25%)')),
+            items: const [
+              DropdownMenuItem(value: 0.0, child: Text('All confidence')),
+              DropdownMenuItem(value: 0.7, child: Text('High (≥70%)')),
+              DropdownMenuItem(value: 0.4, child: Text('Medium (≥40%)')),
+              DropdownMenuItem(value: 0.25, child: Text('Low (≥25%)')),
             ],
             onChanged: (val) => setState(() => _confidenceFilter = val ?? 0.0),
             style: const TextStyle(fontSize: 13),
@@ -201,15 +201,15 @@ class _AiMappingSuggestionsDialogState
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: const Color(0xFFFFF8E1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               'Showing $filteredCount',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: Colors.blue.shade700,
+                color: Color(0xFFB8860B),
               ),
             ),
           ),
@@ -478,7 +478,7 @@ class _SuggestionCard extends StatelessWidget {
                           suggestion.sourceType.toUpperCase(),
                           style: const TextStyle(fontSize: 10),
                         ),
-                        backgroundColor: Colors.blue.shade50,
+                        backgroundColor: const Color(0xFFFFF8E1),
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize:
                             MaterialTapTargetSize.shrinkWrap,
@@ -494,7 +494,7 @@ class _SuggestionCard extends StatelessWidget {
                           suggestion.targetType.toUpperCase(),
                           style: const TextStyle(fontSize: 10),
                         ),
-                        backgroundColor: Colors.purple.shade50,
+                        backgroundColor: const Color(0xFFFFF8E1),
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize:
                             MaterialTapTargetSize.shrinkWrap,
@@ -571,9 +571,9 @@ class _ConfidenceBadge extends StatelessWidget {
         width: 50,
         height: 50,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
-          border: Border.all(color: color.withOpacity(0.3), width: 2),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
         ),
         child: Center(
           child: Column(
@@ -591,7 +591,7 @@ class _ConfidenceBadge extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: 8,
-                  color: color.withOpacity(0.8),
+                  color: color.withValues(alpha: 0.8),
                 ),
               ),
             ],

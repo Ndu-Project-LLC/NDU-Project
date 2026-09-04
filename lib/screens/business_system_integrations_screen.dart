@@ -277,7 +277,7 @@ class _BusinessSystemIntegrationsScreenState
  ),
  child: Center(
  child: Text(
- p.label.substring(0, 1),
+ p.label.isNotEmpty ? p.label.substring(0, 1) : '?',
  style: const TextStyle(
  color: Colors.white,
  fontWeight: FontWeight.w800,
@@ -338,7 +338,7 @@ class _BusinessSystemIntegrationsScreenState
  fontSize: 11.5,
  color: p.supportsOAuth
  ? const Color(0xFF16A34A)
- : const Color(0xFF0EA5E9),
+ : const Color(0xFFFFC812),
  fontWeight: FontWeight.w600,
  ),
  ),
@@ -514,7 +514,7 @@ class _ProviderConfigDialogState extends State<_ProviderConfigDialog> {
  borderRadius: BorderRadius.circular(6),
  ),
  child: Center(
- child: Text(p.label.substring(0, 1),
+ child: Text(p.label.isNotEmpty ? p.label.substring(0, 1) : '?',
  style: const TextStyle(
  color: Colors.white, fontWeight: FontWeight.w800)),
  ),
@@ -545,10 +545,10 @@ class _ProviderConfigDialogState extends State<_ProviderConfigDialog> {
  Container(
  padding: const EdgeInsets.all(12),
  decoration: BoxDecoration(
- color: const Color(0xFF0EA5E9).withValues(alpha: 0.08),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(8),
  border: Border.all(
- color: const Color(0xFF0EA5E9).withValues(alpha: 0.3)),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.3)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,

@@ -211,7 +211,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     final double horizontalPadding = isMobile ? 18 : 32;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,7 +276,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFF6EE7B7)),
+        border: Border.all(color: const Color(0xFF6EE7B7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,7 +324,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: TabBar(
         controller: _tabController,
@@ -382,7 +382,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -592,7 +592,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -631,7 +631,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
@@ -718,7 +718,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -738,7 +738,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
           'AI Operations Insights',
           'AI continuously identifies trends, predicts capacity constraints, flags coverage gaps, '
               'and recommends staffing or workload adjustments to maintain project performance.',
-          const Color(0xFF0891B2),
+          const Color(0xFFD97706),
         ),
       ],
     );
@@ -757,7 +757,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
@@ -852,7 +852,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         children: [

@@ -10,7 +10,6 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 
 class StartUpPlanningScreen extends StatefulWidget {
  const StartUpPlanningScreen({super.key});
@@ -52,7 +51,7 @@ class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
  final horizontalPadding = isMobile ? 20.0 : 32.0;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,16 +90,7 @@ class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
  'startup_planning',
  ), onExportPdf: _exportPdf),
  const SizedBox(height: 12),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 12),
- child: CarriedContextBanner(
- checkpoint: 'startup_planning',
- contextText: _carriedContext!,
- ),
- ),
+
  const Text(
  'Plan readiness, go-live criteria, and transition activities.',
  style: TextStyle(
@@ -210,9 +200,9 @@ class _ReadinessRow extends StatelessWidget {
  value: '9',
  accent: Color(0xFFF59E0B)),
  _MetricCard(
- label: 'Launch Window', value: 'Jul 8', accent: Color(0xFF2563EB)),
+ label: 'Launch Window', value: 'Jul 8', accent: Color(0xFFFFC812)),
  _MetricCard(
- label: 'Hypercare Days', value: '14', accent: Color(0xFF8B5CF6)),
+ label: 'Hypercare Days', value: '14', accent: Color(0xFFB8860B)),
  ],
  );
  }

@@ -19,7 +19,6 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:go_router/go_router.dart';
 const Color _kBackground = Colors.white;
 const Color _kAccent = Color(0xFFFFC812);
@@ -54,8 +53,8 @@ class DeliverablesRoadmapScreen extends StatelessWidget {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Deliverables Roadmap',
  ),
  ),
@@ -435,16 +434,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  onForward: () =>
  PlanningPhaseNavigation.goToNext(context, 'deliverables_roadmap'), onExportPdf: _exportPdf),
  const SizedBox(height: 24),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'deliverables_roadmap',
- contextText: _carriedContext!,
- ),
- ),
+
  _buildStatsRow(),
  const SizedBox(height: 16),
  _buildFilterBar(),
@@ -485,7 +475,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  _StatCard(
  label: 'Total Deliverables',
  value: '$_totalCount',
- accent: const Color(0xFF2563EB),
+ accent: const Color(0xFFFFC812),
  ),
  _StatCard(
  label: 'Completed',
@@ -505,7 +495,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  _StatCard(
  label: 'Sprints',
  value: '${_sprints.length}',
- accent: const Color(0xFF8B5CF6),
+ accent: const Color(0xFFB8860B),
  ),
  ],
  );
@@ -686,7 +676,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  color: Colors.white,
  borderRadius: BorderRadius.circular(14),
  border: Border.all(
- color: _kAccent.withOpacity(0.4),
+ color: _kAccent.withValues(alpha: 0.4),
  style: BorderStyle.solid),
  ),
  child: const Row(
@@ -720,7 +710,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  color: Colors.white,
  borderRadius: BorderRadius.circular(26),
  border: Border.all(
- color: _kAccent.withOpacity(0.3), style: BorderStyle.solid),
+ color: _kAccent.withValues(alpha: 0.3), style: BorderStyle.solid),
  ),
  child: const Column(
  mainAxisAlignment: MainAxisAlignment.center,
@@ -810,7 +800,7 @@ class _FilterChip extends StatelessWidget {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
- color: selected ? _kAccent.withOpacity(0.15) : Colors.white,
+ color: selected ? _kAccent.withValues(alpha: 0.15) : Colors.white,
  borderRadius: BorderRadius.circular(16),
  border: Border.all(color: selected ? _kAccent : _kCardBorder),
  ),
@@ -890,7 +880,7 @@ class _DeliverableCard extends StatelessWidget {
  border: Border.all(color: Colors.white),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 10,
  offset: const Offset(0, 4),
  ),
@@ -1082,7 +1072,7 @@ class _StatusChip extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Text(
@@ -1343,7 +1333,7 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value:
+ initialValue:
  sprints.any((s) => s.id == sprintId) ? sprintId : null,
  decoration: const InputDecoration(labelText: 'Sprint'),
  items: sprints
@@ -1362,7 +1352,7 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
  Expanded(
  child:
  DropdownButtonFormField<RoadmapDeliverableStatus>(
- value: status,
+ initialValue: status,
  decoration:
  const InputDecoration(labelText: 'Status'),
  items: RoadmapDeliverableStatus.values
@@ -1380,7 +1370,7 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
  Expanded(
  child:
  DropdownButtonFormField<RoadmapDeliverablePriority>(
- value: priority,
+ initialValue: priority,
  decoration:
  const InputDecoration(labelText: 'Priority'),
  items: RoadmapDeliverablePriority.values
@@ -1401,7 +1391,7 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
  children: [
  Expanded(
  child: DropdownButtonFormField<int>(
- value: storyPoints,
+ initialValue: storyPoints,
  decoration:
  const InputDecoration(labelText: 'Story Points'),
  items: [1, 2, 3, 5, 8, 13, 21]
@@ -1482,7 +1472,7 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
  horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
  color: isSelected
- ? _kAccent.withOpacity(0.1)
+ ? _kAccent.withValues(alpha: 0.1)
  : const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(8),
  border: Border.all(

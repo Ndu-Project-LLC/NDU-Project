@@ -155,8 +155,8 @@ class _DeliverablesRoadmapDetailedScreenState
               ],
             ),
           ),
-          MobileSidebarHamburger(
-            sidebar: const InitiationLikeSidebar(
+          const MobileSidebarHamburger(
+            sidebar: InitiationLikeSidebar(
               activeItemLabel: 'Detailed Deliverables',
             ),
           ),
@@ -220,13 +220,13 @@ class _DeliverablesRoadmapDetailedScreenState
                 ),
               ),
               const SizedBox(width: 16),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Detailed Deliverables',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: _kHeadline,
@@ -251,12 +251,12 @@ class _DeliverablesRoadmapDetailedScreenState
           child: VoiceTextField(
             decoration: InputDecoration(
               hintText: 'Search deliverables...',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: _kCardBorder),
+                borderSide: const BorderSide(color: _kCardBorder),
               ),
-              contentPadding: EdgeInsets.symmetric(
+              contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 12,
               ),
@@ -453,18 +453,18 @@ class _DeliverablesRoadmapDetailedScreenState
           Icon(Icons.search_off,
               size: 64, color: _kMuted.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             'No deliverables found',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
               color: _kMuted,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'Try adjusting your filters or search terms',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               color: _kMuted,
             ),
@@ -673,17 +673,17 @@ class _DeliverablesRoadmapDetailedScreenState
   Color _getPhaseColor(DeliverablePhase phase) {
     switch (phase) {
       case DeliverablePhase.initiation:
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case DeliverablePhase.frontEndPlanning:
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       case DeliverablePhase.planning:
         return const Color(0xFF10B981);
       case DeliverablePhase.design:
-        return const Color(0xFFEC4899);
+        return const Color(0xFFD97706);
       case DeliverablePhase.execution:
         return const Color(0xFFF59E0B);
       case DeliverablePhase.launch:
-        return const Color(0xFF14B8A6);
+        return const Color(0xFFD97706);
     }
   }
 
@@ -953,7 +953,7 @@ class _AddDeliverableDialogState extends State<_AddDeliverableDialog> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<DeliverableCategory>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: 'Category *',
                   border: OutlineInputBorder(),
@@ -968,7 +968,7 @@ class _AddDeliverableDialogState extends State<_AddDeliverableDialog> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<RoadmapDeliverablePriority>(
-                value: _selectedPriority,
+                initialValue: _selectedPriority,
                 decoration: const InputDecoration(
                   labelText: 'Priority',
                   border: OutlineInputBorder(),
@@ -1146,7 +1146,7 @@ class _EditDeliverableDialogState extends State<_EditDeliverableDialog> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<RoadmapDeliverableStatus>(
-              value: _selectedStatus,
+              initialValue: _selectedStatus,
               decoration: const InputDecoration(
                 labelText: 'Status',
                 border: OutlineInputBorder(),
@@ -1161,7 +1161,7 @@ class _EditDeliverableDialogState extends State<_EditDeliverableDialog> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<RoadmapDeliverablePriority>(
-              value: _selectedPriority,
+              initialValue: _selectedPriority,
               decoration: const InputDecoration(
                 labelText: 'Priority',
                 border: OutlineInputBorder(),
@@ -1269,7 +1269,7 @@ class _NavCircleBtn extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
       ),

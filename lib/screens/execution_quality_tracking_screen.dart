@@ -212,7 +212,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
@@ -333,19 +333,19 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [const Color(0xFFEEF2FF), const Color(0xFFE0E7FF)],
+          colors: [const Color(0xFFFFF8E1), const Color(0xFFFFF8E1)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFB8860B).withOpacity(0.3)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withOpacity(0.15),
+              color: const Color(0xFFB8860B).withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.download_done_rounded, size: 20, color: Color(0xFF4F46E5)),
@@ -434,9 +434,9 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
           // Summary Cards Row
           Row(
             children: [
-              Expanded(child: _buildSummaryCard('Objectives', snapshot.totalObjectives, snapshot.objectivesComplete, Icons.flag, const Color(0xFF3B82F6))),
+              Expanded(child: _buildSummaryCard('Objectives', snapshot.totalObjectives, snapshot.objectivesComplete, Icons.flag, const Color(0xFFFFC812))),
               const SizedBox(width: 12),
-              Expanded(child: _buildSummaryCard('Audits', snapshot.totalAudits, snapshot.auditsPassed, Icons.fact_check, const Color(0xFF8B5CF6))),
+              Expanded(child: _buildSummaryCard('Audits', snapshot.totalAudits, snapshot.auditsPassed, Icons.fact_check, const Color(0xFFB8860B))),
               const SizedBox(width: 12),
               Expanded(child: _buildSummaryCard('Inspections', snapshot.totalInspections, snapshot.inspectionsPassed, Icons.verified, const Color(0xFF10B981))),
             ],
@@ -476,7 +476,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     if (score >= 90) {
       scoreColor = const Color(0xFF10B981); grade = 'A';
     } else if (score >= 75) {
-      scoreColor = const Color(0xFF3B82F6); grade = 'B';
+      scoreColor = const Color(0xFFFFC812); grade = 'B';
     } else if (score >= 60) {
       scoreColor = const Color(0xFFF59E0B); grade = 'C';
     } else {
@@ -547,7 +547,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
         children: [
           const Row(children: [Icon(Icons.build_circle_outlined, size: 18, color: Color(0xFFEF4444)), SizedBox(width: 6), Text('Corrective Actions', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500))]),
           const SizedBox(height: 12),
-          _buildStatRow('Open', open.toString(), Colors.blue),
+          _buildStatRow('Open', open.toString(), Color(0xFFFFC812)),
           _buildStatRow('Overdue', overdue.toString(), Colors.red),
           _buildStatRow('Critical', critical.toString(), const Color(0xFFDC2626)),
         ],
@@ -602,9 +602,9 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
       crossAxisSpacing: 12,
       childAspectRatio: 2.5,
       children: [
-        _buildQuickStat('In Progress Obj.', snapshot.objectivesInProgress.toString(), Colors.blue),
+        _buildQuickStat('In Progress Obj.', snapshot.objectivesInProgress.toString(), Color(0xFFFFC812)),
         _buildQuickStat('Overdue Obj.', snapshot.objectivesOverdue.toString(), Colors.orange),
-        _buildQuickStat('Audits w/ Findings', snapshot.auditsWithFindings.toString(), Colors.purple),
+        _buildQuickStat('Audits w/ Findings', snapshot.auditsWithFindings.toString(), Color(0xFFB8860B)),
         _buildQuickStat('Overdue Audits', snapshot.auditsOverdue.toString(), Colors.red),
         _buildQuickStat('Hold Point Insp.', _trackingData?.inspections.where((i) => i.isHoldPoint).length.toString() ?? '0', Colors.amber),
         _buildQuickStat('Verified CAs', (_trackingData?.correctiveActions.where((c) => c.verified).length ?? 0).toString(), Colors.green),
@@ -768,10 +768,10 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: inspection.type == 'QA' ? const Color(0xFFDBEAFE) : const Color(0xFFD1FAE5),
+                    color: inspection.type == 'QA' ? const Color(0xFFFEF3C7) : const Color(0xFFD1FAE5),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(inspection.type, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: inspection.type == 'QA' ? const Color(0xFF2563EB) : const Color(0xFF059669))),
+                  child: Text(inspection.type, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: inspection.type == 'QA' ? const Color(0xFFFFC812) : const Color(0xFF059669))),
                 ),
                 const SizedBox(width: 8),
                 Expanded(child: Text(inspection.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15))),
@@ -971,9 +971,9 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
 
   Color _getAuditTypeColor(String type) {
     switch (type.toLowerCase()) {
-      case 'external': return const Color(0xFF8B5CF6);
+      case 'external': return const Color(0xFFB8860B);
       case 'regulatory': return const Color(0xFFEF4444);
-      default: return const Color(0xFF3B82F6);
+      default: return const Color(0xFFFFC812);
     }
   }
 
@@ -1265,7 +1265,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
             children: [
               Expanded(child: _buildCoqCategoryCard('Prevention', coq.preventionCostActual, const Color(0xFF10B981))),
               const SizedBox(width: 12),
-              Expanded(child: _buildCoqCategoryCard('Appraisal', coq.appraisalCostActual, const Color(0xFF3B82F6))),
+              Expanded(child: _buildCoqCategoryCard('Appraisal', coq.appraisalCostActual, const Color(0xFFFFC812))),
             ],
           ),
           const SizedBox(height: 12),
@@ -1282,9 +1282,9 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [const Color(0xFFEEF2FF), const Color(0xFFE0E7FF)]),
+              gradient: LinearGradient(colors: [const Color(0xFFFFF8E1), const Color(0xFFFFF8E1)]),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.3)),
+              border: Border.all(color: const Color(0xFFB8860B).withOpacity(0.3)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1350,7 +1350,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
   Color _getCoqCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'prevention': return const Color(0xFF10B981);
-      case 'appraisal': return const Color(0xFF3B82F6);
+      case 'appraisal': return const Color(0xFFFFC812);
       case 'internal failure': return const Color(0xFFEF4444);
       case 'external failure': return const Color(0xFFDC2626);
       default: return Colors.grey;
@@ -1383,7 +1383,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     Color color;
     switch (result) {
       case AuditResultStatus.passed: color = const Color(0xFF10B981); break;
-      case AuditResultStatus.passedWithObservations: color = const Color(0xFF3B82F6); break;
+      case AuditResultStatus.passedWithObservations: color = const Color(0xFFFFC812); break;
       case AuditResultStatus.failed: color = const Color(0xFFEF4444); break;
       case AuditResultStatus.deferred: color = const Color(0xFFF59E0B); break;
       default: color = Colors.grey;

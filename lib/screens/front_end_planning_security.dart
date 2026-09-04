@@ -15,12 +15,12 @@ import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 /// Front End Planning – Security screen
 /// Mirrors the provided layout with shared workspace chrome,
 /// large notes area, security text panel, and AI hint + Next controls.
@@ -303,6 +303,54 @@ Security Training:
  super.dispose();
  }
 
+ List<SsherEntry> _securitySsherEntries() {
+ final entries = <SsherEntry>[];
+ for (final role in _securityRoles) {
+ final name = role.name.trim();
+ if (name.isEmpty) continue;
+ entries.add(SsherEntry(
+ id: 'security_role_${role.id}',
+ category: 'security',
+ department: 'Security',
+ teamMember: name,
+ concern: role.description.trim().isEmpty
+ ? 'Security role: $name'
+ : role.description.trim(),
+ riskLevel: 'Medium',
+ mitigation: 'Assign and review responsibilities for $name.',
+ ));
+ }
+ for (final permission in _securityPermissions) {
+ final resource = permission.resource.trim();
+ if (resource.isEmpty) continue;
+ final scope = permission.scope.trim();
+ entries.add(SsherEntry(
+ id: 'security_permission_${permission.id}',
+ category: 'security',
+ department: 'Security',
+ teamMember: '',
+ concern: scope.isEmpty ? 'Access control for $resource' : '$resource: $scope',
+ riskLevel: 'Medium',
+ mitigation: 'Restrict access to the approved security scope and review regularly.',
+ ));
+ }
+ for (final setting in _securitySettings) {
+ final key = setting.key.trim();
+ if (key.isEmpty) continue;
+ final value = setting.value.trim();
+ entries.add(SsherEntry(
+ id: 'security_setting_${key.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_')}',
+ category: 'security',
+ department: 'Security',
+ teamMember: '',
+ concern: value.isEmpty ? 'Security setting: $key' : '$key: $value',
+ riskLevel: 'Medium',
+ mitigation: 'Implement and monitor this security control.',
+ ));
+ }
+ return entries;
+ }
+
  void _syncSecurityToProvider() {
  if (!mounted || !_isSyncReady) return;
  if (_validationErrors.containsKey('security_requirements') &&
@@ -311,15 +359,30 @@ Security Training:
  _validationErrors = Map<String, String>.from(_validationErrors)
  ..remove('security_requirements');
  });
- }
- final provider = ProjectDataHelper.getProvider(context);
+ }  final provider = ProjectDataHelper.getProvider(context);
  provider.updateField(
- (data) => data.copyWith(
- frontEndPlanning: ProjectDataHelper.updateFEPField(
- current: data.frontEndPlanning,
- security: _securityNotes.text.trim(),
- ),
- ),
+ (data) {
+   final generated = _securitySsherEntries();
+   final manualEntries = data.ssherData.entries
+       .where((entry) => !entry.id.startsWith('security_role_') &&
+           !entry.id.startsWith('security_permission_') &&
+           !entry.id.startsWith('security_setting_'))
+       .toList();
+   return data.copyWith(
+     frontEndPlanning: ProjectDataHelper.updateFEPField(
+       current: data.frontEndPlanning,
+       security: _securityNotes.text.trim(),
+       securityRoles: _securityRoles,
+       securityPermissions: _securityPermissions,
+       securitySettings: _securitySettings,
+       securityAccessLogs: _securityAccessLogs,
+     ),
+     ssherData: data.ssherData.copyWith(
+       entries: [...manualEntries, ...generated],
+       securityPlan: _securityNotes.text.trim(),
+     ),
+   );
+ },
  );
  provider.saveToFirebase(checkpoint: 'fep_security');
  }
@@ -964,7 +1027,7 @@ Security Training:
  'Protect project facilities, equipment, materials, and physical assets '
  'from unauthorized access, damage, theft, or disruption.',
  icon: Icons.shield_outlined,
- accentColor: const Color(0xFF0EA5E9),
+ accentColor: const Color(0xFFFFC812),
  considerations: const [
  'Site access controls and visitor management',
  'Asset, equipment, and material protection',
@@ -1016,7 +1079,7 @@ Security Training:
  'Protect project information, digital systems, and intellectual '
  'property throughout the project lifecycle.',
  icon: Icons.lock_outline,
- accentColor: const Color(0xFF8B5CF6),
+ accentColor: const Color(0xFFB8860B),
  considerations: const [
  'Information classification and data ownership',
  'Cybersecurity requirements (authentication, encryption, backups, disaster recovery)',
@@ -1261,8 +1324,14 @@ Security Training:
 
  @override
  Widget build(BuildContext context) {
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1285,6 +1354,12 @@ Security Training:
  controller: _contentScrollController,
  padding: const EdgeInsets.symmetric(
  horizontal: 32, vertical: 24),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -1361,6 +1436,9 @@ Security Training:
  const SizedBox(height: 24),
  _buildInformationSecurityPillar(),
  const SizedBox(height: 140),
+ ],
+ ),
+ ),
  ],
  ),
  ),
@@ -1488,12 +1566,12 @@ class _BottomOverlay extends StatelessWidget {
  child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
  SizedBox(width: 10),
  Text('AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB))),
+ color: Color(0xFFFFC812))),
  SizedBox(width: 12),
  Text(
  'Identify security measures and compliance requirements.',

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
-import 'package:ndu_project/screens/stakeholder_alignment_screen.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -15,6 +15,7 @@ import 'package:ndu_project/models/scope_tracking_item.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/scope_tracking_table_widget.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
@@ -173,7 +174,7 @@ class _ScopeTrackingImplementationScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('AI generation failed: $e'),
+            content: Text('AI generation failedaiErrorMessage(e)'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: const Color(0xFFEF4444),
           ),
@@ -270,7 +271,7 @@ class _ScopeTrackingImplementationScreenState
     final isNarrow = MediaQuery.sizeOf(context).width < 980;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,10 +300,9 @@ class _ScopeTrackingImplementationScreenState
                         const SizedBox(height: 16),
                         _buildPageHeader(context),
                         const SizedBox(height: 20),
-                        _buildFilterChips(context),
-                        const SizedBox(height: 24),
-                        _buildStatsRow(isNarrow),
-                        const SizedBox(height: 24),
+                        // Status filter chip row and the three summary
+                        // stat cards (Scope Adherence / Identified Creep /
+                        // Implementation Gap) removed per user request.
                         _buildScopeTable(),
                         const SizedBox(height: 24),
                         _buildFooterNavigation(context),
@@ -310,8 +310,8 @@ class _ScopeTrackingImplementationScreenState
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Scope Tracking Implementation',
                     ),
                   ),
@@ -333,7 +333,7 @@ class _ScopeTrackingImplementationScreenState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Color(0xFFFFC812),
+            color: const Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(4),
           ),
           child: const Text(
@@ -461,7 +461,7 @@ class _ScopeTrackingImplementationScreenState
           label: const Text('Add Scope Item',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF0EA5E9),
+            backgroundColor: const Color(0xFFFFC812),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             shape: RoundedRectangleBorder(
@@ -573,7 +573,7 @@ class _ScopeTrackingImplementationScreenState
         'Scope Adherence',
         '$scopeAdherence%',
         '$inProgressOrVerified of $totalItems items',
-        const Color(0xFF2563EB),
+        const Color(0xFFFFC812),
       ),
       _StatCardData(
         'Identified Creep',
@@ -614,7 +614,7 @@ class _ScopeTrackingImplementationScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -644,45 +644,171 @@ class _ScopeTrackingImplementationScreenState
       return _selectedFilters.contains(item.implementationStatus);
     }).toList();
 
+    return SearchableTableSection(
+      title: 'Scope Implementation Table',
+      subtitle: 'Track implementation status and verification for each scope item',
+      searchHint: 'Search scope items, owner, status...',
+      items: filteredItems,
+      searchFilter: (item, query) {
+        if (item is! ScopeTrackingItem) return false;
+        final q = query.toLowerCase();
+        return item.scopeItem.toLowerCase().contains(q) ||
+            item.owner.toLowerCase().contains(q) ||
+            item.implementationStatus.toLowerCase().contains(q) ||
+            item.verificationMethod.toLowerCase().contains(q) ||
+            item.verificationSteps.toLowerCase().contains(q) ||
+            item.trackingNotes.toLowerCase().contains(q);
+      },
+      tableBuilder: (context, query) {
+        final displayItems = query.isEmpty
+            ? filteredItems
+            : filteredItems.where((item) {
+                final q = query.toLowerCase();
+                return item.scopeItem.toLowerCase().contains(q) ||
+                    item.owner.toLowerCase().contains(q) ||
+                    item.implementationStatus.toLowerCase().contains(q) ||
+                    item.verificationMethod.toLowerCase().contains(q);
+              }).toList();
+        return ScopeTrackingTableWidget(
+          items: displayItems,
+          availableRoles: _availableRoles,
+          onUpdated: (item) {
+            setState(() {
+              final index = _items.indexWhere((i) => i.id == item.id);
+              if (index >= 0) {
+                _items[index] = item;
+              } else {
+                _items.add(item);
+              }
+            });
+          },
+          onDeleted: (item) {
+            setState(() {
+              _items.removeWhere((i) => i.id == item.id);
+            });
+          },
+        );
+      },
+      cardBuilder: (context, query) {
+        final displayItems = query.isEmpty
+            ? filteredItems
+            : filteredItems.where((item) {
+                final q = query.toLowerCase();
+                return item.scopeItem.toLowerCase().contains(q) ||
+                    item.owner.toLowerCase().contains(q) ||
+                    item.implementationStatus.toLowerCase().contains(q);
+              }).toList();
+        if (displayItems.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(
+              child: Text('No items match your search.',
+                  style: TextStyle(color: Color(0xFF6B7280))),
+            ),
+          );
+        }
+        return Column(
+          children: displayItems.map((item) => _buildScopeCard(item)).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildScopeCard(ScopeTrackingItem item) {
+    final statusColor = _statusColor(item.implementationStatus);
     return Container(
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Scope Implementation Table',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
-          const Text(
-              'Track implementation status and verification for each scope item',
-              style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-          const SizedBox(height: 16),
-          ScopeTrackingTableWidget(
-            items: filteredItems,
-            availableRoles: _availableRoles,
-            onUpdated: (item) {
-              setState(() {
-                final index = _items.indexWhere((i) => i.id == item.id);
-                if (index >= 0) {
-                  _items[index] = item;
-                } else {
-                  _items.add(item);
-                }
-              });
-            },
-            onDeleted: (item) {
-              setState(() {
-                _items.removeWhere((i) => i.id == item.id);
-              });
-            },
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  item.scopeItem.isEmpty ? 'Untitled' : item.scopeItem,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  item.implementationStatus,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: statusColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _buildCardField('Owner', item.owner.isNotEmpty ? item.owner : 'Not assigned'),
+          _buildCardField('Verification', item.verificationMethod.isNotEmpty ? item.verificationMethod : 'Not set'),
+          if (item.verificationSteps.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              item.verificationSteps,
+              style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCardField(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Text(
+            '$label: ',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF475569),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 12, color: Color(0xFF111827)),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
     );
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'In-Progress':
+        return const Color(0xFF2563EB);
+      case 'Verified':
+        return const Color(0xFF10B981);
+      case 'Out-of-Scope':
+        return const Color(0xFFEF4444);
+      default:
+        return const Color(0xFF9CA3AF);
+    }
   }
 
   Future<void> _showAddItemDialog() async {
@@ -707,7 +833,7 @@ class _ScopeTrackingImplementationScreenState
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
-                      value: selectedScopeItem,
+                      initialValue: selectedScopeItem,
                       decoration: const InputDecoration(
                         labelText: 'Scope Item/Deliverable',
                         hintText: 'Select from Scope Statement or enter new',
@@ -744,7 +870,7 @@ class _ScopeTrackingImplementationScreenState
                         ),
                       ),
                     DropdownButtonFormField<String>(
-                      value: selectedStatus,
+                      initialValue: selectedStatus,
                       decoration: const InputDecoration(
                           labelText: 'Implementation Status'),
                       items: [
@@ -765,7 +891,7 @@ class _ScopeTrackingImplementationScreenState
                       },
                     ),
                     DropdownButtonFormField<String>(
-                      value: selectedOwner,
+                      initialValue: selectedOwner,
                       decoration: const InputDecoration(labelText: 'Owner'),
                       items: _availableRoles.map((role) {
                         return DropdownMenuItem<String>(
@@ -778,7 +904,7 @@ class _ScopeTrackingImplementationScreenState
                       },
                     ),
                     DropdownButtonFormField<String>(
-                      value: selectedVerificationMethod,
+                      initialValue: selectedVerificationMethod,
                       decoration: const InputDecoration(
                           labelText: 'Verification Method'),
                       items: ['Testing', 'UAT', 'Stakeholder Review']
@@ -877,10 +1003,10 @@ class _ScopeTrackingImplementationScreenState
 
   Widget _buildFooterNavigation(BuildContext context) {
     return LaunchPhaseNavigation(
-      backLabel: 'Back: Agile Development Iterations',
-      nextLabel: 'Next: Stakeholder Alignment',
-      onBack: () => AgileDevelopmentIterationsScreen.open(context),
-      onNext: () => StakeholderAlignmentScreen.open(context),
+      backLabel: PlanningPhaseNavigation.backLabel('scope_tracking_implementation'),
+      nextLabel: PlanningPhaseNavigation.nextLabel('scope_tracking_implementation'),
+      onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'scope_tracking_implementation'),
+      onNext: () => PlanningPhaseNavigation.goToNext(context, 'scope_tracking_implementation'),
     );
   }
 

@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/services/portfolio_service.dart';
 import 'package:ndu_project/services/project_service.dart';
+import 'package:ndu_project/models/user_model.dart';
+import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 
@@ -44,7 +46,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
   static const _onSurface = Color(0xFF0F172A);
   static const _muted = Color(0xFF64748B);
   static const _outline = Color(0xFFE2E8F0);
-  static const _blue = Color(0xFF6366F1);
+  static const _blue = Color(0xFFB8860B);
 
   // ── State ──
   final TextEditingController _searchController = TextEditingController();
@@ -74,7 +76,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
         if (_selectedIds.length >= 7) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('You can select up to 7 projects for a portfolio.'),
+              content: Text('A portfolio requires exactly 7 projects. Deselect one first.'),
               duration: Duration(seconds: 2),
             ),
           );
@@ -92,98 +94,186 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
   Future<void> _handleCreatePortfolio() async {
     final nameController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    // Task 13: portfolio manager assignment. We load the account's
+    // registered users once when the dialog opens, and let the user pick
+    // one from a dropdown. `null` is allowed — the user can skip
+    // assignment and assign later from the dashboard card.
+    List<UserModel> availableUsers = const [];
+    try {
+      availableUsers = await UserService.watchAllUsers().first;
+    } catch (e) {
+      // Non-fatal — the dropdown will just be empty. The user can still
+      // create the portfolio without a manager.
+      debugPrint('Could not load users for portfolio-manager dropdown: $e');
+    }
+    UserModel? selectedManager;
 
     final portfolioName = await showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEEF2FF),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.pie_chart_outline_rounded,
-                    color: Color(0xFF4338CA), size: 24),
-              ),
-              const SizedBox(width: 12),
-              const Text('Name Your Portfolio'),
-            ],
-          ),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Give a name to your new portfolio of ${_selectedIds.length} projects.',
-                  style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                ),
-                const SizedBox(height: 20),
-                VoiceTextFormField(
-                  controller: nameController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    labelText: 'Portfolio Name',
-                    hintText: 'e.g., Infrastructure Portfolio',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: Colors.grey[50],
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF8E1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.pie_chart_outline_rounded,
+                        color: Color(0xFF4338CA), size: 24),
                   ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a name';
+                  const SizedBox(width: 12),
+                  const Text('Name Your Portfolio'),
+                ],
+              ),
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Give a name to your new portfolio of ${_selectedIds.length} projects.',
+                      style:
+                          TextStyle(color: Colors.grey[700], fontSize: 14),
+                    ),
+                    const SizedBox(height: 20),
+                    VoiceTextFormField(
+                      controller: nameController,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        labelText: 'Portfolio Name',
+                        hintText: 'e.g., Infrastructure Portfolio',
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter a name';
+                        }
+                        if (value.trim().length < 3) {
+                          return 'Name must be at least 3 characters';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    // ── Portfolio manager assignment (Task 13) ──────────
+                    // Dropdown of registered users on this account. The
+                    // picked user's uid + name + email are written to
+                    // the portfolio doc via PortfolioService.createPortfolio
+                    // and surfaced on the dashboard card via
+                    // PortfolioModel.managerName / managerEmail.
+                    DropdownButtonFormField<UserModel?>(
+                      initialValue: selectedManager,
+                      decoration: InputDecoration(
+                        labelText: 'Portfolio Manager (optional)',
+                        hintText: availableUsers.isEmpty
+                            ? 'No registered users available'
+                            : 'Assign a manager from your team',
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        prefixIcon: const Icon(Icons.person_outline_rounded,
+                            color: Color(0xFF4338CA)),
+                      ),
+                      items: [
+                        const DropdownMenuItem<UserModel?>(
+                          value: null,
+                          child: Text('— No manager assigned —'),
+                        ),
+                        ...availableUsers.map(
+                          (u) => DropdownMenuItem<UserModel?>(
+                            value: u,
+                            child: Text(
+                              u.displayName.isNotEmpty
+                                  ? '${u.displayName} (${u.email})'
+                                  : u.email,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                      onChanged: availableUsers.isEmpty
+                          ? null
+                          : (user) {
+                              setDialogState(() => selectedManager = user);
+                            },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState?.validate() ?? false) {
+                      // Pack the manager selection into the returned value
+                      // so _handleCreatePortfolio can write it to Firestore.
+                      // We piggy-back on the name string with a sentinel
+                      // separator — the caller splits and dispatches.
+                      final name = nameController.text.trim();
+                      final packed = selectedManager == null
+                          ? name
+                          : '$name\u0000${selectedManager!.uid}\u0000${selectedManager!.displayName}\u0000${selectedManager!.email}';
+                      Navigator.of(dialogContext).pop(packed);
                     }
-                    if (value.trim().length < 3) {
-                      return 'Name must be at least 3 characters';
-                    }
-                    return null;
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4338CA),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Create Portfolio'),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (formKey.currentState?.validate() ?? false) {
-                  Navigator.of(dialogContext).pop(nameController.text.trim());
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4338CA),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Text('Create Portfolio'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
 
     if (portfolioName == null || !mounted) return;
 
+    // Unpack the manager fields if the sentinel separator is present.
+    String finalName = portfolioName;
+    String managerId = '';
+    String managerName = '';
+    String managerEmail = '';
+    if (portfolioName.contains('\u0000')) {
+      final parts = portfolioName.split('\u0000');
+      if (parts.length >= 4) {
+        finalName = parts[0];
+        managerId = parts[1];
+        managerName = parts[2];
+        managerEmail = parts[3];
+      }
+    }
+
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
       await PortfolioService.createPortfolio(
-        name: portfolioName,
+        name: finalName,
         projectIds: _selectedIds.toList(),
         ownerId: user.uid,
+        managerId: managerId,
+        managerName: managerName,
+        managerEmail: managerEmail,
       );
 
       if (!mounted) return;
@@ -374,12 +464,12 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                             horizontal: 18, vertical: 16),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0xFFEEF2FF)
+                              ? const Color(0xFFFFF8E1)
                               : _surface.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFFA5B4FC)
+                                ? const Color(0xFFFDE68A)
                                 : _outline.withValues(alpha: 0.15),
                             width: isSelected ? 2 : 1,
                           ),
@@ -465,7 +555,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '$selectedCount/7 projects selected. Select up to seven to create a portfolio.',
+                          '$selectedCount/7 projects selected.',
                           style: const TextStyle(
                             color: _onSurface,
                             fontSize: 14,
@@ -474,14 +564,22 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        if (selectedCount > 0)
+                        if (selectedCount < 7)
                           Text(
-                            selectedCount == 7
-                                ? 'Maximum number of projects selected.'
-                                : '${7 - selectedCount} more project${7 - selectedCount == 1 ? '' : 's'} can be added.',
+                            '${7 - selectedCount} more project${7 - selectedCount == 1 ? '' : 's'} required to create a portfolio.',
                             style: const TextStyle(
                               color: _muted,
                               fontSize: 12,
+                              fontFamily: appFontFamily,
+                            ),
+                          ),
+                        if (selectedCount == 7)
+                          const Text(
+                            'Perfect! You can now create your portfolio.',
+                            style: TextStyle(
+                              color: Color(0xFF10B981),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
                               fontFamily: appFontFamily,
                             ),
                           ),
@@ -501,11 +599,11 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                       ),
                     ),
                   ElevatedButton.icon(
-                    onPressed: selectedCount >= 1 ? _handleCreatePortfolio : null,
+                    onPressed: selectedCount == 7 ? _handleCreatePortfolio : null,
                     icon:
                         const Icon(Icons.pie_chart_outline_rounded, size: 18),
                     label: Text(
-                      selectedCount >= 1 ? 'Create Portfolio' : 'Select projects',
+                      selectedCount == 7 ? 'Create Portfolio' : 'Select 7 projects',
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     style: ElevatedButton.styleFrom(

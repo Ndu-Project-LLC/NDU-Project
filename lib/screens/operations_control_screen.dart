@@ -187,7 +187,7 @@ class _OperationsControlScreenState extends State<OperationsControlScreen> {
  metricCard('CV', '\$${cv.toStringAsFixed(0)}',
  cv >= 0 ? const Color(0xFF059669) : const Color(0xFFDC2626)),
  metricCard('EAC', '\$${eac.toStringAsFixed(0)}',
- const Color(0xFF7C3AED)),
+ const Color(0xFFB8860B)),
  ],
  ),
  ],
@@ -252,7 +252,7 @@ class _OperationsControlScreenState extends State<OperationsControlScreen> {
  value: total > 0 ? completed / total : 0,
  backgroundColor: const Color(0xFFE5E7EB),
  valueColor:
- const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+ const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
  ),
  const SizedBox(height: 4),
  Text('$pct%', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),

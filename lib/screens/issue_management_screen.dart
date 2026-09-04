@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -201,7 +200,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  .length
  .toString(),
  icon: Icons.autorenew,
- color: Colors.blue),
+ color: const Color(0xFFFFC812)),
  _IssueMetric(
  label: 'Resolved',
  value: issueItems
@@ -237,7 +236,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  final searchedIssues = _searchIssues(issueItems);
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,16 +257,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  children: [
  PlanningPhaseHeader(title: 'Issue Management', onExportPdf: _exportPdf),
  const SizedBox(height: 24),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'issue_management',
- contextText: _carriedContext!,
- ),
- ),
+
  const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Issue Management',
@@ -314,8 +304,8 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Issue Management',
  ),
  ),
@@ -432,7 +422,7 @@ class _MetricCard extends StatelessWidget {
  width: 42,
  height: 42,
  decoration: BoxDecoration(
- color: metric.color.withOpacity(0.12),
+ color: metric.color.withValues(alpha: 0.12),
  shape: BoxShape.circle,
  ),
  child: Icon(metric.icon, size: 22, color: metric.color),
@@ -453,7 +443,7 @@ class _MetricCard extends StatelessWidget {
  metric.label,
  style: TextStyle(
  fontSize: 13,
- color: metric.color.withOpacity(0.8),
+ color: metric.color.withValues(alpha: 0.8),
  fontWeight: FontWeight.w500),
  ),
  ],
@@ -684,7 +674,7 @@ class _ProjectIssuesLogCard extends StatelessWidget {
  const Spacer(),
  SizedBox(
  width: 260,
- child: VoiceTextField(
+ child: TextField(
  onChanged: onSearchChanged,
  decoration: InputDecoration(
  hintText: 'Search issues...',
@@ -865,8 +855,8 @@ class _IssueLogRow extends StatelessWidget {
  alignment: Alignment.centerLeft,
  child: _StatusPill(
  label: entry.type,
- background: const Color(0xFFEFF6FF),
- foreground: const Color(0xFF2563EB),
+ background: const Color(0xFFFFF8E1),
+ foreground: const Color(0xFFFFC812),
  ),
  ),
  ),
@@ -1112,10 +1102,10 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
  border: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: BorderSide(color: Colors.grey.withOpacity(0.35))),
+ borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
  enabledBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: BorderSide(color: Colors.grey.withOpacity(0.35))),
+ borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
  borderSide: const BorderSide(color: Color(0xFFFFD54F), width: 1.6)),
@@ -1144,7 +1134,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _selectedType,
+ initialValue: _selectedType,
  items: _types
  .map((type) =>
  DropdownMenuItem(value: type, child: Text(type)))
@@ -1155,7 +1145,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _selectedSeverity,
+ initialValue: _selectedSeverity,
  items: _severities
  .map((severity) => DropdownMenuItem(
  value: severity, child: Text(severity)))
@@ -1166,7 +1156,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _selectedStatus,
+ initialValue: _selectedStatus,
  items: _statuses
  .map((status) =>
  DropdownMenuItem(value: status, child: Text(status)))
@@ -1302,7 +1292,7 @@ class _UserChip extends StatelessWidget {
 }
 
 class _YellowButton extends StatelessWidget {
- const _YellowButton({required this.label, this.onPressed});
+ const _YellowButton({required this.label}) : onPressed = null;
 
  final String label;
  final VoidCallback? onPressed;

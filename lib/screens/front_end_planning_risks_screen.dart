@@ -18,7 +18,9 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 /// Front End Planning – Project Risks page
 /// Matches the provided screenshot with:
 /// - Top bar (back/forward, centered title, user chip)
@@ -615,7 +617,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  final result = await showDialog<_RiskItem>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (ctx) {
  final viewInsets = MediaQuery.of(ctx).viewInsets;
  return Center(
@@ -634,8 +636,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  mainAxisSize: MainAxisSize.min,
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
- children: const [
+ const Row(
+ children: [
  Icon(Icons.edit_note, color: Color(0xFF111827)),
  SizedBox(width: 8),
  Text('Edit Risk',
@@ -1317,10 +1319,16 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  if (isMobile) {
  return _buildMobileScaffold(context);
  }
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
 
  return Scaffold(
  // Ensure white background as requested
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1345,6 +1353,12 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
  _roundedField(
  controller: _notesController,
  hint: 'Input your notes here...',
@@ -1355,11 +1369,11 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment:
  CrossAxisAlignment.start,
- children: const [
+ children: [
  EditableContentText(
  contentKey:
  'fep_initial_project_risks_title',
@@ -1474,11 +1488,14 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ],
  ),
  ),
+ ],
+ ),
+ ),
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Project Risks',
  ),
  ),
@@ -1503,7 +1520,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
 
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: Drawer(
  width: MediaQuery.sizeOf(context).width * 0.88,
  child: const SafeArea(
@@ -1542,7 +1559,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  borderRadius: BorderRadius.circular(20),
  child: const CircleAvatar(
  radius: 13,
- backgroundColor: Color(0xFF2563EB),
+ backgroundColor: Color(0xFFFFC812),
  child: Text('C',
  style: TextStyle(
  color: Colors.white,
@@ -1640,8 +1657,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  style: TextStyle(fontWeight: FontWeight.w700),
  ),
  style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF2563EB),
- side: const BorderSide(color: Color(0xFFBFDBFE)),
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12)),
  padding: const EdgeInsets.symmetric(vertical: 13),
@@ -1947,7 +1964,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  _buildDistributionTile(
  label: 'High',
  value: distribution['High'] ?? 0,
- background: const Color(0xFFFFE4E6),
+ background: const Color(0xFFFFF8E1),
  foreground: const Color(0xFFDC2626),
  ),
  _buildDistributionTile(
@@ -1981,7 +1998,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  decoration: BoxDecoration(
  color: background,
  borderRadius: BorderRadius.circular(10),
- border: Border.all(color: foreground.withOpacity(0.25)),
+ border: Border.all(color: foreground.withValues(alpha: 0.25)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -2009,18 +2026,29 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  }
 
  Widget _buildRiskTable(BuildContext context) {
- return FullScreenTableWrapper(
- title: 'Risks',
- child: _buildRiskTableContent(),
- tableBuilder: (fsContext) => _buildRiskTableContent(),
- );
+		return SearchableTableSection(
+			title: 'Risks',
+			items: _rows,
+			searchFilter: (item, query) {
+				final r = item as _RiskItem;
+				final q = query.trim().toLowerCase();
+				if (q.isEmpty) return true;
+				return r.risk.toLowerCase().contains(q) ||
+						r.description.toLowerCase().contains(q) ||
+						r.category.toLowerCase().contains(q) ||
+						r.owner.toLowerCase().contains(q);
+			},
+			tableBuilder: (fsContext, query) => _buildRiskTableContent(query.isEmpty ? null : _rows.where((r) => r.risk.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.category.toLowerCase().contains(query.trim().toLowerCase()) || r.owner.toLowerCase().contains(query.trim().toLowerCase())).toList()),
+			cardBuilder: (fsContext, query) => Column(children: _rows.where((r) => r.risk.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.category.toLowerCase().contains(query.trim().toLowerCase()) || r.owner.toLowerCase().contains(query.trim().toLowerCase())).map((r) => Card(child: ListTile(title: Text(r.risk), subtitle: Text(r.description)))).toList()),
+		);
  }
 
- Widget _buildRiskTableContent() {
- final border = const BorderSide(color: Color(0xFFE5E7EB));
- final headerStyle = const TextStyle(
+	Widget _buildRiskTableContent([List<_RiskItem>? rowsOverride]) {
+		final rowsSource = rowsOverride ?? _rows;
+ const border = BorderSide(color: Color(0xFFE5E7EB));
+ const headerStyle = TextStyle(
  fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));
- final cellStyle = const TextStyle(fontSize: 14, color: Color(0xFF111827));
+ const cellStyle = TextStyle(fontSize: 14, color: Color(0xFF111827));
 
  return Container(
  key: _riskTableKey,
@@ -2035,7 +2063,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  child: LayoutBuilder(
  builder: (context, constraints) {
- final minTableWidth = 1940.0;
+ const minTableWidth = 1940.0;
  final tableWidth = constraints.maxWidth < minTableWidth
  ? minTableWidth
  : constraints.maxWidth;
@@ -2114,8 +2142,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  _td(
  r.category.isEmpty
  ? const SizedBox.shrink()
- : _chip(r.category, const Color(0xFFF3E8FF),
- const Color(0xFF7C3AED)),
+ : _chip(r.category, const Color(0xFFFFF8E1),
+ const Color(0xFFB8860B)),
  onDoubleTap: () => _showEditRiskSheet(i)),
  _td(
  WrappedText(
@@ -2196,14 +2224,14 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
  color: rowCanUndo
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF8E1)
  : const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(Icons.undo_rounded,
  size: 16,
  color: rowCanUndo
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF9CA3AF)),
  ),
  ),
@@ -2282,7 +2310,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  severity, const Color(0xFFFEE2E2), const Color(0xFFB91C1C));
  case 'High':
  return _chip(
- severity, const Color(0xFFFFE4E6), const Color(0xFFDC2626));
+ severity, const Color(0xFFFFF8E1), const Color(0xFFDC2626));
  case 'Low':
  return _chip(
  severity, const Color(0xFFDCFCE7), const Color(0xFF16A34A));
@@ -2315,7 +2343,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
- color: const Color(0xFFFFE4E6),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(16),
  ),
  child: Text(status,
@@ -2468,7 +2496,7 @@ class _ExpandableCellTextState extends State<_ExpandableCellText> {
  child: Text(
  _isExpanded ? 'View less' : 'View more',
  style: widget.style.copyWith(
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFFFC812),
  fontSize: 12.5,
  fontWeight: FontWeight.w700,
  ),
@@ -2543,13 +2571,13 @@ class _BottomOverlays extends StatelessWidget {
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFD7E5FF)),
  ),
- child: Row(
- children: const [
- Icon(Icons.lightbulb_outline, color: Color(0xFF2563EB)),
+ child: const Row(
+ children: [
+ Icon(Icons.lightbulb_outline, color: Color(0xFFFFC812)),
  SizedBox(width: 8),
  Text('Hint',
  style: TextStyle(
- fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+ fontWeight: FontWeight.w800, color: Color(0xFFFFC812))),
  SizedBox(width: 10),
  Text('Focus on major risks associated with each potential solution.',
  style: TextStyle(color: Color(0xFF1F2937))),
@@ -2596,10 +2624,9 @@ class _LabeledField extends StatelessWidget {
  const _LabeledField({
  required this.label,
  required this.controller,
- this.hintText,
  this.autofocus = false,
  this.enabled = true,
- });
+ }) : hintText = null;
 
  @override
  Widget build(BuildContext context) {
@@ -2623,7 +2650,7 @@ class _LabeledField extends StatelessWidget {
  controller: controller,
  autofocus: autofocus,
  enabled: enabled,
- decoration: InputDecoration(
+ decoration: const InputDecoration(
  border: InputBorder.none,
  ),
  ),

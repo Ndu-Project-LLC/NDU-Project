@@ -30,7 +30,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
   static const Color _kAccent = Color(0xFFF59E0B);
   static const Color _kAccentLight = Color(0xFFFFC812);
   static const Color _kAccentBg = Color(0xFFFEF3C7);
-  static const Color _kBackground = Color(0xFFF8FAFC);
+  static const Color _kBackground = Colors.white;
   static const Color _kSurface = Colors.white;
   static const Color _kBorder = Color(0xFFE5E7EB);
   static const Color _kHeadline = Color(0xFF111827);
@@ -77,11 +77,11 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
     const _ActivityItem('Sarah Chen', 'completed', 'NDU-1042: Login validation',
         '12m ago', Icons.check_circle, Colors.green),
     const _ActivityItem('Marcus Reed', 'moved', 'NDU-1038: API rate limiting',
-        '34m ago', Icons.swap_horiz, Colors.blue),
+        '34m ago', Icons.swap_horiz, Color(0xFFFFC812)),
     const _ActivityItem('Kaz AI', 'flagged', 'Velocity drift detected on Sprint 24',
         '1h ago', Icons.auto_awesome, _kAccent),
     const _ActivityItem('Priya Nair', 'commented on', 'NDU-1031: Dashboard widgets',
-        '2h ago', Icons.chat_bubble_outline, Colors.purple),
+        '2h ago', Icons.chat_bubble_outline, Color(0xFFB8860B)),
     const _ActivityItem('James Okoro', 'blocked', 'NDU-1029: SSO integration',
         '3h ago', Icons.block, Colors.red),
     const _ActivityItem('Lena Park', 'started', 'NDU-1045: Reporting module',
@@ -432,8 +432,8 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
         value: '$_storiesCompleted / $_storiesTotal',
         sublabel: '${(_sprintCompletion * 100).toInt()}% of sprint goal',
         icon: Icons.task_alt,
-        accent: Colors.blue,
-        accentBg: const Color(0xFFDBEAFE),
+        accent: const Color(0xFFFFC812),
+        accentBg: const Color(0xFFFEF3C7),
         trend: '6 in progress',
         trendUp: true,
       ),
@@ -442,8 +442,8 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
         value: '$_teamCapacity%',
         sublabel: '7 of 8 members active',
         icon: Icons.groups,
-        accent: Colors.purple,
-        accentBg: const Color(0xFFEDE9FE),
+        accent: const Color(0xFFB8860B),
+        accentBg: const Color(0xFFFFF8E1),
         trend: 'Healthy',
         trendUp: true,
       ),
@@ -602,7 +602,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
               const SizedBox(width: 8),
               _chip('${_storiesTotal - _storiesCompleted} Remaining', _kAccent),
               const SizedBox(width: 8),
-              _chip('Day $_sprintDay/$_sprintTotalDays', Colors.blue),
+              _chip('Day $_sprintDay/$_sprintTotalDays', const Color(0xFFFFC812)),
               const Spacer(),
               Text(
                   'ETA: ${DateTime.now().add(Duration(days: _sprintTotalDays - _sprintDay)).day}/${DateTime.now().month}',

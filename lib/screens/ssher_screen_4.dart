@@ -3,7 +3,6 @@ import 'package:ndu_project/screens/ssher_components.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
-import 'package:ndu_project/widgets/unified_phase_header.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -26,14 +25,14 @@ class _SsherScreen4State extends State<SsherScreen4> {
  children: [
  SsherSectionCard(
  leadingIcon: Icons.gavel_outlined,
- accentColor: const Color(0xFF8E24AA),
+ accentColor: Color(0xFF8E24AA),
  title: 'Regulatory',
  subtitle: 'Compliance and regulatory requirements',
  detailsPlaceholder:
  'EComprehensive regulatory compliance framework ensuring adherence to industry standards, legal requirements, and best practices. Regular audits documentation',
  itemsLabel: '7 Items',
  addButtonLabel: 'Add Regulatory Item',
- columns: const [
+ columns: [
  '#',
  'Department',
  'Team Member',
@@ -42,7 +41,7 @@ class _SsherScreen4State extends State<SsherScreen4> {
  'Mitigation Strategy',
  'Actions'
  ],
- rows: const [
+ rows: [
  [
  Text('1', style: TextStyle(fontSize: 12)),
  Text('Operations', style: TextStyle(fontSize: 13)),
@@ -89,9 +88,9 @@ class _SsherScreen4State extends State<SsherScreen4> {
  breadcrumbPhase: 'Planning Phase',
  breadcrumbTitle: 'SSHER Hub',
  onBack: () => Navigator.maybePop(context), onExportPdf: _exportPdf),
- Expanded(
+ const Expanded(
  child: SingleChildScrollView(
- padding: const EdgeInsets.all(24),
+ padding: EdgeInsets.all(24),
  child: content,
  ),
  ),
@@ -122,9 +121,9 @@ class _SsherScreen4State extends State<SsherScreen4> {
  activeItemLabel: 'SSHER',
  ),
  ),
- Expanded(
+ const Expanded(
  child: SingleChildScrollView(
- padding: const EdgeInsets.all(24),
+ padding: EdgeInsets.all(24),
  child: content,
  ),
  ),

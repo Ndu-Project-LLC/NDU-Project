@@ -26,7 +26,6 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/responsive.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -514,7 +513,7 @@ class _AgileProjectBaselineScreenState
  add(
  'No formal risk register entries',
  'The risk register is empty, so only inferred risk is available.',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  );
  }
  return items;
@@ -1060,7 +1059,7 @@ onBack: () =>
  children: [
  _MiniPill(
  label: '$_formalRiskCount formal risks',
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFFFC812),
  ),
  _MiniPill(
  label: '$_highRiskCount high formal risks',
@@ -1070,7 +1069,7 @@ onBack: () =>
  ),
  _MiniPill(
  label: '$_dependencyCount dependencies',
- color: const Color(0xFF8B5CF6),
+ color: const Color(0xFFB8860B),
  ),
  _MiniPill(
  label: '$_blockedDependencyCount unresolved deps',
@@ -1150,7 +1149,7 @@ class _TopHeader extends StatelessWidget {
  Widget build(BuildContext context) {
  final statusColor = switch (status) {
  'Approved' => const Color(0xFF10B981),
- 'Ready' => const Color(0xFF2563EB),
+ 'Ready' => const Color(0xFFFFC812),
  _ => const Color(0xFFF59E0B),
  };
 
@@ -1340,7 +1339,7 @@ class _MetricsRow extends StatelessWidget {
  label: 'Capacity Threshold',
  value:
  capacityThreshold == null ? 'Not set' : '$capacityThreshold pts',
- accent: const Color(0xFF2563EB),
+ accent: const Color(0xFFFFC812),
  ),
  _MetricCard(
  label: 'Total Planned Points',
@@ -1350,12 +1349,12 @@ class _MetricsRow extends StatelessWidget {
  _MetricCard(
  label: 'Epic Story Points',
  value: epicTotalPoints.toStringAsFixed(0),
- accent: const Color(0xFF8B5CF6),
+ accent: const Color(0xFFB8860B),
  ),
  _MetricCard(
  label: 'Sprint Count',
  value: '$sprintCount',
- accent: const Color(0xFFEC4899),
+ accent: const Color(0xFFD97706),
  ),
  _MetricCard(
  label: 'Highest Sprint Load',
@@ -1853,6 +1852,7 @@ class _ApproverAutocomplete extends StatelessWidget {
  child: ListView.separated(
  padding: const EdgeInsets.symmetric(vertical: 6),
  shrinkWrap: true,
+ physics: const NeverScrollableScrollPhysics(),
  itemCount: list.length,
  separatorBuilder: (_, __) =>
  const Divider(height: 1, color: _kBorder),
@@ -1871,7 +1871,7 @@ class _ApproverAutocomplete extends StatelessWidget {
  Icon(
  isCreate ? Icons.add_circle : Icons.person,
  size: 18,
- color: isCreate ? Colors.blue : _kMuted,
+ color: isCreate ? const Color(0xFFFFC812) : _kMuted,
  ),
  const SizedBox(width: 8),
  Expanded(
@@ -1881,7 +1881,7 @@ class _ApproverAutocomplete extends StatelessWidget {
  : option,
  style: TextStyle(
  fontSize: 14,
- color: isCreate ? Colors.blue : _kHeadline,
+ color: isCreate ? const Color(0xFFFFC812) : _kHeadline,
  ),
  ),
  ),

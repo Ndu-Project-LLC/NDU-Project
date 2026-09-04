@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,8 +7,6 @@ import 'package:ndu_project/models/deliverable_row.dart';
 import 'package:ndu_project/models/recurring_deliverable_row.dart';
 import 'package:ndu_project/models/status_report_row.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/contracts_tracking_screen.dart';
-import 'package:ndu_project/screens/team_meetings_screen.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
@@ -401,7 +400,7 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Progress Tracking',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -460,9 +459,9 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
                           style: TextStyle(
                               fontSize: 13, fontWeight: FontWeight.w600)),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF7C3AED),
-                        side: const BorderSide(color: Color(0xFFDDD6FE)),
-                        backgroundColor: const Color(0xFFF5F3FF),
+                        foregroundColor: const Color(0xFFB8860B),
+                        side: const BorderSide(color: Color(0xFFFEF3C7)),
+                        backgroundColor: const Color(0xFFFFF8E1),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 10),
                         shape: RoundedRectangleBorder(
@@ -488,7 +487,7 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
                 collapsible: true,
                 initiallyExpanded: false,
                 headerIcon: Icons.view_timeline_outlined,
-                headerIconColor: const Color(0xFF2563EB),
+                headerIconColor: const Color(0xFFFFC812),
                 child: Wrap(
                   spacing: 10,
                   runSpacing: 10,
@@ -515,10 +514,10 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
               _buildActiveWorkspace(),
               const SizedBox(height: 24),
               LaunchPhaseNavigation(
-                backLabel: 'Back: Team Meetings',
-                nextLabel: 'Next: Contracts Tracking',
-                onBack: () => TeamMeetingsScreen.open(context),
-                onNext: () => ContractsTrackingScreen.open(context),
+                backLabel: PlanningPhaseNavigation.backLabel('progress_tracking'),
+                nextLabel: PlanningPhaseNavigation.nextLabel('progress_tracking'),
+                onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'progress_tracking'),
+                onNext: () => PlanningPhaseNavigation.goToNext(context, 'progress_tracking'),
               ),
             ],
             const SizedBox(height: 48),
@@ -567,10 +566,10 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
       showCheckmark: false,
       shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      selectedColor: const Color(0xFFE0F2FE),
-      backgroundColor: Colors.white,
+      selectedColor: const Color(0xFFFFF8E1),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       side: BorderSide(
-        color: selected ? const Color(0xFF7DD3FC) : const Color(0xFFE2E8F0),
+        color: selected ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0),
       ),
       labelStyle: TextStyle(
         fontSize: 12,

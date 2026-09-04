@@ -100,7 +100,7 @@ class _ExecutionEnablingWorkPlanScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Enabling Work Plan',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -161,7 +161,7 @@ class _EnablingWorksPlanSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Enabling Works',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'aspect',
                       label: 'Enabling Work Aspect',
@@ -230,7 +230,7 @@ class _EnablingWorksPlanSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileEnablingWorksActions()
+          const _MobileEnablingWorksActions()
         else
           const _DesktopEnablingWorksActions(),
       ],

@@ -8,7 +8,6 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
-import 'package:ndu_project/widgets/unified_phase_header.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
@@ -17,7 +16,6 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/web_utils_stub.dart'
  if (dart.library.html) 'package:ndu_project/utils/web_utils_web.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
@@ -27,7 +25,7 @@ String _categoryKey(_SsherCategory category) => category.name;
 
 // ── Color Palette (matching HTML design tokens) ──
 class _Palette {
- static const Color primary = Color(0xFF005BB3);
+ static const Color primary = Color(0xFFFFC812);
  static const Color primaryContainer = Color(0xFF0073DF);
  static const Color tertiaryFixedDim = Color(0xFFFABD00);
  static const Color tertiaryContainer = Color(0xFF946F00);
@@ -81,7 +79,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
 
  // Per-category generation flags so we don't re-fetch an existing plan
  // every time the user switches tabs.
- Map<_SsherCategory, bool> _categoryPlanLoaded =
+ final Map<_SsherCategory, bool> _categoryPlanLoaded =
  <_SsherCategory, bool>{};
  _SsherCategory? _generatingCategoryPlan;
 
@@ -806,7 +804,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
 
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: isMobile
  ? Drawer(
  width: AppBreakpoints.sidebarWidth(context),
@@ -2073,7 +2071,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  : _Palette.onSurfaceVariant,
  ),
  ),
- SizedBox(width: 8),
+ const SizedBox(width: 8),
  Icon(Icons.arrow_forward,
  size: 20,
  color: enabled

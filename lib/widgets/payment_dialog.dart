@@ -222,9 +222,9 @@ class _PaymentDialogState extends State<PaymentDialog> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFFF8FAFC),
+              color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Color(0xFFE2E8F0)),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Row(
               children: [
@@ -490,10 +490,10 @@ class _PaymentDialogState extends State<PaymentDialog> {
             children: [
               Row(
                 children: [
-                  Expanded(
+                  const Expanded(
                     child: Text(
                       'Complete Your Subscription',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                         color: _primaryText,
@@ -700,7 +700,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: _accent),
+                            borderSide: const BorderSide(color: _accent),
                           ),
                           errorText: _couponError,
                           errorStyle: const TextStyle(fontSize: 11),
@@ -968,7 +968,7 @@ class _FreeTrialBanner extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Color(0xFF22C55E),
+                            color: const Color(0xFF22C55E),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: const Text(

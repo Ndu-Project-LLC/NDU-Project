@@ -13,7 +13,6 @@ import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
 import 'package:ndu_project/widgets/planning_dashboard_card.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:provider/provider.dart';
@@ -22,9 +21,9 @@ import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
 import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/kanban_card_grid.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 /// Front End Planning – Summary screen
 /// Mirrors the provided layout with shared workspace chrome,
@@ -203,10 +202,16 @@ class _FrontEndPlanningSummaryScreenState
  if (AppBreakpoints.isMobile(context)) {
  return _buildMobileScaffold(context);
  }
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
 
  return ResponsiveScaffold(
  activeItemLabel: 'Details',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: Stack(
  children: [
  const AdminEditToggle(),
@@ -220,6 +225,12 @@ class _FrontEndPlanningSummaryScreenState
  controller: _contentScrollController,
  padding: const EdgeInsets.symmetric(
  horizontal: 32, vertical: 24),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -251,6 +262,9 @@ class _FrontEndPlanningSummaryScreenState
  ],
  ),
  ),
+ ],
+ ),
+ ),
  ),
  ),
  ],
@@ -278,7 +292,7 @@ class _FrontEndPlanningSummaryScreenState
 
  return Scaffold(
  key: _mobileScaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: Drawer(
  width: MediaQuery.sizeOf(context).width * 0.88,
  child: const SafeArea(
@@ -311,7 +325,7 @@ class _FrontEndPlanningSummaryScreenState
  ),
  CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  child: Text(
  (projectName.isNotEmpty ? projectName[0] : 'P')
  .toUpperCase(),
@@ -956,157 +970,140 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
  ? 'default'
  : (data.projectId!).trim();
 
- return KanbanCardGrid(
- projectId: projectId,
- section: _kKanbanSection,
- columns: 2,
- spacing: 16.0,
- runSpacing: 16.0,
- defaultOrder: _kDefaultCardOrder,
- cards: [
- KanbanCardEntry(
- id: _kCardObjectives,
+ // Cross-section item drag-and-drop callback
+ void onItemMovedBetweenSections(
+ BuildContext context, String itemId, String sourceSectionKey, String targetSectionKey) {
+ _handleMoveItemBetweenSections(context,
+ itemId: itemId,
+ sourceSectionKey: sourceSectionKey,
+ targetSectionKey: targetSectionKey,
+ );
+ }
+
+ return Column(
+ children: [
+ // Row 1: Objectives + Success Criteria
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Expanded(
  child: _GoalsCard(
  title: 'Project Objectives',
- description:
- 'Specific, measurable goals the project aims to achieve.',
+ description: 'Specific, measurable goals the project aims to achieve.',
  items: data.projectGoals,
+ sectionKey: 'projectGoals',
+ onItemReceived: (itemId, sourceKey) => onItemMovedBetweenSections(context, itemId, sourceKey, 'projectGoals'),
  isGenerating: _generatingStates['projectGoals'] ?? false,
- onAdd: () => _handleAddGoal(
- context, 'Project Objectives', data.projectGoals),
- onEdit: (item) =>
- _handleEditGoal(context, item, data.projectGoals),
- onDelete: (item) =>
- _handleDeleteGoal(context, item, data.projectGoals),
- onGenerateAI: () => _handleGenerateGoalsAI(context,
- 'Project Objectives', 'projectGoals', data.projectGoals),
+ onAdd: () => _handleAddGoal(context, 'Project Objectives', data.projectGoals),
+ onEdit: (item) => _handleEditGoal(context, item, data.projectGoals),
+ onDelete: (item) => _handleDeleteGoal(context, item, data.projectGoals),
+ onGenerateAI: () => _handleGenerateGoalsAI(context, 'Project Objectives', 'projectGoals', data.projectGoals),
  ),
  ),
- KanbanCardEntry(
- id: _kCardCriteria,
+ const SizedBox(width: 16),
+ Expanded(
  child: PlanningDashboardCard(
  title: 'Success Criteria',
- description:
- 'Standards by which the project success will be judged.',
+ description: 'Standards by which the project success will be judged.',
+ sectionKey: 'successCriteriaItems',
+ onItemReceived: (itemId, sourceKey) => onItemMovedBetweenSections(context, itemId, sourceKey, 'successCriteriaItems'),
  items: data.frontEndPlanning.successCriteriaItems,
  isGenerating: _generatingStates['successCriteria'] ?? false,
  onUndo: () => _undoListChange(context, 'successCriteriaItems'),
  canUndo: _canUndo('successCriteriaItems'),
- onAdd: () => _handleAddItem(
- context,
- 'successCriteriaItems',
- 'Success Criteria',
- data.frontEndPlanning.successCriteriaItems),
- onEdit: (item) => _handleEditItem(
- context,
- 'successCriteriaItems',
- item,
- data.frontEndPlanning.successCriteriaItems),
- onDelete: (item) => _handleDeleteItem(
- context,
- 'successCriteriaItems',
- item,
- data.frontEndPlanning.successCriteriaItems),
- onGenerateAI: () => _handleGenerateAI(
- context,
- 'Success Criteria',
- 'successCriteria',
- data.frontEndPlanning.successCriteriaItems,
- listKey: 'successCriteriaItems',
- showNotice: true),
+ onAdd: () => _handleAddItem(context, 'successCriteriaItems', 'Success Criteria', data.frontEndPlanning.successCriteriaItems),
+ onEdit: (item) => _handleEditItem(context, 'successCriteriaItems', item, data.frontEndPlanning.successCriteriaItems),
+ onDelete: (item) => _handleDeleteItem(context, 'successCriteriaItems', item, data.frontEndPlanning.successCriteriaItems),
+ onGenerateAI: () => _handleGenerateAI(context, 'Success Criteria', 'successCriteria', data.frontEndPlanning.successCriteriaItems, listKey: 'successCriteriaItems', showNotice: true),
  ),
  ),
- KanbanCardEntry(
- id: _kCardScope,
+ ],
+ ),
+ const SizedBox(height: 16),
+ // Row 2: Within Scope + Out of Scope
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Expanded(
  child: PlanningDashboardCard(
  title: 'Within Project Scope',
- description:
- '(Description: Work, features, deliverables, and activities that are explicitly included and will be delivered to achieve the project\'s objectives.)',
+ description: '(Description: Work, features, deliverables, and activities that are explicitly included and will be delivered to achieve the project\'s objectives.)',
+ sectionKey: 'withinScopeItems',
+ onItemReceived: (itemId, sourceKey) => onItemMovedBetweenSections(context, itemId, sourceKey, 'withinScopeItems'),
  items: data.withinScopeItems,
  isGenerating: _generatingStates['withinScope'] ?? false,
  emptyStateText: _autoGeneratedHint,
  onUndo: () => _undoListChange(context, 'withinScopeItems'),
  canUndo: _canUndo('withinScopeItems'),
- onAdd: () => _handleAddItem(context, 'withinScopeItems',
- 'Within Scope', data.withinScopeItems),
- onEdit: (item) => _handleEditItem(
- context, 'withinScopeItems', item, data.withinScopeItems),
- onDelete: (item) => _handleDeleteItem(
- context, 'withinScopeItems', item, data.withinScopeItems),
- onReorder: (oldIndex, newIndex) => _handleReorder(
- context, 'withinScopeItems', data.withinScopeItems, oldIndex, newIndex),
- onGenerateAI: () => _handleGenerateAI(context, 'Within Scope',
- 'withinScope', data.withinScopeItems,
- listKey: 'withinScopeItems', showNotice: true),
+ onAdd: () => _handleAddItem(context, 'withinScopeItems', 'Within Scope', data.withinScopeItems),
+ onEdit: (item) => _handleEditItem(context, 'withinScopeItems', item, data.withinScopeItems),
+ onDelete: (item) => _handleDeleteItem(context, 'withinScopeItems', item, data.withinScopeItems),
+ onReorder: (oldIndex, newIndex) => _handleReorder(context, 'withinScopeItems', data.withinScopeItems, oldIndex, newIndex),
+ onGenerateAI: () => _handleGenerateAI(context, 'Within Scope', 'withinScope', data.withinScopeItems, listKey: 'withinScopeItems', showNotice: true),
  ),
  ),
- KanbanCardEntry(
- id: _kCardOut,
+ const SizedBox(width: 16),
+ Expanded(
  child: PlanningDashboardCard(
  title: 'Out of Project Scope',
- description:
- '(Description: Work, features, or activities that are explicitly excluded from project and will not be delivered as part of its objectives.)',
+ description: '(Description: Work, features, or activities that are explicitly excluded from project and will not be delivered as part of its objectives.)',
+ sectionKey: 'outOfScopeItems',
+ onItemReceived: (itemId, sourceKey) => onItemMovedBetweenSections(context, itemId, sourceKey, 'outOfScopeItems'),
  items: data.outOfScopeItems,
  isGenerating: _generatingStates['outOfScope'] ?? false,
  emptyStateText: _autoGeneratedHint,
  onUndo: () => _undoListChange(context, 'outOfScopeItems'),
  canUndo: _canUndo('outOfScopeItems'),
- onAdd: () => _handleAddItem(context, 'outOfScopeItems',
- 'Out of Scope', data.outOfScopeItems),
- onEdit: (item) => _handleEditItem(
- context, 'outOfScopeItems', item, data.outOfScopeItems),
- onDelete: (item) => _handleDeleteItem(
- context, 'outOfScopeItems', item, data.outOfScopeItems),
- onReorder: (oldIndex, newIndex) => _handleReorder(
- context, 'outOfScopeItems', data.outOfScopeItems, oldIndex, newIndex),
- onGenerateAI: () => _handleGenerateAI(
- context, 'Out of Scope', 'outOfScope', data.outOfScopeItems,
- listKey: 'outOfScopeItems', showNotice: true),
+ onAdd: () => _handleAddItem(context, 'outOfScopeItems', 'Out of Scope', data.outOfScopeItems),
+ onEdit: (item) => _handleEditItem(context, 'outOfScopeItems', item, data.outOfScopeItems),
+ onDelete: (item) => _handleDeleteItem(context, 'outOfScopeItems', item, data.outOfScopeItems),
+ onReorder: (oldIndex, newIndex) => _handleReorder(context, 'outOfScopeItems', data.outOfScopeItems, oldIndex, newIndex),
+ onGenerateAI: () => _handleGenerateAI(context, 'Out of Scope', 'outOfScope', data.outOfScopeItems, listKey: 'outOfScopeItems', showNotice: true),
  ),
  ),
- KanbanCardEntry(
- id: _kCardAssumptions,
+ ],
+ ),
+ const SizedBox(height: 16),
+ // Row 3: Assumptions + Constraints
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Expanded(
  child: PlanningDashboardCard(
  title: 'Project Assumptions',
- description:
- '(Description: Conditions or events assumed to be true that form the basis for planning and decision-making.)',
+ description: '(Description: Conditions or events assumed to be true that form the basis for planning and decision-making.)',
+ sectionKey: 'assumptionItems',
+ onItemReceived: (itemId, sourceKey) => onItemMovedBetweenSections(context, itemId, sourceKey, 'assumptionItems'),
  items: data.assumptionItems,
  isGenerating: _generatingStates['assumptions'] ?? false,
  emptyStateText: _autoGeneratedHint,
  onUndo: () => _undoListChange(context, 'assumptionItems'),
  canUndo: _canUndo('assumptionItems'),
- onAdd: () => _handleAddItem(context, 'assumptionItems',
- 'Assumptions', data.assumptionItems),
- onEdit: (item) => _handleEditItem(
- context, 'assumptionItems', item, data.assumptionItems),
- onDelete: (item) => _handleDeleteItem(
- context, 'assumptionItems', item, data.assumptionItems),
- onGenerateAI: () => _handleGenerateAI(
- context, 'Assumptions', 'assumptions', data.assumptionItems,
- listKey: 'assumptionItems', showNotice: true),
+ onAdd: () => _handleAddItem(context, 'assumptionItems', 'Assumptions', data.assumptionItems),
+ onEdit: (item) => _handleEditItem(context, 'assumptionItems', item, data.assumptionItems),
+ onDelete: (item) => _handleDeleteItem(context, 'assumptionItems', item, data.assumptionItems),
+ onGenerateAI: () => _handleGenerateAI(context, 'Assumptions', 'assumptions', data.assumptionItems, listKey: 'assumptionItems', showNotice: true),
  ),
  ),
- KanbanCardEntry(
- id: _kCardConstraints,
+ const SizedBox(width: 16),
+ Expanded(
  child: PlanningDashboardCard(
  title: 'Project Constraints',
- description:
- '(Description: Fixed limitations or boundaries that restrict how a project can be planned and executed.)',
+ description: '(Description: Fixed limitations or boundaries that restrict how a project can be planned and executed.)',
+ sectionKey: 'constraintItems',
+ onItemReceived: (itemId, sourceKey) => onItemMovedBetweenSections(context, itemId, sourceKey, 'constraintItems'),
  items: data.constraintItems,
  isGenerating: _generatingStates['constraints'] ?? false,
  emptyStateText: _autoGeneratedHint,
  onUndo: () => _undoListChange(context, 'constraintItems'),
  canUndo: _canUndo('constraintItems'),
- onAdd: () => _handleAddItem(context, 'constraintItems',
- 'Constraints', data.constraintItems),
- onEdit: (item) => _handleEditItem(
- context, 'constraintItems', item, data.constraintItems),
- onDelete: (item) => _handleDeleteItem(
- context, 'constraintItems', item, data.constraintItems),
- onGenerateAI: () => _handleGenerateAI(
- context, 'Constraints', 'constraints', data.constraintItems,
- listKey: 'constraintItems', showNotice: true),
+ onAdd: () => _handleAddItem(context, 'constraintItems', 'Constraints', data.constraintItems),
+ onEdit: (item) => _handleEditItem(context, 'constraintItems', item, data.constraintItems),
+ onDelete: (item) => _handleDeleteItem(context, 'constraintItems', item, data.constraintItems),
+ onGenerateAI: () => _handleGenerateAI(context, 'Constraints', 'constraints', data.constraintItems, listKey: 'constraintItems', showNotice: true),
  ),
+ ),
+ ],
  ),
  ],
  );
@@ -1218,6 +1215,86 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
 
  if (context.mounted) {
  await _updateList(context, canonicalListKey, updatedList);
+ }
+ }
+
+ /// Moves an item from one section to another (cross-section drag-and-drop).
+ Future<void> _handleMoveItemBetweenSections(
+ BuildContext context, {
+ required String itemId,
+ required String sourceSectionKey,
+ required String targetSectionKey,
+ }) async {
+ // Find the source list
+ final sourceList = _resolveList(context, sourceSectionKey);
+ if (sourceList == null) return;
+
+ final sourceIndex = sourceList.indexWhere((i) => i.id == itemId);
+ if (sourceIndex == -1) return;
+
+ final item = sourceList[sourceIndex];
+ final targetList = _resolveList(context, targetSectionKey);
+ if (targetList == null) return;
+
+ // Push undo for both source and target
+ _pushUndoSnapshot(sourceSectionKey, sourceList);
+ _pushUndoSnapshot(targetSectionKey, targetList);
+
+ // Remove from source
+ final updatedSource = List<PlanningDashboardItem>.from(sourceList);
+ updatedSource.removeAt(sourceIndex);
+
+ // Add to target
+ final updatedTarget = List<PlanningDashboardItem>.from(targetList);
+ updatedTarget.add(item);
+
+ // Persist both
+ await _updateList(context, sourceSectionKey, updatedSource);
+ await _updateList(context, targetSectionKey, updatedTarget);
+
+ if (context.mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text('Moved "${item.title}" to ${_sectionDisplayName(targetSectionKey)}'),
+ duration: const Duration(seconds: 2),
+ action: SnackBarAction(label: 'Undo', onPressed: () {
+ _undoListChange(context, sourceSectionKey);
+ _undoListChange(context, targetSectionKey);
+ }),
+ ),
+ );
+ }
+ }
+
+ String _sectionDisplayName(String listKey) {
+ switch (listKey) {
+ case 'successCriteriaItems': return 'Success Criteria';
+ case 'withinScopeItems': return 'Within Project Scope';
+ case 'outOfScopeItems': return 'Out of Project Scope';
+ case 'assumptionItems': return 'Project Assumptions';
+ case 'constraintItems': return 'Project Constraints';
+ case 'projectGoals': return 'Project Objectives';
+ default: return listKey;
+ }
+ }
+
+ List<PlanningDashboardItem>? _resolveList(BuildContext context, String listKey) {
+ final data = Provider.of<ProjectDataProvider>(context, listen: false).projectData;
+ switch (listKey) {
+ case 'successCriteriaItems': return data.frontEndPlanning.successCriteriaItems;
+ case 'withinScopeItems': return data.withinScopeItems;
+ case 'outOfScopeItems': return data.outOfScopeItems;
+ case 'assumptionItems': return data.assumptionItems;
+ case 'constraintItems': return data.constraintItems;
+ // projectGoals is List<ProjectGoal>, not List<PlanningDashboardItem>.
+ // We convert them on-the-fly for cross-section drag support.
+ case 'projectGoals':
+ return data.projectGoals.map((g) => PlanningDashboardItem(
+ id: g.name.hashCode.toString(),
+ title: g.name,
+ description: g.description,
+ )).toList();
+ default: return null;
  }
  }
 
@@ -1492,6 +1569,8 @@ class _GoalsCard extends StatelessWidget {
  final Function(ProjectGoal) onEdit;
  final Function(ProjectGoal) onDelete;
  final VoidCallback onGenerateAI;
+ final String? sectionKey;
+ final void Function(String itemId, String sourceSectionKey)? onItemReceived;
 
  const _GoalsCard({
  required this.title,
@@ -1502,11 +1581,13 @@ class _GoalsCard extends StatelessWidget {
  required this.onEdit,
  required this.onDelete,
  required this.onGenerateAI,
+ this.sectionKey,
+ this.onItemReceived,
  });
 
  @override
  Widget build(BuildContext context) {
- return Container(
+ Widget card = Container(
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
@@ -1562,7 +1643,7 @@ class _GoalsCard extends StatelessWidget {
  const SizedBox(width: 8),
  IconButton(
  onPressed: onAdd,
- icon: const Icon(Icons.add_circle, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.add_circle, color: Color(0xFFFFC812)),
  tooltip: 'Add Item',
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(),
@@ -1591,7 +1672,7 @@ class _GoalsCard extends StatelessWidget {
  separatorBuilder: (_, __) => const Divider(height: 1),
  itemBuilder: (context, index) {
  final item = items[index];
- return ListTile(
+ final tile = ListTile(
  title: Text(item.name,
  style: const TextStyle(
  fontWeight: FontWeight.w600, fontSize: 14)),
@@ -1619,15 +1700,62 @@ class _GoalsCard extends StatelessWidget {
  ],
  ),
  );
- },
+ if (sectionKey == null) return tile;
+ return LongPressDraggable<String>(
+ data: '$sectionKey::${item.name.hashCode}',
+ delay: const Duration(milliseconds: 250),
+ feedback: Material(
+ elevation: 6,
+ borderRadius: BorderRadius.circular(8),
+ child: ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 360),
+ child: Opacity(opacity: 0.92, child: tile),
  ),
- ],
  ),
+ childWhenDragging: Opacity(opacity: 0.35, child: tile),
+ child: tile,
  );
- }
-}
+ },
+ ),      ],
+     ),
+     );
 
-class _BottomOverlay extends StatelessWidget {
+     // Wrap with DragTarget when sectionKey is provided
+     if (sectionKey != null && onItemReceived != null) {
+       return DragTarget<String>(
+         onWillAcceptWithDetails: (details) {
+           final payload = details.data;
+           if (!payload.contains('::')) return false;
+           final sourceSection = payload.split('::').first;
+           return sourceSection != sectionKey;
+         },
+         onAcceptWithDetails: (details) {
+           final parts = details.data.split('::');
+           if (parts.length >= 2) {
+             onItemReceived!(parts[1], parts[0]);
+           }
+         },
+         builder: (context, candidateData, rejectedData) {
+           final isHovering = candidateData.isNotEmpty;
+           return AnimatedContainer(
+             duration: const Duration(milliseconds: 200),
+             decoration: BoxDecoration(
+               borderRadius: BorderRadius.circular(12),
+               border: isHovering
+                   ? Border.all(color: const Color(0xFFF59E0B), width: 2)
+                   : null,
+             ),
+             child: card,
+           );
+         },
+       );
+     }
+
+     return card;
+   }
+ }
+
+ class _BottomOverlay extends StatelessWidget {
  const _BottomOverlay({
  required this.summaryController,
  required this.onNext,
@@ -1646,47 +1774,10 @@ class _BottomOverlay extends StatelessWidget {
  child: Stack(
  children: [
  Positioned(
- left: 24,
- bottom: 24,
- child: Container(
- width: 48,
- height: 48,
- decoration: const BoxDecoration(
- color: Color(0xFFB3D9FF), shape: BoxShape.circle),
- child: const Icon(Icons.info_outline, color: Colors.white),
- ),
- ),
- Positioned(
  right: 24,
  bottom: 24,
  child: Row(
  children: [
- Container(
- padding: const EdgeInsets.symmetric(
- horizontal: 18, vertical: 16),
- decoration: BoxDecoration(
- color: const Color(0xFFE6F1FF),
- borderRadius: BorderRadius.circular(14),
- border: Border.all(color: const Color(0xFFD7E5FF)),
- ),
- child: const Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
- SizedBox(width: 10),
- Text('AI',
- style: TextStyle(
- fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB))),
- SizedBox(width: 12),
- Text(
- 'Generate a summary of all front end planning activities.',
- style: TextStyle(color: Color(0xFF1F2937)),
- ),
- ],
- ),
- ),
- const SizedBox(width: 16),
  const KazAiChatBubble(positioned: false),
  const SizedBox(width: 16),
  ElevatedButton(

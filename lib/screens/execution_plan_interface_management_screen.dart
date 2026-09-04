@@ -48,7 +48,7 @@ class ExecutionPlanInterfaceManagementScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Interface Management',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -111,7 +111,7 @@ class _InterfaceManagementSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Interface Register',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'interfaceId',
                       label: 'Interface ID',
@@ -224,7 +224,7 @@ class _InterfaceManagementSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileInterfaceManagementActions()
+          const _MobileInterfaceManagementActions()
         else
           const _DesktopInterfaceManagementActions(),
       ],
@@ -383,7 +383,7 @@ class _InterfaceRegisterTable extends StatelessWidget {
                         const InputDecoration(labelText: 'Interface Name *')),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: interfaceType,
+                  initialValue: interfaceType,
                   decoration: const InputDecoration(labelText: 'Type *'),
                   items: interfaceTypes
                       .map((t) => DropdownMenuItem(value: t, child: Text(t)))
@@ -401,7 +401,7 @@ class _InterfaceRegisterTable extends StatelessWidget {
                     decoration: const InputDecoration(labelText: 'Party B *')),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: status,
+                  initialValue: status,
                   decoration: const InputDecoration(labelText: 'Status *'),
                   items: statuses
                       .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -410,7 +410,7 @@ class _InterfaceRegisterTable extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: frequency,
+                  initialValue: frequency,
                   decoration: const InputDecoration(labelText: 'Frequency *'),
                   items: frequencies
                       .map((f) => DropdownMenuItem(value: f, child: Text(f)))

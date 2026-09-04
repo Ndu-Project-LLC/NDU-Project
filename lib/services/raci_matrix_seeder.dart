@@ -96,13 +96,11 @@ class RaciMatrixSeeder {
               item.checkpoint) ??
           'Planning Phase';
       var row = existingByCheckpoint[item.checkpoint];
-      if (row == null) {
-        row = RaciDeliverableRow(
+      row ??= RaciDeliverableRow(
           checkpoint: item.checkpoint,
           label: item.label,
           phase: phase,
         );
-      }
       // Add assignments for new roles.
       for (final role in roles) {
         final key = RaciAssignmentService.roleKey(role.title);

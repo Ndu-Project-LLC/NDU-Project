@@ -18,7 +18,6 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/utils/wbs_to_work_item_converter.dart';
-import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class ExecutionWorkPackagesScreen extends StatefulWidget {
@@ -147,7 +146,7 @@ class _ExecutionWorkPackagesScreenState
     final normalized = status.toLowerCase();
     switch (normalized) {
       case 'in_progress':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'complete':
       case 'completed':
         return const Color(0xFF10B981);
@@ -501,8 +500,7 @@ class _ExecutionWorkPackagesScreenState
       );
       setState(() {});
       _showInfo('Work package deleted.');
-    }
-      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
+    }      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
   }
 
   Future<void> _showWorkPackageDetail(WorkPackage wp) async {
@@ -728,9 +726,9 @@ class _ExecutionWorkPackagesScreenState
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Color(0xFFFFFBEB),
+          color: const Color(0xFFFFFBEB),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Color(0xFFFDE68A)),
+          border: Border.all(color: const Color(0xFFFDE68A)),
         ),
         child: Row(
           children: [
@@ -872,7 +870,7 @@ class _ExecutionWorkPackagesScreenState
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Work Packages',
       appBarTitle: 'Execution Work Packages',
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: workPackages.isEmpty
@@ -922,13 +920,13 @@ class _ExecutionWorkPackagesScreenState
   };
 
   static const Map<String, Color> _classificationColorMap = {
-    'engineeringEwp': Color(0xFF3B82F6),
+    'engineeringEwp': Color(0xFFFFC812),
     'procurementPackage': Color(0xFF22C55E),
     'constructionCwp': Color(0xFFF97316),
-    'implementationWorkPackage': Color(0xFF8B5CF6),
-    'preCommissioningPackage': Color(0xFFC084FC),
-    'commissioningPackage': Color(0xFFEC4899),
-    'deliveryPackage': Color(0xFF14B8A6),
+    'implementationWorkPackage': Color(0xFFB8860B),
+    'preCommissioningPackage': Color(0xFFFBBF24),
+    'commissioningPackage': Color(0xFFD97706),
+    'deliveryPackage': Color(0xFFD97706),
   };
 
   String _classificationDisplayLabel(String cls) {
@@ -1031,7 +1029,7 @@ class _ExecutionWorkPackagesScreenState
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Color(0xFFF3F4F6),
+        color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -1109,15 +1107,15 @@ class _ExecutionWorkPackagesScreenState
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppSemanticColors.border),
+                  borderSide: const BorderSide(color: AppSemanticColors.border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppSemanticColors.border),
+                  borderSide: const BorderSide(color: AppSemanticColors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Color(0xFFF59E0B), width: 1.5),
+                  borderSide: const BorderSide(color: Color(0xFFF59E0B), width: 1.5),
                 ),
               ),
             ),
@@ -1125,7 +1123,7 @@ class _ExecutionWorkPackagesScreenState
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB),
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: AppSemanticColors.border),
             ),
@@ -1169,7 +1167,6 @@ class _ExecutionWorkPackagesScreenState
               ],
             ),
           ),
-          const Spacer(),
           _actionChip(
               Icons.account_tree_outlined, 'Generate', _generatePackageChains),
           _actionChip(Icons.timeline_outlined, 'Schedule Network',
@@ -1188,7 +1185,7 @@ class _ExecutionWorkPackagesScreenState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: Color(0xFFF3F4F6),
+          color: const Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppSemanticColors.border),
         ),
@@ -1296,9 +1293,9 @@ class _ExecutionWorkPackagesScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 5, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Color(0xFFFFF7ED),
+                        color: const Color(0xFFFFF7ED),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: Color(0xFFF97316)),
+                        border: Border.all(color: const Color(0xFFF97316)),
                       ),
                       child: Text(
                         '${warnings.length}',
@@ -1381,7 +1378,7 @@ class _ExecutionWorkPackagesScreenState
                   GestureDetector(
                     onTap: () => _addContractForPackage(wp),
                     child: const Icon(Icons.add_circle_outline,
-                        size: 12, color: Color(0xFF3B82F6)),
+                        size: 12, color: Color(0xFFFFC812)),
                   ),
                 ],
               ),
@@ -1421,7 +1418,7 @@ class _ExecutionWorkPackagesScreenState
                       minHeight: 6,
                       backgroundColor: const Color(0xFFE5E7EB),
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF3B82F6)),
+                          Color(0xFFFFC812)),
                     ),
                   ),
                 ),

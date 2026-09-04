@@ -20,6 +20,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 
@@ -27,10 +28,22 @@ class AddLineDialog extends StatefulWidget {
   final CostCategory defaultCategory;
   final CostLine? editingLine;
 
+  /// When creating a NEW line (no [editingLine]), pre-select this WBS node
+  /// (its dotted code, e.g. `G1.2.1`) in the WBS Reference picker. Used by
+  /// the manual "price this work package" flow from the Cost-by-WBS view so
+  /// the user never has to hunt for the node — core functionality, no AI.
+  final String? initialWbsRef;
+
+  /// When creating a NEW line, pre-fill the description. Lets callers give
+  /// the line a sensible default tied to the work package being priced.
+  final String? initialDescription;
+
   const AddLineDialog({
     super.key,
     required this.defaultCategory,
     this.editingLine,
+    this.initialWbsRef,
+    this.initialDescription,
   });
 
   @override
@@ -60,8 +73,8 @@ class _AddLineDialogState extends State<AddLineDialog> {
     final l = widget.editingLine;
     _category = l?.category ?? widget.defaultCategory;
     _subCategory = l?.subCategory ?? '';
-    _description = l?.description ?? '';
-    _wbsRef = l?.wbsRef ?? '';
+    _description = l?.description ?? widget.initialDescription ?? '';
+    _wbsRef = l?.wbsRef ?? widget.initialWbsRef ?? '';
     _useQtyRate = l?.quantity != null && l?.rate != null;
     _quantity = l?.quantity?.toString() ?? '';
     _unit = l?.unit ?? 'hours';
@@ -71,12 +84,43 @@ class _AddLineDialogState extends State<AddLineDialog> {
     _basisSource = l?.basisSource ?? CostSourceType.historical;
     _basisReference = l?.basisReference ?? '';
     _confidence = l?.confidence ?? Confidence.med;
-    // Resolve the existing wbsRef text back to a WBS node ID so the dropdown
-    // can pre-select the right node when editing an existing line.
+    // Resolve the existing (or pre-selected) wbsRef text back to a WBS node
+    // ID so the dropdown can pre-select the right node when editing an
+    // existing line or creating one from the "price this work package" flow.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _resolveWbsNodeIdFromRef();
     });
+    // Auto-populate sensible defaults from the current estimate context
+    // when creating a new line (not editing). This uses the project
+    // name and class to give the user a helpful starting point. Caller
+    // pre-fills (initialDescription / initialWbsRef) always win.
+    if (widget.editingLine == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        try {
+          final provider = context.read<CostEstimateProvider>();
+          final estimate = provider.estimate;
+          if (estimate != null) {
+            setState(() {
+              _subCategory = _subCategory.isEmpty
+                  ? '${estimate.className.label} ${_category.name}'
+                  : _subCategory;
+              _description = _description.isEmpty
+                  ? (widget.initialDescription?.trim().isNotEmpty == true
+                      ? widget.initialDescription!.trim()
+                      : '${estimate.projectName} — ${_category.name} work package')
+                  : _description;
+              _basisReference = _basisReference.isEmpty
+                  ? 'Context: ${estimate.projectName} · ${estimate.className.label}'
+                  : _basisReference;
+            });
+          }
+        } catch (_) {
+          // Non-fatal — if provider isn't available, skip defaults.
+        }
+      });
+    }
   }
 
   /// Try to resolve [_wbsRef] (a path string like `1.2.3`) back to a WBS
@@ -114,7 +158,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       title: Text(
         widget.editingLine != null ? 'Edit cost line' : 'Add cost line',
         style: const TextStyle(color: Color(0xFF1A1D1F)),
@@ -430,7 +474,9 @@ class _AddLineDialogState extends State<AddLineDialog> {
         wbsProvider.linkCostLine(_wbsNodeId!, lineId);
       }
     }
-    Navigator.of(context).pop();
+    // Return the created/edited line id so callers (e.g. the Schedule
+    // builder) can stamp the activity's costLineId and stay in sync.
+    Navigator.of(context).pop(lineId);
   }
 
   /// Build the WBS reference picker.
@@ -607,7 +653,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
                         normalize(n.path).contains(q))
                     .toList();
             return AlertDialog(
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
               title: const Row(
@@ -680,6 +726,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
                             )
                           : ListView.separated(
                               shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
                               itemCount: filtered.length,
                               separatorBuilder: (_, __) => const Divider(
                                   height: 1,
@@ -914,27 +961,27 @@ class _AddLineDialogState extends State<AddLineDialog> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color(0xFF6366F1).withValues(alpha: 0.1),
-                const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                const Color(0xFFB8860B).withValues(alpha: 0.1),
+                const Color(0xFFB8860B).withValues(alpha: 0.1),
               ],
             ),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+              color: const Color(0xFFB8860B).withValues(alpha: 0.2),
               width: 0.5,
             ),
           ),
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.auto_awesome, size: 12, color: Color(0xFF6366F1)),
+              Icon(Icons.auto_awesome, size: 12, color: Color(0xFFB8860B)),
               SizedBox(width: 4),
               Text(
                 'KAZ AI',
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF6366F1),
+                  color: Color(0xFFB8860B),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -962,7 +1009,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
             SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF6366F1)),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFB8860B)),
             ),
             SizedBox(width: 16),
             Text('Getting KAZ AI suggestions...'),
@@ -1028,7 +1075,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Row(
             children: [
-              Icon(Icons.auto_awesome, color: Color(0xFF6366F1), size: 20),
+              Icon(Icons.auto_awesome, color: Color(0xFFB8860B), size: 20),
               SizedBox(width: 8),
               Text('KAZ AI Suggestion', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             ],
@@ -1063,7 +1110,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
             ElevatedButton(
               onPressed: () => Navigator.of(ctx).pop(suggestion),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
+                backgroundColor: const Color(0xFFB8860B),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
@@ -1081,7 +1128,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
       Navigator.of(context).pop(); // Close loading dialog
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('KAZ AI suggestion failed: $e'),
+          content: Text('KAZ AI suggestion failedaiErrorMessage(e)'),
           backgroundColor: Colors.red.shade400,
         ),
       );

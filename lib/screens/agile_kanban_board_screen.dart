@@ -12,6 +12,18 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:go_router/go_router.dart';
 
+/// Embeddable, live Kanban board — the SAME board used by the
+/// Kanban Board screen (workflow columns from the saved Kanban
+/// workflow configuration, cards from the AgileTask stories).
+/// Rendered standalone on /agile-kanban-board and embedded under
+/// the Kanban Workflow Configuration page.
+class KanbanBoardPanel extends StatefulWidget {
+  const KanbanBoardPanel({super.key});
+
+  @override
+  State<KanbanBoardPanel> createState() => _KanbanBoardPanelState();
+}
+
 class AgileKanbanBoardScreen extends StatefulWidget {
   const AgileKanbanBoardScreen({super.key});
 
@@ -20,14 +32,15 @@ class AgileKanbanBoardScreen extends StatefulWidget {
   }
 
   @override
-  State<AgileKanbanBoardScreen> createState() => _AgileKanbanBoardScreenState();
+  State<AgileKanbanBoardScreen> createState() =>
+      _AgileKanbanBoardScreenState();
 }
 
-class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
+class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
   static const Color _kAccent = Color(0xFFF59E0B);
   static const Color _kAccentLight = Color(0xFFFFC812);
   static const Color _kAccentBg = Color(0xFFFEF3C7);
-  static const Color _kBackground = Color(0xFFF8FAFC);
+  static const Color _kBackground = Colors.white;
   static const Color _kSurface = Colors.white;
   static const Color _kBorder = Color(0xFFE5E7EB);
   static const Color _kHeadline = Color(0xFF111827);
@@ -52,7 +65,14 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
   Future<void> _loadData() async {
     final pid = _projectId;
     if (pid == null) {
-      if (mounted) setState(() => _isLoading = false);
+      // No project context — still show the default workflow columns so the
+      // embedded board renders an (empty) board instead of a blank 640px box.
+      if (mounted) {
+        setState(() {
+          _columns = _buildColumnsFromConfig(const {});
+          _isLoading = false;
+        });
+      }
       return;
     }
     setState(() => _isLoading = true);
@@ -105,7 +125,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
         _KanbanColumn(
             id: 'ready',
             title: 'Ready',
-            accent: Color(0xFF3B82F6),
+            accent: Color(0xFFFFC812),
             wipLimit: 8),
         _KanbanColumn(
             id: 'in_progress',
@@ -115,7 +135,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
         _KanbanColumn(
             id: 'in_review',
             title: 'In Review',
-            accent: Color(0xFF8B5CF6),
+            accent: Color(0xFFB8860B),
             wipLimit: 3),
         _KanbanColumn(
             id: 'done',
@@ -148,12 +168,12 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
   Color _accentForIndex(int index) {
     const accents = [
       Color(0xFF6B7280),
-      Color(0xFF3B82F6),
+      Color(0xFFFFC812),
       Color(0xFFF59E0B),
-      Color(0xFF8B5CF6),
+      Color(0xFFB8860B),
       Color(0xFFEF4444),
       Color(0xFF10B981),
-      Color(0xFF0EA5E9),
+      Color(0xFFFFC812),
     ];
     return accents[index % accents.length];
   }
@@ -192,6 +212,9 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
   }
 
   void _showMoveSheet(AgileTask story) {
+    // Columns can be transiently empty while board config re-syncs; never
+    // throw "Bad state: No element" from a tap handler.
+    if (_columns.isEmpty) return;
     final currentCol = _columns.firstWhere(
       (c) => c.id == story.workflowState,
       orElse: () => _columns.first,
@@ -286,17 +309,17 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                       story.assignedRole.isNotEmpty
                           ? story.assignedRole
                           : 'Unassigned',
-                      Colors.blue),
+                      const Color(0xFFFFC812)),
                   _metaChip(
                       Icons.account_tree_outlined,
                       feature?.title.isNotEmpty == true
                           ? feature!.title
                           : 'Feature unlinked',
-                      Colors.purple),
+                      const Color(0xFFB8860B)),
                   _metaChip(
                       Icons.layers_outlined,
                       epicTitle.isNotEmpty ? epicTitle : 'Epic unlinked',
-                      Colors.teal),
+                      const Color(0xFFD97706)),
                   _metaChip(
                       Icons.flag_outlined, story.readinessStatus, Colors.green),
                 ],
@@ -340,7 +363,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
       case 'high':
         return const Color(0xFFF59E0B);
       case 'medium':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'low':
         return const Color(0xFF6B7280);
       default:
@@ -369,65 +392,18 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isMobile = AppBreakpoints.isMobile(context);
-    final double hp = isMobile ? 16 : 32;
 
-    return Scaffold(
-      backgroundColor: _kBackground,
-      body: SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            DraggableSidebar(
-              openWidth: AppBreakpoints.sidebarWidth(context),
-              child: const InitiationLikeSidebar(
-                  activeItemLabel: 'Agile Kanban Board'),
-            ),
-            Expanded(
-              child: Stack(
-                children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
-                      activeItemLabel: 'Agile Kanban Board',
-                    ),
-                  ),
-                  SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: hp, vertical: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildTopBar(),
-                        const SizedBox(height: 20),
-                        PlanningPhaseHeader(
-                          title: 'Kanban Board',
-                          showNavigationButtons: false,
-                          breadcrumbPhase: 'Execution',
-                          breadcrumbTitle: 'Agile Hub › Kanban Board',
-                        ),
-                        const SizedBox(height: 24),
-                        if (_isLoading)
-                          const _LoadingStrip()
-                        else ...[
-                          _buildSummaryBar(),
-                          const SizedBox(height: 20),
-                          _buildBoard(isMobile),
-                          const SizedBox(height: 24),
-                          _buildActionBar(),
-                          const SizedBox(height: 64),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const Positioned(
-                    right: 24,
-                    bottom: 24,
-                    child: KazAiChatBubble(),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+    if (_isLoading) return const _LoadingStrip();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSummaryBar(),
+        const SizedBox(height: 20),
+        _buildBoard(isMobile),
+        const SizedBox(height: 24),
+        _buildActionBar(),
+      ],
     );
   }
 
@@ -470,7 +446,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -582,11 +558,18 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                       BoxDecoration(color: col.accent, shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 8),
-                Text(col.title,
-                    style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: _kHeadline)),
+                // Flexible + ellipsis: narrow embedded columns (5 across)
+                // must never push the count/WIP badges out of the header.
+                Flexible(
+                  child: Text(col.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: _kHeadline)),
+                ),
                 const SizedBox(width: 6),
                 Container(
                   padding:
@@ -793,7 +776,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                     style: const TextStyle(fontSize: 11, color: _kMuted),
                   ),
                 ),
-                Icon(Icons.drag_indicator, size: 14, color: _kMuted),
+                const Icon(Icons.drag_indicator, size: 14, color: _kMuted),
               ],
             ),
           ],
@@ -806,7 +789,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       decoration: BoxDecoration(
-          color: Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(6)),
+          color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(6)),
       child: Text(label, style: const TextStyle(fontSize: 10, color: _kMuted)),
     );
   }
@@ -864,10 +847,120 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
           ),
         ),
         const Spacer(),
-        Text(
-            'Board columns come from planning Kanban workflow configuration; cards come from the same AgileTask stories used by backlog planning and schedule import.',
+        // Flexible so the note wraps on narrow widths instead of
+        // overflowing the row.
+        Expanded(
+          flex: 3,
+          child: const Text(
+              'Board columns come from planning Kanban workflow configuration; cards come from the same AgileTask stories used by backlog planning and schedule import.',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                  fontSize: 12,
+                  color: _kMuted,
+                  fontStyle: FontStyle.italic)),
+        ),
+      ],
+    );
+  }
+}
+
+/// Full-screen route shell for the Kanban board (sidebar + header) that
+/// embeds the same [KanbanBoardPanel] used on the configuration page.
+class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
+  static const Color _kScreenBackground = Colors.white;
+  static const Color _kScreenAccent = Color(0xFFF59E0B);
+  static const Color _kScreenAccentBg = Color(0xFFFEF3C7);
+  static const Color _kScreenHeadline = Color(0xFF111827);
+
+  String? get _projectId => ProjectDataHelper.getData(context).projectId;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isMobile = AppBreakpoints.isMobile(context);
+    final double hp = isMobile ? 16 : 32;
+
+    return Scaffold(
+      backgroundColor: _kScreenBackground,
+      body: SafeArea(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DraggableSidebar(
+              openWidth: AppBreakpoints.sidebarWidth(context),
+              child: const InitiationLikeSidebar(
+                  activeItemLabel: 'Agile Kanban Board'),
+            ),
+            Expanded(
+              child: Stack(
+                children: [
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
+                      activeItemLabel: 'Agile Kanban Board',
+                    ),
+                  ),
+                  SingleChildScrollView(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: hp, vertical: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildTopBar(),
+                        const SizedBox(height: 20),
+                        const PlanningPhaseHeader(
+                          title: 'Kanban Board',
+                          showNavigationButtons: false,
+                          breadcrumbPhase: 'Execution',
+                          breadcrumbTitle: 'Agile Hub \u203a Kanban Board',
+                        ),
+                        const SizedBox(height: 24),
+                        const KanbanBoardPanel(),
+                        const SizedBox(height: 64),
+                      ],
+                    ),
+                  ),
+                  const Positioned(
+                    right: 24,
+                    bottom: 24,
+                    child: KazAiChatBubble(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBar() {
+    return Row(
+      children: [
+        Image.asset('assets/images/Logo.png',
+            height: 36,
+            cacheWidth:
+                (MediaQuery.devicePixelRatioOf(context) * 150).round()),
+        const SizedBox(width: 12),
+        const Text('Ndu Project',
             style: TextStyle(
-                fontSize: 12, color: _kMuted, fontStyle: FontStyle.italic)),
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: _kScreenHeadline)),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: _kScreenAccentBg,
+            borderRadius: BorderRadius.circular(20),
+            border:
+                Border.all(color: _kScreenAccent.withValues(alpha: 0.3)),
+          ),
+          child: const Text('KANBAN FLOW',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: _kScreenAccent,
+                  letterSpacing: 1.1)),
+        ),
       ],
     );
   }
@@ -896,7 +989,7 @@ class _LoadingStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

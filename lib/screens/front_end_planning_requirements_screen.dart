@@ -23,7 +23,6 @@ import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -32,6 +31,7 @@ import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 /// Front End Planning - Project Requirements page
@@ -636,10 +636,16 @@ class _FrontEndPlanningRequirementsScreenState
     if (isMobile) {
       return _buildMobileScaffold(context);
     }
+    // Task 14: Once the Project Charter is approved, lock this section
+    // from editing. The user can still view the data and scroll through
+    // it, but every editable control is wrapped in an AbsorbPointer so
+    // taps are silently ignored.
+    final charterLocked =
+        ProjectDataHelper.isCharterApproved(context, listen: true);
 
     return Scaffold(
       // Ensure white background as requested
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -653,8 +659,8 @@ class _FrontEndPlanningRequirementsScreenState
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Project Requirements',
                     ),
                   ),
@@ -673,7 +679,13 @@ class _FrontEndPlanningRequirementsScreenState
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _roundedField(
+                                    CharterLockBanner(visible: charterLocked),
+                                    CharterLockBanner.applyLock(
+                                      locked: charterLocked,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          _roundedField(
                                       controller: _notesController,
                                       hint: 'Input your notes here...',
                                       minLines: 3,
@@ -683,12 +695,12 @@ class _FrontEndPlanningRequirementsScreenState
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Expanded(
+                                        const Expanded(
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              const EditableContentText(
+                                              EditableContentText(
                                                 contentKey:
                                                     'fep_requirements_title',
                                                 fallback:
@@ -699,8 +711,8 @@ class _FrontEndPlanningRequirementsScreenState
                                                     fontWeight: FontWeight.w700,
                                                     color: Color(0xFF111827)),
                                               ),
-                                              const SizedBox(height: 6),
-                                              const EditableContentText(
+                                              SizedBox(height: 6),
+                                              EditableContentText(
                                                 contentKey:
                                                     'fep_requirements_subtitle',
                                                 fallback:
@@ -740,6 +752,8 @@ class _FrontEndPlanningRequirementsScreenState
                                             _buildImportCsvButton(),
                                             const SizedBox(width: 12),
                                             _buildDownloadTemplateButton(),
+                                            const SizedBox(width: 12),
+                                            _buildAddButton(),
                                           ],
                                         ),
                                         _buildViewToggle(),
@@ -747,9 +761,10 @@ class _FrontEndPlanningRequirementsScreenState
                                     ),
                                     const SizedBox(height: 10),
                                     _buildRequirementsTable(context),
-                                    const SizedBox(height: 16),
-                                    _buildAddButton(),
                                     const SizedBox(height: 24),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -857,7 +872,7 @@ class _FrontEndPlanningRequirementsScreenState
           boxShadow: active
               ? [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.06), blurRadius: 2)
+                      color: Colors.black.withValues(alpha: 0.06), blurRadius: 2)
                 ]
               : [],
         ),
@@ -867,14 +882,14 @@ class _FrontEndPlanningRequirementsScreenState
             Icon(icon,
                 size: 16,
                 color:
-                    active ? const Color(0xFF2563EB) : const Color(0xFF6B7280)),
+                    active ? const Color(0xFFFFC812) : const Color(0xFF6B7280)),
             const SizedBox(width: 6),
             Text(label,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: active
-                      ? const Color(0xFF2563EB)
+                      ? const Color(0xFFFFC812)
                       : const Color(0xFF6B7280),
                 )),
           ],
@@ -1002,7 +1017,7 @@ class _FrontEndPlanningRequirementsScreenState
   }
 
   Widget _buildTableViewContent(BuildContext context) {
-    final headerStyle = const TextStyle(
+    const headerStyle = TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w700,
       color: Color(0xFF4B5563),
@@ -1053,8 +1068,8 @@ class _FrontEndPlanningRequirementsScreenState
                   return Container(
                     key: ValueKey('req_table_row_$index'),
                     decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: const Color(0xFFE5E7EB)),
+                      border: const Border(
+                        bottom: BorderSide(color: Color(0xFFE5E7EB)),
                       ),
                       color:
                           index.isEven ? Colors.white : const Color(0xFFFAFBFC),
@@ -1117,7 +1132,7 @@ class _FrontEndPlanningRequirementsScreenState
                                 icon: const Icon(
                                   Icons.edit_outlined,
                                   size: 16,
-                                  color: Color(0xFF2563EB),
+                                  color: Color(0xFFFFC812),
                                 ),
                                 tooltip: 'Edit',
                                 onPressed: () => _openMobileRequirementEditor(
@@ -1247,7 +1262,7 @@ class _FrontEndPlanningRequirementsScreenState
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: Drawer(
         width: MediaQuery.sizeOf(context).width * 0.88,
         child: const SafeArea(
@@ -1286,7 +1301,7 @@ class _FrontEndPlanningRequirementsScreenState
                     borderRadius: BorderRadius.circular(20),
                     child: const CircleAvatar(
                       radius: 13,
-                      backgroundColor: Color(0xFF2563EB),
+                      backgroundColor: Color(0xFFFFC812),
                       child: Text(
                         'C',
                         style: TextStyle(
@@ -1439,16 +1454,7 @@ class _FrontEndPlanningRequirementsScreenState
                             ),
                           ],
                         ),
-                      )
-                    else ...[
-                      ..._rows.asMap().entries.map(
-                            (entry) => Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: _buildMobileRequirementCard(
-                                  context, entry.key, entry.value),
-                            ),
-                          ),
-                    ],
+                      ),
                     OutlinedButton.icon(
                       onPressed: _addRequirementViaEditor,
                       icon: const Icon(Icons.add, size: 18),
@@ -1463,6 +1469,64 @@ class _FrontEndPlanningRequirementsScreenState
                             borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    if (_showInitialGenerationSpinner &&
+                        _rows.every((row) =>
+                            row.descriptionController.text.trim().isEmpty))
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 28),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 10),
+                              Text(
+                                'Generating requirements...',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if ((_initialGenerationError ?? '').isNotEmpty &&
+                        _rows.every((row) =>
+                            row.descriptionController.text.trim().isEmpty))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Column(
+                          children: [
+                            Text(
+                              _initialGenerationError!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                color: Color(0xFFB91C1C),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              onPressed: _isGeneratingRequirements
+                                  ? null
+                                  : () => _generateRequirementsFromContext(),
+                              icon: const Icon(Icons.auto_awesome_rounded,
+                                  size: 16),
+                              label: const Text('Generate with AI'),
+                            ),
+                          ],
+                        ),
+                      )
+                    else ...[
+                      ..._rows.asMap().entries.map(
+                            (entry) => Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: _buildMobileRequirementCard(
+                                  context, entry.key, entry.value),
+                            ),
+                          ),
+                    ],
                   ],
                 ),
               ),
@@ -1496,8 +1560,8 @@ class _FrontEndPlanningRequirementsScreenState
                         style: TextStyle(fontWeight: FontWeight.w700),
                       ),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF2563EB),
-                        side: const BorderSide(color: Color(0xFFBFDBFE)),
+                        foregroundColor: const Color(0xFFFFC812),
+                        side: const BorderSide(color: Color(0xFFFDE68A)),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 13),
@@ -1595,7 +1659,7 @@ class _FrontEndPlanningRequirementsScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -1675,213 +1739,239 @@ class _FrontEndPlanningRequirementsScreenState
         _normalizeDisciplineSelection(row.selectedDiscipline);
     String? selectedPhase = _normalizePhaseSelection(row.selectedPhase);
 
-    await showModalBottomSheet<void>(
+    await showDialog<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (sheetContext) {
-        final inset = MediaQuery.of(sheetContext).viewInsets.bottom;
-        return Padding(
-          padding: EdgeInsets.fromLTRB(16, 12, 16, inset + 14),
-          child: StatefulBuilder(
-            builder: (context, setLocalState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isNew ? 'Add Requirement' : 'Edit Requirement',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 12),
-                  VoiceTextField(
-                    controller: descriptionController,
-                    minLines: 2,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Requirement',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFD1D5DB)),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedType,
-                        hint: const Text('Requirement Type'),
-                        isExpanded: true,
-                        items: const [
-                          'Technical',
-                          'Regulatory',
-                          'Functional',
-                          'Operational',
-                          'Non-Functional',
-                          'Safety',
-                          'Sustainability',
-                          'Business',
-                          'Stakeholder',
-                          'Solutions',
-                          'Transitional',
-                          'Other'
-                        ]
-                            .map((value) => DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                ))
-                            .toList(),
-                        onChanged: (value) =>
-                            setLocalState(() => selectedType = value),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFD1D5DB)),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedDiscipline,
-                        hint: const Text('Discipline'),
-                        isExpanded: true,
-                        items: _RequirementRow.disciplineOptions
-                            .map(
-                              (value) => DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) =>
-                            setLocalState(() => selectedDiscipline = value),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFD1D5DB)),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedPhase,
-                        hint: const Text('Implementation Phase'),
-                        isExpanded: true,
-                        items: _RequirementRow.phaseOptions
-                            .map(
-                              (value) => DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) =>
-                            setLocalState(() => selectedPhase = value),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  VoiceTextField(
-                    controller: roleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Role',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _PersonDropdownField(
-                    value: personController.text,
-                    options: _memberOptions,
-                    hint: 'Person',
-                    dense: false,
-                    onChanged: (value) {
-                      personController.text = value;
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  VoiceTextField(
-                    controller: sourceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Requirement Source',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  VoiceTextField(
-                    controller: commentsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Comments and Requirement Source Links',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setLocalState) {
+            final inset = MediaQuery.of(context).viewInsets.bottom;
+            return Dialog(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              insetPadding: EdgeInsets.fromLTRB(
+                16,
+                24,
+                16,
+                24 + inset,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.85,
+                  maxWidth: 640,
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(sheetContext),
-                        child: const Text('Cancel'),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              isNew ? 'Add Requirement' : 'Edit Requirement',
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 20),
+                            onPressed: () => Navigator.pop(dialogContext),
+                            tooltip: 'Close',
+                          ),
+                        ],
                       ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          if (isNew || (index >= 0 && index < _rows.length)) {
-                            if (isNew && !_rows.contains(row)) {
-                              setState(() => _rows.add(row));
-                            }
-                            setState(() {
-                              final previousDescription =
-                                  row.descriptionController.text;
-                              final nextDescription =
-                                  descriptionController.text;
-                              if (previousDescription.trim().isNotEmpty &&
-                                  previousDescription != nextDescription) {
-                                row.manualUndoText = previousDescription;
-                              }
-                              row.setDescriptionFromCode(nextDescription);
-                              row.commentsController.text =
-                                  commentsController.text;
-                              row.roleController.text = roleController.text;
-                              row.personController.text =
-                                  _resolvePersonSelection(
-                                personController.text,
-                                roleHint: roleController.text,
-                              );
-                              row.sourceController.text = sourceController.text;
-                              row.selectedType =
-                                  _normalizeRequirementTypeSelection(
-                                selectedType,
-                              );
-                              row.selectedDiscipline =
-                                  _normalizeDisciplineSelection(
-                                selectedDiscipline,
-                              );
-                              row.selectedPhase =
-                                  _normalizePhaseSelection(selectedPhase);
-                            });
-                            _scheduleAutoSave(showSnack: false);
-                          }
-                          Navigator.pop(sheetContext);
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: descriptionController,
+                        minLines: 2,
+                        maxLines: 4,
+                        decoration: const InputDecoration(
+                          labelText: 'Requirement',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFD1D5DB)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedType,
+                            hint: const Text('Requirement Type'),
+                            isExpanded: true,
+                            items: const [
+                              'Technical',
+                              'Regulatory',
+                              'Functional',
+                              'Operational',
+                              'Non-Functional',
+                              'Safety',
+                              'Sustainability',
+                              'Business',
+                              'Stakeholder',
+                              'Solutions',
+                              'Transitional',
+                              'Other'
+                            ]
+                                .map((value) => DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    ))
+                                .toList(),
+                            onChanged: (value) =>
+                                setLocalState(() => selectedType = value),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFD1D5DB)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedDiscipline,
+                            hint: const Text('Discipline'),
+                            isExpanded: true,
+                            items: _RequirementRow.disciplineOptions
+                                .map(
+                                  (value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setLocalState(() => selectedDiscipline = value),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFD1D5DB)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedPhase,
+                            hint: const Text('Implementation Phase'),
+                            isExpanded: true,
+                            items: _RequirementRow.phaseOptions
+                                .map(
+                                  (value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setLocalState(() => selectedPhase = value),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: roleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Role',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _PersonDropdownField(
+                        value: personController.text,
+                        options: _memberOptions,
+                        hint: 'Person',
+                        dense: false,
+                        onChanged: (value) {
+                          personController.text = value;
                         },
-                        child: const Text('Save'),
+                      ),
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: sourceController,
+                        decoration: const InputDecoration(
+                          labelText: 'Requirement Source',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: commentsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Comments and Requirement Source Links',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text('Cancel'),
+                          ),
+                          const Spacer(),
+                          FilledButton(
+                            onPressed: () {
+                              if (isNew || (index >= 0 && index < _rows.length)) {
+                                if (isNew && !_rows.contains(row)) {
+                                  setState(() => _rows.add(row));
+                                }
+                                setState(() {
+                                  final previousDescription =
+                                      row.descriptionController.text;
+                                  final nextDescription =
+                                      descriptionController.text;
+                                  if (previousDescription.trim().isNotEmpty &&
+                                      previousDescription != nextDescription) {
+                                    row.manualUndoText = previousDescription;
+                                  }
+                                  row.setDescriptionFromCode(nextDescription);
+                                  row.commentsController.text =
+                                      commentsController.text;
+                                  row.roleController.text = roleController.text;
+                                  row.personController.text =
+                                      _resolvePersonSelection(
+                                        personController.text,
+                                        roleHint: roleController.text,
+                                      );
+                                  row.sourceController.text = sourceController.text;
+                                  row.selectedType =
+                                      _normalizeRequirementTypeSelection(
+                                        selectedType,
+                                      );
+                                  row.selectedDiscipline =
+                                      _normalizeDisciplineSelection(
+                                        selectedDiscipline,
+                                      );
+                                  row.selectedPhase =
+                                      _normalizePhaseSelection(selectedPhase);
+                                });
+                                _scheduleAutoSave(showSnack: false);
+                              }
+                              Navigator.pop(dialogContext);
+                            },
+                            child: const Text('Save'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -1936,37 +2026,37 @@ class _FrontEndPlanningRequirementsScreenState
   }
 
   List<CsvColumnSpec> get _csvColumns => [
-        CsvColumnSpec(
+        const CsvColumnSpec(
             key: 'description',
             label: 'Requirement',
             required: true,
             sampleValue: 'The system shall support user authentication'),
-        CsvColumnSpec(
+        const CsvColumnSpec(
             key: 'type',
             label: 'Type',
             allowedValues: _RequirementRow.requirementTypeOptions,
             defaultValue: 'Functional',
             sampleValue: 'Functional'),
-        CsvColumnSpec(
+        const CsvColumnSpec(
             key: 'discipline',
             label: 'Discipline',
             allowedValues: _RequirementRow.disciplineOptions,
             defaultValue: 'IT',
             sampleValue: 'IT'),
-        CsvColumnSpec(
+        const CsvColumnSpec(
             key: 'role', label: 'Role', sampleValue: 'Requirements Lead'),
-        CsvColumnSpec(key: 'person', label: 'Person', sampleValue: 'John Doe'),
-        CsvColumnSpec(
+        const CsvColumnSpec(key: 'person', label: 'Person', sampleValue: 'John Doe'),
+        const CsvColumnSpec(
             key: 'phase',
             label: 'Phase',
             allowedValues: _RequirementRow.phaseOptions,
             defaultValue: 'Planning',
             sampleValue: 'Planning'),
-        CsvColumnSpec(
+        const CsvColumnSpec(
             key: 'source',
             label: 'Source',
             sampleValue: 'Stakeholder interview'),
-        CsvColumnSpec(
+        const CsvColumnSpec(
             key: 'comments', label: 'Comments', sampleValue: 'High priority'),
       ];
 
@@ -2035,9 +2125,9 @@ class _FrontEndPlanningRequirementsScreenState
         label: const Text('Import CSV',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF2563EB),
-          side: const BorderSide(color: Color(0xFF93C5FD)),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          foregroundColor: const Color(0xFFFFC812),
+          side: const BorderSide(color: Color(0xFFFFC812)),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
@@ -2055,9 +2145,9 @@ class _FrontEndPlanningRequirementsScreenState
         label: const Text('Template',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF2563EB),
-          side: const BorderSide(color: Color(0xFF93C5FD)),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          foregroundColor: const Color(0xFFFFC812),
+          side: const BorderSide(color: Color(0xFFFFC812)),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
@@ -2743,14 +2833,13 @@ class _RequirementRow {
   _RequirementRow({
     required this.number,
     this.onChanged,
-    bool isExpanded = false,
+    this.isExpanded = false,
   })  : descriptionController = TextEditingController(),
         commentsController = TextEditingController(),
         roleController = TextEditingController(),
         personController = TextEditingController(),
         sourceController = TextEditingController(),
-        descriptionFocusNode = FocusNode(),
-        isExpanded = isExpanded {
+        descriptionFocusNode = FocusNode() {
     descriptionFocusNode.addListener(_handleDescriptionFocusChange);
   }
 
@@ -2889,7 +2978,7 @@ class _RequirementRow {
                                     CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.refresh,
-                                size: 18, color: Color(0xFF2563EB)),
+                                size: 18, color: Color(0xFFFFC812)),
                         padding: const EdgeInsets.all(6),
                         constraints:
                             const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -3090,7 +3179,7 @@ class _RequirementCard extends StatelessWidget {
                         height: 36,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEEF2FF),
+                          color: const Color(0xFFFFF8E1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -3132,8 +3221,8 @@ class _RequirementCard extends StatelessWidget {
                                 ),
                                 _RequirementSummaryChip(
                                   label: row.summaryDiscipline,
-                                  backgroundColor: const Color(0xFFEFF6FF),
-                                  textColor: const Color(0xFF1D4ED8),
+                                  backgroundColor: const Color(0xFFFFF8E1),
+                                  textColor: const Color(0xFFFFC812),
                                 ),
                                 _RequirementSummaryChip(
                                   label: row.summaryOwner,
@@ -3144,7 +3233,7 @@ class _RequirementCard extends StatelessWidget {
                                 if (row.summarySource.isNotEmpty)
                                   _RequirementSummaryChip(
                                     label: row.summarySource,
-                                    backgroundColor: Colors.white,
+                                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                                     textColor: const Color(0xFF475569),
                                     icon: Icons.link_rounded,
                                   ),
@@ -3169,7 +3258,7 @@ class _RequirementCard extends StatelessWidget {
                                   )
                                 : const Icon(
                                     Icons.auto_awesome_rounded,
-                                    color: Color(0xFF2563EB),
+                                    color: Color(0xFFFFC812),
                                   ),
                           ),
                           IconButton(
@@ -3220,7 +3309,7 @@ class _RequirementCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _RequirementFieldLabel('Requirement description'),
+                  const _RequirementFieldLabel('Requirement description'),
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
@@ -3849,13 +3938,13 @@ class _MemberPickerDialogState extends State<_MemberPickerDialog> {
                                 dense: true,
                                 leading: CircleAvatar(
                                   radius: 14,
-                                  backgroundColor: const Color(0xFFDBEAFE),
+                                  backgroundColor: const Color(0xFFFEF3C7),
                                   child: Text(
                                     member.displayLabel[0].toUpperCase(),
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF1D4ED8),
+                                      color: Color(0xFFFFC812),
                                     ),
                                   ),
                                 ),

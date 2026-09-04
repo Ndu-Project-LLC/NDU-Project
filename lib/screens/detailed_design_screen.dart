@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
-import 'package:ndu_project/screens/vendor_tracking_screen.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/models/design_component.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
@@ -8,6 +7,7 @@ import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/detailed_design_table_widget.dart';
@@ -47,8 +47,8 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
   bool _isAutoGenerating = false;
   String _methodology = 'Hybrid'; // Waterfall | Hybrid | Agile
 
-  // ── Security & compliance controls (local) ──
-  final List<_SecurityControl> _securityControls = const [
+  // ── Security & compliance controls ──
+  final List<_SecurityControl> _securityControls = [
     _SecurityControl(
       id: 'SEC-001',
       requirement: 'Authentication & authorization controls',
@@ -74,6 +74,93 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       status: 'Defined',
     ),
   ];
+
+  void _addSecurityControl() async {
+    final result = await _showSecurityControlDialog();
+    if (result == null) return;
+    setState(() => _securityControls.add(result));
+  }
+
+  void _editSecurityControl(int index) async {
+    final result = await _showSecurityControlDialog(_securityControls[index]);
+    if (result == null) return;
+    setState(() => _securityControls[index] = result);
+  }
+
+  Future<_SecurityControl?> _showSecurityControlDialog([
+    _SecurityControl? existing,
+  ]) async {
+    final id = TextEditingController(text: existing?.id ?? '');
+    final requirement =
+        TextEditingController(text: existing?.requirement ?? '');
+    final standard = TextEditingController(text: existing?.standard ?? '');
+    var status = existing?.status ?? 'Pending';
+    final result = await showDialog<_SecurityControl>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(existing == null
+              ? 'Add security control'
+              : 'Edit security control'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                    controller: id,
+                    decoration: const InputDecoration(labelText: 'Control ID')),
+                TextField(
+                    controller: requirement,
+                    decoration:
+                        const InputDecoration(labelText: 'Requirement')),
+                TextField(
+                    controller: standard,
+                    decoration: const InputDecoration(
+                        labelText: 'Standard / reference')),
+                DropdownButtonFormField<String>(
+                  initialValue: _safeDropdownValue(status,
+                      const ['Defined', 'In Progress', 'Pending', 'Verified']),
+                  decoration: const InputDecoration(labelText: 'Status'),
+                  items: const ['Defined', 'In Progress', 'Pending', 'Verified']
+                      .map((value) =>
+                          DropdownMenuItem(value: value, child: Text(value)))
+                      .toList(),
+                  onChanged: (value) =>
+                      setDialogState(() => status = value ?? status),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () {
+                if (requirement.text.trim().isEmpty) return;
+                Navigator.pop(
+                    dialogContext,
+                    _SecurityControl(
+                      id: id.text.trim().isEmpty
+                          ? 'SEC-${_securityControls.length + 1}'
+                              .padLeft(7, '0')
+                          : id.text.trim(),
+                      requirement: requirement.text.trim(),
+                      standard: standard.text.trim(),
+                      status: status,
+                    ));
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+    id.dispose();
+    requirement.dispose();
+    standard.dispose();
+    return result;
+  }
 
   // ── Non-functional requirements (local) ──
   final List<_NFRItem> _nfrItems = const [
@@ -153,7 +240,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
           'Asynchronous inter-service communication via message broker with event sourcing for audit-critical flows.',
       status: 'Baseline',
       icon: Icons.hub_outlined,
-      color: const Color(0xFF7C3AED),
+      color: const Color(0xFFB8860B),
     ),
     _ArchitecturePattern(
       name: 'API Gateway',
@@ -161,7 +248,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
           'Centralized entry point for routing, rate-limiting, and authentication. Terminates TLS and enforces policies.',
       status: 'Defined',
       icon: Icons.router_outlined,
-      color: const Color(0xFF2563EB),
+      color: const Color(0xFFFFC812),
     ),
     _ArchitecturePattern(
       name: 'CQRS + Read Replicas',
@@ -169,7 +256,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
           'Separate command and query models for high-throughput reads. Read replicas scale independently from writes.',
       status: 'Proposed',
       icon: Icons.call_split_outlined,
-      color: const Color(0xFF0891B2),
+      color: const Color(0xFFD97706),
     ),
     _ArchitecturePattern(
       name: 'Observability Stack',
@@ -300,9 +387,9 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       final entries = generated['designComponents'] ?? const [];
       if (entries.isEmpty) return;
 
-      final typeRotation = DesignComponent.specificationTypes;
-      final priorityRotation = DesignComponent.priorities;
-      final ownerRotation = DesignComponent.ownerRoles;
+      const typeRotation = DesignComponent.specificationTypes;
+      const priorityRotation = DesignComponent.priorities;
+      const ownerRotation = DesignComponent.ownerRoles;
 
       final newComponents = <DesignComponent>[];
       for (var i = 0; i < entries.length; i++) {
@@ -343,26 +430,39 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
 
   String _inferSpecType(String text) {
     final lower = text.toLowerCase();
-    if (lower.contains('architecture') || lower.contains('decompos'))
+    if (lower.contains('architecture') || lower.contains('decompos')) {
       return 'Architecture';
+    }
     if (lower.contains('interface') ||
         lower.contains('api') ||
-        lower.contains('contract')) return 'Interface';
+        lower.contains('contract')) {
+      return 'Interface';
+    }
     if (lower.contains('data') ||
         lower.contains('schema') ||
-        lower.contains('database')) return 'Data';
+        lower.contains('database')) {
+      return 'Data';
+    }
     if (lower.contains('security') ||
         lower.contains('auth') ||
-        lower.contains('compliance')) return 'Security';
+        lower.contains('compliance')) {
+      return 'Security';
+    }
     if (lower.contains('performance') ||
         lower.contains('scalab') ||
-        lower.contains('availab')) return 'NFR';
+        lower.contains('availab')) {
+      return 'NFR';
+    }
     if (lower.contains('ui') ||
         lower.contains('ux') ||
-        lower.contains('design system')) return 'UI/UX';
+        lower.contains('design system')) {
+      return 'UI/UX';
+    }
     if (lower.contains('infra') ||
         lower.contains('deploy') ||
-        lower.contains('cloud')) return 'Infrastructure';
+        lower.contains('cloud')) {
+      return 'Infrastructure';
+    }
     return 'Component';
   }
 
@@ -390,18 +490,24 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
   List<DesignComponent> _filterComponents(List<DesignComponent> components) {
     if (_selectedFilters.contains('All')) return components;
     return components.where((c) {
-      if (_selectedFilters.contains('Approved') && c.status == 'Approved')
+      if (_selectedFilters.contains('Approved') && c.status == 'Approved') {
         return true;
-      if (_selectedFilters.contains('In Review') && c.status == 'In Review')
+      }
+      if (_selectedFilters.contains('In Review') && c.status == 'In Review') {
         return true;
-      if (_selectedFilters.contains('Reviewed') && c.status == 'Reviewed')
+      }
+      if (_selectedFilters.contains('Reviewed') && c.status == 'Reviewed') {
         return true;
-      if (_selectedFilters.contains('Baseline') && c.status == 'Baseline')
+      }
+      if (_selectedFilters.contains('Baseline') && c.status == 'Baseline') {
         return true;
-      if (_selectedFilters.contains('Draft') && c.status == 'Draft')
+      }
+      if (_selectedFilters.contains('Draft') && c.status == 'Draft') {
         return true;
-      if (_selectedFilters.contains('Must Have') && c.priority == 'Must Have')
+      }
+      if (_selectedFilters.contains('Must Have') && c.priority == 'Must Have') {
         return true;
+      }
       return false;
     }).toList();
   }
@@ -417,7 +523,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Design Specifications',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(padding),
@@ -428,8 +534,6 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                 title: 'Detailed Design',
                 showNavigationButtons: false,
                 onExportPdf: _exportPdf),
-            const SizedBox(height: 20),
-            _buildMethodologySelector(),
             const SizedBox(height: 20),
             _buildMetricsGrid(),
             const SizedBox(height: 24),
@@ -447,201 +551,17 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
             _buildArtifactReadiness(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Vendor Tracking',
-              nextLabel: 'Next: Agile Development Iterations',
-              onBack: () => VendorTrackingScreen.open(context),
-              onNext: () => AgileDevelopmentIterationsScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('detailed_design'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('detailed_design'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(
+                  context, 'detailed_design'),
+              onNext: () =>
+                  PlanningPhaseNavigation.goToNext(context, 'detailed_design'),
             ),
           ],
         ),
       ),
     );
-  }
-
-  // ── METHODOLOGY SELECTOR ──────────────────────────────────────
-
-  Widget _buildMethodologySelector() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 14,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Color(0xFFF5F3FF),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.tune_rounded,
-                  size: 18,
-                  color: Color(0xFF7C3AED),
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Delivery Methodology',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF111827),
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Shapes phase labels, specification depth, and review cadence',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isCompact = constraints.maxWidth < 600;
-              if (isCompact) {
-                return Column(
-                  children: _methodologyOptions()
-                      .map((opt) => Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: opt,
-                          ))
-                      .toList(),
-                );
-              }
-              return Row(
-                children: _methodologyOptions().map((opt) {
-                  return Expanded(
-                      child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: opt,
-                  ));
-                }).toList(),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _methodologyOptions() {
-    final methods = [
-      (
-        'Waterfall',
-        Icons.water_drop_outlined,
-        'Full upfront spec',
-        const Color(0xFF2563EB)
-      ),
-      (
-        'Hybrid',
-        Icons.merge_outlined,
-        'Baseline + iterative detail',
-        const Color(0xFF7C3AED)
-      ),
-      (
-        'Agile',
-        Icons.flash_on_outlined,
-        'Evolving, just-in-time spec',
-        const Color(0xFF059669)
-      ),
-    ];
-
-    return methods.map((m) {
-      final selected = _methodology == m.$1;
-      return GestureDetector(
-        onTap: () {
-          setState(() => _methodology = m.$1);
-          // Persist methodology selection
-          final projectData = ProjectDataHelper.getData(context);
-          ProjectDataHelper.getProvider(context).updateField(
-            (data) => data.copyWith(
-              planningNotes: {
-                ...data.planningNotes,
-                'detailed_design_methodology': m.$1,
-              },
-            ),
-          );
-          // Show feedback
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                  'Delivery model set to ${m.$1}. New components will use ${m.$1} phases.'),
-              duration: const Duration(seconds: 2),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: selected
-                ? m.$4.withValues(alpha: 0.06)
-                : const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: selected
-                  ? m.$4.withValues(alpha: 0.3)
-                  : const Color(0xFFE5E7EB),
-              width: selected ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(m.$2,
-                  size: 18, color: selected ? m.$4 : const Color(0xFF9CA3AF)),
-              const SizedBox(width: 10),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      m.$1,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: selected ? m.$4 : const Color(0xFF374151),
-                      ),
-                    ),
-                    Text(
-                      m.$3,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: selected
-                            ? m.$4.withValues(alpha: 0.7)
-                            : const Color(0xFF9CA3AF),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (selected) ...[
-                const SizedBox(width: 8),
-                Icon(Icons.check_circle, size: 16, color: m.$4),
-              ],
-            ],
-          ),
-        ),
-      );
-    }).toList();
   }
 
   // ── METRICS GRID ──────────────────────────────────────────────
@@ -666,7 +586,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
         icon: Icons.description_outlined,
         helper:
             'Across ${DesignComponent.specificationTypes.length} spec types',
-        emphasisColor: const Color(0xFF2563EB),
+        emphasisColor: const Color(0xFFFFC812),
       ),
       ExecutionMetricData(
         label: 'Must-Have Items',
@@ -687,7 +607,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
         value: '$secDefined/${_securityControls.length}',
         icon: Icons.shield_outlined,
         helper: 'ISO 27001 / NIST / SOC 2',
-        emphasisColor: const Color(0xFF7C3AED),
+        emphasisColor: const Color(0xFFB8860B),
       ),
       ExecutionMetricData(
         label: 'NFRs Specified',
@@ -701,7 +621,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
         value: '$artifactsReady/${_artifacts.length}',
         icon: Icons.inventory_2_outlined,
         helper: 'Staged for build handoff',
-        emphasisColor: const Color(0xFF0891B2),
+        emphasisColor: const Color(0xFFD97706),
       ),
     ];
 
@@ -718,7 +638,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       collapsible: true,
       initiallyExpanded: true,
       headerIcon: Icons.account_tree_outlined,
-      headerIconColor: const Color(0xFF7C3AED),
+      headerIconColor: const Color(0xFFB8860B),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -727,8 +647,8 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
             icon: const Icon(Icons.add_rounded, size: 16),
             label: const Text('Add Pattern'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF7C3AED),
-              side: const BorderSide(color: Color(0xFF7C3AED)),
+              foregroundColor: const Color(0xFFB8860B),
+              side: const BorderSide(color: Color(0xFFB8860B)),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               textStyle:
                   const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
@@ -752,7 +672,9 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                   pattern: pattern,
                   onEdit: () =>
                       _showArchPatternEditor(entry: pattern, index: index),
-                  onDelete: () {
+                  onDelete: () async {
+                    if (!await _confirmDelete('architecture pattern')) return;
+                    if (!mounted) return;
                     setState(() {
                       _archPatterns.removeAt(index);
                     });
@@ -775,17 +697,21 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
     'Deprecated',
   ];
 
+  static String _safeDropdownValue(String? value, List<String> options) {
+    return value != null && options.contains(value) ? value : options.first;
+  }
+
   static const List<MapEntry<IconData, Color>> _archIconOptions = [
-    MapEntry(Icons.hub_outlined, Color(0xFF7C3AED)),
-    MapEntry(Icons.router_outlined, Color(0xFF2563EB)),
-    MapEntry(Icons.call_split_outlined, Color(0xFF0891B2)),
+    MapEntry(Icons.hub_outlined, Color(0xFFB8860B)),
+    MapEntry(Icons.router_outlined, Color(0xFFFFC812)),
+    MapEntry(Icons.call_split_outlined, Color(0xFFD97706)),
     MapEntry(Icons.monitor_heart_outlined, Color(0xFF059669)),
     MapEntry(Icons.layers_outlined, Color(0xFFD97706)),
     MapEntry(Icons.security_outlined, Color(0xFFDC2626)),
-    MapEntry(Icons.storage_outlined, Color(0xFF6366F1)),
-    MapEntry(Icons.cloud_outlined, Color(0xFF0EA5E9)),
-    MapEntry(Icons.dns_outlined, Color(0xFF8B5CF6)),
-    MapEntry(Icons.memory_outlined, Color(0xFFEC4899)),
+    MapEntry(Icons.storage_outlined, Color(0xFFB8860B)),
+    MapEntry(Icons.cloud_outlined, Color(0xFFFFC812)),
+    MapEntry(Icons.dns_outlined, Color(0xFFB8860B)),
+    MapEntry(Icons.memory_outlined, Color(0xFFD97706)),
   ];
 
   Future<void> _showArchPatternEditor(
@@ -793,9 +719,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
     final nameController = TextEditingController(text: entry?.name ?? '');
     final descController =
         TextEditingController(text: entry?.description ?? '');
-    var selectedStatus = _archStatusOptions.contains(entry?.status)
-        ? entry!.status
-        : _archStatusOptions.first;
+    var selectedStatus = _safeDropdownValue(entry?.status, _archStatusOptions);
     var selectedIconIndex = 0;
     if (entry != null) {
       final match = _archIconOptions.indexWhere(
@@ -840,7 +764,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: selectedStatus,
+                        initialValue: selectedStatus,
                         decoration: const InputDecoration(
                           labelText: 'Status',
                           isDense: true,
@@ -947,15 +871,15 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
 
   Widget _buildSpecificationRegister() {
     if (_isLoading) {
-      return ExecutionPanelShell(
+      return const ExecutionPanelShell(
         title: 'Design Specification Register',
         subtitle:
             'Traceable specifications with MoSCoW prioritization, methodology phasing, and requirements traceability',
         collapsible: true,
         initiallyExpanded: true,
         headerIcon: Icons.folder_special_outlined,
-        headerIconColor: const Color(0xFF2563EB),
-        child: const Center(
+        headerIconColor: Color(0xFFFFC812),
+        child: Center(
           child: Padding(
             padding: EdgeInsets.all(24.0),
             child: CircularProgressIndicator(),
@@ -973,14 +897,14 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       collapsible: true,
       initiallyExpanded: true,
       headerIcon: Icons.folder_special_outlined,
-      headerIconColor: const Color(0xFF2563EB),
+      headerIconColor: const Color(0xFFFFC812),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           CsvTableImportButton(
             compact: true,
             tableTitle: 'Design Specification Register',
-            columns: [
+            columns: const [
               CsvColumnSpec(
                   key: 'specId', label: 'Spec ID', hint: 'e.g. DS-001'),
               CsvColumnSpec(
@@ -1114,14 +1038,14 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
 
   Color _getTypeColor(String type) {
     return switch (type) {
-      'Architecture' => const Color(0xFF7C3AED),
-      'Interface' => const Color(0xFF2563EB),
-      'Data' => const Color(0xFF0891B2),
+      'Architecture' => const Color(0xFFB8860B),
+      'Interface' => const Color(0xFFFFC812),
+      'Data' => const Color(0xFFD97706),
       'Component' => const Color(0xFF059669),
       'Security' => const Color(0xFFDC2626),
       'NFR' => const Color(0xFFD97706),
       'Infrastructure' => const Color(0xFF475569),
-      'UI/UX' => const Color(0xFFEC4899),
+      'UI/UX' => const Color(0xFFD97706),
       _ => const Color(0xFF6B7280),
     };
   }
@@ -1138,14 +1062,135 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       headerIcon: Icons.shield_outlined,
       headerIconColor: const Color(0xFFDC2626),
       child: Column(
-        children: _securityControls.map((control) {
-          return _SecurityControlCard(control: control);
-        }).toList(),
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              onPressed: _addSecurityControl,
+              icon: const Icon(Icons.add),
+              label: const Text('Add control'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ..._securityControls.asMap().entries.map((entry) {
+            return _SecurityControlCard(
+              control: entry.value,
+              onEdit: () => _editSecurityControl(entry.key),
+              onDelete: () =>
+                  setState(() => _securityControls.removeAt(entry.key)),
+            );
+          }),
+        ],
       ),
     );
   }
 
   // ── NON-FUNCTIONAL REQUIREMENTS SECTION ───────────────────────
+
+  void _addNfrItem() async {
+    final result = await _showNfrDialog();
+    if (result == null) return;
+    setState(() => _nfrItems.add(result));
+  }
+
+  void _editNfrItem(int index) async {
+    final result = await _showNfrDialog(_nfrItems[index]);
+    if (result == null) return;
+    setState(() => _nfrItems[index] = result);
+  }
+
+  Future<_NFRItem?> _showNfrDialog([_NFRItem? existing]) async {
+    final id = TextEditingController(text: existing?.id ?? '');
+    final requirement =
+        TextEditingController(text: existing?.requirement ?? '');
+    final target = TextEditingController(text: existing?.target ?? '');
+    var category = existing?.category ?? 'Performance';
+    var status = existing?.status ?? 'Draft';
+    final result = await showDialog<_NFRItem>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(existing == null ? 'Add NFR' : 'Edit NFR'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                    controller: id,
+                    decoration: const InputDecoration(labelText: 'NFR ID')),
+                DropdownButtonFormField<String>(
+                  initialValue: _safeDropdownValue(category, const [
+                    'Performance',
+                    'Scalability',
+                    'Availability',
+                    'Recoverability',
+                    'Maintainability'
+                  ]),
+                  decoration: const InputDecoration(labelText: 'Category'),
+                  items: const [
+                    'Performance',
+                    'Scalability',
+                    'Availability',
+                    'Recoverability',
+                    'Maintainability'
+                  ]
+                      .map((value) =>
+                          DropdownMenuItem(value: value, child: Text(value)))
+                      .toList(),
+                  onChanged: (value) =>
+                      setDialogState(() => category = value ?? category),
+                ),
+                TextField(
+                    controller: requirement,
+                    decoration:
+                        const InputDecoration(labelText: 'Requirement')),
+                TextField(
+                    controller: target,
+                    decoration: const InputDecoration(labelText: 'Target')),
+                DropdownButtonFormField<String>(
+                  initialValue: _safeDropdownValue(
+                      status, const ['Draft', 'Specified', 'Verified']),
+                  decoration: const InputDecoration(labelText: 'Status'),
+                  items: const ['Draft', 'Specified', 'Verified']
+                      .map((value) =>
+                          DropdownMenuItem(value: value, child: Text(value)))
+                      .toList(),
+                  onChanged: (value) =>
+                      setDialogState(() => status = value ?? status),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () {
+                if (requirement.text.trim().isEmpty) return;
+                Navigator.pop(
+                    dialogContext,
+                    _NFRItem(
+                      id: id.text.trim().isEmpty
+                          ? 'NFR-${_nfrItems.length + 1}'.padLeft(8, '0')
+                          : id.text.trim(),
+                      category: category,
+                      requirement: requirement.text.trim(),
+                      target: target.text.trim(),
+                      status: status,
+                    ));
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+    id.dispose();
+    requirement.dispose();
+    target.dispose();
+    return result;
+  }
 
   Widget _buildNFRSection() {
     return ExecutionPanelShell(
@@ -1157,11 +1202,177 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       headerIcon: Icons.speed_outlined,
       headerIconColor: const Color(0xFFD97706),
       child: Column(
-        children: _nfrItems.map((item) {
-          return _NFRCard(item: item);
-        }).toList(),
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              onPressed: _addNfrItem,
+              icon: const Icon(Icons.add),
+              label: const Text('Add NFR'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ..._nfrItems.asMap().entries.map((entry) => _NFRCard(
+                item: entry.value,
+                onEdit: () => _editNfrItem(entry.key),
+                onDelete: () async {
+                  if (!await _confirmDelete('NFR')) return;
+                  if (!mounted) return;
+                  setState(() => _nfrItems.removeAt(entry.key));
+                },
+              )),
+        ],
       ),
     );
+  }
+
+  Future<bool> _confirmDelete(String itemType) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => LaunchModalShell(
+        icon: Icons.delete_outline_rounded,
+        accent: const Color(0xFFDC2626),
+        title: 'Delete $itemType?',
+        subtitle: 'This action cannot be undone.',
+        body: Text(
+          'Are you sure you want to remove this $itemType? Any unsaved content will be permanently lost.',
+          style: const TextStyle(
+              fontSize: 14, color: Color(0xFF4B5563), height: 1.5),
+        ),
+        actions: [
+          LaunchModalCancelButton(
+            label: 'Keep it',
+            onPressed: () => Navigator.pop(dialogContext, false),
+          ),
+          LaunchModalDangerButton(
+            label: 'Delete',
+            onPressed: () => Navigator.pop(dialogContext, true),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
+  void _addAdrRecord() async {
+    final result = await _showAdrDialog();
+    if (result == null) return;
+    setState(() => _adrRecords.add(result));
+  }
+
+  void _editAdrRecord(int index) async {
+    final result = await _showAdrDialog(_adrRecords[index]);
+    if (result == null) return;
+    setState(() => _adrRecords[index] = result);
+  }
+
+  Future<_ADRecord?> _showAdrDialog([_ADRecord? existing]) async {
+    final id = TextEditingController(text: existing?.id ?? '');
+    final title = TextEditingController(text: existing?.title ?? '');
+    final contextController =
+        TextEditingController(text: existing?.context ?? '');
+    final decision = TextEditingController(text: existing?.decision ?? '');
+    var status = existing?.status ?? 'Proposed';
+    String? titleError;
+    final result = await showDialog<_ADRecord>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => LaunchModalShell(
+          icon: Icons.gavel_outlined,
+          accent: const Color(0xFFD97706),
+          title: existing == null
+              ? 'Add architecture decision'
+              : 'Edit architecture decision',
+          subtitle: 'Capture the decision, rationale, and lifecycle status.',
+          body: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LaunchModalTextField(
+                label: 'ADR ID',
+                controller: id,
+                hint: 'e.g. ADR-0001',
+              ),
+              const LaunchModalFieldGap(),
+              LaunchModalTextField(
+                label: 'Decision Title',
+                controller: title,
+                hint: 'What decision is being recorded?',
+              ),
+              if (titleError != null) ...[
+                const SizedBox(height: 4),
+                Text(titleError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12)),
+              ],
+              const LaunchModalFieldGap(),
+              LaunchModalTextField(
+                label: 'Context',
+                controller: contextController,
+                maxLines: 3,
+                hint: 'Why was this decision needed?',
+              ),
+              const LaunchModalFieldGap(),
+              LaunchModalTextField(
+                label: 'Decision',
+                controller: decision,
+                maxLines: 3,
+                hint: 'What was decided and why?',
+              ),
+              const LaunchModalFieldGap(),
+              LaunchModalDropdown<String>(
+                label: 'Status',
+                value: _safeDropdownValue(status,
+                    const ['Proposed', 'Accepted', 'Deprecated', 'Superseded']),
+                items: const [
+                  'Proposed',
+                  'Accepted',
+                  'Deprecated',
+                  'Superseded'
+                ],
+                onChanged: (value) =>
+                    setDialogState(() => status = value ?? status),
+              ),
+            ],
+          ),
+          actions: [
+            LaunchModalCancelButton(
+              label: 'Cancel',
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
+            LaunchModalPrimaryButton(
+              label: 'Save',
+              icon: Icons.check,
+              onPressed: () {
+                final trimmedTitle = title.text.trim();
+                if (trimmedTitle.isEmpty) {
+                  setDialogState(() => titleError = 'Enter a decision title.');
+                  return;
+                }
+                Navigator.pop(
+                  dialogContext,
+                  _ADRecord(
+                    id: id.text.trim().isEmpty
+                        ? 'ADR-${_adrRecords.length + 1}'.padLeft(8, '0')
+                        : id.text.trim(),
+                    title: trimmedTitle,
+                    context: contextController.text.trim(),
+                    decision: decision.text.trim(),
+                    status: status,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+    id.dispose();
+    title.dispose();
+    contextController.dispose();
+    decision.dispose();
+    return result;
   }
 
   // ── DESIGN DECISION LOG / ADR SECTION ─────────────────────────
@@ -1174,11 +1385,28 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       collapsible: true,
       initiallyExpanded: true,
       headerIcon: Icons.gavel_outlined,
-      headerIconColor: const Color(0xFF6366F1),
+      headerIconColor: const Color(0xFFB8860B),
       child: Column(
-        children: _adrRecords.map((record) {
-          return _ADRecordCard(record: record);
-        }).toList(),
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              onPressed: _addAdrRecord,
+              icon: const Icon(Icons.add),
+              label: const Text('Add ADR'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ..._adrRecords.asMap().entries.map((entry) => _ADRecordCard(
+                record: entry.value,
+                onEdit: () => _editAdrRecord(entry.key),
+                onDelete: () async {
+                  if (!await _confirmDelete('architecture decision')) return;
+                  if (!mounted) return;
+                  setState(() => _adrRecords.removeAt(entry.key));
+                },
+              )),
+        ],
       ),
     );
   }
@@ -1194,7 +1422,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       collapsible: true,
       initiallyExpanded: true,
       headerIcon: Icons.inventory_2_outlined,
-      headerIconColor: const Color(0xFF0891B2),
+      headerIconColor: const Color(0xFFD97706),
       child: Column(
         children: _artifacts.map((artifact) {
           final color = artifact.ready
@@ -1204,9 +1432,9 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Color(0xFFF8FAFC),
+              color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Color(0xFFE2E8F0)),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Row(
               children: [
@@ -1284,11 +1512,11 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                    color: const Color(0xFFFFC812).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.add_rounded,
-                      size: 20, color: Color(0xFF2563EB)),
+                      size: 20, color: Color(0xFFFFC812)),
                 ),
                 const SizedBox(width: 12),
                 const Text('Add Design Specification',
@@ -1318,7 +1546,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: selectedPriority,
+                            initialValue: selectedPriority,
                             decoration: const InputDecoration(
                                 labelText: 'Priority *', isDense: true),
                             items: DesignComponent.priorities
@@ -1352,7 +1580,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: selectedType,
+                            initialValue: selectedType,
                             decoration: const InputDecoration(
                                 labelText: 'Type *', isDense: true),
                             items: DesignComponent.specificationTypes
@@ -1374,7 +1602,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: selectedPhase,
+                            initialValue: selectedPhase,
                             decoration: const InputDecoration(
                                 labelText: 'Phase', isDense: true),
                             items: _getPhaseOptionsForDialog()
@@ -1391,7 +1619,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: selectedOwner,
+                            initialValue: selectedOwner,
                             decoration: const InputDecoration(
                                 labelText: 'Owner', isDense: true),
                             items: DesignComponent.ownerRoles
@@ -1408,7 +1636,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: selectedStatus,
+                            initialValue: selectedStatus,
                             decoration: const InputDecoration(
                                 labelText: 'Status *', isDense: true),
                             items: DesignComponent.statuses
@@ -1563,9 +1791,9 @@ class _ArchitecturePatternCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1638,14 +1866,20 @@ class _ArchitecturePatternCard extends StatelessWidget {
 }
 
 class _SecurityControlCard extends StatelessWidget {
-  const _SecurityControlCard({required this.control});
+  const _SecurityControlCard({
+    required this.control,
+    required this.onEdit,
+    required this.onDelete,
+  });
   final _SecurityControl control;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
     final statusColor = switch (control.status) {
       'Defined' => const Color(0xFF10B981),
-      'In Progress' => const Color(0xFF2563EB),
+      'In Progress' => const Color(0xFFFFC812),
       'Pending' => const Color(0xFFF59E0B),
       _ => const Color(0xFF9CA3AF),
     };
@@ -1654,9 +1888,9 @@ class _SecurityControlCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: [
@@ -1696,6 +1930,16 @@ class _SecurityControlCard extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            tooltip: 'Edit control',
+            onPressed: onEdit,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, size: 18),
+            tooltip: 'Delete control',
+            onPressed: onDelete,
+          ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
@@ -1715,16 +1959,22 @@ class _SecurityControlCard extends StatelessWidget {
 }
 
 class _NFRCard extends StatelessWidget {
-  const _NFRCard({required this.item});
+  const _NFRCard({
+    required this.item,
+    required this.onEdit,
+    required this.onDelete,
+  });
   final _NFRItem item;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
     final categoryColor = switch (item.category) {
       'Performance' => const Color(0xFFDC2626),
-      'Scalability' => const Color(0xFF7C3AED),
+      'Scalability' => const Color(0xFFB8860B),
       'Availability' => const Color(0xFF059669),
-      'Recoverability' => const Color(0xFF2563EB),
+      'Recoverability' => const Color(0xFFFFC812),
       'Maintainability' => const Color(0xFFD97706),
       _ => const Color(0xFF6B7280),
     };
@@ -1733,9 +1983,9 @@ class _NFRCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: [
@@ -1787,6 +2037,16 @@ class _NFRCard extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            tooltip: 'Edit NFR',
+            onPressed: onEdit,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, size: 18),
+            tooltip: 'Delete NFR',
+            onPressed: onDelete,
+          ),
           ExecutionStatusBadge(label: item.status),
         ],
       ),
@@ -1795,8 +2055,14 @@ class _NFRCard extends StatelessWidget {
 }
 
 class _ADRecordCard extends StatelessWidget {
-  const _ADRecordCard({required this.record});
+  const _ADRecordCard({
+    required this.record,
+    required this.onEdit,
+    required this.onDelete,
+  });
   final _ADRecord record;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -1812,9 +2078,9 @@ class _ADRecordCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1833,6 +2099,16 @@ class _ADRecordCard extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 14, fontWeight: FontWeight.w800)),
               ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                tooltip: 'Edit ADR',
+                onPressed: onEdit,
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, size: 18),
+                tooltip: 'Delete ADR',
+                onPressed: onDelete,
+              ),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -1849,7 +2125,7 @@ class _ADRecordCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          _buildADRow('Context', record.context, const Color(0xFF2563EB)),
+          _buildADRow('Context', record.context, const Color(0xFFFFC812)),
           const SizedBox(height: 8),
           _buildADRow('Decision', record.decision, const Color(0xFF059669)),
         ],

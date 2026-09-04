@@ -77,11 +77,11 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
   static const _blueDeep = Color(0xFFD97706);
   static const _blueSoft = Color(0xFFFEF3C7);
   static const _indigo = Color(0xFFF59E0B);
-  static const _violet = Color(0xFF7C3AED);
+  static const _violet = Color(0xFFB8860B);
   static const _emerald = Color(0xFF059669);
   static const _amber = Color(0xFFD97706);
   static const _crimson = Color(0xFFDC2626);
-  static const _cyan = Color(0xFF0891B2);
+  static const _cyan = Color(0xFFD97706);
 
   @override
   void initState() {
@@ -271,7 +271,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
                             ),
                           ),
                   ],
-                  SliverToBoxAnchor(child: const SizedBox(height: 120.0)),
+                  const SliverToBoxAnchor(child: SizedBox(height: 120.0)),
                 ],
               ),
             );
@@ -282,10 +282,10 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
         onPressed: _createNewProject,
         backgroundColor: const Color(0xFFFFC107),
         foregroundColor: const Color(0xFF1C1C1C),
-        child: const Icon(Icons.psychology_rounded, size: 30, color: Color(0xFF1C1C1C)),
         elevation: 4,
         shape: const CircleBorder(),
         tooltip: 'KAZ AI — New Workspace',
+        child: const Icon(Icons.psychology_rounded, size: 30, color: Color(0xFF1C1C1C)),
       ),
       ),
     );
@@ -813,9 +813,9 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Text(
+              Text(
                 'STATUS DISTRIBUTION',
                 style: TextStyle(
                   fontSize: 10,
@@ -824,7 +824,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
                   letterSpacing: 1.2,
                 ),
               ),
-              const Spacer(),
+              Spacer(),
               Icon(Icons.donut_small_outlined, size: 14, color: _muted),
             ],
           ),
@@ -987,7 +987,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
             child: Container(height: 1, color: _outline),
           ),
           const SizedBox(width: 8),
-          Icon(Icons.view_headline_rounded, size: 14, color: _muted),
+          const Icon(Icons.view_headline_rounded, size: 14, color: _muted),
         ],
       ),
     );
@@ -1009,7 +1009,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
             Container(
               width: 72,
               height: 72,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: _blueSoft,
                 shape: BoxShape.circle,
               ),
@@ -1053,7 +1053,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
         ),
         child: Row(
           children: [
-            Icon(Icons.error_outline_rounded, color: _crimson, size: 20),
+            const Icon(Icons.error_outline_rounded, color: _crimson, size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Text(message,
@@ -1162,10 +1162,10 @@ class _MetricCell extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF64748B),
+                  color: Color(0xFF64748B),
                   letterSpacing: 0.8,
                 ),
                 maxLines: 1,

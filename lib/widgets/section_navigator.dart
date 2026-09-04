@@ -30,6 +30,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// A single tab definition for the [SectionNavigator].
 class SectionTab {
@@ -64,6 +65,7 @@ class SectionNavigator extends StatefulWidget {
     this.routeLabel = 'Page Route',
     this.isCollapsible = false,
     this.initiallyCollapsed = false,
+    this.collapseStorageKey,
   });
 
   /// The ordered list of tabs to render.
@@ -99,20 +101,68 @@ class SectionNavigator extends StatefulWidget {
   /// Whether the navigator section can be collapsed/expanded.
   final bool isCollapsible;
 
-  /// Whether the section starts in the collapsed state.
+  /// Whether the section starts in the collapsed state when no persisted
+  /// state exists for [collapseStorageKey] yet.
   final bool initiallyCollapsed;
+
+  /// Key used to persist the collapsed state across navigation and app
+  /// restarts. Defaults to [title] when null. Each screen using a distinct
+  /// title gets its own persisted collapsed/expanded state.
+  final String? collapseStorageKey;
 
   @override
   State<SectionNavigator> createState() => _SectionNavigatorState();
 }
 
 class _SectionNavigatorState extends State<SectionNavigator> {
+  static const String _prefsPrefix = 'section_navigator_collapsed_';
+
+  /// In-memory cache so the initial collapsed state can be resolved
+  /// synchronously without waiting for SharedPreferences.
+  static final Map<String, bool> _collapsedCache = {};
+
   late bool _isCollapsed;
+
+  String get _storageKey =>
+      widget.collapseStorageKey ?? widget.title ?? 'default';
 
   @override
   void initState() {
     super.initState();
-    _isCollapsed = widget.initiallyCollapsed;
+    _isCollapsed = _collapsedCache[_storageKey] ?? widget.initiallyCollapsed;
+    if (!_collapsedCache.containsKey(_storageKey) && widget.isCollapsible) {
+      _loadCollapsedState();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant SectionNavigator oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldKey = oldWidget.collapseStorageKey ?? oldWidget.title ?? 'default';
+    if (oldKey != _storageKey) {
+      _isCollapsed = _collapsedCache[_storageKey] ?? widget.initiallyCollapsed;
+    }
+  }
+
+  Future<void> _loadCollapsedState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getBool('$_prefsPrefix$_storageKey');
+    if (!mounted) return;
+    _collapsedCache[_storageKey] = stored ?? _isCollapsed;
+    if (stored != null && stored != _isCollapsed) {
+      setState(() => _isCollapsed = stored);
+    }
+  }
+
+  void _toggleCollapsed() {
+    setState(() => _isCollapsed = !_isCollapsed);
+    _persistCollapsedState();
+  }
+
+  Future<void> _persistCollapsedState() async {
+    _collapsedCache[_storageKey] = _isCollapsed;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('$_prefsPrefix$_storageKey', _isCollapsed);
   }
 
   @override
@@ -195,13 +245,13 @@ class _SectionNavigatorState extends State<SectionNavigator> {
                     ),
                   if (widget.isCollapsible)
                     IconButton(
-                      onPressed: () => setState(() => _isCollapsed = !_isCollapsed),
+                      onPressed: _toggleCollapsed,
                       icon: AnimatedRotation(
                         turns: _isCollapsed ? -0.5 : 0,
                         duration: const Duration(milliseconds: 200),
-                        child: Icon(
+                        child: const Icon(
                           Icons.keyboard_arrow_down,
-                          color: const Color(0xFF6B7280),
+                          color: Color(0xFF6B7280),
                           size: 24,
                         ),
                       ),

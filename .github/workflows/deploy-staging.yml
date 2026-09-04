@@ -214,6 +214,27 @@ jobs:
       - name: Pub get
         run: flutter pub get
 
+      # Keep the authenticated AI proxy in sync with the staging web build.
+      # FIREBASE_SERVICE_ACCOUNT is optional so the web deploy remains usable
+      # in repositories that only have the cross-repository Pages token.
+      - name: Deploy OpenAI proxy function
+        continue-on-error: true
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          set -eu
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::warning::FIREBASE_SERVICE_ACCOUNT is not configured; leaving the existing openaiProxy deployment unchanged."
+            exit 0
+          fi
+          SERVICE_ACCOUNT_FILE="$RUNNER_TEMP/firebase-service-account.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$SERVICE_ACCOUNT_FILE"
+          trap 'rm -f "$SERVICE_ACCOUNT_FILE"' EXIT
+          export GOOGLE_APPLICATION_CREDENTIALS="$SERVICE_ACCOUNT_FILE"
+          npm install --global firebase-tools
+          firebase deploy --only functions:openaiProxy \
+            --project ndu-d3f60 --non-interactive
+
       - name: Build web (release, staging)
         env:
           OPENAI_PROXY_ENDPOINT: ${{ secrets.OPENAI_PROXY_ENDPOINT }}

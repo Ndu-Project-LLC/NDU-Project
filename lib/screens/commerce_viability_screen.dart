@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/ai_error_message.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:convert';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
@@ -8,9 +10,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'package:ndu_project/models/launch_phase_models.dart';
-import 'package:ndu_project/screens/actual_vs_planned_gap_analysis_screen.dart';
-import 'package:ndu_project/screens/financial_closeout_screen.dart';
-import 'package:ndu_project/screens/summarize_account_risks_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -68,7 +67,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: '6. Hypercare & Warranty Support',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -99,10 +98,10 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             _buildRecommendationsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Scope & Deliverable Reconciliation',
-              nextLabel: 'Next: Financial Closeout',
-              onBack: () => ActualVsPlannedGapAnalysisScreen.open(context),
-              onNext: () => FinancialCloseoutScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('commerce_viability'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('commerce_viability'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'commerce_viability'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'commerce_viability'),
             ),
             const SizedBox(height: 48),
           ],
@@ -126,7 +125,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             label: 'Active Warranties',
             value: '$activeWarranties',
             icon: Icons.verified_user_outlined,
-            emphasisColor: const Color(0xFF2563EB)),
+            emphasisColor: const Color(0xFFFFC812)),
         ExecutionMetricData(
             label: 'Monthly Ops Cost',
             value:
@@ -137,7 +136,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             label: 'Financial Metrics',
             value: '${_financialMetrics.length}',
             icon: Icons.analytics_outlined,
-            emphasisColor: const Color(0xFF8B5CF6)),
+            emphasisColor: const Color(0xFFB8860B)),
         ExecutionMetricData(
             label: 'Recommendations',
             value: '${_recommendations.length}',
@@ -700,7 +699,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -745,7 +744,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -789,7 +788,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -832,7 +831,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1115,7 +1114,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             pw.Text(
                 '$projectName — Generated ${now.toLocal().toIso8601String()}',
                 style:
-                    pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                    const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
             pw.SizedBox(height: 16),
 
             // Financial Metrics
@@ -1131,7 +1130,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1151,7 +1150,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1172,7 +1171,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1192,7 +1191,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1231,7 +1230,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
   pw.Widget _pdfCell(String text) {
     return pw.Padding(
         padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(text, style: pw.TextStyle(fontSize: 9)));
+        child: pw.Text(text, style: const pw.TextStyle(fontSize: 9)));
   }
 
   String _s(dynamic v) => (v ?? '').toString().trim();
@@ -1259,7 +1258,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
           label: 'Vendors',
           value: '${projectData.vendors.length}',
           icon: Icons.inventory_2_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'under warranty',
         ),
         LaunchKpiTile(
@@ -1273,7 +1272,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
           label: 'Allowances',
           value: '${projectData.frontEndPlanning.allowanceItems.length}',
           icon: Icons.savings_outlined,
-          color: const Color(0xFF7C3AED),
+          color: const Color(0xFFB8860B),
           delta: 'contingency tracked',
         ),
         LaunchKpiTile(

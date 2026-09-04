@@ -1,11 +1,10 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/recurring_deliverable_row.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/deliverable_status_updates_screen.dart';
-import 'package:ndu_project/screens/status_reports_screen.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
@@ -154,8 +153,9 @@ class _RecurringDeliverablesScreenState
   String _extractFrequency(String text) {
     final String lower = text.toLowerCase();
     if (lower.contains('daily')) return 'Daily';
-    if (lower.contains('bi-weekly') || lower.contains('bi weekly'))
+    if (lower.contains('bi-weekly') || lower.contains('bi weekly')) {
       return 'Bi-Weekly';
+    }
     if (lower.contains('weekly')) return 'Weekly';
     if (lower.contains('monthly')) return 'Monthly';
     if (lower.contains('quarter')) return 'Quarterly';
@@ -255,7 +255,7 @@ class _RecurringDeliverablesScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: 'Recurring Deliverables',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -290,10 +290,10 @@ class _RecurringDeliverablesScreenState
               ),
               const SizedBox(height: 24),
               LaunchPhaseNavigation(
-                backLabel: 'Back: Deliverable Status Updates',
-                nextLabel: 'Next: Status Reports',
-                onBack: () => DeliverableStatusUpdatesScreen.open(context),
-                onNext: () => StatusReportsScreen.open(context),
+                backLabel: PlanningPhaseNavigation.backLabel('recurring_deliverables'),
+                nextLabel: PlanningPhaseNavigation.nextLabel('recurring_deliverables'),
+                onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'recurring_deliverables'),
+                onNext: () => PlanningPhaseNavigation.goToNext(context, 'recurring_deliverables'),
               ),
             ],
             const SizedBox(height: 48),
@@ -344,7 +344,7 @@ class _RecurringDeliverablesScreenState
       collapsible: true,
       initiallyExpanded: false,
       headerIcon: Icons.schedule_outlined,
-      headerIconColor: const Color(0xFF7C3AED),
+      headerIconColor: const Color(0xFFB8860B),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -357,13 +357,13 @@ class _RecurringDeliverablesScreenState
           _buildCadenceRow(
             'Weekly',
             'Status reports, risk reviews, sprint planning, timesheet approvals',
-            const Color(0xFF2563EB),
+            const Color(0xFFFFC812),
           ),
           const SizedBox(height: 10),
           _buildCadenceRow(
             'Bi-Weekly',
             'Sprint reviews, retrospectives, resource reallocation, dependency checks',
-            const Color(0xFF7C3AED),
+            const Color(0xFFB8860B),
           ),
           const SizedBox(height: 10),
           _buildCadenceRow(

@@ -1,8 +1,7 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import 'package:ndu_project/screens/contract_close_out_screen.dart';
-import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
@@ -184,7 +183,7 @@ class _FatMechanicalCompletionScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: '3. FAT, Mechanical Completion & Commission Solution',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -256,10 +255,10 @@ class _FatMechanicalCompletionScreenState
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Deployment Transfer, Certification & Release',
-              nextLabel: 'Next: Vendor & Contract Closeout',
-              onBack: () => TransitionToProdTeamScreen.open(context),
-              onNext: () => ContractCloseOutScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('fat_mechanical_completion'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('fat_mechanical_completion'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'fat_mechanical_completion'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'fat_mechanical_completion'),
             ),
             const SizedBox(height: 48),
           ],
@@ -309,7 +308,7 @@ class _FatMechanicalCompletionScreenState
           label: 'Total Items',
           value: '$total',
           icon: Icons.checklist_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'across 3 subsections',
         ),
         LaunchKpiTile(
@@ -389,9 +388,9 @@ class _FatMechanicalCompletionScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFFFFFBEB),
+        color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFFCD34D)),
+        border: Border.all(color: const Color(0xFFFCD34D)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,7 +433,7 @@ class _FatMechanicalCompletionScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -512,9 +511,9 @@ class _StatusDropdown extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(

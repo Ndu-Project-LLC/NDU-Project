@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -324,7 +325,7 @@ class _AgileBacklogGovernanceScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI generation failed: ${e.toString()}')),
+          SnackBar(content: Text('AI generation failedaiErrorMessage(e)')),
         );
       }
     }
@@ -426,7 +427,7 @@ class _AgileBacklogGovernanceScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI regeneration failed: $e')),
+          SnackBar(content: Text('AI regeneration failedaiErrorMessage(e)')),
         );
       }
     }
@@ -476,8 +477,7 @@ class _AgileBacklogGovernanceScreenState
                             const Expanded(
                               child: Text(
                                 'Define the rules, criteria, and processes for managing the product backlog.',
-                                style: TextStyle(
-                                    fontSize: 15, color: _kMuted),
+                                style: TextStyle(fontSize: 15, color: _kMuted),
                               ),
                             ),
                             if (!_isLoading) ...[
@@ -593,26 +593,23 @@ class _AgileBacklogGovernanceScreenState
           ),
           const SizedBox(height: 8),
           if (_showDoRChecklist) ...[
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _doRItems.length,
-              itemBuilder: (context, i) => _buildChecklistRow(
-                _doRItems[i],
-                (checked) {
-                  setState(() => _doRItems[i].checked = checked);
-                  _scheduleAutoSave();
-                },
-                (label) {
-                  setState(() => _doRItems[i].label = label);
-                  _scheduleAutoSave();
-                },
-                () {
-                  setState(() => _doRItems.removeAt(i));
-                  _scheduleAutoSave();
-                },
-              ),
-            ),
+            ..._doRItems.asMap().entries.map(
+                  (entry) => _buildChecklistRow(
+                    entry.value,
+                    (checked) {
+                      setState(() => _doRItems[entry.key].checked = checked);
+                      _scheduleAutoSave();
+                    },
+                    (label) {
+                      setState(() => _doRItems[entry.key].label = label);
+                      _scheduleAutoSave();
+                    },
+                    () {
+                      setState(() => _doRItems.removeAt(entry.key));
+                      _scheduleAutoSave();
+                    },
+                  ),
+                ),
             TextButton.icon(
               onPressed: () {
                 setState(() => _doRItems.add(_ChecklistItem(label: '')));
@@ -661,26 +658,23 @@ class _AgileBacklogGovernanceScreenState
           ),
           const SizedBox(height: 8),
           if (_showDoDChecklist) ...[
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _doDItems.length,
-              itemBuilder: (context, i) => _buildChecklistRow(
-                _doDItems[i],
-                (checked) {
-                  setState(() => _doDItems[i].checked = checked);
-                  _scheduleAutoSave();
-                },
-                (label) {
-                  setState(() => _doDItems[i].label = label);
-                  _scheduleAutoSave();
-                },
-                () {
-                  setState(() => _doDItems.removeAt(i));
-                  _scheduleAutoSave();
-                },
-              ),
-            ),
+            ..._doDItems.asMap().entries.map(
+                  (entry) => _buildChecklistRow(
+                    entry.value,
+                    (checked) {
+                      setState(() => _doDItems[entry.key].checked = checked);
+                      _scheduleAutoSave();
+                    },
+                    (label) {
+                      setState(() => _doDItems[entry.key].label = label);
+                      _scheduleAutoSave();
+                    },
+                    () {
+                      setState(() => _doDItems.removeAt(entry.key));
+                      _scheduleAutoSave();
+                    },
+                  ),
+                ),
             TextButton.icon(
               onPressed: () {
                 setState(() => _doDItems.add(_ChecklistItem(label: '')));
@@ -743,28 +737,14 @@ class _AgileBacklogGovernanceScreenState
 
   Widget _buildExistingField(String key, String hint) {
     final controller = _controllers[key];
-    final hasContent = (controller?.text ?? '').isNotEmpty;
     return VoiceTextField(
       controller: controller,
+      enableKazAi: false,
+      enableTextFormatting: false,
       decoration: InputDecoration(
         hintText: hint,
         border: const OutlineInputBorder(),
         isDense: true,
-        suffixIcon: hasContent
-            ? IconButton(
-                tooltip: 'Clear',
-                icon: const Icon(Icons.delete_sweep,
-                    color: Color(0xFFEF4444), size: 16),
-                onPressed: () {
-                  controller?.clear();
-                  _recordFieldHistory(key, '');
-                  _scheduleAutoSave();
-                  setState(() {});
-                },
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              )
-            : null,
       ),
       minLines: 3,
       maxLines: 5,
@@ -796,26 +776,21 @@ class _AgileBacklogGovernanceScreenState
               "Team norms for communication, collaboration, and process.",
               style: TextStyle(fontSize: 12, color: _kMuted)),
           const SizedBox(height: 12),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _waItems.length,
-            itemBuilder: (context, i) => _buildChecklistRow(
-              _waItems[i],
-              (checked) {
-                setState(() => _waItems[i].checked = checked);
-                _scheduleAutoSave();
-              },
-              (label) {
-                setState(() => _waItems[i].label = label);
-                _scheduleAutoSave();
-              },
-              () {
-                setState(() => _waItems.removeAt(i));
-                _scheduleAutoSave();
-              },
-            ),
-          ),
+          ..._waItems.asMap().entries.map((entry) => _buildChecklistRow(
+                entry.value,
+                (checked) {
+                  setState(() => _waItems[entry.key].checked = checked);
+                  _scheduleAutoSave();
+                },
+                (label) {
+                  setState(() => _waItems[entry.key].label = label);
+                  _scheduleAutoSave();
+                },
+                () {
+                  setState(() => _waItems.removeAt(entry.key));
+                  _scheduleAutoSave();
+                },
+              )),
           TextButton.icon(
             onPressed: () {
               setState(() => _waItems.add(_ChecklistItem(label: '')));
@@ -833,7 +808,6 @@ class _AgileBacklogGovernanceScreenState
     final controller = _controllers[f.key];
     final isRegenerating = _fieldIsRegenerating[f.key] ?? false;
     final isAiGenerated = _fieldIsAiGenerated[f.key] ?? false;
-    final hasContent = (controller?.text ?? '').isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
@@ -853,20 +827,20 @@ class _AgileBacklogGovernanceScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Color(0xFFE0F2FE),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.auto_awesome,
-                          size: 10, color: Color(0xFF0284C7)),
+                          size: 10, color: Color(0xFFFFC812)),
                       SizedBox(width: 3),
                       Text('AI',
                           style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0284C7))),
+                              color: Color(0xFFFFC812))),
                     ],
                   ),
                 ),
@@ -890,11 +864,13 @@ class _AgileBacklogGovernanceScreenState
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Color(0xFFD1D5DB)),
+                border: Border.all(color: const Color(0xFFD1D5DB)),
               ),
               child: VoiceTextField(
                 controller: controller,
                 style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
+                enableKazAi: false,
+                enableTextFormatting: false,
                 decoration: InputDecoration(
                   hintText: f.hint,
                   hintStyle:
@@ -902,43 +878,6 @@ class _AgileBacklogGovernanceScreenState
                   border: InputBorder.none,
                   isDense: true,
                   contentPadding: const EdgeInsets.all(14),
-                  suffixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        tooltip: 'KAZ AI',
-                        icon: isRegenerating
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2))
-                            : const Icon(Icons.auto_awesome,
-                                color: Color(0xFFF59E0B), size: 18),
-                        onPressed: isRegenerating
-                            ? null
-                            : () => _regenerateField(f.key, f.label, f.hint),
-                        padding: const EdgeInsets.all(4),
-                        constraints:
-                            const BoxConstraints(minWidth: 32, minHeight: 32),
-                      ),
-                      if (hasContent)
-                        IconButton(
-                          tooltip: 'Clear all content',
-                          icon: const Icon(Icons.delete_sweep,
-                              color: Color(0xFFEF4444), size: 18),
-                          onPressed: () {
-                            controller?.clear();
-                            _recordFieldHistory(f.key, '');
-                            _scheduleAutoSave();
-                            setState(() {});
-                          },
-                          padding: const EdgeInsets.all(4),
-                          constraints:
-                              const BoxConstraints(minWidth: 32, minHeight: 32),
-                        ),
-                    ],
-                  ),
                 ),
                 minLines: f.fullWidth ? 4 : 3,
                 maxLines: f.fullWidth ? 8 : 6,
@@ -962,8 +901,8 @@ class _AgileBacklogGovernanceScreenState
       screenTitle: 'Agile Backlog Governance',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName},
+          {'Solution Title': projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',

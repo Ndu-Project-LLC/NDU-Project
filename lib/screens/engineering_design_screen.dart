@@ -1,8 +1,8 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -1071,12 +1071,12 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  return const Color(0xFFF59E0B);
  case 'Draft':
  case 'Pending':
- return const Color(0xFF6366F1);
+ return const Color(0xFFB8860B);
  case 'Planned':
  case 'Not Started':
  return const Color(0xFF6B7280);
  case 'Under Review':
- return const Color(0xFF0EA5E9);
+ return const Color(0xFFFFC812);
  default:
  return const Color(0xFF6B7280);
  }
@@ -1889,7 +1889,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Engineering',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [
@@ -1921,10 +1921,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildEngineeringBriefCard(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Backend Design',
- nextLabel: 'Next: Technical Development',
- onBack: () => context.go('/backend-design'),
- onNext: () => context.go('/technical-development'),
+ backLabel: PlanningPhaseNavigation.backLabel('engineering_design'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('engineering_design'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'engineering_design'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'engineering_design'),
  ),
  ],
  ),
@@ -2007,7 +2007,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Define system layers and their responsibilities before detailing '
  'interfaces. Each layer must have a clear specification standard '
  'and designated owner. Verify layer completeness before integration.',
- const Color(0xFF0EA5E9),
+ const Color(0xFFFFC812),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -2253,7 +2253,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _openStructuralItemDialog(
  existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -2432,7 +2432,7 @@ IconButton(
  _openComponentItemDialog(
  existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -2623,7 +2623,7 @@ IconButton(
  _openCalculationItemDialog(
  existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -2811,7 +2811,7 @@ IconButton(
  _openComplianceItemDialog(
  existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -3006,7 +3006,7 @@ IconButton(
  onPressed: () =>
  _openEcnItemDialog(existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -3143,7 +3143,7 @@ IconButton(
  existing: gate),
  icon: const Icon(Icons.edit_outlined,
  size: 14,
- color: Color(0xFF2563EB)),
+ color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(
  minWidth: 24, minHeight: 24),
@@ -3210,11 +3210,11 @@ IconButton(
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: const Color(0xFF0EA5E9).withValues(alpha: 0.12),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: const Icon(Icons.edit_note_outlined,
- size: 20, color: Color(0xFF0EA5E9)),
+ size: 20, color: Color(0xFFFFC812)),
  ),
  const SizedBox(width: 12),
  const Expanded(

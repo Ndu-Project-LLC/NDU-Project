@@ -1,18 +1,16 @@
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/launch_notes_section.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/models/launch_phase_models.dart';
-import 'package:ndu_project/screens/benefits_realization_screen.dart';
-import 'package:ndu_project/screens/finalize_project_screen.dart';
-import 'package:ndu_project/screens/project_close_out_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/download_helper.dart' as download_helper;
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -24,7 +22,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
-import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:go_router/go_router.dart';
 
 class DemobilizeTeamScreen extends StatefulWidget {
@@ -75,7 +72,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
     return ResponsiveScaffold(
       activeItemLabel:
           '10. Team Demobilization & Operations/Production Transition',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: Column(
         children: [
@@ -128,10 +125,10 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
               ),
             ),
             child: LaunchPhaseNavigation(
-              backLabel: 'Back: Benefits Realization',
-              nextLabel: 'Next: Project Closeout',
-              onBack: () => BenefitsRealizationScreen.open(context),
-              onNext: () => ProjectCloseOutScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('demobilize_team'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('demobilize_team'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'demobilize_team'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'demobilize_team'),
             ),
           ),
         ],
@@ -717,7 +714,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -765,7 +762,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -810,7 +807,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -855,7 +852,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1106,7 +1103,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Team Ramp-Down Roster'),
@@ -1114,14 +1111,14 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
             if (_teamRoster.isEmpty)
               pw.Text('No team members.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1142,14 +1139,14 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
             if (_knowledgeTransfers.isEmpty)
               pw.Text('No knowledge transfers.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1171,14 +1168,14 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
             if (_vendorOffboarding.isEmpty)
               pw.Text('No vendor offboarding items.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1199,14 +1196,14 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
             if (_communications.isEmpty)
               pw.Text('No communications.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1235,7 +1232,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
               _debriefNotes.notes.trim().isEmpty
                   ? 'No debrief notes recorded.'
                   : _debriefNotes.notes.trim(),
-              style: pw.TextStyle(fontSize: 9),
+              style: const pw.TextStyle(fontSize: 9),
             ),
           ],
         ),
@@ -1311,7 +1308,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
           label: 'Team Members',
           value: '${projectData.teamMembers.length}',
           icon: Icons.people_outline,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'to demobilize',
         ),
         LaunchKpiTile(
@@ -1325,7 +1322,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
           label: 'Vendors',
           value: '${projectData.vendors.length}',
           icon: Icons.inventory_2_outlined,
-          color: const Color(0xFF7C3AED),
+          color: const Color(0xFFB8860B),
           delta: 'to close out',
         ),
         LaunchKpiTile(

@@ -18,6 +18,13 @@ class ExecutionPhaseAiSeed {
         sectionLabel: section,
       );
     }
+    // Latest-version overlay: topics repeated across phases are read from
+    // their most recent phase (e.g. planning supersedes initiation) — never
+    // re-anchor an AI prompt on a stale earlier copy.
+    final overlay = ProjectDataHelper.buildLatestTopicOverlay(data);
+    if (overlay.trim().isNotEmpty) {
+      contextText = '$contextText\n\n$overlay'.trim();
+    }
     return contextText.trim();
   }
 

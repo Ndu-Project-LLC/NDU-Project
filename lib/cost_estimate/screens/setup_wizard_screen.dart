@@ -37,7 +37,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       appBarTitle: 'Cost Estimate',
       breadcrumbPhase: 'Planning Phase',
       breadcrumbTitle: 'Cost Estimate Setup',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 600),

@@ -134,12 +134,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  return Dialog(
  backgroundColor: Colors.transparent,
  insetPadding:
- const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
- child: Container(
- padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(18),
+ const EdgeInsets.symmetric(horizontal: 18, vertical: 24), child: Container(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+                  decoration: BoxDecoration(
+                    color: scheme.surface,
+                    borderRadius: BorderRadius.circular(18),
  boxShadow: [
  BoxShadow(
  color: Colors.black.withValues(alpha: 0.14),
@@ -520,10 +519,6 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                           error: error,
                           isBasicPlan: widget.isBasicPlan,
                         ),
-                        if (!widget.isBasicPlan) ...[
-                          const SizedBox(height: 22),
-                          const _ProgramsSummaryCard(),
-                        ],
                       ],
                     );
                   }
@@ -609,7 +604,6 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                           if (_metrics!.projectStatuses.isNotEmpty) ...[
                             CollapsibleSection(
                               title: 'Project status',
-                              itemCount: _metrics!.projectStatuses.length,
                               initiallyExpanded: false,
                               child: Wrap(
                                 spacing: 16,
@@ -1910,147 +1904,6 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
   }
 }
 
-class _ProgramsSummaryCard extends StatelessWidget {
-  const _ProgramsSummaryCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = DashboardPaletteScope.of(context);
-    final textTheme = Theme.of(context).textTheme;
-    final user = FirebaseAuth.instance.currentUser;
-
-    return _FrostedSurface(
-      padding: const EdgeInsets.fromLTRB(26, 26, 26, 22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Programs and portfolios',
-            style: textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              fontSize: 22,
-              color: palette.ink,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'High-level containers for your grouped work.',
-            style: textTheme.bodyMedium?.copyWith(
-              color: palette.muted,
-              fontSize: 14.5,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 18),
-          if (user == null)
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final stats = [
-                  const _SummaryStat(
-                    label: 'Programs',
-                    value: '—',
-                    caption: 'Sign in to view your programs.',
-                  ),
-                  const _SummaryStat(
-                    label: 'Portfolios',
-                    value: '—',
-                    caption: 'Sign in to view your portfolios.',
-                  ),
-                  const _SummaryStat(
-                    label: 'Projects per program',
-                    value: 'Max 3',
-                    caption:
-                        'Keep scope focused and interfaces manageable.',
-                  ),
-                ];
-                return _buildStatsLayout(constraints, stats);
-              },
-            )
-          else
-            StreamBuilder<List<ProgramModel>>(
-              stream: ProgramService.streamPrograms(ownerId: user.uid),
-              builder: (context, programSnapshot) {
-                final programCount =
-                    programSnapshot.hasData ? programSnapshot.data!.length : 0;
-                return StreamBuilder<List<PortfolioModel>>(
-                  stream: PortfolioService.streamPortfolios(ownerId: user.uid),
-                  builder: (context, portfolioSnapshot) {
-                    final portfolioCount = portfolioSnapshot.hasData
-                        ? portfolioSnapshot.data!.length
-                        : 0;
-
-                    final stats = [
-                      _SummaryStat(
-                        label: 'Programs',
-                        value: '$programCount',
-                        caption: programCount == 0
-                            ? 'Add three projects to unlock a program dashboard.'
-                            : 'Grouped projects',
-                      ),
-                      _SummaryStat(
-                        label: 'Portfolios',
-                        value: '$portfolioCount',
-                        caption:
-                            'Roll multiple programs into an executive view.',
-                      ),
-                      const _SummaryStat(
-                        label: 'Projects per program',
-                        value: 'Max 3',
-                        caption:
-                            'Keep scope focused and interfaces manageable.',
-                      ),
-                    ];
-
-                    return LayoutBuilder(
-                      builder: (context, constraints) =>
-                          _buildStatsLayout(constraints, stats),
-                    );
-                  },
-                );
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsLayout(
-      BoxConstraints constraints, List<_SummaryStat> stats) {
-    if (constraints.maxWidth < 620) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (int i = 0; i < stats.length; i++) ...[
-            stats[i],
-            if (i < stats.length - 1) const SizedBox(height: 14),
-          ],
-        ],
-      );
-    }
-
-    if (constraints.maxWidth < 1024) {
-      final double cardWidth =
-          ((constraints.maxWidth - 18) / 2).clamp(260.0, constraints.maxWidth);
-      return Wrap(
-        spacing: 18,
-        runSpacing: 18,
-        children: [
-          for (final stat in stats) SizedBox(width: cardWidth, child: stat),
-        ],
-      );
-    }
-
-    return Row(
-      children: [
-        for (int i = 0; i < stats.length; i++) ...[
-          Expanded(child: stats[i]),
-          if (i < stats.length - 1) const SizedBox(width: 18),
-        ],
-      ],
-    );
-  }
-}
 
 class _SingleProjectsExpandedScreen extends StatelessWidget {
   const _SingleProjectsExpandedScreen({
@@ -2177,9 +2030,8 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  email.split('@').first.replaceAll(RegExp(r'[._-]+'), ' ');
  return username
  .split(' ')
- .map((part) => part.isEmpty
- ? ''
- : '${part[0].toUpperCase()}${part.substring(1)}')
+ .where((part) => part.isNotEmpty)
+ .map((part) => part[0].toUpperCase() + part.substring(1))
  .join(' ');
  }
  return 'Unknown';
@@ -2211,8 +2063,8 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  if (normalized.contains('planning')) return const Color(0xFFFFF1CC);
  if (normalized.contains('front end')) return const Color(0xFFFFF8E1);
  if (normalized.contains('design')) return const Color(0xFFE8E6FF);
- if (normalized.contains('launch')) return const Color(0xFFE0F2FE);
- if (normalized.contains('close')) return const Color(0xFFEFF6FF);
+ if (normalized.contains('launch')) return const Color(0xFFFFF8E1);
+ if (normalized.contains('close')) return const Color(0xFFFFF8E1);
  if (normalized.contains('completed')) return const Color(0xFFE8F0FF);
  if (normalized.contains('initiation') || normalized.contains('idea')) {
  return const Color(0xFFF3F4F8);
@@ -2227,8 +2079,8 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  if (normalized.contains('front end')) return const Color(0xFF9A6700);
  if (normalized.contains('design')) return const Color(0xFF5941C6);
  if (normalized.contains('launch')) return const Color(0xFF075985);
- if (normalized.contains('close')) return const Color(0xFF1D4ED8);
- if (normalized.contains('completed')) return const Color(0xFF1D4ED8);
+ if (normalized.contains('close')) return const Color(0xFFFFC812);
+ if (normalized.contains('completed')) return const Color(0xFFFFC812);
  if (normalized.contains('initiation') || normalized.contains('idea')) {
  return const Color(0xFF4A4D57);
  }
@@ -2251,7 +2103,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  Color _progressStatusForeground(ProjectProgressHealth status) {
  switch (status) {
  case ProjectProgressHealth.completed:
- return const Color(0xFF1E40AF);
+ return const Color(0xFFFFC812);
  case ProjectProgressHealth.onTrack:
  return const Color(0xFF166534);
  case ProjectProgressHealth.behind:
@@ -2829,8 +2681,6 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
                       color: palette.primaryDeep,
                       letterSpacing: -0.1,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -2841,15 +2691,11 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
                     color: palette.muted,
                     letterSpacing: 0.2,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 5),
                 Text(
                   'Last edited by ${_lastEditorName()} · ${_relativeTimeString(project.updatedAt)}',
                   style: TextStyle(fontSize: 11, color: palette.mutedSoft),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -2872,8 +2718,6 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
                       fontSize: 12,
                       color: _stageForegroundColor(phaseLabel),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -2906,8 +2750,6 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
                               color: palette.muted,
                               fontWeight: FontWeight.w600),
                           textAlign: TextAlign.right,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -3132,9 +2974,8 @@ class _OwnerNameCellState extends State<_OwnerNameCell> {
  final beforeAt = email.split('@').first;
  final cleaned = beforeAt.replaceAll(RegExp(r'[._-]+'), ' ').trim();
  if (cleaned.isEmpty) return 'Unknown';
- final parts = cleaned.split(RegExp(r'\s+'));
+ final parts = cleaned.split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
  final cased = parts.map((p) {
- if (p.isEmpty) return p;
  final lower = p.toLowerCase();
  return lower[0].toUpperCase() + lower.substring(1);
  }).join(' ');
@@ -3197,8 +3038,6 @@ class _OwnerNameCellState extends State<_OwnerNameCell> {
           fontSize: 15,
           color: DashboardPaletteScope.of(context).ink,
         ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
         textAlign: TextAlign.center,
       ),
     );
@@ -3283,8 +3122,6 @@ class _SelectableProjectRowFromFirebase extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         fontSize: 15.5,
                         color: palette.ink),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -3293,8 +3130,6 @@ class _SelectableProjectRowFromFirebase extends StatelessWidget {
                         color: palette.muted,
                         fontSize: 13,
                         fontWeight: FontWeight.w500),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -3326,59 +3161,6 @@ class _SelectableProjectRowFromFirebase extends StatelessWidget {
   }
 }
 
-class _SummaryStat extends StatelessWidget {
-  const _SummaryStat({
-    required this.label,
-    required this.value,
-    required this.caption,
-  });
-
-  final String label;
-  final String value;
-  final String caption;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = DashboardPaletteScope.of(context);
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: palette.canvas,
-        borderRadius: BorderRadius.circular(palette.cardRadius),
-        border: Border.all(color: palette.outline, width: 1.2),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: palette.muted,
-              fontSize: 13,
-              letterSpacing: 0.2,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 28,
-              color: palette.ink,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            caption,
-            style: TextStyle(color: palette.muted, fontSize: 13.5, height: 1.45),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _TableHeaderLabel extends StatelessWidget {
   const _TableHeaderLabel(this.label, {this.alignment = Alignment.centerLeft});

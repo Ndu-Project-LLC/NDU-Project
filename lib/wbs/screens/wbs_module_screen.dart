@@ -5,7 +5,7 @@ library;
 /// Uses [ResponsiveScaffold] with the standard app sidebar
 /// (`InitiationLikeSidebar`) so it matches the rest of the app.
 ///
-/// Sub-navigation between Builder / AI Generator / Validator / Export & Link
+/// Sub-navigation between Builder / AI Generator / Validator / WBS Summary
 /// is a horizontal `TabBar` at the top of the content area (light-mode pills
 /// matching the Project Controls screen), replacing the old dark navy left
 /// rail.
@@ -31,11 +31,10 @@ import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
 import 'package:ndu_project/wbs/screens/wbs_ai_screen.dart';
 import 'package:ndu_project/wbs/screens/wbs_validator_screen.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
-import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
-import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cross_section_sync_card.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:go_router/go_router.dart';
@@ -97,17 +96,29 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
 
     // If storage already gave us a complete WBS for this project, nothing
     // to do — the builder will render it.
-    if (provider.wbs != null && provider.setupComplete) return;
+    if (provider.wbs != null && provider.setupComplete) return; // No persisted WBS for this project — create one with the project's
+ // resolved methodology and persist it for next time.
+ final helperProjectData = ProjectDataHelper.getData(context, listen: false);
+ final resolvedMethodology = ProjectDataHelper.resolvedProjectMethodology(helperProjectData);
+ final resolvedFramework = WBSProvider.frameworkForMethodology(resolvedMethodology);
+ provider.setup(
+ projectName: projectName,
+ framework: resolvedFramework,
+ methodology: resolvedMethodology,
+ projectId: projectId,
+ );
 
-    // No persisted WBS for this project — create one with the default
-    // framework/methodology and persist it for next time.
-    provider.setup(
-      projectName: projectName,
-      framework: WBSFramework.waterfallDeliverable,
-      methodology: ProjectMethodology.waterfall,
-      projectId: projectId,
-    );
-  }
+ // Auto-import cost items from the Initial Cost Estimate if the
+ // cost estimate has no lines yet. This populates the Cost by WBS
+ // tab with data from the project's cost estimate items.
+ final ceProvider = context.read<CostEstimateProvider>();
+ if (ceProvider.estimate != null && ceProvider.estimate!.lines.isEmpty) {
+ if (projectData.costEstimateItems.isNotEmpty) {
+ ceProvider.importFromProjectCostEstimateItems(
+ projectData.costEstimateItems);
+ }
+ }
+ }
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {
@@ -149,21 +160,31 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
         }
 
         final projectData = projectProvider.projectData;
-        final projectName = (projectData.projectName).trim().isNotEmpty
-            ? projectData.projectName
-            : wbs.projectName;
-        final solutionsCount = projectData.potentialSolutions.length;
-        final businessCasePreview =
-            _clamp((projectData.businessCase).trim(), max: 50);
         final fm = wbs.framework;
         final totalNodes = countAllNodes(wbs.level0);
+
+        // Keep the WBS methodology/framework in sync with the project's
+        // Project Details selection (Waterfall / Agile / Hybrid) so the
+        // header badge and level labels always reflect the current choice.
+        final resolvedMethodology =
+            ProjectDataHelper.resolvedProjectMethodology(projectData);
+        final expectedFramework =
+            WBSProvider.frameworkForMethodology(resolvedMethodology);
+        if (wbs.methodology != resolvedMethodology ||
+            wbs.framework != expectedFramework) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.read<WBSProvider>().syncMethodology(resolvedMethodology);
+            }
+          });
+        }
 
         return ResponsiveScaffold(
           activeItemLabel: 'Work Breakdown Structure',
           appBarTitle: 'Work Breakdown Structure',
           breadcrumbPhase: 'Planning Phase',
           breadcrumbTitle: 'WBS',
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           floatingActionButton: const KazAiChatBubble(positioned: false),
           body: Column(
             children: [
@@ -179,28 +200,19 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
                     SectionTab(icon: Icons.attach_money_outlined, label: 'Cost by WBS'),
                     SectionTab(icon: Icons.auto_awesome, label: 'AI Generator'),
                     SectionTab(icon: Icons.check_circle_outline, label: 'Validator'),
-                    SectionTab(icon: Icons.trending_up, label: 'Export & Link'),
+                    SectionTab(icon: Icons.trending_up, label: 'WBS Summary'),
                   ],
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
                   isCollapsible: true,
+                  initiallyCollapsed: true,
                 ),
               ),
-              // ── Framework dimension indicator ─────────────────────────
+              // ── Node count indicator ─────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    Icon(fm.iconData, size: 14, color: LightModeColors.accent),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Dimension: ${fm.label}',
-                      style: const TextStyle(
-                        color: Color(0xFF6B7280),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                     const Spacer(),
                     Text(
                       'L0–L${fm.maxDepth} · $totalNodes nodes',
@@ -232,7 +244,7 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
               ),
               // Navigation footer
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
                 child: LaunchPhaseNavigation(
                   backLabel: PlanningPhaseNavigation.backLabel('work_breakdown_structure'),
                   nextLabel: PlanningPhaseNavigation.nextLabel('work_breakdown_structure'),
@@ -246,15 +258,9 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
       },
     );
   }
-
-  /// Clamp a string to [max] characters, appending an ellipsis if truncated.
-  String _clamp(String value, {int max = 50}) {
-    if (value.length <= max) return value;
-    return '${value.substring(0, max)}…';
-  }
 }
 
-/// Export & Link tab — exports the WBS as JSON or ASCII tree, and shows the
+/// WBS Summary tab — exports the WBS as JSON or ASCII tree, and shows the
 /// link-to-Cost-Estimate affordance.
 class _ExportAndLinkTab extends StatelessWidget {
   const _ExportAndLinkTab();
@@ -279,62 +285,7 @@ class _ExportAndLinkTab extends StatelessWidget {
         });
         final ascii = _toAsciiTree(wbs.level0);
 
-        // ---- Cost-estimate summary computation ----
-        final estimate = costProvider.estimate;
-        final allLines = estimate?.lines ?? const <CostLine>[];
-        final currency = estimate?.currency ?? 'USD';
-        final totalCost =
-            allLines.fold<double>(0, (s, l) => s + _effectiveLineTotal(l));
-        final linkedLineIds = <String>{};
-        void collect(WBSNode n) {
-          for (final id in (n.costLineIds ?? const <String>[])) {
-            linkedLineIds.add(id);
-          }
-          for (final c in n.children) {
-            collect(c);
-          }
-        }
 
-        collect(wbs.level0);
-        // Also treat cost lines whose wbsRef matches a node code as linked.
-        final wbsCodes = <String>{};
-        for (final flat in flattenWBS(wbs)) {
-          if (flat.path.isNotEmpty) wbsCodes.add(flat.path);
-        }
-        final linkedLines = allLines.where((l) {
-          if (linkedLineIds.contains(l.id)) return true;
-          final ref = (l.wbsRef ?? '').trim();
-          return ref.isNotEmpty && wbsCodes.contains(ref);
-        }).toList();
-        final unlinkedLines = allLines.where((l) {
-          if (linkedLineIds.contains(l.id)) return false;
-          final ref = (l.wbsRef ?? '').trim();
-          return !(ref.isNotEmpty && wbsCodes.contains(ref));
-        }).toList();
-        final linkedTotal =
-            linkedLines.fold<double>(0, (s, l) => s + _effectiveLineTotal(l));
-        final unlinkedTotal =
-            unlinkedLines.fold<double>(0, (s, l) => s + _effectiveLineTotal(l));
-
-        // Per-WBS-node linked totals (only nodes that actually have links).
-        final nodeLinkedTotals = <MapEntry<WBSNode, double>>[];
-        void walk(WBSNode n) {
-          final nodeLines = allLines.where((l) {
-            if ((n.costLineIds ?? const []).contains(l.id)) return true;
-            final ref = (l.wbsRef ?? '').trim();
-            return ref.isNotEmpty && ref == n.code;
-          });
-          final sum =
-              nodeLines.fold<double>(0, (s, l) => s + _effectiveLineTotal(l));
-          if (sum > 0) {
-            nodeLinkedTotals.add(MapEntry(n, sum));
-          }
-          for (final c in n.children) {
-            walk(c);
-          }
-        }
-
-        walk(wbs.level0);
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -347,7 +298,7 @@ class _ExportAndLinkTab extends StatelessWidget {
                   Icon(Icons.trending_up,
                       color: LightModeColors.accent, size: 20),
                   SizedBox(width: 8),
-                  Text('Export & Link',
+                  Text('WBS Summary',
                       style: TextStyle(
                           color: Color(0xFF1A1D1F),
                           fontSize: 20,
@@ -360,20 +311,6 @@ class _ExportAndLinkTab extends StatelessWidget {
                 style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
               ),
               const SizedBox(height: 24),
-              // Cost Estimate Summary card
-              _buildCostEstimateSummaryCard(
-                context: context,
-                totalCost: totalCost,
-                currency: currency,
-                linkedCount: linkedLines.length,
-                unlinkedCount: unlinkedLines.length,
-                linkedTotal: linkedTotal,
-                unlinkedTotal: unlinkedTotal,
-                nodeLinkedTotals: nodeLinkedTotals,
-                unlinkedLines: unlinkedLines,
-                hasEstimate: estimate != null,
-              ),
-              const SizedBox(height: 16),
               // WBS Summary card
               Container(
                 padding: const EdgeInsets.all(20),
@@ -561,6 +498,25 @@ class _ExportAndLinkTab extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    // ── Cross-phase wiring actions ────────────────────────────
+                    // These two buttons are the explicit affordances that
+                    // connect WBS to the initiation + front-end planning
+                    // phases. They are idempotent and safe to press multiple
+                    // times — already-existing links/nodes are skipped.
+                    Consumer2<WBSProvider, ProjectDataProvider>(
+                      builder: (context, wbsProv, pdp, _) {
+                        return Consumer<CostEstimateProvider>(
+                          builder: (context, cep, _) {
+                            return _CrossPhaseActions(
+                              wbsProvider: wbsProv,
+                              projectProvider: pdp,
+                              ceProvider: cep,
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -628,387 +584,6 @@ class _ExportAndLinkTab extends StatelessWidget {
                   color: Color(0xFF6B7280),
                   fontSize: 12,
                   fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
-  }
-
-  /// Effective contribution of a cost line to the estimate total — accounts
-  /// for variance flags (added / removed / changed) so the summary stays
-  /// consistent with [ComputeUtils.computeTotals].
-  double _effectiveLineTotal(CostLine l) {
-    if (l.varianceType == VarianceType.remove) {
-      return -(l.varianceBaselineTotal ?? 0);
-    }
-    if (l.varianceType == VarianceType.change) {
-      return l.varianceDelta ?? 0;
-    }
-    return l.total;
-  }
-
-  /// "Cost Estimate Summary" card — surfaces the cross-module context so the
-  /// WBS Export & Link tab clearly shows:
-  ///   - Total estimated cost across all cost lines
-  ///   - Number of cost lines linked vs unlinked to WBS nodes
-  ///   - Per-WBS-node linked totals
-  ///   - Warning for cost lines missing a WBS reference
-  Widget _buildCostEstimateSummaryCard({
-    required BuildContext context,
-    required double totalCost,
-    required String currency,
-    required int linkedCount,
-    required int unlinkedCount,
-    required double linkedTotal,
-    required double unlinkedTotal,
-    required List<MapEntry<WBSNode, double>> nodeLinkedTotals,
-    required List<CostLine> unlinkedLines,
-    required bool hasEstimate,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE4E7EC)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: LightModeColors.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.attach_money,
-                    color: LightModeColors.accent, size: 18),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Cost Estimate Summary',
-                        style: TextStyle(
-                            color: Color(0xFF1A1D1F),
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700)),
-                    SizedBox(height: 2),
-                    Text(
-                      'Total estimated cost and WBS↔Cost-Line linkage status.',
-                      style: TextStyle(
-                          color: Color(0xFF6B7280), fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: LightModeColors.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                      color: LightModeColors.accent.withValues(alpha: 0.4)),
-                ),
-                child: Text(
-                  hasEstimate
-                      ? 'Total: ${formatCurrency(totalCost, currency)}'
-                      : 'No estimate yet',
-                  style: TextStyle(
-                    color: LightModeColors.accent.withValues(alpha: 1),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (!hasEstimate) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF9FAFB),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFE4E7EC)),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.info_outline,
-                      size: 14, color: Color(0xFF6B7280)),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'No Cost Estimate has been set up yet. Open the Cost Estimate module from the sidebar to start adding cost lines and link them to WBS nodes here.',
-                      style: TextStyle(
-                          color: Color(0xFF6B7280), fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ] else ...[
-            // Linked vs unlinked count row
-            Row(
-              children: [
-                Expanded(
-                  child: _summaryStatTile(
-                    label: 'Linked to WBS',
-                    value: '$linkedCount line${linkedCount == 1 ? '' : 's'}',
-                    sub: formatCurrency(linkedTotal, currency),
-                    color: const Color(0xFF16A34A),
-                    icon: Icons.link,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _summaryStatTile(
-                    label: 'Unlinked',
-                    value:
-                        '$unlinkedCount line${unlinkedCount == 1 ? '' : 's'}',
-                    sub: formatCurrency(unlinkedTotal, currency),
-                    color: unlinkedCount > 0
-                        ? const Color(0xFFB45309)
-                        : const Color(0xFF6B7280),
-                    icon: Icons.link_off,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Per-node linked totals
-            if (nodeLinkedTotals.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFBEB),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: const Color(0xFFFDE68A).withValues(alpha: 0.7)),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.warning_amber,
-                        size: 14, color: Color(0xFFB45309)),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'No cost lines are linked to WBS nodes yet. Open the Cost Estimate module and pick a WBS node from the WBS Reference dropdown on each cost line.',
-                        style: TextStyle(
-                            color: Color(0xFF92400E), fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else ...[
-              const Text('WBS NODES WITH LINKED COST TOTALS',
-                  style: TextStyle(
-                      color: Color(0xFF6B7280),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.8)),
-              const SizedBox(height: 8),
-              ...nodeLinkedTotals.map((entry) {
-                final node = entry.key;
-                final sum = entry.value;
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 6),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE4E7EC)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(node.code,
-                            style: const TextStyle(
-                                color: Color(0xFF495057),
-                                fontSize: 11,
-                                fontFamily: appFontFamily,
-                                fontWeight: FontWeight.bold)),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(node.name,
-                            style: const TextStyle(
-                                color: Color(0xFF1A1D1F),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500),
-                            overflow: TextOverflow.ellipsis),
-                      ),
-                      Text(formatCurrency(sum, currency),
-                          style: const TextStyle(
-                              color: Color(0xFF16A34A),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700)),
-                    ],
-                  ),
-                );
-              }),
-            ],
-            // Warning for cost lines missing a WBS reference
-            if (unlinkedLines.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF2F2),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: const Color(0xFFFECACA)
-                          .withValues(alpha: 0.7)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.warning_amber,
-                            size: 14, color: Color(0xFFB91C1C)),
-                        const SizedBox(width: 8),
-                        const Text(
-                            'Cost lines missing a WBS reference',
-                            style: TextStyle(
-                                color: Color(0xFF7F1D1D),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700)),
-                        const Spacer(),
-                        Text('${unlinkedLines.length}',
-                            style: const TextStyle(
-                                color: Color(0xFFB91C1C),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700)),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    ...unlinkedLines.take(5).map((l) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 1),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 4, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(
-                                      color: const Color(0xFFFECACA),
-                                      width: 0.5),
-                                ),
-                                child: Text(l.category.label,
-                                    style: const TextStyle(
-                                        color: Color(0xFFB91C1C),
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w600)),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  l.description.isEmpty
-                                      ? '(no description)'
-                                      : l.description,
-                                  style: const TextStyle(
-                                      color: Color(0xFF7F1D1D),
-                                      fontSize: 12),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                  formatCurrency(
-                                      _effectiveLineTotal(l), currency),
-                                  style: const TextStyle(
-                                      color: Color(0xFF7F1D1D),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                            ],
-                          ),
-                        )),
-                    if (unlinkedLines.length > 5)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          '+ ${unlinkedLines.length - 5} more unlinked line(s)',
-                          style: const TextStyle(
-                              color: Color(0xFFB91C1C),
-                              fontSize: 11,
-                              fontStyle: FontStyle.italic),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryStatTile({
-    required String label,
-    required String value,
-    required String sub,
-    required Color color,
-    required IconData icon,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: TextStyle(
-                        color: color.withValues(alpha: 0.9),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5)),
-                const SizedBox(height: 2),
-                Text(value,
-                    style: TextStyle(
-                        color: color,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700)),
-                Text(sub,
-                    style: TextStyle(
-                        color: color.withValues(alpha: 0.85),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500)),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -1106,3 +681,266 @@ class _ExportAndLinkTab extends StatelessWidget {
   }
 }
 
+
+/// Cross-phase actions card — surfaces the two explicit affordances that
+/// connect the WBS to the initiation + front-end planning phases:
+///
+/// 1. **Seed from Initiation** — creates L1 deliverable nodes from the
+///    project's `projectGoals` / `keyMilestones` / `withinScopeItems`.
+///    Idempotent: skips names that already exist.
+///
+/// 2. **Auto-link FEP Cost Lines** — matches existing cost-estimate lines
+///    to WBS nodes by `wbsRef == node.code` (strong) or by node-name
+///    appearing in the line description (weak). Idempotent: skips lines
+///    that are already linked.
+///
+/// Both buttons show a confirmation dialog previewing what would happen
+/// before mutating the WBS, then a SnackBar reporting the result.
+class _CrossPhaseActions extends StatelessWidget {
+  const _CrossPhaseActions({
+    required this.wbsProvider,
+    required this.projectProvider,
+    required this.ceProvider,
+  });
+
+  final WBSProvider wbsProvider;
+  final ProjectDataProvider projectProvider;
+  final CostEstimateProvider ceProvider;
+
+  @override
+  Widget build(BuildContext context) {
+    final project = projectProvider.projectData;
+    final goalsCount = project.projectGoals
+        .where((g) => g.name.trim().isNotEmpty)
+        .length;
+    final milestonesCount = project.keyMilestones
+        .where((m) => m.name.trim().isNotEmpty)
+        .length;
+    final scopeCount = project.withinScopeItems
+        .where((s) => s.description.trim().isNotEmpty)
+        .length;
+    final fepLineCount = ceProvider.estimate?.lines.length ?? 0;
+    final existingL1Count =
+        wbsProvider.wbs?.level0.children.length ?? 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFDE68A).withValues(alpha: 0.7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.hub_outlined, size: 16, color: Color(0xFFFFC812)),
+              SizedBox(width: 8),
+              Text('Connect to Initiation & Front-End Planning',
+                  style: TextStyle(
+                      color: Color(0xFFB8860B),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Pull deliverables from the initiation phase into the WBS, then '
+            'match existing front-end planning cost lines to WBS nodes by code '
+            'or by name. Both actions are idempotent — re-running them is safe.',
+            style: TextStyle(color: Color(0xFFFFC812), fontSize: 12),
+          ),
+          const SizedBox(height: 12),
+          // Source-data preview chips
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              _sourceChip('Project goals', '$goalsCount',
+                  Icons.flag_outlined),
+              _sourceChip('Key milestones', '$milestonesCount',
+                  Icons.event_outlined),
+              _sourceChip('Scope items', '$scopeCount',
+                  Icons.checklist_outlined),
+              _sourceChip('FEP cost lines', '$fepLineCount',
+                  Icons.attach_money_outlined),
+              _sourceChip('Existing L1 nodes', '$existingL1Count',
+                  Icons.layers_outlined),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // Action buttons
+          Wrap(
+            spacing: 10,
+            runSpacing: 8,
+            children: [
+              FilledButton.icon(
+                onPressed: () => _onSeedFromInitiation(context),
+                icon: const Icon(Icons.download_for_offline_outlined, size: 16),
+                label: const Text('Seed from Initiation'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFC812),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: fepLineCount == 0
+                    ? null
+                    : () => _onAutoLinkCostLines(context),
+                icon: const Icon(Icons.auto_fix_high_outlined, size: 16),
+                label: const Text('Auto-link FEP Cost Lines'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFFFC812),
+                  side: const BorderSide(color: Color(0xFFFDE68A)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sourceChip(String label, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFFDE68A).withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: const Color(0xFFFFC812)),
+          const SizedBox(width: 4),
+          Text(value,
+              style: const TextStyle(
+                  color: Color(0xFFB8860B),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700)),
+          const SizedBox(width: 4),
+          Text(label,
+              style: const TextStyle(
+                  color: Color(0xFF475569),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onSeedFromInitiation(BuildContext context) async {
+    final project = projectProvider.projectData;
+    final goalsCount = project.projectGoals
+        .where((g) => g.name.trim().isNotEmpty)
+        .length;
+    final milestonesCount = project.keyMilestones
+        .where((m) => m.name.trim().isNotEmpty)
+        .length;
+    final scopeCount = project.withinScopeItems
+        .where((s) => s.description.trim().isNotEmpty)
+        .length;
+
+    final sourceDesc = goalsCount > 0
+        ? '$goalsCount project goal${goalsCount == 1 ? '' : 's'}'
+        : milestonesCount > 0
+            ? '$milestonesCount key milestone${milestonesCount == 1 ? '' : 's'}'
+            : scopeCount > 0
+                ? '$scopeCount scope item${scopeCount == 1 ? '' : 's'}'
+                : 'no candidate sources';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Seed WBS from Initiation'),
+        content: Text(
+          'This will create L1 deliverable nodes from $sourceDesc.\n\n'
+          'Idempotent: candidate names that already exist as L1 nodes will be skipped.\n\n'
+          'Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Seed'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final created = wbsProvider.seedFromInitiation(project);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          created > 0
+              ? 'Seeded $created new L1 deliverable node${created == 1 ? '' : 's'} from initiation.'
+              : 'No new nodes added — all candidate names already exist as L1 nodes.',
+        ),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  Future<void> _onAutoLinkCostLines(BuildContext context) async {
+    final estimate = ceProvider.estimate;
+    if (estimate == null || estimate.lines.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No cost estimate lines to link.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final fepLineCount = estimate.lines.length;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Auto-link FEP Cost Lines'),
+        content: Text(
+          'This will scan $fepLineCount cost line${fepLineCount == 1 ? '' : 's'} '
+          'and match each to a WBS node by:\n\n'
+          '  1. Exact code match (line.wbsRef == node.code, e.g. "G1.2")\n'
+          '  2. Node name appearing in the line description (≥ 4 chars)\n\n'
+          'Idempotent: lines already linked to a node will be skipped.\n\n'
+          'Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Auto-link'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final newLinks = wbsProvider.autoLinkCostLines(ceProvider);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          newLinks > 0
+              ? 'Linked $newLinks new cost line${newLinks == 1 ? '' : 's'} to WBS nodes.'
+              : 'No new links created — all matching lines were already linked.',
+        ),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+}

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -425,7 +426,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI generation failed: ${e.toString()}')),
+          SnackBar(content: Text('AI generation failedaiErrorMessage(e)')),
         );
       }
     }
@@ -517,7 +518,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI regeneration failed: $e')),
+          SnackBar(content: Text('AI regeneration failedaiErrorMessage(e)')),
         );
       }
     }
@@ -651,8 +652,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TabBar(
-          tabs: const [
+        const TabBar(
+          tabs: [
             Tab(text: 'Delivery Model'),
             Tab(text: 'Metrics & Reporting'),
             Tab(text: 'Release Strategy'),
@@ -662,8 +663,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           indicatorColor: _kAccent,
           indicatorSize: TabBarIndicatorSize.tab,
           labelStyle:
-              const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          unselectedLabelStyle: const TextStyle(fontSize: 14),
+              TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: TextStyle(fontSize: 14),
           isScrollable: true,
         ),
         const SizedBox(height: 16),
@@ -778,20 +779,20 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           padding: const EdgeInsets.all(14),
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
+            color: const Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFBFDBFE)),
+            border: Border.all(color: const Color(0xFFFDE68A)),
           ),
           child: const Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.insights, size: 18, color: Color(0xFF2563EB)),
+              Icon(Icons.insights, size: 18, color: Color(0xFFFFC812)),
               SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Define how delivery progress, throughput, predictability, '
                   'and quality will be measured and reported across the project.',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF1E40AF)),
+                  style: TextStyle(fontSize: 13, color: Color(0xFFFFC812)),
                 ),
               ),
             ],
@@ -886,6 +887,24 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
             visualDensity: VisualDensity.compact,
             textStyle: WidgetStateProperty.all(
                 const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            backgroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const Color(0xFFFFC812); // Yellow theme
+              }
+              return Colors.white;
+            }),
+            foregroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const Color(0xFF111827); // Dark text on yellow
+              }
+              return const Color(0xFF374151); // Gray text when not selected
+            }),
+            side: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const BorderSide(color: Color(0xFFFFC812));
+              }
+              return const BorderSide(color: Color(0xFFD1D5DB));
+            }),
           ),
         ),
         const SizedBox(height: 6),
@@ -933,6 +952,24 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
             visualDensity: VisualDensity.compact,
             textStyle: WidgetStateProperty.all(
                 const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            backgroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const Color(0xFFFFC812); // Yellow theme
+              }
+              return Colors.white;
+            }),
+            foregroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const Color(0xFF111827); // Dark text on yellow
+              }
+              return const Color(0xFF374151); // Gray text when not selected
+            }),
+            side: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const BorderSide(color: Color(0xFFFFC812));
+              }
+              return const BorderSide(color: Color(0xFFD1D5DB));
+            }),
           ),
         ),
       ],
@@ -994,20 +1031,20 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Color(0xFFE0F2FE),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.auto_awesome,
-                          size: 10, color: Color(0xFF0284C7)),
+                          size: 10, color: Color(0xFFFFC812)),
                       SizedBox(width: 3),
                       Text('AI',
                           style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0284C7))),
+                              color: Color(0xFFFFC812))),
                     ],
                   ),
                 ),
@@ -1031,7 +1068,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Color(0xFFD1D5DB)),
+                border: Border.all(color: const Color(0xFFD1D5DB)),
               ),
               child: VoiceTextField(
                 controller: controller,

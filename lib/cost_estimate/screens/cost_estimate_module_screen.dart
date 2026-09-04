@@ -39,7 +39,7 @@ import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
-import 'package:ndu_project/widgets/cross_section_sync_card.dart';
+import 'package:ndu_project/wbs/utils/wbs_cost_coverage.dart';
 import 'package:go_router/go_router.dart';
 
 class CostEstimateModuleScreen extends StatefulWidget {
@@ -83,6 +83,20 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
           deliveryModel: DeliveryModel.waterfall,
         );
       }
+      // Auto-import cost items from the Initial Cost Estimate if the
+      // cost estimate has no lines yet. This populates the Cost by WBS
+      // tab with data from the project's cost estimate items.
+      if (provider.estimate != null && provider.estimate!.lines.isEmpty) {
+        final projectData = context.read<ProjectDataProvider>().projectData;
+        if (projectData.costEstimateItems.isNotEmpty) {
+          provider.importFromProjectCostEstimateItems(
+              projectData.costEstimateItems);
+        }
+        // Non-destructive seeding: pull real stakeholder/BOE/review info
+        // from the central ProjectDataModel when corresponding sections
+        // in the estimate are empty.
+        provider.ensureSeededFromProjectData(projectData);
+      }
     });
   }
 
@@ -113,6 +127,22 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
 
         // ---- Context banner data ----
         final projectData = projectProvider.projectData;
+
+        // Auto-populate from the Initiation Phase: if the estimate has no
+        // lines yet and the project captured initial cost items, import them.
+        // Checked on every build (not just initState) so late-arriving
+        // project data (async Firebase load) still seeds the dashboard.
+        if (estimate.lines.isEmpty && projectData.costEstimateItems.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              provider.importFromProjectCostEstimateItems(
+                  projectData.costEstimateItems);
+              // Non-destructive: seeds stakeholder/BOE/review info from the
+              // central ProjectDataModel where the estimate sections are empty.
+              provider.ensureSeededFromProjectData(projectData);
+            }
+          });
+        }
         final projectName = (projectData.projectName).trim().isNotEmpty
             ? projectData.projectName
             : estimate.projectName;
@@ -128,7 +158,7 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
           appBarTitle: 'Cost Estimate',
           breadcrumbPhase: 'Planning Phase',
           breadcrumbTitle: 'Cost Estimate',
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
               // ── World-class Section Navigator (always visible, pinned) ─
@@ -152,33 +182,9 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   ],
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
+                  isCollapsible: true,
+                  initiallyCollapsed: true,
                 ),
-              ),
-              // ── Context banner (drawn from Initiation + WBS) ──────────
-              ContextBanner(
-                storageKey: 'cost_estimate_module_context_banner',
-                items: [
-                  ContextBannerItem(
-                    label: 'Project',
-                    value: projectName,
-                    icon: Icons.flag_outlined,
-                  ),
-                  if (wbs != null && wbsCounts != null)
-                    ContextBannerItem(
-                      label: 'WBS',
-                      value:
-                          '${wbsFrameworkLabel ?? 'WBS'} · ${wbsCounts.level1} $wbsDeliverableWord',
-                      icon: Icons.account_tree_outlined,
-                    ),
-                  ContextBannerItem(
-                    label: 'Solutions',
-                    value: '$solutionsCount potential',
-                    icon: Icons.lightbulb_outline,
-                  ),
-                ],
-              ),
-              const CrossSectionSyncCard(
-                currentSection: CrossSection.costEstimate,
               ),
               // Tab content
               Expanded(
@@ -195,29 +201,6 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                     const BaselineScreen(),
                     const VarianceScreen(),
                     const CostByWBSTab(),
-                  ],
-                ),
-              ),
-              // ── Bottom navigation ──
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: () => Navigator.of(context).maybePop(),
-                      icon: const Icon(Icons.arrow_back, size: 18),
-                      label: const Text('Back'),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () => Navigator.of(context).maybePop(),
-                      icon: const Icon(Icons.arrow_forward, size: 18),
-                      label: const Text('Next: Scope Tracking Plan'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFC812),
-                        foregroundColor: Colors.black,
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -292,12 +275,12 @@ class _CostDashboardTab extends StatelessWidget {
 
     // Category breakdown (top-level summary categories)
     final categories = <_CatData>[
-      _CatData('Direct', t.direct, const Color(0xFF6366F1), Icons.engineering_outlined),
-      _CatData('Indirect', t.indirect, const Color(0xFF8B5CF6), Icons.account_tree_outlined),
-      _CatData('SSHER & Quality', t.sherQuality, const Color(0xFFEC4899), Icons.health_and_safety_outlined),
+      _CatData('Direct', t.direct, const Color(0xFFB8860B), Icons.engineering_outlined),
+      _CatData('Indirect', t.indirect, const Color(0xFFB8860B), Icons.account_tree_outlined),
+      _CatData('SSHER & Quality', t.sherQuality, const Color(0xFFD97706), Icons.health_and_safety_outlined),
       _CatData('Risk', t.riskAllowances, const Color(0xFFF59E0B), Icons.shield_outlined),
       _CatData('Contingency', t.contingency, const Color(0xFF10B981), Icons.savings_outlined),
-      _CatData('Escalation', t.escalation, const Color(0xFF06B6D4), Icons.trending_up_rounded),
+      _CatData('Escalation', t.escalation, const Color(0xFFD97706), Icons.trending_up_rounded),
       _CatData('Taxes', t.taxes, const Color(0xFF64748B), Icons.receipt_long_outlined),
     ];
     final activeCats = categories.where((c) => c.value > 0).toList();
@@ -327,42 +310,27 @@ class _CostDashboardTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── 1. Hero command band ─────────────────────────────────
-            _HeroBand(
-              eyebrow: 'COST ESTIMATE · DASHBOARD',
-              title: 'Cost Dashboard',
-              subtitle:
-                  '$lineCount cost lines · $className · $currencySymbol baseline',
-              statusLabel: statusLabel,
-              statusLive: isBaselined,
-              contextChips: [
-                _HeroChip(
-                    icon: Icons.flag_outlined, label: 'Project', value: estimate.projectName),
-                _HeroChip(
-                    icon: Icons.class_outlined,
-                    label: 'Class',
-                    value: className),
-                _HeroChip(
-                    icon: Icons.payments_outlined,
-                    label: 'Currency',
-                    value: estimate.currency),
-              ],
-              actions: [
-                _HeroAction(
-                  icon: Icons.build_outlined,
-                  label: 'Open Builder',
-                  primary: true,
-                  onTap: () => _scrollToBuilder(context),
-                ),
-              ],
-            ),
+            // ── Hero command band removed per product decision 2026-08-17 ──
+            // The _HeroBand (eyebrow + title + subtitle + status pill +
+            // Project/Class/Currency chips + 'Open Builder' action) was a
+            // large gradient banner consuming ~280px of prime above-the-fold
+            // real estate on the Cost Dashboard. Removed because:
+            //   1. The same context (project, class, currency) is already
+            //      surfaced by the Cost Estimate module's top-of-page
+            //      title and the SectionNavigator tab strip.
+            //   2. The 'Open Builder' CTA is redundant — the Builder tab
+            //      is one tap away in the SectionNavigator.
+            //   3. The status (DRAFT vs BASELINED) is also surfaced inline
+            //      on the Baseline tab.
+            // Removing this frees the dashboard's KPI cards + charts to
+            // appear immediately on page load.
             const SizedBox(height: 22),
 
             // ── 2. Premium KPI strip ─────────────────────────────────
             LayoutBuilder(
               builder: (context, constraints) {
                 final wide = constraints.maxWidth >= 1100;
-                final gap = 14.0;
+                const gap = 14.0;
                 final cols = wide ? 4 : 2;
                 final rows = (4 / cols).ceil();
                 final tileW = (constraints.maxWidth - gap * (cols - 1)) / cols;
@@ -380,7 +348,7 @@ class _CostDashboardTab extends StatelessWidget {
                     value: '$currencySymbol${_fmt(t.totalAuthorizedBudget)}',
                     sub: 'Baseline + mgmt reserve',
                     icon: Icons.account_balance_wallet_outlined,
-                    tint: const Color(0xFF6366F1),
+                    tint: const Color(0xFFB8860B),
                     tintSoft: const Color(0xFFEEF0FF),
                   ),
                   _KpiSpec(
@@ -396,7 +364,7 @@ class _CostDashboardTab extends StatelessWidget {
                     value: '$currencySymbol${_fmt(avgPerLine)}',
                     sub: 'Mean cost per line',
                     icon: Icons.analytics_outlined,
-                    tint: const Color(0xFF8B5CF6),
+                    tint: const Color(0xFFB8860B),
                     tintSoft: const Color(0xFFF4EEFF),
                   ),
                 ];
@@ -425,6 +393,10 @@ class _CostDashboardTab extends StatelessWidget {
                 );
               },
             ),
+            const SizedBox(height: 22),
+
+            // ── 2b. Leaf work-package coverage KPI card ──────────────
+            _buildCoverageCard(context, lines, currencySymbol),
             const SizedBox(height: 22),
 
             // ── 3. Two-column bento: Cost Breakdown + Composition donut ──
@@ -512,6 +484,148 @@ class _CostDashboardTab extends StatelessWidget {
     // SectionNavigator above. Kept as a hook for future wiring.
     // ignore: avoid_print
     debugPrint('Open Builder tapped from Cost Dashboard');
+  }
+
+  /// Live coverage of leaf work packages that already carry a priced cost
+  /// line — the "price every smallest-level work package" core KPI.
+  Widget _buildCoverageCard(
+    BuildContext context,
+    List<CostLine> lines,
+    String currencySymbol,
+  ) {
+    final wbsProvider = context.watch<WBSProvider>();
+    final wbs = wbsProvider.wbs;
+    if (wbs == null) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: _surfaceAlt,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _hairline),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.account_tree_outlined,
+                size: 18, color: Color(0xFFB8860B)),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Work-package pricing coverage appears here once a WBS is set up — every leaf work package needs its own cost estimate.',
+                style:
+                    TextStyle(color: Color(0xFF64748B), fontSize: 12.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final coverage =
+        computeWbsCostCoverage(root: wbs.level0, lines: lines);
+    final pct = (coverage.pricedRatio * 100).clamp(0.0, 100.0);
+    final allPriced = !coverage.hasUnpriced && coverage.totalWorkPackages > 0;
+    final accent =
+        allPriced ? const Color(0xFF16A34A) : const Color(0xFFD97706);
+    final softAccent =
+        allPriced ? const Color(0xFFE7F8F0) : const Color(0xFFFFF3E0);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: softAccent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.fact_check_outlined,
+                    size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Work-Package Pricing Coverage',
+                      style: TextStyle(
+                          color: Color(0xFF0B1220),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Leaf work packages with a priced cost line, out of all leaf work packages in the WBS.',
+                      style: TextStyle(
+                          color: Color(0xFF64748B), fontSize: 11.5),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '${pct.toStringAsFixed(0)}%',
+                style: TextStyle(
+                    color: accent,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    fontFeatures: const [FontFeature.tabularFigures()]),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: coverage.pricedRatio,
+              minHeight: 8,
+              backgroundColor: const Color(0xFFF1F5F9),
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${coverage.pricedWorkPackages} of ${coverage.totalWorkPackages} leaf work packages priced',
+                  style: const TextStyle(
+                      color: Color(0xFF475569), fontSize: 12),
+                ),
+              ),
+              if (!allPriced)
+                Text(
+                  '${coverage.unpriced.length} still need a cost — add them in Cost by WBS or the Schedule builder.',
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                      color: Color(0xFFB45309),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600),
+                )
+              else
+                const Text(
+                  'Every leaf work package is priced at its own level ✓',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                      color: Color(0xFF166534),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   static String _fmt(double value) {
@@ -702,13 +816,7 @@ class _HeroBand extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 18),
-                // Context chips
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: contextChips,
-                ),
+
               ],
             ),
           ),
@@ -929,7 +1037,7 @@ class _KpiTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   spec.label.toUpperCase(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.7,
@@ -947,19 +1055,19 @@ class _KpiTile extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               spec.value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.6,
                 color: _CostDashboardTab._ink,
-                fontFeatures: const [FontFeature.tabularFigures()],
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             spec.sub,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11.5,
               color: _CostDashboardTab._mutedSoft,
               fontWeight: FontWeight.w500,
@@ -1061,7 +1169,7 @@ class _CostBreakdownCard extends StatelessWidget {
                         children: [
                           Text(
                             c.label,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w600,
                               color: _CostDashboardTab._inkSoft,
@@ -1070,11 +1178,11 @@ class _CostBreakdownCard extends StatelessWidget {
                           ),
                           Text(
                             '$currencySymbol${_CostDashboardTab._fmt(c.value)} · ${pct.toStringAsFixed(1)}%',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 10.5,
                               color: _CostDashboardTab._muted,
                               fontWeight: FontWeight.w500,
-                              fontFeatures: const [FontFeature.tabularFigures()],
+                              fontFeatures: [FontFeature.tabularFigures()],
                             ),
                           ),
                         ],
@@ -1131,7 +1239,7 @@ class _CompositionDonutCard extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    const Text(
                       'BASELINE',
                       style: TextStyle(
                         fontSize: 9.5,
@@ -1143,18 +1251,18 @@ class _CompositionDonutCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '$currencySymbol${_CostDashboardTab._fmt(total)}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.4,
                         color: _CostDashboardTab._ink,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                        fontFeatures: [FontFeature.tabularFigures()],
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${categories.length} active ${categories.length == 1 ? "category" : "categories"}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         color: _CostDashboardTab._mutedSoft,
                         fontWeight: FontWeight.w500,
@@ -1186,7 +1294,7 @@ class _CompositionDonutCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         c.label,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           color: _CostDashboardTab._inkSoft,
                           fontWeight: FontWeight.w500,
@@ -1196,11 +1304,11 @@ class _CompositionDonutCard extends StatelessWidget {
                     ),
                     Text(
                       '${pct.toStringAsFixed(1)}%',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: _CostDashboardTab._muted,
                         fontWeight: FontWeight.w700,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                        fontFeatures: [FontFeature.tabularFigures()],
                       ),
                     ),
                   ],
@@ -1258,7 +1366,7 @@ class _DonutPainter extends CustomPainter {
     // Each segment's sweep is proportional to its share of totalActive.
     // We start at -90deg (12 o'clock) and sweep clockwise.
     var startAngle = -math.pi / 2;
-    final gapRad = gapDegrees * math.pi / 180;
+    const gapRad = gapDegrees * math.pi / 180;
 
     for (final seg in activeSegments) {
       final sweep = (seg.value / totalActive) * 2 * math.pi;
@@ -1309,10 +1417,10 @@ class _CategoryDetailsCard extends StatelessWidget {
       child: Column(
         children: [
           // Header row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             child: Row(
-              children: const [
+              children: [
                 Expanded(flex: 5, child: _TableHeader('CATEGORY')),
                 Expanded(flex: 4, child: _TableHeader('SHARE', alignRight: true)),
                 Expanded(flex: 4, child: _TableHeader('VALUE', alignRight: true)),
@@ -1344,7 +1452,7 @@ class _TableHeader extends StatelessWidget {
     return Text(
       label,
       textAlign: alignRight ? TextAlign.right : TextAlign.left,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 9.5,
         fontWeight: FontWeight.w800,
         letterSpacing: 0.8,
@@ -1591,32 +1699,32 @@ class _LinesByCategoryCard extends StatelessWidget {
       case CostCategory.procurement:
       case CostCategory.travelTraining:
       case CostCategory.construction:
-        return const Color(0xFF6366F1); // Direct (indigo)
+        return const Color(0xFFB8860B); // Direct (indigo)
       case CostCategory.projectTeam:
       case CostCategory.overheads:
       case CostCategory.ga:
       case CostCategory.facilities:
       case CostCategory.insuranceCompliance:
-        return const Color(0xFF8B5CF6); // Indirect (violet)
+        return const Color(0xFFB8860B); // Indirect (violet)
       case CostCategory.ssher:
       case CostCategory.quality:
-        return const Color(0xFFEC4899); // SSHER & Quality (pink)
+        return const Color(0xFFD97706); // SSHER & Quality (pink)
       case CostCategory.riskAllowance:
         return const Color(0xFFF59E0B); // Risk (amber)
       case CostCategory.contingency:
         return const Color(0xFF10B981); // Contingency (emerald)
       case CostCategory.mgmtReserve:
-        return const Color(0xFF06B6D4); // Mgmt reserve (cyan)
+        return const Color(0xFFD97706); // Mgmt reserve (cyan)
       case CostCategory.escalation:
-        return const Color(0xFF06B6D4); // Escalation (cyan)
+        return const Color(0xFFD97706); // Escalation (cyan)
       case CostCategory.taxes:
         return const Color(0xFF64748B); // Taxes (slate)
       case CostCategory.financing:
-        return const Color(0xFF0EA5E9); // Financing (sky)
+        return const Color(0xFFFFC812); // Financing (sky)
       case CostCategory.startup:
-        return const Color(0xFF14B8A6); // Startup (teal)
+        return const Color(0xFFD97706); // Startup (teal)
       case CostCategory.warranty:
-        return const Color(0xFFA855F7); // Warranty (purple)
+        return const Color(0xFFFFC812); // Warranty (purple)
       case CostCategory.decommissioning:
         return const Color(0xFF64748B); // Decommissioning (slate)
     }
@@ -1676,7 +1784,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             body,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12.5,
               color: _CostDashboardTab._muted,
               height: 1.55,
@@ -1813,7 +1921,7 @@ class _TotalsSpotlightBar extends StatelessWidget {
                             color: _CostDashboardTab._brand.withValues(alpha: 0.22),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Icon(Icons.account_balance_wallet_rounded,
+                          child: const Icon(Icons.account_balance_wallet_rounded,
                               size: 15, color: _CostDashboardTab._brand),
                         ),
                         const SizedBox(width: 9),
@@ -1834,12 +1942,12 @@ class _TotalsSpotlightBar extends StatelessWidget {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         '$currencySymbol${_CostDashboardTab._fmt(totalAuthorized)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.4,
                           color: _CostDashboardTab._brand,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                          fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
                     ),
@@ -1891,7 +1999,7 @@ class _SpotlightColumn extends StatelessWidget {
               Flexible(
                 child: Text(
                   label.toUpperCase(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.0,
@@ -1908,12 +2016,12 @@ class _SpotlightColumn extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.4,
                 color: _CostDashboardTab._ink,
-                fontFeatures: const [FontFeature.tabularFigures()],
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
           ),
@@ -1979,7 +2087,7 @@ class _SectionCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         subtitle!,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11.5,
                           color: _CostDashboardTab._muted,
                           fontWeight: FontWeight.w500,

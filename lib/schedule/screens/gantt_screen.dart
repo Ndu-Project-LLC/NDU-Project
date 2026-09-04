@@ -13,7 +13,27 @@ class GanttScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ScheduleProvider>(
       builder: (context, provider, _) {
-        final schedule = provider.schedule!;
+        final schedule = provider.schedule;
+        if (schedule == null) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(48),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(LightModeColors.accent),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading schedule...',
+                    style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         final allActivities = _flatten(schedule.activities);
         final rows = _buildRows(allActivities);
 
@@ -370,9 +390,11 @@ class _GanttRow extends StatelessWidget {
     return Column(
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
               width: leftColWidth,
+              constraints: const BoxConstraints(minHeight: 76),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: const BoxDecoration(
                 border: Border(
@@ -399,24 +421,25 @@ class _GanttRow extends StatelessWidget {
                                 fontSize: 10,
                                 fontFamily: appFontFamily,
                                 fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(row.name,
-                              style: const TextStyle(
-                                  color: Color(0xFF1A1D1F),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500),
-                              overflow: TextOverflow.ellipsis),
-                        ),
                       ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3, left: 14),
+                      child: Text(
+                        row.name,
+                        softWrap: true,
+                        style: const TextStyle(
+                            color: Color(0xFF1A1D1F),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500),
+                      ),
                     ),
                     if (_subtitleText().isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4, left: 20),
                         child: Text(
                           _subtitleText(),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                          softWrap: true,
                           style: const TextStyle(
                             color: Color(0xFF6B7280),
                             fontSize: 10,
@@ -430,7 +453,7 @@ class _GanttRow extends StatelessWidget {
             ),
             Container(
               width: timelineWidth,
-              height: 36,
+              constraints: const BoxConstraints(minHeight: 76),
               color: Colors.white,
               child: Stack(
                 children: [

@@ -25,13 +25,13 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/services/schedule_cpm_service.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
-import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
@@ -44,6 +44,9 @@ import 'package:ndu_project/models/project_data_model.dart'
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
+import 'package:ndu_project/cost_estimate/widgets/add_line_dialog.dart';
+import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
+import 'package:ndu_project/schedule/widgets/integrated_schedule_methodology.dart';
 
 class BuilderScreen extends StatefulWidget {
   const BuilderScreen({super.key});
@@ -60,6 +63,25 @@ class _BuilderScreenState extends State<BuilderScreen> {
   }
 
   Future<void> _createActivitiesFromPackages({bool autoMode = false}) async {
+    try {
+      await _createActivitiesFromPackagesUnsafe(autoMode: autoMode);
+    } catch (error, stackTrace) {
+      debugPrint('Work package schedule import failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not import work packages. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _createActivitiesFromPackagesUnsafe({
+    bool autoMode = false,
+  }) async {
     final scheduleProvider = context.read<ScheduleProvider>();
     final data = ProjectDataHelper.getData(context, listen: false);
 
@@ -107,7 +129,18 @@ class _BuilderScreenState extends State<BuilderScreen> {
     }
     final packageIdSet = newPackages.map((p) => p.id).toSet();
 
-    final root = scheduleProvider.schedule!.activities[0];
+    final schedule = scheduleProvider.schedule;
+    if (schedule == null || schedule.activities.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Schedule is still loading. Please try again.'),
+          ),
+        );
+      }
+      return;
+    }
+    final root = schedule.activities.first;
     var newChildren = [...root.children];
 
     List<String> depPackageIds0(WorkPackage pkg) {
@@ -414,7 +447,27 @@ class _BuilderScreenState extends State<BuilderScreen> {
   Widget build(BuildContext context) {
     return Consumer3<ScheduleProvider, WBSProvider, CostEstimateProvider>(
       builder: (context, provider, wbsProvider, costProvider, _) {
-        final schedule = provider.schedule!;
+        final schedule = provider.schedule;
+        if (schedule == null) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(48),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(LightModeColors.accent),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading schedule...',
+                    style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         final root = schedule.activities[0];
         final wbs = wbsProvider.wbs;
         final wbsCounts = wbs != null ? countNodes(wbs) : null;
@@ -430,63 +483,48 @@ class _BuilderScreenState extends State<BuilderScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ═══════════════════════════════════════════════════════════════
-              // TREASURY HERO BAND — world-class command surface
+              // SLIM HEADER ROW — compact page title + primary actions.
+              // (Yellow hero band removed; Add Activity / Setup Timeline kept)
               // ═══════════════════════════════════════════════════════════════
-              TreasuryHeroBand(
-                eyebrow: 'SCHEDULE · BUILDER',
-                title: schedule.projectName,
-                subtitle:
-                    '${schedule.basis.deliveryModel} delivery · ${root.children.length} Level 1 activities · ${schedule.status.label}',
-                statusLabel: schedule.isLocked
-                    ? 'LOCKED'
-                    : (root.children.isEmpty ? 'EMPTY' : 'DRAFT'),
-                statusLive: !schedule.isLocked && root.children.isNotEmpty,
-                contextChips: [
-                  TreasuryHeroChip(
-                    icon: Icons.account_tree_outlined,
-                    label: 'WBS Nodes',
-                    value: wbsCounts != null
-                        ? '${wbsCounts.level1 + wbsCounts.level2 + 1}'
-                        : '—',
-                  ),
-                  TreasuryHeroChip(
-                    icon: Icons.attach_money,
-                    label: 'Cost Estimate',
-                    value: estimate != null
-                        ? formatCurrency(costTotal, currency)
-                        : '—',
-                  ),
-                  TreasuryHeroChip(
-                    icon: Icons.calendar_month_outlined,
-                    label: 'Timeline',
-                    value: root.startDate != null && root.endDate != null
-                        ? '${DateFormat('MMM d').format(root.startDate!)} — ${DateFormat('MMM d, y').format(root.endDate!)}'
-                        : 'Not set',
-                  ),
-                  TreasuryHeroChip(
-                    icon: Icons.flag_outlined,
-                    label: 'Activities',
-                    value: '${root.children.length}',
-                  ),
-                ],
-                actions: [
-                  TreasuryHeroAction(
-                    icon: Icons.add_rounded,
-                    label: 'Add Activity',
-                    primary: true,
-                    onTap: schedule.isLocked
-                        ? () {}
-                        : () => _showAddDialog(context, provider, root.id, 1),
-                  ),
-                  if (!schedule.isLocked)
-                    TreasuryHeroAction(
-                      icon: Icons.date_range_rounded,
-                      label: 'Setup Timeline',
-                      primary: false,
-                      onTap: () =>
-                          _showTimelineSetupDialog(context, provider, root),
+              Container(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+                decoration: BoxDecoration(
+                  color: TreasuryTokens.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: TreasuryTokens.hairline),
+                ),
+                child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    const Text(
+                      'Schedule',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: TreasuryTokens.ink,
+                      ),
                     ),
-                ],
+                    TreasuryHeroAction(
+                      icon: Icons.add_rounded,
+                      label: 'Add Activity',
+                      primary: true,
+                      onTap: schedule.isLocked
+                          ? () {}
+                          : () => _showAddDialog(context, provider, root.id, 1),
+                    ),
+                    if (!schedule.isLocked)
+                      TreasuryHeroAction(
+                        icon: Icons.date_range_rounded,
+                        label: 'Setup Timeline',
+                        primary: false,
+                        onTap: () =>
+                            _showTimelineSetupDialog(context, provider, root),
+                      ),
+                  ],
+                ),
               ),
               const SizedBox(height: 14),
               // —— Secondary action row (overflow actions) ——
@@ -553,6 +591,16 @@ class _BuilderScreenState extends State<BuilderScreen> {
               ),
               const SizedBox(height: 20),
               // ═══════════════════════════════════════════════════════════════
+              // ESTIMATE BASIS — assumptions / methods / data sources
+              // ═══════════════════════════════════════════════════════════════
+              const EstimateBasisCard(),
+              const SizedBox(height: 18),
+              // ═══════════════════════════════════════════════════════════════
+              // SCHEDULE READINESS RULES — pre-CWP gate checklist
+              // ═══════════════════════════════════════════════════════════════
+              const ScheduleReadinessRules(),
+              const SizedBox(height: 18),
+              // ═══════════════════════════════════════════════════════════════
               // SCHEDULE LEVELS CONVENTION CARD
               // ═══════════════════════════════════════════════════════════════
               TreasurySectionCard(
@@ -567,12 +615,12 @@ class _BuilderScreenState extends State<BuilderScreen> {
                     border: Border.all(
                         color: TreasuryTokens.brand.withValues(alpha: 0.4)),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.layers_outlined,
                           size: 12, color: TreasuryTokens.brandDeep),
-                      const SizedBox(width: 5),
+                      SizedBox(width: 5),
                       Text('L0 — L8',
                           style: TextStyle(
                               fontSize: 10,
@@ -606,61 +654,105 @@ class _BuilderScreenState extends State<BuilderScreen> {
               ),
               const SizedBox(height: 22),
               // ═══════════════════════════════════════════════════════════════
-              // ACTIVITY TREE
+              // ACTIVITY TREE (full width)
               // ═══════════════════════════════════════════════════════════════
-              Row(
-                children: [
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: TreasuryTokens.brandSoft,
-                      borderRadius: BorderRadius.circular(9),
-                      border: Border.all(
-                          color: TreasuryTokens.brand.withValues(alpha: 0.3)),
+              // ACTIVITY TREE (full width, scrollable on narrow screens)
+              // ═══════════════════════════════════════════════════════════════
+              SizedBox(
+                width: double.infinity,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
+                  // IntrinsicWidth gives the subtree a BOUNDED width
+                  // (max of minWidth and intrinsic content width). Without it
+                  // the horizontal scroll view passes unbounded width down
+                  // and the Expanded inside _ActivityNode's Row throws
+                  // "RenderFlex children have non-zero flex but incoming
+                  // width constraints are unbounded", which poisons the whole
+                  // layout pass and renders the tab content BLANK.
+                  child: IntrinsicWidth(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: MediaQuery.of(context).size.width - 40,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: TreasuryTokens.brandSoft,
+                                  borderRadius: BorderRadius.circular(9),
+                                  border: Border.all(
+                                      color: TreasuryTokens.brand.withValues(alpha: 0.3)),
+                                ),
+                                child: const Icon(Icons.account_tree_rounded,
+                                    size: 16, color: TreasuryTokens.brandDeep),
+                              ),
+                              const SizedBox(width: 10),
+                              const Text('Activity Tree',
+                                  style: TextStyle(
+                                      color: TreasuryTokens.ink,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.1)),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: TreasuryTokens.surfaceAlt,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: TreasuryTokens.hairline),
+                                ),
+                                child: Text(
+                                    '${root.children.length} L1 · ${_countTotalActivities(root)} total',
+                                    style: const TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: TreasuryTokens.muted,
+                                        letterSpacing: 0.3)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          _ActivityNode(
+                              activity: root,
+                              isRoot: true,
+                              provider: provider,
+                              isLocked: schedule.isLocked),
+                          ...root.children.map((child) => _ActivityNode(
+                              activity: child,
+                              provider: provider,
+                              isLocked: schedule.isLocked)),
+                        ],
+                      ),
                     ),
-                    child: Icon(Icons.account_tree_rounded,
-                        size: 16, color: TreasuryTokens.brandDeep),
                   ),
-                  const SizedBox(width: 10),
-                  const Text('Activity Tree',
-                      style: TextStyle(
-                          color: TreasuryTokens.ink,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.1)),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: TreasuryTokens.surfaceAlt,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: TreasuryTokens.hairline),
-                    ),
-                    child: Text(
-                        '${root.children.length} L1 · ${_countTotalActivities(root)} total',
-                        style: const TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: TreasuryTokens.muted,
-                            letterSpacing: 0.3)),
-                  ),
-                ],
+                ),
               ),
-              const SizedBox(height: 10),
-              _ActivityNode(
-                  activity: root,
-                  isRoot: true,
-                  provider: provider,
-                  isLocked: schedule.isLocked),
-              ...root.children.map((child) => _ActivityNode(
-                  activity: child,
-                  provider: provider,
-                  isLocked: schedule.isLocked)),
               const SizedBox(height: 28),
-              // Sample activity table (preview of what Gantt/List will show)
-              _SampleActivityTable(schedule: schedule),
+              // Sample activity table (preview of what Gantt/List will show).
+              // Give the panel the actual bounded content width. The table
+              // owns its horizontal scroll view, so wide columns remain
+              // accessible without shrinking the panel or leaving a blank
+              // strip at the right edge of the page.
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return SizedBox(
+                    width: constraints.maxWidth,
+                    child: _ActivityScheduleTable(
+                      schedule: schedule,
+                      rootActivity: root,
+                      onImportFromWorkPackages: () =>
+                          _createActivitiesFromPackages(autoMode: true),
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 14),
               // Footer note — Treasury info card
               Container(
@@ -681,13 +773,17 @@ class _BuilderScreenState extends State<BuilderScreen> {
                         color: TreasuryTokens.info.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(7),
                       ),
-                      child: Icon(Icons.tips_and_updates_outlined,
+                      child: const Icon(Icons.tips_and_updates_outlined,
                           size: 15, color: TreasuryTokens.info),
                     ),
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
-                        'The table above shows a sample schedule for reference. Add your own activities via the Add Activity button to populate the Gantt and List View tabs. Each row maps to an EWP, CWP, or activity in your delivery model.',
+                        'The Activity Schedule above is populated from your WBS '
+                        'and Work Packages. Use the action pills at the top of '
+                        'the page to import more activities, or tap "Add '
+                        'activity" below the table. Each row maps to an EWP, '
+                        'CWP, or activity in your delivery model.',
                         style: TextStyle(
                             color: TreasuryTokens.inkSoft,
                             fontSize: 12,
@@ -747,7 +843,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
             ? '${DateFormat('MMM d').format(root.startDate!)} → ${DateFormat('MMM d').format(root.endDate!)}'
             : 'Setup timeline to begin',
         icon: Icons.calendar_month_rounded,
-        tint: const Color(0xFF6366F1),
+        tint: const Color(0xFFB8860B),
         tintSoft: TreasuryTokens.infoSoft,
       ),
       TreasuryKpiSpec(
@@ -763,8 +859,8 @@ class _BuilderScreenState extends State<BuilderScreen> {
         value: _domainLabelFromColor(topDomainColor),
         sub: '${domainCounts.length} domains active',
         icon: Icons.hub_outlined,
-        tint: const Color(0xFFEC4899),
-        tintSoft: const Color(0xFFFCE7F3),
+        tint: const Color(0xFFD97706),
+        tintSoft: const Color(0xFFFFF8E1),
       ),
     ];
   }
@@ -818,7 +914,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: Color(0xFFE4E7EC)),
@@ -970,7 +1066,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: Color(0xFFE4E7EC))),
@@ -1047,7 +1143,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: const BorderSide(color: Color(0xFFE4E7EC))),
@@ -1081,7 +1177,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: Color(0xFFE4E7EC))),
@@ -1173,9 +1269,7 @@ class _ActionChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.primary = false,
-    this.enabled = true,
-  });
+  }) : primary = false, enabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -1200,7 +1294,7 @@ class _ActionChip extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         foregroundColor:
             disabled ? const Color(0xFF9CA3AF) : const Color(0xFF1A1D1F),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         side: BorderSide(
             color:
                 disabled ? const Color(0xFFE4E7EC) : const Color(0xFFE4E7EC)),
@@ -1358,6 +1452,48 @@ class _ActivityNode extends StatelessWidget {
     required this.isLocked,
   });
 
+  /// Priced/unpriced chip shown on rows whose activity is linked to a cost
+  /// line — the visual confirmation that a pull (or manual entry) landed.
+  Widget _costStatusChip(CostLine line) {
+    final priced = isPricedCostLine(line);
+    final color = priced
+        ? const Color(0xFF16A34A)
+        : const Color(0xFFB45309);
+    final soft = priced
+        ? const Color(0xFFE7F8F0)
+        : const Color(0xFFFFF3E0);
+    final label =
+        priced ? 'Cost: \$${_fmtCostAmount(line.total)}' : 'Cost: not priced yet';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: soft,
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.attach_money, size: 12, color: color),
+          const SizedBox(width: 3),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 10.5,
+                  color: color,
+                  fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+
+  static String _fmtCostAmount(double v) =>
+      v == v.roundToDouble() ? v.round().toString() : v.toStringAsFixed(2);
+
+  static bool isPricedCostLine(CostLine? line) =>
+      line != null &&
+      (line.total > 0 ||
+          ((line.quantity ?? 0) > 0 && (line.rate ?? 0) > 0));
+
   List<Widget> _traceabilityChips() {
     final chips = <Widget>[];
     if (activity.importSource != null &&
@@ -1425,20 +1561,37 @@ class _ActivityNode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final domainColor = Color(activity.domain.color);
+    // Linked cost line for the priced/unpriced row badge (live watch so the
+    // badge updates right after a pull or a manual price edit).
+    CostLine? linkedCostLine;
+    final linkedCostId = (activity.costLineId ?? '').trim();
+    if (linkedCostId.isNotEmpty) {
+      final estimate = context.watch<CostEstimateProvider>().estimate;
+      if (estimate != null) {
+        for (final line in estimate.lines) {
+          if (line.id == linkedCostId) {
+            linkedCostLine = line;
+            break;
+          }
+        }
+      }
+    }
+    final allChips = <Widget>[
+      if (linkedCostLine != null) _costStatusChip(linkedCostLine),
+      ..._traceabilityChips(),
+    ];
     return GestureDetector(
       onTap: () => _showActivityEditDialog(context),
       child: Container(
         margin: EdgeInsets.only(bottom: 8, left: isRoot ? 0 : 24),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: TreasuryTokens.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border(
-            left: BorderSide(color: domainColor, width: 3),
-            top: const BorderSide(color: TreasuryTokens.hairline, width: 1),
-            right: const BorderSide(color: TreasuryTokens.hairline, width: 1),
-            bottom: const BorderSide(color: TreasuryTokens.hairline, width: 1),
-          ),
+          // Uniform border only: a per-side colored Border + borderRadius
+          // throws "A borderRadius can only be given on borders with uniform
+          // colors" during paint. The domain accent is drawn as an inner 3px
+          // stripe below instead, clipped to the rounded corners.
+          border: Border.all(color: TreasuryTokens.hairline),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -1453,8 +1606,24 @@ class _ActivityNode extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
-          children: [
+        clipBehavior: Clip.antiAlias,
+        child: IntrinsicHeight(
+          // IntrinsicHeight gives the Row a bounded height even when this node
+          // sits inside the vertically-unbounded Builder scroll view — required
+          // because CrossAxisAlignment.stretch (below) needs a bounded cross
+          // extent, and it makes the 3px accent stripe span the full row.
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+            // Domain accent stripe (replaces the old non-uniform left border)
+            Container(width: 3, color: domainColor),
+            // Original padded content
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                child: Row(
+                  children: [
             // Domain icon tile
             Container(
               width: 30,
@@ -1597,7 +1766,7 @@ class _ActivityNode extends StatelessWidget {
                   ),
                 ),
               ),
-            if (_traceabilityChips().isNotEmpty)
+            if (allChips.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(left: 8),
                 child: SizedBox(
@@ -1605,7 +1774,7 @@ class _ActivityNode extends StatelessWidget {
                   child: Wrap(
                     spacing: 6,
                     runSpacing: 6,
-                    children: _traceabilityChips(),
+                    children: allChips,
                   ),
                 ),
               ),
@@ -1621,22 +1790,19 @@ class _ActivityNode extends StatelessWidget {
                       fontWeight: FontWeight.w500),
                 ),
               ),
-            if (!isRoot && !isLocked) ...[
-              IconButton(
-                icon: const Icon(Icons.add, size: 14, color: Color(0xFF6B7280)),
-                onPressed: () {},
-                constraints: const BoxConstraints(),
-                padding: const EdgeInsets.all(4),
-              ),
-              IconButton(
+            if (!isRoot && !isLocked) ...[..._buildCostActions(context, linkedCostLine), IconButton(
                 icon: const Icon(Icons.delete_outline,
                     size: 14, color: Color(0xFFB91C1C)),
                 onPressed: () => provider.removeActivity(activity.id),
                 constraints: const BoxConstraints(),
                 padding: const EdgeInsets.all(4),
+              )],
+                  ],
+                ),
               ),
+            ),
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -1724,80 +1890,287 @@ class _ActivityNode extends StatelessWidget {
       ),
     );
   }
+  /// Cost actions for this activity row: edit an existing linked cost line,
+  /// or add a new one directly on a leaf work package (core functionality —
+  /// no AI). Returns an empty list when the row should not offer cost entry.
+  List<Widget> _buildCostActions(
+    BuildContext context,
+    CostLine? linkedLine,
+  ) {
+    final canAddNew = activity.children.isEmpty;
+    if (linkedLine == null && !canAddNew) return const [];
+
+    final priced = isPricedCostLine(linkedLine);
+    final color = linkedLine == null
+        ? const Color(0xFF6B7280)
+        : (priced ? const Color(0xFF16A34A) : const Color(0xFFB45309));
+    return [
+      IconButton(
+        tooltip: linkedLine != null
+            ? (priced
+                ? 'Edit cost line for this work package'
+                : 'Edit cost line (not priced yet)')
+            : 'Add cost for this work package',
+        icon: Icon(
+          linkedLine != null
+              ? Icons.paid_outlined
+              : Icons.attach_money_outlined,
+          size: 14,
+          color: color,
+        ),
+        onPressed: () =>
+            _openCostDialog(context, linkedLine),
+        constraints: const BoxConstraints(),
+        padding: const EdgeInsets.all(4),
+      ),
+    ];
+  }
+
+  /// Open the manual cost-line dialog for this activity. New lines are
+  /// pre-linked to the activity's WBS node (when known) and pre-described
+  /// from the activity name. After save/update the activity's `costLineId`
+  /// is stamped so the Schedule ↔ Cost link is bidirectional and repeat
+  /// pulls stay idempotent.
+  Future<void> _openCostDialog(
+    BuildContext context,
+    CostLine? linkedLine,
+  ) async {
+    final savedId = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AddLineDialog(
+        defaultCategory: isScheduledPurchaseActivity(activity)
+            ? CostCategory.procurement
+            : CostCategory.materials,
+        editingLine: linkedLine,
+        initialWbsRef: activity.wbsCode,
+        initialDescription: '${activity.name} — scheduled work package cost',
+      ),
+    );
+    if (savedId == null || savedId.isEmpty) return;
+    if ((activity.costLineId ?? '') != savedId) {
+      provider.updateActivity(
+        activity.id,
+        activity.copyWith(costLineId: savedId),
+      );
+    }
+  }
 }
 
 /// Interactive sample activity table with inline editing, add-row, and KAZ AI
 /// generation. Demonstrates the full columnar view (ID, Name, Duration, Start,
 /// Finish, Predecessors, Resources) that the Gantt and List View tabs render.
-class _SampleActivityTable extends StatefulWidget {
+/// Activity Schedule table — renders the SAME WBS-derived activities that the
+/// Activity Tree above renders, but in a columnar view (ID, Name, Duration,
+/// Start, Finish, Predecessors, Resources). Each row also shows its WBS Code
+/// and Level chips when linked to a WBS node.
+///
+/// Includes an "Add activity" popup dialog (which calls the real
+/// ScheduleProvider.addActivity when a schedule is bound, falling back to a
+/// draft row otherwise) and KAZ AI generation for new activities.
+///
+/// When the schedule has no real activities yet (root has no children), a
+/// prominent empty-state card with a CTA replaces the table to guide the user
+/// toward importing from WBS / Work Packages.
+class _ActivityScheduleTable extends StatefulWidget {
   final Schedule schedule;
-  const _SampleActivityTable({required this.schedule});
+  final ScheduleActivity rootActivity;
+  final VoidCallback? onImportFromWorkPackages;
+
+  const _ActivityScheduleTable({
+    required this.schedule,
+    required this.rootActivity,
+    this.onImportFromWorkPackages,
+  });
 
   @override
-  State<_SampleActivityTable> createState() => _SampleActivityTableState();
+  State<_ActivityScheduleTable> createState() => _ActivityScheduleTableState();
 }
 
-class _SampleActivityTableState extends State<_SampleActivityTable> {
-  late List<_SampleRow> _rows;
-
-  final _nameCtrl = TextEditingController();
-  final _durationCtrl = TextEditingController();
-  final _startCtrl = TextEditingController(text: '01/06/26');
-  final _finishCtrl = TextEditingController(text: '01/30/26');
-  final _predecessorsCtrl = TextEditingController();
-  final _resourcesCtrl = TextEditingController();
+class _ActivityScheduleTableState extends State<_ActivityScheduleTable> {
+  /// User-added or AI-generated draft rows (NOT persisted to the schedule).
+  /// They render below the real WBS-derived activities and can be removed
+  /// inline. Real activities (from `rootActivity`) cannot be removed here —
+  /// they're managed via the Activity Tree or Work Packages module.
+  late List<_ActivityRow> _draftRows;
   bool _isGenerating = false;
-  int _nextId = 8;
+  int _nextId = 1;
 
   @override
   void initState() {
     super.initState();
-    _rows = _sampleRows(
-        widget.schedule.projectName, widget.schedule.basis.deliveryModel);
+    _draftRows = [];
+    _nextId = _computeNextId();
   }
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
-    _durationCtrl.dispose();
-    _startCtrl.dispose();
-    _finishCtrl.dispose();
-    _predecessorsCtrl.dispose();
-    _resourcesCtrl.dispose();
     super.dispose();
   }
 
-  void _addRow() {
-    final name = _nameCtrl.text.trim();
-    if (name.isEmpty) return;
-
-    setState(() {
-      _rows.add(_SampleRow(
-        (_nextId++).toString(),
-        name,
-        _durationCtrl.text.trim().isNotEmpty ? _durationCtrl.text.trim() : '—',
-        _startCtrl.text.trim().isNotEmpty ? _startCtrl.text.trim() : '—',
-        _finishCtrl.text.trim().isNotEmpty ? _finishCtrl.text.trim() : '—',
-        _predecessorsCtrl.text.trim().isNotEmpty
-            ? _predecessorsCtrl.text.trim()
-            : '—',
-        _resourcesCtrl.text.trim().isNotEmpty
-            ? _resourcesCtrl.text.trim()
-            : '—',
-        ScheduleDomain.execution.color,
-      ));
-      _nameCtrl.clear();
-      _durationCtrl.clear();
-      _predecessorsCtrl.clear();
-      _resourcesCtrl.clear();
-      _startCtrl.text = '01/06/26';
-      _finishCtrl.text = '01/30/26';
-    });
+  /// Compute the next draft-row ID by looking at existing activity codes &
+  /// draft-row IDs, so newly added rows don't collide with WBS-derived ones.
+  int _computeNextId() {
+    int max = 0;
+    for (final r in _flattenActivities()) {
+      final n = int.tryParse(r.id) ?? 0;
+      if (n > max) max = n;
+    }
+    for (final r in _draftRows) {
+      final n = int.tryParse(r.id) ?? 0;
+      if (n > max) max = n;
+    }
+    return max + 1;
   }
 
-  void _removeRow(int index) {
-    if (index < 0 || index >= _rows.length) return;
-    setState(() => _rows.removeAt(index));
+  String _formatDate(DateTime d) =>
+      '${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}/${d.year.toString().substring(2)}';
+
+  /// Walk the activity tree depth-first and produce a flat list of rows.
+  /// Excludes the root (Level 0) — only real child activities are shown.
+  List<_ActivityRow> _flattenActivities() {
+    final rows = <_ActivityRow>[];
+    void walk(ScheduleActivity node) {
+      for (final c in node.children) {
+        rows.add(_ActivityRow.fromActivity(c));
+        walk(c);
+      }
+    }
+    walk(widget.rootActivity);
+    return rows;
+  }
+
+
+
+  Future<void> _showAddSampleDialog(BuildContext context) async {
+    final nameCtrl = TextEditingController();
+    final durationCtrl = TextEditingController();
+    final startCtrl = TextEditingController(text: _formatDate(DateTime.now()));
+    final finishCtrl = TextEditingController(
+        text: _formatDate(DateTime.now().add(const Duration(days: 30))));
+    final predsCtrl = TextEditingController();
+    final resourcesCtrl = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Color(0xFFE4E7EC))),
+        title: const Text('Add activity',
+            style: TextStyle(
+                color: Color(0xFF1A1D1F), fontWeight: FontWeight.w600)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(labelText: 'Name'),
+                autofocus: true,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: durationCtrl,
+                decoration: const InputDecoration(labelText: 'Duration (e.g. 10 d)'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: startCtrl,
+                decoration: const InputDecoration(labelText: 'Start (MM/DD/YY)'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: finishCtrl,
+                decoration: const InputDecoration(labelText: 'Finish (MM/DD/YY)'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: predsCtrl,
+                decoration: const InputDecoration(labelText: 'Predecessors (e.g. 6FS)'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: resourcesCtrl,
+                decoration: const InputDecoration(labelText: 'Resources (e.g. Crew (4))'),
+              ),
+            ],
+          ),
+        ),
+          actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              if (nameCtrl.text.trim().isEmpty) return;
+              try {
+                final scheduleProvider = context.read<ScheduleProvider>();
+                final sch = scheduleProvider.schedule;
+                if (sch != null && sch.activities.isNotEmpty) {
+                  final parentId = sch.activities[0].id;
+                  scheduleProvider.addActivity(
+                    parentId,
+                    ScheduleActivity(
+                      id: '',
+                      level: 0,
+                      code: '',
+                      name: nameCtrl.text.trim(),
+                      type: ActivityType.activity,
+                      domain: ScheduleDomain.execution,
+                      dependencies: [],
+                      aiGenerated: false,
+                      children: [],
+                    ),
+                  );
+                } else {
+                  // Fallback to local draft rows when no real schedule is set up
+                  setState(() {
+                    _draftRows.add(_ActivityRow.draft(
+                      id: (_nextId++).toString(),
+                      name: nameCtrl.text.trim(),
+                      duration: durationCtrl.text.trim().isNotEmpty ? durationCtrl.text.trim() : '—',
+                      start: startCtrl.text.trim().isNotEmpty ? startCtrl.text.trim() : '—',
+                      finish: finishCtrl.text.trim().isNotEmpty ? finishCtrl.text.trim() : '—',
+                      predecessors: predsCtrl.text.trim().isNotEmpty ? predsCtrl.text.trim() : '—',
+                      resources: resourcesCtrl.text.trim().isNotEmpty ? resourcesCtrl.text.trim() : '—',
+                      domainColor: ScheduleDomain.execution.color,
+                    ));
+                  });
+                }
+              } catch (e) {
+                // If provider isn't available, fall back to draft rows
+                setState(() {
+                  _draftRows.add(_ActivityRow.draft(
+                    id: (_nextId++).toString(),
+                    name: nameCtrl.text.trim(),
+                    duration: durationCtrl.text.trim().isNotEmpty ? durationCtrl.text.trim() : '—',
+                    start: startCtrl.text.trim().isNotEmpty ? startCtrl.text.trim() : '—',
+                    finish: finishCtrl.text.trim().isNotEmpty ? finishCtrl.text.trim() : '—',
+                    predecessors: predsCtrl.text.trim().isNotEmpty ? predsCtrl.text.trim() : '—',
+                    resources: resourcesCtrl.text.trim().isNotEmpty ? resourcesCtrl.text.trim() : '—',
+                    domainColor: ScheduleDomain.execution.color,
+                  ));
+                });
+              }
+              Navigator.pop(ctx, true);
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+
+    // dispose controllers
+    nameCtrl.dispose();
+    durationCtrl.dispose();
+    startCtrl.dispose();
+    finishCtrl.dispose();
+    predsCtrl.dispose();
+    resourcesCtrl.dispose();
+  }
+
+  void _removeDraftRow(int index) {
+    if (index < 0 || index >= _draftRows.length) return;
+    setState(() => _draftRows.removeAt(index));
   }
 
   Future<void> _generateWithKazAi() async {
@@ -1807,16 +2180,17 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
     try {
       final projectName = widget.schedule.projectName;
       final deliveryModel = widget.schedule.basis.deliveryModel;
-      final existingCount = _rows.length;
+      final realRows = _flattenActivities();
+      final existingCount = realRows.length + _draftRows.length;
 
       final ai = OpenAiServiceSecure();
       final result = await ai.generateCompletion(
         'You are a project schedule expert. Generate 3-5 additional schedule '
         'activities for a project called "$projectName" using the '
-        '$deliveryModel delivery model. The existing $existingCount activities '
-        'cover engineering, procurement, execution, construction, and '
-        'commissioning. Suggest realistic follow-on or parallel activities '
-        'with typical durations and resource assignments.\n\n'
+        '$deliveryModel delivery model. There are already $existingCount '
+        'activities covering engineering, procurement, execution, '
+        'construction, and commissioning. Suggest realistic follow-on or '
+        'parallel activities with typical durations and resource assignments.\n\n'
         'Return the result as a pipe-delimited table with columns:\n'
         'ID|Activity Name|Duration|Start|Finish|Predecessors|Resources\n'
         'Use sequential IDs starting at $_nextId. Dates should be in MM/DD/YY format, '
@@ -1860,15 +2234,15 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
           final predecessors = parts[5];
           final resources = parts[6];
           final domainColor = domains[_nextId % domains.length];
-          _rows.add(_SampleRow(
-            (_nextId++).toString(),
-            name,
-            duration,
-            start,
-            finish,
-            predecessors,
-            resources,
-            domainColor,
+          _draftRows.add(_ActivityRow.draft(
+            id: (_nextId++).toString(),
+            name: name,
+            duration: duration,
+            start: start,
+            finish: finish,
+            predecessors: predecessors,
+            resources: resources,
+            domainColor: domainColor,
           ));
         }
       });
@@ -1877,7 +2251,7 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
           'Added ${lines.length} AI-generated activities to the schedule.');
     } catch (e) {
       if (mounted) {
-        _showInfo('KAZ AI generation failed: $e');
+        _showInfo('KAZ AI generation failedaiErrorMessage(e)');
       }
     } finally {
       if (mounted) setState(() => _isGenerating = false);
@@ -1895,7 +2269,17 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
 
   @override
   Widget build(BuildContext context) {
+    final realRows = _flattenActivities();
+    final allRows = [...realRows, ..._draftRows];
+    final hasAny = allRows.isNotEmpty;
+    final wbsLinkedCount = realRows.where((r) => r.wbsLinked).length;
+
     return Container(
+      // NOTE: no width: double.infinity here — this widget sits inside a
+      // horizontal SingleChildScrollView where max width is unbounded; an
+      // infinite width request throws "BoxConstraints forces an infinite
+      // width". The IntrinsicWidth wrapper in the parent section provides a
+      // bounded width (>= screen width - 40) instead.
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1919,11 +2303,37 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                 const Icon(Icons.table_chart,
                     size: 16, color: LightModeColors.accent),
                 const SizedBox(width: 8),
-                const Text('Sample Activity Schedule',
+                const Text('Activity Schedule',
                     style: TextStyle(
                         color: Color(0xFF1A1D1F),
                         fontSize: 14,
                         fontWeight: FontWeight.w700)),
+                const SizedBox(width: 8),
+                if (wbsLinkedCount > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: TreasuryTokens.infoSoft,
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(
+                          color:
+                              TreasuryTokens.info.withValues(alpha: 0.25)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.account_tree_outlined,
+                            size: 10, color: TreasuryTokens.info),
+                        const SizedBox(width: 3),
+                        Text('$wbsLinkedCount WBS linked',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: TreasuryTokens.info)),
+                      ],
+                    ),
+                  ),
                 const Spacer(),
                 // KAZ AI generate button
                 AnimatedContainer(
@@ -1982,7 +2392,7 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: const Color(0xFFE4E7EC)),
                   ),
-                  child: Text('${_rows.length} activities',
+                  child: Text('${allRows.length} activities',
                       style: const TextStyle(
                           color: Color(0xFF495057),
                           fontSize: 11,
@@ -1992,580 +2402,470 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
             ),
           ),
           const Divider(color: Color(0xFFE4E7EC), height: 1),
-          // Data table
-          FullScreenTableWrapper(
-            title: 'Schedule Builder Activities',
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: buildNduDataTable(
-                context: context,
-                zebra: false,
-                headingRowColor: const Color(0xFFF9FAFB),
-                headingRowHeight: 48,
-                dataRowMinHeight: 52,
-                dataRowMaxHeight: 52,
-                columnSpacing: 24,
-                horizontalMargin: 16,
-                autoWrapCells: false,
-                columns: const [
-                  DataColumn(
-                      label: Text('ID',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Name',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Duration',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Start',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Finish',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Predecessors',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Resources',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(label: SizedBox(width: 32)),
-                ],
-                rows: [
-                  // Data rows
-                  ..._rows.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final r = entry.value;
-                    return DataRow(
-                      cells: [
-                        DataCell(Text(r.id,
-                            style: const TextStyle(
-                                color: Color(0xFF495057),
-                                fontSize: 11,
-                                fontFamily: appFontFamily,
-                                fontWeight: FontWeight.bold))),
-                        DataCell(Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                  color: Color(r.domainColor),
-                                  shape: BoxShape.circle),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(r.name,
-                                style: const TextStyle(
-                                    color: Color(0xFF1A1D1F),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500)),
-                          ],
-                        )),
-                        DataCell(Text(r.duration,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(Text(r.start,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(Text(r.finish,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(Text(r.predecessors,
-                            style: const TextStyle(
-                                color: Color(0xFF495057),
-                                fontSize: 11,
-                                fontFamily: appFontFamily))),
-                        DataCell(Text(r.resources,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline,
-                                size: 16, color: Color(0xFF9CA3AF)),
-                            onPressed: () => _removeRow(i),
-                            tooltip: 'Remove activity',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(
-                                minWidth: 28, minHeight: 28),
-                          ),
+          // Empty state when no activities exist
+          if (!hasAny) _buildEmptyState(),
+          // Data table when there are activities (real or draft)
+          if (hasAny)
+            FullScreenTableWrapper(
+              title: 'Schedule Builder Activities',
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: buildNduDataTable(
+                  context: context,
+                  zebra: false,
+                  headingRowColor: const Color(0xFFF9FAFB),
+                  headingRowHeight: 48,
+                  dataRowMinHeight: 52,
+                  dataRowMaxHeight: 52,
+                  columnSpacing: 24,
+                  horizontalMargin: 16,
+                  autoWrapCells: false,
+                  columns: const [
+                    DataColumn(
+                        label: Text('ID',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Name',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Duration',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Start',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Finish',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Predecessors',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Resources',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(label: SizedBox(width: 32)),
+                  ],
+                  rows: [
+                    // Data rows — real WBS-derived activities + user draft rows
+                    ...allRows.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final r = entry.value;
+                      final isDraft = i >= realRows.length;
+                      final draftIdx = i - realRows.length;
+                      return DataRow(
+                        color: WidgetStateProperty.all(
+                          isDraft ? const Color(0xFFFFFBEB) : null,
                         ),
-                      ],
-                    );
-                  }),
-                  // ── New-row edit fields ──
-                  DataRow(
-                    color: WidgetStateProperty.all(const Color(0xFFFAFFFB)),
-                    cells: [
-                      DataCell(
-                        SizedBox(
-                          width: 40,
-                          child: Text(
-                            _nextId.toString(),
-                            style: const TextStyle(
-                                color: Color(0xFF9CA3AF),
-                                fontSize: 11,
-                                fontFamily: appFontFamily,
-                                fontWeight: FontWeight.bold),
+                        cells: [
+                          DataCell(Text(r.id,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057),
+                                  fontSize: 11,
+                                  fontFamily: appFontFamily,
+                                  fontWeight: FontWeight.bold))),
+                          DataCell(Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                    color: Color(r.domainColor),
+                                    shape: BoxShape.circle),
+                              ),
+                              const SizedBox(width: 6),
+                              if (r.level > 0)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: Color(r.domainColor)
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: Color(r.domainColor)
+                                            .withValues(alpha: 0.35))),
+                                  child: Text('L${r.level}',
+                                      style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(r.domainColor),
+                                          letterSpacing: 0.3)),
+                                ),
+                              if (r.wbsLinked && r.wbsCode.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: TreasuryTokens.infoSoft,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: TreasuryTokens.info
+                                            .withValues(alpha: 0.3)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.account_tree_outlined,
+                                          size: 9, color: TreasuryTokens.info),
+                                      const SizedBox(width: 3),
+                                      Text(r.wbsCode,
+                                          style: TextStyle(
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: TreasuryTokens.info,
+                                              fontFamily: appFontFamily,
+                                              letterSpacing: 0.2)),
+                                    ],
+                                  ),
+                                )
+                              else if (isDraft)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF7E0),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: const Color(0xFFFDE68A)),
+                                  ),
+                                  child: const Text('DRAFT',
+                                      style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF92400E),
+                                          letterSpacing: 0.4)),
+                                ),
+                              Flexible(
+                                child: Text(r.name,
+                                    style: const TextStyle(
+                                        color: Color(0xFF1A1D1F),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500),
+                                    overflow: TextOverflow.ellipsis),
+                              ),
+                            ],
+                          )),
+                          DataCell(Text(r.duration,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(Text(r.start,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(Text(r.finish,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(Text(r.predecessors,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057),
+                                  fontSize: 11,
+                                  fontFamily: appFontFamily))),
+                          DataCell(Text(r.resources,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(
+                            isDraft
+                                ? IconButton(
+                                    icon: const Icon(Icons.remove_circle_outline,
+                                        size: 16, color: Color(0xFFEF4444)),
+                                    onPressed: () => _removeDraftRow(draftIdx),
+                                    tooltip: 'Remove draft row',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(
+                                        minWidth: 28, minHeight: 28),
+                                  )
+                                : const Icon(Icons.lock_outline,
+                                    size: 14, color: Color(0xFFCBD5E1)),
                           ),
+                        ],
+                      );
+                    }),
+                    // Replace inline add row with a single button that opens the
+                    // Add Activity modal so items are added via a popup.
+                    DataRow(cells: [
+                      DataCell(Container()),
+                      DataCell(FilledButton.icon(
+                        onPressed: () => _showAddSampleDialog(context),
+                        icon: const Icon(Icons.add_rounded, size: 16),
+                        label: const Text('Add activity'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: LightModeColors.accent.withValues(alpha: 0.06),
+                          foregroundColor: LightModeColors.accent,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 200,
-                          child: VoiceTextField(
-                            controller: _nameCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'New activity name...',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                            onChanged: (_) => setState(() {}),
-                            onSubmitted: (_) => _addRow(),
+                      )),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                    ]),
+                  ],
+                ),
+              ),
+              tableBuilder: (fsContext) => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: buildNduDataTable(
+                  context: fsContext,
+                  zebra: false,
+                  headingRowColor: const Color(0xFFF9FAFB),
+                  headingRowHeight: 48,
+                  dataRowMinHeight: 52,
+                  dataRowMaxHeight: 52,
+                  columnSpacing: 24,
+                  horizontalMargin: 16,
+                  autoWrapCells: false,
+                  columns: const [
+                    DataColumn(
+                        label: Text('ID',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Name',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Duration',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Start',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Finish',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Predecessors',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Resources',
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600))),
+                    DataColumn(label: SizedBox(width: 32)),
+                  ],
+                  rows: [
+                    // Data rows — real WBS-derived activities + user draft rows
+                    ...allRows.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final r = entry.value;
+                      final isDraft = i >= realRows.length;
+                      final draftIdx = i - realRows.length;
+                      return DataRow(
+                        color: WidgetStateProperty.all(
+                          isDraft ? const Color(0xFFFFFBEB) : null,
+                        ),
+                        cells: [
+                          DataCell(Text(r.id,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057),
+                                  fontSize: 11,
+                                  fontFamily: appFontFamily,
+                                  fontWeight: FontWeight.bold))),
+                          DataCell(Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                    color: Color(r.domainColor),
+                                    shape: BoxShape.circle),
+                              ),
+                              const SizedBox(width: 6),
+                              if (r.level > 0)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: Color(r.domainColor)
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: Color(r.domainColor)
+                                            .withValues(alpha: 0.35))),
+                                  child: Text('L${r.level}',
+                                      style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(r.domainColor),
+                                          letterSpacing: 0.3)),
+                                ),
+                              if (r.wbsLinked && r.wbsCode.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: TreasuryTokens.infoSoft,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: TreasuryTokens.info
+                                            .withValues(alpha: 0.3)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.account_tree_outlined,
+                                          size: 9, color: TreasuryTokens.info),
+                                      const SizedBox(width: 3),
+                                      Text(r.wbsCode,
+                                          style: TextStyle(
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: TreasuryTokens.info,
+                                              fontFamily: appFontFamily,
+                                              letterSpacing: 0.2)),
+                                    ],
+                                  ),
+                                )
+                              else if (isDraft)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF7E0),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                        color: const Color(0xFFFDE68A)),
+                                  ),
+                                  child: const Text('DRAFT',
+                                      style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF92400E),
+                                          letterSpacing: 0.4)),
+                                ),
+                              Flexible(
+                                child: Text(r.name,
+                                    style: const TextStyle(
+                                        color: Color(0xFF1A1D1F),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500),
+                                    overflow: TextOverflow.ellipsis),
+                              ),
+                            ],
+                          )),
+                          DataCell(Text(r.duration,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(Text(r.start,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(Text(r.finish,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(Text(r.predecessors,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057),
+                                  fontSize: 11,
+                                  fontFamily: appFontFamily))),
+                          DataCell(Text(r.resources,
+                              style: const TextStyle(
+                                  color: Color(0xFF495057), fontSize: 12))),
+                          DataCell(
+                            isDraft
+                                ? IconButton(
+                                    icon: const Icon(Icons.remove_circle_outline,
+                                        size: 16, color: Color(0xFFEF4444)),
+                                    onPressed: () => _removeDraftRow(draftIdx),
+                                    tooltip: 'Remove draft row',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(
+                                        minWidth: 28, minHeight: 28),
+                                  )
+                                : const Icon(Icons.lock_outline,
+                                    size: 14, color: Color(0xFFCBD5E1)),
                           ),
+                        ],
+                      );
+                    }),
+                    DataRow(cells: [
+                      DataCell(Container()),
+                      DataCell(FilledButton.icon(
+                        onPressed: () => _showAddSampleDialog(context),
+                        icon: const Icon(Icons.add_rounded, size: 16),
+                        label: const Text('Add activity'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: LightModeColors.accent.withValues(alpha: 0.06),
+                          foregroundColor: LightModeColors.accent,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: VoiceTextField(
-                            controller: _durationCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'e.g. 10 d',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: VoiceTextField(
-                            controller: _startCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'MM/DD/YY',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: VoiceTextField(
-                            controller: _finishCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'MM/DD/YY',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 100,
-                          child: VoiceTextField(
-                            controller: _predecessorsCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'e.g. 6FS',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 130,
-                          child: VoiceTextField(
-                            controller: _resourcesCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'e.g. Crew (4)',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        IconButton(
-                          icon: Icon(
-                            Icons.add_circle_outline,
-                            size: 20,
-                            color: _nameCtrl.text.trim().isNotEmpty
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFF9CA3AF),
-                          ),
-                          onPressed:
-                              _nameCtrl.text.trim().isNotEmpty ? _addRow : null,
-                          tooltip: 'Add activity',
-                          padding: EdgeInsets.zero,
-                          constraints:
-                              const BoxConstraints(minWidth: 28, minHeight: 28),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      )),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                      DataCell(Container()),
+                    ]),
+                  ],
+                ),
               ),
             ),
-            tableBuilder: (fsContext) => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: buildNduDataTable(
-                context: fsContext,
-                zebra: false,
-                headingRowColor: const Color(0xFFF9FAFB),
-                headingRowHeight: 48,
-                dataRowMinHeight: 52,
-                dataRowMaxHeight: 52,
-                columnSpacing: 24,
-                horizontalMargin: 16,
-                autoWrapCells: false,
-                columns: const [
-                  DataColumn(
-                      label: Text('ID',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Name',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Duration',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Start',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Finish',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Predecessors',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Resources',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600))),
-                  DataColumn(label: SizedBox(width: 32)),
-                ],
-                rows: [
-                  // Data rows
-                  ..._rows.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final r = entry.value;
-                    return DataRow(
-                      cells: [
-                        DataCell(Text(r.id,
-                            style: const TextStyle(
-                                color: Color(0xFF495057),
-                                fontSize: 11,
-                                fontFamily: appFontFamily,
-                                fontWeight: FontWeight.bold))),
-                        DataCell(Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                  color: Color(r.domainColor),
-                                  shape: BoxShape.circle),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(r.name,
-                                style: const TextStyle(
-                                    color: Color(0xFF1A1D1F),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500)),
-                          ],
-                        )),
-                        DataCell(Text(r.duration,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(Text(r.start,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(Text(r.finish,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(Text(r.predecessors,
-                            style: const TextStyle(
-                                color: Color(0xFF495057),
-                                fontSize: 11,
-                                fontFamily: appFontFamily))),
-                        DataCell(Text(r.resources,
-                            style: const TextStyle(
-                                color: Color(0xFF495057), fontSize: 12))),
-                        DataCell(
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline,
-                                size: 16, color: Color(0xFF9CA3AF)),
-                            onPressed: () => _removeRow(i),
-                            tooltip: 'Remove activity',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(
-                                minWidth: 28, minHeight: 28),
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-                  // ── New-row edit fields ──
-                  DataRow(
-                    color: WidgetStateProperty.all(const Color(0xFFFAFFFB)),
-                    cells: [
-                      DataCell(
-                        SizedBox(
-                          width: 40,
-                          child: Text(
-                            _nextId.toString(),
-                            style: const TextStyle(
-                                color: Color(0xFF9CA3AF),
-                                fontSize: 11,
-                                fontFamily: appFontFamily,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 200,
-                          child: VoiceTextField(
-                            controller: _nameCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'New activity name...',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                            onChanged: (_) => setState(() {}),
-                            onSubmitted: (_) => _addRow(),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: VoiceTextField(
-                            controller: _durationCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'e.g. 10 d',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: VoiceTextField(
-                            controller: _startCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'MM/DD/YY',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 80,
-                          child: VoiceTextField(
-                            controller: _finishCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'MM/DD/YY',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 100,
-                          child: VoiceTextField(
-                            controller: _predecessorsCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'e.g. 6FS',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 130,
-                          child: VoiceTextField(
-                            controller: _resourcesCtrl,
-                            enableVoice: false,
-                            enableKazAi: false,
-                            enableTextFormatting: false,
-                            decoration: const InputDecoration(
-                              hintText: 'e.g. Crew (4)',
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 4),
-                            ),
-                            style: const TextStyle(
-                                fontSize: 12, color: Color(0xFF1A1D1F)),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        IconButton(
-                          icon: Icon(
-                            Icons.add_circle_outline,
-                            size: 20,
-                            color: _nameCtrl.text.trim().isNotEmpty
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFF9CA3AF),
-                          ),
-                          onPressed:
-                              _nameCtrl.text.trim().isNotEmpty ? _addRow : null,
-                          tooltip: 'Add activity',
-                          padding: EdgeInsets.zero,
-                          constraints:
-                              const BoxConstraints(minWidth: 28, minHeight: 28),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Footnote
-          if (_rows.length <= 7)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+          // Footnote — adapts to whether there are real activities or just drafts
+          if (allRows.length <= 7)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Row(
                 children: [
-                  Icon(Icons.edit_outlined, size: 12, color: Color(0xFF9CA3AF)),
-                  SizedBox(width: 6),
-                  Text(
-                    'Type an activity name and press Enter or tap + to add. '
-                    'Use KAZ AI to auto-generate realistic schedule activities.',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+                  const Icon(Icons.edit_outlined,
+                      size: 12, color: Color(0xFF9CA3AF)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      realRows.isEmpty
+                          ? 'No WBS-derived activities yet. Use the action pills '
+                              'at the top of the page to import from Work '
+                              'Packages, or tap "Add activity" below to add a '
+                              'custom row. KAZ AI can also auto-generate.'
+                          : 'Locked rows (lock icon) are WBS-derived activities — '
+                              'manage them via the Activity Tree or Work Packages '
+                              'module. Draft rows can be removed inline. Use '
+                              'KAZ AI to auto-generate more.',
+                      style: const TextStyle(
+                          fontSize: 11, color: Color(0xFF9CA3AF), height: 1.4),
+                    ),
                   ),
                 ],
               ),
@@ -2575,62 +2875,81 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
     );
   }
 
-  List<_SampleRow> _sampleRows(String projectName, String deliveryModel) {
-    return [
-      _SampleRow('1', 'Engineering — Process Design', '20 d', '01/06/26',
-          '01/30/26', '—', 'Process Eng (2)', ScheduleDomain.engineering.color),
-      _SampleRow(
-          '2',
-          'Procurement — Long-Lead Vessels',
-          '45 d',
-          '02/02/26',
-          '03/20/26',
-          '1FS',
-          'Buyer, Expediter',
-          ScheduleDomain.procurement.color),
-      _SampleRow('3', 'Execution — Fabrication Phase A', '60 d', '03/23/26',
-          '05/22/26', '2FS', 'Fab Shop (6)', ScheduleDomain.execution.color),
-      _SampleRow(
-          '4',
-          'Construction — Site Mobilization',
-          '10 d',
-          '05/25/26',
-          '06/05/26',
-          '3FS-5d',
-          'Site Sup (3)',
-          ScheduleDomain.construction.color),
-      _SampleRow(
-          '5',
-          'Construction — Mechanical Install',
-          '35 d',
-          '06/08/26',
-          '07/17/26',
-          '4FS',
-          'Mech Crew (8)',
-          ScheduleDomain.construction.color),
-      _SampleRow(
-          '6',
-          'Commissioning — Cold Commissioning',
-          '15 d',
-          '07/20/26',
-          '08/07/26',
-          '5FS',
-          'Commissioning Eng (2)',
-          ScheduleDomain.commissioning.color),
-      _SampleRow(
-          '7',
-          'Commissioning — Hot Commissioning & Handover',
-          '12 d',
-          '08/10/26',
-          '08/22/26',
-          '6FS',
-          'Commissioning Eng (2)',
-          ScheduleDomain.commissioning.color),
-    ];
+  /// World-class empty state — shown when no real or draft activities exist.
+  /// Replaces the table with a prominent, helpful CTA card.
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: TreasuryTokens.brandSoft,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                  color: TreasuryTokens.brand.withValues(alpha: 0.3)),
+            ),
+            child: Icon(Icons.account_tree_outlined,
+                size: 30, color: TreasuryTokens.brandDeep),
+          ),
+          const SizedBox(height: 14),
+          const Text('No activities yet',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: TreasuryTokens.ink)),
+          const SizedBox(height: 6),
+          const Text(
+            'Your Activity Schedule is empty. Populate it from your WBS and '
+            'Work Packages, or add a custom activity below.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                fontSize: 12.5,
+                color: TreasuryTokens.muted,
+                height: 1.55,
+                fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 18),
+          if (widget.onImportFromWorkPackages != null)
+            FilledButton.icon(
+              onPressed: widget.onImportFromWorkPackages,
+              icon: const Icon(Icons.work_outline, size: 16),
+              label: const Text('Import from Work Packages'),
+              style: FilledButton.styleFrom(
+                backgroundColor: TreasuryTokens.brand,
+                foregroundColor: TreasuryTokens.ink,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                textStyle: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+            ),
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: _isGenerating ? null : _generateWithKazAi,
+            icon: const Icon(Icons.auto_awesome, size: 14),
+            label: const Text('Generate with KAZ AI'),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF92400E),
+              textStyle: const TextStyle(
+                  fontSize: 12.5, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
-class _SampleRow {
+/// A single activity row in the Activity Schedule table. Holds either a
+/// real WBS-derived [ScheduleActivity] (when constructed via [fromActivity])
+/// or a draft row added by the user / KAZ AI (when constructed via [draft]).
+class _ActivityRow {
   final String id;
   final String name;
   final String duration;
@@ -2639,8 +2958,77 @@ class _SampleRow {
   final String predecessors;
   final String resources;
   final int domainColor;
-  const _SampleRow(this.id, this.name, this.duration, this.start, this.finish,
-      this.predecessors, this.resources, this.domainColor);
+  final int level;
+  final String wbsCode;
+  final bool wbsLinked;
+
+  const _ActivityRow._({
+    required this.id,
+    required this.name,
+    required this.duration,
+    required this.start,
+    required this.finish,
+    required this.predecessors,
+    required this.resources,
+    required this.domainColor,
+    required this.level,
+    required this.wbsCode,
+    required this.wbsLinked,
+  });
+
+  /// Build a row from a real [ScheduleActivity] derived from the WBS tree.
+  factory _ActivityRow.fromActivity(ScheduleActivity a) {
+    final depLabel = a.dependencies.isEmpty
+        ? '—'
+        : a.dependencies
+            .map((d) => '${d.activityId}${d.type.short}')
+            .join(', ');
+    return _ActivityRow._(
+      id: a.code.isNotEmpty ? a.code : a.id,
+      name: a.name,
+      duration: formatDuration(a.duration, a.durationUnit),
+      start: formatDate(a.startDate),
+      finish: formatDate(a.endDate),
+      predecessors: depLabel,
+      resources: a.owner?.isNotEmpty == true ? a.owner! : '—',
+      domainColor: a.domain.color,
+      level: a.level,
+      wbsCode: a.wbsCode ?? '',
+      wbsLinked: a.wbsNodeId != null && a.wbsNodeId!.isNotEmpty,
+    );
+  }
+
+  /// Build a draft row from user input / KAZ AI output.
+  const factory _ActivityRow.draft({
+    required String id,
+    required String name,
+    required String duration,
+    required String start,
+    required String finish,
+    required String predecessors,
+    required String resources,
+    required int domainColor,
+  }) = _DraftActivityRow;
+}
+
+/// Concrete draft-row subclass (kept separate so the const factory above
+/// can produce a const instance — required because [String] fields aren't
+/// const-constructable via the private all-required constructor alone).
+class _DraftActivityRow extends _ActivityRow {
+  const _DraftActivityRow({
+    required super.id,
+    required super.name,
+    required super.duration,
+    required super.start,
+    required super.finish,
+    required super.predecessors,
+    required super.resources,
+    required super.domainColor,
+  }) : super._(
+          level: 0,
+          wbsCode: '',
+          wbsLinked: false,
+        );
 }
 
 /// Interactive Gantt-style timeline visualization showing all activities as
@@ -2799,7 +3187,7 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                     border: Border.all(
                         color: TreasuryTokens.brand.withValues(alpha: 0.3)),
                   ),
-                  child: Icon(Icons.timeline_rounded,
+                  child: const Icon(Icons.timeline_rounded,
                       size: 17, color: TreasuryTokens.brandDeep),
                 ),
                 const SizedBox(width: 10),
@@ -2837,7 +3225,7 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.date_range_rounded,
+                      const Icon(Icons.date_range_rounded,
                           size: 12, color: TreasuryTokens.muted),
                       const SizedBox(width: 5),
                       Text(
@@ -2932,9 +3320,15 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
               children: [
                 const Divider(color: Color(0xFFF3F4F6), height: 1),
                 Container(
-                  height: 44,
+                  // The timeline card sits inside the vertically-unbounded
+                  // Builder scroll view, so the row needs a BOUNDED height for
+                  // CrossAxisAlignment.stretch to resolve — otherwise the whole
+                  // Builder tab layout throws and renders blank (missing
+                  // schedule content). Long names ellipsize like the tree rows.
+                  height: 60,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // ── Activity label (fixed width) ──
                       SizedBox(
@@ -2961,6 +3355,8 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                                         color: Color(0xFF9CA3AF),
                                         fontSize: 9,
                                         fontFamily: appFontFamily),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
                                   Text(
                                     a.name,
@@ -2970,6 +3366,7 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                                         fontWeight: FontWeight.w600),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
+                                    softWrap: false,
                                   ),
                                 ],
                               ),
@@ -3318,7 +3715,7 @@ class _TimelineKazAiButtonState extends State<_TimelineKazAiButton> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('KAZ AI failed: $e'),
+              content: Text('KAZ AI failedaiErrorMessage(e)'),
               duration: const Duration(seconds: 3)),
         );
       }
@@ -3557,7 +3954,7 @@ class _DrawingFromBanner extends StatelessWidget {
                 color: TreasuryTokens.warning.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.info_outline,
+              child: const Icon(Icons.info_outline,
                   size: 16, color: TreasuryTokens.warning),
             ),
             const SizedBox(width: 10),
@@ -3625,7 +4022,7 @@ class _DrawingFromBanner extends StatelessWidget {
                   border: Border.all(
                       color: TreasuryTokens.brand.withValues(alpha: 0.3)),
                 ),
-                child: Icon(Icons.input_rounded,
+                child: const Icon(Icons.input_rounded,
                     size: 15, color: TreasuryTokens.brandDeep),
               ),
               const SizedBox(width: 10),

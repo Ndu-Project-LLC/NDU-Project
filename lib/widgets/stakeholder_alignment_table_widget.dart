@@ -38,7 +38,7 @@ class StakeholderAlignmentTableWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -201,25 +201,17 @@ class _StakeholderAlignmentRowWidget extends StatefulWidget {
   @override
   State<_StakeholderAlignmentRowWidget> createState() =>
       _StakeholderAlignmentRowWidgetState();
-}
-
-class _StakeholderAlignmentRowWidgetState
+}class _StakeholderAlignmentRowWidgetState
     extends State<_StakeholderAlignmentRowWidget> {
   StakeholderAlignmentItem? _previousState;
   final _Debouncer _debouncer = _Debouncer();
   bool _isRegenerating = false;
+  bool _isInlineEditing = false;
 
   static const List<String> _keyInterests = [
-    'ROI',
-    'Security',
-    'Ease of Use',
-    'Cost Savings',
-    'Revenue',
-    'Compliance',
-    'Performance',
-    'Innovation',
-    'Risk Mitigation',
-    'User Experience',
+    'ROI', 'Security', 'Ease of Use', 'Cost Savings',
+    'Revenue', 'Compliance', 'Performance', 'Innovation',
+    'Risk Mitigation', 'User Experience',
   ];
 
   @override
@@ -234,25 +226,37 @@ class _StakeholderAlignmentRowWidgetState
       case _StakeholderAlignmentColumn.stakeholderName:
         return Align(
           alignment: Alignment.centerLeft,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              InlineEditableText(
-                value: widget.item.stakeholderName,
-                hint: 'Enter name',
-                onChanged: (value) =>
-                    _updateItem(widget.item.copyWith(stakeholderName: value)),
-                textAlign: TextAlign.left,
-                maxLines: 1,
-              ),
-              if (widget.item.stakeholderRole.isNotEmpty)
-                Text(
-                  widget.item.stakeholderRole,
-                  style:
-                      const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+          child: Container(
+            padding: _isInlineEditing
+                ? const EdgeInsets.all(4)
+                : EdgeInsets.zero,
+            decoration: _isInlineEditing
+                ? BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                  )
+                : null,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InlineEditableText(
+                  value: widget.item.stakeholderName,
+                  hint: 'Enter name',
+                  onChanged: (value) =>
+                      _updateItem(widget.item.copyWith(stakeholderName: value)),
+                  textAlign: TextAlign.left,
+                  maxLines: 1,
                 ),
-            ],
+                if (widget.item.stakeholderRole.isNotEmpty)
+                  Text(
+                    widget.item.stakeholderRole,
+                    style:
+                        const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                  ),
+              ],
+            ),
           ),
         );
       case _StakeholderAlignmentColumn.alignmentStatus:
@@ -291,13 +295,25 @@ class _StakeholderAlignmentRowWidgetState
       case _StakeholderAlignmentColumn.feedbackSummary:
         return Align(
           alignment: Alignment.centerLeft,
-          child: InlineEditableText(
-            value: widget.item.feedbackSummary,
-            hint: 'Enter feedback (prose, no bullets)',
-            onChanged: (value) =>
-                _updateItem(widget.item.copyWith(feedbackSummary: value)),
-            textAlign: TextAlign.left,
-            maxLines: 2,
+          child: Container(
+            padding: _isInlineEditing
+                ? const EdgeInsets.all(4)
+                : EdgeInsets.zero,
+            decoration: _isInlineEditing
+                ? BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                  )
+                : null,
+            child: InlineEditableText(
+              value: widget.item.feedbackSummary,
+              hint: 'Enter feedback (prose, no bullets)',
+              onChanged: (value) =>
+                  _updateItem(widget.item.copyWith(feedbackSummary: value)),
+              textAlign: TextAlign.left,
+              maxLines: 2,
+            ),
           ),
         );
       case _StakeholderAlignmentColumn.lastEngagementDate:
@@ -308,7 +324,7 @@ class _StakeholderAlignmentRowWidgetState
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                border: Border.all(color: Color(0xFFE2E8F0)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -333,6 +349,37 @@ class _StakeholderAlignmentRowWidgetState
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Edit dialog button
+                IconButton(
+                  icon: const Icon(Icons.edit_note,
+                      size: 16, color: Color(0xFF64748B)),
+                  onPressed: () => _openEditDialog(context),
+                  tooltip: 'Edit in dialog',
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
+                ),
+                // Inline edit toggle button
+                IconButton(
+                  icon: Icon(
+                    _isInlineEditing ? Icons.check_circle : Icons.edit,
+                    size: 16,
+                    color: _isInlineEditing
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFF64748B),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isInlineEditing = !_isInlineEditing;
+                    });
+                  },
+                  tooltip: _isInlineEditing
+                      ? 'Save inline edits'
+                      : 'Toggle inline editing',
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
+                ),
                 IconButton(
                   icon: const Icon(Icons.undo,
                       size: 16, color: Color(0xFF64748B)),
@@ -473,6 +520,115 @@ class _StakeholderAlignmentRowWidgetState
       _updateItem(_previousState!);
       _previousState = null;
     }
+  }
+
+  void _openEditDialog(BuildContext context) {
+    final nameController = TextEditingController(text: widget.item.stakeholderName);
+    final roleController = TextEditingController(text: widget.item.stakeholderRole);
+    final feedbackController = TextEditingController(text: widget.item.feedbackSummary);
+    String selectedStatus = widget.item.alignmentStatus;
+    String? selectedKeyInterest = widget.item.keyInterest.isEmpty ? null : widget.item.keyInterest;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit Stakeholder'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Stakeholder Name',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: roleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Stakeholder Role',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedStatus,
+                  decoration: const InputDecoration(
+                    labelText: 'Alignment Status',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: ['Aligned', 'Neutral', 'Concerned', 'Resistent']
+                      .map((status) => DropdownMenuItem(
+                            value: status,
+                            child: Text(status),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setDialogState(() => selectedStatus = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedKeyInterest,
+                  decoration: const InputDecoration(
+                    labelText: 'Key Interest/Value',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    'ROI', 'Security', 'Ease of Use', 'Cost Savings',
+                    'Revenue', 'Compliance', 'Performance', 'Innovation',
+                    'Risk Mitigation', 'User Experience',
+                  ]
+                      .map((interest) => DropdownMenuItem(
+                            value: interest,
+                            child: Text(interest),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setDialogState(() => selectedKeyInterest = value);
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: feedbackController,
+                  decoration: const InputDecoration(
+                    labelText: 'Feedback Summary',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                _updateItem(
+                  widget.item.copyWith(
+                    stakeholderName: nameController.text.trim(),
+                    stakeholderRole: roleController.text.trim(),
+                    alignmentStatus: selectedStatus,
+                    keyInterest: selectedKeyInterest ?? '',
+                    feedbackSummary: feedbackController.text.trim(),
+                  ),
+                );
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _deleteItem(StakeholderAlignmentItem item) async {

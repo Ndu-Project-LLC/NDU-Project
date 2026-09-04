@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
@@ -11,7 +11,6 @@ import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/screens/it_considerations_screen.dart';
 import 'package:ndu_project/screens/core_stakeholders_screen.dart';
 import 'package:ndu_project/screens/initiation_phase_screen.dart';
-import 'package:ndu_project/screens/potential_solutions_screen.dart';
 import 'package:ndu_project/screens/infrastructure_considerations_screen.dart';
 import 'package:ndu_project/screens/preferred_solution_analysis_screen.dart';
 import 'package:ndu_project/screens/cost_analysis_screen.dart';
@@ -27,10 +26,10 @@ import 'package:ndu_project/widgets/ux_hardening_primitives.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // Removed AppLogo from header per request
 import 'package:ndu_project/screens/settings_screen.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/text_sanitizer.dart';
-import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/access_policy.dart';
@@ -38,7 +37,6 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/widgets/page_hint_dialog.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
@@ -209,9 +207,21 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
       _isAdmin && AccessPolicy.isRestrictedAdminHost();
 
   TextEditingController _createRiskController({String text = ''}) {
-    final controller = RichAutoBulletTextController(text: text);
+    final cleaned = _stripLeadingBullet(text);
+    // Risk descriptions are single-item prose, so use a plain controller —
+    // no auto-bullet dots should ever appear inside these text fields.
+    final controller = TextEditingController(text: cleaned);
     controller.addListener(_onDataChanged);
     return controller;
+  }
+
+  /// Strips a leading bullet prefix (". ", ".", "• ") from previously
+  /// auto-inserted or manually-added bullets.
+  static String _stripLeadingBullet(String text) {
+    if (text.startsWith('\u2022 ')) return text.substring(2);
+    if (text.startsWith('. ')) return text.substring(2);
+    if (text.startsWith('.')) return text.substring(1);
+    return text;
   }
 
   Future<void> _exportPdf() async {
@@ -341,10 +351,16 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     );
   }
 
-  /// Called whenever any text field changes - triggers debounced auto-save
+  /// Called whenever any text field changes - triggers debounced auto-save.
+  /// Also clears a stale AI error banner: once the user is editing content
+  /// manually (or the underlying AI issue has been resolved), the earlier
+  /// failure message is no longer relevant.
   void _onDataChanged() {
     if (!mounted) return;
-    setState(() => _hasUnsavedChanges = true);
+    setState(() {
+      _hasUnsavedChanges = true;
+      _error = null;
+    });
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer(const Duration(seconds: 2), _autoSave);
   }
@@ -426,7 +442,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         final solutionRisk = savedRisks[i];
         for (int r = 0; r < 3 && r < solutionRisk.risks.length; r++) {
           if (i < _riskControllers.length && r < _riskControllers[i].length) {
-            _riskControllers[i][r].text = solutionRisk.risks[r];
+            _riskControllers[i][r].text = _stripLeadingBullet(solutionRisk.risks[r]);
           }
         }
       }
@@ -497,7 +513,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         for (int r = 0; r < 3; r++) {
           final text = r < risks.length ? risks[r] : '';
           if (i < _riskControllers.length && r < _riskControllers[i].length) {
-            _riskControllers[i][r].text = text;
+            _riskControllers[i][r].text = _stripLeadingBullet(text);
           }
         }
       }
@@ -511,15 +527,11 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
       );
     }
     } catch (e) {
-      _error = (e.toString().contains('Failed to fetch') ||
-              e.toString().contains('ClientException') ||
-              e.toString().contains('XMLHttpRequest') ||
-              e.toString().contains('Connection refused'))
-          ? 'AI assist is being set up. Please try again later or enter content manually.'
-          : e.toString();
+      debugPrint('OpenAI risk generation failed: $e');
+      _error = aiErrorMessage(e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to regenerate risks: $e')),
+          SnackBar(content: Text(aiErrorMessage(e))),
         );
       }
     } finally {
@@ -572,7 +584,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
       final sidebarWidth = AppBreakpoints.sidebarWidth(context);
       return Scaffold(
         key: _scaffoldKey,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         drawer: null,
         body: SafeArea(
           top: true,
@@ -628,7 +640,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
       debugPrint('RiskIdentification build error: $e');
       debugPrint(stack.toString());
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
           child: Center(
             child: Padding(
@@ -665,7 +677,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         : (_solutions.length > 3 ? 3 : _solutions.length);
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: UnsavedChangesGuard(
         isDirty: () => _hasUnsavedChanges || _autoSaveTimer?.isActive == true,
         onSave: _flushSaveNow,
@@ -786,7 +798,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                   onPressed: _handleNextPressed,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF6B7280),
-                    backgroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                     side: const BorderSide(color: Color(0xFFD1D5DB)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -919,6 +931,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: VoiceTextField(
+                readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                 controller: _riskControllers[index][r],
                 minLines: 1,
                 maxLines: 2,
@@ -983,7 +996,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                   width: 40,
                   height: 40,
                   decoration: const BoxDecoration(
-                      color: Colors.blue, shape: BoxShape.circle),
+                      color: Color(0xFFFFC812), shape: BoxShape.circle),
                   child:
                       const Icon(Icons.person, color: Colors.white, size: 20)),
               if (!isMobile) ...[
@@ -1424,6 +1437,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                       children: [
                         const SizedBox(height: 8),
                         VoiceTextField(
+                          readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                           controller: _notesController,
                           style:
                               TextStyle(fontSize: 14, color: Colors.grey[600]),
@@ -1517,14 +1531,68 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                           const SizedBox(height: 8),
                           Align(
                             alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: _isGenerating ? null : _generateRisks,
-                              child: const Text('Retry'),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                TextButton(
+                                  onPressed: () {
+                                    if (mounted) {
+                                      setState(() => _error = null);
+                                    }
+                                  },
+                                  child: const Text('Dismiss'),
+                                ),
+                                TextButton(
+                                  onPressed:
+                                      _isGenerating ? null : _generateRisks,
+                                  child: const Text('Retry'),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
+                  const SizedBox(height: 16),
+                  // Table action buttons at the top
+                  Row(
+                    children: [
+                      _buildAutoSaveIndicator(),
+                      const Spacer(),
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFB3D9FF),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.info_outline,
+                            color: Colors.white),
+                      ),
+                      const SizedBox(width: 24),
+                      CsvTableImportButton(
+                        tableTitle: 'Risk Identification',
+                        columns: _riskCsvColumns,
+                        onImport: _handleCsvImport,
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: _addNewRisk,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Risk'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFD700),
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   if (!isMobile) ...[
                     if (_solutions.isEmpty)
                       Container(
@@ -1618,45 +1686,6 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                       ),
                   ],
                   const SizedBox(height: 24),
-                  _buildAutoSaveIndicator(),
-                  const SizedBox(height: 16),
-                  // CSV import available to all users
-                    Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFB3D9FF),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.info_outline,
-                              color: Colors.white),
-                        ),
-                        const SizedBox(width: 24),
-                        CsvTableImportButton(
-                          tableTitle: 'Risk Identification',
-                          columns: _riskCsvColumns,
-                          onImport: _handleCsvImport,
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton.icon(
-                          onPressed: _addNewRisk,
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add Risk'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFD700),
-                            foregroundColor: Colors.black,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  const SizedBox(height: 24),
                   BusinessCaseNavigationButtons(
                     currentScreen: 'Risk Identification',
                     padding:
@@ -1713,6 +1742,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                 border: Border.all(color: Colors.grey.shade300),
               ),
               child: VoiceTextField(
+                readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                 controller: _notesController,
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
                 decoration: const InputDecoration(
@@ -1770,6 +1800,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                       ),
                       const SizedBox(height: 8),
                       VoiceTextField(
+                        readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                         controller: TextEditingController(text: ''),
                         style: const TextStyle(
                             fontSize: 13, color: Colors.black54),
@@ -1967,7 +1998,9 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     );
   }
 
-  /// Risk text area with hint text and KAZ AI suggestion button
+  /// Risk text area with hint text. Editor actions (KAZ AI suggest, voice,
+  /// docx import, formatting) are surfaced by the Open Editor popup on the
+  /// VoiceTextField, so no separate inline KAZ AI pill is needed.
   Widget _riskTextAreaWithAI(TextEditingController controller,
       int solutionIndex, int riskIndex, String solutionTitle) {
     final hintTexts = [
@@ -2018,12 +2051,13 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 8),
                   VoiceTextField(
+                    readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                     controller: controller,
                     minLines: 2,
                     maxLines: null,
@@ -2044,17 +2078,6 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                     ),
                     style: const TextStyle(fontSize: 12, color: Colors.black87),
                   ),
-                ],
-              ),
-            ),
-            // KAZ AI suggestion button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  _buildKazAiButton(
-                      controller, solutionIndex, riskIndex, solutionTitle),
                 ],
               ),
             ),
@@ -2089,7 +2112,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         final riskText = riskIndex < riskList.length
             ? riskList[riskIndex]
             : (riskList.isNotEmpty ? riskList.first : '');
-        controller.text = riskText;
+        controller.text = _stripLeadingBullet(riskText);
 
         await provider.saveToFirebase(checkpoint: 'risk_field_regenerated');
 
@@ -2112,52 +2135,6 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         .map((c) => c.text.trim())
         .where((t) => t.isNotEmpty)
         .toList();
-  }
-
-  /// Build KAZ AI suggestion button inline
-  Widget _buildKazAiButton(TextEditingController controller, int solutionIndex,
-      int riskIndex, String solutionTitle) {
-    // Business Case lock — hide the KAZ AI button entirely when a
-    // preferred solution has been selected (view-only mode).
-    if (BusinessCaseLockHelper.isBusinessCaseLocked(
-        ProjectDataHelper.getData(context))) {
-      return const SizedBox.shrink();
-    }
-    final scheme = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: 'Get KAZ AI suggestions',
-      child: InkWell(
-        onTap: () => _showKazAiSuggestions(
-            controller, solutionIndex, riskIndex, solutionTitle),
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                scheme.primary.withValues(alpha: 0.1),
-                scheme.secondary.withValues(alpha: 0.1)
-              ],
-            ),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.auto_awesome, size: 14, color: scheme.primary),
-              const SizedBox(width: 4),
-              Text(
-                'KAZ AI',
-                style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.primary),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   /// Show KAZ AI suggestions dialog

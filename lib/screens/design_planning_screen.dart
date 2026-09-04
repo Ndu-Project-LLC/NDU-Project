@@ -11,9 +11,9 @@ import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/download_helper.dart' as download_helper;
 import 'package:ndu_project/utils/design_planning_document.dart';
-import 'package:ndu_project/screens/design_phase_screen.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -38,7 +38,7 @@ const Color _kSurface = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kText = Color(0xFF111827);
 const Color _kMuted = Color(0xFF6B7280);
-const Color _kPrimary = Color(0xFF2563EB);
+const Color _kPrimary = Color(0xFFFFC812);
 const Color _kSuccess = Color(0xFF0F9D58);
 const Color _kWarning = Color(0xFFF59E0B);
 // Brand colors from HTML design
@@ -48,8 +48,8 @@ const Color _kGray400 = Color(0xFF9CA3AF);
 const Color _kGray500 = Color(0xFF6B7280);
 const Color _kGray700 = Color(0xFF374151);
 const Color _kGray900 = Color(0xFF111827);
-const Color _kBlue50 = Color(0xFFEFF6FF);
-const Color _kBlue600 = Color(0xFF2563EB);
+const Color _kBlue50 = Color(0xFFFFF8E1);
+const Color _kBlue600 = Color(0xFFFFC812);
 const String _kSectionProgressNotesKey = 'planning_design_section_progress';
 
 enum _SectionProgressState { pending, complete, notApplicable }
@@ -191,7 +191,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   DateTime? _lastSavedAt;
  // ValueNotifier for lightweight save-indicator rebuilds without full setState
  final ValueNotifier<_SaveIndicatorState> _saveIndicatorNotifier =
- ValueNotifier<_SaveIndicatorState>(_SaveIndicatorState(
+ ValueNotifier<_SaveIndicatorState>(const _SaveIndicatorState(
  saving: false, pending: false, lastSavedAt: null));
  final Map<String, bool> _aiGenerating = {};
  late Map<String, _SectionProgressState> _sectionProgress;
@@ -358,7 +358,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
      requestedSectionId.isNotEmpty &&
      _sectionOrder.any((section) => section.id == requestedSectionId);
  _activeSectionId = hasValidInitialSection
-     ? requestedSectionId!
+     ? requestedSectionId
      : _sectionOrder
          .firstWhere(
            (section) => !_isSectionResolved(section.id),
@@ -1211,7 +1211,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  pw.SizedBox(height: 4),
  pw.Text(
  'Generated ${generatedAt.toLocal().toIso8601String()}',
- style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+ style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
  ),
  pw.SizedBox(height: 12),
  pw.TableHelper.fromTextArray(
@@ -1444,7 +1444,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  _showToast('$section generated from project context.');
  } catch (e) {
  if (!mounted) return;
- _showToast('AI generation failed for $section: ${e.toString()}');
+ _showToast('AI generation failed for $section: ${aiErrorMessage(e)}');
  } finally {
  if (mounted) {
  setState(() => _aiGenerating[key] = false);
@@ -2024,7 +2024,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  icon: const Icon(Icons.schedule, size: 16),
  label: const Text('Activity'),
  style: OutlinedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: _kGray700,
  side: const BorderSide(color: _kBorder),
  padding:
@@ -2343,7 +2343,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  title: 'Design Overview',
  subtitle:
  'Document design basis details covering who owns design outcomes, how design will be executed, and what vendor/contract/interface constraints shape the solution.',
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFFFC812),
  child: Column(
  children: [
  _AssistActions(
@@ -2403,7 +2403,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  title: 'System Architecture Basis',
  subtitle:
  'Define the architecture direction, modules, diagram references, and data flow that downstream design must honor.',
- accent: const Color(0xFF7C3AED),
+ accent: const Color(0xFFB8860B),
  child: Column(
  children: [
  _AssistActions(
@@ -2592,7 +2592,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Specifications',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'title', label: 'Title', required: true, hint: 'Specification title'),
  CsvColumnSpec(key: 'specificationType', label: 'Spec type', allowedValues: ['Code', 'Law', 'Standard', 'Criteria', 'Guideline', 'Contract', 'Other'], defaultValue: 'Standard'),
  CsvColumnSpec(key: 'discipline', label: 'Discipline', hint: 'e.g. Architecture, Civil, Frontend'),
@@ -2731,7 +2731,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  title: 'Deviations',
  subtitle:
  'Record approved exceptions that deviate from planned specification items before execution begins.',
- accent: const Color(0xFF0EA5E9),
+ accent: const Color(0xFFFFC812),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -2782,7 +2782,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  title: 'UI/UX Design Basis',
  subtitle:
  'Capture journeys, interface areas, and design-system expectations that should feed the later UI/UX design work.',
- accent: const Color(0xFFDB2777),
+ accent: const Color(0xFFD97706),
  child: Column(
  children: [
  _AssistActions(
@@ -3016,7 +3016,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  title: 'Dependencies',
  subtitle:
  'Track the external systems, teams, approvals, and vendors the design effort depends on.',
- accent: const Color(0xFF0891B2),
+ accent: const Color(0xFFD97706),
  child: Column(
  children: [
  _SubHeader(
@@ -3175,7 +3175,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
       title: 'Design Work Packages',
       subtitle:
           'Select WBS items to generate design work package chains (EWP → Procurement → Execution).',
-      accent: const Color(0xFF0D9488),
+      accent: const Color(0xFFD97706),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -3212,10 +3212,10 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                     : 'Create Design Work Packages from Selected',
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D9488),
+                backgroundColor: const Color(0xFFD97706),
                 foregroundColor: Colors.white,
                 disabledBackgroundColor:
-                    const Color(0xFF0D9488).withValues(alpha: 0.4),
+                    const Color(0xFFD97706).withValues(alpha: 0.4),
                 disabledForegroundColor: Colors.white70,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -3427,21 +3427,21 @@ class _SectionMeta {
 
 const List<_SectionMeta> _sectionOrder = [
   _SectionMeta('overview', 'Project Overview', _kPrimary),
-  _SectionMeta('design_overview', 'Design Overview', Color(0xFF1D4ED8)),
+  _SectionMeta('design_overview', 'Design Overview', Color(0xFFFFC812)),
   _SectionMeta('design_specifications_workspace', 'Design Specifications',
       Color(0xFF0F766E)),
-  _SectionMeta('deviations', 'Deviations', Color(0xFF0EA5E9)),
+  _SectionMeta('deviations', 'Deviations', Color(0xFFFFC812)),
   _SectionMeta('requirements', 'Requirements Mapping', Color(0xFF0F9D58)),
-  _SectionMeta('architecture', 'Architecture Basis', Color(0xFF7C3AED)),
-  _SectionMeta('uiux', 'UI/UX Basis', Color(0xFFDB2777)),
+  _SectionMeta('architecture', 'Architecture Basis', Color(0xFFB8860B)),
+  _SectionMeta('uiux', 'UI/UX Basis', Color(0xFFD97706)),
   _SectionMeta('technical', 'Technical Basis', Color(0xFF0F766E)),
   _SectionMeta('constraints', 'Constraints & Assumptions', Color(0xFFF59E0B)),
   _SectionMeta('risks', 'Risks & Mitigation', Color(0xFFDC2626)),
-  _SectionMeta('dependencies', 'Dependencies', Color(0xFF0891B2)),
+  _SectionMeta('dependencies', 'Dependencies', Color(0xFFD97706)),
   _SectionMeta('decisions', 'Decision Log', Color(0xFF4F46E5)),
   _SectionMeta('validation', 'Validation', Color(0xFF15803D)),
   _SectionMeta('approvals', 'Approvals', Color(0xFF7C2D12)),
-  _SectionMeta('work_packages', 'Work Packages', Color(0xFF0D9488)),
+  _SectionMeta('work_packages', 'Work Packages', Color(0xFFD97706)),
 ];
 
 class _SectionCard extends StatelessWidget {
@@ -3734,7 +3734,7 @@ class _MappingCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -3755,7 +3755,7 @@ class _MappingCard extends StatelessWidget {
           ),
           if (specificationOptions.isNotEmpty)
             DropdownButtonFormField<String>(
-              value: selectedId,
+              initialValue: selectedId,
               isExpanded: true,
               decoration: _inputDecoration('Select specification item'),
               items: specificationOptions
@@ -3921,7 +3921,7 @@ class _WorkItemCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4052,7 +4052,7 @@ class _SpecificationPlanRowCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4269,7 +4269,7 @@ class _SpecificationDeviationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4291,7 +4291,7 @@ class _SpecificationDeviationCard extends StatelessWidget {
           ),
           if (specificationOptions.isNotEmpty)
             DropdownButtonFormField<String>(
-              value: selectedId,
+              initialValue: selectedId,
               isExpanded: true,
               decoration: _inputDecoration('Select specification item'),
               items: specificationOptions
@@ -4364,7 +4364,7 @@ class _SpecificationDocumentCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4478,9 +4478,9 @@ class _RiskCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFFFFBEB),
+        color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFFDE68A)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Column(
         children: [
@@ -4575,7 +4575,7 @@ class _DependencyCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4684,7 +4684,7 @@ class _DecisionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4786,7 +4786,7 @@ class _ApprovalCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
       ),
@@ -4887,7 +4887,7 @@ class _DropdownField extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: selected,
+          initialValue: selected,
           isExpanded: true,
           decoration: _inputDecoration(''),
           items: items
@@ -5073,6 +5073,7 @@ class _FilterableCreatableDropdownFieldState
                   child: ListView.separated(
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: list.length,
                     separatorBuilder: (_, __) =>
                         const Divider(height: 1, color: _kBorder),
@@ -5285,6 +5286,7 @@ class _RequirementMultiSelectFieldState
                             )
                           : ListView.builder(
                               shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
                               itemCount: filtered.length,
                               itemBuilder: (context, index) {
                                 final option = filtered[index];
@@ -5460,7 +5462,7 @@ class _FourColumnGrid extends StatelessWidget {
     final preferredColumns = isMobile ? 1 : (isTablet ? 2 : 4);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final spacing = 12.0;
+        const spacing = 12.0;
         final maxWidth = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : MediaQuery.sizeOf(context).width;
@@ -5697,7 +5699,7 @@ class _EmptyState extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
       ),
@@ -5729,15 +5731,15 @@ InputDecoration _inputDecoration(String hintText) {
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
-      borderSide: BorderSide(color: Color(0xFFD1D5DB)),
+      borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
-      borderSide: BorderSide(color: Color(0xFFD1D5DB)),
+      borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
-      borderSide: BorderSide(color: _kBrandYellow, width: 1.5),
+      borderSide: const BorderSide(color: _kBrandYellow, width: 1.5),
     ),
   );
 }

@@ -306,7 +306,7 @@ class _TeamRolesResponsibilitiesScreenState
  final projectId = provider?.projectData.projectId;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -2116,8 +2116,8 @@ class _TableHeaderActions extends StatelessWidget {
  minimumSize: const Size(0, 36),
  textStyle: const TextStyle(
  fontSize: 12, fontWeight: FontWeight.w600),
- foregroundColor: const Color(0xFF2563EB),
- side: const BorderSide(color: Color(0xFFBFDBFE)),
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(10)),
  ),
@@ -2655,17 +2655,10 @@ class _TeamMemberDialogState extends State<_TeamMemberDialog> {
 
  // --- AI Suggestion Helper (now in dialog state) ---
  Future<String> fetchOpenAiSuggestion(String field) async {
- // Replace with your actual OpenAI API key and endpoint
- const apiKey = 'YOUR_OPENAI_API_KEY';
- const endpoint = 'https://api.openai.com/v1/chat/completions';
-
  final prompt = _buildPromptForField(field);
  final response = await http.post(
- Uri.parse(endpoint),
- headers: {
- 'Content-Type': 'application/json',
- 'Authorization': 'Bearer $apiKey',
- },
+ OpenAiConfig.messagesUri(),
+ headers: OpenAiConfig.headers(),
  body: jsonEncode(OpenAiConfig.wrapBody({
  'model': OpenAiConfig.model,
  'messages': [
@@ -2681,8 +2674,8 @@ class _TeamMemberDialogState extends State<_TeamMemberDialog> {
  );
  if (response.statusCode == 200) {
  final data = jsonDecode(response.body);
- final suggestion = data['choices'][0]['message']['content']?.trim();
- return suggestion ?? '';
+ final suggestion = OpenAiConfig.extractContent(data);
+ return suggestion.isNotEmpty ? suggestion : '';
  } else {
  return '';
  }

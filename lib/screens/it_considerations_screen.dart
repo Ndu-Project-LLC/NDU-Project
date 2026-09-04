@@ -20,24 +20,24 @@ import 'package:ndu_project/widgets/business_case_header.dart';
 import 'package:ndu_project/widgets/business_case_navigation_buttons.dart';
 // Removed AppLogo to match updated header pattern
 import 'package:ndu_project/screens/initiation_phase_screen.dart';
-import 'package:ndu_project/screens/potential_solutions_screen.dart';
 import 'package:ndu_project/screens/risk_identification_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
 import 'package:ndu_project/screens/cost_analysis_screen.dart';
 import 'package:ndu_project/screens/preferred_solution_analysis_screen.dart';
 import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/widgets/page_hint_dialog.dart';
 import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/utils/business_case_lock_helper.dart';
 
 enum _MissingItConsiderationsAction { manual, autoFill, skip }
 
@@ -322,12 +322,8 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
         );
       }
     } catch (e) {
-      _error = (e.toString().contains('Failed to fetch') ||
-              e.toString().contains('ClientException') ||
-              e.toString().contains('XMLHttpRequest') ||
-              e.toString().contains('Connection refused'))
-          ? 'AI assist is being set up. Please try again later or enter content manually.'
-          : e.toString();
+      debugPrint('OpenAI generation failed: $e');
+      _error = aiErrorMessage(e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to regenerate IT considerations: $e')),
@@ -355,7 +351,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
     final sidebarWidth = AppBreakpoints.sidebarWidth(context);
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: null,
       body: SafeArea(
         top: true,
@@ -395,7 +391,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: _buildMobileDrawer(),
       body: SafeArea(
         child: Column(
@@ -480,6 +476,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
                         border: Border.all(color: const Color(0xFFDCE3EE)),
                       ),
                       child: VoiceTextField(
+                        readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                         controller: _notesController,
                         minLines: 3,
                         maxLines: 6,
@@ -537,7 +534,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
                   label: const Text('Back'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF374151),
-                    backgroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                     side: const BorderSide(color: Color(0xFFD1D5DB)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
@@ -692,6 +689,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
                   ],
                 ),
                 VoiceTextField(
+                  readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                   controller: _techControllers[index],
                   minLines: 4,
                   maxLines: null,
@@ -746,7 +744,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
               width: 40,
               height: 40,
               decoration: const BoxDecoration(
-                  color: Colors.blue, shape: BoxShape.circle),
+                  color: Color(0xFFFFC812), shape: BoxShape.circle),
               child: const Icon(Icons.person, color: Colors.white, size: 20)),
           if (!isMobile) ...[
             const SizedBox(width: 12),
@@ -909,7 +907,6 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
           decoration: selected
               ? BoxDecoration(
                   color: primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
                   border: Border(left: BorderSide(color: primary, width: 3)),
                 )
               : null,
@@ -1282,15 +1279,11 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
       );
       return true;
     } catch (e) {
-      _error = (e.toString().contains('Failed to fetch') ||
-              e.toString().contains('ClientException') ||
-              e.toString().contains('XMLHttpRequest') ||
-              e.toString().contains('Connection refused'))
-          ? 'AI assist is being set up. Please try again later or enter content manually.'
-          : e.toString();
+      debugPrint('OpenAI generation failed: $e');
+      _error = aiErrorMessage(e);
       if (!mounted) return false;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('AI autofill failed: $e')),
+        SnackBar(content: Text('AI autofill failedaiErrorMessage(e)')),
       );
       return false;
     } finally {
@@ -1467,6 +1460,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
         controller: _reviewScrollController,
         padding: EdgeInsets.all(AppBreakpoints.pagePadding(context)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          BusinessCaseLockHelper.lockBanner(ProjectDataHelper.getData(context)),
           Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
             const EditableContentText(
                 contentKey: 'it_considerations_heading',
@@ -1512,6 +1506,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.grey.withValues(alpha: 0.3))),
             child: VoiceTextField(
+              readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
               controller: _notesController,
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               decoration: InputDecoration(
@@ -1550,10 +1545,22 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
                     const SizedBox(height: 8),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: TextButton(
-                          onPressed:
-                              _isGenerating ? null : _generateTechnologies,
-                          child: const Text('Retry')),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              if (mounted) setState(() => _error = null);
+                            },
+                            child: const Text('Dismiss'),
+                          ),
+                          TextButton(
+                              onPressed: _isGenerating
+                                  ? null
+                                  : _generateTechnologies,
+                              child: const Text('Retry')),
+                        ],
+                      ),
                     ),
                   ]),
             ),
@@ -1811,6 +1818,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFFE4E7EC))),
             child: VoiceTextField(
+              readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
               controller: controller,
               minLines: 3,
               maxLines: null,

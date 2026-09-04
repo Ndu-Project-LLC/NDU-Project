@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -17,20 +17,14 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/procurement_service.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
-import 'package:ndu_project/services/firebase_auth_service.dart';
-import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/s_curve_chart.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/services/forecast_service.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
-import 'package:ndu_project/widgets/csv_import_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
-import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
@@ -189,7 +183,7 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
         _benefitCountForPreferred(projectData.costAnalysisData, preferredTitle);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,13 +204,6 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
                       children: [
                         PlanningPhaseHeader(
                             title: 'Cost Estimate', onExportPdf: _exportPdf),
-                        const SizedBox(height: 16),
-                        _TopUtilityBar(
-                          onBack: () => PlanningPhaseNavigation.goToPrevious(
-                              context, 'cost_estimate'),
-                          onForward: () => PlanningPhaseNavigation.goToNext(
-                              context, 'cost_estimate'),
-                        ),
                         const SizedBox(height: 24),
                         const PlanningAiNotesCard(
                           title: 'Notes',
@@ -297,8 +284,8 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Cost Estimate',
                     ),
                   ),
@@ -383,7 +370,7 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
               onAddItem: () => _showAddItem(context),
             ),
             const SizedBox(height: 18),
-            _SubsectionHeader(
+            const _SubsectionHeader(
               title: 'Initiation baseline',
               subtitle:
                   'Imported baseline items confirmed for the current estimate.',
@@ -399,7 +386,7 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
               onDelete: (item) => _deleteItem(context, item),
             ),
             const SizedBox(height: 20),
-            _SubsectionHeader(
+            const _SubsectionHeader(
               title: 'Planning adjustments',
               subtitle:
                   'Manual lines and imported planning deltas linked to project sources.',
@@ -416,7 +403,7 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
             ),
             if (_includeSupersededLines) ...[
               const SizedBox(height: 20),
-              _SubsectionHeader(
+              const _SubsectionHeader(
                 title: 'Superseded by reconciliation',
                 subtitle:
                     'Raw imported lines that were collapsed because a stronger cost state exists for the same scope.',
@@ -560,7 +547,7 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
         description: forecastTotal == 0
             ? 'No forecast costs yet'
             : 'Planning estimate and budget inputs',
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         accentColor: const Color(0xFF111827),
         descriptionColor: const Color(0xFF6B7280),
         badgeLabel: forecastTotal == 0 ? null : 'Forecast',
@@ -571,9 +558,9 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
         description: committedTotal == 0
             ? 'No committed costs yet'
             : 'Reference-only downstream commitments',
-        backgroundColor: const Color(0xFFEFF6FF),
-        accentColor: const Color(0xFF1D4ED8),
-        descriptionColor: const Color(0xFF1D4ED8),
+        backgroundColor: const Color(0xFFFFF8E1),
+        accentColor: const Color(0xFFFFC812),
+        descriptionColor: const Color(0xFFFFC812),
         badgeLabel: committedTotal == 0 ? null : 'Committed',
       ),
       _CostSummary(
@@ -604,9 +591,9 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
         description: managementReserve == 0
             ? 'No management reserve set'
             : 'Separate from delivery forecast',
-        backgroundColor: const Color(0xFFF5F3FF),
-        accentColor: const Color(0xFF7C3AED),
-        descriptionColor: const Color(0xFF7C3AED),
+        backgroundColor: const Color(0xFFFFF8E1),
+        accentColor: const Color(0xFFB8860B),
+        descriptionColor: const Color(0xFFB8860B),
         badgeLabel: managementReserve == 0 ? null : 'Reserve',
       ),
     ];
@@ -2592,61 +2579,6 @@ Current Cost Items: ${pd.costEstimateItems.map((e) => "${e.title} (${e.costType}
   }
 }
 
-class _TopUtilityBar extends StatelessWidget {
-  const _TopUtilityBar({required this.onBack, required this.onForward});
-
-  final VoidCallback onBack;
-  final VoidCallback onForward;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        children: [
-          _circleButton(icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
-          const SizedBox(width: 12),
-          _circleButton(
-              icon: Icons.arrow_forward_ios_rounded, onTap: onForward),
-          const SizedBox(width: 20),
-          const Text(
-            'Cost Estimate',
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF111827)),
-          ),
-          const Spacer(),
-          const SizedBox(width: 8),
-          const _UserChip(name: '', role: ''),
-        ],
-      ),
-    );
-  }
-
-  Widget _circleButton({required IconData icon, VoidCallback? onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: Color(0xFFE5E7EB)),
-        ),
-        child: Icon(icon, size: 18, color: const Color(0xFF6B7280)),
-      ),
-    );
-  }
-}
-
 class _HeroBanner extends StatelessWidget {
   const _HeroBanner();
 
@@ -2665,13 +2597,13 @@ class _HeroBanner extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Project Cost Estimate',
                   style: TextStyle(
@@ -2687,8 +2619,8 @@ class _HeroBanner extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 32),
-          const Icon(Icons.stacked_bar_chart_rounded,
+          SizedBox(width: 32),
+          Icon(Icons.stacked_bar_chart_rounded,
               color: Colors.white, size: 46),
         ],
       ),
@@ -2914,14 +2846,14 @@ class _SupersededToggle extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Include Superseded Lines',
                   style: TextStyle(
@@ -2978,7 +2910,7 @@ class _CostEstimateTopBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3000,7 +2932,7 @@ class _CostEstimateTopBar extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Color(0xFFECFDF5),
+                    color: const Color(0xFFECFDF5),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -3073,7 +3005,7 @@ class _WorkspaceTabs extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Wrap(
         spacing: 8,
@@ -3119,7 +3051,7 @@ class _OverviewRollupCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3188,7 +3120,7 @@ class _CoverageSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3216,7 +3148,7 @@ class _CoverageSummaryCard extends StatelessWidget {
           if (reconciliationReport.supersededCount > 0) ...[
             Text(
               '${reconciliationReport.supersededCount} imported line(s) are currently superseded by stronger cost states.',
-              style: const TextStyle(fontSize: 13, color: Color(0xFF1D4ED8)),
+              style: const TextStyle(fontSize: 13, color: Color(0xFFFFC812)),
             ),
             const SizedBox(height: 12),
           ],
@@ -3309,7 +3241,7 @@ class _BoeSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3329,7 +3261,7 @@ class _BoeSummaryCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Color(0xFFF1F5F9),
+                  color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -3462,9 +3394,9 @@ class _BoeSummaryCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: pct,
               minHeight: 4,
-              backgroundColor: Colors.white,
+              backgroundColor: const Color(0xFFE5E7EB),
               valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                  const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
             ),
           ),
         ],
@@ -3498,7 +3430,7 @@ class _BoeSummaryCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: pct,
               minHeight: 4,
-              backgroundColor: Colors.white,
+              backgroundColor: const Color(0xFFE5E7EB),
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
@@ -3562,7 +3494,7 @@ class _CostProfileCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3702,7 +3634,7 @@ class _ContractStrategyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3722,7 +3654,7 @@ class _ContractStrategyCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Color(0xFFF1F5F9),
+                  color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -3742,7 +3674,7 @@ class _ContractStrategyCard extends StatelessWidget {
                   formatCurrency(totalContractValue), const Color(0xFF1E293B)),
               const SizedBox(width: 16),
               _strategyStat('Linked Cost Items', '${contractIds.length} linked',
-                  const Color(0xFF2563EB)),
+                  const Color(0xFFFFC812)),
               const SizedBox(width: 16),
               _strategyStat(
                   'Coverage',
@@ -3787,7 +3719,7 @@ class _ContractStrategyCard extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: pct,
                         minHeight: 6,
-                        backgroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                         valueColor: AlwaysStoppedAnimation<Color>(
                             _contractStatusColor(status)),
                       ),
@@ -3881,7 +3813,7 @@ class _ContractStrategyCard extends StatelessWidget {
       case ContractStatus.under_review:
         return const Color(0xFFC2410C);
       case ContractStatus.approved:
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case ContractStatus.executed:
         return const Color(0xFF059669);
       case ContractStatus.expired:
@@ -3975,7 +3907,7 @@ class _SourceSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
@@ -4041,7 +3973,7 @@ class _ReconciliationReportCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4097,9 +4029,9 @@ class _ReconciliationEntryTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4158,7 +4090,7 @@ class _SourceDetailList extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4293,7 +4225,7 @@ class _ContingencyRiskPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4316,7 +4248,7 @@ class _ContingencyRiskPanel extends StatelessWidget {
             _ContingencyRow(
               label: 'Management Reserve',
               amount: reserve,
-              color: const Color(0xFF7C3AED),
+              color: const Color(0xFFB8860B),
             ),
             const Divider(height: 24),
           ],
@@ -4345,7 +4277,7 @@ class _ContingencyRiskPanel extends StatelessWidget {
             _ContingencyRow(
               label: 'PERT mean estimate',
               amount: pertMeanTotal,
-              color: const Color(0xFF2563EB),
+              color: const Color(0xFFFFC812),
             ),
             const SizedBox(height: 4),
             _ContingencyRow(
@@ -4375,7 +4307,7 @@ class _ContingencyRiskPanel extends StatelessWidget {
               _ContingencyRow(
                 label: 'P80 (80% confidence)',
                 amount: p80,
-                color: const Color(0xFF7C3AED),
+                color: const Color(0xFFB8860B),
               ),
               const SizedBox(height: 4),
               _ContingencyRow(
@@ -4415,7 +4347,7 @@ class _ContingencyRiskPanel extends StatelessWidget {
             forecastTotal,
             Icons.design_services_outlined,
             'Design changes, tech uncertainty, rework',
-            const Color(0xFF2563EB),
+            const Color(0xFFFFC812),
           ),
           const SizedBox(height: 6),
           _riskDomainTile(
@@ -4629,7 +4561,7 @@ class _CbsTreeWorkspace extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4647,7 +4579,7 @@ class _CbsTreeWorkspace extends StatelessWidget {
             children: [
               _legendDot(const Color(0xFFB45309), 'Forecast'),
               const SizedBox(width: 16),
-              _legendDot(const Color(0xFF1D4ED8), 'Committed'),
+              _legendDot(const Color(0xFFFFC812), 'Committed'),
               const SizedBox(width: 16),
               _legendDot(const Color(0xFF047857), 'Actual'),
               const Spacer(),
@@ -4867,7 +4799,7 @@ class _CbsTreeTileState extends State<_CbsTreeTile> {
                   height: 8,
                   decoration: BoxDecoration(
                     color: hasChildren
-                        ? const Color(0xFF2563EB)
+                        ? const Color(0xFFFFC812)
                         : const Color(0xFF94A3B8),
                     shape: BoxShape.circle,
                   ),
@@ -4909,7 +4841,7 @@ class _CbsTreeTileState extends State<_CbsTreeTile> {
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: node.committed > 0
-                                ? const Color(0xFF1D4ED8)
+                                ? const Color(0xFFFFC812)
                                 : const Color(0xFFCBD5E1)),
                         textAlign: TextAlign.right)),
                 SizedBox(
@@ -4980,8 +4912,9 @@ class _CostVsScheduleWorkspace extends StatelessWidget {
       final end = _tryParseDate(wp.plannedEnd) ?? _tryParseDate(wp.actualEnd);
       if (start == null || end == null || end.isBefore(start)) continue;
 
-      if (earliestStart == null || start.isBefore(earliestStart))
+      if (earliestStart == null || start.isBefore(earliestStart)) {
         earliestStart = start;
+      }
       if (latestEnd == null || end.isAfter(latestEnd)) latestEnd = end;
 
       final months = _monthSpan(start, end);
@@ -5290,7 +5223,7 @@ class _EarnedValueMetricsRow extends StatelessWidget {
       child: Row(
         children: [
           _evmMetric('BAC', formatCurrency(bac), const Color(0xFF1E293B)),
-          _evmMetric('PV', formatCurrency(pv), const Color(0xFF2563EB)),
+          _evmMetric('PV', formatCurrency(pv), const Color(0xFFFFC812)),
           _evmMetric('EV', formatCurrency(ev), const Color(0xFF059669)),
           _evmMetric('AC', formatCurrency(ac), const Color(0xFFB45309)),
           _evmMetric('CPI', cpi.toStringAsFixed(2), _evmColor(cpi, 1.0)),
@@ -5299,9 +5232,9 @@ class _EarnedValueMetricsRow extends StatelessWidget {
               cv >= 0 ? const Color(0xFF059669) : const Color(0xFFDC2626)),
           _evmMetric('SV', formatCurrency(sv),
               sv >= 0 ? const Color(0xFF059669) : const Color(0xFFDC2626)),
-          _evmMetric('EAC', formatCurrency(eac), const Color(0xFF7C3AED)),
-          _evmMetric('ETC', formatCurrency(etc), const Color(0xFF9333EA)),
-          _evmMetric('TCPI', tcpii.toStringAsFixed(2), const Color(0xFF0891B2)),
+          _evmMetric('EAC', formatCurrency(eac), const Color(0xFFB8860B)),
+          _evmMetric('ETC', formatCurrency(etc), const Color(0xFFB8860B)),
+          _evmMetric('TCPI', tcpii.toStringAsFixed(2), const Color(0xFFD97706)),
         ],
       ),
     );
@@ -5315,7 +5248,7 @@ class _EarnedValueMetricsRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -5339,8 +5272,9 @@ class _EarnedValueMetricsRow extends StatelessWidget {
   }
 
   Color _evmColor(double ratio, double target) {
-    if (ratio >= target * 0.95 && ratio <= target * 1.05)
+    if (ratio >= target * 0.95 && ratio <= target * 1.05) {
       return const Color(0xFF059669);
+    }
     if (ratio >= target * 0.85) return const Color(0xFFC2410C);
     return const Color(0xFFDC2626);
   }
@@ -5392,7 +5326,7 @@ class _ViewSelector extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: _CostView.values.map((view) {
@@ -5500,11 +5434,11 @@ class _SectionHeader extends StatelessWidget {
                     final rows = await showCsvImportDialog(context,
                         tableTitle: 'Cost Items',
                         columns: [
-                          CsvColumnSpec(
+                          const CsvColumnSpec(
                               key: 'item',
                               label: 'Item',
                               sampleValue: 'Development'),
-                          CsvColumnSpec(
+                          const CsvColumnSpec(
                               key: 'cost', label: 'Cost', sampleValue: '50000'),
                         ]);
 
@@ -5644,7 +5578,7 @@ class _SupersededCostList extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Text(
           activeFilter == _CostStateFilter.all
@@ -5786,9 +5720,9 @@ class _ContextBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -5829,7 +5763,7 @@ class _BaselineDeltaStrip extends StatelessWidget {
       _DeltaMetric(
         label: 'Baseline',
         value: formatCurrency(baseline),
-        tone: const Color(0xFF1D4ED8),
+        tone: const Color(0xFFFFC812),
       ),
       _DeltaMetric(
         label: 'Adjustments',
@@ -5891,7 +5825,7 @@ class _DeltaMetricCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -5961,7 +5895,7 @@ class _EmptyCostState extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
@@ -5969,7 +5903,7 @@ class _EmptyCostState extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: Color(0xFFFFF3CD),
+              color: const Color(0xFFFFF3CD),
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(Icons.add_task, color: Color(0xFFB45309)),
@@ -6035,7 +5969,7 @@ class _CategoryTile extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: Color(0xFFF8FAFC),
+              color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, size: 20, color: const Color(0xFF1E293B)),
@@ -6116,9 +6050,9 @@ class _SupersededCategoryTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        color: Color(0xFFFFFBEB),
+        color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFFDE68A)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -6241,7 +6175,7 @@ class _OverheadConfigCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -6284,7 +6218,7 @@ class _OverheadConfigCard extends StatelessWidget {
                                   : '')
                               .length),
                     ),
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   style: const TextStyle(
                       fontSize: 13, fontWeight: FontWeight.w600),
                   decoration: const InputDecoration(
@@ -6573,7 +6507,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 760, maxHeight: 820),
         child: Column(
@@ -6651,7 +6585,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _DialogLabel(label: 'Category'),
+                        const _DialogLabel(label: 'Category'),
                         const SizedBox(height: 8),
                         _TypeSelector(
                           selectedView: _selectedView,
@@ -6757,7 +6691,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        _DialogLabel(label: 'Cost item'),
+                        const _DialogLabel(label: 'Cost item'),
                         const SizedBox(height: 8),
                         VoiceTextFormField(
                           controller: _titleController,
@@ -6826,7 +6760,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _DialogLabel(label: 'Estimated amount'),
+                        const _DialogLabel(label: 'Estimated amount'),
                         const SizedBox(height: 8),
                         VoiceTextFormField(
                           controller: _amountController,
@@ -6866,7 +6800,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        _DialogLabel(label: 'Estimating basis'),
+                        const _DialogLabel(label: 'Estimating basis'),
                         const SizedBox(height: 8),
                         VoiceTextFormField(
                           controller: _estimatingBasisController,
@@ -6877,7 +6811,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _DialogLabel(label: 'Scope / BOE (optional)'),
+                        const _DialogLabel(label: 'Scope / BOE (optional)'),
                         const SizedBox(height: 8),
                         VoiceTextFormField(
                           controller: _scopeIncludedController,
@@ -7023,7 +6957,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _DialogLabel(label: 'PERT Risk Ranges (optional)'),
+                        const _DialogLabel(label: 'PERT Risk Ranges (optional)'),
                         const SizedBox(height: 8),
                         Row(
                           children: [
@@ -7074,7 +7008,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _DialogLabel(label: 'Notes (optional)'),
+                        const _DialogLabel(label: 'Notes (optional)'),
                         const SizedBox(height: 8),
                         VoiceTextFormField(
                           controller: _notesController,
@@ -7193,17 +7127,17 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
       ),
     );
   }
 
   Color _accentForView(_CostView view) => view == _CostView.direct
-      ? const Color(0xFF2563EB)
+      ? const Color(0xFFFFC812)
       : const Color(0xFF047857);
 
   String _viewLabel(_CostView view) =>
@@ -7219,7 +7153,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
     required ValueChanged<T?> onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       items: items,
       onChanged: onChanged,
       decoration: _inputDecoration(label),
@@ -7248,15 +7182,15 @@ class _TypeSelector extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: _CostView.values.map((view) {
           final bool isActive = view == selectedView;
           final Color accent = view == _CostView.direct
-              ? const Color(0xFF2563EB)
+              ? const Color(0xFFFFC812)
               : const Color(0xFF047857);
           return Expanded(
             child: GestureDetector(
@@ -7312,83 +7246,6 @@ class _DialogLabel extends StatelessWidget {
       label,
       style: const TextStyle(
           fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
-    );
-  }
-}
-
-class _UserChip extends StatelessWidget {
-  const _UserChip({required this.name, required this.role});
-
-  final String name;
-  final String role;
-
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = FirebaseAuthService.displayNameOrEmail(
-        fallback: name.isNotEmpty ? name : 'User');
-    final email = user?.email ?? '';
-    final primary = displayName.isNotEmpty
-        ? displayName
-        : (email.isNotEmpty ? email : name);
-    final photoUrl = user?.photoURL ?? '';
-
-    return RepaintBoundary(
-      child: StreamBuilder<bool>(
-        stream: UserService.watchAdminStatus(),
-        builder: (context, snapshot) {
-          final isAdmin = snapshot.data ?? UserService.isAdminEmail(email);
-          final resolvedRole = isAdmin ? 'Admin' : 'Member';
-          final roleText = role.isNotEmpty ? role : resolvedRole;
-
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: Color(0xFFE5E7EB)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: const Color(0xFFE5E7EB),
-                  backgroundImage:
-                      photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-                  child: photoUrl.isEmpty
-                      ? Text(
-                          primary.isNotEmpty ? primary[0].toUpperCase() : 'U',
-                          style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF374151)),
-                        )
-                      : null,
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      primary,
-                      style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF111827)),
-                    ),
-                    Text(
-                      roleText,
-                      style: const TextStyle(
-                          fontSize: 11, color: Color(0xFF6B7280)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      ),
     );
   }
 }
@@ -7646,7 +7503,7 @@ String _costStateLabel(String costState) {
 Color _costStateTone(String costState) {
   switch (costState) {
     case 'committed':
-      return const Color(0xFF1D4ED8);
+      return const Color(0xFFFFC812);
     case 'actual':
       return const Color(0xFF047857);
     case 'forecast':
@@ -7693,9 +7550,9 @@ Color _designMaturityColor(String designMaturity) {
     case '90%':
       return const Color(0xFF059669);
     case 'IFC':
-      return const Color(0xFF2563EB);
+      return const Color(0xFFFFC812);
     case 'AsBuilt':
-      return const Color(0xFF7C3AED);
+      return const Color(0xFFB8860B);
     default:
       return const Color(0xFF94A3B8);
   }
@@ -7791,7 +7648,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString().replaceAll('Exception:', '').trim();
+          _error = aiErrorMessage(e);
           _loading = false;
         });
       }
@@ -7819,7 +7676,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
         child: Column(
@@ -7830,7 +7687,6 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
               padding: const EdgeInsets.fromLTRB(24, 20, 16, 16),
               decoration: const BoxDecoration(
                 color: Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                 border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
               ),
               child: Row(
@@ -7838,17 +7694,17 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Color(0xFFDBEAFE),
+                      color: const Color(0xFFFEF3C7),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.auto_awesome,
-                        color: Color(0xFF2563EB), size: 24),
+                        color: Color(0xFFFFC812), size: 24),
                   ),
                   const SizedBox(width: 16),
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           'AI Cost Suggestions',
                           style: TextStyle(
@@ -7929,6 +7785,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
                           : ListView.separated(
                               padding: const EdgeInsets.all(24),
                               shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
                               itemCount: _suggestions.length,
                               separatorBuilder: (_, __) =>
                                   const SizedBox(height: 12),
@@ -7943,12 +7800,12 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
                                       color: isSelected
-                                          ? const Color(0xFFEFF6FF)
+                                          ? const Color(0xFFFFF8E1)
                                           : Colors.white,
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
                                         color: isSelected
-                                            ? const Color(0xFF3B82F6)
+                                            ? const Color(0xFFFFC812)
                                             : const Color(0xFFE5E7EB),
                                         width: isSelected ? 2 : 1,
                                       ),
@@ -7965,7 +7822,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
                                                 ? Icons.check_circle
                                                 : Icons.circle_outlined,
                                             color: isSelected
-                                                ? const Color(0xFF3B82F6)
+                                                ? const Color(0xFFFFC812)
                                                 : const Color(0xFFCBD5E1),
                                             size: 22,
                                           ),
@@ -7997,7 +7854,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
                                                         vertical: 2),
                                                     decoration:
                                                         BoxDecoration(
-                                                      color: Color(0xFFF1F5F9),
+                                                      color: const Color(0xFFF1F5F9),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               6),
@@ -8030,7 +7887,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.w700,
                                                   color: Color(
-                                                      0xFF2563EB), // Blue-600
+                                                      0xFFFFC812), // Blue-600
                                                 ),
                                               ),
                                             ],
@@ -8072,7 +7929,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
                         onPressed:
                             _selectedIndices.isEmpty ? null : _addSelected,
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
+                          backgroundColor: const Color(0xFFFFC812),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 12),
                           shape: RoundedRectangleBorder(

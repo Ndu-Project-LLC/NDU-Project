@@ -12,6 +12,7 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/screens/ssher_stacked_screen.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/charter_lock_helper.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -57,6 +58,9 @@ class _PlanningRequirementsScreenState
  List<_AssignableMember> _memberOptions = const <_AssignableMember>[];
  final List<_RequirementRow> _rows = [];
 
+ bool get _isRequirementsLocked =>
+ CharterLockHelper.isFepLocked(ProjectDataHelper.getData(context));
+
  static const Set<String> _authorizedRequirementSubmitRoles = {
  'owner',
  'project manager',
@@ -87,7 +91,8 @@ class _PlanningRequirementsScreenState
  _rows.add(_createRow(1));
  }
 
- if (_rows.length == 1 &&
+ if (!_isRequirementsLocked &&
+ _rows.length == 1 &&
  _rows.first.descriptionController.text.trim().isEmpty) {
  await _generateRequirementsFromContext();
  }
@@ -243,6 +248,7 @@ class _PlanningRequirementsScreenState
  }
 
  Future<void> _generateRequirementsFromContext() async {
+ if (_isRequirementsLocked) return;
  if (_isGeneratingRequirements) return;
  setState(() => _isGeneratingRequirements = true);
 
@@ -323,11 +329,13 @@ class _PlanningRequirementsScreenState
  }
 
  void _handleRequirementChanged() {
+ if (_isRequirementsLocked) return;
  _scheduleAutoSave();
  _schedulePlanRegenerate();
  }
 
  void _handlePlanChanged() {
+ if (_isRequirementsLocked) return;
  if (!_settingPlanFromAi) {
  _planEditedManually = _requirementsPlanController.text.trim().isNotEmpty;
  }
@@ -368,6 +376,7 @@ $requirementsList
  }
 
  Future<void> _generateRequirementsPlan({bool force = false}) async {
+ if (_isRequirementsLocked) return;
  if (_isGeneratingRequirementsPlan) return;
  if (!force &&
  _planEditedManually &&
@@ -416,6 +425,7 @@ $requirementsList
  }
 
  Future<void> _regenerateRequirementRow(int index) async {
+ if (_isRequirementsLocked) return;
  if (index < 0 || index >= _rows.length) return;
  if (_isGeneratingRequirements || _isRegeneratingRow) return;
 
@@ -502,6 +512,7 @@ $requirementsList
  }
 
  void _undoRequirementRow(int index) {
+ if (_isRequirementsLocked) return;
  if (index < 0 || index >= _rows.length) return;
  final row = _rows[index];
  final previous = row.aiUndoText;
@@ -768,6 +779,7 @@ $requirementsList
  bool _isRoleAuthorizedForRequirementSubmit(String role) {
  return _authorizedRequirementSubmitRoles.contains(_normalizeRole(role));
  }  void _onReorder(int oldIndex, int newIndex) {
+    if (_isRequirementsLocked) return;
     if (newIndex > oldIndex) newIndex--;
     if (oldIndex < 0 || oldIndex >= _rows.length) return;
     if (newIndex < 0 || newIndex >= _rows.length) return;
@@ -782,6 +794,7 @@ $requirementsList
   }
 
   void _deleteRow(int index) {
+    if (_isRequirementsLocked) return;
     if (index < 0 || index >= _rows.length) return;
     setState(() {
       _rows[index].dispose();
@@ -952,7 +965,9 @@ $requirementsList
  nextScreenBuilder: () =>
  PlanningPhaseNavigation.resolveNextScreen(context, 'requirements') ??
  const SsherStackedScreen(),
- dataUpdater: (data) => data.copyWith(
+ dataUpdater: _isRequirementsLocked
+ ? null
+ : (data) => data.copyWith(
  frontEndPlanning: ProjectDataHelper.updateFEPField(
  current: data.frontEndPlanning,
  requirements: requirementsText,
@@ -969,6 +984,7 @@ $requirementsList
  }
 
  void _scheduleAutoSave({bool showSnack = true}) {
+ if (_isRequirementsLocked) return;
  _autoSaveTimer?.cancel();
  _autoSaveTimer = Timer(const Duration(milliseconds: 500), () {
  _commitAutoSave(showSnack: showSnack);
@@ -976,7 +992,7 @@ $requirementsList
  }
 
  void _commitAutoSave({bool showSnack = true}) {
- if (!mounted) return;
+ if (!mounted || _isRequirementsLocked) return;
 
  final items = _buildRequirementItems();
  final requirementsText = items
@@ -1042,6 +1058,7 @@ $requirementsList
  }
 
  Future<void> _confirmRegenerate() async {
+ if (_isRequirementsLocked) return;
  if (_isGeneratingRequirements) return;
  if (!_hasAnyRequirementInputs()) {
  await _generateRequirementsFromContext();
@@ -1092,7 +1109,7 @@ $requirementsList
  @override
  Widget build(BuildContext context) {
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1132,6 +1149,7 @@ $requirementsList
  controller: _notesController,
  hint: 'Input your notes here...',
  minLines: 3,
+ readOnly: _isRequirementsLocked,
  ),
  const SizedBox(height: 20),
  Row(
@@ -1171,16 +1189,16 @@ $requirementsList
  child:
  CircularProgressIndicator(
  strokeWidth: 2,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  )
  : const Icon(
  Icons.auto_fix_high,
  size: 20,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  onPressed:
- _isGeneratingRequirementsPlan
+ _isRequirementsLocked || _isGeneratingRequirementsPlan
  ? null
  : () =>
  _generateRequirementsPlan(
@@ -1197,6 +1215,7 @@ $requirementsList
  hint:
  'AI will generate a requirements plan based on your entries...',
  minLines: 4,
+ readOnly: _isRequirementsLocked,
  ),
  const SizedBox(height: 24),
  Row(
@@ -1236,15 +1255,15 @@ $requirementsList
  child:
  CircularProgressIndicator(
  strokeWidth: 2,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  )
  : const Icon(
  Icons.refresh,
  size: 20,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
- onPressed: _isGeneratingRequirements
+ onPressed: _isRequirementsLocked || _isGeneratingRequirements
  ? null
  : _confirmRegenerate,
  tooltip: 'Regenerate requirements',
@@ -1252,9 +1271,9 @@ $requirementsList
  ],
  ),
  const SizedBox(height: 14),
- _buildRequirementsTable(context),
- const SizedBox(height: 16),
  _buildActionButtons(),
+ const SizedBox(height: 16),
+ _buildRequirementsTable(context),
  const SizedBox(height: 24),
  ],
  ),
@@ -1409,15 +1428,32 @@ $requirementsList
 
       return Container(
         key: ValueKey('req_row_$index'),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           border: Border(bottom: BorderSide(color: borderColor)),
         ),
         child: Row(
           children: [
             // Col 0: No + drag handle
-            ReorderableDragStartListener(
-              index: index,
-              child: SizedBox(
+            _isRequirementsLocked
+                ? SizedBox(
+                    width: colW[0],
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.lock_outline,
+                              size: 16, color: Color(0xFFCBD5E1)),
+                          const SizedBox(width: 4),
+                          Text('${row.number}',
+                              style: const TextStyle(
+                                  fontSize: 14, color: Color(0xFF111827))),
+                        ],
+                      ),
+                    ),
+                  )
+                : ReorderableDragStartListener(
+                    index: index,
+                    child: SizedBox(
                 width: colW[0],
                 child: Center(
                   child: Row(
@@ -1430,9 +1466,8 @@ $requirementsList
                       ),
                     ],
                   ),
-                ),
-              ),
-            ),
+                ),                    ),
+                  ),
             // Col 1: Requirement
             SizedBox(
               width: colW[1],
@@ -1450,10 +1485,12 @@ $requirementsList
                           Tooltip(
                             message: 'Regenerate (AI)',
                             child: IconButton(
-                              onPressed: isRowLoading ? null : () => _regenerateRequirementRow(index),
+                              onPressed: _isRequirementsLocked || isRowLoading
+                                  ? null
+                                  : () => _regenerateRequirementRow(index),
                               icon: isRowLoading
                                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                  : const Icon(Icons.refresh, size: 18, color: Color(0xFF2563EB)),
+                                  : const Icon(Icons.refresh, size: 18, color: Color(0xFFFFC812)),
                               padding: const EdgeInsets.all(6),
                               constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                               splashRadius: 18,
@@ -1462,7 +1499,9 @@ $requirementsList
                           Tooltip(
                             message: 'Undo',
                             child: IconButton(
-                              onPressed: () => _undoRequirementRow(index),
+                              onPressed: _isRequirementsLocked
+                                  ? null
+                                  : () => _undoRequirementRow(index),
                               icon: const Icon(Icons.undo, size: 18, color: Color(0xFF6B7280)),
                               padding: const EdgeInsets.all(6),
                               constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -1476,7 +1515,10 @@ $requirementsList
                       controller: row.descriptionController,
                       minLines: 2,
                       maxLines: null,
-                      onChanged: (_) => _handleRequirementChanged(),
+                      readOnly: _isRequirementsLocked,
+                      onChanged: _isRequirementsLocked
+                          ? null
+                          : (_) => _handleRequirementChanged(),
                       decoration: const InputDecoration(
                         hintText: 'Requirement description',
                         hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
@@ -1496,6 +1538,7 @@ $requirementsList
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: _TypeDropdown(
                   value: row.selectedType,
+                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     row.selectedType = value;
                     _handleRequirementChanged();
@@ -1510,6 +1553,7 @@ $requirementsList
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: _DisciplineDropdown(
                   value: row.selectedDiscipline,
+                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     row.selectedDiscipline = value;
                     _handleRequirementChanged();
@@ -1545,6 +1589,7 @@ $requirementsList
                   value: row.personController.text,
                   options: _memberOptions,
                   hint: 'Person',
+                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     row.personController.text = value;
                     _handleRequirementChanged();
@@ -1559,6 +1604,7 @@ $requirementsList
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: _PhaseDropdown(
                   value: row.selectedPhase,
+                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     row.selectedPhase = value;
                     _handleRequirementChanged();
@@ -1611,7 +1657,7 @@ $requirementsList
               child: Center(
                 child: IconButton(
                   icon: const Icon(Icons.delete_outline, size: 20, color: Color(0xFFEF4444)),
-                  onPressed: () => _deleteRow(index),
+                  onPressed: _isRequirementsLocked ? null : () => _deleteRow(index),
                   tooltip: 'Delete requirement',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -1647,7 +1693,7 @@ $requirementsList
                   // Header row (non-draggable)
                   Container(
                     key: const ValueKey('req_header'),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: bgHeader,
                       border: Border(
                         bottom: BorderSide(color: borderColor),
@@ -1716,7 +1762,7 @@ $requirementsList
                   // Header row (non-draggable)
                   Container(
                     key: const ValueKey('req_header'),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: bgHeader,
                       border: Border(
                         bottom: BorderSide(color: borderColor),
@@ -1849,8 +1895,9 @@ $requirementsList
   children: [
   SizedBox(
   height: 44,
-  child: OutlinedButton.icon(
-  onPressed: () async {
+  child: OutlinedButton.icon(                  onPressed: _isRequirementsLocked
+                      ? null
+                      : () async {
   final rows = await showCsvImportDialog(
   context,
   tableTitle: 'Project Requirements',
@@ -1880,14 +1927,13 @@ $requirementsList
  behavior: SnackBarBehavior.floating,
  ),
  );
- }
- },
- icon: const Icon(Icons.upload_file_outlined, size: 18),
+ }  },
+  icon: const Icon(Icons.upload_file_outlined, size: 18),
  label: const Text('Import CSV', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
  style: OutlinedButton.styleFrom(
- backgroundColor: Colors.white,
- foregroundColor: const Color(0xFF2563EB),
- side: const BorderSide(color: Color(0xFF93C5FD)),
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFFC812)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12),
  ),
@@ -1903,9 +1949,9 @@ $requirementsList
   icon: const Icon(Icons.download, size: 18),
   label: const Text('Template', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
   style: OutlinedButton.styleFrom(
-  backgroundColor: Colors.white,
-  foregroundColor: const Color(0xFF2563EB),
-  side: const BorderSide(color: Color(0xFF93C5FD)),
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+  foregroundColor: const Color(0xFFFFC812),
+  side: const BorderSide(color: Color(0xFFFFC812)),
   shape: RoundedRectangleBorder(
   borderRadius: BorderRadius.circular(12),
   ),
@@ -1917,14 +1963,16 @@ $requirementsList
   SizedBox(
   height: 44,
   child: OutlinedButton(
-  onPressed: () {
+  onPressed: _isRequirementsLocked
+      ? null
+      : () {
   setState(() {
   _rows.add(_createRow(_rows.length + 1));
   });
   _scheduleAutoSave(showSnack: false);
   },
   style: OutlinedButton.styleFrom(
-  backgroundColor: Colors.white,
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
   foregroundColor: const Color(0xFF111827),
   side: const BorderSide(color: Color(0xFFE5E7EB)),
   shape: RoundedRectangleBorder(
@@ -1946,6 +1994,7 @@ $requirementsList
  required TextEditingController controller,
  required String hint,
  int minLines = 1,
+ bool readOnly = false,
  }) {
  return Container(
  width: double.infinity,
@@ -1957,6 +2006,7 @@ $requirementsList
  padding: const EdgeInsets.all(14),
  child: VoiceTextField(
  controller: controller,
+ readOnly: readOnly,
  minLines: minLines,
  maxLines: null,
  decoration: InputDecoration(
@@ -2097,10 +2147,15 @@ class _RequirementRow {
 }
 
 class _TypeDropdown extends StatefulWidget {
- const _TypeDropdown({this.value, required this.onChanged});
+ const _TypeDropdown({
+ this.value,
+ required this.onChanged,
+ this.enabled = true,
+ });
 
  final String? value;
  final ValueChanged<String?> onChanged;
+ final bool enabled;
 
  @override
  State<_TypeDropdown> createState() => _TypeDropdownState();
@@ -2147,10 +2202,12 @@ class _TypeDropdownState extends State<_TypeDropdown> {
  size: 20,
  ),
  isExpanded: true,
- onChanged: (value) {
+ onChanged: widget.enabled
+ ? (value) {
  setState(() => _value = value);
  widget.onChanged(value);
- },
+ }
+ : null,
  items: _RequirementRow.requirementTypeOptions
  .map(
  (option) => DropdownMenuItem<String?>(
@@ -2170,10 +2227,15 @@ class _TypeDropdownState extends State<_TypeDropdown> {
 }
 
 class _DisciplineDropdown extends StatefulWidget {
- const _DisciplineDropdown({this.value, required this.onChanged});
+ const _DisciplineDropdown({
+ this.value,
+ required this.onChanged,
+ this.enabled = true,
+ });
 
  final String? value;
  final ValueChanged<String?> onChanged;
+ final bool enabled;
 
  @override
  State<_DisciplineDropdown> createState() => _DisciplineDropdownState();
@@ -2218,10 +2280,12 @@ class _DisciplineDropdownState extends State<_DisciplineDropdown> {
  size: 20,
  ),
  isExpanded: true,
- onChanged: (value) {
+ onChanged: widget.enabled
+ ? (value) {
  setState(() => _value = value);
  widget.onChanged(value);
- },
+ }
+ : null,
  items: _RequirementRow.disciplineOptions
  .map(
  (option) => DropdownMenuItem<String>(
@@ -2241,10 +2305,15 @@ class _DisciplineDropdownState extends State<_DisciplineDropdown> {
 }
 
 class _PhaseDropdown extends StatefulWidget {
- const _PhaseDropdown({this.value, required this.onChanged});
+ const _PhaseDropdown({
+ this.value,
+ required this.onChanged,
+ this.enabled = true,
+ });
 
  final String? value;
  final ValueChanged<String?> onChanged;
+ final bool enabled;
 
  @override
  State<_PhaseDropdown> createState() => _PhaseDropdownState();
@@ -2289,10 +2358,12 @@ class _PhaseDropdownState extends State<_PhaseDropdown> {
  size: 20,
  ),
  isExpanded: true,
- onChanged: (value) {
+ onChanged: widget.enabled
+ ? (value) {
  setState(() => _value = value);
  widget.onChanged(value);
- },
+ }
+ : null,
  items: _RequirementRow.phaseOptions
  .map(
  (option) => DropdownMenuItem<String>(
@@ -2317,12 +2388,14 @@ class _PersonDropdownField extends StatelessWidget {
  required this.options,
  required this.hint,
  required this.onChanged,
+ this.enabled = true,
  });
 
  final String value;
  final List<_AssignableMember> options;
  final String hint;
  final ValueChanged<String> onChanged;
+ final bool enabled;
 
  @override
  Widget build(BuildContext context) {
@@ -2330,7 +2403,7 @@ class _PersonDropdownField extends StatelessWidget {
  final noMembers = options.isEmpty;
 
  return InkWell(
- onTap: noMembers
+ onTap: !enabled || noMembers
  ? null
  : () async {
  final selected = await showDialog<_AssignableMember>(
@@ -2374,8 +2447,9 @@ class _PersonDropdownField extends StatelessWidget {
  Icon(
  Icons.search_rounded,
  size: 18,
- color:
- noMembers ? const Color(0xFFCBD5E1) : const Color(0xFF6B7280),
+ color: !enabled || noMembers
+ ? const Color(0xFFCBD5E1)
+ : const Color(0xFF6B7280),
  ),
  ],
  ),
@@ -2482,13 +2556,13 @@ class _MemberPickerDialogState extends State<_MemberPickerDialog> {
  dense: true,
  leading: CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFFDBEAFE),
+ backgroundColor: const Color(0xFFFEF3C7),
  child: Text(
  member.displayLabel[0].toUpperCase(),
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),

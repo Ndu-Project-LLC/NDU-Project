@@ -35,7 +35,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       appBarTitle: 'Schedule',
       breadcrumbPhase: 'Planning Phase',
       breadcrumbTitle: 'Schedule Setup',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 640),

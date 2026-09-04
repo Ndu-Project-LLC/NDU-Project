@@ -610,8 +610,9 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
 
  void _deleteGoal(int goalId) {
  setState(() {
- final goal = _goals.firstWhere((g) => g.id == goalId);
- goal.nameController.removeListener(_onFieldChanged);
+ final goal = _goals.where((g) => g.id == goalId).firstOrNull;
+if (goal == null) return;
+goal.nameController.removeListener(_onFieldChanged);
  goal.controller.removeListener(_onFieldChanged);
  goal.dispose();
  _goals.removeWhere((g) => g.id == goalId);
@@ -1446,8 +1447,7 @@ class _MobileProjectInfoSection extends StatelessWidget {
                         bottom: BorderSide(
                           color: _Tokens.surfaceContainerLow, width: 1),
                       ),
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(10)),
+
                     ),
                     child: Row(
                       children: [
@@ -1756,35 +1756,6 @@ class _MobileGoalsSection extends StatelessWidget {
  height: 1.3),
  ),
  ],
- ),
- ),
- const SizedBox(width: 12),
- Material(
- color: _Tokens.primary.withValues(alpha: 0.2),
- borderRadius: BorderRadius.circular(8),
- child: InkWell(
- onTap: onAddGoal,
- borderRadius: BorderRadius.circular(8),
- child: Container(
- padding:
- const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
- child: const Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.add, size: 16,
- color: _Tokens.primaryOnContainer),
- SizedBox(width: 4),
- Text(
- 'Add Goal',
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: _Tokens.primaryOnContainer,
- ),
- ),
- ],
- ),
- ),
  ),
  ),
  ],

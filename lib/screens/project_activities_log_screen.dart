@@ -8,11 +8,8 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
-import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
-import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
-import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/activity_log_panel.dart';
@@ -241,6 +238,7 @@ class _ProjectActivitiesLogScreenState
  )
  : ListView.builder(
  shrinkWrap: true,
+ physics: const NeverScrollableScrollPhysics(),
  itemCount: visibleOptions.length,
  itemBuilder: (context, index) {
  final option = visibleOptions[index];
@@ -770,7 +768,7 @@ class _ProjectActivitiesLogScreenState
  : filteredActivities.sublist(startIndex, endIndex);
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Stack(
  children: [
@@ -873,7 +871,7 @@ class _ProjectActivitiesLogScreenState
  child: _StatCard(
  title: 'Total Activities',
  value: '$totalCount',
- color: const Color(0xFF0EA5E9),
+ color: const Color(0xFFFFC812),
  ),
  ),
  SizedBox(
@@ -897,7 +895,7 @@ class _ProjectActivitiesLogScreenState
  child: _StatCard(
  title: 'Approved',
  value: '$approvedCount',
- color: const Color(0xFF6366F1),
+ color: const Color(0xFFB8860B),
  ),
  ),
  ],
@@ -1457,6 +1455,9 @@ class _FilterToolbar extends StatelessWidget {
  child: VoiceTextField(
  controller: searchController,
  onChanged: onSearchChanged,
+ enableVoice: false,
+ enableKazAi: false,
+ enableTextFormatting: false,
  decoration: InputDecoration(
  hintText: 'Search activity, owner, role, phase...',
  isDense: true,
@@ -2102,8 +2103,8 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
   }
   return FullScreenTableWrapper(
    title: 'Project Activities Log',
-   child: buildTable(bc),
    tableBuilder: buildTable,
+   child: buildTable(bc),
   );
  });
  }
@@ -2216,7 +2217,7 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
  fg = const Color(0xFF065F46);
  break;
  case 'Acknowledged':
- bg = const Color(0xFFE0E7FF);
+ bg = const Color(0xFFFFF8E1);
  fg = const Color(0xFF3730A3);
  break;
  case 'Rejected':

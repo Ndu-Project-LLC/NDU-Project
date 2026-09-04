@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 /// Front End Planning – Allowance screen
 /// Refactored to support structured "Program-Aware Financial Inputs".
 ///
@@ -202,7 +203,7 @@ class _FrontEndPlanningAllowanceScreenState
  ],
  ),
  duration: Duration(seconds: 5),
- backgroundColor: Color(0xFF2563EB),
+ backgroundColor: Color(0xFFFFC812),
  behavior: SnackBarBehavior.floating,
  ),
  );
@@ -423,7 +424,7 @@ class _FrontEndPlanningAllowanceScreenState
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(12),
- borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.2),
+ borderSide: const BorderSide(color: Color(0xFFFFC812), width: 1.2),
  ),
  );
  }
@@ -692,7 +693,7 @@ class _FrontEndPlanningAllowanceScreenState
  'Cancel',
  style: TextStyle(
  fontWeight: FontWeight.w600,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -850,11 +851,11 @@ class _FrontEndPlanningAllowanceScreenState
  Container(
  padding: const EdgeInsets.all(10),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: const Icon(Icons.monetization_on_outlined,
- color: Color(0xFF2563EB), size: 24),
+ color: Color(0xFFFFC812), size: 24),
  ),
  const SizedBox(width: 16),
  Expanded(
@@ -932,13 +933,13 @@ class _FrontEndPlanningAllowanceScreenState
  _detailChip(
  icon: Icons.engineering_outlined,
  label: item.responsibleDiscipline,
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFFFC812),
  ),
  if (item.triggerContext.isNotEmpty)
  _detailChip(
  icon: Icons.public_outlined,
  label: item.triggerContext,
- color: const Color(0xFF7C3AED),
+ color: const Color(0xFFB8860B),
  ),
  ],
  ),
@@ -1154,9 +1155,15 @@ class _FrontEndPlanningAllowanceScreenState
  Widget build(BuildContext context) {
  final projectData = ProjectDataHelper.getData(context, listen: true);
  final costData = projectData.costAnalysisData;
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1179,15 +1186,21 @@ class _FrontEndPlanningAllowanceScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
  // Cost Details Container (Blue)
  Container(
  width: double.infinity,
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(12),
  border: Border.all(
- color: const Color(0xFFBFDBFE)),
+ color: const Color(0xFFFDE68A)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1195,14 +1208,14 @@ class _FrontEndPlanningAllowanceScreenState
  Row(
  children: [
  const Icon(Icons.analytics_outlined,
- color: Color(0xFF1E40AF)),
+ color: Color(0xFFFFC812)),
  const SizedBox(width: 12),
  const Text(
  'Cost Details from Cost Basis Analysis',
  style: TextStyle(
  fontSize: 16,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1E3A8A),
+ color: Color(0xFFB8860B),
  ),
  ),
  if (costData == null) ...[
@@ -1337,6 +1350,9 @@ class _FrontEndPlanningAllowanceScreenState
  ],
  ),
  ),
+ ],
+ ),
+ ),
  ),
  ],
  ),
@@ -1381,17 +1397,17 @@ class _ApplyChip extends StatelessWidget {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: isActive ? const Color(0xFFEFF6FF) : Colors.white,
+ color: isActive ? const Color(0xFFFFF8E1) : Colors.white,
  borderRadius: BorderRadius.circular(16),
  border: Border.all(
- color: isActive ? const Color(0xFF3B82F6) : const Color(0xFFD1D5DB),
+ color: isActive ? const Color(0xFFFFC812) : const Color(0xFFD1D5DB),
  ),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
  if (isActive) ...[
- const Icon(Icons.check, size: 12, color: Color(0xFF3B82F6)),
+ const Icon(Icons.check, size: 12, color: Color(0xFFFFC812)),
  const SizedBox(width: 4),
  ],
  Text(
@@ -1400,7 +1416,7 @@ class _ApplyChip extends StatelessWidget {
  fontSize: 12,
  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
  color: isActive
- ? const Color(0xFF1E40AF)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF374151),
  ),
  ),
@@ -1439,7 +1455,7 @@ class _CostMetaItem extends StatelessWidget {
  style: TextStyle(
  fontSize: 16,
  fontWeight: FontWeight.w600,
- color: isHighlight ? const Color(0xFF1E3A8A) : Colors.black87,
+ color: isHighlight ? const Color(0xFFB8860B) : Colors.black87,
  ),
  ),
  ],
@@ -1492,12 +1508,12 @@ class _BottomOverlayState extends State<_BottomOverlay> {
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ const Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
  const SizedBox(width: 10),
  const Text('AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB))),
+ color: Color(0xFFFFC812))),
  const SizedBox(width: 12),
  const Text(
  'Define budget allowances and contingency plans.',

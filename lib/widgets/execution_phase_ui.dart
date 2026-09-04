@@ -47,7 +47,7 @@ class ExecutionActionBar extends StatelessWidget {
 
   Widget _buildAction(BuildContext context, ExecutionActionItem action) {
     final bool disabled = action.onPressed == null || action.isLoading;
-    final Color aiColor = const Color(0xFF5B5BD6);
+    const Color aiColor = Color(0xFF5B5BD6);
 
     switch (action.tone) {
       case ExecutionActionTone.primary:
@@ -65,8 +65,8 @@ class ExecutionActionBar extends StatelessWidget {
               : Icon(action.icon, size: compact ? 16 : 18),
           label: Text(action.label),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF0F172A),
-            foregroundColor: Colors.white,
+            backgroundColor: const Color(0xFFFFC812),
+            foregroundColor: const Color(0xFF111827),
             disabledBackgroundColor: const Color(0xFFE2E8F0),
             disabledForegroundColor: const Color(0xFF94A3B8),
             padding: EdgeInsets.symmetric(
@@ -143,7 +143,7 @@ class ExecutionActionBar extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             foregroundColor: const Color(0xFF475569),
             side: const BorderSide(color: Color(0xFFE2E8F0)),
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             padding: EdgeInsets.symmetric(
               horizontal: compact ? 14 : 16,
               vertical: compact ? 11 : 12,
@@ -186,7 +186,7 @@ class ExecutionPageHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -201,7 +201,7 @@ class ExecutionPageHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Color(0xFFFEF3C7),
+              color: const Color(0xFFFEF3C7),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -301,7 +301,7 @@ class ExecutionMetricData {
     required this.value,
     required this.icon,
     this.helper,
-    this.emphasisColor = const Color(0xFF2563EB),
+    this.emphasisColor = const Color(0xFFFFC812),
   });
 
   final String label;
@@ -329,7 +329,7 @@ class ExecutionMetricsGrid extends StatelessWidget {
       builder: (context, constraints) {
         final double width = constraints.maxWidth;
         final int count = metrics.length;
-        final double spacing = 12;
+        const double spacing = 12;
 
         // Wide screens: single row with equal-width Expanded cards
         if (width >= 900) {
@@ -425,7 +425,7 @@ class ExecutionMetricCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -635,14 +635,14 @@ class _ExecutionPanelShellState extends State<ExecutionPanelShell>
               Container(
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: (widget.headerIconColor ?? const Color(0xFF6366F1))
+                  color: (widget.headerIconColor ?? const Color(0xFFB8860B))
                       .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   widget.headerIcon,
                   size: 18,
-                  color: widget.headerIconColor ?? const Color(0xFF6366F1),
+                  color: widget.headerIconColor ?? const Color(0xFFB8860B),
                 ),
               ),
               const SizedBox(width: 12),
@@ -728,7 +728,7 @@ class _ExecutionPanelShellState extends State<ExecutionPanelShell>
       child: Icon(
         Icons.expand_more_rounded,
         size: 20,
-        color: _isExpanded ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF),
+        color: _isExpanded ? const Color(0xFFB8860B) : const Color(0xFF9CA3AF),
       ),
     );
   }
@@ -754,9 +754,9 @@ class ExecutionEmptyState extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         children: [
@@ -765,7 +765,7 @@ class ExecutionEmptyState extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Color(0xFFE2E8F0)),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Icon(icon, size: 26, color: const Color(0xFF64748B)),
           ),
@@ -893,16 +893,16 @@ class _StatusPalette {
         normalized.contains('scheduled') ||
         normalized.contains('aligned')) {
       return const _StatusPalette(
-        Color(0xFFEFF6FF),
-        Color(0xFFBFDBFE),
-        Color(0xFF1D4ED8),
+        Color(0xFFFFF8E1),
+        Color(0xFFFDE68A),
+        Color(0xFFFFC812),
       );
     }
 
     return const _StatusPalette(
-      Color(0xFFF5F3FF),
-      Color(0xFFDDD6FE),
-      Color(0xFF6D28D9),
+      Color(0xFFFFF8E1),
+      Color(0xFFFEF3C7),
+      Color(0xFFB8860B),
     );
   }
 }
@@ -1001,7 +1001,7 @@ class _ExecutionEditorSurface extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Color(0xFFF8FAFC),
+                      color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(icon, size: 20, color: const Color(0xFF334155)),

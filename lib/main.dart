@@ -114,56 +114,12 @@ void main() async {
     );
   };
 
-  // Firebase must be ready before widgets touch Auth or Firestore. Letting the
-  // app continue while initialization is still pending can crash Flutter web
-  // with a FirebaseException/JavaScriptObject interop type error.
-  try {
-    // Firebase.initializeApp() can hang indefinitely in some browser
-    // environments (e.g. when Firebase CDN is slow, IndexedDB is locked,
-    // or during hot restart with a stale connection). Run it with a hard
-    // timeout so app startup is never blocked by a stuck Firebase init.
-    // On hot restart, Firebase.initializeApp() can hang indefinitely because
-    // the Firebase SDK maintains a stale connection to IndexedDB/Firestore.
-    // Throwing a TimeoutException (caught by the outer try/catch) lets
-    // startup proceed without Firebase — the app degrades gracefully by
-    // showing an error screen rather than sitting on an infinite spinner.
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(
-      const Duration(seconds: 10),
-      onTimeout: () => throw TimeoutException(
-        'Firebase.initializeApp() timed out after 10s',
-      ),
-    );
+  // Firebase must be ready before providers or routes touch Auth/Firestore.
+  // Initialization itself is bounded by a timeout; keeping this ordering
+  // prevents providers from racing Firebase and triggering a false global
+  // cloud-outage state.
 
-    // Configure Firestore to prevent INTERNAL ASSERTION FAILED errors on web.
-    // Disabling persistence avoids IndexedDB cache corruption which causes
-    // the "Unexpected state" assertion in Firestore SDK 12.x Watch system.
-    final firestore = FirebaseFirestore.instance;
-    if (kIsWeb) {
-      // clearPersistence() can hang indefinitely in some browser environments
-      // (e.g. when IndexedDB is locked by a stale service worker, or when
-      // the tab is in the background). Run it with a hard timeout so app
-      // startup is never blocked by a stuck IndexedDB cleanup.
-      await firestore.clearPersistence().timeout(
-        const Duration(seconds: 3),
-        onTimeout: () {
-          debugPrint(
-              '[main] firestore.clearPersistence() timed out after 3s — continuing startup.');
-        },
-      );
-    }
-    firestore.settings = const Settings(
-      persistenceEnabled: !kIsWeb,
-      // Cap Firestore cache size to prevent unbounded IndexedDB growth on web.
-      // CACHE_SIZE_UNLIMITED caused multi-hundred-MB IndexedDB bloat in long
-      // sessions. 40 MB is the SDK default and comfortably holds ~1k documents.
-      cacheSizeBytes: kIsWeb ? 40 * 1024 * 1024 : Settings.CACHE_SIZE_UNLIMITED,
-    );
-  } catch (error, stack) {
-    debugPrint('Firebase init error: $error');
-    debugPrint(stack.toString());
-  }
+  await initializeFirebase();
 
   // KAZ AI always uses the server-side Firebase proxy. No OpenAI credential
   // is loaded into the Flutter application.
@@ -177,9 +133,12 @@ void main() async {
   PaintingBinding.instance.imageCache.maximumSize = 500;
 
   // Warm common local stores in background to reduce first-navigation latency.
-  unawaited(UserPreferencesService.warmUp());
-  unawaited(UserPreferencesService.loadCountryCurrency());
-  unawaited(ProjectNavigationService.instance.warmUp());
+  // These tasks intentionally run concurrently and never block the first frame.
+  unawaited(Future.wait<void>([
+    UserPreferencesService.warmUp(),
+    UserPreferencesService.loadCountryCurrency(),
+    ProjectNavigationService.instance.warmUp(),
+  ]));
 
   // #6: Start session manager (auto-logout after 30 minutes of inactivity)
   // The timer is reset on any user interaction via the Listener widget in MyApp.
@@ -188,8 +147,95 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+/// Tracks whether Firebase bootstrapping succeeded, so the UI can warn users
+/// instead of failing silently (sign-in and cloud data need Firebase).
+class FirebaseBootstrap {
+  static bool initFailed = false;
+}
+
+/// Initializes Firebase and Firestore settings. Returns true on success.
+/// Safe to call repeatedly: used by both app startup and the Retry action on
+/// the outage banner shown when initialization fails.
+Future<bool> initializeFirebase() async {
+  try {
+    // Firebase.initializeApp() can hang indefinitely in some browser
+    // environments (e.g. when Firebase CDN is slow, IndexedDB is locked,
+    // or during hot restart with a stale connection). Run it with a hard
+    // timeout so app startup is never blocked by a stuck Firebase init.
+    // Throwing a TimeoutException (caught below) lets startup proceed without
+    // Firebase — the app degrades gracefully with a warning banner instead of
+    // sitting on an infinite spinner.
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw TimeoutException(
+          'Firebase.initializeApp() timed out after 10s',
+        ),
+      );
+    }
+
+    // Configure Firestore to prevent INTERNAL ASSERTION FAILED errors on web.
+    // Disabling persistence avoids IndexedDB cache corruption which causes
+    // the "Unexpected state" assertion in Firestore SDK 12.x Watch system.
+    final firestore = FirebaseFirestore.instance;
+    if (kIsWeb) {
+      // Avoid clearing IndexedDB on every startup. It invalidates the local
+      // Firestore cache and forces a full network reload, which makes every
+      // launch and first navigation slower. The capped cache settings below
+      // already prevent unbounded growth.
+      debugPrint('[main] Keeping the Firestore web cache for faster startup.');
+    }
+    firestore.settings = const Settings(
+      persistenceEnabled: !kIsWeb,
+      // Cap Firestore cache size to prevent unbounded IndexedDB growth on web.
+      // CACHE_SIZE_UNLIMITED caused multi-hundred-MB IndexedDB bloat in long
+      // sessions. 40 MB is the SDK default and comfortably holds ~1k documents.
+      cacheSizeBytes: kIsWeb ? 40 * 1024 * 1024 : Settings.CACHE_SIZE_UNLIMITED,
+    );
+    FirebaseBootstrap.initFailed = false;
+    return true;
+  } catch (error, stack) {
+    debugPrint('Firebase init error: $error');
+    debugPrint(stack.toString());
+    FirebaseBootstrap.initFailed = true;
+    return false;
+  }
+}
+
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  /// Whether Firebase finished initializing successfully. When false, a
+  /// persistent banner warns the user that sign-in / cloud data may not work.
+  late bool _firebaseReady;
+
+  @override
+  void initState() {
+    super.initState();
+    _firebaseReady = !FirebaseBootstrap.initFailed;
+    if (FirebaseBootstrap.initFailed) {
+      // Give the non-blocking bootstrap a chance to complete before showing
+      // the warning banner, without delaying the first frame.
+      Future<void>.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          setState(() => _firebaseReady = !FirebaseBootstrap.initFailed);
+        }
+      });
+    }
+  }
+
+  Future<void> _retryFirebaseInit() async {
+    final ok = await initializeFirebase();
+    if (!mounted) return;
+    setState(() => _firebaseReady = ok);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -226,9 +272,9 @@ class MyApp extends StatelessWidget {
             provider: projectProvider,
             child: Listener(
               // #6: Reset session timer on any pointer interaction (mouse/touch)
-              onPointerDown: (_) => SessionManager.instance.resetTimer(),
-              onPointerMove: (_) => SessionManager.instance.resetTimer(),
-              onPointerUp: (_) => SessionManager.instance.resetTimer(),
+              onPointerDown: (_) => SessionManager.instance.recordActivity(),
+              onPointerMove: (_) => SessionManager.instance.recordActivity(),
+              onPointerUp: (_) => SessionManager.instance.recordActivity(),
               child: MaterialApp.router(
                 title: AppStrings.appName,
                 debugShowCheckedModeBanner: false,
@@ -236,9 +282,9 @@ class MyApp extends StatelessWidget {
                 darkTheme: darkTheme,
                 themeMode: themeProvider.themeMode,
                 routerConfig: AppRouter.main,
-                // Smooth cross-fade when toggling themes
-                themeAnimationDuration: const Duration(milliseconds: 300),
-                themeAnimationCurve: Curves.easeInOut,
+                // Keep theme changes responsive on large screens and web.
+                themeAnimationDuration: Duration.zero,
+                themeAnimationCurve: Curves.linear,
                 // Performance optimizations
                 builder: (context, child) {
                   final media =
@@ -252,7 +298,17 @@ class MyApp extends StatelessWidget {
                     // be invisible" warning from DecoratedBox wrappers.
                     child: Material(
                       type: MaterialType.transparency,
-                      child: child ?? const SizedBox.shrink(),
+                      child: Column(
+                        children: [
+                          // Persistent warning when Firebase failed to start —
+                          // without it, broken sign-in looks like a bug to users.
+                          if (!_firebaseReady)
+                            _FirebaseOutageBanner(onRetry: _retryFirebaseInit),
+                          Expanded(
+                            child: child ?? const SizedBox.shrink(),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -267,6 +323,74 @@ class MyApp extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// Amber banner shown across the top of every screen while Firebase has not
+/// initialized. Explains WHY sign-in/cloud features are broken and offers a
+/// one-tap Retry so transient network issues can be recovered in place.
+class _FirebaseOutageBanner extends StatefulWidget {
+  const _FirebaseOutageBanner({required this.onRetry});
+
+  final Future<void> Function() onRetry;
+
+  @override
+  State<_FirebaseOutageBanner> createState() => _FirebaseOutageBannerState();
+}
+
+class _FirebaseOutageBannerState extends State<_FirebaseOutageBanner> {
+  bool _retrying = false;
+
+  Future<void> _handleRetry() async {
+    if (_retrying) return;
+    setState(() => _retrying = true);
+    try {
+      await widget.onRetry();
+    } finally {
+      if (mounted) setState(() => _retrying = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.amber.shade700,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              const Icon(Icons.cloud_off, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Cloud connection unavailable — sign-in and synced data may '
+                  'not work until Firebase reconnects.',
+                  style: TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 10),
+              TextButton.icon(
+                onPressed: _retrying ? null : _handleRetry,
+                icon: _retrying
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.refresh, color: Colors.white, size: 18),
+                label: Text(_retrying ? 'Retrying…' : 'Retry',
+                    style: const TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -1,13 +1,12 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/screens/gap_analysis_scope_reconcillation_screen.dart';
-import 'package:ndu_project/screens/risk_tracking_workspace_screen.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -508,13 +507,13 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                   .where((s) => s.toLowerCase() == statusStr.toLowerCase())
                   .isNotEmpty
               ? _changeStatuses
-                  .firstWhere((s) => s.toLowerCase() == statusStr.toLowerCase())
+                  .where((s) => s.toLowerCase() == statusStr.toLowerCase()).firstOrNull!
               : 'Open';
           final matchedType = _changeTypes
                   .where((t) => t.toLowerCase() == changeType.toLowerCase())
                   .isNotEmpty
-              ? _changeTypes.firstWhere(
-                  (t) => t.toLowerCase() == changeType.toLowerCase())
+              ? _changeTypes.where(
+                  (t) => t.toLowerCase() == changeType.toLowerCase()).firstOrNull!
               : 'Scope';
           return _ScopeChangeItem(
             id: _newId(),
@@ -524,8 +523,8 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             impactLevel: _impactLevels
                     .where((i) => i.toLowerCase() == impactLevel.toLowerCase())
                     .isNotEmpty
-                ? _impactLevels.firstWhere(
-                    (i) => i.toLowerCase() == impactLevel.toLowerCase())
+                ? _impactLevels.where(
+                    (i) => i.toLowerCase() == impactLevel.toLowerCase()).firstOrNull!
                 : 'Medium',
             requestedBy: requestedBy,
             status: matchedStatus,
@@ -553,7 +552,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
         style:
             textTheme.bodyMedium ?? const TextStyle(fontFamily: appFontFamily),
         child: Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: SafeArea(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,11 +582,9 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                             _buildTipRow(context),
                             const SizedBox(height: 24),
                             LaunchPhaseNavigation(
-                              backLabel: 'Back: Risk Tracking',
-                              nextLabel:
-                                  'Next: Gap Analysis & Scope Reconciliation',
-                              onBack: () =>
-                                  RiskTrackingWorkspaceScreen.open(context),
+                              backLabel: PlanningPhaseNavigation.backLabel('scope_completion'),
+                              nextLabel: PlanningPhaseNavigation.nextLabel('scope_completion'),
+                              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'scope_completion'),
                               onNext: () =>
                                   GapAnalysisScopeReconcillationScreen.open(
                                       context),
@@ -596,8 +593,8 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                           ],
                         ),
                       ),
-                      MobileSidebarHamburger(
-                        sidebar: const InitiationLikeSidebar(
+                      const MobileSidebarHamburger(
+                        sidebar: InitiationLikeSidebar(
                           activeItemLabel: 'Scope Completion',
                         ),
                       ),
@@ -743,9 +740,9 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -798,7 +795,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
@@ -818,7 +815,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           ),
           const SizedBox(height: 6),
           if (_workPackages.isEmpty)
-            _InlineEmptyState(
+            const _InlineEmptyState(
               title: 'No work packages yet',
               message:
                   'Add work packages to track delivered scope against baseline.',
@@ -897,7 +894,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -1151,11 +1148,11 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   Color _signalCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'sponsor':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'operations':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'technical':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       case 'regulatory':
         return const Color(0xFFEA580C);
       default:
@@ -1166,13 +1163,13 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   Color _changeTypeColor(String type) {
     switch (type.toLowerCase()) {
       case 'scope':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'budget':
         return const Color(0xFFD97706);
       case 'schedule':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'quality':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       default:
         return const Color(0xFF6B7280);
     }
@@ -1187,7 +1184,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       case 'deferred':
         return const Color(0xFFD97706);
       case 'open':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       default:
         return const Color(0xFF6B7280);
     }
@@ -1512,7 +1509,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
@@ -1531,7 +1528,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           ),
           const SizedBox(height: 6),
           if (_acceptanceCheckpoints.isEmpty)
-            _InlineEmptyState(
+            const _InlineEmptyState(
               title: 'No checkpoints yet',
               message: 'List the acceptance checkpoints for sponsor sign-off.',
               icon: Icons.checklist_outlined,
@@ -1603,7 +1600,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -1972,7 +1969,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
@@ -1989,7 +1986,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           ),
           const SizedBox(height: 6),
           if (_acceptanceTags.isEmpty)
-            _InlineEmptyState(
+            const _InlineEmptyState(
               title: 'No acceptance signals yet',
               message: 'Add sponsor and operations acceptance signals.',
               icon: Icons.verified_outlined,
@@ -2046,7 +2043,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -2406,7 +2403,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
@@ -2428,7 +2425,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           ),
           const SizedBox(height: 6),
           if (_scopeChanges.isEmpty)
-            _InlineEmptyState(
+            const _InlineEmptyState(
               title: 'No scope changes yet',
               message: 'Add the most impactful scope changes.',
               icon: Icons.swap_horiz_outlined,
@@ -2498,7 +2495,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -2902,15 +2899,15 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFF93C5FD)),
+        borderSide: const BorderSide(color: Color(0xFFFFC812)),
       ),
     );
   }
@@ -2922,7 +2919,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Color(0xFFF3F4F6),
+        color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -3000,9 +2997,9 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(0xFFF9FAFB),
+                color: const Color(0xFFF9FAFB),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Color(0xFFE5E7EB)),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: Text(
                 badge,
@@ -3220,14 +3217,14 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
 
   Widget _buildTipRow(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
-        Icon(Icons.lightbulb_outline, size: 18, color: const Color(0xFFFFC812)),
-        const SizedBox(width: 8),
+        Icon(Icons.lightbulb_outline, size: 18, color: Color(0xFFFFC812)),
+        SizedBox(width: 8),
         Expanded(
           child: Text(
             'If someone reads only this page, can they quickly see what was delivered, what moved, and that the right people have agreed?',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 13,
                 color: Color(0xFF9CA3AF),
                 fontStyle: FontStyle.italic),
@@ -3271,7 +3268,7 @@ class _ContentCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: child,
     );
@@ -3384,9 +3381,9 @@ class _InlineEmptyState extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [

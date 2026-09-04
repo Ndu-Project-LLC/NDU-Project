@@ -29,7 +29,9 @@ import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
+import 'package:ndu_project/cost_estimate/widgets/add_line_dialog.dart';
 import 'package:ndu_project/services/planning_sync_service.dart';
+import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cross_section_sync_card.dart';
 import 'package:go_router/go_router.dart';
@@ -112,6 +114,132 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
     );
   }
 
+  /// One-click "Pull scheduled purchases into the Cost Estimate".
+  ///
+  /// Core data movement (per the 2026-09-03 voice note): purchases already
+  /// scheduled — "buy CPE", procurement packages, any procurement-domain
+  /// work package — flow into the Cost Estimate as procurement cost lines.
+  /// No AI involved. Each created line is stamped back onto its schedule
+  /// activity (`costLineId`) and linked to the same WBS node the activity
+  /// is attached to, so the skeleton (Schedule → Cost → WBS) stays tight.
+  Future<void> _pullScheduledPurchases(
+    BuildContext context,
+    List<ScheduledPurchaseCandidate> candidates,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    if (!mounted) return;
+
+    final costProvider = context.read<CostEstimateProvider>();
+    // Auto-setup mirrors the Cost Estimate module: opening the module
+    // creates a default estimate, so the pull is always one click.
+    if (costProvider.estimate == null || !costProvider.setupComplete) {
+      final data = ProjectDataHelper.getData(context, listen: false);
+      final projectName =
+          data.projectName.trim().isNotEmpty ? data.projectName.trim() : 'Project';
+      costProvider.setup(
+        projectName: projectName,
+        className: EstimateClass.class3,
+        deliveryModel: DeliveryModel.waterfall,
+      );
+    }
+
+    final result = costProvider.pullScheduledPurchases(candidates);
+    if (result.pulled > 0) {
+      final scheduleProvider = context.read<ScheduleProvider>();
+      final wbsProvider = context.read<WBSProvider>();
+      final wbs = wbsProvider.wbs;
+      // Map WBS codes → node ids so lines can also get the bidirectional
+      // costLineIds link (matching what the Cost Estimate dialog does).
+      final nodeIdByCode = <String, String>{};
+      if (wbs != null) {
+        for (final flat in flattenWBS(wbs)) {
+          if (flat.path.trim().isNotEmpty) {
+            nodeIdByCode[flat.path.trim()] = flat.id;
+          }
+        }
+      }
+      final roots = scheduleProvider.schedule?.activities ?? const [];
+      result.addedByActivityId.forEach((activityId, lineId) {
+        final activity = findActivityById(roots, activityId);
+        if (activity != null) {
+          scheduleProvider.updateActivity(
+            activityId,
+            activity.copyWith(costLineId: lineId),
+          );
+          final code = (activity.wbsCode ?? '').trim();
+          if (code.isNotEmpty) {
+            final nodeId = nodeIdByCode[code];
+            if (nodeId != null) {
+              wbsProvider.linkCostLine(nodeId, lineId);
+            }
+          }
+        }
+      });
+    }
+    if (!mounted) return;
+    messenger.showSnackBar(SnackBar(
+      content: Text(
+        result.pulled > 0
+            ? 'Pulled ${result.pulled} scheduled purchase${result.pulled == 1 ? '' : 's'} into the Cost Estimate — each one starts at \$0 until you price it.'
+            : (result.alreadyInEstimate > 0
+                ? 'All scheduled purchases are already in the Cost Estimate ($result.alreadyInEstimate already present).'
+                : 'All scheduled purchases are already in the Cost Estimate.'),
+      ),
+      duration: const Duration(seconds: 6),
+      action: result.pulled > 0
+          ? SnackBarAction(
+              label: 'Price them now',
+              onPressed: () => _pricePulledPurchases(
+                  context, result.addedByActivityId.values.toList()),
+            )
+          : null,
+    ));
+  }
+
+  /// Walkthrough that opens the manual cost-line dialog for each freshly
+  /// pulled purchase (in pull order) so the user can price it right away.
+  /// Skipping/cancelling a dialog moves on to the next line.
+  Future<void> _pricePulledPurchases(
+    BuildContext navigatorContext,
+    List<String> lineIds,
+  ) async {
+    if (lineIds.isEmpty || !mounted) return;
+    var priced = 0;
+    for (final lineId in lineIds) {
+      if (!mounted) break;
+      final estimate =
+          context.read<CostEstimateProvider>().estimate;
+      CostLine? line;
+      if (estimate != null) {
+        for (final l in estimate.lines) {
+          if (l.id == lineId) {
+            line = l;
+            break;
+          }
+        }
+      }
+      if (line == null) continue;
+      final savedId = await showDialog<String>(
+        context: navigatorContext,
+        barrierDismissible: true,
+        builder: (ctx) => AddLineDialog(
+          defaultCategory: CostCategory.procurement,
+          editingLine: line,
+        ),
+      );
+      if (savedId != null && savedId.isNotEmpty) priced++;
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(
+        priced > 0
+            ? 'Priced $priced of ${lineIds.length} pulled purchase${lineIds.length == 1 ? '' : 's'}. Remaining ones stay \$0 until priced.'
+            : 'No prices entered — you can price them anytime in the Cost Estimate Builder.',
+      ),
+      duration: const Duration(seconds: 4),
+    ));
+  }
+
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {
       setState(() {});
@@ -145,8 +273,8 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
             appBarTitle: 'Schedule',
             breadcrumbPhase: 'Planning Phase',
             breadcrumbTitle: 'Schedule',
-            backgroundColor: Colors.white,
-            body: const Center(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -164,6 +292,26 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
 
         // ---- Context banner data ----
         final projectName = schedule.projectName;
+        final data = ProjectDataHelper.getData(context, listen: false);
+
+        // Keep the schedule's delivery model in sync with the project's
+        // Project Details methodology selection (Waterfall / Agile / Hybrid)
+        // so methodology-dependent views (badge, agile hints, sync imports)
+        // always reflect the current choice.
+        final resolvedMethodology =
+            ProjectDataHelper.resolvedProjectMethodology(data);
+        final resolvedDeliveryModel =
+            ProjectDataHelper.deliveryModelForMethodology(resolvedMethodology);
+        if (schedule.basis.deliveryModel.toUpperCase() !=
+            resolvedDeliveryModel) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context
+                  .read<ScheduleProvider>()
+                  .syncDeliveryModel(resolvedDeliveryModel);
+            }
+          });
+        }
         final wbs = wbsProvider.wbs;
         final wbsCounts = wbs != null ? countNodes(wbs) : null;
         final wbsNodeCount = wbsCounts != null
@@ -177,7 +325,21 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                 (s, l) => s + _effectiveScheduleContextLineTotal(l))
             : 0.0;
 
-        final data = ProjectDataHelper.getData(context, listen: false);
+        // Scheduled purchases → Cost Estimate candidates (core pull flow).
+        final purchaseCandidates = schedule.activities.isEmpty
+            ? const <ScheduledPurchaseCandidate>[]
+            : collectPullablePurchases(schedule.activities)
+                .map((a) => ScheduledPurchaseCandidate(
+                      activityId: a.id,
+                      title: a.name,
+                      wbsRef: a.wbsCode,
+                      activityCostLineId: a.costLineId,
+                    ))
+                .toList(growable: false);
+        final pendingPurchasePull = purchaseCandidates
+            .where((c) => !costProvider.isScheduledPurchaseRepresented(c))
+            .toList(growable: false);
+
         final fepMilestones = data.keyMilestones
             .where((m) => m.name.trim().isNotEmpty)
             .toList();
@@ -214,7 +376,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
           appBarTitle: 'Schedule',
           breadcrumbPhase: 'Planning Phase',
           breadcrumbTitle: 'Schedule',
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
               // ── World-class Section Navigator ─────────────────────────
@@ -231,6 +393,8 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                   ],
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
+                  isCollapsible: true,
+                  initiallyCollapsed: true,
                 ),
               ),
               // ── Context banner (drawn from WBS + Cost Estimate) ───────
@@ -288,13 +452,76 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                         icon: const Icon(Icons.refresh, size: 16),
                         label: const Text('Resync from Planning'),
                         style: TextButton.styleFrom(
-                          foregroundColor: Colors.deepPurple,
+                          foregroundColor: const Color(0xFFB8860B),
                           textStyle: const TextStyle(fontSize: 12),
                         ),
                       ),
                     ],
                 ),
               ),
+              // ── Pull scheduled purchases into the Cost Estimate ─────────
+              if (purchaseCandidates.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: pendingPurchasePull.isEmpty
+                          ? const Color(0xFFF0FDF4)
+                          : const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: pendingPurchasePull.isEmpty
+                            ? const Color(0xFFBBF7D0)
+                            : const Color(0xFFFDE68A),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          pendingPurchasePull.isEmpty
+                              ? Icons.check_circle_outline
+                              : Icons.shopping_cart_checkout,
+                          size: 16,
+                          color: pendingPurchasePull.isEmpty
+                              ? const Color(0xFF16A34A)
+                              : const Color(0xFFB45309),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            pendingPurchasePull.isEmpty
+                                ? 'All ${purchaseCandidates.length} scheduled purchase${purchaseCandidates.length == 1 ? '' : 's'} are in the Cost Estimate.'
+                                : '${pendingPurchasePull.length} scheduled purchase${pendingPurchasePull.length == 1 ? '' : 's'} not yet in the Cost Estimate.',
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF374151)),
+                          ),
+                        ),
+                        if (pendingPurchasePull.isNotEmpty)
+                          TextButton.icon(
+                            onPressed: () => _pullScheduledPurchases(
+                                context, pendingPurchasePull),
+                            icon: const Icon(Icons.arrow_downward, size: 14),
+                            label: Text(
+                                'Pull ${pendingPurchasePull.length} into Cost Estimate',
+                                style: const TextStyle(fontSize: 11)),
+                            style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFFB45309),
+                              backgroundColor: const Color(0xFFFFF7ED),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 6),
+                              minimumSize: Size.zero,
+                              tapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
               // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ──────────
               const CrossSectionSyncCard(
                 currentSection: CrossSection.schedule,

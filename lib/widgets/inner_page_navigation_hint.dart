@@ -74,7 +74,7 @@ class InnerPageNavigationHint extends StatefulWidget {
     required this.sections,
     required this.onSectionTap,
     this.description,
-    this.accentColor = const Color(0xFF005BB3),
+    this.accentColor = const Color(0xFFFFC812),
     this.currentSectionId,
     this.compact = false,
   });
@@ -140,14 +140,14 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
 
   Future<void> _loadDismissState() async {
     final dismissed =
-        await HintService.isPageDismissed('${_dismissPrefix}${widget.pageId}');
+        await HintService.isPageDismissed('$_dismissPrefix${widget.pageId}');
     if (mounted && dismissed) {
       setState(() => _dismissed = true);
     }
   }
 
   Future<void> _dismissPermanently() async {
-    await HintService.markPageDismissed('${_dismissPrefix}${widget.pageId}');
+    await HintService.markPageDismissed('$_dismissPrefix${widget.pageId}');
     if (mounted) {
       await _animController.reverse();
       setState(() => _dismissed = true);
@@ -305,7 +305,7 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: Color(0xFFE5E7EB),
+                            color: const Color(0xFFE5E7EB),
                             borderRadius: BorderRadius.circular(6),
                           ),
                         ),
@@ -349,11 +349,11 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
       children: [
         const SizedBox(height: 6),
         // Section hint text
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'Navigate between sections of this page:',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Color(0xFF6B7280),
@@ -387,21 +387,21 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(Icons.route_outlined,
-                  size: 14, color: const Color(0xFF6B7280)),
-              const SizedBox(width: 6),
+                  size: 14, color: Color(0xFF6B7280)),
+              SizedBox(width: 6),
               Text(
                 'Page Route',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF6B7280),

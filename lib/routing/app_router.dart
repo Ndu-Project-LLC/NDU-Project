@@ -16,6 +16,8 @@ import 'package:ndu_project/screens/mobile_dashboard_screen.dart';
 import 'package:ndu_project/screens/auth/mobile_forgot_password_screen.dart';
 import 'package:ndu_project/screens/project_dashboard_screen.dart';
 import 'package:ndu_project/screens/program_dashboard_screen.dart';
+import 'package:ndu_project/screens/program_teammates_screen.dart';
+import 'package:ndu_project/screens/invitation_accept_screen.dart';
 import 'package:ndu_project/screens/portfolio_dashboard_screen.dart';
 import 'package:ndu_project/screens/launch_checklist_screen.dart';
 import 'package:ndu_project/screens/home_screen.dart';
@@ -59,6 +61,7 @@ import 'package:ndu_project/cost_estimate/screens/cost_estimate_module_screen.da
 import 'package:ndu_project/schedule/screens/schedule_module_screen.dart';
 import 'package:ndu_project/project_controls/screens/project_controls_screen.dart';
 import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
+import 'package:ndu_project/screens/integration_dashboard_screen.dart';
 import 'package:ndu_project/screens/landing/careers_page_screen.dart';
 import 'package:ndu_project/screens/execution_plan_screen.dart';
 import 'package:ndu_project/screens/execution_work_packages_screen.dart';
@@ -231,12 +234,12 @@ import 'package:ndu_project/screens/admin/admin_auth_wrapper.dart';
 import 'package:ndu_project/screens/admin/admin_projects_screen.dart';
 import 'package:ndu_project/screens/admin/admin_users_screen.dart';
 import 'package:ndu_project/screens/admin/admin_coupons_screen.dart';
+import 'package:ndu_project/screens/admin/admin_survey_responses_screen.dart';
 import 'package:ndu_project/screens/admin/admin_subscription_lookup_screen.dart';
 import 'package:ndu_project/services/access_policy.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/subscription_service.dart';
 import 'package:ndu_project/services/activity_auto_logger.dart';
-import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/pricing/mobile_pricing_screen.dart';
 import 'package:ndu_project/routing/shimmer_page_transition.dart';
@@ -256,6 +259,8 @@ class AppRoutes {
 
   static const dashboard = 'dashboard';
   static const programDashboard = 'program-dashboard';
+  static const programTeammates = 'program-teammates';
+  static const invitationAccept = 'invitation-accept';
   static const portfolioDashboard = 'portfolio-dashboard';
   static const launchChecklist = 'launch-checklist';
 
@@ -302,6 +307,7 @@ class AppRoutes {
   static const scheduleManagementBoard = 'schedule-management';
   static const projectControls = 'project-controls';
   static const changeManagementModule = 'change-management-module';
+  static const integrationDashboard = 'integration-dashboard';
   static const landingPage = 'landing-page';
   static const careersPage = 'careers';
 
@@ -480,6 +486,7 @@ class AppRoutes {
   static const adminUsers = 'admin-users';
   static const adminCoupons = 'admin-coupons';
   static const adminSubscriptionLookup = 'admin-subscription-lookup';
+  static const adminSurveyResponses = 'admin-survey-responses';
   static const adminPortal = 'admin';
 }
 
@@ -717,6 +724,11 @@ class AppRouter {
         pageBuilder: (context, state) => shimmerTransitionPage(state: state, child: const AdminAuthWrapper(child: AdminSubscriptionLookupScreen())),
       ),
       GoRoute(
+        name: AppRoutes.adminSurveyResponses,
+        path: '/${AppRoutes.adminSurveyResponses}',
+        pageBuilder: (context, state) => shimmerTransitionPage(state: state, child: const AdminAuthWrapper(child: AdminSurveyResponsesScreen())),
+      ),
+      GoRoute(
         name: AppRoutes.signIn,
         path: '/${AppRoutes.signIn}',
         pageBuilder: (context, state) => shimmerTransitionPage(state: state, child: const SignInScreen()),
@@ -758,6 +770,23 @@ class AppRouter {
         pageBuilder: (context, state) {
           final programId = state.uri.queryParameters['programId'];
           return shimmerTransitionPage(state: state, child: ProgramDashboardScreen(programId: programId));
+        },
+      ),
+      GoRoute(
+        name: AppRoutes.programTeammates,
+        path: '/${AppRoutes.programTeammates}',
+        pageBuilder: (context, state) =>
+            shimmerTransitionPage(state: state, child: const ProgramTeammatesScreen()),
+      ),
+      GoRoute(
+        name: AppRoutes.invitationAccept,
+        path: '/${AppRoutes.invitationAccept}',
+        pageBuilder: (context, state) {
+          final invitationId = state.uri.queryParameters['id'] ?? '';
+          return shimmerTransitionPage(
+            state: state,
+            child: InvitationAcceptScreen(invitationId: invitationId),
+          );
         },
       ),
       GoRoute(
@@ -976,6 +1005,10 @@ class AppRouter {
           name: AppRoutes.projectControls,
           path: '/${AppRoutes.projectControls}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProjectControlsScreen())),
+      GoRoute(
+          name: AppRoutes.integrationDashboard,
+          path: '/${AppRoutes.integrationDashboard}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const IntegrationDashboardScreen())),
       GoRoute(
           name: AppRoutes.changeManagementModule,
           path: '/${AppRoutes.changeManagementModule}',
@@ -1711,6 +1744,11 @@ class AppRouter {
         name: AppRoutes.adminSubscriptionLookup,
         path: '/${AppRoutes.adminSubscriptionLookup}',
         pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AdminAuthWrapper(child: AdminSubscriptionLookupScreen())),
+      ),
+      GoRoute(
+        name: AppRoutes.adminSurveyResponses,
+        path: '/${AppRoutes.adminSurveyResponses}',
+        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AdminAuthWrapper(child: AdminSurveyResponsesScreen())),
       ),
       GoRoute(
         name: AppRoutes.settings,

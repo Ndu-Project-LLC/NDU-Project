@@ -13,7 +13,6 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
@@ -289,7 +288,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  Widget build(BuildContext context) {
  final sidebarWidth = AppBreakpoints.sidebarWidth(context);
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: Stack(
  children: [
  SafeArea(
@@ -305,8 +304,8 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Lessons Learned',
  ),
  ),
@@ -328,16 +327,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  children: [
  PlanningPhaseHeader(title: 'Lessons Learned', onExportPdf: _exportPdf),
  const SizedBox(height: 24),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'lessons_learned',
- contextText: _carriedContext!,
- ),
- ),
+
  const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Lessons Learned',
@@ -378,7 +368,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  icon: const Icon(Icons.arrow_back, size: 16),
  label: Text(PlanningPhaseNavigation.backLabel('lessons_learned')),
  style: ElevatedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: const Color(0xFF374151),
  elevation: 0,
  side: const BorderSide(color: Color(0xFFD1D5DB)),
@@ -425,10 +415,10 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: Colors.grey.withOpacity(0.2)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.02),
+ color: Colors.black.withValues(alpha: 0.02),
  blurRadius: 12,
  offset: const Offset(0, 4),
  ),
@@ -447,7 +437,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
  ),
  const SizedBox(height: 20),
- Divider(color: Colors.grey.withOpacity(0.2), thickness: 1),
+ Divider(color: Colors.grey.withValues(alpha: 0.2), thickness: 1),
  const SizedBox(height: 20),
  isMobile
  ? Column(
@@ -467,7 +457,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  width: 1,
  height: 220,
  margin: const EdgeInsets.symmetric(horizontal: 24),
- color: Colors.grey.withOpacity(0.2),
+ color: Colors.grey.withValues(alpha: 0.2),
  ),
  Expanded(
  child: _summaryRightColumn(
@@ -607,10 +597,10 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: Colors.grey.withOpacity(0.2)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.02),
+ color: Colors.black.withValues(alpha: 0.02),
  blurRadius: 12,
  offset: const Offset(0, 4),
  ),
@@ -631,13 +621,14 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  children: [
  SizedBox(
  width: 260,
- child: VoiceTextField(
+ // Plain search field — no Open Editor button on the toolbar.
+ child: TextField(
  controller: _searchController,
  decoration: InputDecoration(
  prefixIcon: const Icon(Icons.search),
  hintText: 'Search...',
  filled: true,
- fillColor: Colors.grey.withOpacity(0.1),
+ fillColor: Colors.grey.withValues(alpha: 0.1),
  contentPadding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
  border: OutlineInputBorder(
@@ -689,13 +680,14 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  padding: const EdgeInsets.only(top: 16),
  child: Column(
  children: [
- VoiceTextField(
+ // Plain search field — no Open Editor button on the toolbar.
+ TextField(
  controller: _searchController,
  decoration: InputDecoration(
  prefixIcon: const Icon(Icons.search),
  hintText: 'Search...',
  filled: true,
- fillColor: Colors.grey.withOpacity(0.1),
+ fillColor: Colors.grey.withValues(alpha: 0.1),
  contentPadding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
  border: OutlineInputBorder(
@@ -754,7 +746,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  width: double.infinity,
  padding: const EdgeInsets.symmetric(vertical: 48),
  decoration: BoxDecoration(
- color: Colors.grey.withOpacity(0.08),
+ color: Colors.grey.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(16),
  ),
  child: Column(
@@ -800,11 +792,11 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  padding:
  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
  decoration: BoxDecoration(
- color: Colors.grey.withOpacity(0.12),
+ color: Colors.grey.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(12),
  ),
- child: Row(
- children: const [
+ child: const Row(
+ children: [
  Expanded(flex: 6, child: Text('#', style: headerStyle)),
  Expanded(
  flex: 32, child: Text('Lesson', style: headerStyle)),
@@ -837,7 +829,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
  border:
- Border.all(color: Colors.grey.withOpacity(0.12)),
+ Border.all(color: Colors.grey.withValues(alpha: 0.12)),
  ),
  child: Column(
  children: [
@@ -847,7 +839,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  color: entries[i].highlight
  ? Colors.white
  : Colors.grey
- .withOpacity(0.05 * ((i % 2) + 1)),
+ .withValues(alpha: 0.05 * ((i % 2) + 1)),
  borderRadius: i == 0
  ? const BorderRadius.vertical(
  top: Radius.circular(16))
@@ -969,8 +961,8 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
 
  return FullScreenTableWrapper(
  title: 'Lessons Learned — Tasks',
- child: buildTable(context),
  tableBuilder: buildTable,
+ child: buildTable(context),
  );
  }
 
@@ -1021,10 +1013,10 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  ? const Color(0xFFFFD700)
  : Colors.white,
  borderRadius: BorderRadius.circular(22),
- border: Border.all(color: Colors.grey.withOpacity(0.2)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  blurRadius: 6,
  offset: const Offset(0, 2)),
  ],
@@ -1045,10 +1037,10 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(30),
- border: Border.all(color: Colors.grey.withOpacity(0.2)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  blurRadius: 6,
  offset: const Offset(0, 2)),
  ],
@@ -1072,7 +1064,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  children: [
  CircleAvatar(
  radius: 18,
- backgroundColor: Colors.grey.withOpacity(0.2),
+ backgroundColor: Colors.grey.withValues(alpha: 0.2),
  backgroundImage:
  photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
  child: photoUrl.isEmpty
@@ -1144,6 +1136,21 @@ class _LessonDialogState extends State<_LessonDialog> {
  final TextEditingController _submittedByController = TextEditingController();
  final TextEditingController _dateController = TextEditingController();
 
+ // Canonical option sets. Existing records may hold custom values, so any
+ // current value not in the list is still surfaced as the first option.
+ static const List<String> _categoryOptions = <String>[
+ 'Process', 'Technical', 'Planning', 'Cost', 'Schedule', 'Quality',
+ 'Risk', 'Resources', 'Communication', 'Procurement', 'Stakeholder',
+ 'Safety', 'Commercial', 'Other',
+ ];
+ static const List<String> _phaseOptions = <String>[
+ 'Initiation', 'Front-End Planning', 'Planning', 'Design', 'Execution',
+ 'Monitoring & Control', 'Closure', 'Operations',
+ ];
+ static const List<String> _statusOptions = <String>[
+ 'Draft', 'In Review', 'Approved', 'Rejected', 'Archived',
+ ];
+
  String _selectedType = 'Success';
  String _selectedImpact = 'Medium';
  bool _highlightRow = false;
@@ -1175,7 +1182,40 @@ class _LessonDialogState extends State<_LessonDialog> {
  );
  } catch (e) { debugPrint('Error: $e'); }
  }
+ } else {
+ // New entry: pre-select canonical values, prefill the submitter with
+ // the signed-in user and default the date to today.
+ _categoryController.text = 'Process';
+ _phaseController.text = 'Planning';
+ _statusController.text = 'Draft';
+ _submittedByController.text =
+ _currentUserName();
+ _selectedDate = DateTime.now();
+ _dateController.text = _formatDate(_selectedDate!);
  }
+ // Auto-populate Submitted By from the signed-in user when the record
+ // carries no submitter (never leaves it blank).
+ if (_submittedByController.text.trim().isEmpty) {
+ _submittedByController.text = _currentUserName();
+ }
+ }
+
+ /// Resolves the signed-in user's display name: displayName first, then a
+ /// prettified email local part (e.g. 'chungu.chama' -> 'Chungu Chama').
+ String _currentUserName() {
+ final user = FirebaseAuth.instance.currentUser;
+ if (user == null) return '';
+ final name = user.displayName?.trim() ?? '';
+ if (name.isNotEmpty) return name;
+ final email = user.email?.trim() ?? '';
+ if (email.isEmpty) return '';
+ final local = email.split('@').first;
+ return local
+ .split(RegExp(r'[._\-+]+'))
+ .where((p) => p.isNotEmpty)
+ .map((p) =>
+ p[0].toUpperCase() + p.substring(1).toLowerCase())
+ .join(' ');
  }
 
  @override
@@ -1287,29 +1327,13 @@ class _LessonDialogState extends State<_LessonDialog> {
  Row(
  children: [
  Expanded(
- child: VoiceTextFormField(
- controller: _categoryController,
- decoration: _inputDecoration('Category',
- hintText: 'e.g. Process'),
- textInputAction: TextInputAction.next,
- validator: (value) =>
- (value == null || value.trim().isEmpty)
- ? 'Please add a category.'
- : null,
- ),
+ child: _dropdownField(
+ 'Category', _categoryController, _categoryOptions),
  ),
  const SizedBox(width: 12),
  Expanded(
- child: VoiceTextFormField(
- controller: _phaseController,
- decoration: _inputDecoration('Phase',
- hintText: 'e.g. Planning'),
- textInputAction: TextInputAction.next,
- validator: (value) =>
- (value == null || value.trim().isEmpty)
- ? 'Please add a phase.'
- : null,
- ),
+ child: _dropdownField(
+ 'Phase', _phaseController, _phaseOptions),
  ),
  ],
  ),
@@ -1317,23 +1341,18 @@ class _LessonDialogState extends State<_LessonDialog> {
  Row(
  children: [
  Expanded(
- child: VoiceTextFormField(
- controller: _statusController,
- decoration: _inputDecoration('Status',
- hintText: 'e.g. In Review'),
- textInputAction: TextInputAction.next,
- validator: (value) =>
- (value == null || value.trim().isEmpty)
- ? 'Please provide a status.'
- : null,
- ),
+ child: _dropdownField(
+ 'Status', _statusController, _statusOptions),
  ),
  const SizedBox(width: 12),
  Expanded(
- child: VoiceTextFormField(
+ // Auto-populated from the signed-in user — plain field, no
+ // Open Editor button.
+ child: TextFormField(
  controller: _submittedByController,
  decoration: _inputDecoration('Submitted By',
  hintText: 'e.g. Emily Johnson'),
+ readOnly: true,
  textInputAction: TextInputAction.next,
  validator: (value) =>
  (value == null || value.trim().isEmpty)
@@ -1344,7 +1363,8 @@ class _LessonDialogState extends State<_LessonDialog> {
  ],
  ),
  const SizedBox(height: 16),
- VoiceTextFormField(
+ // Plain date field — calendar picker only, no Open Editor button.
+ TextFormField(
  controller: _dateController,
  decoration: _inputDecoration('Date', hintText: 'YYYY-MM-DD')
  .copyWith(
@@ -1408,12 +1428,41 @@ class _LessonDialogState extends State<_LessonDialog> {
  );
  }
 
+ /// Correct input type for enumerated fields: a dropdown, not free text.
+ /// Keeps any existing custom value selectable so older records still edit
+ /// cleanly.
+ Widget _dropdownField(
+   String label,
+   TextEditingController controller,
+   List<String> baseOptions,
+ ) {
+   final String current = controller.text.trim();
+   final List<String> options =
+       (current.isEmpty || baseOptions.contains(current))
+           ? baseOptions
+           : <String>[current, ...baseOptions];
+   return DropdownButtonFormField<String>(
+     initialValue: current.isEmpty ? baseOptions.first : current,
+     decoration: _inputDecoration(label),
+     icon: const Icon(Icons.keyboard_arrow_down_rounded),
+     items: <DropdownMenuItem<String>>[
+       for (final String o in options)
+         DropdownMenuItem<String>(value: o, child: Text(o)),
+     ],
+     onChanged: (String? value) {
+       if (value != null) {
+         setState(() => controller.text = value);
+       }
+     },
+   );
+ }
+
  InputDecoration _inputDecoration(String label, {String? hintText}) {
  return InputDecoration(
  labelText: label,
  hintText: hintText,
  filled: true,
- fillColor: Colors.grey.withOpacity(0.08),
+ fillColor: Colors.grey.withValues(alpha: 0.08),
  border: OutlineInputBorder(
  borderRadius: BorderRadius.circular(12),
  borderSide: BorderSide.none,
@@ -1507,7 +1556,7 @@ class _SummaryStat extends StatelessWidget {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
  decoration: BoxDecoration(
- color: color.withOpacity(0.08),
+ color: color.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(14),
  ),
  child: Column(

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NDU Project — Status Report (Aug 28 – Sep 1, 2026)</title>
+<style>
+  @page { margin: 0.75in; size: A4; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1d1f; line-height: 1.55; font-size: 11pt; }
+  .cover { page-break-after: always; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; text-align: center; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; }
+  .cover h1 { font-size: 32pt; font-weight: 700; margin-bottom: 8px; }
+  .cover h2 { font-size: 16pt; font-weight: 400; opacity: 0.9; margin-bottom: 24px; }
+  .cover .meta { font-size: 11pt; opacity: 0.85; margin-top: 40px; }
+  .cover .meta p { margin: 4px 0; }
+  .toc { page-break-after: always; }
+  .toc h2 { font-size: 18pt; color: #d97706; border-bottom: 2px solid #d97706; padding-bottom: 6px; margin-bottom: 16px; }
+  .toc ul { list-style: none; padding: 0; }
+  .toc li { padding: 5px 0; border-bottom: 1px dotted #ccc; font-size: 11pt; }
+  .toc li span.num { color: #d97706; font-weight: 600; margin-right: 8px; }
+  h2.section { font-size: 16pt; color: #d97706; border-bottom: 2px solid #d97706; padding-bottom: 4px; margin-top: 28px; margin-bottom: 12px; page-break-after: avoid; }
+  h3 { font-size: 12pt; color: #374151; margin-top: 16px; margin-bottom: 6px; page-break-after: avoid; }
+  p, li { font-size: 10.5pt; margin-bottom: 4px; }
+  ul { padding-left: 20px; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 16px 0; font-size: 10pt; }
+  th { background: #f59e0b; color: #fff; text-align: left; padding: 7px 10px; }
+  td { padding: 6px 10px; border-bottom: 1px solid #e4e7ec; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 9pt; font-weight: 600; }
+  .badge-feat { background: #d1fae5; color: #065f46; }
+  .badge-fix { background: #fee2e2; color: #991b1b; }
+  .badge-merge { background: #e0e7ff; color: #3730a3; }
+  .stat-row { display: flex; gap: 20px; margin: 14px 0; flex-wrap: wrap; }
+  .stat-card { flex: 1; min-width: 140px; background: #f9fafb; border: 1px solid #e4e7ec; border-radius: 8px; padding: 14px; text-align: center; }
+  .stat-card .num { font-size: 22pt; font-weight: 700; color: #d97706; }
+  .stat-card .label { font-size: 9pt; color: #6b7280; margin-top: 2px; }
+  .risk { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px 14px; margin: 10px 0; border-radius: 0 6px 6px 0; }
+  .risk strong { color: #92400e; }
+  .page-break { page-break-before: always; }
+  .footer { margin-top: 30px; font-size: 8pt; color: #9ca3af; text-align: center; border-top: 1px solid #e4e7ec; padding-top: 8px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ COVER PAGE ═══════════════ -->
+<div class="cover">
+  <h1>NDU Project</h1>
+  <h2>Sprint Status Report</h2>
+  <p style="font-size:13pt; opacity:0.92;">Reporting Period: August 28 – September 1, 2026</p>
+  <div class="meta">
+    <p><strong>Project:</strong> NDU Project Management Platform</p>
+    <p><strong>Stack:</strong> Flutter / Dart · Firebase · Provider State Management</p>
+    <p><strong>Branch:</strong> staging</p>
+    <p><strong>Prepared by:</strong> AI Development Assistant (Codebuff)</p>
+    <p><strong>Date Generated:</strong> September 1, 2026</p>
+  </div>
+</div>
+
+<!-- ═══════════════ TABLE OF CONTENTS ═══════════════ -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ul>
+    <li><span class="num">1</span> Executive Summary</li>
+    <li><span class="num">2</span> Sprint Metrics Overview</li>
+    <li><span class="num">3</span> Planning Phase — Organization & Staffing</li>
+    <li><span class="num">4</span> Initiation Phase — Business Case & Charter</li>
+    <li><span class="num">5</span> Design Phase — UX Overhaul & Visual Rework</li>
+    <li><span class="num">6</span> Execution / Development Phase</li>
+    <li><span class="num">7</span> Quality Assurance — Bug Fixes & Hardening</li>
+    <li><span class="num">8</span> Deployment & DevOps</li>
+    <li><span class="num">9</span> Performance Audit & Optimisation</li>
+    <li><span class="num">10</span> Risk Register & Open Issues</li>
+    <li><span class="num">11</span> Next Sprint Outlook</li>
+  </ul>
+</div>
+
+<!-- ═══════════════ 1. EXECUTIVE SUMMARY ═══════════════ -->
+<h2 class="section">1. Executive Summary</h2>
+<p>
+  This report captures all development activity on the <strong>NDU Project</strong> Flutter application over the
+  three-day sprint window (August 28 – September 1, 2026). A total of <strong>20 commits</strong> were pushed to the
+  <code>staging</code> branch, plus <strong>uncommitted work-in-progress</strong> touching 8 additional files.
+  The sprint spanned the full project lifecycle — from planning-phase screen enhancements through initiation,
+  design, execution, QA, performance hardening, and deployment script modernisation.
+</p>
+<p>
+  Key headline outcomes include: a <strong>22-point UX overhaul</strong> (yellow re-theme, spotlight walkthrough,
+  steppers, modals), a new <strong>RACI Deliverable Matrix</strong> widget, a completely rewritten
+  <strong>Cost by WBS Tab</strong>, hardened <strong>deployment scripts</strong>, AI routing secured through
+  an <strong>OpenAI proxy</strong>, and a comprehensive <strong>performance audit</strong> identifying 131
+  shrinkWrap instances and 217 missing controller disposals.
+</p>
+
+<!-- ═══════════════ 2. SPRINT METRICS ═══════════════ -->
+<h2 class="section">2. Sprint Metrics Overview</h2>
+<div class="stat-row">
+  <div class="stat-card"><div class="num">20</div><div class="label">Commits Merged</div></div>
+  <div class="stat-card"><div class="num">~250+</div><div class="label">Files Touched</div></div>
+  <div class="stat-card"><div class="num">~9,500+</div><div class="label">Lines Added</div></div>
+  <div class="stat-card"><div class="num">~9,100+</div><div class="label">Lines Removed</div></div>
+  <div class="stat-card"><div class="num">8</div><div class="label">Files WIP (Uncommitted)</div></div>
+</div>
+
+<table>
+  <tr><th>Commit Type</th><th>Count</th><th>Description</th></tr>
+  <tr><td><span class="badge badge-feat">FEAT</span></td><td>5</td><td>New features & major enhancements</td></tr>
+  <tr><td><span class="badge badge-fix">FIX</span></td><td>14</td><td>Bug fixes, QA passes, hardening</td></tr>
+  <tr><td><span class="badge badge-merge">MERGE</span></td><td>1</td><td>Sync remote staging into local</td></tr>
+</table>
+
+<!-- ═══════════════ 3. PLANNING PHASE ═══════════════ -->
+<div class="page-break"></div>
+<h2 class="section">3. Planning Phase — Organization & Staffing</h2>
+
+<h3>3.1 RACI Deliverable Matrix (New Widget)</h3>
+<p>
+  A brand-new <code>RaciDeliverableMatrix</code> widget (1,455 lines) was created and integrated into the
+  <code>OrganizationPlanSubsectionsScreen</code>. This matrix provides:
+</p>
+<ul>
+  <li><strong>Deliverable Rows:</strong> Every sidebar deliverable from Planning Phase through Launch Phase, with a frozen left column showing deliverable name + phase chip.</li>
+  <li><strong>Role Columns:</strong> One column per role from the Staffing Plan, with named personnel displayed under each role header.</li>
+  <li><strong>RACI Cell Assignment:</strong> Coloured RACI pills (R / A / C / RV / I / V) with tap-to-edit dropdowns and empty dashed pills for unassigned cells.</li>
+  <li><strong>Role-based Inheritance:</strong> Assignments are keyed by role title (lowercased) — when a role is reassigned, the new person automatically inherits all cells.</li>
+  <li><strong>Approval Workflow:</strong> An approval banner with stakeholder-alignment confirmation text. Edits reset approval status. Approval is persisted with approver name, role, and timestamp.</li>
+  <li><strong>Full-Screen View:</strong> Expandable via <code>FullScreenTableWrapper</code>.</li>
+</ul>
+
+<h3>3.2 Staffing Plan Screen Enhancements</h3>
+<p>
+  The <code>OrganizationPlanSubsectionsScreen</code> (6,647 lines) received substantial additions including the
+  RACI matrix integration, PDF export capability (<code>_exportPlanningSubsectionPdf</code>), and AI-powered
+  staffing suggestions. The screen now includes:
+</p>
+<ul>
+  <li>Staffing Plan table with all personnel allocation columns (Position, Name, Location, Employment, Category, Start/Release Dates, NDU Access, Status)</li>
+  <li>Reminder banners for overdue/upcoming mobilizations and releases</li>
+  <li>AI suggestion engine for NDU Project Access based on subscription tier and project scope</li>
+  <li>Tabbed view: Staffing Plan, Staffing Timeline Gantt, and Estimated Cost tab</li>
+</ul>
+
+<h3>3.3 Cost by WBS Tab (Complete Rewrite)</h3>
+<p>
+  The <code>CostByWBSTab</code> widget (1,171 lines) was completely rewritten as a "world-class dashboard" showing
+  costs per WBS level. Key design decisions:
+</p>
+<ul>
+  <li>Single source of truth via <code>WBSProvider.computeCostRollup</code> — does NOT re-walk cost estimates</li>
+  <li>Cost matching by <code>costLineIds</code> OR <code>wbsRef == node.code</code>, with rolled-up totals including descendant nodes</li>
+  <li>Schedule linkage surfaced per L1 row (planned start / finish / status from <code>WbsLinkageService</code>)</li>
+  <li>Doubles as a "scope ↔ cost ↔ schedule" traceability matrix at a glance</li>
+</ul>
+
+<h3>3.4 WBS Module Screen Refactor</h3>
+<p>
+  The <code>WBSModuleScreen</code> was significantly refactored (946 lines, down from larger size). Changes include:
+</p>
+<ul>
+  <li>Standardised on <code>ResponsiveScaffold</code> with <code>InitiationLikeSidebar</code> for consistent navigation</li>
+  <li>Horizontal <code>TabBar</code> at the top (light-mode pills matching Project Controls screen), replacing the old dark navy left rail</li>
+  <li>ContextBanner showing upstream Initiation Phase context (project name, solutions count, business case preview)</li>
+  <li>Integrated <code>CostByWBSTab</code> as a first-class tab alongside Builder, AI Generator, and Validator</li>
+</ul>
+
+<!-- ═══════════════ 4. INITIATION PHASE ═══════════════ -->
+<div class="page-break"></div>
+<h2 class="section">4. Initiation Phase — Business Case & Charter</h2>
+
+<h3>4.1 Business-Case Lock Enforcement</h3>
+<p>
+  A QA pass (<code>ad7c5c35</code>) fixed business-case lock enforcement logic:
+</p>
+<ul>
+  <li>Corrected the <code>business_case_lock_helper.dart</code> — lock/unlock transitions were misfiring due to inverted state checks</li>
+  <li>Simplified <code>proceed_confirmation_gate.dart</code> from 66 lines of bloated confirmation logic to a streamlined flow</li>
+  <li>Fixed navigation order in <code>sidebar_navigation_service.dart</code></li>
+  <li>Corrected PSA (Preferred Solution Analysis) data loading and review checkbox state</li>
+</ul>
+
+<h3>4.2 Charter Governance & Project Charter</h3>
+<p>
+  Multiple screens in the charter/governance section received dark mode and stability fixes:
+</p>
+<ul>
+  <li><code>project_charter_screen.dart</code> and <code>project_charter_sections.dart</code> — dark mode theming + borderRadius fix</li>
+  <li><code>charter_governance_section.dart</code> — input type fixes for lesson dialog</li>
+  <li>AI routing for suggestions was secured through the <code>openaiProxy</code> endpoint (commit <code>241833b7</code>), eliminating direct API calls</li>
+</ul>
+
+<h3>4.3 Team & Invitation Management</h3>
+<p>
+  Major additions for team collaboration:
+</p>
+<ul>
+  <li><strong>InvitationAcceptScreen</strong> (348 lines) — new screen for accepting team invitations</li>
+  <li><strong>ProgramTeammatesScreen</strong> (876 lines) — comprehensive teammate management with role assignments</li>
+  <li><strong>TeamRolesResponsibilitiesScreen</strong> — updated role display and RACI integration</li>
+</ul>
+
+<!-- ═══════════════ 5. DESIGN PHASE ═══════════════ -->
+<div class="page-break"></div>
+<h2 class="section">5. Design Phase — UX Overhaul & Visual Rework</h2>
+
+<h3>5.1 22-Point UX Overhaul (Commit 45eca291)</h3>
+<p>
+  The single largest commit of the sprint — <strong>3,906 additions / 3,943 deletions</strong> across 26 files —
+  delivered a comprehensive UX overhaul touching nearly every corner of the app:
+</p>
+<table>
+  <tr><th>Area</th><th>Changes</th></tr>
+  <tr><td>Modals & Steppers</td><td>Replaced flat dialogs with modal bottom sheets + numeric stepper widgets (<code>numeric_stepper_field.dart</code>, 153 lines new)</td></tr>
+  <tr><td>Spotlight Walkthrough</td><td>New <code>spotlight_walkthrough.dart</code> (841 lines) — guided product tour overlay</td></tr>
+  <tr><td>Yellow Re-Theme</td><td>App-wide colour migration from blue/grey to amber/yellow accent palette</td></tr>
+  <tr><td>Section Removals</td><td>Removed <code>detailed_design_screen.dart</code> (188 lines deleted) and consolidated into other screens</td></tr>
+  <tr><td>WBS-Driven Epics</td><td>Epics & Features screen rewritten (1,464 lines changed) to auto-generate from WBS structure</td></tr>
+  <tr><td>Table/Modal Behaviour</td><td>Kanban config, punchlist, and risk tracking tables received new editing patterns</td></tr>
+  <tr><td>KPI Compaction</td><td>Dashboard KPIs condensed for better information density</td></tr>
+  <tr><td>Schedule Hero Slim</td><td>Schedule builder hero section slimmed down</td></tr>
+</table>
+
+<h3>5.2 Dark Mode Implementation</h3>
+<p>
+  Commit <code>60650440</code> applied dark mode across the entire application — touching <strong>174 files</strong>
+  with a systematic pass. Changes included:
+</p>
+<ul>
+  <li>New <code>AdaptiveColors</code> extension on <code>Color</code> in <code>theme.dart</code></li>
+  <li>New "Disable Open Editor" setting in <code>settings_screen.dart</code></li>
+  <li>Systematic replacement of hardcoded white backgrounds and text colours with theme-aware tokens</li>
+  <li>Follow-up fix (<code>a5a17ab7</code>) resolved const expression errors in the new theme system</li>
+</ul>
+
+<h3>5.3 UI Polish — 15 Queued Instructions</h3>
+<p>
+  Commit <code>00b32a09</code> applied a batch of 15 pending UI instructions:
+</p>
+<ul>
+  <li>Yellow headers across all phase screens</li>
+  <li>Text wrapping fixes for narrow containers</li>
+  <li>Section removals (cost estimate module consolidation)</li>
+  <li>Date picker integrations for scheduling screens</li>
+  <li>Collaborator autocomplete in team screens</li>
+  <li>Vendor grid overflow fixes</li>
+  <li>Embedded kanban board default rendering</li>
+  <li>Design phase & deliverables screens reworked (design_deliverables_screen +58 lines, design_phase_screen +148 lines)</li>
+</ul>
+
+<!-- ═══════════════ 6. EXECUTION / DEVELOPMENT ═══════════════ -->
+<div class="page-break"></div>
+<h2 class="section">6. Execution / Development Phase</h2>
+
+<h3>6.1 Schedule Builder — WBS Integration</h3>
+<p>
+  Commit <code>3be1aea8</code> (748 additions / 397 deletions) renamed "Sample Activity Schedule" → "Activity Schedule"
+  and rewrote the schedule builder to populate from WBS data automatically:
+</p>
+<ul>
+  <li>Schedule activities now auto-generate from WBS nodes</li>
+  <li>Double-ticker crash fix — guard against multiple AnimationController starts</li>
+  <li>Blank content fix — schedule builder was rendering empty when WBS data was available</li>
+</ul>
+
+<h3>6.2 Agile / Scrum Module</h3>
+<p>
+  Multiple commits addressed the Agile toolset:
+</p>
+<table>
+  <tr><th>Area</th><th>Fix / Feature</th><th>Commit</th></tr>
+  <tr><td>Epics Auto-Sync</td><td>Fixed "Syncing…" stuck state — <code>_isSyncing</code> reset moved to <code>finally</code> block</td><td><code>c29bf0fa</code></td></tr>
+  <tr><td>Kanban Board</td><td>Default columns render when no project context (was a blank 640px box)</td><td><code>739d59a5</code></td></tr>
+  <tr><td>Kanban Headers</td><td>Column headers now wrap-safe with Flexible + ellipsis (13–73px overflow fixed)</td><td><code>5375f568</code></td></tr>
+  <tr><td>Kanban Config</td><td>Unique row IDs (GlobalKey collisions blanked page on rebuild)</td><td><code>60ce757c</code></td></tr>
+  <tr><td>Kanban Config</td><td>Default path builds name/entry/exit controllers (empty 'Column name' rows fixed)</td><td><code>58931930</code></td></tr>
+  <tr><td>Kanban Config</td><td>Numeric sprint-cadence field (14px overflow resolved)</td><td><code>60ce757c</code></td></tr>
+</table>
+
+<h3>6.3 AI & Integration Layer</h3>
+<ul>
+  <li><strong>Secure AI Routing:</strong> All AI suggestions now route through <code>openaiProxy</code> instead of direct API calls (<code>241833b7</code>) — eliminates client-side API key exposure</li>
+  <li><strong>AI Suggesting TextField:</strong> Enhanced with improved UX (<code>ai_suggesting_textfield.dart</code>, +38 lines)</li>
+  <li><strong>Voice TextField:</strong> Expanded functionality (<code>voice_text_field.dart</code>, +29 lines)</li>
+  <li><strong>Kaz AI Chat Bubble:</strong> Dark mode fixes applied</li>
+</ul>
+
+<h3>6.4 Authentication & Persistence</h3>
+<ul>
+  <li><strong>Persistent Sign-In:</strong> Enhanced Firebase auth service with token persistence</li>
+  <li><strong>Sign-In Dialog:</strong> New widget for streamlined re-authentication flows</li>
+  <li><strong>User Preferences:</strong> Currency symbol sync added for Cost by WBS tab</li>
+</ul>
+
+<h3>6.5 Procurement & Contracts</h3>
+<ul>
+  <li><strong>Procurement Data Resilience:</strong> Error card widget added (<code>procurement_section_error_card.dart</code>, 104 lines) for graceful degradation</li>
+  <li><strong>Contract Vendor Quotes:</strong> Data loading fixes and null-safety improvements</li>
+  <li><strong>Procurement V2 Screen:</strong> Data resilience improvements across procurement workflow</li>
+</ul>
+
+<!-- ═══════════════ 7. QA / BUG FIXES ═══════════════ -->
+<div class="page-break"></div>
+<h2 class="section">7. Quality Assurance — Bug Fixes & Hardening</h2>
+
+<h3>7.1 borderRadius Paint Exceptions (36 Sites)</h3>
+<p>
+  Commit <code>823d14ed</code> systematically eliminated <code>borderRadius-with-non-uniform-Border</code> paint
+  exceptions across <strong>36 widget sites</strong>. A Python automation script
+  (<code>scripts/fix_border_radius_nonuniform.py</code>, 164 lines) was created to identify and fix patterns
+  where <code>BorderRadius.circular()</code> was used with a <code>Border</code> that had non-uniform widths.
+  Files touched include agile screens, cost estimation, design phase, risk assessment, sidebar navigation,
+  and AI chat components.
+</p>
+
+<h3>7.2 shrinkWrap Migration Fix</h3>
+<p>
+  Commit <code>78851947</code> restored <code>shrinkWrap: true</code> at <strong>64 sites</strong> that were
+  incorrectly stripped in an earlier migration attempt (<code>cbc0474</code>). This was a rollback to prevent
+  layout crashes in scrollable containers that depend on shrinkWrap for proper sizing.
+</p>
+
+<h3>7.3 Compile Fix — SectionSubcard</h3>
+<p>
+  Commit <code>648734e4</code> made <code>_SectionSubcard.subtitle</code> optional, resolving a compile error
+  from <code>cbc0474</code> where 7 call sites passed no subtitle parameter.
+</p>
+
+<h3>7.4 QA Round — Multi-Screen Fixes</h3>
+<p>Commit <code>ad7c5c35</code> addressed a full QA pass across 9 files:</p>
+<ul>
+  <li>Business-case lock enforcement logic</li>
+  <li>Sidebar navigation order correction</li>
+  <li>Preferred Solution Analysis data loading</li>
+  <li>Review checkbox state persistence</li>
+  <li>Infrastructure & IT considerations screen fixes</li>
+  <li>Risk identification screen data handling</li>
+</ul>
+
+<h3>7.5 Lesson Dialog & Training Fixes</h3>
+<p>Commit <code>f635e6e4</code> (25 files, 212 additions) ported queued fixes:</p>
+<ul>
+  <li>Lessons Learned dialog input types corrected</li>
+  <li>Team training & building screen improvements</li>
+  <li>Scope completion data handling</li>
+  <li>Document review matrix fixes</li>
+  <li>Interface management screen data validation</li>
+  <li>Test updates: <code>project_lifecycle_service_test.dart</code></li>
+</ul>
+
+<!-- ═══════════════ 8. DEPLOYMENT & DEVOPS ═══════════════ -->
+<h2 class="section">8. Deployment & DevOps</h2>
+<p>
+  Commit <code>de4a0c19</code> (250 additions / 94 deletions) comprehensively hardened all deployment scripts:
+</p>
+<table>
+  <tr><th>Script</th><th>Changes</th></tr>
+  <tr><td><code>deploy.sh</code></td><td>Removed hardcoded paths, added safety rails, replaced deprecated commands</td></tr>
+  <tr><td><code>scripts/build_and_preview.sh</code></td><td>Added error handling and preview server improvements</td></tr>
+  <tr><td><code>scripts/build_flutter.sh</code></td><td>Added build verification and error reporting</td></tr>
+  <tr><td><code>scripts/ci-cd/silent_push.sh</code></td><td>Fixed push mechanism for silent CI/CD operations</td></tr>
+  <tr><td><code>scripts/deploy_staging.sh</code></td><td>Major rework (77 lines changed) — staging deployment flow modernised</td></tr>
+  <tr><td><code>scripts/push_staging_repo.sh</code></td><td>Fixed staging repository push logic</td></tr>
+  <tr><td><code>scripts/serve_flutter_web_fast.py</code></td><td>Python web server updated for current Flutter web output</td></tr>
+</table>
+
+<!-- ═══════════════ 9. PERFORMANCE AUDIT ═══════════════ -->
+<div class="page-break"></div>
+<h2 class="section">9. Performance Audit & Optimisation</h2>
+<p>
+  A comprehensive <code>PERFORMANCE_AUDIT.md</code> (192 lines) was produced documenting all findings.
+  Below is a summary:
+</p>
+
+<table>
+  <tr><th>Issue</th><th>Severity</th><th>Count / Impact</th><th>Status</th></tr>
+  <tr><td>shrinkWrap: true on ListView.builder</td><td>HIGH</td><td>131 instances; ~40% frame time increase</td><td>Partially addressed (64 restored correctly)</td></tr>
+  <tr><td>withOpacity() colour object churn</td><td>MEDIUM</td><td>Multiple sites; ~15% GC pressure increase</td><td>Fixed in <code>draggable_card_canvas.dart</code></td></tr>
+  <tr><td>Missing controller dispose()</td><td>CRITICAL</td><td>39 ScrollControllers + 178 TextEditingControllers</td><td>Audited; remediation planned</td></tr>
+  <tr><td>Missing const constructors</td><td>LOW-MED</td><td>207 instances</td><td>Audited; planned</td></tr>
+  <tr><td>Excessive setState rebuilds</td><td>MEDIUM</td><td>Multiple screens</td><td>Audited; planned</td></tr>
+  <tr><td>borderRadius non-uniform paint</td><td>LOW</td><td>36 sites</td><td><strong>Fully resolved</strong></td></tr>
+</table>
+
+<h3>Current vs Target Performance</h3>
+<table>
+  <tr><th>Metric</th><th>Current</th><th>Target</th></tr>
+  <tr><td>Initial Frame Build Time</td><td>~800ms</td><td>&lt;500ms</td></tr>
+  <tr><td>Scroll Performance</td><td>55–60fps</td><td>Consistent 60fps</td></tr>
+  <tr><td>Memory Usage</td><td>~150MB</td><td>&lt;120MB</td></tr>
+  <tr><td>GC Pressure</td><td>High</td><td>Low</td></tr>
+</table>
+
+<!-- ═══════════════ 10. RISKS ═══════════════ -->
+<h2 class="section">10. Risk Register & Open Issues</h2>
+
+<div class="risk">
+  <strong>⚠️ R1 — Memory Leak Risk (HIGH):</strong> 217 controllers (39 Scroll + 178 Text) detected without proper
+  <code>dispose()</code>. This poses a memory leak risk during long sessions. Remediation is the top priority for
+  the next sprint.
+</div>
+<div class="risk">
+  <strong>⚠️ R2 — shrinkWrap Technical Debt (MEDIUM):</strong> 131 instances of <code>shrinkWrap: true</code> remain
+  across the codebase. While the 64 sites from the botched migration were correctly restored, the underlying
+  performance issue persists in high-item-count lists.
+</div>
+<div class="risk">
+  <strong>⚠️ R3 — Uncommitted WIP (LOW):</strong> 8 files (~829 additions / 653 deletions) remain uncommitted,
+  including major changes to WBS Module Screen, Cost by WBS Tab, and the RACI Deliverable Matrix. These should
+  be committed and tested before the next deployment.
+</div>
+<div class="risk">
+  <strong>⚠️ R4 — WBS Module Size Regression (LOW):</strong> The WBS Module Screen was reduced from a larger
+  codebase to 946 lines, but some functionality may have been lost in the consolidation. Verify feature parity.
+</div>
+
+<!-- ═══════════════ 11. NEXT SPRINT ═══════════════ -->
+<h2 class="section">11. Next Sprint Outlook</h2>
+<table>
+  <tr><th>Priority</th><th>Task</th><th>Estimated Effort</th></tr>
+  <tr><td>P0</td><td>Commit and test all 8 uncommitted WIP files</td><td>Half day</td></tr>
+  <tr><td>P0</td><td>Controller disposal audit — fix all 217 missing dispose() calls</td><td>1–2 days</td></tr>
+  <tr><td>P1</td><td>Begin shrinkWrap → bounded-height migration for top-20 high-traffic lists</td><td>2–3 days</td></tr>
+  <tr><td>P1</td><td>Performance regression testing — set up automated frame-rate monitoring</td><td>1 day</td></tr>
+  <tr><td>P2</td><td>Complete yellow re-theme QA pass across all screens</td><td>1 day</td></tr>
+  <tr><td>P2</td><td>Implement const constructors for 207 identified widget sites</td><td>1 day</td></tr>
+  <tr><td>P3</td><td>Explore Riverpod/Bloc migration for more granular state management</td><td>Exploratory</td></tr>
+</table>
+
+<div class="footer">
+  NDU Project — Sprint Status Report · Aug 28 – Sep 1, 2026 · Generated by Codebuff 🤖 · Page intentionally left dense.
+</div>
+
+</body>
+</html>

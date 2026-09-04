@@ -3,16 +3,9 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/project_service.dart';
-import 'package:ndu_project/screens/admin/admin_users_screen.dart';
-import 'package:ndu_project/screens/admin/admin_hints_screen.dart';
-import 'package:ndu_project/screens/admin_content_screen.dart';
-import 'package:ndu_project/screens/admin/admin_projects_screen.dart';
 import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 
-import 'package:ndu_project/screens/admin/admin_coupons_screen.dart';
-import 'package:ndu_project/screens/admin/admin_subscription_lookup_screen.dart';
-import 'package:ndu_project/screens/admin/admin_pricing_config_screen.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 import 'package:go_router/go_router.dart';
 
@@ -327,6 +320,15 @@ class AdminHomeScreen extends StatelessWidget {
               icon: Icons.people,
               color: _adminAccentColor,
               onTap: () => context.push('/admin-users'),width: cardWidth,
+            ),
+            _ActionCard(
+              title: 'Survey Responses',
+              description:
+                  'Read every user\'s profile-onboarding survey answers in real time, with search, filters, and CSV export',
+              icon: Icons.assignment_outlined,
+              color: _adminAccentColor,
+              onTap: () => context.push('/admin-survey-responses'),
+              width: cardWidth,
             ),
             _ActionCard(
               title: 'Content Management',

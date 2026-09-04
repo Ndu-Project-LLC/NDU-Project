@@ -50,7 +50,7 @@ class ExecutionIssueManagementScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Issue Management',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -251,7 +251,7 @@ class _IssuesManagementSectionState extends State<_IssuesManagementSection> {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Issues',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'issueTopic',
                       label: 'Issue Topic',
@@ -340,7 +340,7 @@ class _IssuesManagementSectionState extends State<_IssuesManagementSection> {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileIssueManagementActions()
+          const _MobileIssueManagementActions()
         else
           const _DesktopIssueManagementActions(),
       ],

@@ -405,7 +405,7 @@ class _RiskTrackingWorkspaceScreenState
  final isMobile = MediaQuery.sizeOf(context).width < 900;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Stack(
  children: [
@@ -464,7 +464,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  icon: const Icon(Icons.arrow_back_ios_new, size: 20),
  onPressed: () => Navigator.of(context).pop(),
  style: IconButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: const Color(0xFF111827),
  padding: const EdgeInsets.all(12),
  ),
@@ -526,14 +526,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  label: 'AI Draft',
  isLoading: _isGenerating,
  onTap: _generateAiDrafts,
- color: const Color(0xFF8B5CF6),
+ color: const Color(0xFFB8860B),
  ),
  const SizedBox(width: 12),
  _buildActionButton(
  icon: Icons.add,
  label: 'Add Risk',
  onTap: _showRiskEditor,
- color: const Color(0xFF6366F1),
+ color: const Color(0xFFB8860B),
  ),
  ],
  ),
@@ -614,14 +614,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ..add(filter);
  });
  },
- selectedColor: const Color(0xFF6366F1),
- backgroundColor: Colors.white,
+ selectedColor: const Color(0xFFB8860B),
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  checkmarkColor: Colors.white,
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(8),
  side: BorderSide(
  color: _selectedFilters.contains(filter)
- ? const Color(0xFF6366F1)
+ ? const Color(0xFFB8860B)
  : const Color(0xFFE5E7EB),
  ),
  ),
@@ -678,8 +678,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(
  child: _buildMetricCard(
  icon: Icons.show_chart_rounded,
- iconColor: const Color(0xFF8B5CF6),
- iconBg: const Color(0xFFF3E8FF),
+ iconColor: const Color(0xFFB8860B),
+ iconBg: const Color(0xFFFFF8E1),
  label: 'Avg Risk Score',
  value: avgRiskScore.toString(),
  ),
@@ -781,6 +781,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildRiskTable() {
  final table = Container(
+ width: double.infinity,
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
@@ -1314,7 +1315,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 40,
  height: 40,
  decoration: BoxDecoration(
- color: severityColor.withOpacity(0.15),
+ color: severityColor.withValues(alpha: 0.15),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Icon(
@@ -1416,7 +1417,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w600,
- color: Color(0xFF6366F1),
+ color: Color(0xFFB8860B),
  ),
  maxLines: 1,
  overflow: TextOverflow.ellipsis,
@@ -1602,7 +1603,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w600,
- color: Color(0xFF6366F1),
+ color: Color(0xFFB8860B),
  ),
  maxLines: 1,
  overflow: TextOverflow.ellipsis,
@@ -1657,6 +1658,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  VoidCallback? onAction,
  }) {
  return Container(
+ width: double.infinity,
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
  color: Colors.white,
@@ -1703,7 +1705,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  if (actionLabel != null && onAction != null)
  Material(
- color: const Color(0xFF6366F1),
+ color: const Color(0xFFB8860B),
  borderRadius: BorderRadius.circular(10),
  child: InkWell(
  onTap: onAction,
@@ -1781,7 +1783,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(5),
  ),
  child: Text(
@@ -1799,7 +1801,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: const Color(0xFFE0E7FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(5),
  ),
  child: Text(
@@ -1817,7 +1819,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: color.withOpacity(0.15),
+ color: color.withValues(alpha: 0.15),
  borderRadius: BorderRadius.circular(5),
  border: Border.all(color: color, width: 1),
  ),
@@ -1881,7 +1883,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return const Color(0xFF10B981);
  case 'monitoring':
  case 'in progress':
- return const Color(0xFF6366F1);
+ return const Color(0xFFB8860B);
  default:
  return const Color(0xFF6B7280);
  }
@@ -1907,7 +1909,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  case 'completed':
  return const Color(0xFF10B981);
  case 'in progress':
- return const Color(0xFF6366F1);
+ return const Color(0xFFB8860B);
  case 'planning':
  return const Color(0xFFF59E0B);
  case 'blocked':
@@ -1933,7 +1935,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Color _getProgressColor(int progress) {
  if (progress >= 80) return const Color(0xFF10B981);
- if (progress >= 50) return const Color(0xFF6366F1);
+ if (progress >= 50) return const Color(0xFFB8860B);
  if (progress >= 25) return const Color(0xFFF59E0B);
  return const Color(0xFFEF4444);
  }
@@ -2026,7 +2028,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color: Color(0xFF111827),
  ),
  ),
- Text(
+ const Text(
  'Fill in the risk details below',
  style: TextStyle(
  fontSize: 13,
@@ -2149,7 +2151,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  decoration: BoxDecoration(
- color: _getRiskScoreColor(likelihoodScore * impactScore).withOpacity(0.15),
+ color: _getRiskScoreColor(likelihoodScore * impactScore).withValues(alpha: 0.15),
  border: Border.all(
  color: _getRiskScoreColor(likelihoodScore * impactScore),
  ),
@@ -2388,7 +2390,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: probability,
+ initialValue: probability,
  items: const ['Low', 'Medium', 'High']
  .map((v) =>
  DropdownMenuItem(value: v, child: Text(v)))
@@ -2402,7 +2404,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 14),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: impact,
+ initialValue: impact,
  items: const ['Low', 'Medium', 'High', 'Critical']
  .map((v) =>
  DropdownMenuItem(value: v, child: Text(v)))
@@ -2416,7 +2418,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 14),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: const [
  'Open',
  'Monitoring',
@@ -2489,7 +2491,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Navigator.pop(context, true);
  },
  style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFF6366F1),
+ backgroundColor: const Color(0xFFB8860B),
  padding: const EdgeInsets.symmetric(
  horizontal: 28, vertical: 14),
  shape: RoundedRectangleBorder(
@@ -2674,7 +2676,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: severity,
+ initialValue: severity,
  items: const ['Low', 'Medium', 'High', 'Critical']
  .map((v) =>
  DropdownMenuItem(value: v, child: Text(v)))
@@ -2688,7 +2690,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 14),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: confidenceLevel,
+ initialValue: confidenceLevel,
  items: const ['Low', 'Medium', 'High']
  .map((v) =>
  DropdownMenuItem(value: v, child: Text(v)))
@@ -2703,7 +2705,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 14),
  DropdownButtonFormField<String>(
- value: associatedRiskIdController.text.isEmpty
+ initialValue: associatedRiskIdController.text.isEmpty
  ? null
  : associatedRiskIdController.text,
  items: _risks
@@ -2744,7 +2746,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Navigator.pop(context, true);
  },
  style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFF6366F1),
+ backgroundColor: const Color(0xFFB8860B),
  padding: const EdgeInsets.symmetric(
  horizontal: 28, vertical: 14),
  shape: RoundedRectangleBorder(
@@ -2927,7 +2929,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 14),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: const [
  'Planning',
  'In Progress',
@@ -2983,7 +2985,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 14),
  DropdownButtonFormField<String>(
- value: associatedRiskIdController.text.isEmpty
+ initialValue: associatedRiskIdController.text.isEmpty
  ? null
  : associatedRiskIdController.text,
  items: _risks
@@ -3024,7 +3026,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Navigator.pop(context, true);
  },
  style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFF6366F1),
+ backgroundColor: const Color(0xFFB8860B),
  padding: const EdgeInsets.symmetric(
  horizontal: 28, vertical: 14),
  shape: RoundedRectangleBorder(
@@ -3098,7 +3100,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(12),
- borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFB8860B), width: 2),
  ),
  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
  filled: true,
@@ -3180,7 +3182,7 @@ class _RiskData {
   final String createdAt;
   final String lastModified;
 
-  static _RiskData empty() => _RiskData(
+  static _RiskData empty() => const _RiskData(
         id: '',
         title: '',
         owner: '',

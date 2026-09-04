@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
-import 'package:ndu_project/widgets/unified_phase_header.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
@@ -218,6 +217,7 @@ class _StakeholderManagementScreenState
               mappingTable: _StakeholderMappingTable(
                 entries: projectData.stakeholderEntries,
                 onChanged: _updateStakeholder,
+                onDelete: _deleteStakeholder,
               ),
               planTable: FullScreenTableWrapper(
                 title: 'Engagement Plans',
@@ -286,7 +286,7 @@ class _StakeholderManagementScreenState
     // --- Mobile layout ---
     if (isMobile) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         drawer: Drawer(
           width: sidebarWidth,
           child: const SafeArea(
@@ -325,7 +325,7 @@ class _StakeholderManagementScreenState
 
     // --- Desktop layout ---
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         top: true,
         child: Row(
@@ -660,7 +660,7 @@ class _StakeholderManagementScreenState
 
     final List<StakeholderEntry> newEntries = [];
     final now = DateTime.now();
-    String _id(String seed) =>
+    String id(String seed) =>
         '${now.microsecondsSinceEpoch}_${seed.hashCode.abs()}';
 
     // ── 1. Initiation Phase core stakeholders ──────────────────────────
@@ -679,9 +679,11 @@ class _StakeholderManagementScreenState
           final cleaned = line.replaceAll(RegExp(r'^[-*•]\s*'), '').trim();
           if (cleaned.isEmpty) continue;
           if (newEntries.any((e) =>
-              e.name.toLowerCase() == cleaned.toLowerCase())) continue;
+              e.name.toLowerCase() == cleaned.toLowerCase())) {
+            continue;
+          }
           newEntries.add(StakeholderEntry(
-            id: _id('init_$cleaned'),
+            id: id('init_$cleaned'),
             name: cleaned,
             organization: org,
             role: 'TBD',
@@ -710,9 +712,11 @@ class _StakeholderManagementScreenState
       final name = m.name.trim();
       if (name.isEmpty) continue;
       if (newEntries.any((e) =>
-          e.name.toLowerCase() == name.toLowerCase())) continue;
+          e.name.toLowerCase() == name.toLowerCase())) {
+        continue;
+      }
       newEntries.add(StakeholderEntry(
-        id: _id('pt_${m.id}'),
+        id: id('pt_${m.id}'),
         name: name,
         organization: 'Project Team',
         role: m.role.isEmpty ? 'TBD' : m.role,
@@ -766,9 +770,11 @@ class _StakeholderManagementScreenState
     ];
     for (final (name, org, role, note) in commonStakeholders) {
       if (newEntries.any((e) =>
-          e.name.toLowerCase() == name.toLowerCase())) continue;
+          e.name.toLowerCase() == name.toLowerCase())) {
+        continue;
+      }
       newEntries.add(StakeholderEntry(
-        id: _id('sugg_$name'),
+        id: id('sugg_$name'),
         name: name,
         organization: org,
         role: role,
@@ -1527,11 +1533,13 @@ parentheses to disambiguate.''';
         plansBuffer.writeln('${i + 1}. ${e.stakeholder}'
             '${e.stakeholderGroup.isNotEmpty ? ' [${e.stakeholderGroup}]' : ''}'
             '${e.manageClosely ? ' (Manage Closely)' : ''}');
-        if (e.objective.isNotEmpty)
+        if (e.objective.isNotEmpty) {
           plansBuffer.writeln('   Objective: ${e.objective}');
+        }
         if (e.method.isNotEmpty) plansBuffer.writeln('   Method: ${e.method}');
-        if (e.frequency.isNotEmpty)
+        if (e.frequency.isNotEmpty) {
           plansBuffer.writeln('   Frequency: ${e.frequency}');
+        }
         if (e.owner.isNotEmpty) plansBuffer.writeln('   Owner: ${e.owner}');
         if (e.status.isNotEmpty) plansBuffer.writeln('   Status: ${e.status}');
         if (e.q1Plan.isNotEmpty ||
@@ -1547,8 +1555,9 @@ parentheses to disambiguate.''';
         if (e.dataShareLinks.isNotEmpty) {
           plansBuffer.writeln('   Data Sharing Links:');
           for (final line in e.dataShareLinks.split('\n')) {
-            if (line.trim().isNotEmpty)
+            if (line.trim().isNotEmpty) {
               plansBuffer.writeln('     - ${line.trim()}');
+            }
           }
         }
         plansBuffer.writeln('');
@@ -1723,7 +1732,7 @@ class _StatsRow extends StatelessWidget {
         title: 'Total Stakeholders',
         value: totalStakeholders.toString(),
         icon: Icons.people_alt_outlined,
-        accentColor: const Color(0xFF60A5FA),
+        accentColor: const Color(0xFFFFC812),
       ),
       _MetricCard(
         title: 'External Partners',
@@ -2041,8 +2050,8 @@ class _InfluenceInterestMatrixState extends State<_InfluenceInterestMatrix> {
                   Expanded(
                     child: _matrixQuadrant(
                       label: 'Keep Satisfied',
-                      color: const Color(0xFFEFF6FF), // Blue
-                      accentColor: const Color(0xFF3B82F6),
+                      color: const Color(0xFFFFF8E1), // Blue
+                      accentColor: const Color(0xFFFFC812),
                       stakeholders: _sorted('Keep Satisfied', keepSatisfied),
                     ),
                   ),
@@ -2270,6 +2279,44 @@ class _InfluenceInterestMatrixState extends State<_InfluenceInterestMatrix> {
                     ),
                   ),
                 ),
+                const SizedBox(width: 6),
+                // Magnify / zoom button
+                InkWell(
+                  onTap: () => _openMagnifiedView(
+                    context,
+                    label: label,
+                    color: color,
+                    accentColor: accentColor,
+                    stakeholders: stakeholders,
+                  ),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.zoom_out_map,
+                          size: 12,
+                          color: accentColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Expand',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: accentColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ],
@@ -2306,6 +2353,214 @@ class _InfluenceInterestMatrixState extends State<_InfluenceInterestMatrix> {
                         ),
                       ),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _openMagnifiedView(
+    BuildContext context, {
+    required String label,
+    required Color color,
+    required Color accentColor,
+    required List<StakeholderEntry> stakeholders,
+  }) {
+    final ratingKey = _ratingKeyFor(label);
+    final sortMode = _sortModes[ratingKey] ?? 'name_asc';
+    final sorted = _sorted(ratingKey, stakeholders);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(20),
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(alpha: 0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: accentColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: accentColor,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${stakeholders.length} stakeholder${stakeholders.length != 1 ? 's' : ''}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: accentColor,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      icon: Icon(Icons.close, color: accentColor),
+                      tooltip: 'Close',
+                    ),
+                  ],
+                ),
+              ),
+              // Sort controls
+              if (stakeholders.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                          color: accentColor.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.sort, size: 16, color: accentColor),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Sort: $sortMode',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: accentColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 16),
+              // Stakeholder list
+              Expanded(
+                child: stakeholders.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.people_outline,
+                              size: 48,
+                              color: accentColor.withValues(alpha: 0.3),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No stakeholders in this category',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontStyle: FontStyle.italic,
+                                color: accentColor.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: sorted
+                              .map((s) => _magnifiedStakeholderChip(s, accentColor))
+                              .toList(),
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _magnifiedStakeholderChip(StakeholderEntry s, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            s.name.isEmpty ? 'Unnamed' : s.name,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          if (s.role.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              s.role,
+              style: TextStyle(
+                fontSize: 13,
+                color: color.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+          if (s.organization.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              s.organization,
+              style: TextStyle(
+                fontSize: 12,
+                color: color.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -2484,7 +2739,7 @@ class _EngagementSection extends StatelessWidget {
                             style: TextStyle(
                                 fontSize: 13, fontWeight: FontWeight.w600)),
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: Colors.white,
+                          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                           foregroundColor: const Color(0xFF1F2937),
                           side: const BorderSide(color: Color(0xFFE5E7EB)),
                           padding: const EdgeInsets.symmetric(
@@ -2837,6 +3092,8 @@ class _StakeholdersTable extends StatelessWidget {
                 itemName:
                     'stakeholder "${entries[index].name.trim().isEmpty ? 'Untitled' : entries[index].name.trim()}"',
                 onDelete: () => onDelete(entries[index].id),
+                entry: entries[index],
+                onEdit: onChanged,
               ),
             ],
           ),
@@ -2862,10 +3119,12 @@ class _StakeholderMappingTable extends StatelessWidget {
   const _StakeholderMappingTable({
     required this.entries,
     required this.onChanged,
+    this.onDelete,
   });
 
   final List<StakeholderEntry> entries;
   final ValueChanged<StakeholderEntry> onChanged;
+  final ValueChanged<String>? onDelete;
 
   /// Quadrant color palette — must stay in sync with
   /// [_InfluenceInterestMatrix._matrixQuadrant].
@@ -2877,8 +3136,8 @@ class _StakeholderMappingTable extends StatelessWidget {
         description: 'High influence / High interest'),
     'Keep Satisfied': _QuadrantPalette(
         name: 'Keep Satisfied',
-        bg: Color(0xFFEFF6FF),
-        accent: Color(0xFF3B82F6),
+        bg: Color(0xFFFFF8E1),
+        accent: Color(0xFFFFC812),
         description: 'High influence / Low interest'),
     'Keep Informed': _QuadrantPalette(
         name: 'Keep Informed',
@@ -2895,7 +3154,7 @@ class _StakeholderMappingTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
-      return _SectionEmptyState(
+      return const _SectionEmptyState(
         title: 'No stakeholders to map',
         message: 'Add stakeholders on the Stakeholders tab first, then use '
             '"AI Suggest Ratings" to auto-classify them into matrix quadrants.',
@@ -2912,6 +3171,7 @@ class _StakeholderMappingTable extends StatelessWidget {
       const _TableColumnDef('Interest', 110),
       const _TableColumnDef('Suggested Rating', 220),
       const _TableColumnDef('Source', 130),
+      const _TableColumnDef('Actions', 100),
     ];
 
     return Column(
@@ -3051,6 +3311,11 @@ class _StakeholderMappingTable extends StatelessWidget {
         },
       ),
       _SourceCell(source: source),
+      _MappingRowActions(
+        entry: entry,
+        onEdit: onChanged,
+        onDelete: onDelete,
+      ),
     ];
   }
 }
@@ -3154,6 +3419,186 @@ class _SourceCell extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Actions cell for the stakeholder mapping table — Edit + Delete buttons.
+class _MappingRowActions extends StatelessWidget {
+  const _MappingRowActions({
+    required this.entry,
+    required this.onEdit,
+    this.onDelete,
+  });
+
+  final StakeholderEntry entry;
+  final ValueChanged<StakeholderEntry> onEdit;
+  final ValueChanged<String>? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return _TableFieldShell(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Tooltip(
+            message: 'Edit stakeholder',
+            child: IconButton(
+              icon: const Icon(Icons.edit_outlined,
+                  size: 18, color: Color(0xFF1F2937)),
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(
+                  minWidth: 32, minHeight: 32),
+              padding: EdgeInsets.zero,
+              onPressed: () => _openEditDialog(context),
+            ),
+          ),
+          if (onDelete != null)
+            Tooltip(
+              message: 'Delete stakeholder',
+              child: IconButton(
+                icon: const Icon(Icons.delete_outline,
+                    size: 18, color: Color(0xFFEF4444)),
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints(
+                    minWidth: 32, minHeight: 32),
+                padding: EdgeInsets.zero,
+                onPressed: () => _confirmDelete(context),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _openEditDialog(BuildContext context) {
+    final nameController = TextEditingController(text: entry.name);
+    final orgController = TextEditingController(text: entry.organization);
+    final roleController = TextEditingController(text: entry.role);
+    String influence = entry.influence;
+    String interest = entry.interest;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit Stakeholder'),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 400,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Stakeholder Name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: orgController,
+                    decoration: const InputDecoration(
+                      labelText: 'Organization',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: roleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Role/Title',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          initialValue: influence,
+                          decoration: const InputDecoration(
+                            labelText: 'Influence',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: ['High', 'Medium', 'Low']
+                              .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                              .toList(),
+                          onChanged: (v) {
+                            if (v != null) setDialogState(() => influence = v);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          initialValue: interest,
+                          decoration: const InputDecoration(
+                            labelText: 'Interest',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: ['High', 'Medium', 'Low']
+                              .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                              .toList(),
+                          onChanged: (v) {
+                            if (v != null) setDialogState(() => interest = v);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                onEdit(entry.copyWith(
+                  name: nameController.text.trim(),
+                  organization: orgController.text.trim(),
+                  role: roleController.text.trim(),
+                  influence: influence,
+                  interest: interest,
+                  updatedAt: DateTime.now(),
+                ));
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Stakeholder'),
+        content: Text('Are you sure you want to delete ${entry.name}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && onDelete != null) onDelete!(entry.id);
   }
 }
 
@@ -4109,10 +4554,14 @@ class _RowActions extends StatelessWidget {
   const _RowActions({
     required this.itemName,
     required this.onDelete,
+    this.entry,
+    this.onEdit,
   });
 
   final String itemName;
   final VoidCallback onDelete;
+  final StakeholderEntry? entry;
+  final ValueChanged<StakeholderEntry>? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -4163,6 +4612,19 @@ class _RowActions extends StatelessWidget {
               },
             ),
           ),
+          if (entry != null && onEdit != null)
+            Tooltip(
+              message: 'Edit stakeholder',
+              child: IconButton(
+                icon: const Icon(Icons.edit_outlined,
+                    size: 18, color: Color(0xFF1F2937)),
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints(
+                    minWidth: 32, minHeight: 32),
+                padding: EdgeInsets.zero,
+                onPressed: () => _openEditDialog(context),
+              ),
+            ),
           Tooltip(
             message: 'Delete row',
             child: IconButton(
@@ -4203,6 +4665,154 @@ class _RowActions extends StatelessWidget {
       ),
     );
     if (confirmed == true) onDelete();
+  }
+
+  void _openEditDialog(BuildContext context) {
+    if (entry == null || onEdit == null) return;
+    final e = entry!;
+    final nameController = TextEditingController(text: e.name);
+    final orgController = TextEditingController(text: e.organization);
+    final roleController = TextEditingController(text: e.role);
+    final contactController = TextEditingController(text: e.contactInfo);
+    final channelController = TextEditingController(text: e.channel);
+    final ownerController = TextEditingController(text: e.owner);
+    final notesController = TextEditingController(text: e.notes);
+    String influence = e.influence;
+    String interest = e.interest;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit Stakeholder'),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 480,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Stakeholder Name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: orgController,
+                    decoration: const InputDecoration(
+                      labelText: 'Organization',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: roleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Role/Title',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: contactController,
+                    decoration: const InputDecoration(
+                      labelText: 'Contact Info (Email/Phone)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          initialValue: influence,
+                          decoration: const InputDecoration(
+                            labelText: 'Influence',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: ['High', 'Medium', 'Low']
+                              .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                              .toList(),
+                          onChanged: (v) {
+                            if (v != null) setDialogState(() => influence = v);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          initialValue: interest,
+                          decoration: const InputDecoration(
+                            labelText: 'Interest',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: ['High', 'Medium', 'Low']
+                              .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                              .toList(),
+                          onChanged: (v) {
+                            if (v != null) setDialogState(() => interest = v);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: channelController,
+                    decoration: const InputDecoration(
+                      labelText: 'Channel',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: ownerController,
+                    decoration: const InputDecoration(
+                      labelText: 'Owner',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: notesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Notes',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                onEdit!(e.copyWith(
+                  name: nameController.text.trim(),
+                  organization: orgController.text.trim(),
+                  role: roleController.text.trim(),
+                  contactInfo: contactController.text.trim(),
+                  channel: channelController.text.trim(),
+                  owner: ownerController.text.trim(),
+                  notes: notesController.text.trim(),
+                  influence: influence,
+                  interest: interest,
+                ));
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -4264,11 +4874,11 @@ class _ProjectTeamRosterSection extends StatelessWidget {
                       size: 22, color: Color(0xFFB45309)),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Row(
+                      Row(
                         children: [
                           Text(
                             'Project Team Communication Roster',
@@ -4282,13 +4892,13 @@ class _ProjectTeamRosterSection extends StatelessWidget {
                           _ManageCloselyBadge(),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         'All Project Team members (pulled from the staffing plan). '
                         'Email is required for every PT member — especially for '
                         'positions that do not have site access and must be '
                         'engaged out-of-band.',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           color: Color(0xFF6B7280),
                         ),
@@ -4816,11 +5426,11 @@ class _AnnouncementsTabState extends State<_AnnouncementsTab> {
         // ── Header row: title + New Announcement button ──
         Row(
           children: [
-            Expanded(
+            const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Stakeholder Announcements',
                     style: TextStyle(
                       fontSize: 16,
@@ -4828,8 +5438,8 @@ class _AnnouncementsTabState extends State<_AnnouncementsTab> {
                       color: Color(0xFF111827),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
+                  SizedBox(height: 4),
+                  Text(
                     'Templates for each engagement level (Manage Closely, '
                     'Keep Satisfied, Keep Informed, Monitor) and the Project '
                     'Team section. Pick a template to seed the composer, then '
@@ -4900,20 +5510,20 @@ class _AnnouncementsTabState extends State<_AnnouncementsTab> {
               border: Border.all(
                   color: const Color(0xFFE5E7EB), style: BorderStyle.solid),
             ),
-            child: Column(
+            child: const Column(
               children: [
-                const Icon(Icons.campaign_outlined,
+                Icon(Icons.campaign_outlined,
                     size: 36, color: Color(0xFF9CA3AF)),
-                const SizedBox(height: 12),
-                const Text(
+                SizedBox(height: 12),
+                Text(
                   'No announcements yet',
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF6B7280)),
                 ),
-                const SizedBox(height: 4),
-                const Text(
+                SizedBox(height: 4),
+                Text(
                   'Pick a template above or tap "New Announcement" to compose one.',
                   style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
                   textAlign: TextAlign.center,
@@ -4973,12 +5583,12 @@ class _AnnouncementTemplatePicker extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.style_outlined,
+              Icon(Icons.style_outlined,
                   size: 18, color: Color(0xFF6B7280)),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 'Announcement Templates',
                 style: TextStyle(
                   fontSize: 13,
@@ -4986,8 +5596,8 @@ class _AnnouncementTemplatePicker extends StatelessWidget {
                   color: Color(0xFF111827),
                 ),
               ),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 '— tap to seed the composer',
                 style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
               ),
@@ -5021,10 +5631,10 @@ class _AudienceTemplateGroup extends StatelessWidget {
 
   static const Map<String, Color> _audienceColors = {
     'Manage Closely': Color(0xFFEF4444),
-    'Keep Satisfied': Color(0xFF3B82F6),
+    'Keep Satisfied': Color(0xFFFFC812),
     'Keep Informed': Color(0xFF10B981),
     'Monitor': Color(0xFF6B7280),
-    'Project Team': Color(0xFF8B5CF6),
+    'Project Team': Color(0xFFB8860B),
   };
 
   @override
@@ -5073,7 +5683,7 @@ class _AudienceTemplateGroup extends StatelessWidget {
                             fontSize: 12, fontWeight: FontWeight.w600)),
                     avatar: const Icon(Icons.description_outlined,
                         size: 14, color: Color(0xFF6B7280)),
-                    backgroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                     side: const BorderSide(color: Color(0xFFE5E7EB)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
@@ -5355,18 +5965,18 @@ class _AnnouncementCard extends StatelessWidget {
 
   static const Map<String, Color> _audienceColors = {
     'Manage Closely': Color(0xFFFEE2E2),
-    'Keep Satisfied': Color(0xFFDBEAFE),
+    'Keep Satisfied': Color(0xFFFEF3C7),
     'Keep Informed': Color(0xFFD1FAE5),
     'Monitor': Color(0xFFF3F4F6),
-    'Project Team': Color(0xFFEDE9FE),
+    'Project Team': Color(0xFFFFF8E1),
   };
 
   static const Map<String, Color> _audienceTextColors = {
     'Manage Closely': Color(0xFF991B1B),
-    'Keep Satisfied': Color(0xFF1E40AF),
+    'Keep Satisfied': Color(0xFFFFC812),
     'Keep Informed': Color(0xFF065F46),
     'Monitor': Color(0xFF374151),
-    'Project Team': Color(0xFF5B21B6),
+    'Project Team': Color(0xFFB8860B),
   };
 
   static const Map<String, Color> _statusColors = {

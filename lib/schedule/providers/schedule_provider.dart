@@ -106,6 +106,23 @@ class ScheduleProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
+  /// Re-syncs the schedule's delivery model with the project's current
+  /// Project Details methodology selection (AGILE / WATERFALL / HYBRID).
+  /// Existing activities and the rest of the basis are kept intact — only
+  /// the methodology-dependent view state (badge, agile hints, level
+  /// import behaviour) is updated.
+  void syncDeliveryModel(String deliveryModel) {
+    if (_schedule == null) return;
+    final normalized = deliveryModel.toUpperCase();
+    if (_schedule!.basis.deliveryModel.toUpperCase() == normalized) return;
+    _schedule = _schedule!.copyWith(
+      basis: _schedule!.basis.copyWith(deliveryModel: normalized),
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+  }
+
   // ─── Basis ──────────────────────────────────────────────────────────────
 
   void updateBasis(ScheduleBasis patch) {

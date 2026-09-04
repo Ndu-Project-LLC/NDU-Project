@@ -62,7 +62,7 @@ class BaselineScreen extends StatelessWidget {
                     actions: const [],
                   ),
                   const SizedBox(height: 22),
-                  TreasuryEmptyState(
+                  const TreasuryEmptyState(
                     icon: Icons.lock_outline_rounded,
                     title: 'No baseline yet',
                     body:
@@ -83,17 +83,17 @@ class BaselineScreen extends StatelessWidget {
         // Category rows (for totals breakdown)
         final categories = <_BaselineCategory>[
           _BaselineCategory(
-              'Direct costs', t.direct, const Color(0xFF6366F1), Icons.engineering_outlined),
+              'Direct costs', t.direct, const Color(0xFFB8860B), Icons.engineering_outlined),
           _BaselineCategory(
-              'Indirect costs', t.indirect, const Color(0xFF8B5CF6), Icons.account_tree_outlined),
+              'Indirect costs', t.indirect, const Color(0xFFB8860B), Icons.account_tree_outlined),
           _BaselineCategory('SSHER & Quality', t.sherQuality,
-              const Color(0xFFEC4899), Icons.health_and_safety_outlined),
+              const Color(0xFFD97706), Icons.health_and_safety_outlined),
           _BaselineCategory('Risk allowances', t.riskAllowances,
               const Color(0xFFF59E0B), Icons.shield_outlined),
           _BaselineCategory(
               'Contingency', t.contingency, const Color(0xFF10B981), Icons.savings_outlined),
           _BaselineCategory(
-              'Escalation', t.escalation, const Color(0xFF06B6D4), Icons.trending_up_rounded),
+              'Escalation', t.escalation, const Color(0xFFD97706), Icons.trending_up_rounded),
           _BaselineCategory(
               'Taxes & duties', t.taxes, const Color(0xFF64748B), Icons.receipt_long_outlined),
         ];
@@ -121,7 +121,7 @@ class BaselineScreen extends StatelessWidget {
                       label: 'Version',
                       value: 'v${baseline.version}',
                     ),
-                    TreasuryHeroChip(
+                    const TreasuryHeroChip(
                       icon: Icons.lock_rounded,
                       label: 'Status',
                       value: 'LOCKED',
@@ -132,7 +132,7 @@ class BaselineScreen extends StatelessWidget {
                       value: baseline.lockedBy,
                     ),
                   ],
-                  actions: [],
+                  actions: const [],
                 ),
                 const SizedBox(height: 22),
 
@@ -154,7 +154,7 @@ class BaselineScreen extends StatelessWidget {
                           '$currencySymbol${treasuryFmt(t.totalAuthorizedBudget)}',
                       sub: 'Baseline + mgmt reserve',
                       icon: Icons.account_balance_wallet_rounded,
-                      tint: const Color(0xFF6366F1),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFEEF0FF),
                     ),
                     TreasuryKpiSpec(
@@ -171,7 +171,7 @@ class BaselineScreen extends StatelessWidget {
                       sub:
                           '${baseline.rebaselineRemaining} remaining via MoC',
                       icon: Icons.refresh_rounded,
-                      tint: const Color(0xFF8B5CF6),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFF4EEFF),
                     ),
                   ],
@@ -311,11 +311,11 @@ class BaselineScreen extends StatelessWidget {
       child: Column(
         children: [
           // Header row
-          Padding(
+          const Padding(
             padding:
-                const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                EdgeInsets.symmetric(horizontal: 4, vertical: 6),
             child: Row(
-              children: const [
+              children: [
                 Expanded(
                     flex: 5,
                     child: TreasuryTableHeader('CATEGORY')),
@@ -375,7 +375,7 @@ class BaselineScreen extends StatelessWidget {
                           .withValues(alpha: 0.30),
                     ),
                   ),
-                  child: Icon(Icons.shield_outlined,
+                  child: const Icon(Icons.shield_outlined,
                       size: 15, color: TreasuryTokens.brandDeep),
                 ),
                 const SizedBox(width: 10),
@@ -417,7 +417,7 @@ class BaselineScreen extends StatelessWidget {
                         .withValues(alpha: 0.22),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.account_balance_wallet_rounded,
+                  child: const Icon(Icons.account_balance_wallet_rounded,
                       size: 15, color: TreasuryTokens.brand),
                 ),
                 const SizedBox(width: 10),
@@ -430,11 +430,11 @@ class BaselineScreen extends StatelessWidget {
                 ),
                 Text(
                   '${_symbolFor(currency)}${treasuryFmt(t.totalAuthorizedBudget)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: TreasuryTokens.brand,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
               ],
@@ -585,7 +585,7 @@ class _MetaRow extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(label,
-                style: TextStyle(
+                style: const TextStyle(
                     color: TreasuryTokens.muted,
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500)),
@@ -628,7 +628,7 @@ class _ImmutabilityNotice extends StatelessWidget {
               color: TreasuryTokens.warning.withValues(alpha: 0.20),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.warning_amber_rounded,
+            child: const Icon(Icons.warning_amber_rounded,
                 size: 20, color: TreasuryTokens.warning),
           ),
           const SizedBox(width: 14),
@@ -636,7 +636,7 @@ class _ImmutabilityNotice extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Baseline is immutable',
                   style: TextStyle(
                     fontSize: 14,
@@ -647,7 +647,7 @@ class _ImmutabilityNotice extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Edits create variance entries. Major changes via MoC can consume a re-baseline (max 2; $rebaselinesRemaining remaining).',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: TreasuryTokens.muted,
                     height: 1.45,

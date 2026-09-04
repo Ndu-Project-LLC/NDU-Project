@@ -95,7 +95,7 @@ class _SafetyFullViewScreenState extends State<SafetyFullViewScreen> {
  backgroundColor: Colors.grey[50],
  appBar: AppBar(
  elevation: 0,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  leading: IconButton(icon: const Icon(Icons.arrow_back_ios, size: 16), onPressed: () => Navigator.pop(context)),
  title: const Text('Safety - Full View', style: TextStyle(fontWeight: FontWeight.w700)),
  ),

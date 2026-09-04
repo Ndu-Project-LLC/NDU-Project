@@ -15,6 +15,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/widgets/sign_in_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -27,10 +28,10 @@ const _textPrimary = Color(0xFFF1F5F9);
 const _textSecondary = Color(0xFF94A3B8);
 const _textMuted = Color(0xFF64748B);
 const _border = Color(0xFF1E293B);
-const _blue = Color(0xFF3B82F6);
-const _blueLight = Color(0xFF60A5FA);
-const _purple = Color(0xFF8B5CF6);
-const _purpleLight = Color(0xFFA78BFA);
+const _blue = Color(0xFFFFC812);
+const _blueLight = Color(0xFFFFC812);
+const _purple = Color(0xFFB8860B);
+const _purpleLight = Color(0xFFFFC812);
 const _green = Color(0xFF10B981);
 const _greenLight = Color(0xFF34D399);
 const _gold = Color(0xFFFBBF24);
@@ -38,8 +39,8 @@ const _goldDeep = Color(0xFFD97706);
 const _red = Color(0xFFEF4444);
 
 // Phase-specific unique colors for "How It Works" section
-const _teal = Color(0xFF14B8A6);      // For Design phase
-const _tealLight = Color(0xFF2DD4BF);
+const _teal = Color(0xFFD97706);      // For Design phase
+const _tealLight = Color(0xFFFBBF24);
 const _orange = Color(0xFFF97316);     // For Execution phase
 const _orangeLight = Color(0xFFFB923C);
 
@@ -134,13 +135,14 @@ class _LandingPageScreenState extends State<LandingPageScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Logo
-                      Row(children: [
-                        Container(width: 32, height: 32, decoration: BoxDecoration(gradient: const LinearGradient(colors: [_gold, _goldDeep]), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.trending_up, color: Color(0xFF0A0E1A), size: 18)),
-                        const SizedBox(width: 10),
-                        const Text('NDU', style: TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
-                        const Text(' Project', style: TextStyle(color: _gold, fontSize: 18, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
-                      ]),
+                      // Logo — canonical NDU squircle brand asset
+                      // (dark page background → gold hairline treatment).
+                      const AppLogo(
+                        height: 40,
+                        onDarkBackground: true,
+                        enableTapToDashboard: false,
+                        semanticLabel: 'NDU Project',
+                      ),
                       // Nav items (desktop)
                       if (MediaQuery.sizeOf(context).width > 900)
                         Row(children: [
@@ -607,6 +609,7 @@ class _SolutionSection extends StatelessWidget {
           const SizedBox(height: 40),
           // Capability grid
           GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 4, crossAxisSpacing: 20, mainAxisSpacing: 20, childAspectRatio: 1.0, children: caps.map((c) => _capCard(c.$1, c.$2, c.$3, c.$4)).toList()),
+          GridView.count(physics: const NeverScrollableScrollPhysics(), crossAxisCount: 4, crossAxisSpacing: 20, mainAxisSpacing: 20, childAspectRatio: 1.0, children: caps.map((c) => _capCard(c.$1, c.$2, c.$3, c.$4)).toList()),
           const SizedBox(height: 40),
           // Comparison table
           Container(decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Column(children: [
@@ -1316,7 +1319,7 @@ class _FooterSection extends StatelessWidget {
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             // Brand column
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-              Row(mainAxisSize: MainAxisSize.min, children: [Container(width: 28, height: 28, decoration: BoxDecoration(gradient: const LinearGradient(colors: [_gold, _goldDeep]), borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.trending_up, color: Color(0xFF0A0E1A), size: 16)), const SizedBox(width: 8), const Text('NDU', style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily)), const Text(' Project', style: TextStyle(color: _gold, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily))]),
+              AppLogo(height: 34, onDarkBackground: true, enableTapToDashboard: false, semanticLabel: 'NDU Project'),
               const SizedBox(height: 12),
               const Text('The Project Delivery Operating System', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily)),
               const SizedBox(height: 16),

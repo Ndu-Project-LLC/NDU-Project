@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/contract_service.dart';
-import 'package:ndu_project/screens/front_end_planning_contracts_screen.dart';
 
 import '../theme.dart';
 import '../widgets/responsive.dart';
@@ -660,7 +659,7 @@ class _ContractRowTile extends StatelessWidget {
 
  const actions = Wrap(
  spacing: 10,
- children: const [
+ children: [
  _RoundIcon(icon: Icons.remove_red_eye_outlined),
  _RoundIcon(icon: Icons.edit_outlined),
  ],
@@ -695,7 +694,7 @@ class _ContractRowTile extends StatelessWidget {
  Expanded(flex: 2, child: progressBar),
  Expanded(
  child: Text(row.value, style: theme.textTheme.bodyMedium)),
- SizedBox(width: 120, child: Center(child: actions)),
+ const SizedBox(width: 120, child: Center(child: actions)),
  ],
  );
 

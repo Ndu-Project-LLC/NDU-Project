@@ -51,7 +51,7 @@ class _ExecutionPlanScreenState extends State<ExecutionPlanScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Execution Plan Overview',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
  padding: EdgeInsets.symmetric(

@@ -38,7 +38,7 @@ class _AddonUsersSelectorState extends State<AddonUsersSelector> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Max add-on users reached (${remainingSlots} for ${widget.tier.label}).'),
+              'Max add-on users reached ($remainingSlots for ${widget.tier.label}).'),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
         ),
@@ -61,9 +61,9 @@ class _AddonUsersSelectorState extends State<AddonUsersSelector> {
       return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Color(0xFFF8FAFC),
+          color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Color(0xFFE2E8F0)),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
         child: Row(
           children: [
@@ -89,9 +89,9 @@ class _AddonUsersSelectorState extends State<AddonUsersSelector> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

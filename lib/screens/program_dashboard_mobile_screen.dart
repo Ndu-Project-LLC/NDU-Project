@@ -13,11 +13,9 @@ import '../services/portfolio_service.dart';
 import '../services/program_service.dart';
 import '../services/project_service.dart';
 import '../services/project_navigation_service.dart';
-import '../services/navigation_context_service.dart';
 import '../utils/navigation_route_resolver.dart';
 import '../providers/project_data_provider.dart';
 import '../screens/initiation_phase_screen.dart';
-import '../screens/portfolio_dashboard_screen.dart';
 import '../routing/app_router.dart';
 
 // ---------------------------------------------------------------------------
@@ -69,9 +67,7 @@ class _ProgramAction {  const _ProgramAction({
     required this.description,
     required this.appliesTo,
     required this.isOn,
-    this.badgeColor,
-    this.badgeTextColor,
-  });
+  }) : badgeColor = null, badgeTextColor = null;
 
  final String title;
  final String description;
@@ -138,7 +134,7 @@ const _demoSlices = [
  label: 'Goal 2',
  amount: 1.9,
  percent: 0.35,
- color: Color(0xFF3B82F6),
+ color: Color(0xFFFFC812),
  ),
  _RollupSlice(
  label: 'Goal 3',
@@ -372,7 +368,7 @@ class _ProgramDashboardMobileScreenState
 
  final priorityColors = [
  const Color(0xFFEA580C), // P1 - Primary driver (orange)
- const Color(0xFF2563EB), // P2 - Dependent (blue)
+ const Color(0xFFFFC812), // P2 - Dependent (blue)
  const Color(0xFF16A34A), // P3 - Support (green)
  ];
  final priorityLabels = [
@@ -766,7 +762,7 @@ class _TopNavBar extends StatelessWidget {
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: const Color(0xFFE0E7FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(18),
  ),
  child: const Icon(Icons.person, size: 20, color: Color(0xFF4F46E5)),
@@ -797,14 +793,14 @@ class _PageSummary extends StatelessWidget {
  Row(
  children: [
  Icon(Icons.arrow_back_ios, size: 14,
- color: Color(0xFF3B82F6)),
+ color: Color(0xFFFFC812)),
  SizedBox(width: 4),
  Text(
  'Program workspace overview',
  style: TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w600,
- color: Color(0xFF3B82F6),
+ color: Color(0xFFFFC812),
  ),
  ),
  ],
@@ -868,16 +864,16 @@ class _StatsScrollRow extends StatelessWidget {
  const SizedBox(width: 12),
  _StatCard(
  icon: Icons.folder_open_outlined,
- iconBgColor: const Color(0xFFDBEAFE),
- iconColor: const Color(0xFF2563EB),
+ iconBgColor: const Color(0xFFFEF3C7),
+ iconColor: const Color(0xFFFFC812),
  value: '$totalProjects',
  label: 'PROJECTS',
  ),
  const SizedBox(width: 12),
  _StatCard(
  icon: Icons.layers_outlined,
- iconBgColor: const Color(0xFFEDE9FE),
- iconColor: const Color(0xFF7C3AED),
+ iconBgColor: const Color(0xFFFFF8E1),
+ iconColor: const Color(0xFFB8860B),
  value: '$programCount',
  label: 'PROGRAMS',
  ),
@@ -977,8 +973,8 @@ class _StatusIndicators extends StatelessWidget {
  _StatusPill(
  icon: Icons.check_circle,
  text: '$projectCount OF 3 PROJECTS IN THIS PROGRAM',
- bgColor: const Color(0xFFDBEAFE),
- textColor: const Color(0xFF1D4ED8),
+ bgColor: const Color(0xFFFEF3C7),
+ textColor: const Color(0xFFFFC812),
  ),
  const _StatusPill(
  icon: Icons.check_circle,
@@ -1171,7 +1167,7 @@ class _ProjectsSection extends StatelessWidget {
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -1231,7 +1227,7 @@ class _ProjectCard extends StatelessWidget {
  padding:
  const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
  decoration: BoxDecoration(
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFFFC812),
  borderRadius: BorderRadius.circular(8),
  ),
  child: const Text(
@@ -1263,7 +1259,7 @@ class _ProjectCard extends StatelessWidget {
  borderRadius: BorderRadius.circular(6),
  child: LinearProgressIndicator(
  value: info.progress,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  valueColor: AlwaysStoppedAnimation<Color>(info.stageColor),
  minHeight: 6,
  ),
@@ -1381,8 +1377,8 @@ class _ProgramActionsSection extends StatelessWidget {
  'Use the same approval path for all projects in this program.',
  isOn: gateApprovalsOn,
  badgeText: 'Applies to all',
- badgeBgColor: const Color(0xFFDBEAFE),
- badgeTextColor: const Color(0xFF1D4ED8),
+ badgeBgColor: const Color(0xFFFEF3C7),
+ badgeTextColor: const Color(0xFFFFC812),
  onChanged: onGateApprovalsChanged,
  ),
  const Divider(height: 1, color: Color(0xFFF3F4F6)),
@@ -1392,8 +1388,8 @@ class _ProgramActionsSection extends StatelessWidget {
  'Surface program-level risks and mitigation once across all work.',
  isOn: sharedRiskOn,
  badgeText: 'Applies to all',
- badgeBgColor: const Color(0xFFDBEAFE),
- badgeTextColor: const Color(0xFF1D4ED8),
+ badgeBgColor: const Color(0xFFFEF3C7),
+ badgeTextColor: const Color(0xFFFFC812),
  onChanged: onSharedRiskChanged,
  ),
  const Divider(height: 1, color: Color(0xFFF3F4F6)),
@@ -1464,7 +1460,7 @@ class _ActionToggleRow extends StatelessWidget {
  Switch.adaptive(
  value: isOn,
  onChanged: onChanged,
- activeColor: const Color(0xFF2563EB),
+ activeColor: const Color(0xFFFFC812),
  ),
  const SizedBox(width: 8),
  Expanded(
@@ -1633,7 +1629,7 @@ class _InterfaceCard extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFFDBEAFE),
+ color: const Color(0xFFFEF3C7),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Text(
@@ -1641,7 +1637,7 @@ class _InterfaceCard extends StatelessWidget {
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w600,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -1695,7 +1691,7 @@ class _RollupSection extends StatelessWidget {
  label: 'Goal 2',
  startMonths: 3,
  endMonths: 18,
- color: Color(0xFF3B82F6),
+ color: Color(0xFFFFC812),
  ),
  const _ScheduleItem(
  label: 'Goal 3',

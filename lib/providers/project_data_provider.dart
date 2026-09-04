@@ -44,6 +44,13 @@ class ProjectDataProvider extends ChangeNotifier {
     });
   }
 
+  @override
+  void dispose() {
+    _autoSaveDebounce?.cancel();
+    _autoSaveDebounce = null;
+    super.dispose();
+  }
+
   /// Computes a rough progress percentage from the current checkpoint.
   static double _computeProgressFromCheckpoint(String checkpoint) {
     const phaseProgress = {
@@ -784,13 +791,11 @@ class ProjectDataProvider extends ChangeNotifier {
     if (!solutionExists) return false;
 
     _projectData.setPreferredSolution(solutionId);
-    // Lock the Business Case sections now that a preferred solution
-    // has been chosen. The dedicated IT/Infrastructure Considerations
-    // pages remain editable (they belong to the FEP, not the Business
-    // Case), but the Business Case workflow screens (Scope Statement,
-    // Potential Solutions, Risk Identification, Core Stakeholders,
-    // Initial Cost Estimate, Preferred Solution Analysis) become
-    // view-only.
+    // Lock ALL Business Case sections now that a preferred solution
+    // has been chosen: Scope Statement, Potential Solutions, Risk
+    // Identification, IT Considerations, Infrastructure Considerations,
+    // Core Stakeholders, Initial Cost Estimate and Preferred Solution
+    // Analysis all become view-only.
     _projectData = _projectData.copyWith(
       frontEndPlanning: _projectData.frontEndPlanning.copyWith(
         businessCaseLocked: true,

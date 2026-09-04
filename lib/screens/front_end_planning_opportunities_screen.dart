@@ -15,17 +15,17 @@ import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/batch_delete_bar.dart';
 import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/screens/design_phase_screen.dart';
-import 'package:ndu_project/screens/staff_team_screen.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 
 /// Front End Planning – Project Opportunities page
 /// Built to match the provided screenshot exactly:
@@ -523,7 +523,7 @@ Opportunity generation constraints:
       _useFallbackOpportunities();
       if (!autoTriggered && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
                 'Opportunity generation failed. Using fallback suggestions.'),
           ),
@@ -544,10 +544,16 @@ Opportunity generation constraints:
     if (isMobile) {
       return _buildMobileScaffold(context);
     }
+    // Task 14: Once the Project Charter is approved, lock this section
+    // from editing. The user can still view the data and scroll through
+    // it, but every editable control is wrapped in an AbsorbPointer so
+    // taps are silently ignored.
+    final charterLocked =
+        ProjectDataHelper.isCharterApproved(context, listen: true);
 
     return Scaffold(
       // Ensure white background as requested
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,8 +567,8 @@ Opportunity generation constraints:
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Project Opportunities',
                     ),
                   ),
@@ -577,7 +583,13 @@ Opportunity generation constraints:
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _roundedField(
+                              CharterLockBanner(visible: charterLocked),
+                              CharterLockBanner.applyLock(
+                                locked: charterLocked,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _roundedField(
                                   controller: _notes,
                                   hint: 'Input your notes here...',
                                   minLines: 3),
@@ -585,7 +597,7 @@ Opportunity generation constraints:
                               LayoutBuilder(
                                 builder: (context, constraints) {
                                   final isCompact = constraints.maxWidth < 1120;
-                                  final titleSection = const Column(
+                                  const titleSection = Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
@@ -714,44 +726,87 @@ Opportunity generation constraints:
                                   ),
                                 )
                               else
-                                Column(
-                                  children: [
-                                    _OpportunityTable(
-                                      rows: _rows,
-                                      onEdit: (item) {
-                                        _showAddOpportunityDialog(
-                                            existingItem: item);
-                                      },
-                                      onDelete: _confirmDeleteOpportunity,
-                                      onUndo: _undoOpportunityRow,
-                                      canUndoRow: _canUndoOpportunityRow,
-                                      selectedIds: _selectedIds,
-                                      onToggleSelect: _toggleSelection,
-                                      onAcceptReject: _handleAcceptReject,
-                                    ),
-                                    if (_hasSelection)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 12),
-                                        child: BatchDeleteBar(
-                                          selectedCount: _selectedIds.length,
-                                          onDelete: () async {
-                                            await _handleBatchDelete();
-                                            return true;
+                                SearchableTableSection(
+                                  title: 'Project Opportunities',
+                                  items: _rows,
+                                  searchFilter: (item, query) {
+                                    final r = item as OpportunityItem;
+                                    final q = query.trim().toLowerCase();
+                                    if (q.isEmpty) return true;
+                                    return r.opportunity.toLowerCase().contains(q) ||
+                                        r.discipline.toLowerCase().contains(q) ||
+                                        r.implementationStrategy.toLowerCase().contains(q) ||
+                                        r.owner.toLowerCase().contains(q) ||
+                                        r.responsibleRole.toLowerCase().contains(q);
+                                  },
+                                  tableBuilder: (ctx, query) {
+                                    final filtered = _rows
+                                        .where((r) => r.opportunity.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.discipline.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.implementationStrategy.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.owner.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.responsibleRole.toLowerCase().contains(query.trim().toLowerCase()))
+                                        .toList();
+                                    return Column(
+                                      children: [
+                                        _OpportunityTable(
+                                          rows: filtered,
+                                          onEdit: (item) {
+                                            _showAddOpportunityDialog(existingItem: item);
                                           },
-                                          onClear: () => setState(
-                                              () => _selectedIds.clear()),
-                                          itemLabel: 'opportunities',
-                                          confirmTitle:
-                                              'Delete selected opportunities?',
+                                          onDelete: _confirmDeleteOpportunity,
+                                          onUndo: _undoOpportunityRow,
+                                          canUndoRow: _canUndoOpportunityRow,
+                                          selectedIds: _selectedIds,
+                                          onToggleSelect: _toggleSelection,
+                                          onAcceptReject: _handleAcceptReject,
                                         ),
-                                      ),
-                                  ],
+                                        if (_hasSelection)
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 12),
+                                            child: BatchDeleteBar(
+                                              selectedCount: _selectedIds.length,
+                                              onDelete: () async {
+                                                await _handleBatchDelete();
+                                                return true;
+                                              },
+                                              onClear: () => setState(() => _selectedIds.clear()),
+                                              itemLabel: 'opportunities',
+                                              confirmTitle: 'Delete selected opportunities?',
+                                            ),
+                                          ),
+                                      ],
+                                    );
+                                  },
+                                  cardBuilder: (ctx, query) {
+                                    final filtered = _rows
+                                        .where((r) => r.opportunity.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.discipline.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.implementationStrategy.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.owner.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.responsibleRole.toLowerCase().contains(query.trim().toLowerCase()))
+                                        .toList();
+                                    return Column(
+                                      children: filtered
+                                          .map((r) => Card(
+                                                child: ListTile(
+                                                  title: Text(r.opportunity),
+                                                  subtitle: Text('${r.discipline} • ${r.owner}'),
+                                                  trailing: Text(r.potentialCostSavings),
+                                                ),
+                                              ))
+                                          .toList(),
+                                    );
+                                  },
                                 ),
                               const SizedBox(height: 80),
-                            ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                   _BottomOverlays(onSubmit: _submitOpportunities),
@@ -993,7 +1048,7 @@ Opportunity generation constraints:
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddOpportunityDialog(),
@@ -1034,7 +1089,7 @@ Opportunity generation constraints:
                   ),
                   const CircleAvatar(
                     radius: 13,
-                    backgroundColor: Color(0xFF2563EB),
+                    backgroundColor: Color(0xFFFFC812),
                     child: Text('C',
                         style: TextStyle(
                             color: Colors.white,
@@ -1084,7 +1139,7 @@ Opportunity generation constraints:
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
                       ),
                       child: Text(
                         topSummary.isEmpty
@@ -1104,7 +1159,7 @@ Opportunity generation constraints:
                           : 'No additional opportunities.',
                       style: const TextStyle(
                         fontSize: 11,
-                        color: Color(0xFF2563EB),
+                        color: Color(0xFFFFC812),
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -1338,7 +1393,7 @@ Opportunity generation constraints:
     required bool active,
     required VoidCallback onTap,
   }) {
-    final color = active ? const Color(0xFF2563EB) : const Color(0xFF9CA3AF);
+    final color = active ? const Color(0xFFFFC812) : const Color(0xFF9CA3AF);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -1602,16 +1657,16 @@ class _OpportunityDialogState extends State<_OpportunityDialog> {
                                 }
                               });
                             },
-                            backgroundColor: Colors.white,
-                            selectedColor: const Color(0xFFEFF6FF),
-                            checkmarkColor: const Color(0xFF3B82F6),
+                            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                            selectedColor: const Color(0xFFFFF8E1),
+                            checkmarkColor: const Color(0xFFFFC812),
                             side: BorderSide(
                                 color: isSelected
-                                    ? const Color(0xFF3B82F6)
+                                    ? const Color(0xFFFFC812)
                                     : const Color(0xFFE5E7EB)),
                             labelStyle: TextStyle(
                               color: isSelected
-                                  ? const Color(0xFF1E40AF)
+                                  ? const Color(0xFFFFC812)
                                   : const Color(0xFF374151),
                               fontWeight: isSelected
                                   ? FontWeight.w600
@@ -1739,17 +1794,16 @@ class _OpportunityTableState extends State<_OpportunityTable> {
   @override
   Widget build(BuildContext context) {
     return FullScreenTableWrapper(
-      title: 'Opportunities',
+      tableBuilder: (fsCtx) => _buildTableContent(),
       child: _buildTableContent(),
-      tableBuilder: (fsContext) => _buildTableContent(),
     );
   }
 
-  Widget _buildTableContent() {
-    final border = const BorderSide(color: Color(0xFFE5E7EB));
-    final headerStyle = const TextStyle(
+  Widget _buildTableContent([List<OpportunityItem>? items]) {
+    const border = BorderSide(color: Color(0xFFE5E7EB));
+    const headerStyle = TextStyle(
         fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));
-    final cellStyle = const TextStyle(fontSize: 14, color: Color(0xFF111827));
+    const cellStyle = TextStyle(fontSize: 14, color: Color(0xFF111827));
 
     Widget td(Widget child, {VoidCallback? onDoubleTap}) => Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1762,7 +1816,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
                 ),
         );
 
-    final rows = widget.rows;
+    final rows = items ?? widget.rows;
 
     return Container(
       decoration: BoxDecoration(
@@ -1859,7 +1913,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
                                 child: Checkbox(
                                   value: widget.selectedIds.contains(r.id),
                                   onChanged: (_) => widget.onToggleSelect(r.id),
-                                  activeColor: const Color(0xFF2563EB),
+                                  activeColor: const Color(0xFFFFC812),
                                   materialTapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,
                                   visualDensity: VisualDensity.compact,
@@ -1993,7 +2047,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
                                         padding: const EdgeInsets.all(6),
                                         decoration: BoxDecoration(
                                           color: canUndo
-                                              ? const Color(0xFFEFF6FF)
+                                              ? const Color(0xFFFFF8E1)
                                               : const Color(0xFFF3F4F6),
                                           borderRadius:
                                               BorderRadius.circular(8),
@@ -2001,7 +2055,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
                                         child: Icon(Icons.undo_rounded,
                                             size: 16,
                                             color: canUndo
-                                                ? const Color(0xFF2563EB)
+                                                ? const Color(0xFFFFC812)
                                                 : const Color(0xFF9CA3AF)),
                                       ),
                                     ),
@@ -2061,8 +2115,8 @@ class _OpportunityTableState extends State<_OpportunityTable> {
       bg = const Color(0xFFDCFCE7);
       fg = const Color(0xFF15803D);
     } else if (normalized.contains('progress')) {
-      bg = const Color(0xFFEFF6FF);
-      fg = const Color(0xFF1D4ED8);
+      bg = const Color(0xFFFFF8E1);
+      fg = const Color(0xFFFFC812);
     } else {
       bg = const Color(0xFFFFF7ED);
       fg = const Color(0xFFC2410C);
@@ -2149,13 +2203,13 @@ class _BottomOverlays extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFD7E5FF)),
       ),
-      child: Row(
-        children: const [
-          Icon(Icons.lightbulb_outline, color: Color(0xFF2563EB)),
+      child: const Row(
+        children: [
+          Icon(Icons.lightbulb_outline, color: Color(0xFFFFC812)),
           SizedBox(width: 8),
           Text('Hint',
               style: TextStyle(
-                  fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+                  fontWeight: FontWeight.w800, color: Color(0xFFFFC812))),
           SizedBox(width: 10),
           Text(
               'Keep opportunities tied to scope, discipline, role, owner, and phase.',
@@ -2326,7 +2380,7 @@ class _ExpandableCellTextState extends State<_ExpandableCellText> {
                 child: Text(
                   _isExpanded ? 'View less' : 'View more',
                   style: widget.style.copyWith(
-                    color: const Color(0xFF2563EB),
+                    color: const Color(0xFFFFC812),
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                   ),

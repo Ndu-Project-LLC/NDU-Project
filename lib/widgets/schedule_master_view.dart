@@ -37,7 +37,7 @@ class _ScheduleMasterViewState extends State<ScheduleMasterView> {
     final normalized = status.toLowerCase();
     switch (normalized) {
       case 'in_progress':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'complete':
       case 'completed':
         return const Color(0xFF10B981);
@@ -165,11 +165,11 @@ class _ScheduleMasterViewState extends State<ScheduleMasterView> {
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: AppSemanticColors.border),
+                      borderSide: const BorderSide(color: AppSemanticColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: AppSemanticColors.border),
+                      borderSide: const BorderSide(color: AppSemanticColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -363,7 +363,7 @@ class _WorkPackageTileState extends State<_WorkPackageTile> {
     final normalized = status.toLowerCase();
     switch (normalized) {
       case 'in_progress':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'complete':
       case 'completed':
         return const Color(0xFF10B981);
@@ -428,7 +428,7 @@ class _WorkPackageTileState extends State<_WorkPackageTile> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -436,7 +436,7 @@ class _WorkPackageTileState extends State<_WorkPackageTile> {
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1D4ED8),
+                      color: Color(0xFFFFC812),
                     ),
                   ),
                 ),
@@ -600,7 +600,7 @@ class _WorkPackageTileState extends State<_WorkPackageTile> {
                 minHeight: 6,
                 backgroundColor: const Color(0xFFE5E7EB),
                 valueColor:
-                    const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                    const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
               ),
             ),
           ],
@@ -631,15 +631,15 @@ class _EmptyMasterView extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
-      child: Column(
+      child: const Column(
         children: [
           Icon(
             Icons.account_tree_outlined,
             size: 48,
-            color: const Color(0xFF9CA3AF),
+            color: Color(0xFF9CA3AF),
           ),
-          const SizedBox(height: 12),
-          const Text(
+          SizedBox(height: 12),
+          Text(
             'No Work Packages Yet',
             style: TextStyle(
               fontSize: 16,
@@ -647,8 +647,8 @@ class _EmptyMasterView extends StatelessWidget {
               color: Color(0xFF374151),
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Create work packages and link them to schedule activities '
             'to see the master schedule view.',
             style: TextStyle(

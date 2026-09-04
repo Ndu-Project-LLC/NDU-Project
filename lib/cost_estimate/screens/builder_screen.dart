@@ -72,15 +72,15 @@ class _BuilderScreenState extends State<BuilderScreen>
   // Tab accent tints — warm Treasury palette progression
   static const _tabTints = <Color>[
     Color(0xFFD97706), // Direct — amber (brand deep)
-    Color(0xFF8B5CF6), // Indirect — violet
-    Color(0xFFEC4899), // SSHER & Quality — pink
-    Color(0xFF06B6D4), // Additional — cyan
+    Color(0xFFB8860B), // Indirect — violet
+    Color(0xFFD97706), // SSHER & Quality — pink
+    Color(0xFFD97706), // Additional — cyan
   ];
   static const _tabTintsSoft = <Color>[
     Color(0xFFFFF3E0),
     Color(0xFFF4EEFF),
-    Color(0xFFFCE7F3),
-    Color(0xFFCFFAFE),
+    Color(0xFFFFF8E1),
+    Color(0xFFFFF8E1),
   ];
 
   @override
@@ -205,7 +205,7 @@ class _BuilderScreenState extends State<BuilderScreen>
                           : '${currencySymbol}0',
                       sub: 'Mean cost across estimate',
                       icon: Icons.analytics_outlined,
-                      tint: const Color(0xFF6366F1),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFEEF0FF),
                     ),
                   ],
@@ -251,10 +251,10 @@ class _BuilderScreenState extends State<BuilderScreen>
                     ),
                     const SizedBox(width: 14),
                     // Totals sidebar
-                    SizedBox(
+                    const SizedBox(
                       width: 320,
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 0),
+                        padding: EdgeInsets.only(top: 0),
                         child: TotalsPanel(),
                       ),
                     ),
@@ -503,7 +503,7 @@ class _BaselinedNotice extends StatelessWidget {
               color: TreasuryTokens.warning.withValues(alpha: 0.20),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.lock_rounded,
+            child: const Icon(Icons.lock_rounded,
                 size: 15, color: TreasuryTokens.warning),
           ),
           const SizedBox(width: 12),
@@ -513,7 +513,7 @@ class _BaselinedNotice extends StatelessWidget {
               children: [
                 Text(
                   'Estimate is baselined (v$version)',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: TreasuryTokens.ink,
@@ -522,7 +522,7 @@ class _BaselinedNotice extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Edits create variance entries. Re-baselines remaining: $remaining',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 11.5,
                     color: TreasuryTokens.muted,
                   ),
@@ -576,7 +576,7 @@ class _TreasuryLineRow extends StatelessWidget {
                 color: TreasuryTokens.brand.withValues(alpha: 0.20),
               ),
             ),
-            child: Icon(Icons.receipt_long_rounded,
+            child: const Icon(Icons.receipt_long_rounded,
                 size: 18, color: TreasuryTokens.brandDeep),
           ),
           const SizedBox(width: 12),
@@ -604,18 +604,18 @@ class _TreasuryLineRow extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF3B82F6)
+                          color: const Color(0xFFFFC812)
                               .withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: const Color(0xFF3B82F6)
+                            color: const Color(0xFFFFC812)
                                 .withValues(alpha: 0.35),
                           ),
                         ),
                         child: const Text(
                           'AI',
                           style: TextStyle(
-                            color: Color(0xFF3B82F6),
+                            color: Color(0xFFFFC812),
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.4,
@@ -652,27 +652,27 @@ class _TreasuryLineRow extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.label_outline,
+                    const Icon(Icons.label_outline,
                         size: 11,
                         color: TreasuryTokens.mutedSoft),
                     const SizedBox(width: 4),
                     Text(
                       line.category.label,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         color: TreasuryTokens.muted,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Icon(Icons.source_outlined,
+                    const Icon(Icons.source_outlined,
                         size: 11,
                         color: TreasuryTokens.mutedSoft),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         line.basisSource.label,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
                           color: TreasuryTokens.muted,
                         ),

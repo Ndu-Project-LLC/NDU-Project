@@ -1,11 +1,10 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/deliverable_row.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/recurring_deliverables_screen.dart';
-import 'package:ndu_project/screens/progress_tracking_screen.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
@@ -176,7 +175,7 @@ class _DeliverableStatusUpdatesScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: 'Deliverable Status Updates',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -209,10 +208,10 @@ class _DeliverableStatusUpdatesScreenState
               ),
               const SizedBox(height: 24),
               LaunchPhaseNavigation(
-                backLabel: 'Back: Progress Tracking',
-                nextLabel: 'Next: Recurring Deliverables',
-                onBack: () => ProgressTrackingScreen.open(context),
-                onNext: () => RecurringDeliverablesScreen.open(context),
+                backLabel: PlanningPhaseNavigation.backLabel('deliverable_status_updates'),
+                nextLabel: PlanningPhaseNavigation.nextLabel('deliverable_status_updates'),
+                onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'deliverable_status_updates'),
+                onNext: () => PlanningPhaseNavigation.goToNext(context, 'deliverable_status_updates'),
               ),
             ],
             const SizedBox(height: 48),
@@ -277,10 +276,10 @@ class _DeliverableStatusUpdatesScreenState
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Color(0xFFF0F9FF),
+            color: const Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 18, color: const Color(0xFF0284C7)),
+          child: Icon(icon, size: 18, color: const Color(0xFFFFC812)),
         ),
         const SizedBox(width: 14),
         Expanded(

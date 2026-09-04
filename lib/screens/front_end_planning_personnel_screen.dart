@@ -707,7 +707,7 @@ class _PersonnelTable extends StatelessWidget {
  8: FixedColumnWidth(110),
  9: FixedColumnWidth(110),
  },
- border: TableBorder(
+ border: const TableBorder(
  horizontalInside: border,
  verticalInside: border,
  top: border,
@@ -753,7 +753,7 @@ class _PersonnelTable extends StatelessWidget {
  8: FixedColumnWidth(110),
  9: FixedColumnWidth(110),
  },
- border: TableBorder(
+ border: const TableBorder(
  horizontalInside: border,
  verticalInside: border,
  top: border,
@@ -847,13 +847,13 @@ class _BottomOverlays extends StatelessWidget {
  ),
  child: const Row(
  children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
  SizedBox(width: 8),
  Text(
  'AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  SizedBox(width: 10),

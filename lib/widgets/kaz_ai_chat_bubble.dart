@@ -608,7 +608,11 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         return 'Invalid API key. Please check your OpenAI configuration in **Settings**.';
       }
       if (response.statusCode == 429) {
-        return 'API quota exceeded. Please check your OpenAI billing or try again shortly.';
+        if (isOpenAiCreditsExhausted(
+            response.statusCode, response.body)) {
+          return const OpenAiCreditsExhaustedException().toString();
+        }
+        return 'AI is rate limited right now. Please try again in a minute.';
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
         return 'I encountered a server error (${response.statusCode}). Please try again.';
@@ -622,6 +626,9 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           : '';
       return content.trim();
     } catch (e) {
+      if (e is OpenAiCreditsExhaustedException) {
+        return e.toString();
+      }
       return 'I\'m having trouble connecting right now. Please try again in a moment.';
     }
   }

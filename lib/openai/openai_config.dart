@@ -218,6 +218,35 @@ class OpenAiNotConfiguredException implements Exception {
       'AI service is starting up. Please try again in a moment.';
 }
 
+/// Raised when the OpenAI workspace behind the proxy is out of credits.
+///
+/// This is a *permanent* condition until the organization's billing is
+/// topped up — retrying, re-authenticating, or redeploying will not help.
+/// The proxy (openaiProxy) passes the provider 429 through verbatim, so the
+/// client classifies it from the response body.
+class OpenAiCreditsExhaustedException implements Exception {
+  const OpenAiCreditsExhaustedException();
+
+  @override
+  String toString() =>
+      'AI credits are exhausted. Please ask your administrator to add '
+      'credits in the OpenAI billing portal '
+      '(platform.openai.com → Settings → Organization → Billing). '
+      'AI features resume automatically once billing is topped up — '
+      'no app update or redeploy is needed.';
+}
+
+/// Returns true when [statusCode]/[body] represent the permanent
+/// out-of-credits condition rather than a transient rate limit.
+bool isOpenAiCreditsExhausted(int statusCode, String body) {
+  if (statusCode != 429 && statusCode != 402) return false;
+  final b = body.toLowerCase();
+  return b.contains('credit_balance_exhausted') ||
+      b.contains('insufficient_quota') ||
+      b.contains('no credits remaining') ||
+      b.contains('quota exceeded') && b.contains('billing');
+}
+
 /// Lightweight autocomplete service backed by OpenAI Chat Completions API.
 class OpenAiAutocompleteService {
   OpenAiAutocompleteService._internal({http.Client? client})

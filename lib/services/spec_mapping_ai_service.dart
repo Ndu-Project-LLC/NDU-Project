@@ -322,7 +322,7 @@ class SpecMappingAiService {
     required List<DesignSpecificationPlanRow> specifications,
     required List<AiMappingSuggestion> acceptedSuggestions,
   }) {
-    final updatedSpecs = { for (var spec in specifications) (spec as DesignSpecificationPlanRow).id : spec };
+    final updatedSpecs = { for (var spec in specifications) (spec).id : spec };
 
     for (final suggestion in acceptedSuggestions) {
       final spec = updatedSpecs[suggestion.sourceId];

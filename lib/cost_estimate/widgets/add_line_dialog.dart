@@ -20,9 +20,9 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 
 class AddLineDialog extends StatefulWidget {
   final CostCategory defaultCategory;
@@ -1128,7 +1128,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
       Navigator.of(context).pop(); // Close loading dialog
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('KAZ AI suggestion failedaiErrorMessage(e)'),
+          content: Text('KAZ AI suggestion failed: ${aiErrorMessage(e)}'),
           backgroundColor: Colors.red.shade400,
         ),
       );

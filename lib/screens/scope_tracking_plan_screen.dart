@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -17,6 +16,7 @@ import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/scope_tracking_table_widget.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
@@ -141,7 +141,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  if (mounted) {
  setState(() => _items = newItems);
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text('Scope items seeded from planning requirements.'),
  behavior: SnackBarBehavior.floating,
  ),
@@ -194,7 +194,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
- content: Text('AI generation failedaiErrorMessage(e)'),
+ content: Text('AI generation failed: ${aiErrorMessage(e)}'),
  behavior: SnackBarBehavior.floating,
  ),
  );
@@ -277,7 +277,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
 
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text('Scope baseline set.'),
  behavior: SnackBarBehavior.floating,
  ),
@@ -1171,7 +1171,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  if (missing.isEmpty) {
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text('No missing scope items found.'),
  behavior: SnackBarBehavior.floating,
  ),
@@ -1220,8 +1220,8 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  screenTitle: 'Scope Tracking Plan',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_scope_tracking_plan_notes'] ?? 'No data recorded.'),
  ],

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,6 +19,7 @@ import 'package:ndu_project/utils/file_upload_helper.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class BackendDesignScreen extends StatefulWidget {
@@ -136,7 +136,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  screenTitle: 'Backend Design',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['backend_design_screen'] ?? 'No data recorded.'),
  ],
@@ -940,7 +940,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('KAZ AI generation failed: $e');
  if (mounted) {
    ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: Color(0xFFDC2626)),
  );
  }
  } finally {
@@ -977,7 +977,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('KAZ AI field generation failed: $e');
  if (mounted) {
    ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: Color(0xFFDC2626)),
  );
  }
  }
@@ -1332,7 +1332,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('Backend design save error: $error');
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text(
  'Unable to save Backend Design changes right now. Please try again.',
  ),
@@ -1358,7 +1358,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ── KAZ AI row generator ──
  void _kazAiForRow() {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text('KAZ AI: Generating suggestions for this row...'),
  duration: Duration(seconds: 2),
  ),

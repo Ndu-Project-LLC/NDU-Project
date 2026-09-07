@@ -6,6 +6,7 @@ import 'package:ndu_project/openai/openai_config.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -475,7 +476,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  } catch (e) {
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Failed to regenerate notes: $e')),
+ SnackBar(content: Text('Failed to regenerate notes: ${aiErrorMessage(e)}')),
  );
  }
  }
@@ -2556,7 +2557,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  if (!mounted) return;
  setState(() => _isLoadingSolutions = false);
  messenger.showSnackBar(
- SnackBar(content: Text('Failed to regenerate solutions: $e')),
+ SnackBar(content: Text('Failed to regenerate solutions: ${aiErrorMessage(e)}')),
  );
  }
  }
@@ -2606,7 +2607,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  } catch (e) {
  if (!mounted) return;
  messenger.showSnackBar(
- SnackBar(content: Text('Failed to regenerate field: $e')));
+ SnackBar(content: Text('Failed to regenerate field: ${aiErrorMessage(e)}')));
  }
  }
 

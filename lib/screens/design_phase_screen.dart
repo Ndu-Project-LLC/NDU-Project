@@ -157,7 +157,7 @@ class _DesignPhaseScreenState extends State<DesignPhaseScreen> {
  screenTitle: 'Design Phase',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['design_phase_screen'] ?? 'No data recorded.'),
  ],

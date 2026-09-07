@@ -2042,8 +2042,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                   : null,
             ),
             foregroundDecoration: isHighlighted
-                ? BoxDecoration(
-                    border: const Border(
+                ? const BoxDecoration(
+                    border: Border(
                       left: BorderSide(width: 4, color: activeColor),
                     ),
 
@@ -2110,8 +2110,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                   : null,
             ),
             foregroundDecoration: isHighlighted
-                ? BoxDecoration(
-                    border: const Border(
+                ? const BoxDecoration(
+                    border: Border(
                       left: BorderSide(width: 4, color: activeColor),
                     ),
 
@@ -2180,8 +2180,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                 : null,
           ),
           foregroundDecoration: isHighlighted
-              ? BoxDecoration(
-                  border: const Border(
+              ? const BoxDecoration(
+                  border: Border(
                     left: BorderSide(width: 4, color: activeColor),
                   ),
 
@@ -2253,8 +2253,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                   : null,
             ),
             foregroundDecoration: isHighlighted
-                ? BoxDecoration(
-                    border: const Border(
+                ? const BoxDecoration(
+                    border: Border(
                       left: BorderSide(width: 3, color: activeColor),
                     ),
 
@@ -2322,8 +2322,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                 : null,
           ),
           foregroundDecoration: isHighlighted
-              ? BoxDecoration(
-                  border: const Border(
+              ? const BoxDecoration(
+                  border: Border(
                     left: BorderSide(width: 4, color: activeColor),
                   ),
 

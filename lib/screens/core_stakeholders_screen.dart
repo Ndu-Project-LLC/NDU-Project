@@ -1898,7 +1898,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  } catch (e) {
  if (!mounted) return;
  messenger
- .showSnackBar(SnackBar(content: Text('Failed to regenerate: $e')));
+ .showSnackBar(SnackBar(content: Text('Failed to regenerate: ${aiErrorMessage(e)}')));
  }
  }
 

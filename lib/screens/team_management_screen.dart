@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -12,6 +11,7 @@ import 'package:ndu_project/models/team_management_plan.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/team_management_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:provider/provider.dart';
@@ -387,7 +387,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  if (newMembers.isEmpty) {
  if (showSnackbar && mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text(
  'No new members to sync — every staffing role is already linked.',
  ),
@@ -1382,8 +1382,8 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  screenTitle: 'Team Management',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_team_management_notes'] ?? 'No data recorded.'),
  ],
@@ -2055,7 +2055,7 @@ class _EditableTextBlockState extends State<_EditableTextBlock> {
  widget.onChanged(_controller.text);
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text(
  'AI-generated content inserted. Review and edit as needed.'),
  backgroundColor: Color(0xFF16A34A),
@@ -2068,9 +2068,9 @@ class _EditableTextBlockState extends State<_EditableTextBlock> {
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
- content: Text('AI generation failedaiErrorMessage(e)'),
- backgroundColor: const Color(0xFFDC2626),
- duration: const Duration(seconds: 4),
+ content: Text('AI generation failed: ${aiErrorMessage(e)}'),
+ backgroundColor: Color(0xFFDC2626),
+ duration: Duration(seconds: 4),
  ),
  );
  }

@@ -23,7 +23,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Stakeholder Identification',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -99,7 +99,7 @@ class _StakeholderIdentificationSectionState
       screenTitle: 'Stakeholder Identification',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text(
             'Notes',

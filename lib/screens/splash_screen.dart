@@ -126,7 +126,7 @@ class _SplashScreenState extends State<SplashScreen>
  child: Center(
  child: FadeTransition(
  opacity: _fadeAnimation,
- child: Column(
+ child: const Column(
  mainAxisAlignment: MainAxisAlignment.center,
  children: [
  // NDU Project Logo — canonical squircle brand asset

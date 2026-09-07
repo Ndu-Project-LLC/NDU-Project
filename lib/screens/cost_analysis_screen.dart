@@ -3075,13 +3075,13 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  const Text('Project Benefit Calculation',
+                  Text('Project Benefit Calculation',
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  const SizedBox(width: 8),
-                  const _AiTag(),
+                  SizedBox(width: 8),
+                  _AiTag(),
                 ]),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   'AI-assisted estimation to showcase project benefits',
                   style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -3118,7 +3118,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: titleColumn),
+                const Expanded(child: titleColumn),
                 const SizedBox(width: 12),
                 aiButton,
               ],
@@ -5631,10 +5631,10 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           builder: (context, constraints) {
             final isNarrow = constraints.maxWidth < 600;
             const titleRow = Row(children: [
-              const Text('Initial cost estimate',
+              Text('Initial cost estimate',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              const SizedBox(width: 8),
-              const _AiTag(),
+              SizedBox(width: 8),
+              _AiTag(),
             ]);
             final actionButtons = Row(
               mainAxisSize: MainAxisSize.min,

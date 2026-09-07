@@ -69,7 +69,7 @@ class _UpdateOpsMaintenancePlansScreenState
       screenTitle: 'Update Ops & Maintenance Plans',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text(
             'Notes',
@@ -628,7 +628,7 @@ class _UpdateOpsMaintenancePlansScreenState
                     FilledButton.icon(
                       onPressed: projectId == null
                           ? null
-                          : () => _openAddPlanDialog(projectId),
+                          : () => _openPlanDialog(projectId),
                       icon: const Icon(Icons.add, size: 18),
                       label: const Text('Add Plan'),
                       style: FilledButton.styleFrom(
@@ -686,7 +686,7 @@ class _UpdateOpsMaintenancePlansScreenState
               icon: Icons.inbox_outlined,
               message: 'No ops plans recorded yet.',
               actionLabel: 'Add first plan',
-              onAction: () => _openAddPlanDialog(projectId),
+              onAction: () => _openPlanDialog(projectId),
             );
           }
           return Column(
@@ -697,12 +697,12 @@ class _UpdateOpsMaintenancePlansScreenState
                 decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
                 child: const Row(
                   children: [
-                    Expanded(flex: 1, child: _HeaderCell('ID')),
                     Expanded(flex: 3, child: _HeaderCell('Plan Item')),
                     Expanded(flex: 2, child: _HeaderCell('Team')),
                     Expanded(flex: 2, child: _HeaderCell('Status')),
                     Expanded(flex: 2, child: _HeaderCell('Due')),
                     Expanded(flex: 2, child: _HeaderCell('Owner')),
+                    Expanded(flex: 1, child: _HeaderCell('Actions')),
                   ],
                 ),
               ),
@@ -715,7 +715,12 @@ class _UpdateOpsMaintenancePlansScreenState
                   final isLast = i == filtered.length - 1;
                   return RepaintBoundary(
                     key: ValueKey('ops_plan_row_$i'),
-                    child: _PlanRow(plan: plan, isLast: isLast),
+                    child: _PlanRow(
+                      plan: plan,
+                      isLast: isLast,
+                      onEdit: () => _openPlanDialog(projectId, plan: plan),
+                      onDelete: () => _confirmDeletePlan(projectId, plan),
+                    ),
                   );
                 },
               ),
@@ -1346,16 +1351,107 @@ class _UpdateOpsMaintenancePlansScreenState
     );
   }
 
+  Future<void> _confirmDeletePlan(String projectId, OpsPlanItem plan) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Ops Plan Item?'),
+        content: Text(
+          'Delete "${plan.title.isEmpty ? 'Untitled plan' : plan.title}" from '
+          'the ops register? This cannot be undone.',
+        ),
+        actions: [
+          LaunchModalCancelButton(
+            label: 'Cancel',
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+          ),
+          LaunchModalDangerButton(
+            label: 'Delete',
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ProjectInsightsService.deleteOpsPlan(projectId, plan.docId);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Unable to delete the ops plan item.')),
+      );
+      return;
+    }
+    if (!mounted) return;
+    showDeleteSuccessSnackBar(context, itemLabel: 'Plan');
+  }
+
   // ─── Dialog ──────────────────────────────────────────────────────────────
 
-  Future<void> _openAddPlanDialog(String projectId) async {
-    final idController = TextEditingController();
-    final titleController = TextEditingController();
-    final teamController = TextEditingController();
-    final ownerController = TextEditingController();
-    final dueController = TextEditingController();
-    String status = _planStatuses.first;
+  Future<void> _openPlanDialog(String projectId, {OpsPlanItem? plan}) async {
+    final isEdit = plan != null;
+    final titleController = TextEditingController(text: plan?.title ?? '');
+    final teamController = TextEditingController(text: plan?.team ?? '');
+    final ownerController = TextEditingController(text: plan?.owner ?? '');
+    final dueController = TextEditingController(text: plan?.due ?? '');
+    String status = (plan != null && _planStatuses.contains(plan.status))
+        ? plan.status
+        : _planStatuses.first;
     DateTime? dueDate;
+    // Selected existing values, or the add-new sentinel when the user is
+    // entering a value not yet present in the register.
+    String? selectedTitle;
+    String? selectedTeam;
+    String? selectedOwner;
+    const addNewTitle = '__add_new_plan_item__';
+    const addNewTeam = '__add_new_team__';
+    const addNewOwner = '__add_new_owner__';
+
+    // Existing records drive the dropdown options for plan items, teams and
+    // owners.
+    List<OpsPlanItem> existing = const [];
+    try {
+      existing = await ProjectInsightsService.fetchOpsPlans(projectId);
+    } catch (_) {
+      // Fall back to an empty register so the dialog can still create records.
+    }
+    if (!mounted) return;
+    final existingTitles = existing
+        .map((plan) => plan.title.trim())
+        .where((title) => title.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+    final existingTeams = existing
+        .map((plan) => plan.team.trim())
+        .where((team) => team.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+    final existingOwners = existing
+        .map((plan) => plan.owner.trim())
+        .where((owner) => owner.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+
+    // When editing, pre-select the record's own values so the dropdowns show
+    // them (falling back to the add-new entry when the value is empty).
+    final planTitle = plan?.title.trim() ?? '';
+    if (plan != null && planTitle.isNotEmpty) {
+      selectedTitle =
+          existingTitles.contains(planTitle) ? planTitle : addNewTitle;
+    }
+    final planTeam = plan?.team.trim() ?? '';
+    if (plan != null && planTeam.isNotEmpty) {
+      selectedTeam = existingTeams.contains(planTeam) ? planTeam : addNewTeam;
+    }
+    final planOwner = plan?.owner.trim() ?? '';
+    if (plan != null && planOwner.isNotEmpty) {
+      selectedOwner =
+          existingOwners.contains(planOwner) ? planOwner : addNewOwner;
+    }
 
     try {
       await showDialog<void>(
@@ -1367,41 +1463,132 @@ class _UpdateOpsMaintenancePlansScreenState
               return LaunchModalShell(
                 icon: Icons.playlist_add_check_rounded,
                 accent: const Color(0xFF059669),
-                title: 'Add Ops Plan Item',
-                subtitle:
-                    'Log a runbook or maintenance update for the ops register.',
+                title: isEdit ? 'Edit Ops Plan Item' : 'Add Ops Plan Item',
+                subtitle: isEdit
+                    ? 'Update runbook or maintenance details for the ops register.'
+                    : 'Log a runbook or maintenance update for the ops register.',
                 body: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    LaunchModalTextField(
-                      label: 'Plan ID',
-                      controller: idController,
-                      hint: 'e.g. OP-301',
-                    ),
-                    const SizedBox(height: 12),
-                    LaunchModalTextField(
-                      label: 'Plan Item',
-                      controller: titleController,
-                      hint: 'e.g. Runbook refresh',
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        LaunchModalDropdown<String>(
+                          label: 'Plan Item',
+                          value: selectedTitle ??
+                              (existingTitles.isEmpty ? addNewTitle : null),
+                          items: [...existingTitles, addNewTitle],
+                          labelBuilder: (value) => value == addNewTitle
+                              ? '+ Add New Plan Item'
+                              : value,
+                          hint: existingTitles.isEmpty
+                              ? 'No plan items yet — add the first one'
+                              : 'Select an existing plan item',
+                          onChanged: (value) => setDialogState(() {
+                            selectedTitle = value;
+                            if (value == null || value == addNewTitle) {
+                              titleController.clear();
+                            } else {
+                              titleController.text = value;
+                            }
+                          }),
+                        ),
+                        if (selectedTitle == addNewTitle ||
+                            existingTitles.isEmpty) ...[
+                          const SizedBox(height: 12),
+                          LaunchModalTextField(
+                            label: 'New Plan Item',
+                            controller: titleController,
+                            hint: 'e.g. Runbook refresh',
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 12),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: LaunchModalTextField(
-                            label: 'Team',
-                            controller: teamController,
-                            hint: 'e.g. Operations',
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              LaunchModalDropdown<String>(
+                                label: 'Team',
+                                value: selectedTeam ??
+                                    (existingTeams.isEmpty
+                                        ? addNewTeam
+                                        : null),
+                                items: [...existingTeams, addNewTeam],
+                                labelBuilder: (value) =>
+                                    value == addNewTeam
+                                        ? '+ Add New Team'
+                                        : value,
+                                hint: existingTeams.isEmpty
+                                    ? 'No teams yet — add the first one'
+                                    : 'Select an existing team',
+                                onChanged: (value) => setDialogState(() {
+                                  selectedTeam = value;
+                                  if (value == null || value == addNewTeam) {
+                                    teamController.clear();
+                                  } else {
+                                    teamController.text = value;
+                                  }
+                                }),
+                              ),
+                              if (selectedTeam == addNewTeam ||
+                                  existingTeams.isEmpty) ...[
+                                const SizedBox(height: 12),
+                                LaunchModalTextField(
+                                  label: 'New Team',
+                                  controller: teamController,
+                                  hint: 'e.g. Operations',
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: LaunchModalTextField(
-                            label: 'Owner',
-                            controller: ownerController,
-                            hint: 'e.g. M. Thompson',
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              LaunchModalDropdown<String>(
+                                label: 'Owner',
+                                value: selectedOwner ??
+                                    (existingOwners.isEmpty
+                                        ? addNewOwner
+                                        : null),
+                                items: [...existingOwners, addNewOwner],
+                                labelBuilder: (value) =>
+                                    value == addNewOwner
+                                        ? '+ Add New Owner'
+                                        : value,
+                                hint: existingOwners.isEmpty
+                                    ? 'No owners yet — add the first one'
+                                    : 'Select an existing owner',
+                                onChanged: (value) => setDialogState(() {
+                                  selectedOwner = value;
+                                  if (value == null || value == addNewOwner) {
+                                    ownerController.clear();
+                                  } else {
+                                    ownerController.text = value;
+                                  }
+                                }),
+                              ),
+                              if (selectedOwner == addNewOwner ||
+                                  existingOwners.isEmpty) ...[
+                                const SizedBox(height: 12),
+                                LaunchModalTextField(
+                                  label: 'New Owner',
+                                  controller: ownerController,
+                                  hint: 'e.g. M. Thompson',
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ],
@@ -1423,6 +1610,7 @@ class _UpdateOpsMaintenancePlansScreenState
                         Expanded(
                           child: LaunchModalDateField(
                             label: 'Due Date',
+                            initialText: dueController.text,
                             initialDate: dueDate,
                             firstDate: DateTime.now()
                                 .subtract(const Duration(days: 365)),
@@ -1448,13 +1636,27 @@ class _UpdateOpsMaintenancePlansScreenState
                     onPressed: () => Navigator.of(dialogContext).pop(),
                   ),
                   LaunchModalPrimaryButton(
-                    label: 'Add Plan',
-                    icon: Icons.add_rounded,
+                    label: isEdit ? 'Save Changes' : 'Add Plan',
+                    icon: isEdit ? Icons.check_rounded : Icons.add_rounded,
                     onPressed: () async {
-                      if (idController.text.trim().isEmpty ||
-                          titleController.text.trim().isEmpty ||
-                          teamController.text.trim().isEmpty ||
-                          ownerController.text.trim().isEmpty ||
+                      final title = (selectedTitle == null ||
+                              selectedTitle == addNewTitle)
+                          ? titleController.text.trim()
+                          : selectedTitle;
+                      final team = (selectedTeam == null ||
+                              selectedTeam == addNewTeam)
+                          ? teamController.text.trim()
+                          : selectedTeam;
+                      final owner = (selectedOwner == null ||
+                              selectedOwner == addNewOwner)
+                          ? ownerController.text.trim()
+                          : selectedOwner;
+                      if (title == null ||
+                          title.isEmpty ||
+                          team == null ||
+                          team.isEmpty ||
+                          owner == null ||
+                          owner.isEmpty ||
                           dueController.text.trim().isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -1463,21 +1665,26 @@ class _UpdateOpsMaintenancePlansScreenState
                         return;
                       }
                       final navigator = Navigator.of(dialogContext);
-                      await FirebaseFirestore.instance
-                          .collection('projects')
-                          .doc(projectId)
-                          .collection('opsMaintenance')
-                          .doc('overview')
-                          .collection('plans')
-                          .add({
-                        'id': idController.text.trim(),
-                        'title': titleController.text.trim(),
-                        'team': teamController.text.trim(),
-                        'status': status,
-                        'due': dueController.text.trim(),
-                        'owner': ownerController.text.trim(),
-                        'createdAt': FieldValue.serverTimestamp(),
-                      });
+                      if (isEdit) {
+                        await ProjectInsightsService.updateOpsPlan(
+                          projectId,
+                          plan.docId,
+                          title: title,
+                          team: team,
+                          status: status,
+                          due: dueController.text.trim(),
+                          owner: owner,
+                        );
+                      } else {
+                        await ProjectInsightsService.addOpsPlan(
+                          projectId,
+                          title: title,
+                          team: team,
+                          status: status,
+                          due: dueController.text.trim(),
+                          owner: owner,
+                        );
+                      }
                       if (!mounted) return;
                       navigator.pop();
                     },
@@ -1489,7 +1696,6 @@ class _UpdateOpsMaintenancePlansScreenState
         },
       );
     } finally {
-      idController.dispose();
       titleController.dispose();
       teamController.dispose();
       ownerController.dispose();
@@ -1685,10 +1891,17 @@ class _HeaderCell extends StatelessWidget {
 }
 
 class _PlanRow extends StatelessWidget {
-  const _PlanRow({required this.plan, required this.isLast});
+  const _PlanRow({
+    required this.plan,
+    required this.isLast,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   final OpsPlanItem plan;
   final bool isLast;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   Color _statusColor(String status) {
     switch (status) {
@@ -1730,14 +1943,6 @@ class _PlanRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            flex: 1,
-            child: Text(plan.id,
-                style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFFFFC812))),
-          ),
           Expanded(
             flex: 3,
             child: Text(plan.title,
@@ -1788,7 +1993,74 @@ class _PlanRow extends StatelessWidget {
             child: Text(plan.owner,
                 style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
           ),
+          Expanded(
+            flex: 1,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _PlanRowActionButton(
+                  icon: Icons.edit_outlined,
+                  color: const Color(0xFFB8860B),
+                  background: const Color(0xFFFFF8E1),
+                  border: const Color(0xFFFEF3C7),
+                  tooltip: 'Edit plan item',
+                  onTap: onEdit,
+                ),
+                const SizedBox(width: 6),
+                _PlanRowActionButton(
+                  icon: Icons.delete_outline_rounded,
+                  color: const Color(0xFFDC2626),
+                  background: const Color(0xFFFEE2E2),
+                  border: const Color(0xFFFECACA),
+                  tooltip: 'Delete plan item',
+                  onTap: onDelete,
+                ),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+/// Compact edit/delete action chip used by ops plan register rows.
+class _PlanRowActionButton extends StatelessWidget {
+  const _PlanRowActionButton({
+    required this.icon,
+    required this.color,
+    required this.background,
+    required this.border,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color color;
+  final Color background;
+  final Color border;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Tooltip(
+        message: tooltip,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: border),
+            ),
+            child: Icon(icon, size: 16, color: color),
+          ),
+        ),
       ),
     );
   }

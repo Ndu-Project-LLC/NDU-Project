@@ -616,7 +616,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  screenTitle: 'Engineering Design',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['engineering_design_screen'] ?? 'No data recorded.'),
  ],

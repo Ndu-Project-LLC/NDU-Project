@@ -23,7 +23,7 @@ Future<void> _exportInfrastructurePlanPdf(BuildContext context) async {
     screenTitle: 'Infrastructure Plan',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -192,7 +192,7 @@ class _PlanningInfrastructureCostSectionState
       screenTitle: 'Infrastructure Plan',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text(
             'Notes',

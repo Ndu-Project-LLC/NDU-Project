@@ -254,7 +254,7 @@ class _AgileBacklogGovernanceScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
               content: Text('Saved'), duration: Duration(seconds: 1)),
         );
       }
@@ -325,7 +325,7 @@ class _AgileBacklogGovernanceScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI generation failedaiErrorMessage(e)')),
+          SnackBar(content: Text('AI generation failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -427,7 +427,7 @@ class _AgileBacklogGovernanceScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI regeneration failedaiErrorMessage(e)')),
+          SnackBar(content: Text('AI regeneration failed: ${aiErrorMessage(e)}')),
         );
       }
     }

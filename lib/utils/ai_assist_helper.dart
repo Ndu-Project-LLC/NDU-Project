@@ -96,9 +96,9 @@ IMPORTANT RULES:
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('AI Assist failedaiErrorMessage(e)'),
+            content: Text('AI Assist failed: ${aiErrorMessage(e)}'),
             behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFFEF4444),
+            backgroundColor: Color(0xFFEF4444),
           ),
         );
       }

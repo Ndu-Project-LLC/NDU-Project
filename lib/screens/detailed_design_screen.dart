@@ -49,25 +49,25 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
 
   // ── Security & compliance controls ──
   final List<_SecurityControl> _securityControls = [
-    _SecurityControl(
+    const _SecurityControl(
       id: 'SEC-001',
       requirement: 'Authentication & authorization controls',
       standard: 'ISO 27001 A.9',
       status: 'Defined',
     ),
-    _SecurityControl(
+    const _SecurityControl(
       id: 'SEC-002',
       requirement: 'Data encryption at rest and in transit',
       standard: 'NIST SP 800-111',
       status: 'In Progress',
     ),
-    _SecurityControl(
+    const _SecurityControl(
       id: 'SEC-003',
       requirement: 'Input validation and injection prevention',
       standard: 'OWASP Top 10',
       status: 'Pending',
     ),
-    _SecurityControl(
+    const _SecurityControl(
       id: 'SEC-004',
       requirement: 'Audit logging and monitoring',
       standard: 'SOC 2 CC7',
@@ -324,7 +324,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       screenTitle: 'Detailed Design',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text(
             'Notes',

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
@@ -1914,9 +1913,9 @@ class _KazAiActionButtonState extends State<_KazAiActionButton> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('KAZ AI failedaiErrorMessage(e)'),
+            content: Text('KAZ AI failed: ${aiErrorMessage(e)}'),
             behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFFDC2626),
+            backgroundColor: Color(0xFFDC2626),
           ),
         );
       }

@@ -1,4 +1,3 @@
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // ignore_for_file: unused_element
@@ -24,6 +23,7 @@ import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
@@ -144,7 +144,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  screenTitle: 'UI/UX Design',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['ui_ux_design_screen'] ?? 'No data recorded.'),
  ],
@@ -585,7 +585,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -629,7 +629,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -673,7 +673,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -718,7 +718,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -764,7 +764,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -2466,7 +2466,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  controller.selection = TextSelection.fromPosition(TextPosition(offset: cleaned.length));
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  }
  isGeneratingNotifier.value = false;
  },

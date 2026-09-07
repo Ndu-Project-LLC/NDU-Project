@@ -35,8 +35,8 @@
 /// - The widget never crashes when the target has no render box yet: it
 ///   waits (post-frame) for the box to become available and auto-dismisses
 ///   gracefully if the target never appears.
+library;
 
-import 'dart:ui' show BlurStyle, MaskFilter, PathOperation;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -433,7 +433,7 @@ class _SpotlightWalkthroughState extends State<SpotlightWalkthrough>
         bulletsHeight +
         (widget.primaryLabel == null ? 0 : 52) +
         (multiStep ? 44 : 0);
-    final gap = 14.0;
+    const gap = 14.0;
 
     // Prefer below the highlight; flip above when there is not enough room.
     final belowTop = glowRect.bottom + gap;

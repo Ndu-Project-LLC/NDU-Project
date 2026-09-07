@@ -1319,7 +1319,7 @@ class _FooterSection extends StatelessWidget {
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             // Brand column
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-              AppLogo(height: 34, onDarkBackground: true, enableTapToDashboard: false, semanticLabel: 'NDU Project'),
+              const AppLogo(height: 34, onDarkBackground: true, enableTapToDashboard: false, semanticLabel: 'NDU Project'),
               const SizedBox(height: 12),
               const Text('The Project Delivery Operating System', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily)),
               const SizedBox(height: 16),

@@ -12,7 +12,6 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/theme.dart';
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/models/wbs_templates.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
@@ -20,6 +19,7 @@ import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/wbs/widgets/wbs_node_dialog.dart';
 
 class WBSBuilderScreen extends StatefulWidget {
@@ -2065,8 +2065,8 @@ Guidelines:
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('KAZ AI erroraiErrorMessage(e)'),
-            backgroundColor: const Color(0xFFEF4444),
+            content: Text('KAZ AI error: ${aiErrorMessage(e)}'),
+            backgroundColor: Color(0xFFEF4444),
           ),
         );
       }

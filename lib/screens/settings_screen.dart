@@ -4785,7 +4785,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
           const stats = Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: const [
+            children: [
               _AccessStat(label: 'Role tiers', value: '5'),
               _AccessStat(label: 'Access levels', value: '5'),
               _AccessStat(label: 'Policy gates', value: '22'),

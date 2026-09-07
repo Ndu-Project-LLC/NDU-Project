@@ -198,7 +198,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       debugPrint('[VoiceTextField] KAZ AI failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')),
+          SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -297,7 +297,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       if (!started) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text(kIsWeb
                   ? 'Voice input unavailable. Use Chrome/Edge/Safari over HTTPS and allow mic access. Firefox is not supported.'
                   : 'Speech recognition is not available on this device.'),
@@ -910,7 +910,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)')),
+          SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -1015,7 +1015,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
       if (!started) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text(kIsWeb
                   ? 'Voice input unavailable. Use Chrome/Edge/Safari over HTTPS and allow mic access. Firefox is not supported.'
                   : 'Speech recognition is not available on this device.'),

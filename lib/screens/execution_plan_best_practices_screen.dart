@@ -22,7 +22,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Best Practices',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',

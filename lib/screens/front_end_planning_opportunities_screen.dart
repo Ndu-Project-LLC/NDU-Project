@@ -99,7 +99,7 @@ class _FrontEndPlanningOpportunitiesScreenState
       screenTitle: 'Project Opportunities',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
       ],
@@ -686,7 +686,7 @@ Opportunity generation constraints:
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Expanded(child: titleSection),
+                                      const Expanded(child: titleSection),
                                       const SizedBox(width: 12),
                                       actions,
                                     ],
@@ -1854,7 +1854,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
                     10: FixedColumnWidth(160),
                     11: FixedColumnWidth(180),
                   },
-                  border: TableBorder(
+                  border: const TableBorder(
                     horizontalInside: border,
                     verticalInside: border,
                     top: border,

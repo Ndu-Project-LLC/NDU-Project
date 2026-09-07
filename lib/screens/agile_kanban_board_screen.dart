@@ -849,9 +849,9 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
         const Spacer(),
         // Flexible so the note wraps on narrow widths instead of
         // overflowing the row.
-        Expanded(
+        const Expanded(
           flex: 3,
-          child: const Text(
+          child: Text(
               'Board columns come from planning Kanban workflow configuration; cards come from the same AgileTask stories used by backlog planning and schedule import.',
               textAlign: TextAlign.right,
               style: TextStyle(

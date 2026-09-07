@@ -175,42 +175,47 @@ class _OpenEditorButtonState extends State<OpenEditorButton> {
                 horizontal: widget.compact ? 10 : 14,
                 vertical: widget.compact ? 6 : 8,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (widget.isLoading)
-                    SizedBox(
-                      width: widget.compact ? 13 : 15,
-                      height: widget.compact ? 13 : 15,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(fgColor),
+              // FittedBox lets the button shrink to fit narrow columns
+              // (e.g. 140px table cells) instead of overflowing the row.
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (widget.isLoading)
+                      SizedBox(
+                        width: widget.compact ? 13 : 15,
+                        height: widget.compact ? 13 : 15,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(fgColor),
+                        ),
+                      )
+                    else
+                      Icon(
+                        Icons.edit_note_rounded,
+                        size: widget.compact ? 16 : 18,
+                        color: fgColor,
                       ),
-                    )
-                  else
+                    SizedBox(width: widget.compact ? 6 : 8),
+                    Text(
+                      widget.label,
+                      style: TextStyle(
+                        fontSize: widget.compact ? 12 : 13,
+                        fontWeight: FontWeight.w700,
+                        color: fgColor,
+                        letterSpacing: 0.2,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(width: 4),
                     Icon(
-                      Icons.edit_note_rounded,
+                      Icons.keyboard_arrow_down_rounded,
                       size: widget.compact ? 16 : 18,
                       color: fgColor,
                     ),
-                  SizedBox(width: widget.compact ? 6 : 8),
-                  Text(
-                    widget.label,
-                    style: TextStyle(
-                      fontSize: widget.compact ? 12 : 13,
-                      fontWeight: FontWeight.w700,
-                      color: fgColor,
-                      letterSpacing: 0.2,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: widget.compact ? 16 : 18,
-                    color: fgColor,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

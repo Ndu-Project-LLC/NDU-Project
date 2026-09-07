@@ -13,7 +13,7 @@ import 'package:ndu_project/utils/diagram_model.dart';
 const String endpoint = String.fromEnvironment('OPENAI_PROXY_ENDPOINT');
 
 /// Central configuration for OpenAI API access.
-/// Uses GPT-4o — OpenAI's smartest model with the best reasoning capabilities.
+/// Uses GPT-5.6 Terra — OpenAI's model that balances intelligence and cost.
 class OpenAiConfig {
   static String get _trimmedEnvEndpoint => endpoint.trim().isEmpty
       ? ''
@@ -32,7 +32,7 @@ class OpenAiConfig {
     return SecureAPIConfig.baseUrl;
   }
 
-  /// Model used for OpenAI API requests — GPT-4o.
+  /// Model used for OpenAI API requests — GPT-5.6 Terra.
   static String get model => SecureAPIConfig.model;
 
   /// The Firebase proxy requires a signed-in Firebase user. The client adds
@@ -98,25 +98,26 @@ class OpenAiConfig {
       result['messages'] = messages;
     }
 
-    // Convert max_tokens to max_tokens (OpenAI uses same name)
-    // Already correct for OpenAI format
-
-    // Remove legacy-specific fields (no-op for OpenAI, but cleans up any
-    // leftover fields from older request formats)
-    // No legacy anthropic_version to remove (OpenAI-only project)
-
-    // Convert max_completion_tokens to max_tokens (OpenAI Chat Completions
-    // uses max_tokens, not max_completion_tokens which is Responses API only)
-    if (result.containsKey('max_completion_tokens')) {
-      result['max_tokens'] = result.remove('max_completion_tokens');
-    }
+    // GPT-5.x models require max_completion_tokens (max_tokens is rejected),
+    // so keep that spelling when present and only normalize the Responses API
+    // name (max_output_tokens) to it. Legacy max_tokens is left untouched and
+    // translated by the proxy for callers that still send it.
     if (result.containsKey('max_output_tokens')) {
-      result['max_tokens'] = result.remove('max_output_tokens');
+      result['max_completion_tokens'] = result.remove('max_output_tokens');
     }
 
-    // Ensure max_tokens exists with a reasonable default
-    if (!result.containsKey('max_tokens')) {
-      result['max_tokens'] = 1200;
+    // Ensure a token cap exists with a reasonable default.
+    if (!result.containsKey('max_completion_tokens') &&
+        !result.containsKey('max_tokens')) {
+      result['max_completion_tokens'] = 1200;
+    }
+
+    // GPT-5.1+ only accept sampling params (temperature/top_p) when reasoning
+    // is disabled. Request effort 'none' unless the caller already chose one,
+    // so existing temperature-based prompts keep working.
+    if (!result.containsKey('reasoning_effort') &&
+        (result.containsKey('temperature') || result.containsKey('top_p'))) {
+      result['reasoning_effort'] = 'none';
     }
 
     // Ensure model is set
@@ -233,7 +234,7 @@ class OpenAiAutocompleteService {
   // Autocomplete is intentionally conservative: it is a convenience feature,
   // and must not consume the quota needed by full AI actions while a user types.
   static const Duration _requestCooldown = Duration(seconds: 20);
-  static const String _autocompleteModel = 'gpt-4o-mini';
+  static const String _autocompleteModel = 'gpt-5.6-luna';
   DateTime? _lastRequestAt;
 
   Future<List<String>> fetchSuggestions({

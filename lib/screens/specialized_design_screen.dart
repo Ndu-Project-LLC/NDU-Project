@@ -1,4 +1,3 @@
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 // ignore_for_file: unused_element
@@ -21,6 +20,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:go_router/go_router.dart';
 
 class SpecializedDesignScreen extends StatefulWidget {
@@ -116,7 +116,7 @@ class _SpecializedDesignScreenState extends State<SpecializedDesignScreen> {
  screenTitle: 'Specialized Design',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['specialized_design_screen'] ?? 'No data recorded.'),
  ],
@@ -569,7 +569,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('KAZ AI field generation failed: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: Color(0xFFDC2626)),
  );
  }
  }

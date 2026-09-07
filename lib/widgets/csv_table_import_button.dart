@@ -26,6 +26,7 @@ class CsvTableImportButton extends StatelessWidget {
     required this.columns,
     required this.onImport,
     this.compact = false,
+    this.enabled = true,
   });
 
   /// Title shown in the CSV import dialog header
@@ -39,6 +40,10 @@ class CsvTableImportButton extends StatelessWidget {
 
   /// When true, renders a smaller icon-only button (for tight spaces)
   final bool compact;
+
+  /// When false, the button is disabled (e.g. while the section is in
+  /// read-only view).
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +62,7 @@ class CsvTableImportButton extends StatelessWidget {
       return Tooltip(
         message: 'Import CSV/XLSX',
         child: IconButton.outlined(
-          onPressed: handleImport,
+          onPressed: enabled ? handleImport : null,
           icon: const Icon(Icons.upload_file_outlined, size: 18),
           style: IconButton.styleFrom(
             foregroundColor: const Color(0xFFFFC812),
@@ -70,7 +75,7 @@ class CsvTableImportButton extends StatelessWidget {
     }
 
     return OutlinedButton.icon(
-      onPressed: handleImport,
+      onPressed: enabled ? handleImport : null,
       icon: const Icon(Icons.upload_file_outlined, size: 16),
       label: const Text('Import CSV/XLSX'),
       style: OutlinedButton.styleFrom(

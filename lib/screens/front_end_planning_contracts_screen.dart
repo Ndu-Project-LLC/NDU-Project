@@ -13,6 +13,7 @@ import 'package:ndu_project/screens/planning_procurement_screen.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/contract_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/ai_suggesting_textfield.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
@@ -141,7 +142,7 @@ class _FrontEndPlanningContractsScreenState
  screenTitle: 'Contracting',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
  ],
@@ -2949,7 +2950,7 @@ class _CollapsibleAiTextCardState extends State<_CollapsibleAiTextCard> {
  } catch (e) {
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Failed to regenerate: $e')),
+ SnackBar(content: Text('Failed to regenerate: ${aiErrorMessage(e)}')),
  );
  } finally {
  if (mounted) setState(() => _isRegenerating = false);

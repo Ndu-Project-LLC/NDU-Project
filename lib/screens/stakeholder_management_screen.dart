@@ -196,6 +196,26 @@ class _StakeholderManagementScreenState
             _InfluenceInterestMatrix(
                 stakeholders: projectData.stakeholderEntries),
             const SizedBox(height: 32),
+            // The stakeholder tabs span the entire width of the screen,
+            // breaking out of the page gutter to the viewport edges. Flutter
+            // asserts against negative margins, so instead of a negative
+            // margin we translate the strip left by the gutter width and
+            // compensate with extra width on the right.
+            LayoutBuilder(
+              builder: (context, constraints) => Transform.translate(
+                offset: Offset(-horizontalPadding, 0),
+                child: SizedBox(
+                  width: constraints.maxWidth + horizontalPadding * 2,
+                  child: _EngagementTabStrip(
+                    activeTabIndex: _activeTabIndex,
+                    onTabChanged: (idx) =>
+                        setState(() => _activeTabIndex = idx),
+                    horizontalPadding: horizontalPadding,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             _EngagementSection(
               activeTabIndex: _activeTabIndex,
               onTabChanged: (idx) => setState(() => _activeTabIndex = idx),
@@ -1594,8 +1614,8 @@ parentheses to disambiguate.''';
       screenTitle: 'Stakeholder Management',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
           'Engagement Plans',
@@ -2691,20 +2711,6 @@ class _EngagementSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFFF4F5FB),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: Row(
-              children: [
-                _tabButton(title: 'Stakeholders', index: 0),
-                _tabButton(title: 'Stakeholder Mapping', index: 1),
-                _tabButton(title: 'Engagement Plans', index: 2),
-                _tabButton(title: 'Announcements', index: 3),
-              ],
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -2906,6 +2912,39 @@ class _EngagementSection extends StatelessWidget {
     );
   }
 
+}
+
+/// Full-width tab strip for the stakeholder engagement section. Rendered
+/// outside the content gutters (above the padded content) so the tabs span
+/// the entire width of the screen.
+class _EngagementTabStrip extends StatelessWidget {
+  const _EngagementTabStrip({
+    required this.activeTabIndex,
+    required this.onTabChanged,
+    required this.horizontalPadding,
+  });
+
+  final int activeTabIndex;
+  final ValueChanged<int> onTabChanged;
+  final double horizontalPadding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFF4F5FB),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: Row(
+        children: [
+          _tabButton(title: 'Stakeholders', index: 0),
+          _tabButton(title: 'Stakeholder Mapping', index: 1),
+          _tabButton(title: 'Engagement Plans', index: 2),
+          _tabButton(title: 'Announcements', index: 3),
+        ],
+      ),
+    );
+  }
+
   Widget _tabButton({required String title, required int index}) {
     final active = activeTabIndex == index;
     return InkWell(
@@ -2946,6 +2985,12 @@ class _SearchField extends StatelessWidget {
     return VoiceTextField(
       enabled: enabled,
       onChanged: onChanged,
+      // Search bars don't need the Open Editor button (voice / AI / docx
+      // import are for content fields, not search). Disable all editor
+      // features so the OpenEditorButton doesn't render above the field.
+      enableVoice: false,
+      enableKazAi: false,
+      enableTextFormatting: false,
       decoration: InputDecoration(
         hintText: 'Search stakeholders...',
         prefixIcon:

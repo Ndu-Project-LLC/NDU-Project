@@ -335,6 +335,7 @@ class LaunchModalDateField extends StatefulWidget {
     required this.label,
     required this.initialDate,
     required this.onPicked,
+    this.initialText,
     this.hint = 'Select date',
     this.firstDate,
     this.lastDate,
@@ -343,6 +344,10 @@ class LaunchModalDateField extends StatefulWidget {
   final String label;
   final DateTime? initialDate;
   final ValueChanged<DateTime?> onPicked;
+
+  /// Pre-filled display text (e.g. an existing value when editing). Takes
+  /// precedence over [initialDate].
+  final String? initialText;
   final String hint;
   final DateTime? firstDate;
   final DateTime? lastDate;
@@ -358,9 +363,10 @@ class _LaunchModalDateFieldState extends State<LaunchModalDateField> {
   void initState() {
     super.initState();
     _controller = TextEditingController(
-      text: widget.initialDate != null
-          ? _formatDateShort(widget.initialDate!)
-          : '',
+      text: widget.initialText ??
+          (widget.initialDate != null
+              ? _formatDateShort(widget.initialDate!)
+              : ''),
     );
   }
 
@@ -439,6 +445,7 @@ class LaunchModalDropdown<T> extends StatelessWidget {
     required this.items,
     required this.onChanged,
     this.hint,
+    this.labelBuilder,
   });
 
   final String label;
@@ -446,6 +453,10 @@ class LaunchModalDropdown<T> extends StatelessWidget {
   final List<T> items;
   final ValueChanged<T?> onChanged;
   final String? hint;
+
+  /// Optional display-label override per item (e.g. to render a friendly
+  /// "+ Add New…" label for a sentinel item value).
+  final String Function(T value)? labelBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -468,7 +479,7 @@ class LaunchModalDropdown<T> extends StatelessWidget {
           items: items
               .map((v) => DropdownMenuItem<T>(
                     value: v,
-                    child: Text(v.toString()),
+                    child: Text(labelBuilder?.call(v) ?? v.toString()),
                   ))
               .toList(),
           onChanged: onChanged,

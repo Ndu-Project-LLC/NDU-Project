@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart'; // provides AiSolutionItem model
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/services/auth_nav.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/user_service.dart';
@@ -234,7 +234,7 @@ class _InfrastructureConsiderationsScreenState
 
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text(
  'Infrastructure considerations regenerated successfully')),
  );
@@ -243,7 +243,7 @@ class _InfrastructureConsiderationsScreenState
  debugPrint('Error generating infrastructure considerations: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Failed to regenerate infrastructure: $e')),
+ SnackBar(content: Text('Failed to regenerate infrastructure: ${aiErrorMessage(e)}')),
  );
  }
  } finally {
@@ -285,14 +285,14 @@ class _InfrastructureConsiderationsScreenState
 
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text('Infrastructure regenerated successfully')),
  );
  }
  } catch (e) {
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Failed to regenerate: $e')),
+ SnackBar(content: Text('Failed to regenerate: ${aiErrorMessage(e)}')),
  );
  }
  } finally {
@@ -1446,7 +1446,7 @@ class _InfrastructureConsiderationsScreenState
 
  if (previewRows.isEmpty) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text(
  'AI could not generate infrastructure suggestions. Add an entry manually or try again.',
  ),
@@ -1492,13 +1492,13 @@ class _InfrastructureConsiderationsScreenState
  await _saveInfrastructureConsiderationsData();
  if (!mounted) return false;
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('AI infrastructure suggestions applied.')),
+ SnackBar(content: Text('AI infrastructure suggestions applied.')),
  );
  return true;
  } catch (e) {
  if (!mounted) return false;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('AI autofill failedaiErrorMessage(e)')),
+ SnackBar(content: Text('AI autofill failed: ${aiErrorMessage(e)}')),
  );
  return false;
  } finally {
@@ -1522,7 +1522,7 @@ class _InfrastructureConsiderationsScreenState
 
  if (action == _MissingInfrastructureAction.manual) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text(
  'Continuing without infrastructure considerations. You can complete this later or let AI fill it in later.',
  ),
@@ -1539,7 +1539,7 @@ class _InfrastructureConsiderationsScreenState
  );
  if (!hasInfraData) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text(
  'AI could not generate infrastructure considerations right now. Continuing anyway so you can complete this later.',
  ),
@@ -1548,7 +1548,7 @@ class _InfrastructureConsiderationsScreenState
  }
  } else {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text(
  'Continuing without infrastructure considerations. You can complete this later.',
  ),
@@ -1862,13 +1862,13 @@ class _InfrastructureConsiderationsScreenState
 
  if (mounted) {
  messenger.showSnackBar(
- const SnackBar(content: Text('Infrastructure field regenerated')),
+ SnackBar(content: Text('Infrastructure field regenerated')),
  );
  }
  } catch (e) {
  if (mounted) {
  messenger.showSnackBar(
- SnackBar(content: Text('Failed to regenerate: $e')),
+ SnackBar(content: Text('Failed to regenerate: ${aiErrorMessage(e)}')),
  );
  }
  }

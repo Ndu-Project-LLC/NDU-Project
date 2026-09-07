@@ -982,9 +982,9 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
   Widget _buildTipCard(_PracticeTip t) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFAFAFA),
-        border: const Border(
+      decoration: const BoxDecoration(
+        color: Color(0xFFFAFAFA),
+        border: Border(
           left: BorderSide(color: _kAccent, width: 3),
         ),
       ),

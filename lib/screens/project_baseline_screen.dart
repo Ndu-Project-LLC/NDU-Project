@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -12,6 +11,7 @@ import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/text_sanitizer.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 
@@ -527,7 +527,7 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  } catch (e) {
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text('Unable to save baseline version.'),
  backgroundColor: Colors.red,
  ),
@@ -645,7 +645,7 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  } catch (e) {
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('AI generation failedaiErrorMessage(e)')),
+ SnackBar(content: Text('AI generation failed: ${aiErrorMessage(e)}')),
  );
  } finally {
  if (mounted) setState(() => _isGenerating = false);
@@ -2389,8 +2389,8 @@ onBack: () =>
  screenTitle: 'Project Baseline',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_project_baseline_notes'] ?? 'No data recorded.'),
  ],

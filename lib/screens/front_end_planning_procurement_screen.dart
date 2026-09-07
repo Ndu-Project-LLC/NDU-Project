@@ -908,7 +908,7 @@ class _FrontEndPlanningProcurementScreenState
  screenTitle: 'Procurement',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
  ],
@@ -12747,7 +12747,7 @@ class _ContractingWorkflowViewState extends State<_ContractingWorkflowView> {
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -12759,8 +12759,8 @@ class _ContractingWorkflowViewState extends State<_ContractingWorkflowView> {
  color: accent,
  ),
  ),
- const SizedBox(height: 4),
- const Text(
+ SizedBox(height: 4),
+ Text(
  'Walk through each stage in order. Mark each one '
  'complete to advance. Use the Vendor Evaluation tab '
  'to score bids during the Review Bids stage.',
@@ -12795,14 +12795,14 @@ class _ContractingWorkflowViewState extends State<_ContractingWorkflowView> {
  value: _progressPercent,
  minHeight: 10,
  backgroundColor: const Color(0xFFE2E8F0),
- valueColor: AlwaysStoppedAnimation<Color>(accent),
+ valueColor: const AlwaysStoppedAnimation<Color>(accent),
  ),
  ),
  ),
  const SizedBox(width: 12),
  Text(
  '$_completedCount / $_totalStages',
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w600,
  color: accent,
@@ -12928,7 +12928,7 @@ class _ContractingStageCard extends StatelessWidget {
  children: [
  Text(
  stage.label,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 15,
  fontWeight: FontWeight.w600,
  color: accent,
@@ -12936,10 +12936,10 @@ class _ContractingStageCard extends StatelessWidget {
  ),
  const SizedBox(width: 8),
  if (isComplete)
- _StageChip(
+ const _StageChip(
  text: 'COMPLETE',
  color: successGreen,
- bgColor: const Color(0xFFE8FFF4),
+ bgColor: Color(0xFFE8FFF4),
  )
  else if (isNext)
  const _StageChip(
@@ -13111,10 +13111,10 @@ class _VendorEvaluationViewState extends State<_VendorEvaluationView> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  children: [
- const Icon(Icons.grading_outlined, color: Color(0xFFB8860B)),
- const SizedBox(width: 10),
+ Icon(Icons.grading_outlined, color: Color(0xFFB8860B)),
+ SizedBox(width: 10),
  Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -13127,8 +13127,8 @@ class _VendorEvaluationViewState extends State<_VendorEvaluationView> {
  color: accent,
  ),
  ),
- const SizedBox(height: 4),
- const Text(
+ SizedBox(height: 4),
+ Text(
  'Score each vendor on three pillars. The weighted '
  'total drives the ranking. Adjust the weights below '
  'to match your project priorities.',
@@ -13355,7 +13355,7 @@ class _EvaluationMatrix extends StatelessWidget {
  const headerStyle = TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: const Color(0xFF1E293B),
+ color: Color(0xFF1E293B),
  );
 
  return Scrollbar(
@@ -13368,19 +13368,19 @@ class _EvaluationMatrix extends StatelessWidget {
  columnSpacing: 24,
  horizontalMargin: 8,
  columns: [
- DataColumn(
+ const DataColumn(
  label: SizedBox(
  width: 40,
  child: Text('#', style: headerStyle),
  ),
  ),
- DataColumn(
+ const DataColumn(
  label: SizedBox(
  width: 180,
  child: Text('Vendor', style: headerStyle),
  ),
  ),
- DataColumn(
+ const DataColumn(
  label: SizedBox(
  width: 120,
  child: Text('Category', style: headerStyle),
@@ -13407,7 +13407,7 @@ class _EvaluationMatrix extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ const DataColumn(
  label: SizedBox(
  width: 140,
  child: Text('Weighted Total', style: headerStyle),

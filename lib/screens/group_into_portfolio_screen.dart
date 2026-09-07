@@ -6,7 +6,6 @@
 /// rather than an inline section on the dashboard.
 library;
 
-import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

@@ -56,7 +56,7 @@ void main() {
       code: '1.1',
       name: 'Install line',
       aiGenerated: false,
-      children: const [],
+      children: [],
     );
     final wbs = WBS(
       id: 'wbs-1',
@@ -158,7 +158,7 @@ void main() {
       deliveryModel: DeliveryModel.waterfall,
       isBaselined: true,
       isExecutionActive: false,
-      workPackages: const [
+      workPackages: [
         WorkPackageControl(
           id: 'control-1',
           wbsCode: '1.1',
@@ -179,9 +179,9 @@ void main() {
           progressMethod: ProgressMethod.physicalPercent,
         ),
       ],
-      changeRequests: const [],
-      baselineHistory: const [],
-      auditTrail: const [],
+      changeRequests: [],
+      baselineHistory: [],
+      auditTrail: [],
     );
 
     final assessment = ProjectLifecycleService.assess(

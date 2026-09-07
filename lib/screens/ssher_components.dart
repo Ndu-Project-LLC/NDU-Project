@@ -92,7 +92,7 @@ class SsherSectionCard extends StatelessWidget {
  label: const Text('Full View'),
  style: OutlinedButton.styleFrom(
  foregroundColor: const Color(0xFFB8860B),
- side: BorderSide(color: const Color(0xFFFCD34D)),
+ side: const BorderSide(color: Color(0xFFFCD34D)),
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
  ),

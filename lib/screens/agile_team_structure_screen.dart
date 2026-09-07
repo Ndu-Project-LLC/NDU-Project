@@ -148,7 +148,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
               content: Text('Saved'), duration: Duration(seconds: 1)),
         );
       }
@@ -223,7 +223,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI regeneration failedaiErrorMessage(e)')),
+          SnackBar(content: Text('AI regeneration failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -511,7 +511,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
                 content: Text('AI did not return valid team data. Try again.')),
           );
         }
@@ -519,7 +519,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI generation failedaiErrorMessage(e)')),
+          SnackBar(content: Text('AI generation failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -816,8 +816,8 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
       screenTitle: 'Agile Team Structure',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',

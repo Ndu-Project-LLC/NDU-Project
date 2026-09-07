@@ -89,7 +89,7 @@ class ExecutionActionBar extends StatelessWidget {
               ? SizedBox(
                   width: compact ? 16 : 18,
                   height: compact ? 16 : 18,
-                  child: CircularProgressIndicator(
+                  child: const CircularProgressIndicator(
                     strokeWidth: 2,
                     color: aiColor,
                   ),
@@ -398,7 +398,7 @@ class ExecutionMetricsGrid extends StatelessWidget {
             ),
           );
           if (i + columns < count) {
-            rows.add(SizedBox(height: spacing));
+            rows.add(const SizedBox(height: spacing));
           }
         }
         return Column(

@@ -18,7 +18,7 @@ Future<void> _exportPdf(BuildContext context) async {
  screenTitle: 'Construction Plan',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['execution_plan_construction_plan_screen'] ?? 'No data recorded.'),
  ],

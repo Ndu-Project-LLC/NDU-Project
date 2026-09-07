@@ -58,7 +58,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Agile Delivery Plan',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
     ],
   );
@@ -200,7 +200,7 @@ class PlanDecisionSectionState extends State<PlanDecisionSection> {
       screenTitle: 'Agile Delivery Plan',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text(
             'Notes',

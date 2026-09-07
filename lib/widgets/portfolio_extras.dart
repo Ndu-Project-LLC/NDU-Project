@@ -148,7 +148,7 @@ class _GanttPainter extends CustomPainter {
       text: const TextSpan(text: 'TIMELINE', style: headerStyle),
       textDirection: TextDirection.ltr,
     )..layout();
-    timelineLabel.paint(canvas, Offset(chartLeft, 4));
+    timelineLabel.paint(canvas, const Offset(chartLeft, 4));
 
     // Draw vertical grid lines (4 quarters)
     final gridPaint = Paint()

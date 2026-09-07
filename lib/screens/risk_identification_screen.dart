@@ -2124,7 +2124,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Failed to regenerate: $e')));
+          .showSnackBar(SnackBar(content: Text('Failed to regenerate: ${aiErrorMessage(e)}')));
     }
   }
 

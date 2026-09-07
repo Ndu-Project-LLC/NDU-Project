@@ -314,7 +314,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
               content: Text('Saved'),
               duration: Duration(seconds: _savingIndicatorDuration)),
         );
@@ -335,7 +335,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     if (_selectedFramework == 'Waterfall') {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
                 'AI generation is only available for Agile frameworks (Scrum, Kanban, ScrumBan).'),
           ),
@@ -351,7 +351,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       if (contextText.trim().isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
                 content: Text(
                     'Not enough project context to generate. Fill in earlier sections first.')),
           );
@@ -426,7 +426,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI generation failedaiErrorMessage(e)')),
+          SnackBar(content: Text('AI generation failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -518,7 +518,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI regeneration failedaiErrorMessage(e)')),
+          SnackBar(content: Text('AI regeneration failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -1140,8 +1140,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       screenTitle: 'Agile Delivery Model',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',

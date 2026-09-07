@@ -1,4 +1,3 @@
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
@@ -12,6 +11,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/activity_log_service.dart';
 import 'package:ndu_project/services/integration_oauth_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -168,7 +168,7 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  debugPrint('Tools integration save error: $error');
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text('Unable to save tools integration changes right now. Please try again.'),
  ),
  );
@@ -583,13 +583,13 @@ showNavigationButtons: false,
  onPressed: policy.canCreate ? () => _showIntegrationDialog() : null),
  _actionButton(Icons.upload_outlined, 'Export inventory', onPressed: () {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Inventory export queued. All integration records will be included.')),
+ SnackBar(content: Text('Inventory export queued. All integration records will be included.')),
  );
  }),
  _actionButton(Icons.health_and_safety_outlined, 'Start health check', onPressed: () {
  _refreshIntegrationStatuses();
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Health check initiated. All integration statuses are being refreshed.')),
+ SnackBar(content: Text('Health check initiated. All integration statuses are being refreshed.')),
  );
  }),
  _primaryButton('Run manual sync'),
@@ -620,7 +620,7 @@ showNavigationButtons: false,
  onPressed: () {
  _refreshIntegrationStatuses();
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Manual sync triggered. Refreshing all integration statuses.')),
+ SnackBar(content: Text('Manual sync triggered. Refreshing all integration statuses.')),
  );
  },
  icon: const Icon(Icons.sync, size: 18),
@@ -1653,7 +1653,7 @@ showNavigationButtons: false,
  debugPrint('KAZ AI integration generation failed: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI generation failedaiErrorMessage(e)'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI generation failed: ${aiErrorMessage(e)}'), backgroundColor: Color(0xFFDC2626)),
  );
  }
  } finally {
@@ -1682,7 +1682,7 @@ showNavigationButtons: false,
  debugPrint('KAZ AI field generation failed: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failedaiErrorMessage(e)'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: Color(0xFFDC2626)),
  );
  }
  }

@@ -59,11 +59,66 @@ class ProjectInsightsService {
     });
   }
 
+  static CollectionReference<Map<String, dynamic>> _opsPlansCol(String projectId) {
+    return _projects
+        .doc(projectId)
+        .collection('opsMaintenance')
+        .doc('overview')
+        .collection('plans');
+  }
+
   static Stream<List<OpsPlanItem>> streamOpsPlans(String projectId) {
-    final collection = _projects.doc(projectId).collection('opsMaintenance').doc('overview').collection('plans');
+    final collection = _opsPlansCol(projectId);
     return collection.snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => OpsPlanItem.fromJson(doc.data())).toList();
+      return snapshot.docs.map((doc) => OpsPlanItem.fromDoc(doc)).toList();
     });
+  }
+
+  /// One-shot fetch of the existing ops plans, used to derive dropdown options
+  /// (teams, owners) when adding a new plan.
+  static Future<List<OpsPlanItem>> fetchOpsPlans(String projectId) async {
+    final snapshot = await _opsPlansCol(projectId).get();
+    return snapshot.docs.map((doc) => OpsPlanItem.fromDoc(doc)).toList();
+  }
+
+  static Future<void> addOpsPlan(
+    String projectId, {
+    required String title,
+    required String team,
+    required String status,
+    required String due,
+    required String owner,
+  }) async {
+    await _opsPlansCol(projectId).add({
+      'title': title,
+      'team': team,
+      'status': status,
+      'due': due,
+      'owner': owner,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  static Future<void> updateOpsPlan(
+    String projectId,
+    String docId, {
+    required String title,
+    required String team,
+    required String status,
+    required String due,
+    required String owner,
+  }) async {
+    await _opsPlansCol(projectId).doc(docId).update({
+      'title': title,
+      'team': team,
+      'status': status,
+      'due': due,
+      'owner': owner,
+    });
+  }
+
+  static Future<void> deleteOpsPlan(String projectId, String docId) async {
+    await _opsPlansCol(projectId).doc(docId).delete();
   }
 
   static Color _fromHex(String? value, {Color fallback = const Color(0xFFFFC812)}) {
@@ -264,7 +319,7 @@ class OpsPlanStat {
 
 class OpsPlanItem {
   OpsPlanItem({
-    required this.id,
+    required this.docId,
     required this.title,
     required this.team,
     required this.status,
@@ -272,9 +327,10 @@ class OpsPlanItem {
     required this.owner,
   });
 
-  factory OpsPlanItem.fromJson(Map<String, dynamic> json) {
+  factory OpsPlanItem.fromDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final json = doc.data();
     return OpsPlanItem(
-      id: json['id']?.toString() ?? '',
+      docId: doc.id,
       title: json['title']?.toString() ?? '',
       team: json['team']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
@@ -283,7 +339,8 @@ class OpsPlanItem {
     );
   }
 
-  final String id;
+  /// Firestore auto-generated document id for this plan entry.
+  final String docId;
   final String title;
   final String team;
   final String status;

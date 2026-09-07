@@ -1044,8 +1044,8 @@ goal.nameController.removeListener(_onFieldChanged);
  screenTitle: 'Project Framework',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_project_framework_notes'] ?? 'No data recorded.'),
  ],
@@ -1732,10 +1732,10 @@ class _MobileGoalsSection extends StatelessWidget {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  // Header row
- Row(
+ const Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
- const Expanded(
+ Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [

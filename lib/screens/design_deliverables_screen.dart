@@ -142,7 +142,7 @@ class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
  screenTitle: 'Design Deliverables',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['design_deliverables_screen'] ?? 'No data recorded.'),
  ],

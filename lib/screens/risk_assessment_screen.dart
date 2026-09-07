@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -752,7 +753,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
- content: Text('Failed to regenerate mitigation plan: $e'),
+ content: Text('Failed to regenerate mitigation plan: ${aiErrorMessage(e)}'),
  backgroundColor: Colors.red,
  ),
  );
@@ -810,8 +811,8 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  screenTitle: 'Risk Assessment',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_risk_assessment_notes'] ?? 'No data recorded.'),
  ],

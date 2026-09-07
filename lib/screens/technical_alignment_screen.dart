@@ -1,4 +1,3 @@
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // ignore_for_file: unused_element
@@ -10,6 +9,7 @@ import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/design_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -370,7 +370,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
     if (projectId == null || projectId.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Cannot save: No active project found.'),
             backgroundColor: Color(0xFFB91C1C),
           ),
@@ -395,7 +395,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       debugPrint('Error saving technical alignment: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
                 'Failed to save. Please check your permissions and try again.'),
             backgroundColor: Color(0xFFB91C1C),
@@ -460,7 +460,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
     final projectId = provider?.projectData.projectId;
     if (projectId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: No active project found.')),
+        SnackBar(content: Text('Error: No active project found.')),
       );
       return;
     }
@@ -544,7 +544,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       _scheduleSave();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Technical Alignment generated successfully!'),
           backgroundColor: Colors.green,
         ),
@@ -554,7 +554,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('AI Generation failedaiErrorMessage(e)'),
+            content: Text('AI Generation failed: ${aiErrorMessage(e)}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -1765,15 +1765,15 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                                       });
                                     } catch (e) {
                                       debugPrint(
-                                          'KAZ AI model generation failedaiErrorMessage(e)');
+                                          'KAZ AI model generation failed: ${aiErrorMessage(e)}');
                                       if (mounted) {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                                'KAZ AI generation failedaiErrorMessage(e)'),
+                                                'KAZ AI generation failed: ${aiErrorMessage(e)}'),
                                             backgroundColor:
-                                                const Color(0xFFDC2626),
+                                                Color(0xFFDC2626),
                                           ),
                                         );
                                       }
@@ -1884,8 +1884,8 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('KAZ AI failedaiErrorMessage(e)'),
-                          backgroundColor: const Color(0xFFDC2626),
+                          content: Text('KAZ AI failed: ${aiErrorMessage(e)}'),
+                          backgroundColor: Color(0xFFDC2626),
                         ),
                       );
                     }
@@ -5572,7 +5572,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
         IconButton(
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
                   content: Text('KAZ AI: Generating suggestions...'),
                   duration: Duration(seconds: 2)),
             );
@@ -5757,8 +5757,8 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       screenTitle: 'Technical Alignment',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',

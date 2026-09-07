@@ -1866,7 +1866,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  screenTitle: 'Design Planning',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['design_planning_screen'] ?? 'No data recorded.'),
  ],

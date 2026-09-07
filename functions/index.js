@@ -317,12 +317,17 @@ exports.openaiProxy = functions
         return;
       }
 
-      // Ensure the payload has the required fields for OpenAI Chat Completions
+      // Ensure the payload has the required fields for OpenAI Chat Completions.
+      // GPT-5.x models (GPT-4o was retired in Feb 2026) reject max_tokens and
+      // only accept temperature/top_p when reasoning effort is 'none', so we
+      // normalize to max_completion_tokens and default reasoning_effort to
+      // 'none' unless the client explicitly requested another effort level.
       const openaiBody = {
-        model: rawPayload.model || 'gpt-4o',
+        model: rawPayload.model || 'gpt-5.6-terra',
         messages: rawPayload.messages || [],
         temperature: rawPayload.temperature ?? 0.7,
-        max_tokens: rawPayload.max_tokens ?? rawPayload.max_completion_tokens ?? 2000,
+        max_completion_tokens: rawPayload.max_completion_tokens ?? rawPayload.max_tokens ?? 2000,
+        reasoning_effort: rawPayload.reasoning_effort || 'none',
         stream: false,
       };
       

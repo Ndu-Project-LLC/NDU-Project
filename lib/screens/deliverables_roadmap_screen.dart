@@ -740,8 +740,8 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  screenTitle: 'Deliverables Roadmap',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_deliverables_roadmap_notes'] ?? 'No data recorded.'),
  ],

@@ -25,13 +25,13 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/services/schedule_cpm_service.dart';
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
@@ -70,7 +70,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
       debugPrintStack(stackTrace: stackTrace);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Could not import work packages. Please try again.'),
             backgroundColor: Colors.red,
           ),
@@ -89,7 +89,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     if (packages.isEmpty) {
       if (mounted && !autoMode) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
               content: Text(
                   'No work packages found. Create them in Execution Work Packages first.')),
         );
@@ -115,7 +115,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     if (newPackages.isEmpty) {
       if (mounted && !autoMode) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
               content:
                   Text('All work packages already have schedule activities.')),
         );
@@ -133,7 +133,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     if (schedule == null || schedule.activities.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Schedule is still loading. Please try again.'),
           ),
         );
@@ -258,7 +258,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     if (pid == null || pid.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No project ID found.')),
+          SnackBar(content: Text('No project ID found.')),
         );
       }
       return;
@@ -269,7 +269,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     if (epics.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
               content: Text(
                   'No epics found. Sync from WBS or create epics first in the Agile Delivery Model.')),
         );
@@ -318,7 +318,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     if (stories.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
               content: Text(
                   'No stories found assigned to features. Create stories in Agile Development Iterations first.')),
         );
@@ -376,7 +376,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     final result = scheduleProvider.computeCpm(overwriteDates: false);
     if (result == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No activities to compute CPM on.')),
+        SnackBar(content: Text('No activities to compute CPM on.')),
       );
       return;
     }
@@ -1027,7 +1027,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                       content:
                           Text('Please enter valid dates in MM/DD/YY format')),
                 );
@@ -1232,7 +1232,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     await Clipboard.setData(ClipboardData(text: json));
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text('Schedule JSON copied to clipboard'),
         duration: Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
@@ -2251,7 +2251,7 @@ class _ActivityScheduleTableState extends State<_ActivityScheduleTable> {
           'Added ${lines.length} AI-generated activities to the schedule.');
     } catch (e) {
       if (mounted) {
-        _showInfo('KAZ AI generation failedaiErrorMessage(e)');
+        _showInfo('KAZ AI generation failed: ${aiErrorMessage(e)}');
       }
     } finally {
       if (mounted) setState(() => _isGenerating = false);
@@ -2323,11 +2323,11 @@ class _ActivityScheduleTableState extends State<_ActivityScheduleTable> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.account_tree_outlined,
+                        const Icon(Icons.account_tree_outlined,
                             size: 10, color: TreasuryTokens.info),
                         const SizedBox(width: 3),
                         Text('$wbsLinkedCount WBS linked',
-                            style: TextStyle(
+                            style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 color: TreasuryTokens.info)),
@@ -2527,11 +2527,11 @@ class _ActivityScheduleTableState extends State<_ActivityScheduleTable> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.account_tree_outlined,
+                                      const Icon(Icons.account_tree_outlined,
                                           size: 9, color: TreasuryTokens.info),
                                       const SizedBox(width: 3),
                                       Text(r.wbsCode,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                               fontSize: 9.5,
                                               fontWeight: FontWeight.w700,
                                               color: TreasuryTokens.info,
@@ -2745,11 +2745,11 @@ class _ActivityScheduleTableState extends State<_ActivityScheduleTable> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.account_tree_outlined,
+                                      const Icon(Icons.account_tree_outlined,
                                           size: 9, color: TreasuryTokens.info),
                                       const SizedBox(width: 3),
                                       Text(r.wbsCode,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                               fontSize: 9.5,
                                               fontWeight: FontWeight.w700,
                                               color: TreasuryTokens.info,
@@ -2892,7 +2892,7 @@ class _ActivityScheduleTableState extends State<_ActivityScheduleTable> {
               border: Border.all(
                   color: TreasuryTokens.brand.withValues(alpha: 0.3)),
             ),
-            child: Icon(Icons.account_tree_outlined,
+            child: const Icon(Icons.account_tree_outlined,
                 size: 30, color: TreasuryTokens.brandDeep),
           ),
           const SizedBox(height: 14),
@@ -3649,7 +3649,7 @@ class _TimelineKazAiButtonState extends State<_TimelineKazAiButton> {
       if (activitiesWithoutDates.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
                 content: Text('All activities already have dates set.'),
                 duration: Duration(seconds: 2)),
           );
@@ -3715,8 +3715,8 @@ class _TimelineKazAiButtonState extends State<_TimelineKazAiButton> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('KAZ AI failedaiErrorMessage(e)'),
-              duration: const Duration(seconds: 3)),
+              content: Text('KAZ AI failed: ${aiErrorMessage(e)}'),
+              duration: Duration(seconds: 3)),
         );
       }
     } finally {

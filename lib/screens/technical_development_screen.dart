@@ -156,7 +156,7 @@ class _TechnicalDevelopmentScreenState
  screenTitle: 'Technical Development',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['technical_development_screen'] ?? 'No data recorded.'),
  ],

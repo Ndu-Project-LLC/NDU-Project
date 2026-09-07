@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -13,6 +12,7 @@ import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
@@ -124,7 +124,7 @@ class _FrontEndPlanningMilestoneScreenState
  screenTitle: 'Milestone Planning',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
  ],
@@ -291,7 +291,7 @@ void _loadMilestoneData() {
  Future<void> _saveAndNavigate({bool skippedValidation = false}) async {
  if (skippedValidation && mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text(
  'Saved progress. You can complete remaining milestone details later.',
  ),
@@ -403,7 +403,7 @@ void _loadMilestoneData() {
  if (picked != null) {
  if (startDate != null && picked.isBefore(startDate)) {
  messenger.showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text('End date cannot be before start date'),
  backgroundColor: Colors.orange,
  ),
@@ -693,7 +693,7 @@ markdown. The notes field must be plain text (max ~80 words).
      final parsed = _parseMilestoneAiJson(response);
      if (parsed == null) {
        ScaffoldMessenger.of(context).showSnackBar(
-         const SnackBar(
+         SnackBar(
            content: Text('KAZ AI could not parse a suggestion. Try again.'),
            backgroundColor: Color(0xFFD97706),
            behavior: SnackBarBehavior.floating,
@@ -731,8 +731,8 @@ markdown. The notes field must be plain text (max ~80 words).
      if (!mounted) return;
      ScaffoldMessenger.of(context).showSnackBar(
        SnackBar(
-         content: Text('KAZ AI request failedaiErrorMessage(e)'),
-         backgroundColor: const Color(0xFFDC2626),
+         content: Text('KAZ AI request failed: ${aiErrorMessage(e)}'),
+         backgroundColor: Color(0xFFDC2626),
          behavior: SnackBarBehavior.floating,
        ),
      );
@@ -940,7 +940,7 @@ Generate milestones that cover the typical project lifecycle phases.''';
 
  if (!silent) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content:
  Text('Using default milestones - you can edit them as needed'),
  backgroundColor: Color(0xFFFFC812),
@@ -1092,7 +1092,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  _syncToProvider();
  if (!silent) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
+ SnackBar(
  content: Text('Project dates generated'),
  backgroundColor: Color(0xFF10B981),
  ),

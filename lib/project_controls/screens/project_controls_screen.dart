@@ -140,7 +140,7 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
             breadcrumbPhase: 'Execution Phase',
             breadcrumbTitle: 'Project Controls',
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            body: PageShimmerSkeleton(),
+            body: const PageShimmerSkeleton(),
           );
         }
 
@@ -187,7 +187,7 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                 ),
               ),
               // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ──────────
-              CrossSectionSyncCard(
+              const CrossSectionSyncCard(
                 currentSection: CrossSection.projectControls,
               ),
               // Tab content

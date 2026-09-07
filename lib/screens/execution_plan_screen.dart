@@ -38,7 +38,7 @@ class _ExecutionPlanScreenState extends State<ExecutionPlanScreen> {
  screenTitle: 'Execution Plan',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['execution_plan_screen'] ?? 'No data recorded.'),
  ],

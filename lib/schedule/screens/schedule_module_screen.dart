@@ -274,7 +274,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
             breadcrumbPhase: 'Planning Phase',
             breadcrumbTitle: 'Schedule',
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            body: Center(
+            body: const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

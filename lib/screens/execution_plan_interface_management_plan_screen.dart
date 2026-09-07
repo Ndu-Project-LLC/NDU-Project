@@ -21,7 +21,7 @@ Future<void> _exportInterfaceManagementPlanPdf(BuildContext context) async {
     screenTitle: 'Interface Management Plan',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -100,7 +100,7 @@ class _InterfaceManagementPlanFormState
       screenTitle: 'Interface Management Plan',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text(
             'Notes',

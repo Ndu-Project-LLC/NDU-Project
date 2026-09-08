@@ -608,9 +608,16 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         return 'AI authentication failed. Please sign out and sign back in, then try again.';
       }
       if (response.statusCode == 429) {
+        // Surface the actionable credits-exhausted state everywhere it
+        // occurs; otherwise fall back to the generic rate-limit message
+        // enriched with the proxy/OpenAI error detail when available.
+        if (isOpenAiCreditsExhausted(
+            response.statusCode, response.body)) {
+          return const OpenAiCreditsExhaustedException().toString();
+        }
         final detail = _extractAiErrorDetail(response.body);
-        return 'AI is paused: the AI account is out of credits or rate limited.'
-            '${detail.isNotEmpty ? ' ($detail)' : ''} Add credits at platform.openai.com, then try again.';
+        return 'AI is rate limited right now.'
+            '${detail.isNotEmpty ? ' ($detail)' : ''} Please try again in a minute.';
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
         final detail = _extractAiErrorDetail(response.body);
@@ -626,6 +633,9 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           : '';
       return content.trim();
     } catch (e) {
+      if (e is OpenAiCreditsExhaustedException) {
+        return e.toString();
+      }
       return 'I\'m having trouble connecting right now. Please try again in a moment.';
     }
   }

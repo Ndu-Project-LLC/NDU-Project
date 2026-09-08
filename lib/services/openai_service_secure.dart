@@ -8,6 +8,17 @@ import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/models/meeting_row.dart';
 
+/// Builds the appropriate exception for a 429 from the AI proxy/provider.
+/// Distinguishes the permanent out-of-credits state from transient throttling
+/// so users get an actionable message instead of a dead-end retry loop.
+Exception _aiQuotaException(String body) {
+  if (isOpenAiCreditsExhausted(429, body)) {
+    return const OpenAiCreditsExhaustedException();
+  }
+  return Exception(
+      'AI is rate limited right now. Please try again in a minute.');
+}
+
 // Remove markdown bold markers commonly produced by the model (e.g. *text* or **text**)
 String _stripAsterisks(String s) => s.replaceAll('*', '');
 
@@ -629,7 +640,7 @@ class OpenAiServiceSecure {
           .post(uri, headers: headers, body: body)
           .timeout(const Duration(seconds: 90));
       if (response.statusCode == 401) throw Exception('Invalid API key');
-      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode == 429) throw _aiQuotaException(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -731,7 +742,7 @@ ${_escape(trimmedText)}
           .post(uri, headers: headers, body: body)
           .timeout(const Duration(seconds: 90));
       if (response.statusCode == 401) throw Exception('Invalid API key');
-      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode == 429) throw _aiQuotaException(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -792,7 +803,7 @@ ${_escape(trimmedText)}
           .post(uri, headers: headers, body: body)
           .timeout(const Duration(seconds: 180));
       if (response.statusCode == 401) throw Exception('Invalid API key');
-      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode == 429) throw _aiQuotaException(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -2426,7 +2437,7 @@ Return JSON with:
           .post(uri, headers: headers, body: body)
           .timeout(const Duration(seconds: 90));
       if (response.statusCode == 401) throw Exception('Invalid API key');
-      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode == 429) throw _aiQuotaException(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -2688,7 +2699,7 @@ $c
         throw Exception('Invalid API key');
       }
       if (response.statusCode == 429) {
-        throw Exception('API quota exceeded');
+        throw _aiQuotaException(response.body);
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
@@ -2949,7 +2960,7 @@ $scaleConstraints
           .timeout(const Duration(seconds: 180));
 
       if (response.statusCode == 401) throw Exception('Invalid API key');
-      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode == 429) throw _aiQuotaException(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -3354,7 +3365,7 @@ $domainHints
         .post(uri, headers: headers, body: body)
         .timeout(const Duration(seconds: 180));
     if (response.statusCode == 429) {
-      throw Exception('API quota exceeded. Please check your OpenAI billing.');
+      throw _aiQuotaException(response.body);
     }
     if (response.statusCode == 401) {
       throw Exception('Invalid API key. Please check your OpenAI API key.');
@@ -3586,7 +3597,7 @@ $domainHints
             headers: headers, body: jsonEncode(OpenAiConfig.wrapBody(payload)))
         .timeout(const Duration(seconds: 180));
     if (response.statusCode == 429) {
-      throw Exception('API quota exceeded. Please check your OpenAI billing.');
+      throw _aiQuotaException(response.body);
     }
     if (response.statusCode == 401) {
       throw Exception('Invalid API key. Please check your OpenAI API key.');
@@ -6169,8 +6180,7 @@ Return ONLY JSON.
         throw Exception('Invalid API key. Please check your OpenAI API key.');
       }
       if (response.statusCode == 429) {
-        throw Exception(
-            'API quota exceeded. Please check your OpenAI billing.');
+        throw _aiQuotaException(response.body);
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
@@ -12761,7 +12771,7 @@ Return only the title, no additional text.''';
           .timeout(const Duration(seconds: 180));
 
       if (response.statusCode == 401) throw Exception('Invalid API key');
-      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode == 429) throw _aiQuotaException(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');

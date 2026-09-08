@@ -17,6 +17,7 @@ import '../utils/navigation_route_resolver.dart';
 import '../providers/project_data_provider.dart';
 import '../screens/initiation_phase_screen.dart';
 import '../routing/app_router.dart';
+import '../widgets/kaz_ai_chat_bubble.dart';
 
 // ---------------------------------------------------------------------------
 // Data models (kept private to this file, same as existing screen)
@@ -525,6 +526,7 @@ class _ProgramDashboardMobileScreenState
  !_isLoading && _error == null && _currentProgram == null;
 
  return Scaffold(
+ floatingActionButton: const KazAiChatBubble(positioned: false),
  backgroundColor: background,
  body: Stack(
  children: [

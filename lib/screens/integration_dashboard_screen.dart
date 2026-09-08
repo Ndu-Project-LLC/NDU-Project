@@ -31,6 +31,7 @@ import 'package:ndu_project/project_controls/providers/project_controls_provider
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/services/ibr_service.dart';
 import 'package:ndu_project/routing/app_router.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 // Local color tokens — keep the file self-contained. The codebase uses
 // different theme patterns (LightModeColors / DarkModeColors / adaptive
@@ -106,6 +107,7 @@ class _IntegrationDashboardScreenState
     final report = _report;
     return ResponsiveScaffold(
       appBarTitle: 'Integration Dashboard',
+      floatingActionButton: const KazAiChatBubble(positioned: false),
       activeItemLabel: 'Integration Dashboard',
       body: RefreshIndicator(
         onRefresh: _runIbr,

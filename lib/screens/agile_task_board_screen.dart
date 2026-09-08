@@ -4,6 +4,7 @@ import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/kanban_config_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 class AgileTaskBoardScreen extends StatefulWidget {
   const AgileTaskBoardScreen({
@@ -75,6 +76,7 @@ class _AgileTaskBoardScreenState extends State<AgileTaskBoardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: const KazAiChatBubble(positioned: false),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(

@@ -26,6 +26,7 @@ import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 /// Front End Planning – Project Opportunities page
 /// Built to match the provided screenshot exactly:
@@ -553,6 +554,7 @@ Opportunity generation constraints:
 
     return Scaffold(
       // Ensure white background as requested
+      floatingActionButton: const KazAiChatBubble(positioned: false),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(

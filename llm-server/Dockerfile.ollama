@@ -1,0 +1,13 @@
+FROM ollama/ollama:latest
+
+# Start Ollama, wait for it to come up, then pull the configured model so
+# inference works on first boot without manual steps. When LLM_MODEL points
+# at ndu-assistant, start.sh builds it from this Modelfile first.
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+# Custom project model (built on qwen2.5-coder:14b) — baked into the image so
+# the VM can serve it with no manual steps: just set LLM_MODEL=ndu-assistant.
+COPY ndu-assistant.Modelfile /root/ndu-assistant.Modelfile
+
+ENTRYPOINT ["/bin/sh", "/start.sh"]

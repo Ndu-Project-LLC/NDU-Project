@@ -192,6 +192,7 @@ class ChangeManagementProvider extends ChangeNotifier {
 
     _changeRequests = [..._changeRequests, cr];
     _addAudit('CR Created', '${cr.crNumber}: ${cr.title}', cr.id);
+    unawaited(_persistCR(cr));
     notifyListeners();
     return crId;
   }
@@ -336,6 +337,7 @@ class ChangeManagementProvider extends ChangeNotifier {
       updatedBaselines: cr.affectedBaselines,
     );
     _baselineHistory = [..._baselineHistory, revision];
+    unawaited(_persistBaseline(revision));
     _addAudit('Baseline Revised', 'v${revision.version} — ${cr.crNumber}', cr.id);
   }
 
@@ -642,6 +644,7 @@ class ChangeManagementProvider extends ChangeNotifier {
       approver: _currentUser,
     );
     _baselineHistory = [..._baselineHistory, revision];
+    unawaited(_persistBaseline(revision));
     _currentBAC = revisedBAC;
     _currentScopeHash = revisedHash;
     _currentBaselineFinish = revisedFinish;
@@ -664,6 +667,7 @@ class ChangeManagementProvider extends ChangeNotifier {
     _currentScopeHash = last.previousScopeHash ?? _currentScopeHash;
     _currentBaselineFinish = last.previousFinish ?? _currentBaselineFinish;
     _baselineHistory = _baselineHistory.sublist(0, _baselineHistory.length - 1);
+    unawaited(_deleteBaselineRevision(last.version));
     _addAudit(
       'Baseline Rollback',
       'v${last.version} reverted • BAC restored to \$${_currentBAC.toStringAsFixed(0)}',
@@ -677,19 +681,22 @@ class ChangeManagementProvider extends ChangeNotifier {
 
   void _updateCR(String id, CMChangeRequest updated) {
     _changeRequests = _changeRequests.map((c) => c.id == id ? updated : c).toList();
+    unawaited(_persistCR(updated));
   }
 
   int _auditCounter = 0;
   void _addAudit(String action, String details, String? crId, {DateTime? timestamp}) {
     _auditCounter++;
-    _auditTrail = [..._auditTrail, CMAuditEntry(
+    final entry = CMAuditEntry(
       id: 'audit_${timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch}_$_auditCounter',
       user: _currentUser,
       timestamp: timestamp ?? DateTime.now(),
       action: action,
       details: details,
       linkedCRId: crId,
-    )];
+    );
+    _auditTrail = [..._auditTrail, entry];
+    unawaited(_persistAudit(entry));
   }
 
   // ─── Seed demo data ────────────────────────────────────────────────
@@ -966,6 +973,12 @@ class ChangeManagementProvider extends ChangeNotifier {
           return _crFromFirestore(doc.id, data);
         }).toList();
         _crCounter = _changeRequests.length;
+        // Recompute contingency / reserve usage from persisted CRs so the
+        // dashboard stays consistent after a reload.
+        _usedContingency = _changeRequests.fold<double>(
+            0, (acc, cr) => acc + (cr.contingencyUsed ?? 0));
+        _usedReserve = _changeRequests.fold<double>(
+            0, (acc, cr) => acc + (cr.reserveUsed ?? 0));
         _isLoading = false;
         notifyListeners();
       }, onError: (e) {
@@ -1022,6 +1035,13 @@ class ChangeManagementProvider extends ChangeNotifier {
             approver: data['approver'] as String?,
           );
         }).toList();
+        // Restore current baseline state from the latest persisted revision.
+        if (_baselineHistory.isNotEmpty) {
+          final latest = _baselineHistory.first;
+          _currentBAC = latest.revisedBudget ?? _currentBAC;
+          _currentScopeHash = latest.revisedScopeHash ?? _currentScopeHash;
+          _currentBaselineFinish = latest.revisedFinish ?? _currentBaselineFinish;
+        }
         notifyListeners();
       }, onError: (e) {
         debugPrint('[ChangeManagementProvider] Baseline stream error: $e');
@@ -1248,11 +1268,12 @@ class ChangeManagementProvider extends ChangeNotifier {
     }, SetOptions(merge: true));
   }
 
-  /// Save a baseline revision to Firestore.
+  /// Save a baseline revision to Firestore. Keyed by version so rollback
+  /// can delete the exact revision document.
   Future<void> _saveBaselineToFirestore(BaselineRevisionRecord rec) async {
     final col = _baselineCollection;
     if (col == null) return;
-    await col.add({
+    await col.doc('v${rec.version}').set({
       'version': rec.version,
       'revisionDate': Timestamp.fromDate(rec.revisionDate),
       'previousBAC': rec.previousBudget,
@@ -1272,6 +1293,45 @@ class ChangeManagementProvider extends ChangeNotifier {
           : null,
       'createdAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  // ─── Fire-and-forget persistence helpers ────────────────────────────
+  // Called from every mutation funnel so state changes survive reloads.
+  // Failures are logged, never thrown, so a transient Firestore error does
+  // not break the in-memory workflow.
+
+  Future<void> _persistCR(CMChangeRequest cr) async {
+    try {
+      await _saveCRToFirestore(cr);
+    } catch (e) {
+      debugPrint('[ChangeManagementProvider] Failed to save CR ${cr.crNumber}: $e');
+    }
+  }
+
+  Future<void> _persistAudit(CMAuditEntry entry) async {
+    try {
+      await _saveAuditToFirestore(entry);
+    } catch (e) {
+      debugPrint('[ChangeManagementProvider] Failed to save audit entry: $e');
+    }
+  }
+
+  Future<void> _persistBaseline(BaselineRevisionRecord rec) async {
+    try {
+      await _saveBaselineToFirestore(rec);
+    } catch (e) {
+      debugPrint('[ChangeManagementProvider] Failed to save baseline revision: $e');
+    }
+  }
+
+  Future<void> _deleteBaselineRevision(int version) async {
+    try {
+      final col = _baselineCollection;
+      if (col == null) return;
+      await col.doc('v$version').delete();
+    } catch (e) {
+      debugPrint('[ChangeManagementProvider] Failed to delete baseline revision: $e');
+    }
   }
 
   @override

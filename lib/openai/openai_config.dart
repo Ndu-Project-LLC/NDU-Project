@@ -46,7 +46,19 @@ class OpenAiConfig {
       if (user == null) {
         throw const OpenAiAuthenticationRequiredException();
       }
-      final token = await user.getIdToken();
+
+      // Refresh the user record and force a fresh ID token for every AI call.
+      // Some sessions keep a stale token after sign-in or after backend-driven
+      // refreshes; that causes false 401/auth failures even though the user is
+      // still authenticated.
+      await user.reload();
+      final refreshedUser = FirebaseAuth.instance.currentUser;
+      if (refreshedUser == null) {
+        throw const OpenAiAuthenticationRequiredException();
+      }
+
+      final tokenResult = await refreshedUser.getIdTokenResult(true);
+      final token = tokenResult.token;
       if (token == null || token.trim().isEmpty) {
         throw const OpenAiAuthenticationRequiredException();
       }
@@ -430,7 +442,7 @@ Always return ONLY a valid JSON object with nodes and edges arrays.''',
     try {
       final response = await http
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 16));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI diagram error ${response.statusCode}: ${response.body}');

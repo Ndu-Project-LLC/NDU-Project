@@ -602,16 +602,20 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
 
       final response = await http
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 20));
+          .timeout(const Duration(seconds: 120));
 
       if (response.statusCode == 401) {
-        return 'Invalid API key. Please check your OpenAI configuration in **Settings**.';
+        return 'AI authentication failed. Please sign out and sign back in, then try again.';
       }
       if (response.statusCode == 429) {
-        return 'API quota exceeded. Please check your OpenAI billing or try again shortly.';
+        final detail = _extractAiErrorDetail(response.body);
+        return 'AI is paused: the AI account is out of credits or rate limited.'
+            '${detail.isNotEmpty ? ' ($detail)' : ''} Add credits at platform.openai.com, then try again.';
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        return 'I encountered a server error (${response.statusCode}). Please try again.';
+        final detail = _extractAiErrorDetail(response.body);
+        return 'AI request failed (${response.statusCode})'
+            '${detail.isNotEmpty ? ': $detail' : ''}. Please try again in a moment.';
       }
 
       final data =
@@ -624,6 +628,30 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
     } catch (e) {
       return 'I\'m having trouble connecting right now. Please try again in a moment.';
     }
+  }
+
+  /// Pulls the human-readable error message out of a proxy / OpenAI error
+  /// body (e.g. `{"error":{"message":"..."}}` or `{"message":"..."}`) so
+  /// the chat surfaces the real failure instead of a generic string.
+  String _extractAiErrorDetail(String body) {
+    if (body.trim().isEmpty) return '';
+    try {
+      final data = jsonDecode(body);
+      if (data is Map<String, dynamic>) {
+        final err = data['error'];
+        if (err is Map<String, dynamic>) {
+          final m = err['message'];
+          if (m is String && m.trim().isNotEmpty) return m.trim();
+        } else if (err is String && err.trim().isNotEmpty) {
+          return err.trim();
+        }
+        final m = data['message'];
+        if (m is String && m.trim().isNotEmpty) return m.trim();
+      }
+    } catch (_) {
+      // Non-JSON body (proxy HTML error page etc.) — return empty detail.
+    }
+    return '';
   }
 
   // ── Support Chat ──────────────────────────────────────────────────────
@@ -1583,6 +1611,10 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
                 style: const TextStyle(fontSize: 14, height: 1.4),
                 maxLines: 4,
                 minLines: 1,
+                // Hide the Open Editor affordance in the chat input — the
+                // actions are surfaced via the send button and Format toolbar.
+                enableVoice: false,
+                enableKazAi: false,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => onSend(),
               ),

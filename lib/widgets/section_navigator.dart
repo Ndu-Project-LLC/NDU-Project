@@ -393,7 +393,12 @@ class _TabPill extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          // Fixed height so every tab card has the SAME height regardless of
+          // whether its label wraps to one or two lines. Widths may vary
+          // naturally (content-based) while the height stays uniform.
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          constraints: const BoxConstraints(minHeight: 54),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isActive ? accentColor : Colors.white,
             borderRadius: BorderRadius.circular(10),

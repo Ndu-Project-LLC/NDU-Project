@@ -13,6 +13,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 class ContractDetailsDashboardScreen extends StatefulWidget {
  const ContractDetailsDashboardScreen({super.key});
 
@@ -34,6 +35,7 @@ class _ContractDetailsDashboardScreenState extends State<ContractDetailsDashboar
  );
 
  return Scaffold(
+ floatingActionButton: const KazAiChatBubble(positioned: false),
  backgroundColor: Theme.of(context).colorScheme.surface,
  body: SafeArea(
  child: Row(

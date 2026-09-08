@@ -15,6 +15,7 @@ import 'package:ndu_project/models/user_model.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 /// A self-contained screen that lets the user select up to 7 projects
 /// and group them into a new portfolio.
@@ -304,6 +305,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
     final projects = _filteredProjects;
 
     return Scaffold(
+      floatingActionButton: const KazAiChatBubble(positioned: false),
       backgroundColor: _bg,
       appBar: AppBar(
         backgroundColor: _bg,

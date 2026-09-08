@@ -2,6 +2,13 @@ const functions = require('firebase-functions/v1');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 const { Resend } = require('resend');
+const {
+  getLocalLlmConfig,
+  buildOpenAiBody,
+  buildLocalBody,
+  forwardCompletion,
+  OPENAI_URL,
+} = require('./llm-router');
 
 // Initialize admin only if not already initialized
 if (!admin.apps.length) {
@@ -38,27 +45,24 @@ function generateOtp() {
 }
 
 
-// Lazy-load config to avoid deployment timeouts
-function getRuntimeConfig() {
-  try {
-    return typeof functions.config === 'function' ? functions.config() : {};
-  } catch (e) {
-    console.warn('Failed to load runtime config:', e);
-    return {};
-  }
-}
-
+// ── CORS / runtime origins ─────────────────────────────────────────────────
+// NOTE: legacy functions.config() support was removed — the Cloud Runtime
+// Configuration API it depends on shuts down in March 2026, after which any
+// function still referencing it cannot be deployed. Non-secret runtime values
+// now come from process.env (set via functions/.env at deploy time) with code
+// defaults matching the values that previously lived in `functions:config`.
 function getCorsAllowedOrigins() {
-  const runtimeConfig = getRuntimeConfig();
-  const appConfig = runtimeConfig.app || {};
-  const configuredBaseUrl = appConfig.base_url || appConfig.baseUrl || '';
-  const configAllowedOrigins = appConfig.allowed_origins || appConfig.allowedOrigins || '';
   const envAllowedOrigins = process.env.APP_ALLOWED_ORIGINS || '';
-  const APP_BASE_URL = process.env.APP_BASE_URL || configuredBaseUrl || 'https://ndu-d3f60.web.app';
-  const EXTRA_ALLOWED_ORIGINS = [configAllowedOrigins, envAllowedOrigins]
-    .flatMap((value) => value.split(','))
-    .map((origin) => origin.trim())
-    .filter(Boolean);
+  const APP_BASE_URL = process.env.APP_BASE_URL || 'https://admin.nduproject.com';
+  // 'ndu-project-1.onrender.com' was previously stored in functions:config as
+  // app.allowed_origins. The *.nduproject.com regex below already covers
+  // admin.nduproject.com, so only the legacy onrender deployment needs an
+  // explicit entry. APP_ALLOWED_ORIGINS (comma-separated) can extend this list.
+  const EXTRA_ALLOWED_ORIGINS = ['https://ndu-project-1.onrender.com']
+    .concat(envAllowedOrigins
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean));
   return [
     /^(http|https):\/\/localhost(:\d+)?$/,
     /^(http|https):\/\/127\.0\.0\.1(:\d+)?$/,
@@ -240,34 +244,39 @@ async function validateCouponForTier(couponCode, tier, originalPriceCents) {
 }
 
 /**
- * Secure OpenAI API Proxy
+ * Secure AI Proxy (self-hosted first, OpenAI fallback)
  * 
- * This Cloud Function acts as a secure proxy to OpenAI's Chat Completions API,
- * keeping the API key server-side and never exposing it to client code or version control.
+ * This Cloud Function acts as a secure proxy for the app's AI completions:
+ *   - Primary: the self-hosted LLM server (llm-server/, Ollama on the Oracle
+ *     Always-Free VM) — near-zero cost.
+ *   - Fallback: OpenAI's Chat Completions API — used only when the self-hosted
+ *     server is unreachable, keeping AI features available.
  * 
- * The app already sends OpenAI-format requests (chat/completions with messages array),
- * so this proxy forwards them directly to OpenAI without format transformation.
+ * Secrets stay server-side and are never exposed to client code or version
+ * control. The app sends OpenAI-format requests (chat/completions with a
+ * messages array); this proxy normalizes them per upstream (see llm-router.js).
  * 
  * Setup Instructions:
- * 1. Set your OpenAI API key as a secret in Firebase:
+ * 1. (Recommended) Point LLM_SERVER_URL at the self-hosted server and set the
+ *    LLM_SERVER_API_TOKEN secret:
+ *    firebase functions:secrets:set LLM_SERVER_API_TOKEN
+ * 2. Set your OpenAI API key as a fallback secret:
  *    firebase functions:secrets:set OPENAI_API_KEY
- *    
- * 2. Deploy this function:
+ * 3. Deploy this function:
  *    firebase deploy --only functions
- *    
- * 3. The app's SecureAPIConfig.baseUrl should point to this Cloud Function URL.
+ * 4. The app's SecureAPIConfig.baseUrl should point to this Cloud Function URL.
  * 
  * Security Features:
- * - API key stored as Firebase secret (never in code or environment)
- * - Optional Firebase Auth verification
+ * - API keys stored as Firebase secrets (never in code or environment)
+ * - Firebase Auth verification on every request
  * - CORS configured for your app domain only
  * - Request validation and sanitization
  */
 
 exports.openaiProxy = functions
   .runWith({
-    secrets: ['OPENAI_API_KEY'],
-    timeoutSeconds: 60,
+    secrets: ['OPENAI_API_KEY', 'LLM_SERVER_API_TOKEN'],
+    timeoutSeconds: 300,
     memory: '256MB'
   })
   .https.onRequest(async (req, res) => {
@@ -304,49 +313,70 @@ exports.openaiProxy = functions
       await checkRateLimit(decodedToken.uid, rateLimitAction, rateLimit);
 
       const apiKey = process.env.OPENAI_API_KEY;
-      if (!apiKey) {
-        console.error('No API key configured. Set the OPENAI_API_KEY Firebase secret.');
+      const localConfig = getLocalLlmConfig();
+
+      if (!apiKey && !localConfig) {
+        console.error('No AI upstream configured. Set the OPENAI_API_KEY Firebase secret and/or LLM_SERVER_URL.');
         res.status(500).json({ error: 'Service configuration error' });
         return;
       }
-      
-      // The app sends OpenAI-format requests directly — no transformation needed.
-      // Just forward the payload as-is to OpenAI's Chat Completions API.
+
       if (!Array.isArray(rawPayload.messages) || rawPayload.messages.length === 0) {
         res.status(400).json({ error: 'Request must include a non-empty messages array.' });
         return;
       }
 
-      // Ensure the payload has the required fields for OpenAI Chat Completions.
+      // ── Primary: self-hosted LLM (Ollama on the Oracle Always-Free VM) ──
+      // Cost-free path — OpenAI credits are only spent when this is down.
+      if (localConfig) {
+        const localOutcome = await forwardCompletion({
+          url: localConfig.url,
+          headers: {
+            'content-type': 'application/json',
+            ...(localConfig.apiToken
+              ? { authorization: `Bearer ${localConfig.apiToken}` }
+              : {}),
+          },
+          body: buildLocalBody(rawPayload, localConfig),
+          timeoutMs: localConfig.timeoutMs,
+        });
+
+        if (localOutcome.status >= 200 && localOutcome.status < 300) {
+          res.status(localOutcome.status).json(localOutcome.data);
+          return;
+        }
+
+        // Any non-2xx (including 429/5xx) or network failure falls back to
+        // OpenAI so AI features stay available while the VM is down.
+        console.warn(
+          `Local LLM request failed (${localOutcome.status}); falling back to OpenAI.`,
+          localOutcome.data?.error || localOutcome.data?.message || ''
+        );
+      }
+
+      // ── Fallback: OpenAI (only reached when the local server is down or not configured) ──
+      if (!apiKey) {
+        console.error('No API key configured. Set the OPENAI_API_KEY Firebase secret.');
+        res.status(500).json({ error: 'Service configuration error' });
+        return;
+      }
+
       // GPT-5.x models (GPT-4o was retired in Feb 2026) reject max_tokens and
       // only accept temperature/top_p when reasoning effort is 'none', so we
       // normalize to max_completion_tokens and default reasoning_effort to
       // 'none' unless the client explicitly requested another effort level.
-      const openaiBody = {
-        model: rawPayload.model || 'gpt-5.6-terra',
-        messages: rawPayload.messages || [],
-        temperature: rawPayload.temperature ?? 0.7,
-        max_completion_tokens: rawPayload.max_completion_tokens ?? rawPayload.max_tokens ?? 2000,
-        reasoning_effort: rawPayload.reasoning_effort || 'none',
-        stream: false,
-      };
-      
-      // Copy over any additional fields the client may have sent
-      if (rawPayload.response_format) openaiBody.response_format = rawPayload.response_format;
-      if (rawPayload.top_p != null) openaiBody.top_p = rawPayload.top_p;
-      if (rawPayload.frequency_penalty != null) openaiBody.frequency_penalty = rawPayload.frequency_penalty;
-      if (rawPayload.presence_penalty != null) openaiBody.presence_penalty = rawPayload.presence_penalty;
+      const openaiBody = buildOpenAiBody(rawPayload);
 
-      // Forward the request to OpenAI Chat Completions API
-      const openaiUrl = 'https://api.openai.com/v1/chat/completions';
-      
-      const openaiResponse = await fetch(openaiUrl, {
+      // Bound the OpenAI fallback so a hung upstream can never outlive the
+      // client's request timeout (the Cloud Function itself allows 300s).
+      const openaiResponse = await fetch(OPENAI_URL, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
           'authorization': `Bearer ${apiKey}`,
         },
-        body: JSON.stringify(openaiBody)
+        body: JSON.stringify(openaiBody),
+        signal: AbortSignal.timeout(55000),
       });
       
       const data = await openaiResponse.json();

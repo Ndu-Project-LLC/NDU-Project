@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/services/business_system_integration_service.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 /// Screen for connecting CRM / ERP / Accounting integrations to a program.
 ///
@@ -129,6 +130,7 @@ class _BusinessSystemIntegrationsScreenState
  @override
  Widget build(BuildContext context) {
  return Scaffold(
+ floatingActionButton: const KazAiChatBubble(positioned: false),
  appBar: AppBar(
  title: Text(widget.programName != null
  ? 'Integrations · ${widget.programName}'

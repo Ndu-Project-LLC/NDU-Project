@@ -6,12 +6,14 @@
 /// - Standard header (logo + breadcrumb + nav buttons + profile avatar with logout)
 /// - No sidebar (full-width dashboard, like Portfolio Dashboard)
 /// - Hero bento grid: Budget KPI + Planned vs Actual chart + Radial progress gauge
-/// - Project Health Matrix table with sparkline budget trends
+/// - Project Status table with sparkline budget trends
 /// - Critical Risks + Resource Capacity side-by-side
 /// - Escalation Summary + Recent Activity timeline + Visual Context card
 /// - Floating Action Button
 /// - Custom radial gauge painter with animated sweep
 library;
+
+import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,10 +26,15 @@ import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/services/portfolio_service.dart';
 import 'package:ndu_project/models/user_model.dart';
+import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/screens/initiation_phase_screen.dart';
+import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/services/user_service.dart';
+import 'package:ndu_project/utils/navigation_route_resolver.dart';
 import 'package:ndu_project/services/program_service.dart';
 import 'package:ndu_project/services/project_service.dart';
 import 'package:ndu_project/widgets/compact_action_button.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/screens/group_into_portfolio_screen.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
@@ -242,6 +249,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  final user = FirebaseAuth.instance.currentUser;
 
  return Scaffold(
+ floatingActionButton: const KazAiChatBubble(positioned: false),
  backgroundColor: _bg,
  body: SafeArea(
  child: StreamBuilder<List<ProgramModel>>(
@@ -410,7 +418,9 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  if (firstName.isNotEmpty) {
  return '$firstName Program';
  }
- return 'Program ${DateTime.now().millisecondsSinceEpoch.toString().substring(0, 8)}';
+ // Fallback when no project name is available — no more opaque
+ // "Program <timestamp>" titles.
+ return 'Portfolio Dashboard';
  }
 
  // ─── Compute real metrics from projects + programs ─────────────────────
@@ -1143,33 +1153,36 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Portfolio metrics row
-                  Wrap(
-                    spacing: 24,
-                    runSpacing: 16,
+                  // Portfolio metrics row — laid out horizontally so the
+                  // stat cards sit side by side at every screen width.
+                  Row(
                     children: [
                       _portfolioMetric(
                         label: 'Total Budget',
                         value: _formatBudget(totalBudget),
                         icon: Icons.account_balance_wallet_outlined,
                       ),
+                      const SizedBox(width: 24),
                       _portfolioMetric(
                         label: 'Avg Progress',
                         value: '${(avgProgress * 100).round()}%',
                         icon: Icons.trending_up,
                       ),
+                      const SizedBox(width: 24),
                       _portfolioMetric(
                         label: 'Healthy',
                         value: '$healthyCount',
                         icon: Icons.check_circle_outline,
                         valueColor: _emerald,
                       ),
+                      const SizedBox(width: 24),
                       _portfolioMetric(
                         label: 'At Risk',
                         value: '$atRiskCount',
                         icon: Icons.warning_amber_outlined,
                         valueColor: _amber,
                       ),
+                      const SizedBox(width: 24),
                       _portfolioMetric(
                         label: 'Critical',
                         value: '$criticalCount',
@@ -1243,71 +1256,141 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
   }
 
   // Task 12: row inside the expanded portfolio card showing one
-  // project's name + progress + owner.
+  // project's name + progress + owner. Tapping the row opens the
+  // project so it can be worked on directly from the portfolio.
   Widget _portfolioProjectRow(ProjectRecord p) {
     final progress = (p.progress.isNaN ? 0 : p.progress.clamp(0, 1)) * 100;
+    final progressColor =
+        progress >= 67 ? _emerald : (progress >= 34 ? _amber : _crimson);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              p.name.isEmpty ? 'Untitled project' : p.name,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: _onSurface,
-                fontFamily: appFontFamily,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: () => _openProject(p),
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    p.name.isEmpty ? 'Untitled project' : p.name,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _onSurface,
+                      fontFamily: appFontFamily,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 80,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: progress / 100,
+                      minHeight: 6,
+                      backgroundColor: _surfaceHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 50,
+                  child: Text(
+                    '${progress.round()}%',
+                    textAlign: TextAlign.end,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _onSurface,
+                      fontFamily: appFontFamily,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 140,
+                  child: Text(
+                    p.ownerName.isEmpty ? 'Unassigned' : p.ownerName,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: _onSurfaceVariant,
+                      fontFamily: appFontFamily,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: _onSurfaceVariant.withValues(alpha: 0.6),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 80,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: progress / 100,
-                minHeight: 6,
-                backgroundColor: _surfaceHighest,
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(progress >= 67 ? _emerald : progress >= 34 ? _amber : _crimson),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 50,
-            child: Text(
-              '${progress.round()}%',
-              textAlign: TextAlign.end,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: _onSurface,
-                fontFamily: appFontFamily,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 140,
-            child: Text(
-              p.ownerName.isEmpty ? 'Unassigned' : p.ownerName,
-              style: const TextStyle(
-                fontSize: 12,
-                color: _onSurfaceVariant,
-                fontFamily: appFontFamily,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  // ── Open project from a portfolio row ──────────────────────────────────
+  // Loads the project workspace and navigates to its last checkpoint,
+  // mirroring the open-project flow used across the other dashboards.
+  Future<void> _openProject(ProjectRecord project) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      final provider = ProjectDataInherited.read(context);
+      final success = await provider
+          .loadFromFirebase(project.id)
+          .timeout(const Duration(seconds: 35));
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(provider.lastError ?? 'Unable to open project'),
+          backgroundColor: const Color(0xFFEF4444),
+        ));
+        return;
+      }
+      final checkpoint = project.checkpointRoute.isNotEmpty
+          ? project.checkpointRoute
+          : await ProjectNavigationService.instance.getLastPage(project.id);
+      if (!mounted) return;
+      final screen = NavigationRouteResolver.resolveCheckpointToScreen(
+        checkpoint.isEmpty ? 'initiation' : checkpoint,
+        context,
+      );
+      context.push(
+        NavigationRouteResolver.resolveCheckpointToUrl(
+            checkpoint.isEmpty ? 'initiation' : checkpoint),
+        extra: screen ?? const InitiationPhaseScreen(),
+      );
+    } on TimeoutException {
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Project load timed out. Please retry.'),
+        backgroundColor: Colors.orange,
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error opening project: $e')));
+    }
   }
 
   // Task 12: delete-confirmation dialog. Calls
@@ -1825,17 +1908,9 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
 
  // ─── Main Grid ───────────────────────────────────────────────────────────
  Widget _buildMainGrid(BuildContext context, {_ProgramMetrics? metrics}) {
- final width = MediaQuery.sizeOf(context).width;
- // Desktop (>1180): 2-column main grid (8:4)
- // Tablet (700-1180): 1-column main grid (left column above, then right column)
- // Mobile (<700): stacked vertically
- if (width > 1180) {
- return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
- Expanded(flex: 8, child: _leftColumn(metrics: metrics)),
- const SizedBox(width: 24),
- Expanded(flex: 4, child: _rightColumn(metrics: metrics)),
- ]);
- }
+ // Stack the left column (Project Status, risks, capacity) on top of the
+ // right column (Escalations, Recent Activity, Visual Context) at every
+ // screen width instead of placing them side by side.
  return Column(children: [
  _leftColumn(metrics: metrics),
  const SizedBox(height: 24),
@@ -1843,7 +1918,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  ]);
  }
 
- // ─── Left Column: Health Matrix + Risks + Capacity ───────────────────────
+ // ─── Left Column: Project Status + Risks + Capacity ─────────────────────
  Widget _leftColumn({_ProgramMetrics? metrics}) {
  final width = MediaQuery.sizeOf(context).width;
  final sideBySide = width > 1180;
@@ -1886,8 +1961,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  ),
  child: Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
- children: [
- const Text('Project Health Matrix',
+ children: [  const Text('Project Status',
  style: TextStyle(
  color: _primary,
  fontSize: 18,

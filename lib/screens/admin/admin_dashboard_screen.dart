@@ -3,6 +3,7 @@ import 'package:ndu_project/models/user_role.dart';
 import 'package:ndu_project/services/permission_service.dart';
 import 'user_management_screen.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 /// World-class Admin Dashboard for platform management
 /// Provides comprehensive overview and management capabilities
@@ -24,6 +25,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SafeArea(
         child: Row(
           children: [

@@ -20,6 +20,7 @@ import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/utils/wbs_to_work_item_converter.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 class ExecutionWorkPackagesScreen extends StatefulWidget {
   const ExecutionWorkPackagesScreen({super.key});
 
@@ -870,6 +871,7 @@ class _ExecutionWorkPackagesScreenState
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Work Packages',
       appBarTitle: 'Execution Work Packages',
+      floatingActionButton: const KazAiChatBubble(positioned: false),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

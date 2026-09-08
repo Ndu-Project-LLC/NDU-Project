@@ -6,6 +6,7 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 class _LessonItem {
  String id;
@@ -62,6 +63,7 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  @override
  Widget build(BuildContext context) {
  return Scaffold(
+ floatingActionButton: const KazAiChatBubble(positioned: false),
  backgroundColor: Colors.grey[50],
  body: SafeArea(
  top: true,

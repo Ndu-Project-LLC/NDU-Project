@@ -8,6 +8,7 @@ import '../models/program_model.dart';
 import '../services/project_service.dart';
 import '../services/program_service.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/kaz_ai_chat_bubble.dart';
 
 class MobileDashboardScreen extends StatelessWidget {
  const MobileDashboardScreen({super.key});
@@ -23,6 +24,7 @@ class MobileDashboardScreen extends StatelessWidget {
  : ProgramService.streamPrograms(ownerId: user.uid);
 
  return Scaffold(
+ floatingActionButton: const KazAiChatBubble(positioned: false),
  appBar: AppBar(
  title: const Text('NDU mobile lightspeed'),
  elevation: 0,

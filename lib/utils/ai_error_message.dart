@@ -12,6 +12,19 @@ String aiErrorMessage(Object error) {
   final raw = error.toString();
   final lower = raw.toLowerCase();
 
+  // User is signed out / AI requests are blocked until authentication is
+  // restored. This is the most common UX issue in the app and should be
+  // surfaced as an actionable sign-in message instead of a raw exception.
+  if (lower.contains('please sign in before using ai') ||
+      lower.contains('openaiauthenticationrequiredexception') ||
+      lower.contains('unable to authenticate ai request') ||
+      lower.contains('sign in before using ai') ||
+      lower.contains('authentication required') ||
+      lower.contains('not authenticated') ||
+      lower.contains('currentuser == null')) {
+    return 'Please sign in before using AI.';
+  }
+
   // Billing / quota exhaustion (OpenAI HTTP 429, insufficient_quota,
   // credit_balance_exhausted, "no credits remaining", …).
   if (raw.contains('429') ||

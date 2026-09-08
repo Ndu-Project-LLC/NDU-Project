@@ -11,7 +11,18 @@ import 'package:ndu_project/services/project_intelligence_service.dart';
 
 /// Provider that manages project data state across the entire application
 class ProjectDataProvider extends ChangeNotifier {
-  ProjectDataProvider();
+  ProjectDataProvider() {
+    // Register as the app-wide provider so router-level observers without a
+    // BuildContext (e.g. [ContinuityRouteObserver]) can refresh the
+    // deterministic continuity snapshot on every page push. Mirrors the
+    // existing [lastKnownProjectId] app-wide static pattern.
+    active = this;
+  }
+
+  /// Most-recently-created app-level [ProjectDataProvider] instance. Used by
+  /// the router-level [ContinuityRouteObserver] to call
+  /// [prepareForCheckpoint] when the user navigates between pages.
+  static ProjectDataProvider? active;
 
   /// Most-recently-loaded project ID across all [ProjectDataProvider]
   /// instances in the app. Used by the router-level [ActivityAutoLogger]

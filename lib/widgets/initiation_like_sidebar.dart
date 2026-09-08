@@ -141,6 +141,10 @@ import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/screens/ai_recommendations_screen.dart';
+import 'package:ndu_project/screens/ai_integrations_screen.dart';
+import 'package:ndu_project/screens/agile_ai_coach_screen.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 /// Sidebar styled to match InitiationPhaseScreen's sidebar.
 class InitiationLikeSidebar extends StatefulWidget {
@@ -487,6 +491,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   late bool _projectServicesExpanded = _sharedProjectServicesExpanded ?? false;
   late bool _agileWireframeExpanded = _sharedAgileWireframeExpanded ?? false;
   late bool _designPlanningExpanded = _sharedDesignPlanningExpanded ?? false;
+  bool _kazAiExpanded = false;
   late final ScrollController _scrollController =
       ScrollController(initialScrollOffset: _sharedScrollOffset);
 
@@ -2524,6 +2529,35 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         onTap: () => HomeScreen.open(context),
         isActive: _isActiveLabel('Home'),
       ),
+      _buildExpandableHeader(
+        Icons.smart_toy_outlined,
+        'KAZ AI',
+        expanded: _kazAiExpanded,
+        onTap: () => setState(() => _kazAiExpanded = !_kazAiExpanded),
+        isActive: _isActiveLabel('KAZ AI'),
+      ),
+      if (_kazAiExpanded) ...[
+        _buildSubMenuItem(
+          'Ask KAZ AI',
+          onTap: () => KazAiChatBubble.openChat(context),
+          isActive: _isActiveLabel('Ask KAZ AI'),
+        ),
+        _buildSubMenuItem(
+          'AI Recommendations',
+          onTap: () => AiRecommendationsScreen.open(context),
+          isActive: _isActiveLabel('AI Recommendations'),
+        ),
+        _buildSubMenuItem(
+          'AI Integrations',
+          onTap: () => AiIntegrationsScreen.open(context),
+          isActive: _isActiveLabel('AI Integrations'),
+        ),
+        _buildSubMenuItem(
+          'Agile AI Coach',
+          onTap: () => AgileAiCoachScreen.open(context),
+          isActive: _isActiveLabel('Agile AI Coach'),
+        ),
+      ],
       _buildExpandableHeader(
         Icons.flag_outlined,
         'Initiation Phase',

@@ -60,19 +60,18 @@ class _ProgramTeammatesScreenState extends State<ProgramTeammatesScreen> {
       FirebaseAuth.instance.currentUser?.email ?? '';
   String get _currentUserName => FirebaseAuthService.displayNameOrEmail();
 
-  void _showInviteSheet() {
+  void _showInviteDialog() {
     _emailController.clear();
     _nameController.clear();
     _selectedRole = 'Viewer';
     _inviteError = null;
     _inviteSuccess = null;
 
-    showModalBottomSheet(
+    showDialog<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      barrierDismissible: true,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => _InviteBottomSheet(
+        builder: (ctx, setDialogState) => _InviteDialog(
           emailController: _emailController,
           nameController: _nameController,
           selectedRole: _selectedRole,
@@ -80,11 +79,11 @@ class _ProgramTeammatesScreenState extends State<ProgramTeammatesScreen> {
           isInviting: _isInviting,
           inviteError: _inviteError,
           inviteSuccess: _inviteSuccess,
-          onRoleChanged: (v) => setSheetState(() => _selectedRole = v!),
+          onRoleChanged: (v) => setDialogState(() => _selectedRole = v!),
           onInvite: () async {
-            setSheetState(() => _isInviting = true);
+            setDialogState(() => _isInviting = true);
             await _sendInvitation();
-            if (ctx.mounted) setSheetState(() {});
+            if (ctx.mounted) setDialogState(() {});
           },
         ),
       ),
@@ -242,7 +241,7 @@ class _ProgramTeammatesScreenState extends State<ProgramTeammatesScreen> {
           ),
           const Spacer(),
           ElevatedButton.icon(
-            onPressed: _showInviteSheet,
+            onPressed: _showInviteDialog,
             icon: const Icon(Icons.person_add_outlined, size: 18),
             label: const Text('Invite Teammate'),
             style: ElevatedButton.styleFrom(
@@ -680,9 +679,9 @@ class _ProgramTeammatesScreenState extends State<ProgramTeammatesScreen> {
   }
 }
 
-// ─── Invite Bottom Sheet ─────────────────────────────────────────────────
-class _InviteBottomSheet extends StatelessWidget {
-  const _InviteBottomSheet({
+// ─── Invite Dialog ───────────────────────────────────────────────────────
+class _InviteDialog extends StatelessWidget {
+  const _InviteDialog({
     required this.emailController,
     required this.nameController,
     required this.selectedRole,
@@ -712,32 +711,34 @@ class _InviteBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+    return Dialog(
+      backgroundColor: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
       ),
-      decoration: const BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Handle
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: _outline,
-                  borderRadius: BorderRadius.circular(2),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: _outline,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
             const Text(
               'Invite Teammate',
               style: TextStyle(
@@ -869,6 +870,7 @@ class _InviteBottomSheet extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

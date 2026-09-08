@@ -26,6 +26,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 class TeamTrainingAndBuildingScreen extends StatefulWidget {
   const TeamTrainingAndBuildingScreen({super.key});
@@ -125,6 +126,7 @@ class _TeamTrainingAndBuildingScreenState
     // --- Mobile layout ---
     if (isMobile) {
       return Scaffold(
+        floatingActionButton: const KazAiChatBubble(positioned: false),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         drawer: Drawer(
           width: sidebarWidth,
@@ -154,6 +156,7 @@ class _TeamTrainingAndBuildingScreenState
 
     // --- Desktop layout ---
     return Scaffold(
+      floatingActionButton: const KazAiChatBubble(positioned: false),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         top: true,

@@ -241,6 +241,7 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/subscription_service.dart';
 import 'package:ndu_project/services/activity_auto_logger.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/utils/continuity_route_observer.dart';
 import 'package:ndu_project/screens/pricing/mobile_pricing_screen.dart';
 import 'package:ndu_project/routing/shimmer_page_transition.dart';
 
@@ -586,6 +587,10 @@ class AppRouter {
   static final GoRouter main = _guardedRouter('main', () => GoRouter(
     debugLogDiagnostics: kDebugMode,
     initialLocation: PlatformRouter.getInitialRoute(),
+    // Refresh the deterministic continuity snapshot on EVERY page push, so
+    // prior-phase data is carried page-to-page with real project data — no
+    // AI involvement. See [ContinuityRouteObserver].
+    observers: [ContinuityRouteObserver.instance],
     redirect: (context, state) async {
       // Enforce admin-host policy if a user is present
       User? user;

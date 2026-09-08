@@ -24,6 +24,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -264,6 +265,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
     final double hp = isMobile ? 20 : 40;
 
     return Scaffold(
+      floatingActionButton: const KazAiChatBubble(positioned: false),
       backgroundColor: _kBackground,
       body: SafeArea(
         child: Row(

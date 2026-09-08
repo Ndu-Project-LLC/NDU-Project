@@ -217,10 +217,15 @@ jobs:
       # Keep the authenticated AI proxy in sync with the staging web build.
       # FIREBASE_SERVICE_ACCOUNT is optional so the web deploy remains usable
       # in repositories that only have the cross-repository Pages token.
+      # LLM_SERVER_URL / LLM_MODEL_NAME (optional) carry the self-hosted LLM
+      # config into CI deploys — functions/.env is gitignored, so without them
+      # the proxy deploys in OpenAI-only mode.
       - name: Deploy OpenAI proxy function
         continue-on-error: true
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          LLM_SERVER_URL: ${{ secrets.LLM_SERVER_URL }}
+          LLM_MODEL_NAME: ${{ secrets.LLM_MODEL_NAME }}
         run: |
           set -eu
           if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
@@ -230,6 +235,12 @@ jobs:
           SERVICE_ACCOUNT_FILE="$RUNNER_TEMP/firebase-service-account.json"
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$SERVICE_ACCOUNT_FILE"
           trap 'rm -f "$SERVICE_ACCOUNT_FILE"' EXIT
+          if [ -n "$LLM_SERVER_URL" ]; then
+            printf 'LLM_SERVER_URL=%s\n' "$LLM_SERVER_URL" >> functions/.env
+            if [ -n "$LLM_MODEL_NAME" ]; then
+              printf 'LLM_MODEL_NAME=%s\n' "$LLM_MODEL_NAME" >> functions/.env
+            fi
+          fi
           export GOOGLE_APPLICATION_CREDENTIALS="$SERVICE_ACCOUNT_FILE"
           npm install --global firebase-tools
           firebase deploy --only functions:openaiProxy \

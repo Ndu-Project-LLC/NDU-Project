@@ -65,14 +65,25 @@ class DarkModeColors {
 /// Extension on BuildContext for easy access to adaptive colors
 extension AdaptiveColors on BuildContext {
   bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
+
+  // ── Surfaces ────────────────────────────────────────────────────
   Color get adaptiveSurface => isDarkMode ? DarkModeColors.cardBackground : Colors.white;
   Color get adaptiveBackground => isDarkMode ? DarkModeColors.darkSurface : Colors.white;
+  Color get adaptiveCard => isDarkMode ? DarkModeColors.cardBackground : Colors.white;
+  Color get adaptiveSubtle => isDarkMode ? DarkModeColors.subtleBackground : const Color(0xFFF8FAFC);
+
+  // ── Text ────────────────────────────────────────────────────────
   Color get adaptiveTextPrimary => isDarkMode ? DarkModeColors.textPrimary : const Color(0xFF0F172A);
   Color get adaptiveTextSecondary => isDarkMode ? DarkModeColors.textSecondary : const Color(0xFF64748B);
+  Color get adaptiveTextMuted => isDarkMode ? DarkModeColors.textMuted : const Color(0xFF9CA3AF);
+  Color get adaptiveTextOnSurface => isDarkMode ? DarkModeColors.darkOnSurface : const Color(0xFF0F172A);
+
+  // ── Borders & Dividers ──────────────────────────────────────────
   Color get adaptiveBorder => isDarkMode ? DarkModeColors.border : const Color(0xFFE5E7EB);
-  Color get adaptiveSubtle => isDarkMode ? DarkModeColors.subtleBackground : const Color(0xFFF8FAFC);
+  Color get adaptiveDivider => isDarkMode ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE5E7EB);
+
+  // ── Accent ──────────────────────────────────────────────────────
   Color get adaptiveAccent => isDarkMode ? DarkModeColors.accent : LightModeColors.accent;
-  Color get adaptiveCard => isDarkMode ? DarkModeColors.cardBackground : Colors.white;
 }
 
 /// Semantic colors shared across light and dark themes

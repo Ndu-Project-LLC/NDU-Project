@@ -13,6 +13,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:ndu_project/project_controls/models/change_management_models.dart';
+import 'package:ndu_project/utils/iterable_extensions.dart';
 
 const String _currentUser = 'you@ndu.project';
 
@@ -56,28 +57,33 @@ class ChangeManagementProvider extends ChangeNotifier {
   DateTime get currentBaselineFinish => _currentBaselineFinish;
 
   // ─── Dashboard metrics ─────────────────────────────────────────────
-  int get openCRs => _changeRequests.where((cr) =>
-      cr.status == CMStatus.submitted ||
-      cr.status == CMStatus.underReview ||
-      cr.status == CMStatus.pendingApproval).length;
+  int get openCRs => _changeRequests
+      .where((cr) =>
+          cr.status == CMStatus.submitted ||
+          cr.status == CMStatus.underReview ||
+          cr.status == CMStatus.pendingApproval)
+      .length;
 
-  int get pendingApprovals => _changeRequests.where((cr) =>
-      cr.status == CMStatus.underReview ||
-      cr.status == CMStatus.pendingApproval).length;
+  int get pendingApprovals => _changeRequests
+      .where((cr) =>
+          cr.status == CMStatus.underReview ||
+          cr.status == CMStatus.pendingApproval)
+      .length;
 
-  int get approvedCRs => _changeRequests.where((cr) =>
-      cr.status == CMStatus.approved ||
-      cr.status == CMStatus.implemented).length;
+  int get approvedCRs => _changeRequests
+      .where((cr) =>
+          cr.status == CMStatus.approved || cr.status == CMStatus.implemented)
+      .length;
 
-  int get rejectedCRs => _changeRequests.where((cr) =>
-      cr.status == CMStatus.rejected).length;
+  int get rejectedCRs =>
+      _changeRequests.where((cr) => cr.status == CMStatus.rejected).length;
 
-  int get emergencyCRs => _changeRequests.where((cr) =>
-      cr.isEmergency).length;
+  int get emergencyCRs => _changeRequests.where((cr) => cr.isEmergency).length;
 
-  int get implementedCRs => _changeRequests.where((cr) =>
-      cr.status == CMStatus.implemented ||
-      cr.status == CMStatus.closed).length;
+  int get implementedCRs => _changeRequests
+      .where((cr) =>
+          cr.status == CMStatus.implemented || cr.status == CMStatus.closed)
+      .length;
 
   int get rebaselineCount => _baselineHistory.length;
 
@@ -90,11 +96,13 @@ class ChangeManagementProvider extends ChangeNotifier {
   /// Average approval cycle time (days from submission to approval) for
   /// approved CRs that have an approvedAt timestamp. Returns 0 when none.
   double get avgApprovalCycleDays {
-    final approved = _changeRequests.where((cr) =>
-        cr.approvedAt != null);
+    final approved = _changeRequests.where((cr) => cr.approvedAt != null);
     if (approved.isEmpty) return 0;
-    final totalDays = approved.fold<double>(0, (sum, cr) =>
-        sum + cr.approvedAt!.difference(cr.dateSubmitted).inDays.toDouble());
+    final totalDays = approved.fold<double>(
+        0,
+        (total, item) =>
+            total +
+            item.approvedAt!.difference(item.dateSubmitted).inDays.toDouble());
     return totalDays / approved.length;
   }
 
@@ -105,7 +113,8 @@ class ChangeManagementProvider extends ChangeNotifier {
     final today = DateTime(now.year, now.month, now.day);
     final counts = List<int>.filled(7, 0);
     for (final cr in _changeRequests) {
-      final d = DateTime(cr.dateSubmitted.year, cr.dateSubmitted.month, cr.dateSubmitted.day);
+      final d = DateTime(
+          cr.dateSubmitted.year, cr.dateSubmitted.month, cr.dateSubmitted.day);
       final diff = today.difference(d).inDays;
       if (diff >= 0 && diff < 7) counts[6 - diff] += 1;
     }
@@ -113,12 +122,14 @@ class ChangeManagementProvider extends ChangeNotifier {
   }
 
   double get totalCostImpact => _changeRequests
-      .where((cr) => cr.status == CMStatus.approved || cr.status == CMStatus.implemented)
-      .fold(0, (sum, cr) => sum + cr.impact.totalCostImpact);
+      .where((cr) =>
+          cr.status == CMStatus.approved || cr.status == CMStatus.implemented)
+      .fold(0, (total, item) => total + item.impact.totalCostImpact);
 
   double get totalScheduleImpact => _changeRequests
-      .where((cr) => cr.status == CMStatus.approved || cr.status == CMStatus.implemented)
-      .fold(0, (sum, cr) => sum + cr.impact.totalScheduleImpact);
+      .where((cr) =>
+          cr.status == CMStatus.approved || cr.status == CMStatus.implemented)
+      .fold(0, (total, item) => total + item.impact.totalScheduleImpact);
 
   // ─── CR Lifecycle ──────────────────────────────────────────────────
 
@@ -155,6 +166,7 @@ class ChangeManagementProvider extends ChangeNotifier {
     int? scheduleDaysImpact,
     double? contingencyDrawdownRequested,
     double? reserveDrawdownRequested,
+    List<CMImpactedDeliverable> deliverables = const [],
   }) {
     final crId = 'cm_${DateTime.now().millisecondsSinceEpoch}';
     final cr = CMChangeRequest(
@@ -187,10 +199,12 @@ class ChangeManagementProvider extends ChangeNotifier {
       scheduleDaysImpact: scheduleDaysImpact,
       contingencyDrawdownRequested: contingencyDrawdownRequested,
       reserveDrawdownRequested: reserveDrawdownRequested,
+      deliverables: deliverables,
     );
 
     _changeRequests = [..._changeRequests, cr];
     _addAudit('CR Created', '${cr.crNumber}: ${cr.title}', cr.id);
+    unawaited(_persistCR(cr));
     notifyListeners();
     return crId;
   }
@@ -210,96 +224,190 @@ class ChangeManagementProvider extends ChangeNotifier {
     ];
   }
 
-  void approveStep(String crId, {String? comments}) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+  /// Approve the current workflow step. On final approval the approver must
+  /// pick the drawdown source (contingency OR management reserve — never
+  /// both) and may specify the drawdown amount, per the Lusaka 22 call.
+  /// The drawdown is only applied to the chosen reserve.
+  void approveStep(
+    String crId, {
+    String? comments,
+    CMReserveSource? reserveSource,
+    double? drawdownAmount,
+  }) {
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('approveStep: CR not found: $crId');
+      return;
+    }
     final steps = cr.approvalSteps;
     final idx = cr.currentStepIndex;
     if (idx >= steps.length) return;
 
-    final updatedSteps = steps.asMap().map((i, s) => MapEntry(
-        i,
-        i == idx
-            ? s.copyWith(
-                decision: ApprovalDecision.approved,
-                decidedAt: DateTime.now(),
-                comments: comments,
-                assigneeName: _currentUser,
-              )
-            : s)).values.toList();
+    final updatedSteps = steps
+        .asMap()
+        .map((i, s) => MapEntry(
+            i,
+            i == idx
+                ? s.copyWith(
+                    decision: ApprovalDecision.approved,
+                    decidedAt: DateTime.now(),
+                    comments: comments,
+                    assigneeName: _currentUser,
+                  )
+                : s))
+        .values
+        .toList();
 
     final newIdx = idx + 1;
-    final allApproved = updatedSteps.every((s) => s.decision == ApprovalDecision.approved);
+    final allApproved =
+        updatedSteps.every((s) => s.decision == ApprovalDecision.approved);
 
-    _updateCR(crId, cr.copyWith(
-      approvalSteps: updatedSteps,
-      currentStepIndex: newIdx,
-      status: allApproved ? CMStatus.approved : CMStatus.pendingApproval,
-      approvedAt: allApproved ? DateTime.now() : cr.approvedAt,
-      triggersRebaseline: allApproved && cr.impact.requiresRebaseline,
-    ));
-
-    // Apply contingency/reserve usage on approval
+    // Apply the drawdown on final approval — from ONE reserve, chosen by the
+    // approver (contingency OR management reserve, never both). Computed
+    // BEFORE the single _updateCR below so the approval-step changes and the
+    // drawdown are persisted atomically (a second _updateCR built from the
+    // stale `cr` would wipe the approved steps / status / step index).
+    CMReserveSource? source;
+    double applied = 0;
     if (allApproved) {
+      source = reserveSource ??
+          (cr.contingencyDrawdownRequested != null &&
+                  (cr.reserveDrawdownRequested == null ||
+                      cr.contingencyDrawdownRequested! >=
+                          cr.reserveDrawdownRequested!)
+              ? CMReserveSource.contingency
+              : (cr.reserveDrawdownRequested != null
+                  ? CMReserveSource.managementReserve
+                  : CMReserveSource.contingency));
+
+      final requestedForSource = source == CMReserveSource.contingency
+          ? (cr.contingencyDrawdownRequested ?? 0)
+          : (cr.reserveDrawdownRequested ?? 0);
       final costImpact = cr.impact.totalCostImpact;
-      if (costImpact > 0) {
-        // Small changes eat into contingency first, then reserve
-        if (costImpact <= remainingContingency) {
-          _usedContingency += costImpact;
-          _addAudit('Contingency Used', '\$${costImpact.toStringAsFixed(0)} from contingency', crId);
+      final fallback = requestedForSource > 0
+          ? requestedForSource
+          : (costImpact > 0 ? costImpact : (cr.initialCostEstimate ?? 0));
+      final amount = (drawdownAmount ?? fallback).clamp(0.0, double.infinity);
+      final remaining = source == CMReserveSource.contingency
+          ? remainingContingency
+          : remainingReserve;
+      applied = amount > remaining ? remaining : amount;
+
+      if (applied > 0) {
+        if (source == CMReserveSource.contingency) {
+          _usedContingency += applied;
         } else {
-          final fromContingency = remainingContingency;
-          final fromReserve = costImpact - fromContingency;
-          _usedContingency += fromContingency;
-          _usedReserve += fromReserve;
-          _addAudit('Reserve Used', '\$${fromContingency.toStringAsFixed(0)} contingency + \$${fromReserve.toStringAsFixed(0)} reserve', crId);
+          _usedReserve += applied;
         }
+        _addAudit(
+          source == CMReserveSource.contingency
+              ? 'Contingency Drawdown'
+              : 'Management Reserve Drawdown',
+          '\$${applied.toStringAsFixed(0)} from ${source.label}'
+          '${applied < amount ? ' (clamped to available ${source.label})' : ''}',
+          crId,
+        );
       }
       _addAudit('CR Approved', '${cr.crNumber} fully approved', crId);
     }
+
+    _updateCR(
+        crId,
+        cr.copyWith(
+          approvalSteps: updatedSteps,
+          currentStepIndex: newIdx,
+          status: allApproved ? CMStatus.approved : CMStatus.pendingApproval,
+          approvedAt: allApproved ? DateTime.now() : cr.approvedAt,
+          triggersRebaseline: allApproved && cr.impact.requiresRebaseline,
+          drawdownReserve: allApproved ? source : cr.drawdownReserve,
+          drawdownAmount: allApproved && applied > 0 ? applied : cr.drawdownAmount,
+        ));
     notifyListeners();
   }
 
   void rejectCR(String crId, {String? reason}) {
-    _updateCR(crId, _changeRequests.firstWhere((c) => c.id == crId).copyWith(
-      status: CMStatus.rejected,
-    ));
+    final crForUpdate = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (crForUpdate == null) {
+      debugPrint('rejectCR: CR not found: $crId');
+      return;
+    }
+    _updateCR(
+        crId,
+        crForUpdate.copyWith(
+          status: CMStatus.rejected,
+        ));
     _addAudit('CR Rejected', reason ?? 'No reason provided', crId);
     notifyListeners();
   }
 
   void returnForRevision(String crId, {String? comments}) {
-    _updateCR(crId, _changeRequests.firstWhere((c) => c.id == crId).copyWith(
-      status: CMStatus.returned,
-    ));
+    final crForReturn = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (crForReturn == null) {
+      debugPrint('returnForRevision: CR not found: $crId');
+      return;
+    }
+    _updateCR(
+        crId,
+        crForReturn.copyWith(
+          status: CMStatus.returned,
+        ));
     _addAudit('CR Returned', comments ?? 'Returned for revision', crId);
     notifyListeners();
   }
 
   void implementCR(String crId, {String? notes}) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('implementCR: CR not found: $crId');
+      return;
+    }
 
     // Check if re-baseline is needed
     if (cr.triggersRebaseline) {
       _createBaselineRevision(cr);
     }
 
-    _updateCR(crId, cr.copyWith(
-      status: CMStatus.implemented,
-      implementedAt: DateTime.now(),
-      implementationNotes: notes,
-    ));
+    _updateCR(
+        crId,
+        cr.copyWith(
+          status: CMStatus.implemented,
+          implementedAt: DateTime.now(),
+          implementationNotes: notes,
+        ));
     _addAudit('CR Implemented', '${cr.crNumber} implemented', crId);
     notifyListeners();
   }
 
-  void closeCR(String crId, {String? closureNotes}) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
-    _updateCR(crId, cr.copyWith(
-      status: CMStatus.closed,
-      closedAt: DateTime.now(),
-      closureNotes: closureNotes,
-    ));
-    _addAudit('CR Closed', '${cr.crNumber} closed', crId);
+  /// Close the CR and record the actual cost so the close-out can show the
+  /// actual-vs-estimate variance (per the Lusaka 22 call: before a change is
+  /// closed, the actual cost must be compared to the estimate).
+  void closeCR(String crId, {String? closureNotes, double? actualCost}) {
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('closeCR: CR not found: $crId');
+      return;
+    }
+    final estimate = cr.initialCostEstimate ?? 0;
+    _updateCR(
+        crId,
+        cr.copyWith(
+          status: CMStatus.closed,
+          closedAt: DateTime.now(),
+          closureNotes: closureNotes,
+          actualCost: actualCost ?? cr.actualCost,
+        ));
+    if (actualCost != null) {
+      final variance = actualCost - estimate;
+      _addAudit(
+        'CR Closed',
+        '${cr.crNumber} closed — actual \$${actualCost.toStringAsFixed(0)} vs '
+            'estimate \$${estimate.toStringAsFixed(0)} '
+            '(\$${variance >= 0 ? '+' : ''}${variance.toStringAsFixed(0)})',
+        crId,
+      );
+    } else {
+      _addAudit('CR Closed', '${cr.crNumber} closed', crId);
+    }
     notifyListeners();
   }
 
@@ -313,7 +421,9 @@ class ChangeManagementProvider extends ChangeNotifier {
       updatedBaselines: cr.affectedBaselines,
     );
     _baselineHistory = [..._baselineHistory, revision];
-    _addAudit('Baseline Revised', 'v${revision.version} — ${cr.crNumber}', cr.id);
+    unawaited(_persistBaseline(revision));
+    _addAudit(
+        'Baseline Revised', 'v${revision.version} — ${cr.crNumber}', cr.id);
   }
 
   // ─── Impact Assessment Detail ──────────────────────────────────────
@@ -329,7 +439,11 @@ class ChangeManagementProvider extends ChangeNotifier {
     String? owner,
     DateTime? dueDate,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('updateImpactDimension: CR not found: $crId');
+      return;
+    }
     final dims = cr.impact.all;
     if (dimensionIndex < 0 || dimensionIndex >= dims.length) return;
     final existing = dims[dimensionIndex];
@@ -352,7 +466,11 @@ class ChangeManagementProvider extends ChangeNotifier {
   /// Bulk-replaces the CR's impact assessment (used by the Impact Detail
   /// tab's Save button which posts the whole grid in one transaction).
   void saveImpactAssessment(String crId, FullImpactAssessment assessment) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('saveImpactAssessment: CR not found: $crId');
+      return;
+    }
     _updateCR(crId, cr.copyWith(impact: assessment));
     _addAudit(
       'Impact Assessment Saved',
@@ -371,8 +489,13 @@ class ChangeManagementProvider extends ChangeNotifier {
     required String decisionMakerName,
     DateTime? dueDate,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
-    final stepId = 'step_${cr.approvalSteps.length + 1}_${DateTime.now().millisecondsSinceEpoch}';
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('addApprovalStep: CR not found: $crId');
+      return;
+    }
+    final stepId =
+        'step_${cr.approvalSteps.length + 1}_${DateTime.now().millisecondsSinceEpoch}';
     final newStep = CMApprovalStep(
       id: stepId,
       roleLabel: role.label,
@@ -401,25 +524,33 @@ class ChangeManagementProvider extends ChangeNotifier {
     String? escalationReason,
     String? delegatedFrom,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('recordApprovalDecision: CR not found: $crId');
+      return;
+    }
     final stepIndex = cr.approvalSteps.indexWhere((s) => s.id == stepId);
     if (stepIndex == -1) return;
 
-    final updatedSteps = cr.approvalSteps.asMap().map((i, s) {
-      if (i != stepIndex) return MapEntry(i, s);
-      return MapEntry(
-        i,
-        s.copyWith(
-          decision: decision,
-          decidedAt: DateTime.now(),
-          comments: comments,
-          assigneeName: s.assigneeName ?? _currentUser,
-          escalationTarget: escalationTarget,
-          escalationReason: escalationReason,
-          delegatedFrom: delegatedFrom,
-        ),
-      );
-    }).values.toList();
+    final updatedSteps = cr.approvalSteps
+        .asMap()
+        .map((i, s) {
+          if (i != stepIndex) return MapEntry(i, s);
+          return MapEntry(
+            i,
+            s.copyWith(
+              decision: decision,
+              decidedAt: DateTime.now(),
+              comments: comments,
+              assigneeName: s.assigneeName ?? _currentUser,
+              escalationTarget: escalationTarget,
+              escalationReason: escalationReason,
+              delegatedFrom: delegatedFrom,
+            ),
+          );
+        })
+        .values
+        .toList();
 
     // Advance current step pointer if the decided step was the active one.
     final newCurrentIdx = stepIndex == cr.currentStepIndex
@@ -427,14 +558,17 @@ class ChangeManagementProvider extends ChangeNotifier {
         : cr.currentStepIndex;
 
     // If any step is rejected, mark whole CR returned for revision.
-    final anyRejected = updatedSteps.any((s) => s.decision == ApprovalDecision.rejected);
+    final anyRejected =
+        updatedSteps.any((s) => s.decision == ApprovalDecision.rejected);
     final newStatus = anyRejected ? CMStatus.returned : cr.status;
 
-    _updateCR(crId, cr.copyWith(
-      approvalSteps: updatedSteps,
-      currentStepIndex: newCurrentIdx,
-      status: newStatus,
-    ));
+    _updateCR(
+        crId,
+        cr.copyWith(
+          approvalSteps: updatedSteps,
+          currentStepIndex: newCurrentIdx,
+          status: newStatus,
+        ));
     _addAudit(
       'Approval Decision',
       '${cr.crNumber} • ${updatedSteps[stepIndex].roleLabel} → ${decision.label}',
@@ -447,20 +581,26 @@ class ChangeManagementProvider extends ChangeNotifier {
   /// is closed as either approved (→ triggers re-baseline if scope change
   /// exceeds threshold) or rejected (→ audit entry only).
   void finalizeApproval(String crId) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('finalizeApproval: CR not found: $crId');
+      return;
+    }
     if (cr.approvalSteps.isEmpty) return;
     final allTerminal = cr.approvalSteps.every((s) => s.isTerminal);
     if (!allTerminal) return;
 
-    final allApproved = cr.approvalSteps.every((s) =>
-        s.decision == ApprovalDecision.approved);
+    final allApproved =
+        cr.approvalSteps.every((s) => s.decision == ApprovalDecision.approved);
     if (allApproved) {
       final willRebaseline = cr.impact.requiresRebaseline;
-      _updateCR(crId, cr.copyWith(
-        status: CMStatus.approved,
-        approvedAt: DateTime.now(),
-        triggersRebaseline: willRebaseline,
-      ));
+      _updateCR(
+          crId,
+          cr.copyWith(
+            status: CMStatus.approved,
+            approvedAt: DateTime.now(),
+            triggersRebaseline: willRebaseline,
+          ));
       _addAudit(
         'Workflow Finalized',
         '${cr.crNumber} • APPROVED${willRebaseline ? " (re-baseline triggered)" : ""}',
@@ -474,9 +614,11 @@ class ChangeManagementProvider extends ChangeNotifier {
         );
       }
     } else {
-      _updateCR(crId, cr.copyWith(
-        status: CMStatus.rejected,
-      ));
+      _updateCR(
+          crId,
+          cr.copyWith(
+            status: CMStatus.rejected,
+          ));
       _addAudit(
         'Workflow Finalized',
         '${cr.crNumber} • REJECTED',
@@ -496,7 +638,11 @@ class ChangeManagementProvider extends ChangeNotifier {
     String? assignee,
     DateTime? dueDate,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('addImplementationTask: CR not found: $crId');
+      return;
+    }
     final task = ImplementationTask(
       id: 'task_${DateTime.now().millisecondsSinceEpoch}',
       workPackageId: workPackageId,
@@ -504,10 +650,12 @@ class ChangeManagementProvider extends ChangeNotifier {
       assignee: assignee,
       dueDate: dueDate,
     );
-    _updateCR(crId, cr.copyWith(
-      implementationTasks: [...cr.implementationTasks, task],
-      affectedWorkPackages: [...cr.affectedWorkPackages, workPackageId],
-    ));
+    _updateCR(
+        crId,
+        cr.copyWith(
+          implementationTasks: [...cr.implementationTasks, task],
+          affectedWorkPackages: [...cr.affectedWorkPackages, workPackageId],
+        ));
     _addAudit(
       'Implementation Task Added',
       '${cr.crNumber} • $workPackageName',
@@ -524,14 +672,20 @@ class ChangeManagementProvider extends ChangeNotifier {
     String? assignee,
     DateTime? dueDate,
   }) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('updateImplementationTask: CR not found: $crId');
+      return;
+    }
     final updatedTasks = cr.implementationTasks.map((t) {
       if (t.id != taskId) return t;
       return t.copyWith(
         status: status ?? t.status,
         assignee: assignee ?? t.assignee,
         dueDate: dueDate ?? t.dueDate,
-        completedAt: status == ImplementationStatus.done ? DateTime.now() : t.completedAt,
+        completedAt: status == ImplementationStatus.done
+            ? DateTime.now()
+            : t.completedAt,
       );
     }).toList();
     _updateCR(crId, cr.copyWith(implementationTasks: updatedTasks));
@@ -540,10 +694,15 @@ class ChangeManagementProvider extends ChangeNotifier {
     final allDone = updatedTasks.isNotEmpty &&
         updatedTasks.every((t) => t.status == ImplementationStatus.done);
     if (allDone && cr.status == CMStatus.approved) {
-      _updateCR(crId, _changeRequests.firstWhere((c) => c.id == crId).copyWith(
-        status: CMStatus.implemented,
-        implementedAt: DateTime.now(),
-      ));
+      final crForImpl = _changeRequests.firstOrNull((c) => c.id == crId);
+      if (crForImpl != null) {
+        _updateCR(
+            crId,
+            crForImpl.copyWith(
+              status: CMStatus.implemented,
+              implementedAt: DateTime.now(),
+            ));
+      }
     }
 
     _addAudit(
@@ -558,12 +717,17 @@ class ChangeManagementProvider extends ChangeNotifier {
   /// CR's cost impact, and writes a re-baseline audit entry. Returns the
   /// new revision version number.
   int applyToBaseline(String crId) {
-    final cr = _changeRequests.firstWhere((c) => c.id == crId);
+    final cr = _changeRequests.firstOrNull((c) => c.id == crId);
+    if (cr == null) {
+      debugPrint('applyToBaseline: CR not found: $crId');
+      return _baselineHistory.length + 1; // no-op fallback
+    }
     final previousBAC = _currentBAC;
     final costImpact = cr.impact.totalCostImpact;
     final revisedBAC = previousBAC + costImpact;
     final previousHash = _currentScopeHash;
-    final revisedHash = 'sha256:${cr.id}_${cr.impact.compositeImpactScore.toStringAsFixed(2)}_${DateTime.now().millisecondsSinceEpoch}';
+    final revisedHash =
+        'sha256:${cr.id}_${cr.impact.compositeImpactScore.toStringAsFixed(2)}_${DateTime.now().millisecondsSinceEpoch}';
     final previousFinish = _currentBaselineFinish;
     final scheduleDelta = cr.impact.totalScheduleImpact.round();
     final revisedFinish = previousFinish.add(Duration(days: scheduleDelta));
@@ -584,6 +748,7 @@ class ChangeManagementProvider extends ChangeNotifier {
       approver: _currentUser,
     );
     _baselineHistory = [..._baselineHistory, revision];
+    unawaited(_persistBaseline(revision));
     _currentBAC = revisedBAC;
     _currentScopeHash = revisedHash;
     _currentBaselineFinish = revisedFinish;
@@ -606,6 +771,7 @@ class ChangeManagementProvider extends ChangeNotifier {
     _currentScopeHash = last.previousScopeHash ?? _currentScopeHash;
     _currentBaselineFinish = last.previousFinish ?? _currentBaselineFinish;
     _baselineHistory = _baselineHistory.sublist(0, _baselineHistory.length - 1);
+    unawaited(_deleteBaselineRevision(last.version));
     _addAudit(
       'Baseline Rollback',
       'v${last.version} reverted • BAC restored to \$${_currentBAC.toStringAsFixed(0)}',
@@ -618,20 +784,25 @@ class ChangeManagementProvider extends ChangeNotifier {
   // ─── Helpers ───────────────────────────────────────────────────────
 
   void _updateCR(String id, CMChangeRequest updated) {
-    _changeRequests = _changeRequests.map((c) => c.id == id ? updated : c).toList();
+    _changeRequests =
+        _changeRequests.map((c) => c.id == id ? updated : c).toList();
+    unawaited(_persistCR(updated));
   }
 
   int _auditCounter = 0;
-  void _addAudit(String action, String details, String? crId, {DateTime? timestamp}) {
+  void _addAudit(String action, String details, String? crId,
+      {DateTime? timestamp}) {
     _auditCounter++;
-    _auditTrail = [..._auditTrail, CMAuditEntry(
+    final entry = CMAuditEntry(
       id: 'audit_${timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch}_$_auditCounter',
       user: _currentUser,
       timestamp: timestamp ?? DateTime.now(),
       action: action,
       details: details,
       linkedCRId: crId,
-    )];
+    );
+    _auditTrail = [..._auditTrail, entry];
+    unawaited(_persistAudit(entry));
   }
 
   // ─── Seed demo data ────────────────────────────────────────────────
@@ -642,16 +813,22 @@ class ChangeManagementProvider extends ChangeNotifier {
         id: 'cm_demo_1',
         crNumber: 'CR-2026-001',
         title: 'Add Fire Suppression System',
-        description: 'Local fire code update requires automated suppression in Site Prep area',
+        description:
+            'Local fire code update requires automated suppression in Site Prep area',
         changeType: CMChangeType.scope,
         priority: CMPriority.high,
         status: CMStatus.underReview,
         submittedBy: 'John Smith (Site Manager)',
         dateSubmitted: DateTime(2026, 6, 18),
-        businessJustification: 'Regulatory compliance — new fire code effective Q3 2026',
+        businessJustification:
+            'Regulatory compliance — new fire code effective Q3 2026',
         rootCause: 'Regulatory change',
-        alternativesConsidered: 'Option A: Manual fire watch (rejected — labour cost). Option B: Portable extinguishers only (rejected — insufficient coverage).',
-        affectedWorkPackages: const ['WP-1.2 Site Prep', 'WP-3.4 Mechanical Rough-In'],
+        alternativesConsidered:
+            'Option A: Manual fire watch (rejected — labour cost). Option B: Portable extinguishers only (rejected — insufficient coverage).',
+        affectedWorkPackages: const [
+          'WP-1.2 Site Prep',
+          'WP-3.4 Mechanical Rough-In'
+        ],
         deliverablesAdded: 1,
         deliverablesModified: 2,
         deliverablesRemoved: 0,
@@ -659,45 +836,149 @@ class ChangeManagementProvider extends ChangeNotifier {
         scheduleDaysImpact: 14,
         contingencyDrawdownRequested: 350000,
         impact: const FullImpactAssessment(
-          scope: ImpactDimension(name: 'Scope', impact: 'New deliverable: Fire suppression installation', isCritical: true, impactLevel: 5, narrative: 'Adds new scope item: complete NFPA-13 sprinkler system in Site Prep and adjacent mechanical rooms.', owner: 'Engineering Lead', dueDate: null),
-          schedule: ImpactDimension(name: 'Schedule', scheduleDays: 14, isCritical: true, impactLevel: 4, narrative: 'Adds 14 working days to critical path — procurement lead time 21d, installation 7d.', owner: 'Project Controls'),
-          cost: ImpactDimension(name: 'Cost', costAmount: 350000, isCritical: true, impactLevel: 5, narrative: 'Capital cost \$350K — equipment \$210K, installation \$120K, commissioning \$20K.', owner: 'Finance'),
-          resources: ImpactDimension(name: 'Resources', impact: 'Additional fire protection contractor required', impactLevel: 3, narrative: 'Requires licensed fire-protection subcontractor for 4 weeks.', owner: 'Procurement Lead'),
-          procurement: ImpactDimension(name: 'Procurement', impact: 'New PO for suppression equipment', impactLevel: 4, narrative: 'New PO — long-lead item 21 days ARO.', owner: 'Procurement Lead'),
-          contracts: ImpactDimension(name: 'Contracts', impactLevel: 2, narrative: 'Subcontract amendment required.', owner: 'Contracts'),
-          risks: ImpactDimension(name: 'Risks', impact: 'Reduces fire risk but adds schedule risk', impactLevel: 3, narrative: 'Net risk reduction post-implementation; temporary schedule risk during installation.', owner: 'Risk Manager'),
-          quality: ImpactDimension(name: 'Quality', impact: 'Must meet NFPA standards', impactLevel: 3, narrative: 'Acceptance testing per NFPA-13 §28.', owner: 'Quality Manager'),
-          safety: ImpactDimension(name: 'Safety', impactLevel: 4, narrative: 'Positive safety impact — reduces fire risk exposure.', owner: 'Safety Officer'),
-          stakeholders: ImpactDimension(name: 'Stakeholders', impactLevel: 2, narrative: 'Local AHJ notified; insurance carrier informed.', owner: 'Project Manager'),
-          funding: ImpactDimension(name: 'Funding', impactLevel: 3, narrative: 'Funded from contingency reserve.', owner: 'Finance'),
-          benefits: ImpactDimension(name: 'Benefits', impactLevel: 3, narrative: 'Regulatory compliance + reduced insurance premium long-term.', owner: 'Sponsor'),
-          dependencies: ImpactDimension(name: 'Dependencies', impactLevel: 2, narrative: 'Depends on WP-1.2 completion; blocks WP-3.4 start.', owner: 'Project Controls'),
-          interfaces: ImpactDimension(name: 'Interfaces', impactLevel: 2, narrative: 'Integration with building management system.', owner: 'Engineering Lead'),
-          technical: ImpactDimension(name: 'Technical', impactLevel: 3, narrative: 'Standard NFPA-13 design — no R&D required.', owner: 'Engineering Lead'),
+          scope: ImpactDimension(
+              name: 'Scope',
+              impact: 'New deliverable: Fire suppression installation',
+              isCritical: true,
+              impactLevel: 5,
+              narrative:
+                  'Adds new scope item: complete NFPA-13 sprinkler system in Site Prep and adjacent mechanical rooms.',
+              owner: 'Engineering Lead',
+              dueDate: null),
+          schedule: ImpactDimension(
+              name: 'Schedule',
+              scheduleDays: 14,
+              isCritical: true,
+              impactLevel: 4,
+              narrative:
+                  'Adds 14 working days to critical path — procurement lead time 21d, installation 7d.',
+              owner: 'Project Controls'),
+          cost: ImpactDimension(
+              name: 'Cost',
+              costAmount: 350000,
+              isCritical: true,
+              impactLevel: 5,
+              narrative:
+                  'Capital cost \$350K — equipment \$210K, installation \$120K, commissioning \$20K.',
+              owner: 'Finance'),
+          resources: ImpactDimension(
+              name: 'Resources',
+              impact: 'Additional fire protection contractor required',
+              impactLevel: 3,
+              narrative:
+                  'Requires licensed fire-protection subcontractor for 4 weeks.',
+              owner: 'Procurement Lead'),
+          procurement: ImpactDimension(
+              name: 'Procurement',
+              impact: 'New PO for suppression equipment',
+              impactLevel: 4,
+              narrative: 'New PO — long-lead item 21 days ARO.',
+              owner: 'Procurement Lead'),
+          contracts: ImpactDimension(
+              name: 'Contracts',
+              impactLevel: 2,
+              narrative: 'Subcontract amendment required.',
+              owner: 'Contracts'),
+          risks: ImpactDimension(
+              name: 'Risks',
+              impact: 'Reduces fire risk but adds schedule risk',
+              impactLevel: 3,
+              narrative:
+                  'Net risk reduction post-implementation; temporary schedule risk during installation.',
+              owner: 'Risk Manager'),
+          quality: ImpactDimension(
+              name: 'Quality',
+              impact: 'Must meet NFPA standards',
+              impactLevel: 3,
+              narrative: 'Acceptance testing per NFPA-13 §28.',
+              owner: 'Quality Manager'),
+          safety: ImpactDimension(
+              name: 'Safety',
+              impactLevel: 4,
+              narrative: 'Positive safety impact — reduces fire risk exposure.',
+              owner: 'Safety Officer'),
+          stakeholders: ImpactDimension(
+              name: 'Stakeholders',
+              impactLevel: 2,
+              narrative: 'Local AHJ notified; insurance carrier informed.',
+              owner: 'Project Manager'),
+          funding: ImpactDimension(
+              name: 'Funding',
+              impactLevel: 3,
+              narrative: 'Funded from contingency reserve.',
+              owner: 'Finance'),
+          benefits: ImpactDimension(
+              name: 'Benefits',
+              impactLevel: 3,
+              narrative:
+                  'Regulatory compliance + reduced insurance premium long-term.',
+              owner: 'Sponsor'),
+          dependencies: ImpactDimension(
+              name: 'Dependencies',
+              impactLevel: 2,
+              narrative: 'Depends on WP-1.2 completion; blocks WP-3.4 start.',
+              owner: 'Project Controls'),
+          interfaces: ImpactDimension(
+              name: 'Interfaces',
+              impactLevel: 2,
+              narrative: 'Integration with building management system.',
+              owner: 'Engineering Lead'),
+          technical: ImpactDimension(
+              name: 'Technical',
+              impactLevel: 3,
+              narrative: 'Standard NFPA-13 design — no R&D required.',
+              owner: 'Engineering Lead'),
         ),
         approvalSteps: [
-          const CMApprovalStep(id: 's1', roleLabel: 'Project Manager', role: ApprovalRole.projectManager, decision: ApprovalDecision.approved, decidedAt: null, assigneeName: 'PM Office'),
-          const CMApprovalStep(id: 's2', roleLabel: 'Project Controls', role: ApprovalRole.projectControls),
-          const CMApprovalStep(id: 's3', roleLabel: 'Finance', role: ApprovalRole.finance, dueDate: null),
-          const CMApprovalStep(id: 's4', roleLabel: 'Sponsor', role: ApprovalRole.sponsor),
+          const CMApprovalStep(
+              id: 's1',
+              roleLabel: 'Project Manager',
+              role: ApprovalRole.projectManager,
+              decision: ApprovalDecision.approved,
+              decidedAt: null,
+              assigneeName: 'PM Office'),
+          const CMApprovalStep(
+              id: 's2',
+              roleLabel: 'Project Controls',
+              role: ApprovalRole.projectControls),
+          const CMApprovalStep(
+              id: 's3',
+              roleLabel: 'Finance',
+              role: ApprovalRole.finance,
+              dueDate: null),
+          const CMApprovalStep(
+              id: 's4', roleLabel: 'Sponsor', role: ApprovalRole.sponsor),
         ],
         currentStepIndex: 1,
-        affectedRegisters: ['WBS', 'Schedule', 'Cost Estimate', 'Procurement Register', 'Risk Register'],
-        affectedBaselines: ['Scope Baseline', 'Cost Baseline', 'Schedule Baseline'],
+        affectedRegisters: [
+          'WBS',
+          'Schedule',
+          'Cost Estimate',
+          'Procurement Register',
+          'Risk Register'
+        ],
+        affectedBaselines: [
+          'Scope Baseline',
+          'Cost Baseline',
+          'Schedule Baseline'
+        ],
         triggersRebaseline: true,
       ),
       CMChangeRequest(
         id: 'cm_demo_2',
         crNumber: 'CR-2026-002',
         title: 'Accelerate Steel Delivery',
-        description: 'Expedite structural steel delivery to recover 5 days of schedule float',
+        description:
+            'Expedite structural steel delivery to recover 5 days of schedule float',
         changeType: CMChangeType.procurement,
         priority: CMPriority.medium,
         status: CMStatus.implemented,
         submittedBy: 'Sarah Chen (Procurement Lead)',
         dateSubmitted: DateTime(2026, 6, 10),
-        businessJustification: 'Recover schedule float before critical path impacts',
-        alternativesConsidered: 'Option A: Air freight (selected — \$45K). Option B: Wait for next vessel (rejected — 21d delay).',
+        businessJustification:
+            'Recover schedule float before critical path impacts',
+        alternativesConsidered:
+            'Option A: Air freight (selected — \$45K). Option B: Wait for next vessel (rejected — 21d delay).',
         affectedWorkPackages: const ['WP-2.1 Structural Steel'],
         deliverablesAdded: 0,
         deliverablesModified: 1,
@@ -706,45 +987,111 @@ class ChangeManagementProvider extends ChangeNotifier {
         scheduleDaysImpact: -5,
         contingencyDrawdownRequested: 45000,
         impact: const FullImpactAssessment(
-          schedule: ImpactDimension(name: 'Schedule', scheduleDays: -5, impactLevel: 3, narrative: 'Recovers 5 days of schedule float.', owner: 'Project Controls'),
-          cost: ImpactDimension(name: 'Cost', costAmount: 45000, impactLevel: 2, narrative: 'Air-freight premium \$45K — funded from contingency.', owner: 'Finance'),
-          procurement: ImpactDimension(name: 'Procurement', impact: 'Expedited shipping fee', impactLevel: 3, narrative: 'PO amended with expedite fee.', owner: 'Procurement Lead'),
+          schedule: ImpactDimension(
+              name: 'Schedule',
+              scheduleDays: -5,
+              impactLevel: 3,
+              narrative: 'Recovers 5 days of schedule float.',
+              owner: 'Project Controls'),
+          cost: ImpactDimension(
+              name: 'Cost',
+              costAmount: 45000,
+              impactLevel: 2,
+              narrative: 'Air-freight premium \$45K — funded from contingency.',
+              owner: 'Finance'),
+          procurement: ImpactDimension(
+              name: 'Procurement',
+              impact: 'Expedited shipping fee',
+              impactLevel: 3,
+              narrative: 'PO amended with expedite fee.',
+              owner: 'Procurement Lead'),
         ),
         approvalSteps: [
-          const CMApprovalStep(id: 's1', roleLabel: 'Project Manager', role: ApprovalRole.projectManager, decision: ApprovalDecision.approved, assigneeName: 'PM Office'),
-          const CMApprovalStep(id: 's2', roleLabel: 'Project Controls', role: ApprovalRole.projectControls, decision: ApprovalDecision.approved, assigneeName: 'PC Team'),
-          const CMApprovalStep(id: 's3', roleLabel: 'Finance', role: ApprovalRole.finance, decision: ApprovalDecision.approved, assigneeName: 'Finance Dept'),
+          const CMApprovalStep(
+              id: 's1',
+              roleLabel: 'Project Manager',
+              role: ApprovalRole.projectManager,
+              decision: ApprovalDecision.approved,
+              assigneeName: 'PM Office'),
+          const CMApprovalStep(
+              id: 's2',
+              roleLabel: 'Project Controls',
+              role: ApprovalRole.projectControls,
+              decision: ApprovalDecision.approved,
+              assigneeName: 'PC Team'),
+          const CMApprovalStep(
+              id: 's3',
+              roleLabel: 'Finance',
+              role: ApprovalRole.finance,
+              decision: ApprovalDecision.approved,
+              assigneeName: 'Finance Dept'),
         ],
         currentStepIndex: 3,
         approvedAt: DateTime(2026, 6, 15),
         implementedAt: DateTime(2026, 6, 20),
-        affectedRegisters: ['Schedule', 'Cost Estimate', 'Procurement Register'],
+        affectedRegisters: [
+          'Schedule',
+          'Cost Estimate',
+          'Procurement Register'
+        ],
         affectedBaselines: ['Schedule Baseline'],
         contingencyUsed: 45000,
         triggersRebaseline: false,
         implementationTasks: const [
-          ImplementationTask(id: 'task_1', workPackageId: 'WP-2.1', workPackageName: 'Structural Steel Erection', status: ImplementationStatus.done, assignee: 'Sarah Chen', dueDate: null, completedAt: null, notes: 'Steel delivered 2 days ahead of revised ETA.'),
-          ImplementationTask(id: 'task_2', workPackageId: 'WP-2.1', workPackageName: 'Erection Crew Mobilization', status: ImplementationStatus.done, assignee: 'Carlos Mendez', completedAt: null),
-          ImplementationTask(id: 'task_3', workPackageId: 'WP-2.1', workPackageName: 'Schedule Update in P6', status: ImplementationStatus.inProgress, assignee: 'Priya Singh'),
+          ImplementationTask(
+              id: 'task_1',
+              workPackageId: 'WP-2.1',
+              workPackageName: 'Structural Steel Erection',
+              status: ImplementationStatus.done,
+              assignee: 'Sarah Chen',
+              dueDate: null,
+              completedAt: null,
+              notes: 'Steel delivered 2 days ahead of revised ETA.'),
+          ImplementationTask(
+              id: 'task_2',
+              workPackageId: 'WP-2.1',
+              workPackageName: 'Erection Crew Mobilization',
+              status: ImplementationStatus.done,
+              assignee: 'Carlos Mendez',
+              completedAt: null),
+          ImplementationTask(
+              id: 'task_3',
+              workPackageId: 'WP-2.1',
+              workPackageName: 'Schedule Update in P6',
+              status: ImplementationStatus.inProgress,
+              assignee: 'Priya Singh'),
         ],
       ),
       CMChangeRequest(
         id: 'cm_demo_3',
         crNumber: 'CR-2026-003',
         title: 'Cloud Infrastructure Upgrade',
-        description: 'Upgrade cloud tier for production environment to handle increased load',
+        description:
+            'Upgrade cloud tier for production environment to handle increased load',
         changeType: CMChangeType.technical,
         priority: CMPriority.low,
         status: CMStatus.submitted,
         submittedBy: 'Mike Ross (DevOps)',
         dateSubmitted: DateTime(2026, 6, 25),
-        businessJustification: 'Performance requirements exceed current tier capacity',
+        businessJustification:
+            'Performance requirements exceed current tier capacity',
         impact: const FullImpactAssessment(
-          cost: ImpactDimension(name: 'Cost', costAmount: 12000, impactLevel: 1, narrative: 'OpEx increase \$12K/year.'),
-          technical: ImpactDimension(name: 'Technical', impact: 'No architecture change, tier upgrade only', impactLevel: 2, narrative: 'Configuration change only — no code changes.'),
+          cost: ImpactDimension(
+              name: 'Cost',
+              costAmount: 12000,
+              impactLevel: 1,
+              narrative: 'OpEx increase \$12K/year.'),
+          technical: ImpactDimension(
+              name: 'Technical',
+              impact: 'No architecture change, tier upgrade only',
+              impactLevel: 2,
+              narrative: 'Configuration change only — no code changes.'),
         ),
         approvalSteps: [
-          const CMApprovalStep(id: 's1', roleLabel: 'Product Owner', role: ApprovalRole.changeBoard),
+          const CMApprovalStep(
+              id: 's1',
+              roleLabel: 'Product Owner',
+              role: ApprovalRole.changeBoard),
         ],
         currentStepIndex: 0,
         isAgileRoutineRefinement: true,
@@ -756,15 +1103,22 @@ class ChangeManagementProvider extends ChangeNotifier {
         id: 'cm_demo_4',
         crNumber: 'CR-2026-004',
         title: 'HVAC Re-Design for Cleanroom Annex',
-        description: 'Stakeholder requested cleanroom annex (Class 10K) requires HVAC re-design with HEPA filtration and positive pressure differential.',
+        description:
+            'Stakeholder requested cleanroom annex (Class 10K) requires HVAC re-design with HEPA filtration and positive pressure differential.',
         changeType: CMChangeType.scope,
         priority: CMPriority.critical,
         status: CMStatus.pendingApproval,
         submittedBy: 'Aisha Patel (Program Manager)',
         dateSubmitted: DateTime(2026, 6, 28),
-        businessJustification: 'New customer contract requires ISO 14644 Class 7 cleanroom — current design cannot meet particle count threshold.',
-        alternativesConsidered: 'Option A: Retrofit existing HVAC (selected — \$620K, 28d). Option B: Build standalone cleanroom module (rejected — \$1.2M, 70d). Option C: Outsource to vendor (rejected — no IP control).',
-        affectedWorkPackages: const ['WP-4.2 HVAC', 'WP-4.3 Controls', 'WP-5.1 Commissioning'],
+        businessJustification:
+            'New customer contract requires ISO 14644 Class 7 cleanroom — current design cannot meet particle count threshold.',
+        alternativesConsidered:
+            'Option A: Retrofit existing HVAC (selected — \$620K, 28d). Option B: Build standalone cleanroom module (rejected — \$1.2M, 70d). Option C: Outsource to vendor (rejected — no IP control).',
+        affectedWorkPackages: const [
+          'WP-4.2 HVAC',
+          'WP-4.3 Controls',
+          'WP-5.1 Commissioning'
+        ],
         deliverablesAdded: 3,
         deliverablesModified: 2,
         deliverablesRemoved: 0,
@@ -773,36 +1127,155 @@ class ChangeManagementProvider extends ChangeNotifier {
         contingencyDrawdownRequested: 500000,
         reserveDrawdownRequested: 120000,
         impact: const FullImpactAssessment(
-          scope: ImpactDimension(name: 'Scope', impact: 'New cleanroom annex + HVAC re-design', isCritical: true, impactLevel: 5, narrative: 'Adds 3 new deliverables: HEPA filtration, positive-pressure controls, particle monitoring.', owner: 'Engineering Lead'),
-          schedule: ImpactDimension(name: 'Schedule', scheduleDays: 28, isCritical: true, impactLevel: 5, narrative: 'Adds 28 days to critical path.', owner: 'Project Controls'),
-          cost: ImpactDimension(name: 'Cost', costAmount: 620000, isCritical: true, impactLevel: 5, narrative: 'Capital \$620K — exceeds contingency, draws \$120K from reserve.', owner: 'Finance'),
-          resources: ImpactDimension(name: 'Resources', impact: 'HVAC engineer + cleanroom consultant', impactLevel: 4, narrative: 'Requires specialist cleanroom consultant 6 weeks.', owner: 'Procurement Lead'),
-          procurement: ImpactDimension(name: 'Procurement', impactLevel: 4, narrative: 'HEPA units long-lead 35d ARO.', owner: 'Procurement Lead'),
-          contracts: ImpactDimension(name: 'Contracts', impactLevel: 3, narrative: 'HVAC subcontract change order required.', owner: 'Contracts'),
-          risks: ImpactDimension(name: 'Risks', impactLevel: 4, narrative: 'Acceptance test risk — particle count threshold strict.', owner: 'Risk Manager'),
-          quality: ImpactDimension(name: 'Quality', impactLevel: 4, narrative: 'ISO 14644 Class 7 acceptance criteria.', owner: 'Quality Manager'),
-          safety: ImpactDimension(name: 'Safety', impactLevel: 2, narrative: 'No new safety hazards.', owner: 'Safety Officer'),
-          stakeholders: ImpactDimension(name: 'Stakeholders', impactLevel: 3, narrative: 'Customer notified — approves additional cost.', owner: 'Project Manager'),
-          funding: ImpactDimension(name: 'Funding', impactLevel: 4, narrative: 'Contingency + management reserve drawdown.', owner: 'Finance'),
-          benefits: ImpactDimension(name: 'Benefits', impactLevel: 4, narrative: 'Unlocks \$4M customer contract.', owner: 'Sponsor'),
-          dependencies: ImpactDimension(name: 'Dependencies', impactLevel: 3, narrative: 'Blocks commissioning of WP-5.1.', owner: 'Project Controls'),
-          interfaces: ImpactDimension(name: 'Interfaces', impactLevel: 3, narrative: 'BMS integration for pressure monitoring.', owner: 'Engineering Lead'),
-          technical: ImpactDimension(name: 'Technical', impactLevel: 3, narrative: 'Standard cleanroom design — well-understood.', owner: 'Engineering Lead'),
+          scope: ImpactDimension(
+              name: 'Scope',
+              impact: 'New cleanroom annex + HVAC re-design',
+              isCritical: true,
+              impactLevel: 5,
+              narrative:
+                  'Adds 3 new deliverables: HEPA filtration, positive-pressure controls, particle monitoring.',
+              owner: 'Engineering Lead'),
+          schedule: ImpactDimension(
+              name: 'Schedule',
+              scheduleDays: 28,
+              isCritical: true,
+              impactLevel: 5,
+              narrative: 'Adds 28 days to critical path.',
+              owner: 'Project Controls'),
+          cost: ImpactDimension(
+              name: 'Cost',
+              costAmount: 620000,
+              isCritical: true,
+              impactLevel: 5,
+              narrative:
+                  'Capital \$620K — exceeds contingency, draws \$120K from reserve.',
+              owner: 'Finance'),
+          resources: ImpactDimension(
+              name: 'Resources',
+              impact: 'HVAC engineer + cleanroom consultant',
+              impactLevel: 4,
+              narrative: 'Requires specialist cleanroom consultant 6 weeks.',
+              owner: 'Procurement Lead'),
+          procurement: ImpactDimension(
+              name: 'Procurement',
+              impactLevel: 4,
+              narrative: 'HEPA units long-lead 35d ARO.',
+              owner: 'Procurement Lead'),
+          contracts: ImpactDimension(
+              name: 'Contracts',
+              impactLevel: 3,
+              narrative: 'HVAC subcontract change order required.',
+              owner: 'Contracts'),
+          risks: ImpactDimension(
+              name: 'Risks',
+              impactLevel: 4,
+              narrative:
+                  'Acceptance test risk — particle count threshold strict.',
+              owner: 'Risk Manager'),
+          quality: ImpactDimension(
+              name: 'Quality',
+              impactLevel: 4,
+              narrative: 'ISO 14644 Class 7 acceptance criteria.',
+              owner: 'Quality Manager'),
+          safety: ImpactDimension(
+              name: 'Safety',
+              impactLevel: 2,
+              narrative: 'No new safety hazards.',
+              owner: 'Safety Officer'),
+          stakeholders: ImpactDimension(
+              name: 'Stakeholders',
+              impactLevel: 3,
+              narrative: 'Customer notified — approves additional cost.',
+              owner: 'Project Manager'),
+          funding: ImpactDimension(
+              name: 'Funding',
+              impactLevel: 4,
+              narrative: 'Contingency + management reserve drawdown.',
+              owner: 'Finance'),
+          benefits: ImpactDimension(
+              name: 'Benefits',
+              impactLevel: 4,
+              narrative: 'Unlocks \$4M customer contract.',
+              owner: 'Sponsor'),
+          dependencies: ImpactDimension(
+              name: 'Dependencies',
+              impactLevel: 3,
+              narrative: 'Blocks commissioning of WP-5.1.',
+              owner: 'Project Controls'),
+          interfaces: ImpactDimension(
+              name: 'Interfaces',
+              impactLevel: 3,
+              narrative: 'BMS integration for pressure monitoring.',
+              owner: 'Engineering Lead'),
+          technical: ImpactDimension(
+              name: 'Technical',
+              impactLevel: 3,
+              narrative: 'Standard cleanroom design — well-understood.',
+              owner: 'Engineering Lead'),
         ),
         approvalSteps: [
-          const CMApprovalStep(id: 's1', roleLabel: 'Project Manager', role: ApprovalRole.projectManager, decision: ApprovalDecision.approved, assigneeName: 'Aisha Patel', decidedAt: null, comments: 'Approved — customer-funded.'),
-          const CMApprovalStep(id: 's2', roleLabel: 'Project Controls', role: ApprovalRole.projectControls, decision: ApprovalDecision.approved, assigneeName: 'James Wong', comments: 'Schedule impact acceptable.'),
-          const CMApprovalStep(id: 's3', roleLabel: 'Finance', role: ApprovalRole.finance, decision: ApprovalDecision.escalated, assigneeName: 'Finance Dept', escalationTarget: 'Sponsor', escalationReason: 'Exceeds contingency — requires management reserve drawdown.'),
-          const CMApprovalStep(id: 's4', roleLabel: 'Sponsor', role: ApprovalRole.sponsor),
+          const CMApprovalStep(
+              id: 's1',
+              roleLabel: 'Project Manager',
+              role: ApprovalRole.projectManager,
+              decision: ApprovalDecision.approved,
+              assigneeName: 'Aisha Patel',
+              decidedAt: null,
+              comments: 'Approved — customer-funded.'),
+          const CMApprovalStep(
+              id: 's2',
+              roleLabel: 'Project Controls',
+              role: ApprovalRole.projectControls,
+              decision: ApprovalDecision.approved,
+              assigneeName: 'James Wong',
+              comments: 'Schedule impact acceptable.'),
+          const CMApprovalStep(
+              id: 's3',
+              roleLabel: 'Finance',
+              role: ApprovalRole.finance,
+              decision: ApprovalDecision.escalated,
+              assigneeName: 'Finance Dept',
+              escalationTarget: 'Sponsor',
+              escalationReason:
+                  'Exceeds contingency — requires management reserve drawdown.'),
+          const CMApprovalStep(
+              id: 's4', roleLabel: 'Sponsor', role: ApprovalRole.sponsor),
         ],
         currentStepIndex: 3,
-        affectedRegisters: ['WBS', 'Schedule', 'Cost Estimate', 'Procurement Register', 'Risk Register', 'Quality Plan'],
-        affectedBaselines: ['Scope Baseline', 'Cost Baseline', 'Schedule Baseline', 'Quality Baseline'],
+        affectedRegisters: [
+          'WBS',
+          'Schedule',
+          'Cost Estimate',
+          'Procurement Register',
+          'Risk Register',
+          'Quality Plan'
+        ],
+        affectedBaselines: [
+          'Scope Baseline',
+          'Cost Baseline',
+          'Schedule Baseline',
+          'Quality Baseline'
+        ],
         triggersRebaseline: true,
         implementationTasks: const [
-          ImplementationTask(id: 'task_1', workPackageId: 'WP-4.2', workPackageName: 'HVAC Re-Design Drawings', status: ImplementationStatus.todo, assignee: 'Engineering Lead'),
-          ImplementationTask(id: 'task_2', workPackageId: 'WP-4.3', workPackageName: 'Controls Programming Update', status: ImplementationStatus.todo, assignee: 'Controls Engineer'),
-          ImplementationTask(id: 'task_3', workPackageId: 'WP-5.1', workPackageName: 'Cleanroom Commissioning & Particle Test', status: ImplementationStatus.todo, assignee: 'Quality Manager'),
+          ImplementationTask(
+              id: 'task_1',
+              workPackageId: 'WP-4.2',
+              workPackageName: 'HVAC Re-Design Drawings',
+              status: ImplementationStatus.todo,
+              assignee: 'Engineering Lead'),
+          ImplementationTask(
+              id: 'task_2',
+              workPackageId: 'WP-4.3',
+              workPackageName: 'Controls Programming Update',
+              status: ImplementationStatus.todo,
+              assignee: 'Controls Engineer'),
+          ImplementationTask(
+              id: 'task_3',
+              workPackageId: 'WP-5.1',
+              workPackageName: 'Cleanroom Commissioning & Particle Test',
+              status: ImplementationStatus.todo,
+              assignee: 'Quality Manager'),
         ],
       ),
     ];
@@ -833,17 +1306,83 @@ class ChangeManagementProvider extends ChangeNotifier {
 
     // Seed audit trail with several historical entries spanning multiple actors.
     _auditTrail = [
-      CMAuditEntry(id: 'a1', user: 'John Smith', timestamp: DateTime.now().subtract(const Duration(hours: 240)), action: 'CR Created', details: 'CR-2026-001: Add Fire Suppression System', linkedCRId: 'cm_demo_1'),
-      CMAuditEntry(id: 'a2', user: 'Sarah Chen', timestamp: DateTime.now().subtract(const Duration(hours: 480)), action: 'CR Created', details: 'CR-2026-002: Accelerate Steel Delivery', linkedCRId: 'cm_demo_2'),
-      CMAuditEntry(id: 'a3', user: 'Sarah Chen', timestamp: DateTime.now().subtract(const Duration(hours: 360)), action: 'Approval Decision', details: 'CR-2026-002 • Project Manager → Approved', linkedCRId: 'cm_demo_2'),
-      CMAuditEntry(id: 'a4', user: 'you@ndu.project', timestamp: DateTime.now().subtract(const Duration(hours: 350)), action: 'Workflow Finalized', details: 'CR-2026-002 • APPROVED', linkedCRId: 'cm_demo_2'),
-      CMAuditEntry(id: 'a5', user: 'you@ndu.project', timestamp: DateTime.now().subtract(const Duration(hours: 320)), action: 'Baseline Applied', details: 'v1 • BAC \$12,500,000 → \$12,545,000 • CR-2026-002', linkedCRId: 'cm_demo_2'),
-      CMAuditEntry(id: 'a6', user: 'you@ndu.project', timestamp: DateTime.now().subtract(const Duration(hours: 300)), action: 'CR Implemented', details: 'CR-2026-002 implemented', linkedCRId: 'cm_demo_2'),
-      CMAuditEntry(id: 'a7', user: 'Mike Ross', timestamp: DateTime.now().subtract(const Duration(hours: 72)), action: 'CR Created', details: 'CR-2026-003: Cloud Infrastructure Upgrade', linkedCRId: 'cm_demo_3'),
-      CMAuditEntry(id: 'a8', user: 'Aisha Patel', timestamp: DateTime.now().subtract(const Duration(hours: 24)), action: 'CR Created', details: 'CR-2026-004: HVAC Re-Design for Cleanroom Annex', linkedCRId: 'cm_demo_4'),
-      CMAuditEntry(id: 'a9', user: 'Aisha Patel', timestamp: DateTime.now().subtract(const Duration(hours: 20)), action: 'Approval Decision', details: 'CR-2026-004 • Project Manager → Approved', linkedCRId: 'cm_demo_4'),
-      CMAuditEntry(id: 'a10', user: 'James Wong', timestamp: DateTime.now().subtract(const Duration(hours: 18)), action: 'Approval Decision', details: 'CR-2026-004 • Project Controls → Approved', linkedCRId: 'cm_demo_4'),
-      CMAuditEntry(id: 'a11', user: 'Finance Dept', timestamp: DateTime.now().subtract(const Duration(hours: 12)), action: 'Approval Decision', details: 'CR-2026-004 • Finance → Escalated (exceeds contingency)', linkedCRId: 'cm_demo_4'),
+      CMAuditEntry(
+          id: 'a1',
+          user: 'John Smith',
+          timestamp: DateTime.now().subtract(const Duration(hours: 240)),
+          action: 'CR Created',
+          details: 'CR-2026-001: Add Fire Suppression System',
+          linkedCRId: 'cm_demo_1'),
+      CMAuditEntry(
+          id: 'a2',
+          user: 'Sarah Chen',
+          timestamp: DateTime.now().subtract(const Duration(hours: 480)),
+          action: 'CR Created',
+          details: 'CR-2026-002: Accelerate Steel Delivery',
+          linkedCRId: 'cm_demo_2'),
+      CMAuditEntry(
+          id: 'a3',
+          user: 'Sarah Chen',
+          timestamp: DateTime.now().subtract(const Duration(hours: 360)),
+          action: 'Approval Decision',
+          details: 'CR-2026-002 • Project Manager → Approved',
+          linkedCRId: 'cm_demo_2'),
+      CMAuditEntry(
+          id: 'a4',
+          user: 'you@ndu.project',
+          timestamp: DateTime.now().subtract(const Duration(hours: 350)),
+          action: 'Workflow Finalized',
+          details: 'CR-2026-002 • APPROVED',
+          linkedCRId: 'cm_demo_2'),
+      CMAuditEntry(
+          id: 'a5',
+          user: 'you@ndu.project',
+          timestamp: DateTime.now().subtract(const Duration(hours: 320)),
+          action: 'Baseline Applied',
+          details: 'v1 • BAC \$12,500,000 → \$12,545,000 • CR-2026-002',
+          linkedCRId: 'cm_demo_2'),
+      CMAuditEntry(
+          id: 'a6',
+          user: 'you@ndu.project',
+          timestamp: DateTime.now().subtract(const Duration(hours: 300)),
+          action: 'CR Implemented',
+          details: 'CR-2026-002 implemented',
+          linkedCRId: 'cm_demo_2'),
+      CMAuditEntry(
+          id: 'a7',
+          user: 'Mike Ross',
+          timestamp: DateTime.now().subtract(const Duration(hours: 72)),
+          action: 'CR Created',
+          details: 'CR-2026-003: Cloud Infrastructure Upgrade',
+          linkedCRId: 'cm_demo_3'),
+      CMAuditEntry(
+          id: 'a8',
+          user: 'Aisha Patel',
+          timestamp: DateTime.now().subtract(const Duration(hours: 24)),
+          action: 'CR Created',
+          details: 'CR-2026-004: HVAC Re-Design for Cleanroom Annex',
+          linkedCRId: 'cm_demo_4'),
+      CMAuditEntry(
+          id: 'a9',
+          user: 'Aisha Patel',
+          timestamp: DateTime.now().subtract(const Duration(hours: 20)),
+          action: 'Approval Decision',
+          details: 'CR-2026-004 • Project Manager → Approved',
+          linkedCRId: 'cm_demo_4'),
+      CMAuditEntry(
+          id: 'a10',
+          user: 'James Wong',
+          timestamp: DateTime.now().subtract(const Duration(hours: 18)),
+          action: 'Approval Decision',
+          details: 'CR-2026-004 • Project Controls → Approved',
+          linkedCRId: 'cm_demo_4'),
+      CMAuditEntry(
+          id: 'a11',
+          user: 'Finance Dept',
+          timestamp: DateTime.now().subtract(const Duration(hours: 12)),
+          action: 'Approval Decision',
+          details: 'CR-2026-004 • Finance → Escalated (exceeds contingency)',
+          linkedCRId: 'cm_demo_4'),
     ];
     notifyListeners();
   }
@@ -908,6 +1447,12 @@ class ChangeManagementProvider extends ChangeNotifier {
           return _crFromFirestore(doc.id, data);
         }).toList();
         _crCounter = _changeRequests.length;
+        // Recompute contingency / reserve usage from persisted CRs so the
+        // dashboard stays consistent after a reload.
+        _usedContingency = _changeRequests.fold<double>(
+            0, (acc, cr) => acc + (cr.contingencyUsed ?? 0));
+        _usedReserve = _changeRequests.fold<double>(
+            0, (acc, cr) => acc + (cr.reserveUsed ?? 0));
         _isLoading = false;
         notifyListeners();
       }, onError: (e) {
@@ -927,7 +1472,8 @@ class ChangeManagementProvider extends ChangeNotifier {
           return CMAuditEntry(
             id: doc.id,
             user: data['user'] as String? ?? 'Unknown',
-            timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            timestamp:
+                (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
             action: data['action'] as String? ?? '',
             details: data['details'] as String? ?? '',
             linkedCRId: data['linkedCRId'] as String?,
@@ -947,8 +1493,11 @@ class ChangeManagementProvider extends ChangeNotifier {
           final data = doc.data();
           return BaselineRevisionRecord(
             version: data['version'] as int? ?? 1,
-            revisionDate: (data['revisionDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-            revisedBy: data['revisedBy'] as String? ?? data['approver'] as String? ?? 'Unknown',
+            revisionDate: (data['revisionDate'] as Timestamp?)?.toDate() ??
+                DateTime.now(),
+            revisedBy: data['revisedBy'] as String? ??
+                data['approver'] as String? ??
+                'Unknown',
             linkedCRId: data['linkedCRId'] as String? ?? '',
             reason: data['reason'] as String? ?? '',
             updatedBaselines: (data['updatedBaselines'] as List<dynamic>?)
@@ -957,13 +1506,23 @@ class ChangeManagementProvider extends ChangeNotifier {
                 const [],
             previousBudget: (data['previousBAC'] as num?)?.toDouble(),
             revisedBudget: (data['revisedBAC'] as num?)?.toDouble(),
-            previousFinish: (data['previousBaselineFinish'] as Timestamp?)?.toDate(),
-            revisedFinish: (data['revisedBaselineFinish'] as Timestamp?)?.toDate(),
+            previousFinish:
+                (data['previousBaselineFinish'] as Timestamp?)?.toDate(),
+            revisedFinish:
+                (data['revisedBaselineFinish'] as Timestamp?)?.toDate(),
             previousScopeHash: data['previousScopeHash'] as String?,
             revisedScopeHash: data['revisedScopeHash'] as String?,
             approver: data['approver'] as String?,
           );
         }).toList();
+        // Restore current baseline state from the latest persisted revision.
+        if (_baselineHistory.isNotEmpty) {
+          final latest = _baselineHistory.first;
+          _currentBAC = latest.revisedBudget ?? _currentBAC;
+          _currentScopeHash = latest.revisedScopeHash ?? _currentScopeHash;
+          _currentBaselineFinish =
+              latest.revisedFinish ?? _currentBaselineFinish;
+        }
         notifyListeners();
       }, onError: (e) {
         debugPrint('[ChangeManagementProvider] Baseline stream error: $e');
@@ -993,20 +1552,32 @@ class ChangeManagementProvider extends ChangeNotifier {
     final impactData = data['impact'] as Map<String, dynamic>? ?? {};
     final dimensions = <String, ImpactDimension>{
       'Scope': parseDim('Scope', impactData['scope'] as Map<String, dynamic>?),
-      'Schedule': parseDim('Schedule', impactData['schedule'] as Map<String, dynamic>?),
+      'Schedule':
+          parseDim('Schedule', impactData['schedule'] as Map<String, dynamic>?),
       'Cost': parseDim('Cost', impactData['cost'] as Map<String, dynamic>?),
-      'Resources': parseDim('Resources', impactData['resources'] as Map<String, dynamic>?),
-      'Procurement': parseDim('Procurement', impactData['procurement'] as Map<String, dynamic>?),
-      'Contracts': parseDim('Contracts', impactData['contracts'] as Map<String, dynamic>?),
+      'Resources': parseDim(
+          'Resources', impactData['resources'] as Map<String, dynamic>?),
+      'Procurement': parseDim(
+          'Procurement', impactData['procurement'] as Map<String, dynamic>?),
+      'Contracts': parseDim(
+          'Contracts', impactData['contracts'] as Map<String, dynamic>?),
       'Risks': parseDim('Risks', impactData['risks'] as Map<String, dynamic>?),
-      'Quality': parseDim('Quality', impactData['quality'] as Map<String, dynamic>?),
-      'Safety': parseDim('Safety', impactData['safety'] as Map<String, dynamic>?),
-      'Stakeholders': parseDim('Stakeholders', impactData['stakeholders'] as Map<String, dynamic>?),
-      'Funding': parseDim('Funding', impactData['funding'] as Map<String, dynamic>?),
-      'Benefits': parseDim('Benefits', impactData['benefits'] as Map<String, dynamic>?),
-      'Dependencies': parseDim('Dependencies', impactData['dependencies'] as Map<String, dynamic>?),
-      'Interfaces': parseDim('Interfaces', impactData['interfaces'] as Map<String, dynamic>?),
-      'Technical': parseDim('Technical', impactData['technical'] as Map<String, dynamic>?),
+      'Quality':
+          parseDim('Quality', impactData['quality'] as Map<String, dynamic>?),
+      'Safety':
+          parseDim('Safety', impactData['safety'] as Map<String, dynamic>?),
+      'Stakeholders': parseDim(
+          'Stakeholders', impactData['stakeholders'] as Map<String, dynamic>?),
+      'Funding':
+          parseDim('Funding', impactData['funding'] as Map<String, dynamic>?),
+      'Benefits':
+          parseDim('Benefits', impactData['benefits'] as Map<String, dynamic>?),
+      'Dependencies': parseDim(
+          'Dependencies', impactData['dependencies'] as Map<String, dynamic>?),
+      'Interfaces': parseDim(
+          'Interfaces', impactData['interfaces'] as Map<String, dynamic>?),
+      'Technical': parseDim(
+          'Technical', impactData['technical'] as Map<String, dynamic>?),
     };
 
     final impact = FullImpactAssessment(
@@ -1033,12 +1604,14 @@ class ChangeManagementProvider extends ChangeNotifier {
       final m = s as Map<String, dynamic>;
       return CMApprovalStep(
         id: m['id'] as String? ?? '',
-        roleLabel: m['roleLabel'] as String? ?? m['role'] as String? ?? 'Approver',
+        roleLabel:
+            m['roleLabel'] as String? ?? m['role'] as String? ?? 'Approver',
         role: ApprovalRole.values.firstWhere(
           (r) => r.name == m['role'],
           orElse: () => ApprovalRole.projectManager,
         ),
-        assigneeName: m['decisionMaker'] as String? ?? m['assigneeName'] as String?,
+        assigneeName:
+            m['decisionMaker'] as String? ?? m['assigneeName'] as String?,
         decision: ApprovalDecision.values.firstWhere(
           (d) => d.name == m['decision'],
           orElse: () => ApprovalDecision.pending,
@@ -1059,7 +1632,9 @@ class ChangeManagementProvider extends ChangeNotifier {
       return ImplementationTask(
         id: m['id'] as String? ?? '',
         workPackageId: m['workPackageId'] as String? ?? '',
-        workPackageName: m['workPackageName'] as String? ?? m['workPackageId'] as String? ?? '',
+        workPackageName: m['workPackageName'] as String? ??
+            m['workPackageId'] as String? ??
+            '',
         status: ImplementationStatus.values.firstWhere(
           (s) => s.name == m['status'],
           orElse: () => ImplementationStatus.todo,
@@ -1088,15 +1663,18 @@ class ChangeManagementProvider extends ChangeNotifier {
         orElse: () => CMStatus.draft,
       ),
       submittedBy: data['submittedBy'] as String? ?? 'Unknown',
-      dateSubmitted: (data['dateSubmitted'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      requestedCompletion: (data['requestedCompletion'] as Timestamp?)?.toDate(),
+      dateSubmitted:
+          (data['dateSubmitted'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      requestedCompletion:
+          (data['requestedCompletion'] as Timestamp?)?.toDate(),
       businessJustification: data['businessJustification'] as String? ?? '',
       rootCause: data['rootCause'] as String?,
       impact: impact,
       approvalSteps: steps,
       currentStepIndex: data['currentStepIndex'] as int? ?? 0,
       isEmergency: data['isEmergency'] as bool? ?? false,
-      isAgileRoutineRefinement: data['isAgileRoutineRefinement'] as bool? ?? false,
+      isAgileRoutineRefinement:
+          data['isAgileRoutineRefinement'] as bool? ?? false,
       affectedRegisters: (data['affectedRegisters'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
@@ -1108,6 +1686,40 @@ class ChangeManagementProvider extends ChangeNotifier {
       contingencyUsed: (data['contingencyUsed'] as num?)?.toDouble(),
       reserveUsed: (data['reserveUsed'] as num?)?.toDouble(),
       implementationTasks: tasks,
+      affectedWorkPackages: (data['affectedWorkPackages'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      deliverablesAdded: data['deliverablesAdded'] as int? ?? 0,
+      deliverablesModified: data['deliverablesModified'] as int? ?? 0,
+      deliverablesRemoved: data['deliverablesRemoved'] as int? ?? 0,
+      initialCostEstimate: (data['initialCostEstimate'] as num?)?.toDouble(),
+      scheduleDaysImpact: data['scheduleDaysImpact'] as int?,
+      contingencyDrawdownRequested:
+          (data['contingencyDrawdownRequested'] as num?)?.toDouble(),
+      reserveDrawdownRequested:
+          (data['reserveDrawdownRequested'] as num?)?.toDouble(),
+      deliverables:
+          (data['deliverables'] as List<dynamic>? ?? const []).map((d) {
+        final m = d as Map<String, dynamic>;
+        return CMImpactedDeliverable(
+          id: m['id'] as String? ?? '',
+          name: m['name'] as String? ?? '',
+          action: DeliverableAction.values.firstWhere(
+            (a) => a.name == m['action'],
+            orElse: () => DeliverableAction.add,
+          ),
+          notes: m['notes'] as String?,
+        );
+      }).toList(),
+      drawdownReserve: data['drawdownReserve'] == null
+          ? null
+          : CMReserveSource.values.firstWhere(
+              (s) => s.name == data['drawdownReserve'],
+              orElse: () => CMReserveSource.contingency,
+            ),
+      drawdownAmount: (data['drawdownAmount'] as num?)?.toDouble(),
+      actualCost: (data['actualCost'] as num?)?.toDouble(),
     );
   }
 
@@ -1133,6 +1745,25 @@ class ChangeManagementProvider extends ChangeNotifier {
       'affectedBaselines': cr.affectedBaselines,
       'contingencyUsed': cr.contingencyUsed,
       'reserveUsed': cr.reserveUsed,
+      'affectedWorkPackages': cr.affectedWorkPackages,
+      'deliverablesAdded': cr.deliverablesAdded,
+      'deliverablesModified': cr.deliverablesModified,
+      'deliverablesRemoved': cr.deliverablesRemoved,
+      'initialCostEstimate': cr.initialCostEstimate,
+      'scheduleDaysImpact': cr.scheduleDaysImpact,
+      'contingencyDrawdownRequested': cr.contingencyDrawdownRequested,
+      'reserveDrawdownRequested': cr.reserveDrawdownRequested,
+      'deliverables': cr.deliverables
+          .map((d) => {
+                'id': d.id,
+                'name': d.name,
+                'action': d.action.name,
+                'notes': d.notes,
+              })
+          .toList(),
+      'drawdownReserve': cr.drawdownReserve?.name,
+      'drawdownAmount': cr.drawdownAmount,
+      'actualCost': cr.actualCost,
       'updatedAt': FieldValue.serverTimestamp(),
     };
     if (cr.requestedCompletion != null) {
@@ -1146,32 +1777,42 @@ class ChangeManagementProvider extends ChangeNotifier {
         'impactLevel': dim.impactLevel,
         'narrative': dim.narrative,
         'owner': dim.owner,
-        'dueDate': dim.dueDate != null ? Timestamp.fromDate(dim.dueDate!) : null,
+        'dueDate':
+            dim.dueDate != null ? Timestamp.fromDate(dim.dueDate!) : null,
       };
     }
     data['impact'] = impactMap;
     // Save approval steps
-    data['approvalSteps'] = cr.approvalSteps.map((s) => {
-      'role': s.role?.name ?? 'projectManager',
-      'decision': s.decision.name,
-      'decisionMaker': s.assigneeName,
-      'roleLabel': s.roleLabel,
-      'id': s.id,
-      'decisionDate': s.decidedAt != null ? Timestamp.fromDate(s.decidedAt!) : null,
-      'comments': s.comments,
-      'dueDate': s.dueDate != null ? Timestamp.fromDate(s.dueDate!) : null,
-      'escalationTarget': s.escalationTarget,
-      'escalationReason': s.escalationReason,
-      'delegatedFrom': s.delegatedFrom,
-    }).toList();
+    data['approvalSteps'] = cr.approvalSteps
+        .map((s) => {
+              'role': s.role?.name ?? 'projectManager',
+              'decision': s.decision.name,
+              'decisionMaker': s.assigneeName,
+              'roleLabel': s.roleLabel,
+              'id': s.id,
+              'decisionDate':
+                  s.decidedAt != null ? Timestamp.fromDate(s.decidedAt!) : null,
+              'comments': s.comments,
+              'dueDate':
+                  s.dueDate != null ? Timestamp.fromDate(s.dueDate!) : null,
+              'escalationTarget': s.escalationTarget,
+              'escalationReason': s.escalationReason,
+              'delegatedFrom': s.delegatedFrom,
+            })
+        .toList();
     // Save implementation tasks
-    data['implementationTasks'] = cr.implementationTasks.map((t) => {
-      'workPackageId': t.workPackageId,
-      'status': t.status.name,
-      'assignee': t.assignee,
-      'dueDate': t.dueDate != null ? Timestamp.fromDate(t.dueDate!) : null,
-      'completedAt': t.completedAt != null ? Timestamp.fromDate(t.completedAt!) : null,
-    }).toList();
+    data['implementationTasks'] = cr.implementationTasks
+        .map((t) => {
+              'workPackageId': t.workPackageId,
+              'status': t.status.name,
+              'assignee': t.assignee,
+              'dueDate':
+                  t.dueDate != null ? Timestamp.fromDate(t.dueDate!) : null,
+              'completedAt': t.completedAt != null
+                  ? Timestamp.fromDate(t.completedAt!)
+                  : null,
+            })
+        .toList();
 
     await col.doc(cr.id).set(data, SetOptions(merge: true));
   }
@@ -1190,11 +1831,12 @@ class ChangeManagementProvider extends ChangeNotifier {
     }, SetOptions(merge: true));
   }
 
-  /// Save a baseline revision to Firestore.
+  /// Save a baseline revision to Firestore. Keyed by version so rollback
+  /// can delete the exact revision document.
   Future<void> _saveBaselineToFirestore(BaselineRevisionRecord rec) async {
     final col = _baselineCollection;
     if (col == null) return;
-    await col.add({
+    await col.doc('v${rec.version}').set({
       'version': rec.version,
       'revisionDate': Timestamp.fromDate(rec.revisionDate),
       'previousBAC': rec.previousBudget,
@@ -1214,6 +1856,48 @@ class ChangeManagementProvider extends ChangeNotifier {
           : null,
       'createdAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  // ─── Fire-and-forget persistence helpers ────────────────────────────
+  // Called from every mutation funnel so state changes survive reloads.
+  // Failures are logged, never thrown, so a transient Firestore error does
+  // not break the in-memory workflow.
+
+  Future<void> _persistCR(CMChangeRequest cr) async {
+    try {
+      await _saveCRToFirestore(cr);
+    } catch (e) {
+      debugPrint(
+          '[ChangeManagementProvider] Failed to save CR ${cr.crNumber}: $e');
+    }
+  }
+
+  Future<void> _persistAudit(CMAuditEntry entry) async {
+    try {
+      await _saveAuditToFirestore(entry);
+    } catch (e) {
+      debugPrint('[ChangeManagementProvider] Failed to save audit entry: $e');
+    }
+  }
+
+  Future<void> _persistBaseline(BaselineRevisionRecord rec) async {
+    try {
+      await _saveBaselineToFirestore(rec);
+    } catch (e) {
+      debugPrint(
+          '[ChangeManagementProvider] Failed to save baseline revision: $e');
+    }
+  }
+
+  Future<void> _deleteBaselineRevision(int version) async {
+    try {
+      final col = _baselineCollection;
+      if (col == null) return;
+      await col.doc('v$version').delete();
+    } catch (e) {
+      debugPrint(
+          '[ChangeManagementProvider] Failed to delete baseline revision: $e');
+    }
   }
 
   @override

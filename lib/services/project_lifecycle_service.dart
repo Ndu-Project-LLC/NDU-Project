@@ -53,8 +53,9 @@ class ProjectLifecycleAssessment {
   final bool timePhasedBaselineReady;
   final bool evmReady;
 
-  LifecycleStageAssessment stage(ProjectLifecycleStage stage) =>
-      stages.firstWhere((item) => item.stage == stage);
+  /// Null when the stage has no assessment record (callers must handle).
+  LifecycleStageAssessment? stage(ProjectLifecycleStage stage) =>
+      stages.where((item) => item.stage == stage).firstOrNull;
 
   bool get hasIterativeFeedback => openFeedbackCount > 0;
 

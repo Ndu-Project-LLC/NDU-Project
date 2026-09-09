@@ -29,11 +29,11 @@ enum ScheduleDomain {
       };
 
   int get color => switch (this) {
-        ScheduleDomain.engineering => 0xFF3B82F6, // blue
+        ScheduleDomain.engineering => 0xFFFFC812, // blue
         ScheduleDomain.procurement => 0xFF22C55E, // green
         ScheduleDomain.execution => 0xFFF8BD2A, // yellow/gold
         ScheduleDomain.construction => 0xFF909096, // gray
-        ScheduleDomain.commissioning => 0xFFC084FC, // purple
+        ScheduleDomain.commissioning => 0xFFFBBF24, // purple
       };
 
   String get icon => switch (this) {
@@ -451,6 +451,7 @@ class ScheduleBasis {
   final String deliveryModel; // 'AGILE' | 'WATERFALL' | 'HYBRID'
   final int? sprintDurationWeeks;
   final String? releaseCadence;
+  final String? incrementStrategy;
   final String? definitionOfReady;
   final String? definitionOfDone;
   final List<String> assumptions;
@@ -462,6 +463,7 @@ class ScheduleBasis {
     required this.deliveryModel,
     this.sprintDurationWeeks,
     this.releaseCadence,
+    this.incrementStrategy,
     this.definitionOfReady,
     this.definitionOfDone,
     required this.assumptions,
@@ -474,6 +476,7 @@ class ScheduleBasis {
     String? deliveryModel,
     int? sprintDurationWeeks,
     String? releaseCadence,
+    String? incrementStrategy,
     String? definitionOfReady,
     String? definitionOfDone,
     List<String>? assumptions,
@@ -485,6 +488,7 @@ class ScheduleBasis {
       deliveryModel: deliveryModel ?? this.deliveryModel,
       sprintDurationWeeks: sprintDurationWeeks ?? this.sprintDurationWeeks,
       releaseCadence: releaseCadence ?? this.releaseCadence,
+      incrementStrategy: incrementStrategy ?? this.incrementStrategy,
       definitionOfReady: definitionOfReady ?? this.definitionOfReady,
       definitionOfDone: definitionOfDone ?? this.definitionOfDone,
       assumptions: assumptions ?? this.assumptions,
@@ -711,6 +715,9 @@ ScheduleBasis createEmptyBasis(String deliveryModel) => ScheduleBasis(
       deliveryModel: deliveryModel,
       sprintDurationWeeks: deliveryModel == 'AGILE' ? 2 : null,
       releaseCadence: deliveryModel == 'AGILE' ? 'Monthly' : null,
+      incrementStrategy: deliveryModel == 'AGILE'
+          ? 'Feature-based increments, delivered end of every sprint'
+          : null,
       definitionOfReady: '',
       definitionOfDone: '',
       assumptions: [],

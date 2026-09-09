@@ -294,9 +294,9 @@ class _MyRaciAssignmentsPanelState extends State<MyRaciAssignmentsPanel> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFBFDBFE)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +304,7 @@ class _MyRaciAssignmentsPanelState extends State<MyRaciAssignmentsPanel> {
           Row(
             children: [
               const Icon(Icons.touch_app_outlined,
-                  size: 16, color: Color(0xFF1D4ED8)),
+                  size: 16, color: Color(0xFFFFC812)),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -312,7 +312,7 @@ class _MyRaciAssignmentsPanelState extends State<MyRaciAssignmentsPanel> {
                   'the Staffing Plan:',
                   style: TextStyle(
                     fontSize: widget.compact ? 11 : 12,
-                    color: const Color(0xFF1E3A8A),
+                    color: const Color(0xFFB8860B),
                     height: 1.4,
                   ),
                 ),
@@ -414,7 +414,7 @@ class _MyRaciAssignmentsPanelState extends State<MyRaciAssignmentsPanel> {
               _pill(
                 label: 'Total',
                 value: '${rows.length}',
-                bg: const Color(0xFFE0E7FF),
+                bg: const Color(0xFFFFF8E1),
                 fg: const Color(0xFF4338CA),
               ),
               _pill(

@@ -7,7 +7,6 @@ import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/inline_editable_text.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -188,7 +187,7 @@ class _DeliverablesTrackingWidgetState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -201,11 +200,11 @@ class _DeliverablesTrackingWidgetState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          Padding(
-            padding: const EdgeInsets.all(20),
+          const Padding(
+            padding: EdgeInsets.all(20),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Deliverable status updates',
                     style: TextStyle(
@@ -227,15 +226,15 @@ class _DeliverablesTrackingWidgetState
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.all(32),
+    return const Padding(
+      padding: EdgeInsets.all(32),
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.inventory_2_outlined,
+            Icon(Icons.inventory_2_outlined,
                 color: Color(0xFF9CA3AF), size: 32),
-            const SizedBox(height: 12),
-            const Text(
+            SizedBox(height: 12),
+            Text(
               'No deliverables yet. Add details to get started.',
               style: TextStyle(
                 fontSize: 13,
@@ -262,7 +261,7 @@ class _DeliverablesTrackingWidgetState
               topRight: Radius.circular(12),
             ),
           ),
-          child: Row(
+          child: const Row(
             children: [
               _TableHeaderCell('Deliverable', flex: 4),
               _TableHeaderCell('Owner', flex: 2),
@@ -440,7 +439,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedStatus.isEmpty ? null : selectedStatus,
+                    initialValue: selectedStatus.isEmpty ? null : selectedStatus,
                     decoration: const InputDecoration(
                       labelText: 'Status',
                       isDense: true,
@@ -623,11 +622,11 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
                                           height: 16,
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2,
-                                            color: Color(0xFF7C3AED),
+                                            color: Color(0xFFB8860B),
                                           ),
                                         )
                                       : const Icon(Icons.auto_awesome,
-                                          size: 16, color: Color(0xFF7C3AED)),
+                                          size: 16, color: Color(0xFFB8860B)),
                                   onPressed: _isRegenerating
                                       ? null
                                       : () {
@@ -684,7 +683,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
   Color _getStatusColor(String status) {
     return switch (status) {
       'Completed' => const Color(0xFF10B981),
-      'In Progress' => const Color(0xFF2563EB),
+      'In Progress' => const Color(0xFFFFC812),
       'At Risk' => const Color(0xFFF59E0B),
       'Blocked' => const Color(0xFFEF4444),
       _ => const Color(0xFF9CA3AF),

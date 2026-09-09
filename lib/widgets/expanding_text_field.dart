@@ -253,7 +253,7 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
   }
 
   Widget _buildDocxImportIcon() {
-    const iconColor = Color(0xFF0EA5E9);
+    const iconColor = Color(0xFFFFC812);
     if (_isImportingDoc) {
       return Container(
         width: 36,
@@ -268,7 +268,7 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
           child: SizedBox(
             width: 18,
             height: 18,
-            child: const CircularProgressIndicator(
+            child: CircularProgressIndicator(
                 strokeWidth: 2, color: iconColor),
           ),
         ),
@@ -569,7 +569,7 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
   }
 
   Widget _buildDocxImportIcon() {
-    const iconColor = Color(0xFF0EA5E9);
+    const iconColor = Color(0xFFFFC812);
     if (_isImportingDoc) {
       return Container(
         width: 36,
@@ -584,7 +584,7 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
           child: SizedBox(
             width: 18,
             height: 18,
-            child: const CircularProgressIndicator(
+            child: CircularProgressIndicator(
                 strokeWidth: 2, color: iconColor),
           ),
         ),

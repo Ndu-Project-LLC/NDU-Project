@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/contract_service.dart';
-import 'package:ndu_project/screens/front_end_planning_contracts_screen.dart';
 
 import '../theme.dart';
 import '../widgets/responsive.dart';
@@ -14,6 +13,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 class ContractDetailsDashboardScreen extends StatefulWidget {
  const ContractDetailsDashboardScreen({super.key});
 
@@ -35,6 +35,7 @@ class _ContractDetailsDashboardScreenState extends State<ContractDetailsDashboar
  );
 
  return Scaffold(
+ floatingActionButton: const KazAiChatBubble(positioned: false),
  backgroundColor: Theme.of(context).colorScheme.surface,
  body: SafeArea(
  child: Row(
@@ -111,8 +112,8 @@ class _ContractDetailsDashboardScreenState extends State<ContractDetailsDashboar
  screenTitle: 'Contract Details Dashboard',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_contract_details_dashboard_notes'] ?? 'No data recorded.'),
  ],
@@ -660,7 +661,7 @@ class _ContractRowTile extends StatelessWidget {
 
  const actions = Wrap(
  spacing: 10,
- children: const [
+ children: [
  _RoundIcon(icon: Icons.remove_red_eye_outlined),
  _RoundIcon(icon: Icons.edit_outlined),
  ],
@@ -695,7 +696,7 @@ class _ContractRowTile extends StatelessWidget {
  Expanded(flex: 2, child: progressBar),
  Expanded(
  child: Text(row.value, style: theme.textTheme.bodyMedium)),
- SizedBox(width: 120, child: Center(child: actions)),
+ const SizedBox(width: 120, child: Center(child: actions)),
  ],
  );
 

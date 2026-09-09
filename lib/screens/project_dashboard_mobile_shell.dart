@@ -16,10 +16,6 @@ import '../services/project_service.dart';
 import '../utils/dashboard_palette.dart';
 import '../utils/navigation_route_resolver.dart';
 import 'initiation_phase_screen.dart';
-import 'program_dashboard_mobile_screen.dart';
-import 'portfolio_dashboard_screen.dart';
-import 'regular_project_dashboard_screen.dart';
-import 'project_command_center_screen.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import '../widgets/dashboard_bottom_nav_bar.dart';
@@ -343,7 +339,7 @@ class _ProjectDashboardMobileShellState
  switch (snapshot.health) {
  case ProjectProgressHealth.completed:
  healthLabel = 'Completed';
- healthColor = const Color(0xFF1D4ED8);
+ healthColor = const Color(0xFFFFC812);
  break;
  case ProjectProgressHealth.onTrack:
  healthLabel = 'On Track';
@@ -821,8 +817,8 @@ class _ProjectDashboardMobileShellState
  ? 'Sign in to view'
  : programCount.toString(),
  icon: Icons.layers,
- iconBg: const Color(0xFFFAF5FF),
- iconColor: const Color(0xFF9333EA),
+ iconBg: const Color(0xFFFFF8E1),
+ iconColor: const Color(0xFFB8860B),
  onTap: _navigateToProgram,
  ),
  _statCard(
@@ -1188,11 +1184,14 @@ class _PremiumUserGreeting extends StatelessWidget {
 
  /// Extract initials (up to 2 chars) from display name
  static String _initials(String name) {
- final parts = name.trim().split(RegExp(r'\s+'));
+ final trimmed = name.trim();
+ if (trimmed.isEmpty) return 'U';
+ final parts = trimmed.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+ if (parts.isEmpty) return trimmed[0].toUpperCase();
  if (parts.length >= 2) {
  return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
  }
- return name.isNotEmpty ? name[0].toUpperCase() : 'U';
+ return parts[0][0].toUpperCase();
  }
 
  @override

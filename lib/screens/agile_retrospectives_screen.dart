@@ -28,7 +28,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
   static const Color _kAccent = Color(0xFFF59E0B);
   static const Color _kAccentLight = Color(0xFFFFC812);
   static const Color _kAccentBg = Color(0xFFFEF3C7);
-  static const Color _kBackground = Color(0xFFF8FAFC);
+  static const Color _kBackground = Colors.white;
   static const Color _kSurface = Colors.white;
   static const Color _kBorder = Color(0xFFE5E7EB);
   static const Color _kHeadline = Color(0xFF111827);
@@ -40,7 +40,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
   int _activeTemplate = 0; // 0 = Start/Stop/Continue, 1 = Mad/Sad/Glad, 2 = 4Ls
 
   final List<_RetrospectiveTemplate> _templates = [
-    _RetrospectiveTemplate(
+    const _RetrospectiveTemplate(
       name: 'Start / Stop / Continue',
       icon: Icons.play_arrow,
       columns: [
@@ -61,7 +61,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
             prompt: 'What is working well?'),
       ],
     ),
-    _RetrospectiveTemplate(
+    const _RetrospectiveTemplate(
       name: 'Mad / Sad / Glad',
       icon: Icons.sentiment_satisfied,
       columns: [
@@ -73,7 +73,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
         _RetroColumn(
             id: 'sad',
             title: 'Sad',
-            color: Colors.blue,
+            color: Color(0xFFFFC812),
             prompt: 'What disappointed you?'),
         _RetroColumn(
             id: 'glad',
@@ -82,7 +82,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
             prompt: 'What made you happy?'),
       ],
     ),
-    _RetrospectiveTemplate(
+    const _RetrospectiveTemplate(
       name: '4Ls — Liked / Learned / Lacked / Longed For',
       icon: Icons.school,
       columns: [
@@ -104,7 +104,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
         _RetroColumn(
             id: 'longed',
             title: 'Longed For',
-            color: Colors.purple,
+            color: Color(0xFFB8860B),
             prompt: 'What did you long for?'),
       ],
     ),
@@ -180,46 +180,46 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
     _cardsByColumn = {
       // Start / Stop / Continue
       'start': [
-        _RetroCard(
+        const _RetroCard(
             id: 'r1',
             text: 'Pair programming on hard tickets',
             author: 'Sarah C.',
             votes: 5),
-        _RetroCard(
+        const _RetroCard(
             id: 'r2',
             text: 'Demo dry-runs the day before review',
             author: 'Marcus R.',
             votes: 3),
-        _RetroCard(
+        const _RetroCard(
             id: 'r3',
             text: 'Async standup notes in Slack',
             author: 'Priya N.',
             votes: 4),
       ],
       'stop': [
-        _RetroCard(
+        const _RetroCard(
             id: 'r4',
             text: 'Skipping story refinement mid-sprint',
             author: 'James O.',
             votes: 6),
-        _RetroCard(
+        const _RetroCard(
             id: 'r5',
             text: 'Ad-hoc scope changes without triage',
             author: 'Lena P.',
             votes: 4),
       ],
       'continue': [
-        _RetroCard(
+        const _RetroCard(
             id: 'r6',
             text: 'Rotating facilitator for standups',
             author: 'Sarah C.',
             votes: 7),
-        _RetroCard(
+        const _RetroCard(
             id: 'r7',
             text: 'Kaz AI pattern insights each retro',
             author: 'Marcus R.',
             votes: 5),
-        _RetroCard(
+        const _RetroCard(
             id: 'r8',
             text: 'End-of-sprint stakeholder preview',
             author: 'Priya N.',
@@ -227,31 +227,31 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
       ],
       // Mad / Sad / Glad
       'mad': [
-        _RetroCard(
+        const _RetroCard(
             id: 'm1',
             text: 'Production incident during sprint kickoff',
             author: 'James O.',
             votes: 4),
       ],
       'sad': [
-        _RetroCard(
+        const _RetroCard(
             id: 'm2',
             text: 'Story NDU-1015 rejected at review',
             author: 'James O.',
             votes: 3),
-        _RetroCard(
+        const _RetroCard(
             id: 'm3',
             text: 'Velocity dropped 8% — felt rushed',
             author: 'Lena P.',
             votes: 2),
       ],
       'glad': [
-        _RetroCard(
+        const _RetroCard(
             id: 'm4',
             text: 'SSO shipped and signed off by security',
             author: 'Sarah C.',
             votes: 8),
-        _RetroCard(
+        const _RetroCard(
             id: 'm5',
             text: 'Team collaborated really well on rate-limiting',
             author: 'Marcus R.',
@@ -259,38 +259,38 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
       ],
       // 4Ls
       'liked': [
-        _RetroCard(
+        const _RetroCard(
             id: 'l1',
             text: 'Daily KPI visibility from Kaz AI',
             author: 'Sarah C.',
             votes: 6),
       ],
       'learned': [
-        _RetroCard(
+        const _RetroCard(
             id: 'l2',
             text: 'Redis token bucket pattern for rate limiting',
             author: 'Marcus R.',
             votes: 5),
-        _RetroCard(
+        const _RetroCard(
             id: 'l3',
             text: 'Importance of DoR checklist',
             author: 'Priya N.',
             votes: 4),
       ],
       'lacked': [
-        _RetroCard(
+        const _RetroCard(
             id: 'l4',
             text: 'Cross-team dependency visibility',
             author: 'Lena P.',
             votes: 5),
       ],
       'longed': [
-        _RetroCard(
+        const _RetroCard(
             id: 'l5',
             text: 'Dedicated refinement sessions mid-sprint',
             author: 'James O.',
             votes: 6),
-        _RetroCard(
+        const _RetroCard(
             id: 'l6',
             text: 'Better dark-mode design tokens',
             author: 'Priya N.',
@@ -299,7 +299,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
     };
     _feedback.clear();
     _feedback.addAll([
-      _TeamFeedback(
+      const _TeamFeedback(
           member: 'Sarah Chen',
           role: 'Tech Lead',
           avatar: 'SC',
@@ -307,23 +307,23 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
           sentiment: 'positive',
           comment:
               'Best sprint yet — SSO shipping was a huge win. Loved the rotating facilitator experiment.'),
-      _TeamFeedback(
+      const _TeamFeedback(
           member: 'Marcus Reed',
           role: 'Backend Engineer',
           avatar: 'MR',
-          color: Colors.blue,
+          color: Color(0xFFFFC812),
           sentiment: 'positive',
           comment:
               'Pairing on rate limiting paid off. Would love more mid-sprint refinement time.'),
-      _TeamFeedback(
+      const _TeamFeedback(
           member: 'Priya Nair',
           role: 'Frontend Engineer',
           avatar: 'PN',
-          color: Colors.purple,
+          color: Color(0xFFB8860B),
           sentiment: 'mixed',
           comment:
               'Felt rushed toward the end. Story rejection hurt morale — let\'s tighten DoR.'),
-      _TeamFeedback(
+      const _TeamFeedback(
           member: 'James Okoro',
           role: 'Frontend Engineer',
           avatar: 'JO',
@@ -331,46 +331,46 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
           sentiment: 'mixed',
           comment:
               'Audit log rejection was frustrating but the feedback was fair. Need clearer acceptance criteria.'),
-      _TeamFeedback(
+      const _TeamFeedback(
           member: 'Lena Park',
           role: 'Frontend Engineer',
           avatar: 'LP',
-          color: Colors.teal,
+          color: Color(0xFFD97706),
           sentiment: 'positive',
           comment:
               'Onboarding tour planning went smoothly. Team coordination was excellent.'),
     ]);
     _actions.clear();
     _actions.addAll([
-      _RetroAction(
+      const _RetroAction(
           id: 'RA-301',
           description: 'Schedule 30-min mid-sprint refinement slot',
           owner: 'Sarah Chen',
           due: 'Next Sprint',
           status: 'Open',
           priority: 'High'),
-      _RetroAction(
+      const _RetroAction(
           id: 'RA-302',
           description: 'Add DoR checklist to story template',
           owner: 'Marcus Reed',
           due: 'This week',
           status: 'In Progress',
           priority: 'High'),
-      _RetroAction(
+      const _RetroAction(
           id: 'RA-303',
           description: 'Cross-team dependency board setup',
           owner: 'Lena Park',
           due: '2 sprints',
           status: 'Open',
           priority: 'Medium'),
-      _RetroAction(
+      const _RetroAction(
           id: 'RA-304',
           description: 'Dark-mode design tokens workshop with Design',
           owner: 'Priya Nair',
           due: 'Next week',
           status: 'Open',
           priority: 'Medium'),
-      _RetroAction(
+      const _RetroAction(
           id: 'RA-305',
           description: 'Rotate standup facilitator (continue experiment)',
           owner: 'All',
@@ -401,10 +401,10 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Retrospective saved'),
+          const SnackBar(
+            content: Text('Retrospective saved'),
             backgroundColor: _kAccent,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -468,8 +468,8 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Retrospectives',
                     ),
                   ),
@@ -480,7 +480,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        PlanningPhaseHeader(
+                        const PlanningPhaseHeader(
                           title: 'Sprint Retrospectives',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -559,7 +559,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -774,7 +774,6 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(10),
         border: Border(
           left: BorderSide(color: col.color, width: 3),
         ),
@@ -905,11 +904,11 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.forum_outlined, size: 20, color: _kAccent),
-              const SizedBox(width: 8),
-              const Text('Team Feedback',
+              Icon(Icons.forum_outlined, size: 20, color: _kAccent),
+              SizedBox(width: 8),
+              Text('Team Feedback',
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -944,7 +943,6 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(10),
         border: Border(
           left: BorderSide(color: sentimentColor, width: 3),
         ),
@@ -1045,8 +1043,8 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
   Widget _buildActionsHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: Row(
-        children: const [
+      child: const Row(
+        children: [
           SizedBox(width: 30),
           Expanded(
               flex: 5,
@@ -1147,7 +1145,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
                   color: done
                       ? Colors.green
                       : a.status == 'In Progress'
-                          ? Colors.blue
+                          ? const Color(0xFFFFC812)
                           : _kAccent),
             ),
           ],
@@ -1341,7 +1339,7 @@ class _LoadingStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

@@ -1421,9 +1421,9 @@ class ProjectDataModel {
   PotentialSolution? get preferredSolution {
     if (preferredSolutionId == null) return null;
     try {
-      return potentialSolutions.firstWhere(
+      return potentialSolutions.where(
         (s) => s.id == preferredSolutionId,
-      );
+      ).firstOrNull;
     } catch (e) {
       return null;
     }
@@ -4020,6 +4020,15 @@ class TeamMember {
   /// since most PT members are internal users provisioned in the app.
   bool hasSiteAccess;
 
+  /// Foreign key to [StaffingRow.id] when this member was derived from
+  /// the Front-End Planning > Personnel staffing plan via the "Sync from
+  /// Staffing Plan" action on the Team Management > Members tab.
+  ///
+  /// Null when the member was added manually. Used for idempotent
+  /// re-syncing: if a staffing row with this id already has N linked
+  /// members and its quantity is N, re-syncing will not create duplicates.
+  String? staffingPlanId;
+
   TeamMember({
     String? id,
     this.name = '',
@@ -4029,6 +4038,7 @@ class TeamMember {
     this.phone = '',
     this.location = '',
     this.hasSiteAccess = true,
+    this.staffingPlanId,
   }) : id = id ?? _generateId();
 
   Map<String, dynamic> toJson() => {
@@ -4040,6 +4050,7 @@ class TeamMember {
         'phone': phone,
         'location': location,
         'hasSiteAccess': hasSiteAccess,
+        if (staffingPlanId != null) 'staffingPlanId': staffingPlanId,
       };
 
   factory TeamMember.fromJson(Map<String, dynamic> json) {
@@ -4052,6 +4063,7 @@ class TeamMember {
       phone: json['phone']?.toString() ?? '',
       location: json['location']?.toString() ?? '',
       hasSiteAccess: json['hasSiteAccess'] != false,
+      staffingPlanId: json['staffingPlanId']?.toString(),
     );
   }
 
@@ -4063,6 +4075,7 @@ class TeamMember {
     String? phone,
     String? location,
     bool? hasSiteAccess,
+    String? staffingPlanId,
   }) {
     return TeamMember(
       id: id,
@@ -4073,6 +4086,7 @@ class TeamMember {
       phone: phone ?? this.phone,
       location: location ?? this.location,
       hasSiteAccess: hasSiteAccess ?? this.hasSiteAccess,
+      staffingPlanId: staffingPlanId ?? this.staffingPlanId,
     );
   }
 
@@ -5869,7 +5883,7 @@ class DebtInsight {
     this.evidence = '',
     this.control = '',
     this.tier = 'Medium',
-    this.colorValue = 0xFF6366F1,
+    this.colorValue = 0xFFB8860B,
   });
 
   Map<String, dynamic> toJson() => {
@@ -5887,7 +5901,7 @@ class DebtInsight {
         evidence: json['evidence'] ?? '',
         control: json['control'] ?? '',
         tier: json['tier'] ?? 'Medium',
-        colorValue: json['colorValue'] ?? 0xFF6366F1,
+        colorValue: json['colorValue'] ?? 0xFFB8860B,
       );
 
   DebtInsight copyWith({
@@ -5924,7 +5938,7 @@ class RemediationTrack {
     this.evidence = '',
     this.ownerCadence = '',
     this.progress = 0.0,
-    this.colorValue = 0xFF6366F1,
+    this.colorValue = 0xFFB8860B,
   });
 
   Map<String, dynamic> toJson() => {
@@ -5947,7 +5961,7 @@ class RemediationTrack {
         progress: (json['progress'] is num)
             ? (json['progress'] as num).toDouble()
             : 0.0,
-        colorValue: json['colorValue'] ?? 0xFF6366F1,
+        colorValue: json['colorValue'] ?? 0xFFB8860B,
       );
 
   RemediationTrack copyWith({
@@ -6668,7 +6682,7 @@ class RaciDesignation {
   static ({int bg, int fg}) color(String code) {
     switch (code.toUpperCase()) {
       case 'R':
-        return (bg: 0xFFDBEAFE, fg: 0xFF1D4ED8);
+        return (bg: 0xFFFEF3C7, fg: 0xFFFFC812);
       case 'A':
         return (bg: 0xFFFEE2E2, fg: 0xFFB91C1C);
       case 'C':
@@ -6676,9 +6690,9 @@ class RaciDesignation {
       case 'RV':
         return (bg: 0xFFFFEDD5, fg: 0xFFC2410C);
       case 'I':
-        return (bg: 0xFFF3E8FF, fg: 0xFF7E22CE);
+        return (bg: 0xFFFFF8E1, fg: 0xFFB8860B);
       case 'V':
-        return (bg: 0xFFE0E7FF, fg: 0xFF4338CA);
+        return (bg: 0xFFFFF8E1, fg: 0xFF4338CA);
       default:
         return (bg: 0xFFF3F4F6, fg: 0xFF6B7280);
     }
@@ -7705,6 +7719,8 @@ class QualityStandard {
   final String category;
   final String description;
   final String applicability;
+  final String effectiveDate;
+  final String reviewDate;
 
   QualityStandard({
     required this.id,
@@ -7713,6 +7729,8 @@ class QualityStandard {
     required this.category,
     required this.description,
     required this.applicability,
+    this.effectiveDate = '',
+    this.reviewDate = '',
   });
 
   factory QualityStandard.empty() => QualityStandard(
@@ -7722,6 +7740,8 @@ class QualityStandard {
         category: '',
         description: '',
         applicability: '',
+        effectiveDate: '',
+        reviewDate: '',
       );
 
   Map<String, dynamic> toJson() => {
@@ -7731,6 +7751,8 @@ class QualityStandard {
         'category': category,
         'description': description,
         'applicability': applicability,
+        'effectiveDate': effectiveDate,
+        'reviewDate': reviewDate,
       };
 
   factory QualityStandard.fromJson(Map<String, dynamic> json) {
@@ -7741,6 +7763,8 @@ class QualityStandard {
       category: json['category']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       applicability: json['applicability']?.toString() ?? '',
+      effectiveDate: json['effectiveDate']?.toString() ?? '',
+      reviewDate: json['reviewDate']?.toString() ?? '',
     );
   }
 
@@ -7750,6 +7774,8 @@ class QualityStandard {
     String? category,
     String? description,
     String? applicability,
+    String? effectiveDate,
+    String? reviewDate,
   }) {
     return QualityStandard(
       id: id,
@@ -7758,6 +7784,8 @@ class QualityStandard {
       category: category ?? this.category,
       description: description ?? this.description,
       applicability: applicability ?? this.applicability,
+      effectiveDate: effectiveDate ?? this.effectiveDate,
+      reviewDate: reviewDate ?? this.reviewDate,
     );
   }
 
@@ -9354,6 +9382,14 @@ class InterfaceEntry {
   final String dataFlow; // Bidirectional, A→B, B→A
   final String protocol; // API, File Transfer, Manual, Email, Shared DB
 
+  // Interface Management Plan fields (from document)
+  final String interfaceClassification; // Internal, External
+  final String dependencies; // Deliverable, Schedule, Resource, Procurement, Technical
+  final String conflictResolution; // Conflict resolution process description
+  final String escalationPath; // Escalation procedures
+  final String assumptions; // Assumptions affecting interfaces
+  final String changeImpacts; // Change impacts description
+
   InterfaceEntry({
     String? id,
     this.boundary = '',
@@ -9370,6 +9406,12 @@ class InterfaceEntry {
     this.criticality = '',
     this.dataFlow = '',
     this.protocol = '',
+    this.interfaceClassification = '',
+    this.dependencies = '',
+    this.conflictResolution = '',
+    this.escalationPath = '',
+    this.assumptions = '',
+    this.changeImpacts = '',
   }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
 
   InterfaceEntry copyWith({
@@ -9387,6 +9429,12 @@ class InterfaceEntry {
     String? criticality,
     String? dataFlow,
     String? protocol,
+    String? interfaceClassification,
+    String? dependencies,
+    String? conflictResolution,
+    String? escalationPath,
+    String? assumptions,
+    String? changeImpacts,
   }) {
     return InterfaceEntry(
       id: id,
@@ -9404,6 +9452,12 @@ class InterfaceEntry {
       criticality: criticality ?? this.criticality,
       dataFlow: dataFlow ?? this.dataFlow,
       protocol: protocol ?? this.protocol,
+      interfaceClassification: interfaceClassification ?? this.interfaceClassification,
+      dependencies: dependencies ?? this.dependencies,
+      conflictResolution: conflictResolution ?? this.conflictResolution,
+      escalationPath: escalationPath ?? this.escalationPath,
+      assumptions: assumptions ?? this.assumptions,
+      changeImpacts: changeImpacts ?? this.changeImpacts,
     );
   }
 
@@ -9423,6 +9477,12 @@ class InterfaceEntry {
         'criticality': criticality,
         'dataFlow': dataFlow,
         'protocol': protocol,
+        'interfaceClassification': interfaceClassification,
+        'dependencies': dependencies,
+        'conflictResolution': conflictResolution,
+        'escalationPath': escalationPath,
+        'assumptions': assumptions,
+        'changeImpacts': changeImpacts,
       };
 
   factory InterfaceEntry.fromJson(Map<String, dynamic> json) {
@@ -9442,6 +9502,12 @@ class InterfaceEntry {
       criticality: json['criticality']?.toString() ?? '',
       dataFlow: json['dataFlow']?.toString() ?? '',
       protocol: json['protocol']?.toString() ?? '',
+      interfaceClassification: json['interfaceClassification']?.toString() ?? '',
+      dependencies: json['dependencies']?.toString() ?? '',
+      conflictResolution: json['conflictResolution']?.toString() ?? '',
+      escalationPath: json['escalationPath']?.toString() ?? '',
+      assumptions: json['assumptions']?.toString() ?? '',
+      changeImpacts: json['changeImpacts']?.toString() ?? '',
     );
   }
 

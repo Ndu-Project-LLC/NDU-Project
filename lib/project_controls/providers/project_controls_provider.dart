@@ -8,9 +8,18 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/project_controls/models/project_controls_models.dart';
 import 'package:ndu_project/project_controls/services/project_controls_firestore_service.dart';
-import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart' as ce_models;
+import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart'
+    as ce_models;
 
-String get _currentUser => FirebaseAuth.instance.currentUser?.email ?? 'you@ndu.project';
+String get _currentUser {
+  try {
+    return FirebaseAuth.instance.currentUser?.email ?? 'you@ndu.project';
+  } catch (_) {
+    // Firebase not initialized (e.g. unit tests) — fall back to the
+    // canonical demo identity used elsewhere in the app.
+    return 'you@ndu.project';
+  }
+}
 
 class ProjectControlsProvider extends ChangeNotifier {
   ProjectControlsState _state = const ProjectControlsState(
@@ -139,7 +148,9 @@ class ProjectControlsProvider extends ChangeNotifier {
           );
         }).toList();
         _state = _state.copyWith(workPackages: updatedWPs);
-        _addAudit('BAC', '\$${currentTotal.toStringAsFixed(0)}',
+        _addAudit(
+            'BAC',
+            '\$${currentTotal.toStringAsFixed(0)}',
             '\$${bac.toStringAsFixed(0)}',
             'BAC synced from Cost Estimate (total authorized budget)');
         notifyListeners();
@@ -149,8 +160,9 @@ class ProjectControlsProvider extends ChangeNotifier {
     }
 
     // No work packages yet — seed from cost lines that have WBS references.
-    final costLines = estimate.lines.where((l) =>
-        l.wbsRef != null && l.wbsRef!.isNotEmpty).toList();
+    final costLines = estimate.lines
+        .where((l) => l.wbsRef != null && l.wbsRef!.isNotEmpty)
+        .toList();
 
     if (costLines.isEmpty) {
       // Do not create an untraceable project-total control account. The
@@ -258,7 +270,8 @@ class ProjectControlsProvider extends ChangeNotifier {
         // New activity from Schedule → seed a new work package.
         updated.add(WorkPackageControl(
           id: 'wp_${act.id}',
-          wbsCode: act.wbsCode ?? 'WP-${(updated.length + 1).toString().padLeft(3, '0')}',
+          wbsCode: act.wbsCode ??
+              'WP-${(updated.length + 1).toString().padLeft(3, '0')}',
           scheduleActivityId: act.id,
           name: act.name,
           scopeDescription: act.description ?? '',
@@ -302,11 +315,11 @@ class ProjectControlsProvider extends ChangeNotifier {
   }
 
   void updateWorkPackage(String id, WorkPackageControl updated) {
-    final oldWp = _state.workPackages.firstWhere((w) => w.id == id);
+    final oldWp = _state.workPackages.where((w) => w.id == id).firstOrNull;
+    if (oldWp == null) return;
     _state = _state.copyWith(
-      workPackages: _state.workPackages
-          .map((w) => w.id == id ? updated : w)
-          .toList(),
+      workPackages:
+          _state.workPackages.map((w) => w.id == id ? updated : w).toList(),
     );
     if (oldWp.actualCost != updated.actualCost) {
       _addAudit('actualCost.$id', '${oldWp.actualCost}',
@@ -356,29 +369,36 @@ class ProjectControlsProvider extends ChangeNotifier {
         'Change request status updated to ${status.label}');
     notifyListeners();
     _saveToFirestore();
-    final updated = _state.changeRequests.firstWhere((cr) => cr.id == id);
+    final updated =
+        _state.changeRequests.where((cr) => cr.id == id).firstOrNull;
+    if (updated == null) return;
     ProjectControlsFirestoreService.instance.saveChangeRequest(updated);
   }
 
   void approveChangeStep(String changeId) {
-    final cr = _state.changeRequests.firstWhere((c) => c.id == changeId);
+    final cr = _state.changeRequests.where((c) => c.id == changeId).firstOrNull;
+    if (cr == null) return;
     if (cr.approval == null) return;
     final steps = cr.approval!.steps;
     final currentIdx = cr.approval!.currentStepIndex;
     if (currentIdx >= steps.length) return;
 
-    final updatedSteps = steps.asMap().map((i, s) => MapEntry(
-        i,
-        i == currentIdx
-            ? ApprovalStep(
-                id: s.id,
-                role: s.role,
-                assigneeName: s.assigneeName,
-                approved: true,
-                approvedAt: DateTime.now(),
-                comments: s.comments,
-              )
-            : s)).values.toList();
+    final updatedSteps = steps
+        .asMap()
+        .map((i, s) => MapEntry(
+            i,
+            i == currentIdx
+                ? ApprovalStep(
+                    id: s.id,
+                    role: s.role,
+                    assigneeName: s.assigneeName,
+                    approved: true,
+                    approvedAt: DateTime.now(),
+                    comments: s.comments,
+                  )
+                : s))
+        .values
+        .toList();
 
     final newIdx = currentIdx + 1;
     final allApproved = updatedSteps.every((s) => s.approved);
@@ -401,28 +421,33 @@ class ProjectControlsProvider extends ChangeNotifier {
               : c)
           .toList(),
     );
-    _addAudit('changeApproval.$changeId', 'step $currentIdx',
+    _addAudit(
+        'changeApproval.$changeId',
+        'step $currentIdx',
         allApproved ? 'ALL APPROVED' : 'step $newIdx',
         'Change approval step ${currentIdx + 1} approved');
     notifyListeners();
     _saveToFirestore();
-    final updated = _state.changeRequests.firstWhere((c) => c.id == changeId);
+    final updated =
+        _state.changeRequests.where((c) => c.id == changeId).firstOrNull;
+    if (updated == null) return;
     ProjectControlsFirestoreService.instance.saveChangeRequest(updated);
   }
 
   void rejectChangeRequest(String id, String reason) {
     _state = _state.copyWith(
       changeRequests: _state.changeRequests
-          .map((cr) => cr.id == id
-              ? cr.copyWith(status: ChangeStatus.rejected)
-              : cr)
+          .map((cr) =>
+              cr.id == id ? cr.copyWith(status: ChangeStatus.rejected) : cr)
           .toList(),
     );
     _addAudit('changeRejection.$id', '', 'REJECTED',
         'Change request rejected: $reason');
     notifyListeners();
     _saveToFirestore();
-    final updated = _state.changeRequests.firstWhere((cr) => cr.id == id);
+    final updated =
+        _state.changeRequests.where((cr) => cr.id == id).firstOrNull;
+    if (updated == null) return;
     ProjectControlsFirestoreService.instance.saveChangeRequest(updated);
   }
 
@@ -488,17 +513,18 @@ class ProjectControlsProvider extends ChangeNotifier {
   }
 
   void updateScheduleVariance(String workPackageId, ScheduleVariance updated) {
-    final existing = _state.scheduleVariances
-        .any((sv) => sv.workPackageId == workPackageId);
+    final existing =
+        _state.scheduleVariances.any((sv) => sv.workPackageId == workPackageId);
     _state = _state.copyWith(
       scheduleVariances: existing
           ? _state.scheduleVariances
-              .map((sv) =>
-                  sv.workPackageId == workPackageId ? updated : sv)
+              .map((sv) => sv.workPackageId == workPackageId ? updated : sv)
               .toList()
           : [..._state.scheduleVariances, updated],
     );
-    _addAudit('scheduleVariance.$workPackageId', 'updated',
+    _addAudit(
+        'scheduleVariance.$workPackageId',
+        'updated',
         updated.compressionStrategy.label,
         'Schedule variance updated — strategy: ${updated.compressionStrategy.label}, reason: "${updated.delayReason}"');
     notifyListeners();
@@ -508,15 +534,16 @@ class ProjectControlsProvider extends ChangeNotifier {
 
   void setCompressionStrategy(
       String workPackageId, CompressionStrategy strategy) {
-    final idx =
-        _state.scheduleVariances.indexWhere((sv) => sv.workPackageId == workPackageId);
+    final idx = _state.scheduleVariances
+        .indexWhere((sv) => sv.workPackageId == workPackageId);
     if (idx == -1) return;
     final old = _state.scheduleVariances[idx];
     final updated = old.copyWith(compressionStrategy: strategy);
     final newList = List<ScheduleVariance>.from(_state.scheduleVariances);
     newList[idx] = updated;
     _state = _state.copyWith(scheduleVariances: newList);
-    _addAudit('scheduleVariance.$workPackageId.compression',
+    _addAudit(
+        'scheduleVariance.$workPackageId.compression',
         old.compressionStrategy.label,
         strategy.label,
         'Compression strategy set to ${strategy.label} for $workPackageId');
@@ -526,17 +553,71 @@ class ProjectControlsProvider extends ChangeNotifier {
   }
 
   void setDelayReason(String workPackageId, String reason) {
-    final idx =
-        _state.scheduleVariances.indexWhere((sv) => sv.workPackageId == workPackageId);
+    final idx = _state.scheduleVariances
+        .indexWhere((sv) => sv.workPackageId == workPackageId);
     if (idx == -1) return;
-    final updated =
-        _state.scheduleVariances[idx].copyWith(delayReason: reason);
+    final updated = _state.scheduleVariances[idx].copyWith(delayReason: reason);
     final newList = List<ScheduleVariance>.from(_state.scheduleVariances);
     newList[idx] = updated;
     _state = _state.copyWith(scheduleVariances: newList);
-    _addAudit('scheduleVariance.$workPackageId.delayReason', '',
+    _addAudit(
+        'scheduleVariance.$workPackageId.delayReason',
+        '',
         reason.isEmpty ? '(cleared)' : reason,
         'Delay reason recorded for $workPackageId');
+    notifyListeners();
+    _saveToFirestore();
+    ProjectControlsFirestoreService.instance.saveScheduleVariance(updated);
+  }
+
+  /// Attribute a schedule variance (or create one) to a change request.
+  ///
+  /// Per the Lusaka 22 call, Project Controls must show the actual-vs-plan
+  /// delta for a work package and the *reason* for it — the change request
+  /// number (`CR-2026-003` …). Upserts the variance record for
+  /// [workPackageId]: existing rows keep their dates/strategy and gain the
+  /// attribution; a missing row gets a minimal default variance.
+  void attributeScheduleVarianceToChangeRequest(
+    String workPackageId, {
+    required String crNumber,
+    String? reason,
+  }) {
+    // `reason` is the composed attribution line (may already carry the CR
+    // number); fall back to the bare CR number.
+    final attribution =
+        (reason == null || reason.trim().isEmpty) ? crNumber : reason;
+    final idx = _state.scheduleVariances
+        .indexWhere((sv) => sv.workPackageId == workPackageId);
+    final ScheduleVariance updated;
+    if (idx == -1) {
+      updated = ScheduleVariance(
+        workPackageId: workPackageId,
+        floatDays: 0,
+        delayReason: attribution,
+        compressionStrategy: CompressionStrategy.none,
+        changeRequestNumber: crNumber,
+      );
+      _state = _state.copyWith(
+        scheduleVariances: [..._state.scheduleVariances, updated],
+      );
+    } else {
+      final existing = _state.scheduleVariances[idx];
+      // Keep any user-entered delay reason; just make sure the CR is named.
+      final mergedReason = existing.delayReason.contains(crNumber)
+          ? existing.delayReason
+          : (existing.delayReason.trim().isEmpty
+              ? attribution
+              : '${existing.delayReason} — $crNumber');
+      updated = existing.copyWith(
+        delayReason: mergedReason,
+        changeRequestNumber: crNumber,
+      );
+      final newList = List<ScheduleVariance>.from(_state.scheduleVariances);
+      newList[idx] = updated;
+      _state = _state.copyWith(scheduleVariances: newList);
+    }
+    _addAudit('scheduleVariance.$workPackageId.changeRequest', '', crNumber,
+        'Variance for $workPackageId attributed to $crNumber');
     notifyListeners();
     _saveToFirestore();
     ProjectControlsFirestoreService.instance.saveScheduleVariance(updated);
@@ -545,7 +626,9 @@ class ProjectControlsProvider extends ChangeNotifier {
   // ─── Risk & Issues ──────────────────────────────────────────────────
   void addRiskItem(RiskItem item) {
     _state = _state.copyWith(risksAndIssues: [..._state.risksAndIssues, item]);
-    _addAudit(item.isIssue ? 'issue.${item.id}' : 'risk.${item.id}', '—',
+    _addAudit(
+        item.isIssue ? 'issue.${item.id}' : 'risk.${item.id}',
+        '—',
         item.status.label,
         '${item.isIssue ? "Issue" : "Risk"} ${item.id} added: ${item.description}');
     notifyListeners();
@@ -555,9 +638,8 @@ class ProjectControlsProvider extends ChangeNotifier {
 
   void updateRiskItem(String id, RiskItem updated) {
     _state = _state.copyWith(
-      risksAndIssues: _state.risksAndIssues
-          .map((r) => r.id == id ? updated : r)
-          .toList(),
+      risksAndIssues:
+          _state.risksAndIssues.map((r) => r.id == id ? updated : r).toList(),
     );
     _addAudit('risk.$id', '', updated.status.label,
         'Risk/issue $id updated — status: ${updated.status.label}, owner: ${updated.owner}');
@@ -567,8 +649,8 @@ class ProjectControlsProvider extends ChangeNotifier {
   }
 
   void closeRiskItem(String id) {
-    final existing =
-        _state.risksAndIssues.firstWhere((r) => r.id == id);
+    final existing = _state.risksAndIssues.where((r) => r.id == id).firstOrNull;
+    if (existing == null) return;
     updateRiskItem(id, existing.copyWith(status: RiskStatus.closed));
   }
 
@@ -595,7 +677,9 @@ class ProjectControlsProvider extends ChangeNotifier {
               .toList()
           : [..._state.resourceAllocations, updated],
     );
-    _addAudit('resource.$resourceName', 'updated',
+    _addAudit(
+        'resource.$resourceName',
+        'updated',
         '${updated.weeklyHours.length}w',
         'Resource allocation updated for $resourceName');
     notifyListeners();
@@ -606,7 +690,8 @@ class ProjectControlsProvider extends ChangeNotifier {
   // ─── Reporting ──────────────────────────────────────────────────────
   void generateReport(ReportType type, DateTime start, DateTime end,
       {String? summaryOverride}) {
-    final summary = summaryOverride ?? _buildDefaultReportSummary(type, start, end);
+    final summary =
+        summaryOverride ?? _buildDefaultReportSummary(type, start, end);
     final report = ReportRecord(
       id: 'rpt_${DateTime.now().millisecondsSinceEpoch}',
       type: type,
@@ -697,7 +782,8 @@ class ProjectControlsProvider extends ChangeNotifier {
           cr.status == ChangeStatus.approved &&
           cr.description.toLowerCase().contains(wp.name.toLowerCase()));
       if (!hasApproval && wp.status == 'Added') {
-        issues.add('${wp.wbsCode} ${wp.name} — added without approved change request');
+        issues.add(
+            '${wp.wbsCode} ${wp.name} — added without approved change request');
       }
     }
     return issues;

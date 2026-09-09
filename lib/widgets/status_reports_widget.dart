@@ -127,7 +127,7 @@ class _StatusReportsWidgetState extends State<StatusReportsWidget> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -139,11 +139,11 @@ class _StatusReportsWidgetState extends State<StatusReportsWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
+          const Padding(
+            padding: EdgeInsets.all(20),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Status reports & asks',
                     style: TextStyle(
@@ -158,15 +158,15 @@ class _StatusReportsWidgetState extends State<StatusReportsWidget> {
           ),
           const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
           if (_reports.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(32),
+            const Padding(
+              padding: EdgeInsets.all(32),
               child: Center(
                 child: Column(
                   children: [
-                    const Icon(Icons.description_outlined,
+                    Icon(Icons.description_outlined,
                         color: Color(0xFF9CA3AF), size: 32),
-                    const SizedBox(height: 12),
-                    const Text(
+                    SizedBox(height: 12),
+                    Text(
                       'No status reports yet.',
                       style: TextStyle(
                         fontSize: 13,
@@ -191,7 +191,7 @@ class _StatusReportsWidgetState extends State<StatusReportsWidget> {
                       topRight: Radius.circular(12),
                     ),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
                       _TableHeaderCell('Report Type', flex: 2),
                       _TableHeaderCell('Stakeholder', flex: 2),
@@ -364,7 +364,7 @@ class _StatusReportRowWidgetState extends State<_StatusReportRowWidget> {
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
-                          value: selectedStatus,
+                          initialValue: selectedStatus,
                           decoration: const InputDecoration(
                             labelText: 'Status',
                             border: OutlineInputBorder(),
@@ -550,7 +550,7 @@ class _StatusReportRowWidgetState extends State<_StatusReportRowWidget> {
                               : _report.status == 'Draft'
                                   ? const Color(0xFFF59E0B)
                                       .withValues(alpha: 0.1)
-                                  : const Color(0xFF2563EB)
+                                  : const Color(0xFFFFC812)
                                       .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -563,7 +563,7 @@ class _StatusReportRowWidgetState extends State<_StatusReportRowWidget> {
                                 ? const Color(0xFF10B981)
                                 : _report.status == 'Draft'
                                     ? const Color(0xFFF59E0B)
-                                    : const Color(0xFF2563EB),
+                                    : const Color(0xFFFFC812),
                           ),
                         ),
                       ),

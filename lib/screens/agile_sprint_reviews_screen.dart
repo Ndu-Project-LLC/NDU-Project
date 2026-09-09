@@ -29,7 +29,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   static const Color _kAccent = Color(0xFFF59E0B);
   static const Color _kAccentLight = Color(0xFFFFC812);
   static const Color _kAccentBg = Color(0xFFFEF3C7);
-  static const Color _kBackground = Color(0xFFF8FAFC);
+  static const Color _kBackground = Colors.white;
   static const Color _kSurface = Colors.white;
   static const Color _kBorder = Color(0xFFE5E7EB);
   static const Color _kHeadline = Color(0xFF111827);
@@ -190,10 +190,10 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Sprint review saved'),
+          const SnackBar(
+            content: Text('Sprint review saved'),
             backgroundColor: _kAccent,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -256,8 +256,8 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Sprint Reviews',
                     ),
                   ),
@@ -268,7 +268,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        PlanningPhaseHeader(
+                        const PlanningPhaseHeader(
                           title: 'Sprint Reviews',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -361,7 +361,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -451,8 +451,8 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildStoriesHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: Row(
-        children: const [
+      child: const Row(
+        children: [
           SizedBox(
               width: 80,
               child: Text('Story',
@@ -568,7 +568,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
     final color = value == 'High'
         ? _kAccent
         : value == 'Medium'
-            ? Colors.blue
+            ? const Color(0xFFFFC812)
             : Colors.grey;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -587,7 +587,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
         (status == 'Done'
             ? Colors.green
             : status == 'In Progress'
-                ? Colors.blue
+                ? const Color(0xFFFFC812)
                 : _kAccent);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -678,13 +678,13 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      Icon(Icons.person_outline, size: 11, color: _kMuted),
+                      const Icon(Icons.person_outline, size: 11, color: _kMuted),
                       const SizedBox(width: 4),
                       Text(d.owner,
                           style: const TextStyle(fontSize: 11, color: _kMuted)),
                       if (d.notes.isNotEmpty) ...[
                         const SizedBox(width: 10),
-                        Icon(Icons.notes, size: 11, color: _kMuted),
+                        const Icon(Icons.notes, size: 11, color: _kMuted),
                         const SizedBox(width: 4),
                         Expanded(
                             child: Text(d.notes,
@@ -719,11 +719,11 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.feedback_outlined, size: 20, color: _kAccent),
-              const SizedBox(width: 8),
-              const Text('Stakeholder Feedback',
+              Icon(Icons.feedback_outlined, size: 20, color: _kAccent),
+              SizedBox(width: 8),
+              Text('Stakeholder Feedback',
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -748,7 +748,6 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(10),
         border: Border(
           left: BorderSide(color: sentimentColor, width: 3),
         ),
@@ -853,8 +852,8 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildActionsHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: Row(
-        children: const [
+      child: const Row(
+        children: [
           SizedBox(width: 30),
           Expanded(
               flex: 5,
@@ -955,7 +954,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
                   color: done
                       ? Colors.green
                       : a.status == 'In Progress'
-                          ? Colors.blue
+                          ? const Color(0xFFFFC812)
                           : _kAccent),
             ),
           ],
@@ -1147,7 +1146,7 @@ class _LoadingStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

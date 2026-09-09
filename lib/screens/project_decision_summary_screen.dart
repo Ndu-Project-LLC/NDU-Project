@@ -766,7 +766,7 @@ class _ProjectDecisionSummaryScreenState
  Widget build(BuildContext context) {
  final isMobile = AppBreakpoints.isMobile(context);
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: isMobile
  ? Drawer(
  width: AppBreakpoints.sidebarWidth(context),

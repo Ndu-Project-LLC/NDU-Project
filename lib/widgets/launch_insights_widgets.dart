@@ -21,8 +21,8 @@ const Color _kAmber = Color(0xFFF59E0B);
 const Color _kAmberDark = Color(0xFFD97706);
 const Color _kGreen = Color(0xFF10B981);
 const Color _kRed = Color(0xFFEF4444);
-const Color _kBlue = Color(0xFF2563EB);
-const Color _kPurple = Color(0xFF7C3AED);
+const Color _kBlue = Color(0xFFFFC812);
+const Color _kPurple = Color(0xFFB8860B);
 const Color _kSlate = Color(0xFF64748B);
 const Color _kInk = Color(0xFF0F172A);
 const Color _kInk2 = Color(0xFF334155);
@@ -1141,7 +1141,6 @@ class _KanbanColumn extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
                       border: Border(
                         left: BorderSide(color: c.accent ?? color, width: 3),
                       ),
@@ -1433,7 +1432,17 @@ class _DonutSegmentPainter extends CustomPainter {
 // Composed insights header — KPI row + donut side-by-side
 // ─────────────────────────────────────────────────────────────────────────
 
-class LaunchInsightsHeader extends StatelessWidget {
+/// Collapsible insights header shared by every Launch Phase screen.
+///
+/// By default the section is **collapsible and collapsed** on first render
+/// — a slim header (icon + title + subtitle + compact percent badge +
+/// chevron) is shown, and tapping the header expands the full layout
+/// (donut + KPI row). This frees vertical space on pages that stack many
+/// panels beneath the insights block.
+///
+/// Callers can opt out of collapsing with `collapsible: false`, or default
+/// to expanded with `defaultCollapsed: false`.
+class LaunchInsightsHeader extends StatefulWidget {
   final String sectionTitle;
   final String sectionSubtitle;
   final IconData sectionIcon;
@@ -1442,6 +1451,17 @@ class LaunchInsightsHeader extends StatelessWidget {
   final String completionLabel;
   final String? completionCaption;
   final List<LaunchKpiTile> kpiTiles;
+
+  /// When `true`, the header gains a chevron toggle and tapping the
+  /// header expands / collapses the donut + KPI row. Defaults to `true`
+  /// so all 11 Launch Phase screens collapse by default without per-page
+  /// edits.
+  final bool collapsible;
+
+  /// Initial collapsed state. Only honoured when [collapsible] is `true`.
+  /// Defaults to `true` so screens open with the section already closed,
+  /// matching the product decision to free vertical space on Launch pages.
+  final bool defaultCollapsed;
 
   const LaunchInsightsHeader({
     super.key,
@@ -1453,10 +1473,138 @@ class LaunchInsightsHeader extends StatelessWidget {
     required this.completionLabel,
     this.completionCaption,
     required this.kpiTiles,
+    this.collapsible = true,
+    this.defaultCollapsed = true,
   });
 
   @override
+  State<LaunchInsightsHeader> createState() => _LaunchInsightsHeaderState();
+}
+
+class _LaunchInsightsHeaderState extends State<LaunchInsightsHeader>
+    with SingleTickerProviderStateMixin {
+  late bool _collapsed = widget.collapsible && widget.defaultCollapsed;
+
+  void _toggle() {
+    if (!widget.collapsible) return;
+    setState(() => _collapsed = !_collapsed);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final accent = widget.sectionColor;
+
+    // ── Compact percent badge — shown only when collapsed so the user
+    //    still sees the headline KPI (e.g. "75% READY") without expanding.
+    final compactBadge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accent.withValues(alpha: 0.24)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '${(widget.completionPercent * 100).round()}%',
+            style: TextStyle(
+              color: accent,
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            widget.completionLabel,
+            style: TextStyle(
+              color: accent,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // ── Chevron toggle — uses AnimatedSwitcher (same pattern as
+    //    SectionNavigator) so collapse / expand state stays visually
+    //    consistent across the app.
+    final chevron = Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: _collapsed
+            ? const Color(0xFFF3F4F6)
+            : accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: _collapsed
+              ? const Color(0xFFE4E7EC)
+              : accent.withValues(alpha: 0.25),
+        ),
+      ),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 180),
+        child: Icon(
+          _collapsed
+              ? Icons.keyboard_arrow_down_rounded
+              : Icons.keyboard_arrow_up_rounded,
+          key: ValueKey(_collapsed),
+          size: 20,
+          color: _collapsed ? const Color(0xFF6B7280) : accent,
+        ),
+      ),
+    );
+
+    // ── Title row — icon + title + subtitle (always visible).
+    final titleRow = Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(widget.sectionIcon, color: accent, size: 20),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.sectionTitle,
+                style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: _kInk,
+                    letterSpacing: -0.2),
+              ),
+              Text(
+                widget.sectionSubtitle,
+                style: const TextStyle(
+                    fontSize: 11, color: _kInk2, height: 1.4),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    // ── Donut — shown only when expanded.
+    final donut = LaunchProgressDonut(
+      percent: widget.completionPercent,
+      centerLabel: widget.completionLabel,
+      caption: widget.completionCaption,
+      color: accent,
+      size: 92,
+    );
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1474,51 +1622,39 @@ class LaunchInsightsHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: sectionColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(sectionIcon, color: sectionColor, size: 20),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      sectionTitle,
-                      style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: _kInk,
-                          letterSpacing: -0.2),
-                    ),
-                    Text(
-                      sectionSubtitle,
-                      style: const TextStyle(
-                          fontSize: 11, color: _kInk2, height: 1.4),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              LaunchProgressDonut(
-                percent: completionPercent,
-                centerLabel: completionLabel,
-                caption: completionCaption,
-                color: sectionColor,
-                size: 92,
-              ),
-            ],
+          // ── Header row — tappable when collapsible.
+          InkWell(
+            onTap: widget.collapsible ? _toggle : null,
+            borderRadius: BorderRadius.circular(10),
+            child: Row(
+              children: [
+                Expanded(child: titleRow),
+                if (_collapsed) ...[
+                  const SizedBox(width: 12),
+                  compactBadge,
+                ] else ...[
+                  const SizedBox(width: 16),
+                  donut,
+                ],
+                if (widget.collapsible) ...[
+                  const SizedBox(width: 8),
+                  chevron,
+                ],
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          LaunchKpiRow(tiles: kpiTiles),
+          // ── Body — collapses to zero height when _collapsed.
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeInOutCubic,
+            alignment: Alignment.topCenter,
+            child: _collapsed
+                ? const SizedBox(width: double.infinity, height: 0)
+                : Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: LaunchKpiRow(tiles: widget.kpiTiles),
+                  ),
+          ),
         ],
       ),
     );

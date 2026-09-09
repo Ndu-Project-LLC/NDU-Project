@@ -426,11 +426,18 @@ class StakeholdersScreen extends StatelessWidget {
     final emailCtrl = TextEditingController();
     final roleCtrl = TextEditingController();
     bool sme = false;
+    try {
+      final estimate = provider.estimate;
+      if (estimate != null) {
+        // Prefill a helpful role hint based on estimate class
+        roleCtrl.text = '${estimate.className.label} SME';
+      }
+    } catch (_) {}
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           title: const Text('Add stakeholder',
               style: TextStyle(color: Color(0xFF1A1D1F))),
           content: Column(
@@ -505,7 +512,7 @@ class StakeholdersScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           title: const Text('Grant access',
               style: TextStyle(color: Color(0xFF1A1D1F))),
           content: Column(

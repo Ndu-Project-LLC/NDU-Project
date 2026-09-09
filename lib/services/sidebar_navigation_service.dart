@@ -133,10 +133,10 @@ class SidebarNavigationService {
         checkpoint: 'infrastructure_considerations',
         label: 'Infrastructure Considerations'),
     SidebarItem(checkpoint: 'core_stakeholders', label: 'Core Stakeholders'),
+    SidebarItem(checkpoint: 'cost_analysis', label: 'Initial Cost Estimate'),
     SidebarItem(
         checkpoint: 'preferred_solution_analysis',
         label: 'Preferred Solution Analysis'),
-    SidebarItem(checkpoint: 'cost_analysis', label: 'Initial Cost Estimate'),
 
     // Front End Planning
     SidebarItem(checkpoint: 'fep_summary', label: 'Summary'),
@@ -268,6 +268,9 @@ class SidebarNavigationService {
     // Schedule & Cost
     SidebarItem(checkpoint: 'schedule', label: 'Schedule'),
     SidebarItem(checkpoint: 'cost_estimate', label: 'Cost Estimate Overview'),
+    // PMB Integration — the unified Scope ↔ WBS ↔ Schedule ↔ Controls view
+    SidebarItem(
+        checkpoint: 'integration_dashboard', label: 'Integration Dashboard'),
     // Scope & Change Management
     SidebarItem(
         checkpoint: 'scope_tracking_plan', label: 'Scope Tracking Plan'),

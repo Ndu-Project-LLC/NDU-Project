@@ -2,8 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../services/navigation_context_service.dart';
 
-/// World-class, interactive app logo widget that automatically switches between
-/// assets/images/Logo.png (light mode) and assets/images/Ndu_logodarkmode.png (dark mode).
+/// World-class, interactive app logo widget for the entire NDU Project
+/// application.
+///
+/// Renders the canonical brand asset — `assets/images/Logo.png`, the dark
+/// NDU squircle (gold trend-arrow icon, white "NDU" + gold "PROJECT"
+/// wordmark, "Navigate. Deliver. Upgrade." tagline). The same asset is used
+/// for both light and dark surfaces because the squircle carries its own
+/// dark background.
+///
+/// Visibility on dark surfaces: the squircle is near-black, so when it sits
+/// on a dark background (dark theme, black landing page) a 1px gold
+/// hairline border + subtle gold glow is applied so the logo always reads
+/// clearly. On light surfaces the squircle's own contrast needs no help.
+///
 /// Features smooth hover animations and professional visual feedback.
 class AppLogo extends StatefulWidget {
   const AppLogo({
@@ -12,6 +24,7 @@ class AppLogo extends StatefulWidget {
     this.width,
     this.semanticLabel,
     this.enableTapToDashboard = true,
+    this.onDarkBackground,
   });
 
   /// Desired rendered height. If null, defaults to 56 for compact headers.
@@ -25,6 +38,14 @@ class AppLogo extends StatefulWidget {
 
   /// When true, tapping the logo will navigate to the landing page. Defaults to true.
   final bool enableTapToDashboard;
+
+  /// Explicit control over the dark-background hairline treatment.
+  ///
+  /// * `null` (default) — auto-detect from the ambient [Theme] brightness.
+  /// * `true` — always apply the gold hairline border + glow (e.g. the
+  ///   black landing page, which is dark regardless of platform theme).
+  /// * `false` — never apply it (e.g. white cards).
+  final bool? onDarkBackground;
 
   @override
   State<AppLogo> createState() => _AppLogoState();
@@ -69,12 +90,11 @@ class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final h = widget.height ?? 56;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Use theme-aware logo selection: dark mode uses dark logo, light mode uses standard logo
-    final assetPath = isDark
-        ? 'assets/images/Ndu_logodarkmode.png' // Dark mode logo
-        : 'assets/images/Logo.png'; // Light mode logo (using Logo.png as requested)
+    final themeIsDark = Theme.of(context).brightness == Brightness.dark;
+    // The squircle asset is used on every surface; only the hairline
+    // treatment varies so the near-black logo stays visible in the dark.
+    final onDark = widget.onDarkBackground ?? themeIsDark;
+    const assetPath = 'assets/images/Logo.png';
 
     final image = Image.asset(
       assetPath,
@@ -85,8 +105,44 @@ class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
       cacheHeight: (MediaQuery.devicePixelRatioOf(context) * h).round(),
     );
 
+    // ── Dark-background visibility treatment ──
+    // The squircle is near-black (#0d0d0d); on dark surfaces it needs a
+    // 1px gold hairline + soft gold glow to read clearly. On light
+    // surfaces the squircle's own contrast is sufficient.
+    final hairline = onDark
+        ? Border.all(
+            color: const Color(0xFFFFC60B).withValues(alpha: 0.55),
+            width: 1,
+          )
+        : null;
+    final glow = onDark
+        ? [
+            BoxShadow(
+              // Gold-tinted glow that frames the squircle in the dark.
+              color: const Color(0xFFFFC60B).withValues(alpha: 0.18),
+              blurRadius: 14,
+              spreadRadius: 0,
+              offset: const Offset(0, 2),
+            ),
+          ]
+        : <BoxShadow>[];
+
+    // The squircle's own rounded corners must NOT be cropped or re-rounded
+    // by a ClipRRect — padding keeps the border floating just outside it.
+    final framed = Container(
+      height: h,
+      width: widget.width,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(h * 0.18),
+        border: hairline,
+        boxShadow: glow,
+      ),
+      child: image,
+    );
+
     if (!widget.enableTapToDashboard) {
-      return SizedBox(height: h, width: widget.width, child: image);
+      return SizedBox(height: h, width: widget.width, child: framed);
     }
 
     // World-class interactive logo with smooth animations and hover effects
@@ -106,36 +162,14 @@ class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
             scale: _scaleAnimation.value,
             child: Opacity(
               opacity: _opacityAnimation.value,
-              child: Container(
-                height: h,
-                width: widget.width,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: _isHovering
-                      ? [
-                          BoxShadow(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.2),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Semantics(
-                  button: true,
-                  label: widget.semanticLabel ?? 'Go to landing page',
-                  child: child,
-                ),
+              child: Semantics(
+                button: true,
+                label: widget.semanticLabel ?? 'Go to landing page',
+                child: child,
               ),
             ),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: image,
-          ),
+          child: framed,
         ),
       ),
     );

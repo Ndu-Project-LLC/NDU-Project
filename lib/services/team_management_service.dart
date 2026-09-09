@@ -11,6 +11,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/models/team_management_plan.dart';
 
 /// Curated role → onboarding requirements mapping. Each entry is a
@@ -492,5 +493,150 @@ class TeamManagementService {
       sum += m.progress;
     }
     return sum / plan.memberMobilizations.length;
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Staffing Plan → TeamMember bridge
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  //
+  // The Front-End Planning > Personnel screen captures required roles as
+  // StaffingRow entries (role, quantity, internal/external, duration,
+  // monthly cost, skills, status). The Team Management > Members tab
+  // needs named individuals to assign responsibilities, mobilization
+  // checklists, onboarding requirements, and handover records to.
+  //
+  // generateMembersFromStaffingPlan bridges the two: for each staffing
+  // row, it produces one TeamMember per slot (so a row with quantity=2
+  // becomes 2 distinct member cards the user can later name individually).
+  // The bridge is idempotent — re-running it on a row whose slots are
+  // already linked produces zero new members.
+
+  /// Builds the combined responsibilities string for a TeamMember derived
+  /// from a StaffingRow: the role description followed by each skill
+  /// requirement on its own line. Empty inputs produce an empty string.
+  static String _composeResponsibilities(StaffingRow row) {
+    final parts = <String>[];
+    final desc = row.roleDescription.trim();
+    if (desc.isNotEmpty) parts.add(desc);
+    final skills = row.skillRequirements
+        .split(RegExp(r'[.\n;]+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty);
+    for (final s in skills) {
+      parts.add(s);
+    }
+    return parts.join('\n');
+  }
+
+  /// Generates new TeamMember entries from staffing rows, deduplicated
+  /// against existing members via [TeamMember.staffingPlanId].
+  ///
+  /// For each staffing row with a non-empty role, the number of new
+  /// members created equals `max(0, row.quantity - alreadyLinkedCount)`
+  /// where `alreadyLinkedCount` is the number of existing members whose
+  /// `staffingPlanId` matches `row.id`. Rows whose role is empty are
+  /// skipped (they are placeholders the user hasn't filled in yet).
+  ///
+  /// Returns the list of new members (caller is responsible for appending
+  /// them to ProjectDataModel.teamMembers and persisting).
+  static List<TeamMember> generateMembersFromStaffingPlan({
+    required List<TeamMember> existingMembers,
+    required List<StaffingRow> staffingRows,
+  }) {
+    final result = <TeamMember>[];
+    for (final row in staffingRows) {
+      final role = row.role.trim();
+      if (role.isEmpty) continue;
+      final alreadyLinked = existingMembers
+          .where((m) => m.staffingPlanId == row.id)
+          .length;
+      final needed = row.quantity - alreadyLinked;
+      if (needed <= 0) continue;
+      final responsibilities = _composeResponsibilities(row);
+      for (int i = 0; i < needed; i++) {
+        result.add(TeamMember(
+          name: '',
+          role: role,
+          email: '',
+          responsibilities: responsibilities,
+          // New members default to internal if the staffing row is
+          // internal; external hires will need email provisioning before
+          // they get site access.
+          hasSiteAccess: row.isInternal,
+          staffingPlanId: row.id,
+        ));
+      }
+    }
+    return result;
+  }
+
+  /// Returns a snapshot of the staffing plan: total distinct roles,
+  /// total headcount (sum of quantities), sum of monthly cost
+  /// (quantity × monthlyCost per row), and the internal/external split.
+  /// Used by the Members tab summary card.
+  static StaffingPlanSnapshot summarizeStaffingPlan(
+      List<StaffingRow> staffingRows) {
+    int roles = 0;
+    int headcount = 0;
+    double monthlyCost = 0;
+    double totalCost = 0;
+    int internalCount = 0;
+    int externalCount = 0;
+    for (final row in staffingRows) {
+      if (row.role.trim().isEmpty) continue;
+      roles++;
+      headcount += row.quantity;
+      final monthly =
+          double.tryParse(row.monthlyCost.replaceAll(RegExp(r'[,\$]'), '')) ??
+              0.0;
+      monthlyCost += row.quantity * monthly;
+      totalCost += row.subtotal;
+      if (row.isInternal) {
+        internalCount += row.quantity;
+      } else {
+        externalCount += row.quantity;
+      }
+    }
+    return StaffingPlanSnapshot(
+      roles: roles,
+      headcount: headcount,
+      monthlyCost: monthlyCost,
+      totalCost: totalCost,
+      internalCount: internalCount,
+      externalCount: externalCount,
+    );
+  }
+}
+
+/// Immutable snapshot of a staffing plan's rollup totals. Returned by
+/// [TeamManagementService.summarizeStaffingPlan] for display in the
+/// Team Management > Members tab summary card.
+class StaffingPlanSnapshot {
+  final int roles;
+  final int headcount;
+  final double monthlyCost;
+  final double totalCost;
+  final int internalCount;
+  final int externalCount;
+
+  const StaffingPlanSnapshot({
+    required this.roles,
+    required this.headcount,
+    required this.monthlyCost,
+    required this.totalCost,
+    required this.internalCount,
+    required this.externalCount,
+  });
+
+  bool get isEmpty => roles == 0;
+
+  String get monthlyCostFormatted {
+    if (monthlyCost <= 0) return '\$0';
+    return '\$${monthlyCost.toStringAsFixed(monthlyCost.truncateToDouble() == monthlyCost ? 0 : 2)}';
+  }
+
+  String get totalCostFormatted {
+    if (totalCost <= 0) return '\$0';
+    return '\$${totalCost.toStringAsFixed(totalCost.truncateToDouble() == totalCost ? 0 : 2)}';
   }
 }

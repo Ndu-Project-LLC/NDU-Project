@@ -20,9 +20,9 @@ Optimizations vs. the basic http.server:
      → browser can resume interrupted downloads of large assets
 
 Usage:
-    python3 /home/z/my-project/scripts/serve_flutter_web_fast.py start
-    python3 /home/z/my-project/scripts/serve_flutter_web_fast.py stop
-    python3 /home/z/my-project/scripts/serve_flutter_web_fast.py status
+    python3 scripts/serve_flutter_web_fast.py start
+    python3 scripts/serve_flutter_web_fast.py stop
+    python3 scripts/serve_flutter_web_fast.py status
 """
 
 from __future__ import annotations
@@ -37,10 +37,14 @@ import mimetypes
 from pathlib import Path
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-SERVE_DIR = "/home/z/my-project/serve"
+# Resolve paths relative to the script's location (project root)
+_SCRIPT_DIR = Path(__file__).resolve().parent
+_PROJECT_ROOT = _SCRIPT_DIR.parent
+
+SERVE_DIR = str(_PROJECT_ROOT / "serve")
 PORT = 8080
-PID_FILE = "/home/z/my-project/server.pid"
-LOG_FILE = "/home/z/my-project/server.log"
+PID_FILE = str(_PROJECT_ROOT / "server.pid")
+LOG_FILE = str(_PROJECT_ROOT / "server.log")
 
 # Pre-compress text assets at startup so we don't re-compress per request.
 # Threshold: pre-compress anything > 16 KB (smaller files compress on-the-fly).

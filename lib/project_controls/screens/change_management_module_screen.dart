@@ -30,7 +30,6 @@ import 'package:ndu_project/project_controls/providers/change_management_provide
 import 'package:ndu_project/utils/download_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
@@ -85,7 +84,8 @@ class _ChangeManagementModuleScreenState
       final data = ProjectDataHelper.getData(context);
 
       // Pull real carried context for the banner.
-      final carried = await buildAccumulatedContext(context, 'change_management');
+      final carried =
+          await buildAccumulatedContext(context, 'change_management');
       if (mounted) setState(() => _carriedContext = carried);
 
       final provider = context.read<ChangeManagementProvider>();
@@ -117,7 +117,7 @@ class _ChangeManagementModuleScreenState
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Seeded ${seed.rows.length} change request(s) from ${seed.source}.'),
+                  'Seeded ${seed.rows.length} change request(s) from ${seed.source}.'),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -179,25 +179,6 @@ class _ChangeManagementModuleScreenState
           breadcrumbTitle: 'Change Management',
           body: Column(
             children: [
-              // ── Carried context banner (real prior-phase data only) ──
-              if (_isAutoPopulating ||
-                  (_carriedContext != null && _carriedContext!.isNotEmpty))
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_isAutoPopulating)
-                        const AutoPopulatingIndicator(),
-                      if (_carriedContext != null &&
-                          _carriedContext!.isNotEmpty)
-                        CarriedContextBanner(
-                          checkpoint: 'change_management',
-                          contextText: _carriedContext!,
-                        ),
-                    ],
-                  ),
-                ),
               // ── World-class Section Navigator ─────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -208,8 +189,8 @@ class _ChangeManagementModuleScreenState
                       children: [
                         const Spacer(),
                         TextButton.icon(
-                          onPressed: () => setState(() =>
-                              _navCollapsed = !_navCollapsed),
+                          onPressed: () =>
+                              setState(() => _navCollapsed = !_navCollapsed),
                           icon: Icon(
                             _navCollapsed
                                 ? Icons.unfold_more
@@ -233,8 +214,7 @@ class _ChangeManagementModuleScreenState
                     if (!_navCollapsed)
                       SectionNavigator(
                         title: 'Change Management Navigation',
-                        subtitle:
-                            'Navigate between change management sections',
+                        subtitle: 'Navigate between change management sections',
                         icon: Icons.sync_alt,
                         tabs: const [
                           SectionTab(
@@ -245,13 +225,11 @@ class _ChangeManagementModuleScreenState
                           SectionTab(
                               icon: Icons.assessment_outlined,
                               label: 'Impact & Approval Summary'),
-                          SectionTab(
-                              icon: Icons.history, label: 'Audit Trail'),
+                          SectionTab(icon: Icons.history, label: 'Audit Trail'),
                           SectionTab(
                               icon: Icons.add_circle_outline,
                               label: 'Create CR'),
-                          SectionTab(
-                              icon: Icons.tune, label: 'Impact Detail'),
+                          SectionTab(icon: Icons.tune, label: 'Impact Detail'),
                           SectionTab(
                               icon: Icons.account_tree_outlined,
                               label: 'Workflow'),
@@ -346,20 +324,20 @@ class _DashboardTab extends StatelessWidget {
                 _kpiCard('Open CRs', '${provider.openCRs}',
                     Icons.pending_actions, const Color(0xFFF59E0B)),
                 _kpiCard('Pending Approval', '${provider.pendingApprovals}',
-                    Icons.assignment_late, const Color(0xFF8B5CF6)),
+                    Icons.assignment_late, const Color(0xFFB8860B)),
                 _kpiCard('Approved', '${provider.approvedCRs}',
                     Icons.check_circle, const Color(0xFF10B981)),
                 _kpiCard('Emergency', '${provider.emergencyCRs}',
                     Icons.emergency, const Color(0xFFEF4444)),
                 _kpiCard('Re-baselines', '${provider.rebaselineCount}',
-                    Icons.history, const Color(0xFF6366F1)),
+                    Icons.history, const Color(0xFFB8860B)),
                 _kpiCard(
                   'Approval Cycle (avg)',
                   provider.avgApprovalCycleDays == 0
                       ? '—'
                       : '${provider.avgApprovalCycleDays.toStringAsFixed(1)}d',
                   Icons.timer_outlined,
-                  const Color(0xFF06B6D4),
+                  const Color(0xFFD97706),
                 ),
                 _kpiCard(
                   'Re-baselines (Qtr)',
@@ -369,32 +347,16 @@ class _DashboardTab extends StatelessWidget {
                 ),
               ];
 
-              // Desktop: all 7 in one row using Expanded (no overflow)
-              if (constraints.maxWidth > 1100) {
-                return Row(
-                  children: kpiCards.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                            right: i < kpiCards.length - 1 ? 12 : 0),
-                        child: entry.value,
-                      ),
-                    );
-                  }).toList(),
-                );
-              }
-
-              // Tablet/mobile: GridView with 4 or 2 columns
-              final count = constraints.maxWidth > 700 ? 4 : 2;
-              return GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: count,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.4,
-                children: kpiCards,
+              // All 7 KPI cards in one row, wrapping gracefully
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: kpiCards.map((card) {
+                  return SizedBox(
+                    width: (constraints.maxWidth - 12 * 6) / 7,
+                    child: card,
+                  );
+                }).toList(),
               );
             },
           ),
@@ -455,11 +417,11 @@ class _DashboardTab extends StatelessWidget {
           Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                  color: const Color(0xFFB8860B).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6)),
               child: Text('$total CRs',
                   style: const TextStyle(
-                      color: Color(0xFF6366F1),
+                      color: Color(0xFFB8860B),
                       fontSize: 11,
                       fontWeight: FontWeight.w700))),
         ]),
@@ -470,7 +432,7 @@ class _DashboardTab extends StatelessWidget {
             size: Size.infinite,
             painter: _SparklinePainter(
               values: volume,
-              color: const Color(0xFF6366F1),
+              color: const Color(0xFFB8860B),
               max: maxV == 0 ? 1 : maxV.toDouble(),
             ),
           ),
@@ -490,7 +452,8 @@ class _DashboardTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(8)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             const Text('Peak day',
@@ -500,7 +463,7 @@ class _DashboardTab extends StatelessWidget {
                     fontWeight: FontWeight.w600)),
             Text('$maxV CRs',
                 style: const TextStyle(
-                    color: Color(0xFF6366F1),
+                    color: Color(0xFFB8860B),
                     fontSize: 12,
                     fontWeight: FontWeight.w800)),
           ]),
@@ -590,13 +553,14 @@ class _DashboardTab extends StatelessWidget {
         const SizedBox(height: 12),
         // Reserve
         _reserveBar('Management Reserve', provider.usedReserve,
-            provider.totalReserve, const Color(0xFF6366F1)),
+            provider.totalReserve, const Color(0xFFB8860B)),
         const SizedBox(height: 16),
         // Total impact
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(8)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             const Text('Total Cost Impact (Approved)',
@@ -615,7 +579,8 @@ class _DashboardTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(8)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             const Text('Total Schedule Impact (Approved)',
@@ -974,7 +939,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                 // View toggle: Card / Table
                 Container(
                   decoration: BoxDecoration(
-                    color: Color(0xFFF9FAFB),
+                    color: const Color(0xFFF9FAFB),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: _surfaceBorder),
                   ),
@@ -1222,19 +1187,50 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
               selected: isSelected,
               onSelectChanged: (_) => widget.onSelectCR(cr.id),
               cells: [
-                DataCell(WrappedText(cr.id, style: const TextStyle(color: Color(0xFF6366F1), fontSize: 12, fontWeight: FontWeight.w600))),
+                DataCell(WrappedText(cr.id,
+                    style: const TextStyle(
+                        color: Color(0xFFB8860B),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600))),
                 DataCell(ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 240),
-                  child: WrappedText(cr.title, style: const TextStyle(color: _textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
+                  child: WrappedText(cr.title,
+                      style: const TextStyle(
+                          color: _textPrimary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600)),
                 )),
-                DataCell(WrappedText(cr.changeType.label, style: const TextStyle(color: _textSecondary, fontSize: 12))),
+                DataCell(WrappedText(cr.changeType.label,
+                    style:
+                        const TextStyle(color: _textSecondary, fontSize: 12))),
                 DataCell(_priorityBadge(cr.priority)),
                 DataCell(_statusBadge(cr.status)),
-                DataCell(WrappedText(cr.impact.compositeImpactScore.toStringAsFixed(2), style: TextStyle(color: _scoreColor(cr.impact.compositeImpactScore), fontSize: 12, fontWeight: FontWeight.w700))),
-                DataCell(WrappedText('\$${cr.impact.totalCostImpact.toStringAsFixed(0)}', style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12, fontWeight: FontWeight.w600))),
-                DataCell(WrappedText('${cr.impact.totalScheduleImpact > 0 ? "+" : ""}${cr.impact.totalScheduleImpact.toStringAsFixed(0)}d', style: TextStyle(color: cr.impact.totalScheduleImpact > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981), fontSize: 12, fontWeight: FontWeight.w600))),
-                DataCell(WrappedText(cr.submittedBy, style: const TextStyle(color: _textSecondary, fontSize: 12))),
-                DataCell(WrappedText(_formatDate(cr.dateSubmitted), style: const TextStyle(color: _textSecondary, fontSize: 12))),
+                DataCell(WrappedText(
+                    cr.impact.compositeImpactScore.toStringAsFixed(2),
+                    style: TextStyle(
+                        color: _scoreColor(cr.impact.compositeImpactScore),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700))),
+                DataCell(WrappedText(
+                    '\$${cr.impact.totalCostImpact.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                        color: Color(0xFFEF4444),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600))),
+                DataCell(WrappedText(
+                    '${cr.impact.totalScheduleImpact > 0 ? "+" : ""}${cr.impact.totalScheduleImpact.toStringAsFixed(0)}d',
+                    style: TextStyle(
+                        color: cr.impact.totalScheduleImpact > 0
+                            ? const Color(0xFFEF4444)
+                            : const Color(0xFF10B981),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600))),
+                DataCell(WrappedText(cr.submittedBy,
+                    style:
+                        const TextStyle(color: _textSecondary, fontSize: 12))),
+                DataCell(WrappedText(_formatDate(cr.dateSubmitted),
+                    style:
+                        const TextStyle(color: _textSecondary, fontSize: 12))),
               ],
             );
           }).toList(),
@@ -1257,7 +1253,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
   Widget _priorityBadge(CMPriority p) {
     final colors = <CMPriority, Color>{
       CMPriority.low: const Color(0xFF6B7280),
-      CMPriority.medium: const Color(0xFF3B82F6),
+      CMPriority.medium: const Color(0xFFFFC812),
       CMPriority.high: const Color(0xFFF59E0B),
       CMPriority.critical: const Color(0xFFEF4444),
       CMPriority.emergency: const Color(0xFFDC2626),
@@ -1277,12 +1273,12 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
   Widget _statusBadge(CMStatus s) {
     final colors = <CMStatus, Color>{
       CMStatus.draft: const Color(0xFF6B7280),
-      CMStatus.submitted: const Color(0xFF3B82F6),
-      CMStatus.underReview: const Color(0xFF8B5CF6),
+      CMStatus.submitted: const Color(0xFFFFC812),
+      CMStatus.underReview: const Color(0xFFB8860B),
       CMStatus.pendingApproval: const Color(0xFFF59E0B),
       CMStatus.approved: const Color(0xFF10B981),
       CMStatus.rejected: const Color(0xFFEF4444),
-      CMStatus.implemented: const Color(0xFF06B6D4),
+      CMStatus.implemented: const Color(0xFFD97706),
       CMStatus.closed: const Color(0xFF64748B),
     };
     final color = colors[s] ?? const Color(0xFF6B7280);
@@ -1310,7 +1306,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB),
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
           child: DropdownButtonHideUnderline(
@@ -1357,10 +1353,10 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
           fillColor: const Color(0xFFF9FAFB),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
         ),
         style: const TextStyle(color: _textPrimary, fontSize: 12),
       ),
@@ -1457,7 +1453,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                      color: Color(0xFFDC2626),
+                      color: const Color(0xFFDC2626),
                       borderRadius: BorderRadius.circular(4)),
                   child: const Text('EMERGENCY',
                       style: TextStyle(
@@ -1470,11 +1466,11 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+                      color: const Color(0xFFFFC812).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(4)),
                   child: const Text('AGILE',
                       style: TextStyle(
-                          color: Color(0xFF3B82F6),
+                          color: Color(0xFFFFC812),
                           fontSize: 9,
                           fontWeight: FontWeight.w700))),
             Container(
@@ -1506,6 +1502,140 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
               const SizedBox(height: 4),
               Text('Root Cause: ${cr.rootCause}',
                   style: const TextStyle(color: _textSecondary, fontSize: 12))
+            ],
+            // Lusaka 22 — affected work packages, impacted deliverables,
+            // drawdown source and actual-vs-estimate at close-out.
+            if (cr.affectedWorkPackages.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              const Text('AFFECTED WORK PACKAGES',
+                  style: TextStyle(
+                      color: _textSecondary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1)),
+              const SizedBox(height: 6),
+              Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: cr.affectedWorkPackages.take(12).map((wp) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                          color:
+                              const Color(0xFFD97706).withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(6)),
+                      child: Text(wp,
+                          style: const TextStyle(
+                              color: Color(0xFFB8860B),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600)),
+                    );
+                  }).toList()),
+              if (cr.affectedWorkPackages.length > 12)
+                Text('+${cr.affectedWorkPackages.length - 12} more',
+                    style:
+                        const TextStyle(color: _textSecondary, fontSize: 10)),
+            ],
+            if (cr.deliverables.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              const Text('IMPACTED DELIVERABLES',
+                  style: TextStyle(
+                      color: _textSecondary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1)),
+              const SizedBox(height: 6),
+              ...cr.deliverables.map((d) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(d.action.icon, size: 14, color: d.action.color),
+                          const SizedBox(width: 6),
+                          Expanded(
+                              child: Text(
+                            d.name,
+                            style: const TextStyle(
+                                color: _textPrimary, fontSize: 12),
+                          )),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                                color: d.action.color.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4)),
+                            child: Text(d.action.label,
+                                style: TextStyle(
+                                    color: d.action.color,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700)),
+                          ),
+                        ]),
+                  )),
+              if (cr.deliverables.any((d) => (d.notes ?? '').isNotEmpty))
+                ...cr.deliverables
+                    .where((d) => (d.notes ?? '').isNotEmpty)
+                    .map((d) => Padding(
+                          padding: const EdgeInsets.only(left: 20, bottom: 4),
+                          child: Text('${d.name}: ${d.notes}',
+                              style: const TextStyle(
+                                  color: _textSecondary,
+                                  fontSize: 10,
+                                  fontStyle: FontStyle.italic)),
+                        )),
+            ],
+            if (cr.drawdownReserve != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                    color: const Color(0xFFB8860B).withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: const Color(0xFFB8860B).withValues(alpha: 0.2))),
+                child: Row(children: [
+                  const Icon(Icons.account_balance_wallet_outlined,
+                      color: Color(0xFFB8860B), size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: Text(
+                    'Drawdown: \$${(cr.drawdownAmount ?? 0).toStringAsFixed(0)} '
+                    'from ${cr.drawdownReserve!.label}',
+                    style: const TextStyle(
+                        color: Color(0xFFB8860B),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600),
+                  )),
+                ]),
+              ),
+            ],
+            if (cr.actualCost != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.2))),
+                child: Row(children: [
+                  const Icon(Icons.compare_arrows,
+                      color: Color(0xFF10B981), size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: Text(
+                    'Actual \$${cr.actualCost!.toStringAsFixed(0)} vs '
+                    'estimate \$${(cr.initialCostEstimate ?? 0).toStringAsFixed(0)} '
+                    '(variance \$${((cr.actualCost ?? 0) - (cr.initialCostEstimate ?? 0)).toStringAsFixed(0)})',
+                    style: const TextStyle(
+                        color: Color(0xFF10B981),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600),
+                  )),
+                ]),
+              ),
             ],
             const SizedBox(height: 12),
             // Impact chips
@@ -1610,7 +1740,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
               if (cr.status == CMStatus.underReview ||
                   cr.status == CMStatus.pendingApproval) ...[
                 ElevatedButton(
-                    onPressed: () => widget.provider.approveStep(cr.id),
+                    onPressed: () => _showApprovalDialog(cr),
                     style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF10B981),
                         foregroundColor: Colors.white,
@@ -1633,11 +1763,24 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                     onPressed: () => widget.provider
                         .implementCR(cr.id, notes: 'Implemented from UI'),
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6366F1),
+                        backgroundColor: const Color(0xFFB8860B),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6))),
                     child: const Text('Implement Change')),
+              ],
+              // Lusaka 22 — close the CR and record actual cost for the
+              // actual-vs-estimate comparison.
+              if (cr.status == CMStatus.implemented) ...[
+                const SizedBox(width: 8),
+                ElevatedButton(
+                    onPressed: () => _showCloseDialog(cr),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6B7280),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6))),
+                    child: const Text('Close CR')),
               ],
             ]),
             // Re-baseline warning
@@ -1668,12 +1811,186 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
     );
   }
 
+  /// Approval dialog. Intermediate steps approve directly; the final step
+  /// asks the approver to choose the drawdown source (contingency OR
+  /// management reserve — never both) and the drawdown amount.
+  Future<void> _showApprovalDialog(CMChangeRequest cr) async {
+    final isFinalStep = cr.currentStepIndex >= cr.approvalSteps.length - 1;
+    if (!isFinalStep) {
+      widget.provider.approveStep(cr.id);
+      return;
+    }
+
+    final preferredSource = cr.reserveDrawdownRequested != null &&
+            cr.contingencyDrawdownRequested == null
+        ? CMReserveSource.managementReserve
+        : CMReserveSource.contingency;
+    var source = preferredSource;
+    final suggested =
+        cr.contingencyDrawdownRequested ?? cr.reserveDrawdownRequested ?? 0;
+    final amountCtrl = TextEditingController(
+        text: suggested > 0 ? suggested.toStringAsFixed(0) : '');
+    final commentsCtrl = TextEditingController();
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text('Final approval — ${cr.crNumber}'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                    'Choose which reserve the drawdown comes out of — '
+                    'contingency OR management reserve (never both).',
+                    style: TextStyle(fontSize: 12, color: _textSecondary)),
+                const SizedBox(height: 12),
+                _ReserveChoiceTile(
+                  title: 'Contingency',
+                  subtitle:
+                      '\$${widget.provider.remainingContingency.toStringAsFixed(0)} available',
+                  selected: source == CMReserveSource.contingency,
+                  onTap: () => setDialogState(
+                      () => source = CMReserveSource.contingency),
+                ),
+                const SizedBox(height: 8),
+                _ReserveChoiceTile(
+                  title: 'Management Reserve',
+                  subtitle:
+                      '\$${widget.provider.remainingReserve.toStringAsFixed(0)} available',
+                  selected: source == CMReserveSource.managementReserve,
+                  onTap: () => setDialogState(
+                      () => source = CMReserveSource.managementReserve),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: amountCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Drawdown amount (\$)',
+                    hintText: 'Defaults to requested / cost impact',
+                    isDense: true,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: commentsCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Approval comment (optional)',
+                    isDense: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final amount = double.tryParse(amountCtrl.text.trim());
+                final comments = commentsCtrl.text.trim();
+                widget.provider.approveStep(
+                  cr.id,
+                  reserveSource: source,
+                  drawdownAmount: amount,
+                  comments: comments.isEmpty ? null : comments,
+                );
+                Navigator.of(ctx).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white),
+              child: const Text('Approve'),
+            ),
+          ],
+        ),
+      ),
+    );
+    amountCtrl.dispose();
+    commentsCtrl.dispose();
+  }
+
+  /// Close-out dialog: record the actual cost so the close-out shows the
+  /// actual-vs-estimate variance for this change.
+  Future<void> _showCloseDialog(CMChangeRequest cr) async {
+    final estimate = cr.initialCostEstimate ?? 0;
+    final actualCtrl = TextEditingController();
+    final notesCtrl = TextEditingController();
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Close ${cr.crNumber}'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                  'Record the actual cost to compare against the estimate '
+                  '(\$${estimate.toStringAsFixed(0)}).',
+                  style: const TextStyle(fontSize: 12, color: _textSecondary)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: actualCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Actual cost (\$)',
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: notesCtrl,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Closure notes (optional)',
+                  isDense: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final actual = double.tryParse(actualCtrl.text.trim());
+              final notes = notesCtrl.text.trim();
+              widget.provider.closeCR(
+                cr.id,
+                actualCost: actual,
+                closureNotes: notes.isEmpty ? null : notes,
+              );
+              Navigator.of(ctx).pop();
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6B7280),
+                foregroundColor: Colors.white),
+            child: const Text('Close Change Request'),
+          ),
+        ],
+      ),
+    );
+    actualCtrl.dispose();
+    notesCtrl.dispose();
+  }
+
   List<Widget> _buildImpactChips(CMChangeRequest cr) {
     final chips = <Widget>[];
     for (final d in cr.impact.all) {
       if (!d.hasImpact) continue;
       final color =
-          d.isCritical ? const Color(0xFFEF4444) : const Color(0xFF6366F1);
+          d.isCritical ? const Color(0xFFEF4444) : const Color(0xFFB8860B);
       final labelParts = <String>[];
       if (d.scheduleDays != null && d.scheduleDays != 0) {
         labelParts.add(
@@ -1719,7 +2036,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           title: const Text('Quick Change Request',
               style: TextStyle(
                   color: Color(0xFF1A1D1F),
@@ -1905,11 +2222,11 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
           Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                  color: const Color(0xFFB8860B).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6)),
               child: Text('Avg composite ${avgComposite.toStringAsFixed(2)}',
                   style: const TextStyle(
-                      color: Color(0xFF6366F1),
+                      color: Color(0xFFB8860B),
                       fontSize: 11,
                       fontWeight: FontWeight.w700))),
         ]),
@@ -1928,7 +2245,8 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(8)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             const Text('Highest-impact dimension',
@@ -1984,7 +2302,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                      color: const Color(0xFFB8860B).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6)),
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -1997,7 +2315,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                 letterSpacing: 0.5)),
                         Text(cr.impact.compositeImpactScore.toStringAsFixed(2),
                             style: const TextStyle(
-                                color: Color(0xFF6366F1),
+                                color: Color(0xFFB8860B),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800)),
                       ])),
@@ -2040,7 +2358,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                               ? (d.isCritical
                                   ? const Color(0xFFEF4444)
                                       .withValues(alpha: 0.06)
-                                  : const Color(0xFF6366F1)
+                                  : const Color(0xFFB8860B)
                                       .withValues(alpha: 0.04))
                               : const Color(0xFFF9FAFB),
                           borderRadius: BorderRadius.circular(6),
@@ -2049,7 +2367,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                   ? (d.isCritical
                                       ? const Color(0xFFEF4444)
                                           .withValues(alpha: 0.2)
-                                      : const Color(0xFF6366F1)
+                                      : const Color(0xFFB8860B)
                                           .withValues(alpha: 0.15))
                                   : _surfaceBorder)),
                       child: Column(
@@ -2065,7 +2383,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                           color: hasImpact
                                               ? (d.isCritical
                                                   ? const Color(0xFFEF4444)
-                                                  : const Color(0xFF6366F1))
+                                                  : const Color(0xFFB8860B))
                                               : _textSecondary,
                                           fontSize: 9,
                                           fontWeight: FontWeight.w600)),
@@ -2076,7 +2394,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                         decoration: BoxDecoration(
                                             color: (d.isCritical
                                                     ? const Color(0xFFEF4444)
-                                                    : const Color(0xFF6366F1))
+                                                    : const Color(0xFFB8860B))
                                                 .withValues(alpha: 0.15),
                                             borderRadius:
                                                 BorderRadius.circular(3)),
@@ -2084,7 +2402,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                             style: TextStyle(
                                                 color: d.isCritical
                                                     ? const Color(0xFFEF4444)
-                                                    : const Color(0xFF6366F1),
+                                                    : const Color(0xFFB8860B),
                                                 fontSize: 8,
                                                 fontWeight: FontWeight.w800))),
                                 ]),
@@ -2095,7 +2413,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                     style: TextStyle(
                                         color: d.isCritical
                                             ? const Color(0xFFEF4444)
-                                            : const Color(0xFF6366F1),
+                                            : const Color(0xFFB8860B),
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700)),
                               if (d.costAmount != null && d.costAmount != 0)
@@ -2103,7 +2421,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                     style: TextStyle(
                                         color: d.isCritical
                                             ? const Color(0xFFEF4444)
-                                            : const Color(0xFF6366F1),
+                                            : const Color(0xFFB8860B),
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700)),
                               if (d.impact != null)
@@ -2125,7 +2443,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
               Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                      color: Color(0xFFF9FAFB),
+                      color: const Color(0xFFF9FAFB),
                       borderRadius: BorderRadius.circular(8)),
                   child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -2145,7 +2463,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                         _totalChip(
                             'Dimensions',
                             '${cr.impact.impactedCount}/${cr.impact.all.length}',
-                            const Color(0xFF6366F1)),
+                            const Color(0xFFB8860B)),
                         _totalChip(
                             'Composite',
                             cr.impact.compositeImpactScore.toStringAsFixed(2),
@@ -2310,7 +2628,7 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
             icon: const Icon(Icons.download, size: 16),
             label: const Text('Export CSV'),
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
+                backgroundColor: const Color(0xFFB8860B),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8))),
@@ -2409,18 +2727,18 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
                     color: _cardBg,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: const Color(0xFF6366F1).withValues(alpha: 0.2))),
+                        color: const Color(0xFFB8860B).withValues(alpha: 0.2))),
                 child: Row(children: [
                   Container(
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                          color: const Color(0xFFB8860B).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6)),
                       child: const Center(
                           child: Text('v',
                               style: TextStyle(
-                                  color: Color(0xFF6366F1),
+                                  color: Color(0xFFB8860B),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w800)))),
                   const SizedBox(width: 12),
@@ -2586,7 +2904,7 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-            color: Color(0xFFF9FAFB),
+            color: const Color(0xFFF9FAFB),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: _surfaceBorder)),
         child: DropdownButtonHideUnderline(
@@ -2622,7 +2940,7 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB),
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
           child: Row(children: [
@@ -2710,15 +3028,18 @@ class _CreateCRTabState extends State<_CreateCRTab> {
 
   // Section C — Scope Impact
   final Set<String> _selectedWbs = {};
-  final _addedCtrl = TextEditingController(text: '0');
-  final _modifiedCtrl = TextEditingController(text: '0');
-  final _removedCtrl = TextEditingController(text: '0');
 
   // Section D — Cost & Schedule
   final _costCtrl = TextEditingController();
   final _schedCtrl = TextEditingController();
   final _contingencyCtrl = TextEditingController();
   final _reserveCtrl = TextEditingController();
+
+  // Lusaka 22 — searchable work-package picker, deliverables list editor,
+  // and schedule impact expressed as a number + unit (days/weeks/months).
+  final _wbsSearchCtrl = TextEditingController();
+  final List<_DeliverableRowData> _deliverableRows = [];
+  _ScheduleUnit _scheduleUnit = _ScheduleUnit.days;
 
   @override
   void dispose() {
@@ -2728,17 +3049,37 @@ class _CreateCRTabState extends State<_CreateCRTab> {
       _descCtrl,
       _justCtrl,
       _altCtrl,
-      _addedCtrl,
-      _modifiedCtrl,
-      _removedCtrl,
       _costCtrl,
       _schedCtrl,
       _contingencyCtrl,
-      _reserveCtrl
+      _reserveCtrl,
+      _wbsSearchCtrl,
+      ..._deliverableRows.expand((r) => [r.nameCtrl, r.notesCtrl]),
     ]) {
       c.dispose();
     }
     super.dispose();
+  }
+
+  /// Real work packages from the project WBS, falling back to the static
+  /// representative list when the project has none yet.
+  List<String> _wbsOptions(BuildContext context) {
+    try {
+      final data = ProjectDataHelper.getData(context);
+      final real = data.workPackages
+          .map((wp) {
+            final code = wp.packageCode.trim();
+            final title = wp.title.trim();
+            if (title.isEmpty && code.isEmpty) return '';
+            return code.isEmpty ? title : '$code $title';
+          })
+          .where((s) => s.isNotEmpty)
+          .toList();
+      if (real.isNotEmpty) return real;
+    } catch (_) {
+      // No project data in scope — fall through to the static list.
+    }
+    return _kWbsOptions;
   }
 
   bool get _isValid =>
@@ -2768,12 +3109,32 @@ class _CreateCRTabState extends State<_CreateCRTab> {
       return;
     }
     final cost = double.tryParse(_costCtrl.text.trim()) ?? 0;
-    final sched = int.tryParse(_schedCtrl.text.trim()) ?? 0;
+    final schedRaw = int.tryParse(_schedCtrl.text.trim()) ?? 0;
+    // Convert the entered duration to days so the model stays canonical.
+    final sched = switch (_scheduleUnit) {
+      _ScheduleUnit.days => schedRaw,
+      _ScheduleUnit.weeks => schedRaw * 7,
+      _ScheduleUnit.months => schedRaw * 30,
+    };
     final cont = double.tryParse(_contingencyCtrl.text.trim()) ?? 0;
     final res = double.tryParse(_reserveCtrl.text.trim()) ?? 0;
-    final added = int.tryParse(_addedCtrl.text.trim()) ?? 0;
-    final modified = int.tryParse(_modifiedCtrl.text.trim()) ?? 0;
-    final removed = int.tryParse(_removedCtrl.text.trim()) ?? 0;
+    final deliverables = _deliverableRows
+        .map((r) => CMImpactedDeliverable(
+              id: 'dlv_${DateTime.now().microsecondsSinceEpoch}_${r.hashCode}',
+              name: r.nameCtrl.text.trim(),
+              action: r.action,
+              notes: r.notesCtrl.text.trim().isEmpty
+                  ? null
+                  : r.notesCtrl.text.trim(),
+            ))
+        .where((d) => d.name.isNotEmpty)
+        .toList();
+    final added =
+        deliverables.where((d) => d.action == DeliverableAction.add).length;
+    final modified =
+        deliverables.where((d) => d.action == DeliverableAction.modify).length;
+    final removed =
+        deliverables.where((d) => d.action == DeliverableAction.remove).length;
     final crId = widget.provider.createChangeRequest(
       title: _titleCtrl.text.trim(),
       description: _descCtrl.text.trim(),
@@ -2795,6 +3156,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
       scheduleDaysImpact: sched,
       contingencyDrawdownRequested: cont,
       reserveDrawdownRequested: res,
+      deliverables: deliverables,
     );
     widget.onCreated(crId);
     // Reset form for next entry.
@@ -2808,14 +3170,30 @@ class _CreateCRTabState extends State<_CreateCRTab> {
       _schedCtrl.clear();
       _contingencyCtrl.clear();
       _reserveCtrl.clear();
-      _addedCtrl.text = '0';
-      _modifiedCtrl.text = '0';
-      _removedCtrl.text = '0';
       _selectedWbs.clear();
+      _wbsSearchCtrl.clear();
+      for (final r in _deliverableRows) {
+        r.nameCtrl.dispose();
+        r.notesCtrl.dispose();
+      }
+      _deliverableRows.clear();
+      _scheduleUnit = _ScheduleUnit.days;
       _type = CMChangeType.scope;
       _priority = CMPriority.medium;
       _isEmergency = false;
       _dateRaised = DateTime.now();
+    });
+  }
+
+  void _addDeliverableRow() {
+    setState(() => _deliverableRows.add(_DeliverableRowData()));
+  }
+
+  void _removeDeliverableRow(int index) {
+    setState(() {
+      final row = _deliverableRows.removeAt(index);
+      row.nameCtrl.dispose();
+      row.notesCtrl.dispose();
     });
   }
 
@@ -2933,41 +3311,131 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1)),
             const SizedBox(height: 8),
-            Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _kWbsOptions.map((w) {
-                  final selected = _selectedWbs.contains(w);
-                  return FilterChip(
-                    label: Text(w,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: selected ? Colors.white : _textPrimary)),
-                    selected: selected,
-                    onSelected: (v) => setState(() {
-                      if (v) {
-                        _selectedWbs.add(w);
-                      } else {
-                        _selectedWbs.remove(w);
-                      }
-                    }),
-                    selectedColor: LightModeColors.accent,
-                    checkmarkColor: _textPrimary,
-                    backgroundColor: _bgColor,
-                    side: const BorderSide(color: _surfaceBorder),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6)),
-                  );
-                }).toList()),
-            if (_selectedWbs.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text('${_selectedWbs.length} work package(s) selected',
+            // Searchable picker over ALL factored work packages — type to
+            // filter (e.g. "electrical" → every electrical package), select
+            // all, or clear. Covers projects with 50+ packages without
+            // filling the screen (Lusaka 22 call).
+            TextField(
+              controller: _wbsSearchCtrl,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText:
+                    'Search work packages (type to filter, e.g. electrical)',
+                prefixIcon: const Icon(Icons.search, size: 18),
+                isDense: true,
+                filled: true,
+                fillColor: _bgColor,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: _surfaceBorder)),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: _surfaceBorder)),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(children: [
+              TextButton.icon(
+                onPressed: () => setState(() {
+                  final options = _wbsOptions(context);
+                  _selectedWbs.addAll(options);
+                }),
+                icon: const Icon(Icons.select_all, size: 14),
+                label: const Text('Select all'),
+                style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFFD97706),
+                    visualDensity: VisualDensity.compact),
+              ),
+              TextButton.icon(
+                onPressed: () => setState(() => _selectedWbs.clear()),
+                icon: const Icon(Icons.deselect, size: 14),
+                label: const Text('Clear'),
+                style: TextButton.styleFrom(
+                    foregroundColor: _textSecondary,
+                    visualDensity: VisualDensity.compact),
+              ),
+              const Spacer(),
+              Text('${_selectedWbs.length} selected',
                   style: const TextStyle(
                       color: Color(0xFFD97706),
                       fontSize: 11,
                       fontWeight: FontWeight.w700)),
-            ],
+            ]),
+            const SizedBox(height: 4),
+            Builder(builder: (context) {
+              final query = _wbsSearchCtrl.text.trim().toLowerCase();
+              final options = _wbsOptions(context);
+              final filtered = query.isEmpty
+                  ? options
+                  : options
+                      .where((w) => w.toLowerCase().contains(query))
+                      .toList();
+              if (filtered.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text('No work packages match "$query".',
+                      style:
+                          const TextStyle(color: _textSecondary, fontSize: 12)),
+                );
+              }
+              // Lusaka 22 — don't fill the screen with 50 chips. Show the
+              // first 10 as chips; the rest are reachable through a
+              // "More (N)" dropdown (or type in the search box above to
+              // filter — e.g. "electrical" pops up every electrical
+              // package). While searching, every match is shown as a chip
+              // because the query already narrows the list.
+              final showAll = query.isNotEmpty || filtered.length <= 10;
+              final visible = showAll ? filtered : filtered.take(10).toList();
+              final hidden =
+                  showAll ? const <String>[] : filtered.skip(10).toList();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: visible.map((w) {
+                        final selected = _selectedWbs.contains(w);
+                        return FilterChip(
+                          label: Text(w,
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color:
+                                      selected ? Colors.white : _textPrimary)),
+                          selected: selected,
+                          onSelected: (v) => setState(() {
+                            if (v) {
+                              _selectedWbs.add(w);
+                            } else {
+                              _selectedWbs.remove(w);
+                            }
+                          }),
+                          selectedColor: LightModeColors.accent,
+                          checkmarkColor: _textPrimary,
+                          backgroundColor: _bgColor,
+                          side: const BorderSide(color: _surfaceBorder),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6)),
+                        );
+                      }).toList()),
+                  if (hidden.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    _MoreWorkPackagesDropdown(
+                      hidden: hidden,
+                      selected: _selectedWbs,
+                      onToggle: (w) => setState(() {
+                        if (!_selectedWbs.add(w)) {
+                          _selectedWbs.remove(w);
+                        }
+                      }),
+                    ),
+                  ],
+                ],
+              );
+            }),
             const SizedBox(height: 16),
             const Text('DELIVERABLES IMPACT',
                 style: TextStyle(
@@ -2975,20 +3443,69 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1)),
+            const SizedBox(height: 4),
+            const Text(
+                'List the deliverables this change adds, modifies, or removes — with notes for quotes / documents.',
+                style: TextStyle(color: _textSecondary, fontSize: 11)),
             const SizedBox(height: 8),
-            Row(children: [
-              Expanded(
-                  child: _numberField(
-                      'Added', _addedCtrl, const Color(0xFF10B981))),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: _numberField(
-                      'Modified', _modifiedCtrl, const Color(0xFFF59E0B))),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: _numberField(
-                      'Removed', _removedCtrl, const Color(0xFFEF4444))),
-            ]),
+            if (_deliverableRows.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                    color: _bgColor,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: _surfaceBorder)),
+                child: const Text('No deliverables listed yet.',
+                    style: TextStyle(color: _textSecondary, fontSize: 12)),
+              )
+            else
+              ..._deliverableRows.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final row = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                            flex: 3,
+                            child: _textField('Deliverable name', row.nameCtrl,
+                                'e.g. Vendor contract, Updated drawing set')),
+                        const SizedBox(width: 8),
+                        Expanded(
+                            flex: 2,
+                            child: _dropdownField<DeliverableAction>(
+                                'Action',
+                                row.action,
+                                DeliverableAction.values,
+                                (a) => a.label,
+                                (v) => setState(() => row.action = v!))),
+                        const SizedBox(width: 8),
+                        Expanded(
+                            flex: 3,
+                            child: _textField('Notes (quotes / docs)',
+                                row.notesCtrl, 'Optional — quote refs, links',
+                                maxLines: 1)),
+                        IconButton(
+                          onPressed: () => _removeDeliverableRow(idx),
+                          icon: const Icon(Icons.remove_circle_outline,
+                              color: Color(0xFFEF4444), size: 18),
+                          tooltip: 'Remove deliverable',
+                        ),
+                      ]),
+                );
+              }),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _addDeliverableRow,
+                icon: const Icon(Icons.add_circle_outline, size: 16),
+                label: const Text('Add deliverable'),
+                style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFFD97706),
+                    visualDensity: VisualDensity.compact),
+              ),
+            ),
           ]),
         ),
         const SizedBox(height: 16),
@@ -3004,9 +3521,20 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                       _currencyField('Initial Cost Estimate (\$)', _costCtrl)),
               const SizedBox(width: 12),
               Expanded(
-                  child: _numberField('Schedule Days Impact', _schedCtrl,
-                      const Color(0xFF8B5CF6),
-                      allowNegative: true)),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    _numberField(
+                        'Schedule Impact', _schedCtrl, const Color(0xFFB8860B),
+                        allowNegative: true),
+                    const SizedBox(height: 6),
+                    _dropdownField<_ScheduleUnit>(
+                        'Unit',
+                        _scheduleUnit,
+                        _ScheduleUnit.values,
+                        (u) => u.label,
+                        (v) => setState(() => _scheduleUnit = v!)),
+                  ])),
             ]),
             const SizedBox(height: 12),
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -3021,11 +3549,11 @@ class _CreateCRTabState extends State<_CreateCRTab> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                  color: Color(0xFFF9FAFB),
+                  color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(8)),
               child: Row(children: [
                 const Icon(Icons.info_outline,
-                    color: Color(0xFF6366F1), size: 16),
+                    color: Color(0xFFB8860B), size: 16),
                 const SizedBox(width: 8),
                 Expanded(
                     child: Text(
@@ -3057,14 +3585,14 @@ class _CreateCRTabState extends State<_CreateCRTab> {
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Color(0xFFF9FAFB),
+                  color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                       color: _surfaceBorder, style: BorderStyle.solid),
                 ),
                 child: Column(children: [
                   const Icon(Icons.upload_file,
-                      size: 36, color: Color(0xFF6366F1)),
+                      size: 36, color: Color(0xFFB8860B)),
                   const SizedBox(height: 8),
                   const Text(
                       'Drop supporting documents here or click to upload',
@@ -3101,9 +3629,13 @@ class _CreateCRTabState extends State<_CreateCRTab> {
               ]) {
                 c.clear();
               }
-              _addedCtrl.text = '0';
-              _modifiedCtrl.text = '0';
-              _removedCtrl.text = '0';
+              _wbsSearchCtrl.clear();
+              for (final r in _deliverableRows) {
+                r.nameCtrl.dispose();
+                r.notesCtrl.dispose();
+              }
+              _deliverableRows.clear();
+              _scheduleUnit = _ScheduleUnit.days;
               _selectedWbs.clear();
               _type = CMChangeType.scope;
               _priority = CMPriority.medium;
@@ -3160,7 +3692,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                           fontSize: 14,
                           fontWeight: FontWeight.w800)))),
           const SizedBox(width: 12),
-          Icon(icon, color: const Color(0xFF6366F1), size: 18),
+          Icon(icon, color: const Color(0xFFB8860B), size: 18),
           const SizedBox(width: 8),
           Text(title,
               style: const TextStyle(
@@ -3197,10 +3729,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
           fillColor: _bgColor,
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
         ),
         style: const TextStyle(color: _textPrimary, fontSize: 12),
       ),
@@ -3218,7 +3750,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
-            color: Color(0xFFF3F4F6),
+            color: const Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: _surfaceBorder)),
         child: Text(value,
@@ -3316,10 +3848,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
           fillColor: _bgColor,
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
           prefixIcon: allowNegative
               ? Icon(Icons.remove_circle_outline,
                   size: 14, color: color.withValues(alpha: 0.5))
@@ -3350,10 +3882,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
           fillColor: _bgColor,
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _surfaceBorder)),
+              borderSide: const BorderSide(color: _surfaceBorder)),
           prefixIcon: const Icon(Icons.attach_money,
               size: 14, color: Color(0xFF6B7280)),
         ),
@@ -3599,7 +4131,7 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
               icon: const Icon(Icons.calculate, size: 14),
               label: const Text('Auto-calculate composite'),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
+                  backgroundColor: const Color(0xFFB8860B),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8))),
@@ -3722,10 +4254,10 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
             fillColor: _bgColor,
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: _surfaceBorder)),
+                borderSide: const BorderSide(color: _surfaceBorder)),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: _surfaceBorder)),
+                borderSide: const BorderSide(color: _surfaceBorder)),
           ),
           style: const TextStyle(color: _textPrimary, fontSize: 11),
         ),
@@ -3746,10 +4278,10 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
                 size: 12, color: _textSecondary),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: _surfaceBorder)),
+                borderSide: const BorderSide(color: _surfaceBorder)),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: _surfaceBorder)),
+                borderSide: const BorderSide(color: _surfaceBorder)),
           ),
           style: const TextStyle(color: _textPrimary, fontSize: 11),
         ),
@@ -3847,7 +4379,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlgState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           title: const Text('Add Approval Step',
               style: TextStyle(
                   color: Color(0xFF1A1D1F),
@@ -3864,7 +4396,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
                         value: r,
                         child: Row(children: [
                           Icon(r.icon,
-                              size: 14, color: const Color(0xFF6366F1)),
+                              size: 14, color: const Color(0xFFB8860B)),
                           const SizedBox(width: 8),
                           Text(r.label)
                         ])))
@@ -3953,7 +4485,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Row(children: [
           Icon(decision.icon, color: decision.color, size: 18),
           const SizedBox(width: 8),
@@ -4085,7 +4617,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
               icon: const Icon(Icons.add, size: 14),
               label: const Text('Add Step'),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
+                  backgroundColor: const Color(0xFFB8860B),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8))),
@@ -4160,13 +4692,13 @@ class _WorkflowTabState extends State<_WorkflowTab> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB),
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
             _statChip(
-                'Total Steps', '${steps.length}', const Color(0xFF6366F1)),
+                'Total Steps', '${steps.length}', const Color(0xFFB8860B)),
             _statChip(
                 'Approved',
                 '${steps.where((s) => s.decision == ApprovalDecision.approved).length}',
@@ -4182,7 +4714,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
             _statChip(
                 'Delegated',
                 '${steps.where((s) => s.decision == ApprovalDecision.delegated).length}',
-                const Color(0xFF8B5CF6)),
+                const Color(0xFFB8860B)),
           ]),
         ),
         if (!canFinalize) ...[
@@ -4277,7 +4809,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               Icon(step.role?.icon ?? Icons.person_outline,
-                  size: 14, color: const Color(0xFF6366F1)),
+                  size: 14, color: const Color(0xFFB8860B)),
               const SizedBox(width: 6),
               Expanded(
                   child: Text(step.roleLabel,
@@ -4336,7 +4868,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
               Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                      color: Color(0xFFF9FAFB),
+                      color: const Color(0xFFF9FAFB),
                       borderRadius: BorderRadius.circular(6)),
                   child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -4358,19 +4890,19 @@ class _WorkflowTabState extends State<_WorkflowTab> {
               Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.08),
+                      color: const Color(0xFFB8860B).withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                           color:
-                              const Color(0xFF8B5CF6).withValues(alpha: 0.2))),
+                              const Color(0xFFB8860B).withValues(alpha: 0.2))),
                   child: Row(children: [
                     const Icon(Icons.forward,
-                        size: 12, color: Color(0xFF8B5CF6)),
+                        size: 12, color: Color(0xFFB8860B)),
                     const SizedBox(width: 6),
                     Expanded(
                         child: Text('Delegated from: ${step.delegatedFrom}',
                             style: const TextStyle(
-                                color: Color(0xFF8B5CF6),
+                                color: Color(0xFFB8860B),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600))),
                   ])),
@@ -4542,7 +5074,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: const Text('Apply to Baseline?',
             style: TextStyle(
                 color: Color(0xFF1A1D1F),
@@ -4584,7 +5116,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: const Text('Rollback Baseline?',
             style: TextStyle(
                 color: Color(0xFF1A1D1F),
@@ -4731,8 +5263,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                 border: Border.all(
                     color: const Color(0xFFF59E0B).withValues(alpha: 0.2))),
             child: const Row(children: [
-              Icon(Icons.lock_outline,
-                  color: Color(0xFFF59E0B), size: 18),
+              Icon(Icons.lock_outline, color: Color(0xFFF59E0B), size: 18),
               SizedBox(width: 12),
               Expanded(
                   child: Text(
@@ -4760,7 +5291,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                         letterSpacing: 1)),
                 Text('$doneCount of ${tasks.length} work packages complete',
                     style: const TextStyle(
-                        color: Color(0xFF6366F1),
+                        color: Color(0xFFB8860B),
                         fontSize: 12,
                         fontWeight: FontWeight.w700)),
               ]),
@@ -4832,16 +5363,16 @@ class _ImplementationTabState extends State<_ImplementationTab> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.06),
+              color: const Color(0xFFB8860B).withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.2))),
+                  color: const Color(0xFFB8860B).withValues(alpha: 0.2))),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
             _baselineStat(
                 'Current BAC',
                 '\$${widget.provider.currentBAC.toStringAsFixed(0)}',
-                const Color(0xFF6366F1)),
+                const Color(0xFFB8860B)),
             _baselineStat(
                 'Baseline Finish',
                 '${widget.provider.currentBaselineFinish.day}/${widget.provider.currentBaselineFinish.month}/${widget.provider.currentBaselineFinish.year}',
@@ -4849,7 +5380,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
             _baselineStat(
                 'Scope Hash',
                 _shortHash(widget.provider.currentScopeHash),
-                const Color(0xFF8B5CF6)),
+                const Color(0xFFB8860B)),
             _baselineStat('Re-baselines', '${widget.provider.rebaselineCount}',
                 const Color(0xFFD97706)),
           ]),
@@ -5066,7 +5597,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
           Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                  color: Color(0xFFF9FAFB),
+                  color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(6)),
               child:
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -5092,19 +5623,19 @@ class _ImplementationTabState extends State<_ImplementationTab> {
           color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.2))),
+              color: const Color(0xFFB8860B).withValues(alpha: 0.2))),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Container(
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                  color: const Color(0xFFB8860B).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8)),
               child: const Center(
                   child: Text('v',
                       style: TextStyle(
-                          color: Color(0xFF6366F1),
+                          color: Color(0xFFB8860B),
                           fontSize: 16,
                           fontWeight: FontWeight.w800)))),
           const SizedBox(width: 12),
@@ -5127,12 +5658,13 @@ class _ImplementationTabState extends State<_ImplementationTab> {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(8)),
           child: Column(children: [
             // BAC diff
             Row(children: [
               const Icon(Icons.account_balance_wallet_outlined,
-                  size: 14, color: Color(0xFF6366F1)),
+                  size: 14, color: Color(0xFFB8860B)),
               const SizedBox(width: 6),
               const Expanded(
                   child: Text('BAC',
@@ -5160,7 +5692,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
             const SizedBox(height: 6),
             // Scope hash diff
             Row(children: [
-              const Icon(Icons.fingerprint, size: 14, color: Color(0xFF8B5CF6)),
+              const Icon(Icons.fingerprint, size: 14, color: Color(0xFFB8860B)),
               const SizedBox(width: 6),
               const Expanded(
                   child: Text('Scope hash',
@@ -5177,7 +5709,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                     size: 12, color: _textSecondary),
                 Text(_shortHash(rev.revisedScopeHash),
                     style: const TextStyle(
-                        color: Color(0xFF8B5CF6),
+                        color: Color(0xFFB8860B),
                         fontSize: 10,
                         fontWeight: FontWeight.w700)),
               ] else
@@ -5225,11 +5757,11 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                           color:
-                              const Color(0xFF6366F1).withValues(alpha: 0.08),
+                              const Color(0xFFB8860B).withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(4)),
                       child: Text(b,
                           style: const TextStyle(
-                              color: Color(0xFF6366F1),
+                              color: Color(0xFFB8860B),
                               fontSize: 9,
                               fontWeight: FontWeight.w600)),
                     ))
@@ -5456,7 +5988,7 @@ class _ImpactBarChartPainter extends CustomPainter {
       } else if (lvl <= 1) {
         barColor = const Color(0xFF10B981);
       } else if (lvl <= 2) {
-        barColor = const Color(0xFF3B82F6);
+        barColor = const Color(0xFFFFC812);
       } else if (lvl <= 3) {
         barColor = const Color(0xFFF59E0B);
       } else if (lvl <= 4) {
@@ -5492,5 +6024,171 @@ class _ImpactBarChartPainter extends CustomPainter {
       if (old.levels[i] != levels[i]) return true;
     }
     return false;
+  }
+}
+
+// ─── Lusaka 22 helpers ─────────────────────────────────────────────────────
+
+/// Unit for the schedule-impact duration entered on the Create CR form.
+/// Stored canonically as days (weeks × 7, months × 30).
+enum _ScheduleUnit { days, weeks, months }
+
+extension on _ScheduleUnit {
+  String get label => switch (this) {
+        _ScheduleUnit.days => 'Days',
+        _ScheduleUnit.weeks => 'Weeks',
+        _ScheduleUnit.months => 'Months',
+      };
+}
+
+/// Drop-down access to the work packages beyond the first 10 shown as chips
+/// on the Create CR form (Lusaka 22 — "the first 10 … and then the rest they
+/// can select from a drop-down list"). Entries show a check-box reflecting
+/// the current selection; tapping toggles it.
+class _MoreWorkPackagesDropdown extends StatelessWidget {
+  final List<String> hidden;
+  final Set<String> selected;
+  final ValueChanged<String> onToggle;
+
+  const _MoreWorkPackagesDropdown({
+    required this.hidden,
+    required this.selected,
+    required this.onToggle,
+  });
+
+  static const _accent = Color(0xFFD97706);
+  static const _border = Color(0xFFE4E7EC);
+  static const _muted = Color(0xFF6B7280);
+  static const _ink = Color(0xFF1A1D1F);
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      tooltip: 'More work packages',
+      onSelected: onToggle,
+      itemBuilder: (context) => [
+        for (final w in hidden)
+          PopupMenuItem<String>(
+            value: w,
+            height: 36,
+            child: Row(
+              children: [
+                Icon(
+                  selected.contains(w)
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                  size: 16,
+                  color:
+                      selected.contains(w) ? _accent : const Color(0xFF9CA3AF),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    w,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: selected.contains(w) ? _accent : _ink,
+                      fontSize: 12,
+                      fontWeight: selected.contains(w)
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: _border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.arrow_drop_down, size: 16, color: _accent),
+            const SizedBox(width: 2),
+            Text(
+              'More (${hidden.length})',
+              style: const TextStyle(
+                  color: _muted, fontSize: 11, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One row of the deliverables list editor on the Create CR form.
+class _DeliverableRowData {
+  final TextEditingController nameCtrl = TextEditingController();
+  final TextEditingController notesCtrl = TextEditingController();
+  DeliverableAction action = DeliverableAction.add;
+}
+
+/// Selectable tile used in the approval dialog to pick the drawdown source
+/// (contingency vs management reserve). Avoids RadioListTile, which is
+/// deprecated in current Flutter in favor of RadioGroup.
+class _ReserveChoiceTile extends StatelessWidget {
+  const _ReserveChoiceTile({
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected
+              ? const Color(0xFFD97706).withValues(alpha: 0.1)
+              : const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected ? const Color(0xFFD97706) : const Color(0xFFE4E7EC),
+          ),
+        ),
+        child: Row(children: [
+          Icon(
+            selected
+                ? Icons.radio_button_checked
+                : Icons.radio_button_unchecked,
+            size: 18,
+            color: selected ? const Color(0xFFD97706) : const Color(0xFF9CA3AF),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        color: Color(0xFF1A1D1F),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600)),
+                Text(subtitle,
+                    style: const TextStyle(
+                        color: Color(0xFF6B7280), fontSize: 11)),
+              ],
+            ),
+          ),
+        ]),
+      ),
+    );
   }
 }

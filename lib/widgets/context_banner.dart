@@ -91,9 +91,9 @@ class _ContextBannerState extends State<ContextBanner> {
       margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFE4E7EC)),
+        border: Border.all(color: const Color(0xFFE4E7EC)),
       ),
       child: Row(
         children: [

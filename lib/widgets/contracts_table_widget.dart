@@ -8,7 +8,6 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/inline_editable_text.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
@@ -45,7 +44,7 @@ class ContractsTableWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -66,7 +65,7 @@ class ContractsTableWidget extends StatelessWidget {
                 topRight: Radius.circular(12),
               ),
             ),
-            child: Row(
+            child: const Row(
               children: [
                 _TableHeaderCell('Vendor/Party Name', flex: 2),
                 _TableHeaderCell('Contract Type', flex: 2),
@@ -480,7 +479,7 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _dropdownValue(
+                        initialValue: _dropdownValue(
                             contractTypeOptions, selectedContractType),
                         decoration: const InputDecoration(
                           labelText: 'Contract Type *',
@@ -499,7 +498,7 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _dropdownValue(statusOptions, selectedStatus),
+                        initialValue: _dropdownValue(statusOptions, selectedStatus),
                         decoration: const InputDecoration(
                           labelText: 'Status *',
                           isDense: true,
@@ -676,7 +675,7 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
       'active' => const Color(0xFF10B981),
       'draft' => const Color(0xFFF59E0B),
       'expired' => const Color(0xFFEF4444),
-      'signed' => const Color(0xFF2563EB),
+      'signed' => const Color(0xFFFFC812),
       _ => const Color(0xFF9CA3AF),
     };
   }
@@ -874,9 +873,9 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 5),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFF5F3FF),
+                                  color: const Color(0xFFFFF8E1),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Color(0xFFDDD6FE)),
+                                  border: Border.all(color: const Color(0xFFFEF3C7)),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -887,19 +886,19 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                                         height: 12,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 1.5,
-                                          color: Color(0xFF7C3AED),
+                                          color: Color(0xFFB8860B),
                                         ),
                                       )
                                     else
                                       const Icon(Icons.auto_awesome_rounded,
-                                          size: 13, color: Color(0xFF7C3AED)),
+                                          size: 13, color: Color(0xFFB8860B)),
                                     const SizedBox(width: 4),
                                     Text(
                                       _isRegenerating ? '...' : 'KAZ AI',
                                       style: const TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
-                                        color: Color(0xFF7C3AED),
+                                        color: Color(0xFFB8860B),
                                       ),
                                     ),
                                   ],

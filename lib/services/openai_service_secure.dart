@@ -8,6 +8,17 @@ import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/models/meeting_row.dart';
 
+/// Builds the appropriate exception for a 429 from the AI proxy/provider.
+/// Distinguishes the permanent out-of-credits state from transient throttling
+/// so users get an actionable message instead of a dead-end retry loop.
+Exception _aiQuotaException(String body) {
+  if (isOpenAiCreditsExhausted(429, body)) {
+    return const OpenAiCreditsExhaustedException();
+  }
+  return Exception(
+      'AI is rate limited right now. Please try again in a minute.');
+}
+
 // Remove markdown bold markers commonly produced by the model (e.g. *text* or **text**)
 String _stripAsterisks(String s) => s.replaceAll('*', '');
 
@@ -57,8 +68,9 @@ String _extractJson(String text) {
   if (match != null) return match.group(1)?.trim() ?? text.trim();
   final jsonStart = text.indexOf('{');
   final jsonEnd = text.lastIndexOf('}');
-  if (jsonStart >= 0 && jsonEnd > jsonStart)
+  if (jsonStart >= 0 && jsonEnd > jsonStart) {
     return text.substring(jsonStart, jsonEnd + 1);
+  }
   return text.trim();
 }
 
@@ -116,8 +128,9 @@ String _usdRateHint(String currency) {
 String _convertHint(double usdAmount, String currency) {
   final rate = _usdToCurrencyRates[currency.toUpperCase()] ?? 1.0;
   final converted = usdAmount * rate;
-  if (converted >= 1000000)
+  if (converted >= 1000000) {
     return '${(converted / 1000000).toStringAsFixed(1)}M';
+  }
   if (converted >= 1000) return converted.toStringAsFixed(0);
   return converted.toStringAsFixed(converted % 1 == 0 ? 0 : 2);
 }
@@ -126,7 +139,6 @@ String _convertHint(double usdAmount, String currency) {
 /// When the currency is not USD, tells the AI to convert all values.
 String _currencyConversionInstruction(String currency) {
   if (currency.toUpperCase() == 'USD') return '';
-  final rate = _usdToCurrencyRates[currency.toUpperCase()] ?? 1.0;
   return '\n- All monetary amounts MUST be expressed in $currency. Convert from USD equivalents using realistic exchange rates (1 USD ≈ ${_usdRateHint(currency)} $currency). Do NOT simply reuse USD numerical values — $currency has a different purchasing power and exchange rate. For example, if USD amount would be 10,000, the amount in $currency should be approximately ${_convertHint(10000, currency)}. Apply this conversion to every monetary amount in your response.';
 }
 
@@ -549,7 +561,7 @@ class OpenAiServiceSecure {
 
     return _runSerialized(() async {
       final uri = OpenAiConfig.chatUri();
-      final headers = OpenAiConfig.headers();
+      final headers = await OpenAiConfig.authenticatedHeaders();
 
       final body = jsonEncode(OpenAiConfig.wrapBody({
         'model': OpenAiConfig.model,
@@ -571,7 +583,7 @@ class OpenAiServiceSecure {
 
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -599,7 +611,7 @@ class OpenAiServiceSecure {
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = _fepSectionPrompt(section: section, context: trimmedContext);
     final body = jsonEncode(OpenAiConfig.wrapBody({
@@ -626,9 +638,9 @@ class OpenAiServiceSecure {
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode == 401) throw Exception('Invalid API key');
-      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode == 429) throw _aiQuotaException(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -678,7 +690,7 @@ class OpenAiServiceSecure {
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = '''
 You are a senior editor for an enterprise project management workspace. Rewrite the user's existing text for the "$section" section so that it is clearer, more professional, and grammatically correct.
@@ -728,9 +740,9 @@ ${_escape(trimmedText)}
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode == 401) throw Exception('Invalid API key');
-      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode == 429) throw _aiQuotaException(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -765,7 +777,7 @@ ${_escape(trimmedText)}
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -789,9 +801,9 @@ ${_escape(trimmedText)}
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode == 401) throw Exception('Invalid API key');
-      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode == 429) throw _aiQuotaException(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -1106,7 +1118,7 @@ ${_escape(trimmedText)}
     if (!OpenAiConfig.isConfigured) return {'in': [], 'out': []};
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -1129,7 +1141,7 @@ ${_escape(trimmedText)}
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode >= 300) return {'in': [], 'out': []};
 
       final data =
@@ -1165,7 +1177,7 @@ ${_escape(trimmedText)}
     if (!OpenAiConfig.isConfigured) return {'risks': [], 'constraints': []};
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -1188,7 +1200,7 @@ ${_escape(trimmedText)}
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode >= 300) return {'risks': [], 'constraints': []};
 
       final data =
@@ -1244,7 +1256,7 @@ ${_escape(trimmedText)}
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = _buildMitigationPrompt(trimmedRisks, context);
 
@@ -1269,7 +1281,7 @@ ${_escape(trimmedText)}
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode >= 300) {
         return _fallbackMitigationPlans(trimmedRisks);
       }
@@ -1346,7 +1358,7 @@ ${_escape(trimmedText)}
     if (!OpenAiConfig.isConfigured) return {};
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -1369,7 +1381,7 @@ ${_escape(trimmedText)}
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode >= 300) return {};
 
       final data =
@@ -1420,7 +1432,7 @@ ${_escape(trimmedText)}
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = '''
 You are a senior project manager. Based on the project context below, generate a list of specific, actionable items for the "$section" section.
@@ -1463,7 +1475,7 @@ Rules:
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
@@ -1508,7 +1520,7 @@ Rules:
     if (!OpenAiConfig.isConfigured) return '';
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = '''
 You are a senior project planning assistant. Using the project context below, write a concise project objective summary.
@@ -1543,7 +1555,7 @@ Return ONLY valid JSON: {"objective": "..." }
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
@@ -1577,7 +1589,7 @@ Return ONLY valid JSON: {"objective": "..." }
     if (!OpenAiConfig.isConfigured) return {};
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final fieldLines = fields.entries
         .map((entry) => '- ${entry.key}: ${entry.value}'.trim())
@@ -1631,7 +1643,7 @@ $trimmedContext
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -1995,7 +2007,7 @@ $trimmedContext
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -2025,7 +2037,7 @@ Use concise professional language. Status should use In progress, Pending, In re
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode >= 300) return const DesignDeliverablesData();
 
       final data =
@@ -2080,7 +2092,7 @@ Use concise professional language. Status should use In progress, Pending, In re
     if (!OpenAiConfig.isConfigured) return {};
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -2108,7 +2120,7 @@ Use concise professional language. Status must be one of: Approved, Aligned, Rea
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 20));
+          .timeout(const Duration(seconds: 120));
 
       if (response.statusCode >= 300) return {};
 
@@ -2135,7 +2147,7 @@ Use concise professional language. Status must be one of: Approved, Aligned, Rea
     if (!OpenAiConfig.isConfigured) return SpecializedDesignData();
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -2161,7 +2173,7 @@ Return JSON with:
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 20));
+          .timeout(const Duration(seconds: 120));
 
       if (response.statusCode >= 300) return SpecializedDesignData();
 
@@ -2335,7 +2347,7 @@ Return JSON with:
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': temperature,
@@ -2357,7 +2369,7 @@ Return JSON with:
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -2395,7 +2407,7 @@ Return JSON with:
     if (!OpenAiConfig.isConfigured) throw const OpenAiNotConfiguredException();
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -2423,9 +2435,9 @@ Return JSON with:
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode == 401) throw Exception('Invalid API key');
-      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode == 429) throw _aiQuotaException(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -2640,7 +2652,7 @@ $c
     final scaleConstraints = _scaleFinancialConstraints(projectScale);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = _singleItemEstimatePrompt(
       itemName: trimmed,
@@ -2682,12 +2694,12 @@ $c
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 60));
       if (response.statusCode == 401) {
         throw Exception('Invalid API key');
       }
       if (response.statusCode == 429) {
-        throw Exception('API quota exceeded');
+        throw _aiQuotaException(response.body);
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
@@ -2911,7 +2923,7 @@ $scaleConstraints
     final scaleConstraints = _scaleFinancialConstraints(projectScale);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -2945,10 +2957,10 @@ $scaleConstraints
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
 
       if (response.statusCode == 401) throw Exception('Invalid API key');
-      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode == 429) throw _aiQuotaException(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -2996,7 +3008,7 @@ $scaleConstraints
     if (!OpenAiConfig.isConfigured) throw const OpenAiNotConfiguredException();
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -3024,7 +3036,7 @@ $scaleConstraints
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 18));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -3322,7 +3334,7 @@ $domainHints
     String contextNotes = '',
   }) async {
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.7,
@@ -3351,9 +3363,9 @@ $domainHints
 
     final response = await _client
         .post(uri, headers: headers, body: body)
-        .timeout(const Duration(seconds: 30));
+        .timeout(const Duration(seconds: 180));
     if (response.statusCode == 429) {
-      throw Exception('API quota exceeded. Please check your OpenAI billing.');
+      throw _aiQuotaException(response.body);
     }
     if (response.statusCode == 401) {
       throw Exception('Invalid API key. Please check your OpenAI API key.');
@@ -3382,7 +3394,7 @@ $domainHints
     if (!OpenAiConfig.isConfigured) throw const OpenAiNotConfiguredException();
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.6,
@@ -3406,7 +3418,7 @@ $domainHints
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -3557,7 +3569,7 @@ $domainHints
     required bool includeResponseFormat,
   }) async {
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final payload = {
       'model': OpenAiConfig.model,
       'temperature': 0.7,
@@ -3583,9 +3595,9 @@ $domainHints
     final response = await _client
         .post(uri,
             headers: headers, body: jsonEncode(OpenAiConfig.wrapBody(payload)))
-        .timeout(const Duration(seconds: 30));
+        .timeout(const Duration(seconds: 180));
     if (response.statusCode == 429) {
-      throw Exception('API quota exceeded. Please check your OpenAI billing.');
+      throw _aiQuotaException(response.body);
     }
     if (response.statusCode == 401) {
       throw Exception('Invalid API key. Please check your OpenAI API key.');
@@ -3683,10 +3695,11 @@ $domainHints
     if (!cleaned.startsWith('[')) {
       // Try to find the first [ character
       final idx = cleaned.indexOf('[');
-      if (idx >= 0)
+      if (idx >= 0) {
         cleaned = cleaned.substring(idx);
-      else
+      } else {
         return null;
+      }
     }
     try {
       final decoded = jsonDecode(cleaned);
@@ -3707,7 +3720,7 @@ $domainHints
     if (!OpenAiConfig.isConfigured) throw const OpenAiNotConfiguredException();
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -3734,7 +3747,7 @@ $domainHints
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -3797,7 +3810,7 @@ $domainHints
         _financialDomainHints(context: contextNotes, solutions: solutions);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.45,
@@ -3829,7 +3842,7 @@ $domainHints
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -4312,53 +4325,75 @@ $domainHints
     }).join(',');
     final currencyInstruction = _currencyConversionInstruction(currency);
     return '''
-For each solution below, provide a cost breakdown with up to 20 items (aim for 8-20 when possible).
+You are a senior cost estimator with 15+ years of experience in project cost analysis. Generate realistic, industry-standard cost estimates that reflect actual market rates and real-world project economics.
+
+For each solution below, provide a cost breakdown with 8-15 items.
 Each item must include: item, description, estimated_cost (number in $currency), roi_percent (number), and npv_by_years (keys "3_years", "5_years", "10_years" with numeric values in $currency).
 
-CRITICAL — Realistic Financial Guidelines:
-- Every estimated_cost MUST be a realistic, non-zero value based on real-world market rates.
-- NEVER return estimated_cost as 0 or null. Minimum is \$5,000.
-- Research-based cost ranges (USD) by project type:
-  • Healthcare/Software platform: \$50,000–\$2,000,000+
-  • Physical pharmacy/construction: \$100,000–\$5,000,000+
-  • Digital transformation: \$75,000–\$1,500,000
-  • Staffing/Training: \$20,000–\$500,000
-  • Regulatory/Compliance: \$10,000–\$200,000
-  • Monitoring/Ongoing: \$15,000–\$300,000/year (NEVER \$0)
+CRITICAL — REALISTIC COST ESTIMATION RULES:
 
-CRITICAL — ROI and NPV Consistency Rules:
-- roi_percent is the RETURN ON INVESTMENT percentage for that line item.
-  Realistic ranges: 5%–45% for most projects. NEVER exceed 100% per item.
-  Higher-risk digital projects may go up to 60%. Physical projects typically 10%–25%.
-- npv_by_years MUST be the NET PRESENT VALUE of future cash flows from that item.
-  NPV MUST be positive if ROI is positive.
-  NPV MUST increase with time horizon: 10_years > 5_years > 3_years.
-  NPV at 5_years should typically be 1.2x–3x the estimated_cost for profitable items.
-  Example: if estimated_cost is \$50,000 and roi_percent is 20%, then:
-    npv_3_years ≈ \$15,000–\$25,000
-    npv_5_years ≈ \$30,000–\$50,000
-    npv_10_years ≈ \$60,000–\$100,000
-- For physical/infrastructure projects, ROI should be lower (10%–25%) with
-  proportionally lower NPV values.
-- For digital/software projects, ROI can be higher (20%–60%) with
-  proportionally higher NPV values.
-- Total project ROI should be a weighted average of item ROIs, NOT a sum.
-- Vary costs, ROIs, and NPVs across items — do not use identical values.
+1. COST ACCURACY (Most Important):
+   - Every estimated_cost MUST reflect real-world market rates for the specific project type and region.
+   - NEVER return estimated_cost as 0, null, or placeholder values.
+   - Minimum realistic cost: \$5,000 for small items; most items should be \$15,000–\$500,000.
+   - Total project cost should typically range from \$250,000 to \$5,000,000+ depending on scope.
 
-Rules:
+2. INDUSTRY-STANDARD COST BENCHMARKS:
+   a) Road/Infrastructure Projects (like this one):
+      - Site survey & feasibility: \$25,000–\$150,000
+      - Permits & regulatory approvals: \$15,000–\$75,000
+      - Engineering & technical drawings: \$50,000–\$200,000
+      - Materials & equipment: \$150,000–\$1,500,000
+      - Civil works & installation: \$200,000–\$3,000,000
+      - Project management & supervision: \$40,000–\$250,000
+      - Testing & commissioning: \$20,000–\$100,000
+      - Training & handover: \$10,000–\$50,000
+   b) Building/Construction:
+      - Design & architecture: \$75,000–\$400,000
+      - Foundation & structural: \$100,000–\$800,000
+      - MEP (Mechanical, Electrical, Plumbing): \$150,000–\$600,000
+      - Finishing & fit-out: \$80,000–\$400,000
+   c) IT/Digital Projects:
+      - Discovery & requirements: \$20,000–\$80,000
+      - UX/UI design: \$30,000–\$120,000
+      - Development (per platform): \$80,000–\$400,000
+      - Testing & QA: \$25,000–\$100,000
+      - Deployment & launch: \$15,000–\$60,000
+      - Ongoing support (annual): \$30,000–\$150,000
+
+3. ROI GUIDELINES:
+   - Infrastructure/Physical projects: 8%–20% ROI (realistic for capital projects)
+   - Digital/Software projects: 15%–40% ROI
+   - Service/Training projects: 10%–30% ROI
+   - NEVER exceed 50% ROI for any single item (unrealistic)
+   - ROI should reflect the actual return potential of that specific investment
+
+4. NPV RULES:
+   - NPV MUST increase with time: 10_years > 5_years > 3_years
+   - NPV at 5_years should be 1.5x–3x the estimated_cost for profitable items
+   - For infrastructure with 8% ROI: NPV_5y ≈ 1.2x–1.5x cost
+   - For high-growth digital with 30% ROI: NPV_5y ≈ 2.0x–3.0x cost
+   - NPV at 10_years should be 2.5x–5x the estimated_cost
+
+5. VARIETY AND REALISM:
+   - Costs should vary significantly across items (not uniform)
+   - Include a mix of large capital items (\$100K+) and smaller operational items (\$10K–\$50K)
+   - Description must explain what specifically is included in the cost
+   - Each solution should have genuinely different cost structures based on its approach
+
+CRITICAL RULES:
 - Detect the project type per solution (physical construction/infrastructure, digital/software, or hybrid) and use domain-appropriate line items.
-- Physical solutions must not use software lifecycle placeholders such as Discovery and Planning, MVP Build, Integration, or Data.
-- Do not return repetitive placeholder amounts (100000, 250000, 500000) unless explicitly justified from context quantities.
-- Ensure solutions are distinct: avoid identical item lists and identical costs across different solutions.
-- If confidence is low for a specific line item, omit it instead of inventing a generic entry.
+- Physical solutions must not use software lifecycle placeholders.
+- Do not return repetitive placeholder amounts unless explicitly justified from context.
+- Ensure solutions are distinct: avoid identical item lists and identical costs.
 - Be detailed and specific: do not use "etc.", "and similar", or vague groupings.
-- All monetary values (estimated_cost, npv_by_years) must be in $currency.$currencyInstruction
+- All monetary values must be in $currency.$currencyInstruction
 
 Return ONLY valid JSON with this exact structure:
 {
   "cost_breakdown": [
     {"solution": "Solution Name", "items": [
-      {"item": "Project Item", "description": "...", "estimated_cost": 12345, "roi_percent": 18.5, "npv_by_years": {"3_years": 5600, "5_years": 7800, "10_years": 12800}}
+      {"item": "Project Item", "description": "Detailed scope of work...", "estimated_cost": 12345, "roi_percent": 18.5, "npv_by_years": {"3_years": 5600, "5_years": 7800, "10_years": 12800}}
     ]}
   ]
 }
@@ -4860,10 +4895,12 @@ Domain guardrail: $guardrails
     // --- Decision logic ---
     if (smallScore >= 3 && largeScore < 3) return _AiProjectScale.small;
     if (largeScore >= 3 && smallScore < 3) return _AiProjectScale.large;
-    if (smallScore >= 3 && smallScore > largeScore)
+    if (smallScore >= 3 && smallScore > largeScore) {
       return _AiProjectScale.small;
-    if (largeScore >= 3 && largeScore > smallScore)
+    }
+    if (largeScore >= 3 && largeScore > smallScore) {
       return _AiProjectScale.large;
+    }
     // Default to medium when no strong signal
     return _AiProjectScale.medium;
   }
@@ -5258,7 +5295,7 @@ Domain guardrail: $guardrails
 
     final scaleHint = _projectScaleLabel(detectedScale);
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.4,
@@ -5290,7 +5327,7 @@ Domain guardrail: $guardrails
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -5603,22 +5640,30 @@ $domainHints
     required String solutionDescription,
     String notes = '',
   }) async {
-    if (!OpenAiConfig.isConfigured) throw const OpenAiNotConfiguredException();
-    final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
-    final body = jsonEncode(OpenAiConfig.wrapBody({
-      'model': OpenAiConfig.model,
-      'temperature': 0.6,
-      'max_completion_tokens': 1200,
-      'messages': [
-        {
-          'role': 'system',
-          'content':
-              'You are a project strategist. Write a concise, executive-ready business case. Use short paragraphs or bullets. No markdown headings.'
-        },
-        {
-          'role': 'user',
-          'content': '''
+    final fallback = _fallbackBusinessCase(
+      projectName: projectName,
+      solutionTitle: solutionTitle,
+      solutionDescription: solutionDescription,
+      notes: notes,
+    );
+    if (!OpenAiConfig.isConfigured) return fallback;
+
+    try {
+      final uri = OpenAiConfig.chatUri();
+      final headers = await OpenAiConfig.authenticatedHeaders();
+      final body = jsonEncode(OpenAiConfig.wrapBody({
+        'model': OpenAiConfig.model,
+        'temperature': 0.6,
+        'max_completion_tokens': 1200,
+        'messages': [
+          {
+            'role': 'system',
+            'content':
+                'You are a project strategist. Write a concise, executive-ready business case. Use short paragraphs or bullets. No markdown headings.'
+          },
+          {
+            'role': 'user',
+            'content': '''
 Project: ${_escape(projectName)}
 Solution title: ${_escape(solutionTitle)}
 Solution description: ${_escape(solutionDescription)}
@@ -5626,20 +5671,72 @@ Notes: ${notes.trim().isEmpty ? 'None' : _escape(notes)}
 
 Include: problem statement, proposed solution, benefits, risks, success metrics, and a brief recommendation.
 Return plain text only.'''
-        }
-      ],
-    }));
+          }
+        ],
+      }));
 
-    final response = await _client
-        .post(uri, headers: headers, body: body)
-        .timeout(const Duration(seconds: 18));
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('OpenAI error ${response.statusCode}: ${response.body}');
+      final response = await _client
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 90));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(
+            'OpenAI error ${response.statusCode}: ${response.body}');
+      }
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final content = _stripAsterisks(OpenAiConfig.extractContent(data)).trim();
+      if (content.isEmpty) throw const FormatException('Empty AI response');
+      return content;
+    } catch (error) {
+      // Business-case generation must remain usable during provider outages,
+      // expired auth sessions, quota exhaustion, or malformed responses.
+      debugPrint(
+          'Business case AI unavailable; using editable local draft: $error');
+      return fallback;
     }
-    final data =
-        jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-    final content = OpenAiConfig.extractContent(data);
-    return _stripAsterisks(content).trim();
+  }
+
+  String _fallbackBusinessCase({
+    required String projectName,
+    required String solutionTitle,
+    required String solutionDescription,
+    required String notes,
+  }) {
+    final name =
+        projectName.trim().isEmpty ? 'This project' : projectName.trim();
+    final title = solutionTitle.trim().isEmpty
+        ? 'the proposed solution'
+        : solutionTitle.trim();
+    final description = solutionDescription.trim().isEmpty
+        ? 'The solution details require confirmation from the project team.'
+        : solutionDescription.trim();
+    final context = notes.trim().isEmpty
+        ? 'Additional project assumptions and evidence are to be confirmed.'
+        : notes.trim();
+
+    return '''Problem statement
+$name requires a clear, agreed approach to address the need described in the project context. The current notes should be validated with stakeholders before approval.
+
+Proposed solution
+$title: $description
+
+Expected benefits
+- Aligns stakeholders around the stated project need and intended outcome.
+- Provides a basis for defining scope, ownership, delivery checkpoints, and success measures.
+- Creates an editable starting point for validating value, risks, and feasibility.
+
+Risks and assumptions
+- The current context may not include all operational, technical, financial, or compliance constraints.
+- Benefits, costs, dependencies, and delivery dates must be validated before commitment.
+- Key assumptions: $context
+
+Success metrics
+- Stakeholder-approved scope and acceptance criteria.
+- Measurable progress against agreed milestones and budget controls.
+- Demonstrable improvement against the baseline outcome selected by the project team.
+
+Recommendation
+Use this draft as a starting point, confirm the assumptions with the relevant subject-matter experts, and update the business case before final approval.''';
   }
 
   Future<List<BenefitLineItemInput>> generateBenefitLineItems({
@@ -5668,7 +5765,7 @@ Return plain text only.'''
 
     final scaleHint = _projectScaleLabel(detectedScale);
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final list = solutions
         .map((s) =>
             '{"title":"${_escape(s.title)}","description":"${_escape(s.description)}"}')
@@ -5707,7 +5804,7 @@ Return plain text only.'''
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         return _fallbackBenefitLineItems(
           estimatedProjectValue,
@@ -6044,7 +6141,7 @@ Return ONLY JSON.
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.4,
@@ -6078,13 +6175,12 @@ Return ONLY JSON.
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode == 401) {
         throw Exception('Invalid API key. Please check your OpenAI API key.');
       }
       if (response.statusCode == 429) {
-        throw Exception(
-            'API quota exceeded. Please check your OpenAI billing.');
+        throw _aiQuotaException(response.body);
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
@@ -6254,7 +6350,7 @@ Remember: Return ONLY a JSON object with key "savings_scenarios".
     if (!OpenAiConfig.isConfigured) return _fallbackInfrastructure(solutions);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -6281,7 +6377,7 @@ Remember: Return ONLY a JSON object with key "savings_scenarios".
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -6438,7 +6534,7 @@ Context notes (optional): $notes
     if (!OpenAiConfig.isConfigured) return _fallbackStakeholders(solutions);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -6460,7 +6556,7 @@ Context notes (optional): $notes
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -6809,7 +6905,7 @@ Context notes (optional): $notes
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final existingRisksText = existingRisks.isEmpty
         ? 'None yet'
@@ -6854,7 +6950,7 @@ Make each suggestion:
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 60));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception('OpenAI error ${response.statusCode}');
       }
@@ -6938,7 +7034,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -6961,7 +7057,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -7012,7 +7108,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -7026,8 +7122,8 @@ $escaped
         },
         {
           'role': 'user',
-          'content': _ssherCategoryPlanPrompt(
-              trimmedContext, normalizedCategory),
+          'content':
+              _ssherCategoryPlanPrompt(trimmedContext, normalizedCategory),
         },
       ],
     }));
@@ -7035,7 +7131,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -7239,7 +7335,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -7262,7 +7358,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -7323,7 +7419,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -7337,8 +7433,8 @@ $escaped
         },
         {
           'role': 'user',
-          'content': _qualityAssistantPrompt(
-              trimmedContext, normalizedCategory),
+          'content':
+              _qualityAssistantPrompt(trimmedContext, normalizedCategory),
         },
       ],
     }));
@@ -7346,7 +7442,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -7357,12 +7453,10 @@ $escaped
       if (content.isNotEmpty) {
         final parsed = _decodeJsonSafely(content);
         if (parsed != null) {
-          final insights = (parsed['insights'] ??
-                  parsed['summary'] ??
-                  parsed['text'] ??
-                  '')
-              .toString()
-              .trim();
+          final insights =
+              (parsed['insights'] ?? parsed['summary'] ?? parsed['text'] ?? '')
+                  .toString()
+                  .trim();
           final applicableRaw = parsed['applicable'];
           final applicable = applicableRaw is bool
               ? applicableRaw
@@ -7386,7 +7480,8 @@ $escaped
       }
     }
 
-    return _fallbackQualityAssistantInsights(trimmedContext, normalizedCategory);
+    return _fallbackQualityAssistantInsights(
+        trimmedContext, normalizedCategory);
   }
 
   String _normalizeQualityCategory(String category) {
@@ -7550,14 +7645,12 @@ $escaped
   String _fallbackQualityCategorySummary(String context, String category) {
     final projectName = _extractProjectName(context);
     final assetName = projectName.isEmpty ? 'this project' : projectName;
-    final isSoftware =
-        context.toLowerCase().contains('software') ||
-            context.toLowerCase().contains('agile') ||
-            context.toLowerCase().contains('app');
-    final isConstruction =
-        context.toLowerCase().contains('construction') ||
-            context.toLowerCase().contains('civil') ||
-            context.toLowerCase().contains('infrastructure');
+    final isSoftware = context.toLowerCase().contains('software') ||
+        context.toLowerCase().contains('agile') ||
+        context.toLowerCase().contains('app');
+    final isConstruction = context.toLowerCase().contains('construction') ||
+        context.toLowerCase().contains('civil') ||
+        context.toLowerCase().contains('infrastructure');
 
     switch (category) {
       case 'plan':
@@ -7640,10 +7733,9 @@ $escaped
       String context, String category) {
     final projectName = _extractProjectName(context);
     final assetName = projectName.isEmpty ? 'this project' : projectName;
-    final isSoftware =
-        context.toLowerCase().contains('software') ||
-            context.toLowerCase().contains('agile') ||
-            context.toLowerCase().contains('app');
+    final isSoftware = context.toLowerCase().contains('software') ||
+        context.toLowerCase().contains('agile') ||
+        context.toLowerCase().contains('app');
 
     String insights;
     bool applicable;
@@ -7854,7 +7946,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -7877,7 +7969,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -7913,7 +8005,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -7942,7 +8034,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -7981,7 +8073,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -8010,7 +8102,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -8097,7 +8189,7 @@ $escaped
     final staffingGuidance = _scaleStaffingCostGuidance(projectScale);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -8126,7 +8218,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -8312,7 +8404,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -8341,7 +8433,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -8492,7 +8584,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -8521,7 +8613,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -8706,7 +8798,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -8730,7 +8822,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -10057,7 +10149,7 @@ Context notes (optional): $notes
     final count = minCount < 3 ? 3 : minCount;
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.6,
@@ -10103,7 +10195,7 @@ Return JSON in this format:
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -10156,7 +10248,7 @@ Return JSON in this format:
     if (!OpenAiConfig.isConfigured) return [];
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -10186,7 +10278,7 @@ Return JSON in this format:
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 22));
+          .timeout(const Duration(seconds: 120));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -10316,7 +10408,7 @@ Additional Context: $contextNotes
     final durationGuidance = _scaleDurationGuidance(projectScale);
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -10340,7 +10432,7 @@ Additional Context: $contextNotes
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -10439,7 +10531,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.6,
@@ -10467,7 +10559,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -10580,7 +10672,7 @@ Return ONLY valid JSON.
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.6,
@@ -10608,7 +10700,7 @@ Return ONLY valid JSON.
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -10758,7 +10850,7 @@ Return ONLY valid JSON.
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.45,
@@ -10927,7 +11019,7 @@ Return ONLY valid JSON.
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -11243,7 +11335,7 @@ Return ONLY valid JSON in this exact structure:
   }) async {
     if (!OpenAiConfig.isConfigured) return [];
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -11274,7 +11366,7 @@ Return ONLY JSON: {"items":[...]}'''
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode < 200 || response.statusCode >= 300) return [];
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
@@ -11297,7 +11389,7 @@ Return ONLY JSON: {"items":[...]}'''
   }) async {
     if (!OpenAiConfig.isConfigured) return [];
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -11328,7 +11420,7 @@ Return ONLY JSON: {"items":[...]}'''
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode < 200 || response.statusCode >= 300) return [];
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
@@ -11351,7 +11443,7 @@ Return ONLY JSON: {"items":[...]}'''
   }) async {
     if (!OpenAiConfig.isConfigured) return [];
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
@@ -11381,7 +11473,7 @@ Return ONLY JSON: {"items":[...]}'''
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 90));
       if (response.statusCode < 200 || response.statusCode >= 300) return [];
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
@@ -11424,7 +11516,7 @@ Return ONLY JSON: {"items":[...]}'''
             'label': 'IT Equipment',
             'amount': 240000,
             'percent': 42,
-            'color': 0xFF6366F1
+            'color': 0xFFB8860B
           },
           {
             'label': 'Construction',
@@ -11484,7 +11576,7 @@ Return ONLY JSON: {"items":[...]}'''
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -11658,7 +11750,7 @@ $escaped
         : '0';
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -11781,7 +11873,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final tasksText = completedTasks.join('\n');
 
@@ -11879,7 +11971,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -11981,7 +12073,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12084,7 +12176,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12190,7 +12282,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12294,7 +12386,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12323,7 +12415,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -12402,7 +12494,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12425,7 +12517,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -12506,7 +12598,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
@@ -12541,7 +12633,7 @@ $escaped
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -12640,7 +12732,7 @@ $escaped
     }
 
     final uri = OpenAiConfig.chatUri();
-    final headers = OpenAiConfig.headers();
+    final headers = await OpenAiConfig.authenticatedHeaders();
 
     final prompt = '''
 Based on this goal description, generate a concise, impactful title in the format "G$goalNumber [ACTION_KEYWORD]".
@@ -12676,10 +12768,10 @@ Return only the title, no additional text.''';
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 180));
 
       if (response.statusCode == 401) throw Exception('Invalid API key');
-      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode == 429) throw _aiQuotaException(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -12748,7 +12840,7 @@ IMPORTANT RULES:
 
     try {
       final uri = OpenAiConfig.chatUri();
-      final headers = OpenAiConfig.headers();
+      final headers = await OpenAiConfig.authenticatedHeaders();
 
       final body = jsonEncode(OpenAiConfig.wrapBody({
         'model': OpenAiConfig.model,
@@ -12767,7 +12859,7 @@ IMPORTANT RULES:
 
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 20));
+          .timeout(const Duration(seconds: 120));
 
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body) as Map<String, dynamic>;

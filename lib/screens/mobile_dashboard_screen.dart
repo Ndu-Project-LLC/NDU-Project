@@ -7,9 +7,8 @@ import 'package:ndu_project/widgets/unified_phase_header.dart';
 import '../models/program_model.dart';
 import '../services/project_service.dart';
 import '../services/program_service.dart';
-import 'project_dashboard_screen.dart';
-import 'program_dashboard_mobile_screen.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/kaz_ai_chat_bubble.dart';
 
 class MobileDashboardScreen extends StatelessWidget {
  const MobileDashboardScreen({super.key});
@@ -25,10 +24,11 @@ class MobileDashboardScreen extends StatelessWidget {
  : ProgramService.streamPrograms(ownerId: user.uid);
 
  return Scaffold(
+ floatingActionButton: const KazAiChatBubble(positioned: false),
  appBar: AppBar(
  title: const Text('NDU mobile lightspeed'),
  elevation: 0,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: const Color(0xFF111827),
  actions: const [
  Padding(
@@ -114,21 +114,21 @@ class MobileDashboardScreen extends StatelessWidget {
  label: 'Regular projects',
  value: '$basicProjectCount',
  caption: 'Starter plan',
- color: Colors.teal.shade600,
+ color: const Color(0xFFD97706),
  icon: Icons.folder_special_rounded,
  ),
  _MobileStatusCard(
  label: 'Projects',
  value: '$projectCount',
  caption: 'Active workspaces',
- color: Colors.blue.shade600,
+ color: const Color(0xFFD97706),
  icon: Icons.folder_open_rounded,
  ),
  _MobileStatusCard(
  label: 'Active work',
  value: '$activeCount',
  caption: 'In progress',
- color: Colors.purple.shade600,
+ color: const Color(0xFFB8860B),
  icon: Icons.autorenew_rounded,
  ),
  _MobileStatusCard(

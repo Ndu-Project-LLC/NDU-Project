@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/project_charter_sections.dart';
+import 'package:ndu_project/utils/charter_lock_helper.dart';
 
 class CharterGovernanceSection extends StatelessWidget {
  final ProjectDataModel? data;
@@ -20,6 +20,13 @@ class CharterGovernanceSection extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  if (data == null) return const SizedBox();
+
+ // Once the charter is approved, the entire FEP is locked —
+ // the "Edit" affordance on the stakeholders card disappears
+ // so the approved baseline is preserved.
+ final isLocked = CharterLockHelper.isFepLocked(data);
+ final effectiveOnEditStakeholders =
+ isLocked ? null : onEditStakeholders;
 
  return Container(
  padding: const EdgeInsets.all(24),
@@ -58,7 +65,7 @@ class CharterGovernanceSection extends StatelessWidget {
  child: _GovernanceCard(
  child: CharterStakeholdersShort(
  data: data,
- onEdit: onEditStakeholders,
+ onEdit: effectiveOnEditStakeholders,
  ))),
  ],
  ),
@@ -189,10 +196,10 @@ class CharterStakeholdersShort extends StatelessWidget {
  data!.preferredSolutionAnalysis?.solutionAnalyses ?? [];
  SolutionAnalysisItem? matchedAnalysis;
  try {
- matchedAnalysis = analysisItems.firstWhere(
+ matchedAnalysis = analysisItems.where(
  (a) => a.solutionTitle.trim().toLowerCase() ==
  preferredSolution.title.trim().toLowerCase(),
- );
+ ).firstOrNull;
  } catch (_) {
  matchedAnalysis = analysisItems.isNotEmpty
  ? analysisItems.first
@@ -266,11 +273,11 @@ class CharterStakeholdersShort extends StatelessWidget {
  padding:
  const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
  decoration: BoxDecoration(
- color: Colors.blue.shade50,
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(4)),
  child: Text(i['role']!,
- style: TextStyle(
- fontSize: 10, color: Colors.blue.shade800)),
+ style: const TextStyle(
+ fontSize: 10, color: Color(0xFFB8860B))),
  )
  ],
  ),
@@ -318,8 +325,8 @@ class CharterStakeholdersShort extends StatelessWidget {
  label: Text(s,
  style: const TextStyle(
  fontSize: 11, fontWeight: FontWeight.w500)),
- backgroundColor: Colors.purple.shade50,
- labelStyle: TextStyle(color: Colors.purple.shade800),
+ backgroundColor: const Color(0xFFFFF8E1),
+ labelStyle: const TextStyle(color: Color(0xFF92400E)),
  padding: EdgeInsets.zero,
  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
  visualDensity: VisualDensity.compact,
@@ -723,7 +730,7 @@ class _CharterApprovalsState extends State<CharterApprovals> {
  padding:
  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
- color: Colors.blue.shade600,
+ color: const Color(0xFFD97706),
  borderRadius: BorderRadius.circular(4)),
  child: const Text('Click to Approve',
  style: TextStyle(
@@ -766,7 +773,7 @@ class _CharterApprovalsState extends State<CharterApprovals> {
  title: const Row(
  children: [
  Icon(Icons.gavel_outlined,
- color: Color(0xFF2563EB), size: 22),
+ color: Color(0xFFFFC812), size: 22),
  SizedBox(width: 10),
  Text('Confirm Charter Approval'),
  ],

@@ -48,14 +48,14 @@ class PcPalette {
   static const Color goldSoft = Color(0xFFFFF4CC);
 
   // Semantic accents
-  static const Color indigo = Color(0xFF6366F1);
+  static const Color indigo = Color(0xFFB8860B);
   static const Color emerald = Color(0xFF10B981);
   static const Color amber = Color(0xFFD97706);
-  static const Color violet = Color(0xFF8B5CF6);
-  static const Color sky = Color(0xFF0EA5E9);
-  static const Color rose = Color(0xFFF43F5E);
-  static const Color teal = Color(0xFF14B8A6);
-  static const Color fuchsia = Color(0xFFD946EF);
+  static const Color violet = Color(0xFFB8860B);
+  static const Color sky = Color(0xFFFFC812);
+  static const Color rose = Color(0xFFD97706);
+  static const Color teal = Color(0xFFD97706);
+  static const Color fuchsia = Color(0xFFD97706);
 
   // Status
   static const Color danger = Color(0xFFEF4444);
@@ -143,26 +143,35 @@ class _PcPageScaffoldState extends State<PcPageScaffold>
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      child: SingleChildScrollView(
-        padding: widget.padding,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: widget.maxWidth),
-            child: FadeTransition(
-              opacity: _intro,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.03),
-                  end: Offset.zero,
-                ).animate(_intro),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: widget.children,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPadding = constraints.maxWidth < 520 ? 12.0 : null;
+          final padding = horizontalPadding == null
+              ? widget.padding
+              : EdgeInsets.fromLTRB(
+                  horizontalPadding, 16, horizontalPadding, 32);
+          return SingleChildScrollView(
+            padding: padding,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: widget.maxWidth),
+                child: FadeTransition(
+                  opacity: _intro,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.03),
+                      end: Offset.zero,
+                    ).animate(_intro),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: widget.children,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -374,7 +383,7 @@ class PcHeroBand extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             color: PcPalette.inkPrimary,
             fontSize: 26,
             fontWeight: FontWeight.w800,
@@ -386,7 +395,7 @@ class PcHeroBand extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           subtitle,
-          style: TextStyle(
+          style: const TextStyle(
             color: PcPalette.inkSecondary,
             fontSize: 13.5,
             fontWeight: FontWeight.w500,
@@ -447,7 +456,7 @@ class PcHeroBand extends StatelessWidget {
                     const SizedBox(width: 10),
                     Text(
                       action!.label,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
@@ -504,7 +513,7 @@ class PcKpiTrend {
 
 /// Renders a responsive `Wrap` of KPI cards built from [kpis].
 ///
-/// 4 columns when width > 1100, 2 columns when > 720, else 1 column.
+/// 3 columns when width > 1100, 2 columns when > 760, else 1 column.
 class PcKpiStrip extends StatelessWidget {
   const PcKpiStrip({
     super.key,
@@ -520,11 +529,15 @@ class PcKpiStrip extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, c) {
         final cols = c.maxWidth > 1100
-            ? 4
-            : c.maxWidth > 720
+            ? 3
+            : c.maxWidth > 760
                 ? 2
                 : 1;
-        final cardW = (c.maxWidth - spacing * (cols - 1)) / cols;
+        final availableWidth = c.maxWidth.isFinite && c.maxWidth > 0
+            ? c.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final cardW = ((availableWidth - spacing * (cols - 1)) / cols)
+            .clamp(0.0, double.infinity);
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
@@ -551,7 +564,12 @@ class _PcKpiCard extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
           width: cardWidth,
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+          constraints: BoxConstraints(
+            minWidth: 0,
+            maxWidth: cardWidth,
+            minHeight: 120,
+          ),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           decoration: BoxDecoration(
             color: PcPalette.surface,
             borderRadius: BorderRadius.circular(16),
@@ -612,8 +630,7 @@ class _PcKpiCard extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child:
-                              Icon(spec.icon, color: Colors.white, size: 20),
+                          child: Icon(spec.icon, color: Colors.white, size: 20),
                         ),
                         const Spacer(),
                         if (spec.live)
@@ -637,27 +654,27 @@ class _PcKpiCard extends StatelessWidget {
                           ),
                       ],
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
                     Text(
                       spec.label.toUpperCase(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkMuted,
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
+                        letterSpacing: 0.5,
                         fontFamily: appFontFamily,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Flexible(
                           child: Text(
                             spec.value,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: PcPalette.inkPrimary,
-                              fontSize: 24,
+                              fontSize: 22,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.5,
                               height: 1.1,
@@ -707,10 +724,10 @@ class _PcKpiCard extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
                       spec.sub,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: PcPalette.inkSecondary,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -779,7 +796,7 @@ class PcSectionCard extends StatelessWidget {
           children: [
             // Header row with accent rail
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 border: Border(
                   bottom: BorderSide(color: PcPalette.borderSubtle),
                 ),
@@ -806,7 +823,7 @@ class PcSectionCard extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: PcPalette.inkPrimary,
                             fontSize: 14.5,
                             fontWeight: FontWeight.w700,
@@ -818,7 +835,7 @@ class PcSectionCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             subtitle!,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: PcPalette.inkSecondary,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -960,7 +977,7 @@ class PcEmptyState extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               color: PcPalette.inkPrimary,
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -973,7 +990,7 @@ class PcEmptyState extends StatelessWidget {
             child: Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: PcPalette.inkSecondary,
                 fontSize: 12.5,
                 fontWeight: FontWeight.w500,

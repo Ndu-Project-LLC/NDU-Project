@@ -381,7 +381,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     final double horizontalPadding = isMobile ? 18 : 32;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,7 +453,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFFCD34D)),
+        border: Border.all(color: const Color(0xFFFCD34D)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -712,9 +712,9 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
         _StatCard(
             'Awarded', '$awarded', Icons.verified, const Color(0xFF10B981)),
         _StatCard('Approved', '$approved', Icons.check_circle,
-            const Color(0xFF3B82F6)),
+            const Color(0xFFFFC812)),
         _StatCard(
-            'Nominated', '$nominated', Icons.star, const Color(0xFF8B5CF6)),
+            'Nominated', '$nominated', Icons.star, const Color(0xFFB8860B)),
       ];
       if (isWide) {
         return Row(
@@ -746,7 +746,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -765,7 +765,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -799,7 +799,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Column(
           children: [
@@ -851,10 +851,10 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     final statusColor = r.status == 'Awarded'
         ? const Color(0xFF10B981)
         : r.status == 'Approved'
-            ? const Color(0xFF3B82F6)
+            ? const Color(0xFFFFC812)
             : r.status == 'Rejected'
                 ? const Color(0xFFEF4444)
-                : const Color(0xFF8B5CF6);
+                : const Color(0xFFB8860B);
 
     return Container(
       width: double.infinity,
@@ -880,7 +880,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                   ),
                   borderRadius: BorderRadius.circular(12),
@@ -926,7 +926,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Color(0xFFF9FAFB),
+                color: const Color(0xFFF9FAFB),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(r.comments,
@@ -981,7 +981,7 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [

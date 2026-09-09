@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:ndu_project/screens/staff_team_screen.dart';
-import 'package:ndu_project/screens/team_meetings_screen.dart';
-import 'package:ndu_project/screens/team_training_building_screen.dart';
-import 'package:ndu_project/screens/recognition_awards_screen.dart';
-import 'package:ndu_project/screens/team_status_check_screen.dart';
-import 'package:ndu_project/screens/team_handover_screen.dart';
-import 'package:ndu_project/screens/lessons_learned_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -167,7 +160,7 @@ class _ProjectTeamActivitiesScreenState
       title: 'Team Meetings',
       subtitle: 'Recurring meetings, agendas, and action items',
       icon: Icons.video_call_outlined,
-      gradientStart: Color(0xFF0891B2),
+      gradientStart: Color(0xFFD97706),
       gradientEnd: Color(0xFF0E7490),
       description:
           'Manages recurring project meetings and provides a single location for planning, '
@@ -205,8 +198,8 @@ class _ProjectTeamActivitiesScreenState
       title: 'Training & Team Building',
       subtitle: 'Follows through from Planning Phase',
       icon: Icons.school_outlined,
-      gradientStart: Color(0xFF7C3AED),
-      gradientEnd: Color(0xFF6D28D9),
+      gradientStart: Color(0xFFB8860B),
+      gradientEnd: Color(0xFFB8860B),
       description:
           'In line with the corresponding section of the Planning Phase. The page naturally '
           'reflects here and is stewarded in this phase. Tracks onboarding, discipline-specific '
@@ -302,8 +295,8 @@ class _ProjectTeamActivitiesScreenState
       title: 'Team Handover',
       subtitle: 'Checklist for team member demobilization',
       icon: Icons.swap_horiz_outlined,
-      gradientStart: Color(0xFFEC4899),
-      gradientEnd: Color(0xFFDB2777),
+      gradientStart: Color(0xFFD97706),
+      gradientEnd: Color(0xFFD97706),
       description:
           'Ensures all responsibilities, knowledge, and project work are successfully transferred '
           'before a team member leaves the project. Methodology-neutral — suitable for Agile, '
@@ -332,7 +325,7 @@ class _ProjectTeamActivitiesScreenState
       title: 'Lessons Learned',
       subtitle: 'Continuous capture throughout execution',
       icon: Icons.lightbulb_outline,
-      gradientStart: Color(0xFF6366F1),
+      gradientStart: Color(0xFFB8860B),
       gradientEnd: Color(0xFF4F46E5),
       description:
           'Capture lessons learned continuously throughout project execution rather than waiting '
@@ -577,13 +570,13 @@ class _ProjectTeamActivitiesScreenState
           label: 'Defined Roles',
           value: '$_totalRoles',
           icon: Icons.work_outline,
-          color: const Color(0xFF7C3AED),
+          color: const Color(0xFFB8860B),
         ),
         _MetricCard(
           label: 'Upcoming Meetings',
           value: '$_upcomingMeetings',
           icon: Icons.event_outlined,
-          color: const Color(0xFF0891B2),
+          color: const Color(0xFFD97706),
         ),
         const _MetricCard(
           label: 'Active Sections',
@@ -636,14 +629,14 @@ class _ProjectTeamActivitiesScreenState
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF111827),
+                color: Color(0xFFFFC107),
               ),
             ),
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Color(0xFFF1F5F9),
+                color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -832,9 +825,9 @@ class _ProjectTeamActivitiesScreenState
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: Color(0xFFF3F4F6),
+                              color: const Color(0xFFF3F4F6),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Color(0xFFE5E7EB)),
+                              border: Border.all(color: const Color(0xFFE5E7EB)),
                             ),
                             child: Text(
                               f,
@@ -902,11 +895,11 @@ class _ProjectTeamActivitiesScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF8E1), Color(0xFFFEF3C7)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFF93C5FD)),
+        border: Border.all(color: const Color(0xFFFFC812)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -916,11 +909,11 @@ class _ProjectTeamActivitiesScreenState
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB).withValues(alpha: 0.15),
+                  color: const Color(0xFFFFC812).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.auto_awesome,
-                    color: Color(0xFF1D4ED8), size: 22),
+                    color: Color(0xFFFFC812), size: 22),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -929,7 +922,7 @@ class _ProjectTeamActivitiesScreenState
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E3A8A),
+                    color: Color(0xFFB8860B),
                   ),
                 ),
               ),
@@ -951,14 +944,14 @@ class _ProjectTeamActivitiesScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Icon(Icons.check_circle,
-                        size: 16, color: Color(0xFF2563EB)),
+                        size: 16, color: Color(0xFFFFC812)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         item,
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF1E40AF),
+                          color: Color(0xFFFFC812),
                           height: 1.5,
                         ),
                       ),

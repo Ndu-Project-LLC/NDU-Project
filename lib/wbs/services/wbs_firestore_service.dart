@@ -38,6 +38,35 @@ class WbsFirestoreService {
         if (node.methodology != null) 'methodology': node.methodology,
         if (node.costLineIds != null && node.costLineIds!.isNotEmpty)
           'costLineIds': node.costLineIds,
+        // Cross-section linkage (WBS ↔ PC ↔ Schedule) — previously dropped
+        // on Firestore round-trip; restored here so the integrated PMB
+        // survives load/save cycles. See Phase 0 of the integration plan.
+        if (node.controlAccountId != null &&
+            node.controlAccountId!.isNotEmpty)
+          'controlAccountId': node.controlAccountId,
+        if (node.scheduleActivityId != null &&
+            node.scheduleActivityId!.isNotEmpty)
+          'scheduleActivityId': node.scheduleActivityId,
+        if (node.percentComplete != null)
+          'percentComplete': node.percentComplete,
+        if (node.actualCost != null) 'actualCost': node.actualCost,
+        if (node.plannedStart != null)
+          'plannedStart': node.plannedStart!.toIso8601String(),
+        if (node.plannedFinish != null)
+          'plannedFinish': node.plannedFinish!.toIso8601String(),
+        if (node.scheduleStatus != null && node.scheduleStatus!.isNotEmpty)
+          'scheduleStatus': node.scheduleStatus,
+        // WBS Dictionary fields (Phase 1) — the per-work-package scope
+        // statement / acceptance criteria / work-package definition.
+        if (node.deliverableDescription != null &&
+            node.deliverableDescription!.isNotEmpty)
+          'deliverableDescription': node.deliverableDescription,
+        if (node.acceptanceCriteria != null &&
+            node.acceptanceCriteria!.isNotEmpty)
+          'acceptanceCriteria': node.acceptanceCriteria,
+        if (node.workPackageDefinition != null &&
+            node.workPackageDefinition!.isNotEmpty)
+          'workPackageDefinition': node.workPackageDefinition,
         'children': node.children.map(_nodeToFirestore).toList(),
       };
 
@@ -87,6 +116,28 @@ class WbsFirestoreService {
       costLineIds: json['costLineIds'] != null
           ? (json['costLineIds'] as List<dynamic>).cast<String>()
           : null,
+      // Cross-section linkage (WBS ↔ PC ↔ Schedule) — restored on load.
+      controlAccountId: json['controlAccountId'] as String?,
+      scheduleActivityId: json['scheduleActivityId'] as String?,
+      percentComplete: (json['percentComplete'] as num?)?.toDouble(),
+      actualCost: (json['actualCost'] as num?)?.toDouble(),
+      plannedStart: json['plannedStart'] is Timestamp
+          ? (json['plannedStart'] as Timestamp).toDate()
+          : (json['plannedStart'] is String
+              ? DateTime.tryParse(json['plannedStart'] as String)
+              : null),
+      plannedFinish: json['plannedFinish'] is Timestamp
+          ? (json['plannedFinish'] as Timestamp).toDate()
+          : (json['plannedFinish'] is String
+              ? DateTime.tryParse(json['plannedFinish'] as String)
+              : null),
+      scheduleStatus: json['scheduleStatus'] as String?,
+      // WBS Dictionary fields (Phase 1)
+      deliverableDescription: json['deliverableDescription'] as String?,
+      acceptanceCriteria: json['acceptanceCriteria'] != null
+          ? (json['acceptanceCriteria'] as List<dynamic>).cast<String>()
+          : null,
+      workPackageDefinition: json['workPackageDefinition'] as String?,
       children: (json['children'] as List<dynamic>? ?? [])
           .map((c) => _nodeFromFirestore(c as Map<String, dynamic>))
           .toList(),

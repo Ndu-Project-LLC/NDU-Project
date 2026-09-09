@@ -16,6 +16,7 @@ import 'package:ndu_project/utils/navigation_route_resolver.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/widgets/compact_action_button.dart';
 import 'package:ndu_project/widgets/dashboard_metrics_cards.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 // The dashboard_metrics_cards import is retained intentionally so the
 // workspace keeps a stable import surface even though the executive
@@ -207,6 +208,7 @@ class _ProjectWorkspaceDashboardScreenState
   Widget build(BuildContext context) {
     NavigationContextService.instance.setLastClientDashboard('/dashboard');
     return Scaffold(
+      floatingActionButton: const KazAiChatBubble(positioned: false),
       backgroundColor: _bg,
       body: SafeArea(
         child: StreamBuilder<List<ProjectRecord>>(
@@ -675,7 +677,7 @@ class _ProjectWorkspaceDashboardScreenState
     );
   }
 
-  // ── 4. Project Health Matrix Table ──────────────────────────────────────
+  // ── 4. Project Status Table ─────────────────────────────────────────────
   Widget _buildHealthMatrix(ProjectStatusRollup? rollup) {
     final rows = <_HealthRow>[
       _HealthRow('Schedule', Icons.schedule_outlined, rollup?.scheduleStatus ?? 'on_track',
@@ -690,7 +692,7 @@ class _ProjectWorkspaceDashboardScreenState
           '+1', false, 'New high-impact risk logged: vendor lead time slippage.'),
     ];
     return _sectionCard(
-      title: 'Project Health Matrix',
+      title: 'Project Status',
       subtitle: 'Five-dimension PMO rollup with trend and latest insight.',
       child: Container(
         decoration: BoxDecoration(

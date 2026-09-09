@@ -11,7 +11,7 @@
 //
 // Visual language:
 //   - White canvas (#FFFFFF) matching the app surface
-//   - Brand yellow accent (#FFC812) + info blue primary (#2563EB)
+//   - Brand yellow accent (#FFC812) + info blue primary (#FFC812)
 //     aligned with the overall NDU app theme (theme.dart)
 //   - Sand/clay neutrals for surfaces
 
@@ -65,7 +65,7 @@ class _RegularProjectDashboardScreenState
   late final Animation<Offset> _heroSlide;
 
   // Design tokens — aligned with the NDU app theme (theme.dart):
-  //   primary = #FFC812 (brand yellow), secondary = #2563EB (info blue),
+  //   primary = #FFC812 (brand yellow), secondary = #FFC812 (info blue),
   //   tertiary = #16A34A (success green), surface = white.
   static const _canvas = Color(0xFFFFFFFF);
   static const _surface = Color(0xFFFFFFFF);
@@ -78,14 +78,14 @@ class _RegularProjectDashboardScreenState
   static const _muted = Color(0xFF6B7280);
   static const _mutedSoft = Color(0xFF9CA3AF);
   static const _brand = Color(0xFFFFC812); // App primary (brand yellow)
-  static const _teal = Color(0xFF2563EB); // App secondary (info blue)
-  static const _tealDeep = Color(0xFF1E40AF);
-  static const _tealSoft = Color(0xFFDBEAFE);
+  static const _teal = Color(0xFFFFC812); // App secondary (info blue)
+  static const _tealDeep = Color(0xFFFFC812);
+  static const _tealSoft = Color(0xFFFEF3C7);
 
-  static const _coral = Color(0xFFFB7185);
+  static const _coral = Color(0xFFFBBF24);
   static const _amber = Color(0xFFF59E0B);
   static const _emerald = Color(0xFF10B981);
-  static const _indigo = Color(0xFF6366F1);
+  static const _indigo = Color(0xFFB8860B);
 
   @override
   void initState() {
@@ -317,14 +317,14 @@ class _RegularProjectDashboardScreenState
         onPressed: _createNewProject,
         backgroundColor: const Color(0xFFFFC107),
         foregroundColor: const Color(0xFF1C1C1C),
+        elevation: 4,
+        shape: const CircleBorder(),
+        tooltip: 'KAZ AI — New Project',
         child: const _KazAiBadge(
           size: 36,
           iconColor: Color(0xFF1C1C1C),
           badgeColor: Colors.transparent,
         ),
-        elevation: 4,
-        shape: const CircleBorder(),
-        tooltip: 'KAZ AI — New Project',
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       // The bottom navigation bar is a mobile-only affordance. On web the
@@ -774,7 +774,7 @@ class _RegularProjectDashboardScreenState
             Container(
               width: 88,
               height: 88,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: _tealSoft,
                 shape: BoxShape.circle,
               ),
@@ -824,7 +824,7 @@ class _RegularProjectDashboardScreenState
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline_rounded, color: _coral, size: 22),
+          const Icon(Icons.error_outline_rounded, color: _coral, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -938,6 +938,31 @@ class _RegularProjectCard extends StatelessWidget {
     final progress = (project.progress * 100).clamp(0, 100).toDouble();
     final updatedLabel = _formatRelative(project.updatedAt);
 
+    // Pick the most informative description available — solutionDescription
+    // is the long-form brief, falling back to businessCase, then notes,
+    // then milestone. Empty string means we render nothing for the
+    // descriptive band.
+    final description = (project.solutionDescription.trim().isNotEmpty
+            ? project.solutionDescription
+            : project.businessCase.trim().isNotEmpty
+                ? project.businessCase
+                : project.notes.trim().isNotEmpty
+                    ? project.notes
+                    : project.milestone.trim().isNotEmpty
+                        ? project.milestone
+                        : '')
+        .trim();
+
+    // Phase tag — derived from progress so we always have something
+    // meaningful to show next to the timestamp in the footer.
+    final phaseLabel = progress <= 0
+        ? 'Initiation'
+        : progress < 25
+            ? 'Planning'
+            : progress < 75
+                ? 'Execution'
+                : 'Closure';
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1012,6 +1037,68 @@ class _RegularProjectCard extends StatelessWidget {
                   _StatusPill(color: statusColor, label: statusLabel),
                 ],
               ),
+              // ── Descriptive section ──────────────────────────────────────
+              // Mirrors the "Project" column pattern from the Executive
+              // Dashboard table: a 2-3 line brief that gives the project
+              // manager enough context to recognize the workspace without
+              // having to open it. Skipped entirely when the project has
+              // no description yet (keeps the card compact for new
+              // workspaces).
+              if (description.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFBF9F3),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: const Color(0xFFF1ECDE), width: 1),
+                  ),
+                  child: Text(
+                    description,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      height: 1.45,
+                      color: Color(0xFF4B5563),
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+              // ── "Last edited by" metadata row ───────────────────────────
+              // Shows who last touched the workspace + when — same pattern
+              // as the Executive Dashboard's "Last edited by [name] • [time]"
+              // metadata line. Hidden when there is no owner name and no
+              // meaningful timestamp.
+              if (project.ownerName.isNotEmpty ||
+                  project.updatedAt
+                      .isAfter(DateTime.fromMillisecondsSinceEpoch(0))) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(Icons.history_rounded,
+                        size: 12, color: Colors.grey.shade500),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        project.ownerName.isNotEmpty
+                            ? 'Last edited by ${project.ownerName} • $updatedLabel'
+                            : 'Updated $updatedLabel',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 16),
               // Progress bar
               Column(
@@ -1098,6 +1185,30 @@ class _RegularProjectCard extends StatelessWidget {
                   else
                     const SizedBox.shrink(),
                   const SizedBox(width: 8),
+                  // Phase pill — solidifies the "descriptive section"
+                  // by always showing the project phase next to the
+                  // forward arrow (mirrors screenshot 1786981889271's
+                  // footer pill pattern).
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF8E5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: const Color(0xFFE7C98E), width: 1),
+                    ),
+                    child: Text(
+                      phaseLabel,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF92580A),
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   const Icon(
                     Icons.arrow_forward_rounded,
                     size: 16,
@@ -1119,7 +1230,7 @@ class _RegularProjectCard extends StatelessWidget {
       case 'at_risk':
         return const Color(0xFFF59E0B);
       case 'off_track':
-        return const Color(0xFFFB7185);
+        return const Color(0xFFFBBF24);
       default:
         return const Color(0xFF6B7280);
     }
@@ -1196,9 +1307,9 @@ class _BottomMiniNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: const Color(0xFFE7E5E0))),
+        border: Border(top: BorderSide(color: Color(0xFFE7E5E0))),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -1214,7 +1325,7 @@ class _BottomMiniNav extends StatelessWidget {
             icon: Icons.explore_rounded,
             label: 'Insights',
             isActive: activeIndex == 1,
-            color: const Color(0xFF6366F1),
+            color: const Color(0xFFB8860B),
           ),
           _NavItem(
             icon: Icons.bookmark_rounded,
@@ -1226,7 +1337,7 @@ class _BottomMiniNav extends StatelessWidget {
             icon: Icons.person_rounded,
             label: 'Profile',
             isActive: activeIndex == 3,
-            color: const Color(0xFFFB7185),
+            color: const Color(0xFFFBBF24),
           ),
         ],
       ),

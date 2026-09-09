@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.11" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>NDU Project — Daily Development Report</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">NDU Project — Daily Development Report</h1>
+</header>
+<h1 id="ndu-project-daily-development-report">NDU Project — Daily
+Development Report</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>To</strong></td>
+<td>Freebuff</td>
+</tr>
+<tr>
+<td><strong>From</strong></td>
+<td>Chungu Chama — NDU Project</td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>4 September 2026</td>
+</tr>
+<tr>
+<td><strong>Subject</strong></td>
+<td>Development progress report — work completed on 3 September
+2026</td>
+</tr>
+<tr>
+<td><strong>Project</strong></td>
+<td>NDU Project Management Platform</td>
+</tr>
+<tr>
+<td><strong>Repository</strong></td>
+<td>https://github.com/CHAMA18/Ndu_Project</td>
+</tr>
+<tr>
+<td><strong>Environment</strong></td>
+<td>Staging (<code>staging.admin.nduproject.com</code>) — branch
+<code>staging</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="purpose">1. Purpose</h2>
+<p>This report records the development work carried out on the NDU
+Project on <strong>Wednesday, 3 September 2026</strong>. It sets out the
+work programme agreed following the product-owner review of the staging
+environment, the items delivered against that programme, the
+verification performed, and the matters remaining open.</p>
+<h2 id="background-and-work-programme">2. Background and work
+programme</h2>
+<p>The product owner conducted a review of the staging environment on 3
+September 2026 (voice note, “New Recording 6”, transcribed and recorded
+in <code>docs/voice_notes/2026-09-03-recording-6-transcript.md</code>).
+The review distilled eight requirements for the platform. The governing
+principles were:</p>
+<ol type="1">
+<li><strong>The “skeleton” must work as core functionality, without
+AI.</strong> The core flow — WBS breakdown → Schedule → Cost; Cost +
+Schedule → Controls; and management based on the Controls — is the
+foundation of the application. All other modules (people, quality,
+orders, procurement) feed that skeleton. If the skeleton does not work,
+the application serves no purpose.</li>
+<li><strong>Manual cost estimation is core.</strong> Every work package
+appearing in the Schedule must be priceable at the smallest (leaf) WBS
+level. Entering a value against a work package is core functionality and
+must not require AI. AI is acceptable only for <em>suggesting</em>
+prices and for <em>checking the site for missing items</em> (a minimal
+AI cost).</li>
+<li><strong>Data movement between sections is core.</strong> Copying or
+carrying a topic from one phase to another (e.g. initiation → planning)
+is core functionality and must not depend on AI “grabbing things”.</li>
+<li><strong>AI must read the latest version of a topic.</strong> Where a
+topic exists in several phases, AI should use the most recent phase’s
+version, falling back to an earlier phase only when no later version
+exists.</li>
+<li><strong>Schedule costs must flow into the Cost Estimate</strong>
+rather than being re-entered, and costs not represented in the Schedule
+(project manager, structural engineer, permits, government fees,
+architect, etc.) are added as additional estimate-level costs on top of
+the work-package costs.</li>
+</ol>
+<p>The day’s implementation session executed these requirements across
+four workstreams (WS1–WS3 and a fourth corrective round), as detailed
+below.</p>
+<h2 id="work-completed">3. Work completed</h2>
+<h3 id="ws1-manual-cost-estimation-at-leaf-wbs-level-core-no-ai">3.1 WS1
+— Manual cost estimation at leaf-WBS level (core, no AI)</h3>
+<ul>
+<li>Added pure coverage helpers
+(<code>lib/wbs/utils/wbs_cost_coverage.dart</code>) that collect leaf
+work packages, detect which leaves are linked to a cost line or priced
+(by <code>costLineIds</code> or by WBS reference), and report the leaves
+that remain unpriced — i.e. the smallest level at which cost is
+estimated.</li>
+<li>The <strong>Cost by WBS</strong> tab (used in both the WBS module
+and the Cost Estimate module) now includes a <strong>“Work Packages
+Without Cost (N of M)”</strong> section listing every unpriced leaf work
+package. Each row carries an <strong>Add cost</strong> action that opens
+the manual cost-line dialog pre-linked to that WBS node; the user types
+a quantity × rate or a lump total and the line is stored with a
+bidirectional link to the work package. No AI is involved.</li>
+<li>The tab now observes both the cost and WBS providers, so coverage
+updates immediately after any manual entry.</li>
+</ul>
+<h3
+id="ws2-ai-and-downstream-flows-read-the-latest-version-of-a-topic">3.2
+WS2 — AI and downstream flows read the latest version of a topic</h3>
+<ul>
+<li>Added a reusable resolver
+(<code>lib/utils/latest_phase_content.dart</code>) that implements the
+product rule: a later phase wins; an earlier phase is authoritative only
+when nothing later exists; placeholders count as empty. It exposes pure
+helpers (<code>resolveLatestNonEmpty</code>,
+<code>resolveLatestPerArea</code>,
+<code>buildLatestContextSummary</code>) ready for any AI context builder
+that scans multiple phases.</li>
+<li>Audited the cross-phase write paths (e.g. WBS seeding from
+initiation, front-end-planning procurement/contract seeding). These
+already honour latest-wins behaviour — idempotent and seed-only-if-empty
+— and never overwrite a later phase with earlier data.</li>
+</ul>
+<h3 id="ws3-skeleton-hardening-wbs-schedule-cost-controls">3.3 WS3 —
+Skeleton hardening (WBS → Schedule → Cost → Controls)</h3>
+<ul>
+<li>Fixed a cold-start data-loss bug in which saved cost estimates could
+not be reloaded: <code>EstimateClass.name</code> is overridden to the
+display label (e.g. “Budget Authorization”), while reload looked the
+class up by identifier only, causing the whole estimate to fail to
+deserialize silently. Reload now accepts the identifier or the display
+label and defaults safely.</li>
+<li>Cost Estimate persistence now round-trips the <strong>Basis of
+Estimate (BOE)</strong> — scope basis,
+assumptions/constraints/exclusions, methodology, data sources and
+accuracy range — and <strong>stakeholders</strong>, which were
+previously dropped on save. Parse failures degrade to safe defaults
+instead of aborting the load.</li>
+</ul>
+<h3 id="round-2-schedule-to-cost-flows-and-pricing-coverage-kpi">3.4
+Round 2 — Schedule-to-cost flows and pricing coverage KPI</h3>
+<ul>
+<li><strong>One-click pull of scheduled purchases into the Cost
+Estimate.</strong> The Schedule module now shows a status strip with a
+<strong>“Pull N into Cost Estimate”</strong> action
+(<code>CostEstimateProvider.pullScheduledPurchases</code>) that creates
+procurement cost lines from the purchases already visible in the
+Schedule — carrying the WBS reference, starting at $0 until priced, and
+idempotent (no double counting). This is core data movement, not
+AI.</li>
+<li><strong>Costs entered directly on schedule work packages.</strong>
+Each activity row in the Schedule Builder carries a cost action:
+<em>Add</em> on leaf work packages and <em>Edit</em> where a linked cost
+line already exists, with the activity stamped with the resulting
+cost-line id.</li>
+<li><strong>Pricing coverage KPI.</strong> The Cost Dashboard now shows
+a <strong>Work-Package Pricing Coverage</strong> card — the percentage
+of leaf WBS work packages that are priced, with a progress bar,
+priced/total counts, and a hint when the WBS is not yet set up.</li>
+</ul>
+<h3
+id="round-3-latest-version-ai-context-and-schedulecost-finishing-touches">3.5
+Round 3 — Latest-version AI context and schedule/cost finishing
+touches</h3>
+<ul>
+<li><strong>Latest-phase resolver wired into AI context
+builders.</strong> A new
+<code>ProjectDataHelper.buildLatestTopicOverlay</code> renders a “Latest
+topic versions” overlay (e.g. Goals in initiation vs planning;
+Technology and Infrastructure in initiation vs planning), and both
+<code>ExecutionPhaseAiSeed.buildContext</code> and
+<code>LaunchPhaseAiSeed.buildFullPhaseDependencyContext</code> append it
+— so AI prompts always read the most recent phase of a recurring topic
+and never a stale earlier copy.</li>
+<li><strong>Leaf-coverage indicator</strong> added to the WBS module’s
+Cost-by-WBS header (cost lines · total · linked % · leaf work packages
+priced %).</li>
+<li><strong>“Price them now” walkthrough.</strong> After pulling
+purchases, the confirmation offers a walkthrough that opens the manual
+cost dialog for each newly pulled line in order (cancelling or skipping
+advances to the next).</li>
+<li><strong>Priced/unpriced confirmation on Schedule rows.</strong>
+Activity rows now carry a live badge — green “Cost: $X” when the linked
+cost line is priced, amber “Cost: not priced yet” when linked but still
+unpriced — updating immediately after a pull or a manual entry.</li>
+</ul>
+<h3 id="round-4-fix-for-blank-schedule-builder-content">3.6 Round 4 —
+Fix for blank Schedule Builder content</h3>
+<ul>
+<li><strong>Reported symptom:</strong> the Schedule Builder tab rendered
+without its content (“missing schedule items”) once synced planning
+content populated the tree.</li>
+<li><strong>Root cause:</strong> the Project Timeline card’s activity
+rows used a stretch cross-axis alignment with only a minimum height
+inside the Builder’s vertically unbounded scroll view; with no bounded
+extent the stretch row threw a <code>RenderFlex</code> layout exception
+that blanked the whole tab.</li>
+<li><strong>Fix:</strong> each timeline activity row now has a bounded
+height, resolving the stretch row; long activity names ellipsize on a
+single line, consistent with the Activity Tree rows. An
+<code>IntrinsicHeight</code> approach was trialled first but is
+incompatible with the bar area’s <code>LayoutBuilder</code>, so the
+bounded-height fix was adopted.</li>
+<li>Verified with widget reproductions covering both a populated synced
+tree and a root-only tree; both now render without exceptions.</li>
+</ul>
+<h2 id="key-deliverables">4. Key deliverables</h2>
+<p>New modules:</p>
+<ul>
+<li><code>lib/wbs/utils/wbs_cost_coverage.dart</code> — leaf
+work-package coverage helpers</li>
+<li><code>lib/utils/latest_phase_content.dart</code> — latest-phase
+content resolver</li>
+<li><code>lib/schedule/utils/schedule_purchase_cost.dart</code> —
+pullable-purchase detector</li>
+</ul>
+<p>Modified modules:</p>
+<ul>
+<li>Cost Estimate: <code>models/cost_estimate_models.dart</code>,
+<code>providers/cost_estimate_provider.dart</code>,
+<code>screens/cost_estimate_module_screen.dart</code>,
+<code>widgets/add_line_dialog.dart</code></li>
+<li>Schedule: <code>screens/builder_screen.dart</code>,
+<code>screens/schedule_module_screen.dart</code></li>
+<li>Shared: <code>widgets/cost_by_wbs_tab.dart</code>,
+<code>screens/project_dashboard_screen.dart</code></li>
+<li>AI context: <code>utils/project_data_helper.dart</code>,
+<code>utils/execution_phase_ai_seed.dart</code>,
+<code>utils/launch_phase_ai_seed.dart</code></li>
+</ul>
+<p>New test suites:</p>
+<ul>
+<li><code>test/wbs_cost_coverage_test.dart</code></li>
+<li><code>test/latest_phase_content_test.dart</code></li>
+<li><code>test/cost_estimate_boe_persistence_test.dart</code></li>
+<li><code>test/cost_estimate_pull_purchases_test.dart</code></li>
+<li><code>test/schedule_purchase_cost_test.dart</code></li>
+<li><code>test/latest_topic_overlay_test.dart</code></li>
+<li><code>test/schedule_row_cost_badge_test.dart</code></li>
+</ul>
+<h2 id="verification-and-quality">5. Verification and quality</h2>
+<ul>
+<li><code>flutter analyze</code> is clean on all touched files.</li>
+<li>The related unit and widget suites — cost, WBS, schedule, lifecycle
+and routing — pass: 47 tests reported at the close of the first three
+workstreams, with a further 11+ assertions and additional widget suites
+added during the later rounds of the session.</li>
+<li>The Schedule Builder regression was verified with widget
+reproductions before and after the fix.</li>
+</ul>
+<h2 id="outstanding-items-and-next-steps">6. Outstanding items and next
+steps</h2>
+<ol type="1">
+<li><strong>Commit and deploy to staging.</strong> The 3 September
+changes are implemented in the local staging workspace and are to be
+committed and pushed to staging.</li>
+<li><strong>Notification protocol.</strong> Per the process note in the
+review, updates pushed to staging are to be announced to the owner at
+the time of the push; this was missed in the previous round and is now
+an agreed standing practice.</li>
+<li><strong>Owner validation.</strong> An end-to-end walkthrough on
+staging to confirm the skeleton — WBS breakdown → Schedule → Cost; Cost
++ Schedule → Controls; management based on Controls — works as core
+functionality, ahead of the next review session.</li>
+<li><strong>Continued build-out.</strong> People, quality, orders and
+procurement modules continue to feed the skeleton, and the “minimal AI”
+checks for missing items can now be built on the coverage helpers
+delivered in this session.</li>
+</ol>
+<hr />
+<p><strong>Report compiled by:</strong></p>
+<p>Chungu Chama NDU Project</p>
+<p><em>Reference:
+<code>docs/voice_notes/2026-09-03-recording-6-transcript.md</code> —
+product-owner review and implementation log for 3 September
+2026.</em></p>
+</body>
+</html>

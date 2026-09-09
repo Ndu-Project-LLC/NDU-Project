@@ -11,8 +11,18 @@ service firebase.storage {
     }
     
     function isAdmin() {
+      // MEDIUM #9: previously `firebasestore.get(/databases/(default)/...)`
+      // — two bugs: (a) `firebasestore` is not a defined global (the
+      // correct identifier is `firestore`); (b) the path used literal
+      // parentheses around `default` instead of the required template-
+      // substitution syntax `$(default)` (or, more robustly, `$(database)`
+      // to match the parameter in the outer match block). At runtime this
+      // threw, causing isAdmin() to evaluate to false for everyone —
+      // including real admins — silently denying admin storage writes.
+      // Now mirrors the firestore.rules isAdmin helper at firestore.rules:14-18.
       return isAuthenticated()
-        && firebasestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true;
     }
 
     // User profile images - users can upload their own, admins can access all

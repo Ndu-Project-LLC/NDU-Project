@@ -59,6 +59,8 @@ class ScheduleProvider extends ChangeNotifier {
                   'deliveryModel': s.basis.deliveryModel,
                   'status': s.status.name,
                   'isLocked': s.isLocked,
+                  'basis': _basisToJson(s.basis),
+                  'estimateBasis': _estimateBasisToJson(s.estimateBasis),
                   'activities': s.activities.map((a) => a.toJson()).toList(),
                 }
               : null,
@@ -82,9 +84,97 @@ class ScheduleProvider extends ChangeNotifier {
       final activities = rawActivities
           .map((a) => ScheduleActivity.fromJson(a as Map<String, dynamic>))
           .toList();
-      return s.copyWith(activities: activities);
+      var restored = s.copyWith(activities: activities);
+      final basisJson = json['basis'] as Map<String, dynamic>?;
+      if (basisJson != null) {
+        restored = restored.copyWith(basis: _basisFromJson(basisJson));
+      }
+      final estimateJson = json['estimateBasis'] as Map<String, dynamic>?;
+      if (estimateJson != null) {
+        restored = restored.copyWith(estimateBasis: _estimateBasisFromJson(estimateJson));
+      }
+      return restored;
     }
     return s;
+  }
+
+  static Map<String, dynamic> _basisToJson(ScheduleBasis b) => {
+        'deliveryModel': b.deliveryModel,
+        if (b.sprintDurationWeeks != null)
+          'sprintDurationWeeks': b.sprintDurationWeeks,
+        if (b.releaseCadence != null) 'releaseCadence': b.releaseCadence,
+        if (b.incrementStrategy != null)
+          'incrementStrategy': b.incrementStrategy,
+        if (b.definitionOfReady != null)
+          'definitionOfReady': b.definitionOfReady,
+        if (b.definitionOfDone != null)
+          'definitionOfDone': b.definitionOfDone,
+        'assumptions': b.assumptions,
+        'constraints': b.constraints,
+        'milestones': b.milestones,
+        'interfaces': b.interfaces,
+      };
+
+  static ScheduleBasis _basisFromJson(Map<String, dynamic> json) {
+    return ScheduleBasis(
+      deliveryModel: json['deliveryModel'] as String? ?? 'WATERFALL',
+      sprintDurationWeeks: (json['sprintDurationWeeks'] as num?)?.toInt(),
+      releaseCadence: json['releaseCadence'] as String?,
+      incrementStrategy: json['incrementStrategy'] as String?,
+      definitionOfReady: json['definitionOfReady'] as String?,
+      definitionOfDone: json['definitionOfDone'] as String?,
+      assumptions: (json['assumptions'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+      constraints: (json['constraints'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+      milestones: (json['milestones'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+      interfaces: (json['interfaces'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+    );
+  }
+
+  static Map<String, dynamic>? _estimateBasisToJson(EstimateBasis? e) {
+    if (e == null) return null;
+    return {
+      'scopeAlignment': e.scopeAlignment,
+      'estimationMethods': e.estimationMethods.map((m) => m.name).toList(),
+      'keyAssumptions': e.keyAssumptions,
+      'procurementConsiderations': e.procurementConsiderations,
+      'engineeringConsiderations': e.engineeringConsiderations,
+      'constraintsAndRisks': e.constraintsAndRisks,
+      'validationBenchmarking': e.validationBenchmarking,
+      'documentation': e.documentation,
+    };
+  }
+
+  static EstimateBasis _estimateBasisFromJson(Map<String, dynamic> json) {
+    return EstimateBasis(
+      scopeAlignment: json['scopeAlignment'] as String? ?? '',
+      estimationMethods:
+          (json['estimationMethods'] as List<dynamic>? ?? [])
+              .map((e) => EstimationMethod.values
+                  .byName(e.toString())
+                  // Defensive: any unknown method falls back to expert judgment.
+                  )
+              .toList()
+              .cast<EstimationMethod>(),
+      keyAssumptions:
+          Map<String, String>.from(json['keyAssumptions'] as Map? ?? {}),
+      procurementConsiderations: Map<String, String>.from(
+          json['procurementConsiderations'] as Map? ?? {}),
+      engineeringConsiderations: Map<String, String>.from(
+          json['engineeringConsiderations'] as Map? ?? {}),
+      constraintsAndRisks: (json['constraintsAndRisks'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+      validationBenchmarking: json['validationBenchmarking'] as String? ?? '',
+      documentation: json['documentation'] as String? ?? '',
+    );
   }
 
   // ─── Setup ──────────────────────────────────────────────────────────────
@@ -106,6 +196,23 @@ class ScheduleProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
+  /// Re-syncs the schedule's delivery model with the project's current
+  /// Project Details methodology selection (AGILE / WATERFALL / HYBRID).
+  /// Existing activities and the rest of the basis are kept intact — only
+  /// the methodology-dependent view state (badge, agile hints, level
+  /// import behaviour) is updated.
+  void syncDeliveryModel(String deliveryModel) {
+    if (_schedule == null) return;
+    final normalized = deliveryModel.toUpperCase();
+    if (_schedule!.basis.deliveryModel.toUpperCase() == normalized) return;
+    _schedule = _schedule!.copyWith(
+      basis: _schedule!.basis.copyWith(deliveryModel: normalized),
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+  }
+
   // ─── Basis ──────────────────────────────────────────────────────────────
 
   void updateBasis(ScheduleBasis patch) {
@@ -115,12 +222,35 @@ class ScheduleProvider extends ChangeNotifier {
         deliveryModel: patch.deliveryModel,
         sprintDurationWeeks: patch.sprintDurationWeeks,
         releaseCadence: patch.releaseCadence,
+        incrementStrategy: patch.incrementStrategy,
         definitionOfReady: patch.definitionOfReady,
         definitionOfDone: patch.definitionOfDone,
         assumptions: patch.assumptions,
         constraints: patch.constraints,
         milestones: patch.milestones,
         interfaces: patch.interfaces,
+      ),
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  /// Update the schedule's estimate basis (assumptions, methods, data
+  /// sources used to determine activity durations).
+  void updateEstimateBasis(EstimateBasis patch) {
+    if (_schedule == null) return;
+    final current = _schedule!.estimateBasis ?? createEmptyEstimateBasis();
+    _schedule = _schedule!.copyWith(
+      estimateBasis: current.copyWith(
+        scopeAlignment: patch.scopeAlignment,
+        estimationMethods: patch.estimationMethods,
+        keyAssumptions: patch.keyAssumptions,
+        procurementConsiderations: patch.procurementConsiderations,
+        engineeringConsiderations: patch.engineeringConsiderations,
+        constraintsAndRisks: patch.constraintsAndRisks,
+        validationBenchmarking: patch.validationBenchmarking,
+        documentation: patch.documentation,
       ),
       updatedAt: DateTime.now(),
     );

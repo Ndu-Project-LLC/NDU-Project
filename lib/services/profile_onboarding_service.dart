@@ -400,4 +400,82 @@ class ProfileOnboardingService {
     if (answers == null) return false;
     return answers.completedAt != null;
   }
+
+  // ── Admin-only methods ────────────────────────────────────────────────
+  //
+  // These methods are intended to be called from the admin panel only.
+  // They rely on the firestore.rules update that grants `isAdmin()` read
+  // access to every user's `profile/onboarding` document.
+
+  /// Loads a single user's profile-onboarding answers by uid (admin only).
+  ///
+  /// Returns null if the user has no onboarding document yet (i.e. they
+  /// signed up but never started the survey). Throws the underlying
+  /// Firestore error if the admin lacks permission (which would indicate
+  /// a rules misconfiguration rather than a runtime issue).
+  static Future<ProfileOnboardingAnswers?> loadForUser(String uid) async {
+    try {
+      final snap = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('profile')
+          .doc('onboarding')
+          .get();
+      if (!snap.exists) return null;
+      return ProfileOnboardingAnswers.fromFirestore(snap);
+    } catch (e) {
+      debugPrint(
+          '[ProfileOnboardingService] loadForUser($uid) error: $e');
+      return null;
+    }
+  }
+
+  /// Streams every user's profile-onboarding document in real time (admin
+  /// only). Uses a collection-group query on `profile` so the result stays
+  /// live as users submit or update their survey answers.
+  ///
+  /// Each [AdminOnboardingRecord] pairs the onboarding answers with the
+  /// parent user id, so the admin UI can cross-reference against the
+  /// `users` collection for display name / email.
+  static Stream<List<AdminOnboardingRecord>> watchAllForAdmin() {
+    return _firestore
+        .collectionGroup('profile')
+        .snapshots()
+        .map((snapshot) {
+      final out = <AdminOnboardingRecord>[];
+      for (final doc in snapshot.docs) {
+        // The parent path is `users/{uid}/profile/onboarding`.
+        // Walk up two levels to recover the uid.
+        final segs = doc.reference.path.split('/');
+        // segs: ['users', '<uid>', 'profile', '<docId>']
+        if (segs.length < 4 || segs[0] != 'users') continue;
+        final uid = segs[1];
+        // Only include documents whose id is 'onboarding' — the profile
+        // subcollection may host other docs in the future, and we only
+        // surface survey responses here.
+        if (segs[3] != 'onboarding') continue;
+        try {
+          out.add(AdminOnboardingRecord(
+            uid: uid,
+            answers: ProfileOnboardingAnswers.fromFirestore(doc),
+          ));
+        } catch (_) {
+          // Skip malformed documents rather than breaking the whole stream.
+        }
+      }
+      return out;
+    });
+  }
+}
+
+/// Pairs a user's uid with their profile-onboarding answers, for use in the
+/// admin panel's survey-responses view.
+class AdminOnboardingRecord {
+  final String uid;
+  final ProfileOnboardingAnswers answers;
+
+  const AdminOnboardingRecord({
+    required this.uid,
+    required this.answers,
+  });
 }

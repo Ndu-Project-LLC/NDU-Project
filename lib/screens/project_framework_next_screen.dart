@@ -20,7 +20,6 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
-import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 
 const Color _kAccentColor = Color(0xFFFFC107);
@@ -29,7 +28,7 @@ const Color _kSecondaryText = Color(0xFF64748B);
 const Color _kBorderColor = Color(0xFFE2E8F0);
 const Color _kCardShadow = Color(0x14000000);
 const Color _kLightYellow = Color(0xFFFFF8E1);
-const Color _kLightBlue = Color(0xFFE0F2FE);
+const Color _kLightBlue = Color(0xFFFFF8E1);
 const Color _kGreenBrand = Color(0xFF22C55E);
 const Color _kLightGray = Color(0xFFF1F5F9);
 const List<String> _kPriorityOptions = [
@@ -76,25 +75,20 @@ class ProjectFrameworkNextScreen extends StatefulWidget {
 
 class _ProjectFrameworkNextScreenState
     extends State<ProjectFrameworkNextScreen> {
-  final List<TextEditingController> _goalTitleControllers =
-      List.generate(3, (_) => TextEditingController());
-  final List<TextEditingController> _goalDescControllers =
-      List.generate(3, (_) => TextEditingController());
-  final List<TextEditingController> _goalYearControllers =
-      List.generate(3, (_) => TextEditingController());
-  final List<String> _goalIds = List.generate(3, (_) => '');
-  final List<List<String>> _goalMilestoneIds =
-      List.generate(3, (_) => <String>[]);
-  final List<String> _goalPriorities =
-      List.generate(3, (_) => 'Medium Priority');
+  final List<TextEditingController> _goalTitleControllers = [];
+  final List<TextEditingController> _goalDescControllers = [];
+  final List<TextEditingController> _goalYearControllers = [];
+  final List<String> _goalIds = [];
+  final List<List<String>> _goalMilestoneIds = [];
+  final List<String> _goalPriorities = [];
   final DateFormat _dateFormat = DateFormat('MMM d, y');
   late final OpenAiServiceSecure _openAi;
   final Set<int> _regeneratingMilestoneSuggestions = <int>{};
 
   // FocusNodes for auto-save on blur
-  final List<FocusNode> _titleFocusNodes = List.generate(3, (_) => FocusNode());
-  final List<FocusNode> _descFocusNodes = List.generate(3, (_) => FocusNode());
-  final List<FocusNode> _yearFocusNodes = List.generate(3, (_) => FocusNode());
+  final List<FocusNode> _titleFocusNodes = [];
+  final List<FocusNode> _descFocusNodes = [];
+  final List<FocusNode> _yearFocusNodes = [];
 
   String _potentialSolution = '';
   String _projectObjective = '';
@@ -115,7 +109,7 @@ class _ProjectFrameworkNextScreenState
     if (!mounted) return;
 
     final planningGoals = <PlanningGoal>[];
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < _goalTitleControllers.length; i++) {
       planningGoals.add(PlanningGoal(
         id: _goalIds[i].trim().isNotEmpty ? _goalIds[i] : null,
         goalNumber: i + 1,
@@ -165,12 +159,33 @@ class _ProjectFrameworkNextScreenState
         );
       }
 
-      // Populate from planning goals (preferred) - only if they have actual content
+      // Determine how many goals we need (at least 3, or more from saved data)
+      int goalCount = 3;
       final hasPlanningGoalContent = projectData.planningGoals.any(
         (g) => g.title.isNotEmpty || g.description.isNotEmpty,
       );
+      if (hasPlanningGoalContent && projectData.planningGoals.length > goalCount) {
+        goalCount = projectData.planningGoals.length;
+      } else if (!hasPlanningGoalContent && projectData.projectGoals.length > goalCount) {
+        goalCount = projectData.projectGoals.length;
+      }
+
+      // Initialize dynamic lists with the required number of goals
+      for (int i = 0; i < goalCount; i++) {
+        _goalTitleControllers.add(TextEditingController());
+        _goalDescControllers.add(TextEditingController());
+        _goalYearControllers.add(TextEditingController());
+        _goalIds.add('');
+        _goalMilestoneIds.add(<String>[]);
+        _goalPriorities.add('Medium Priority');
+        _titleFocusNodes.add(FocusNode());
+        _descFocusNodes.add(FocusNode());
+        _yearFocusNodes.add(FocusNode());
+      }
+
+      // Populate from planning goals (preferred) - only if they have actual content
       if (hasPlanningGoalContent) {
-        for (int i = 0; i < projectData.planningGoals.length && i < 3; i++) {
+        for (int i = 0; i < projectData.planningGoals.length && i < _goalTitleControllers.length; i++) {
           final goal = projectData.planningGoals[i];
           _goalIds[i] = goal.id;
           _goalTitleControllers[i].text = goal.title;
@@ -182,7 +197,7 @@ class _ProjectFrameworkNextScreenState
         }
       } else if (projectData.projectGoals.isNotEmpty) {
         // Fallback to project goals
-        for (int i = 0; i < projectData.projectGoals.length && i < 3; i++) {
+        for (int i = 0; i < projectData.projectGoals.length && i < _goalTitleControllers.length; i++) {
           final goal = projectData.projectGoals[i];
           _goalTitleControllers[i].text = goal.name;
           _goalDescControllers[i].text = goal.description;
@@ -227,12 +242,12 @@ class _ProjectFrameworkNextScreenState
               : '');
 
       // Setup nomenclature listeners
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < _goalTitleControllers.length; i++) {
         _setupGoalNomenclature(i);
       }
 
       // Setup focus listeners for auto-save on blur
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < _goalTitleControllers.length; i++) {
         _titleFocusNodes[i].addListener(() {
           if (!_titleFocusNodes[i].hasFocus) _saveData();
         });
@@ -281,6 +296,49 @@ class _ProjectFrameworkNextScreenState
         }
       }
     });
+  }
+
+  void _addGoal() {
+    setState(() {
+      final idx = _goalTitleControllers.length;
+      _goalTitleControllers.add(TextEditingController());
+      _goalDescControllers.add(TextEditingController());
+      _goalYearControllers.add(TextEditingController());
+      _goalIds.add('');
+      _goalMilestoneIds.add(<String>[]);
+      _goalPriorities.add('Medium Priority');
+      _titleFocusNodes.add(FocusNode());
+      _descFocusNodes.add(FocusNode());
+      _yearFocusNodes.add(FocusNode());
+
+      // Add listeners for real-time title updates
+      _goalTitleControllers.last.addListener(() {
+        if (mounted) setState(() {});
+      });
+
+      // Auto-save listeners
+      _goalTitleControllers.last.addListener(_onFieldChanged);
+      _goalDescControllers.last.addListener(_onFieldChanged);
+      _goalYearControllers.last.addListener(_onFieldChanged);
+
+      // Focus listeners for auto-save on blur
+      _titleFocusNodes.last.addListener(() {
+        if (!_titleFocusNodes.last.hasFocus) _saveData();
+      });
+      _descFocusNodes.last.addListener(() {
+        if (!_descFocusNodes.last.hasFocus) _saveData();
+      });
+      _yearFocusNodes.last.addListener(() {
+        if (!_yearFocusNodes.last.hasFocus) _saveData();
+      });
+
+      // Setup nomenclature for the new goal
+      _setupGoalNomenclature(idx);
+
+      // Switch to the new goal tab
+      _currentFilter = 'Goal ${idx + 1}';
+    });
+    _saveData();
   }
 
   void _clearGoal(int index) {
@@ -333,7 +391,7 @@ class _ProjectFrameworkNextScreenState
 
   // ignore: unused_element
   bool _areAllGoalsFilled() {
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < _goalTitleControllers.length; i++) {
       if (_goalTitleControllers[i].text.trim().isEmpty ||
           _goalDescControllers[i].text.trim().isEmpty ||
           _goalYearControllers[i].text.trim().isEmpty) {
@@ -346,7 +404,7 @@ class _ProjectFrameworkNextScreenState
   void _navigateToNext() async {
     // Validation removed to match top navigation behavior
 
-    final planningGoals = List.generate(3, (i) {
+    final planningGoals = List.generate(_goalTitleControllers.length, (i) {
       return PlanningGoal(
         id: _goalIds[i].trim().isNotEmpty ? _goalIds[i] : null,
         goalNumber: i + 1,
@@ -383,7 +441,7 @@ class _ProjectFrameworkNextScreenState
   Widget build(BuildContext context) {
     final isMobile = AppBreakpoints.isMobile(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: isMobile
           ? Drawer(
               width: AppBreakpoints.sidebarWidth(context),
@@ -731,30 +789,16 @@ class _ProjectFrameworkNextScreenState
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildFilterPill(
-                label: 'Goal 1',
-                value: 'Goal 1',
-                isActive: _currentFilter == 'Goal 1',
-                activeColor: _kAccentColor,
-                activeBgColor: _kLightYellow,
-              ),
-              const SizedBox(width: 8),
-              _buildFilterPill(
-                label: 'Goal 2',
-                value: 'Goal 2',
-                isActive: _currentFilter == 'Goal 2',
-                activeColor: const Color(0xFF2563EB),
-                activeBgColor: _kLightBlue,
-              ),
-              const SizedBox(width: 8),
-              _buildFilterPill(
-                label: 'Goal 3',
-                value: 'Goal 3',
-                isActive: _currentFilter == 'Goal 3',
-                activeColor: _kAccentColor,
-                activeBgColor: _kLightYellow,
-              ),
-              const SizedBox(width: 8),
+              for (int i = 0; i < _goalTitleControllers.length; i++) ...[
+                _buildFilterPill(
+                  label: 'Goal ${i + 1}',
+                  value: 'Goal ${i + 1}',
+                  isActive: _currentFilter == 'Goal ${i + 1}',
+                  activeColor: i % 2 == 0 ? _kAccentColor : const Color(0xFFFFC812),
+                  activeBgColor: i % 2 == 0 ? _kLightYellow : _kLightBlue,
+                ),
+                const SizedBox(width: 8),
+              ],
               _buildFilterPill(
                 label: 'View All',
                 value: 'View All',
@@ -778,13 +822,13 @@ class _ProjectFrameworkNextScreenState
           child: const Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.info_outline, size: 16, color: Color(0xFF1E40AF)),
+              Icon(Icons.info_outline, size: 16, color: Color(0xFFFFC812)),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Goal milestones would be a foundation for the project schedule. Focus on the key milestones required for project success.',
                   style: TextStyle(
-                      fontSize: 12, color: Color(0xFF1E40AF), height: 1.4),
+                      fontSize: 12, color: Color(0xFFFFC812), height: 1.4),
                 ),
               ),
             ],
@@ -793,7 +837,7 @@ class _ProjectFrameworkNextScreenState
         const SizedBox(height: 16),
         // Goal cards
         if (isMobile || _currentFilter != 'View All')
-          ...List.generate(3, (i) {
+          ...List.generate(_goalTitleControllers.length, (i) {
             if (_currentFilter != 'View All' &&
                 _currentFilter != 'Goal ${i + 1}') {
               return const SizedBox.shrink();
@@ -804,17 +848,33 @@ class _ProjectFrameworkNextScreenState
             );
           })
         else
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: List.generate(3, (i) {
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(right: i < 2 ? 12 : 0),
-                  child: _buildGoalCard(i),
-                ),
+          Wrap(
+            spacing: 12,
+            runSpacing: 16,
+            children: List.generate(_goalTitleControllers.length, (i) {
+              return SizedBox(
+                width: 350,
+                child: _buildGoalCard(i),
               );
             }),
           ),
+        const SizedBox(height: 16),
+        // Add Goal button
+        Center(
+          child: OutlinedButton.icon(
+            onPressed: _addGoal,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Add Goal'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _kAccentColor,
+              side: const BorderSide(color: _kAccentColor),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -1447,87 +1507,93 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
               color: Color(0xFFF9FAFB),
-              borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(12)),
               border: Border(bottom: BorderSide(color: _kBorderColor)),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: VoiceTextField(
-                    controller: widget.titleController,
-                    focusNode: widget.titleFocusNode,
-                    decoration: InputDecoration(
-                      hintText: 'Goal ${widget.goalIndex + 1} Title',
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: _kPrimaryText),
+                VoiceTextField(
+                  controller: widget.titleController,
+                  focusNode: widget.titleFocusNode,
+                  maxLines: 3,
+                  enableVoice: false,
+                  enableKazAi: false,
+                  enableDocxImport: false,
+                  enableTextFormatting: false,
+                  decoration: InputDecoration(
+                    hintText: 'Goal ${widget.goalIndex + 1} Title',
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
                   ),
+                  style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: _kPrimaryText),
                 ),
-                const SizedBox(width: 8),
-                // Priority badge pill
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: priorityBg,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: priorityColor,
-                        ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    // Priority badge pill
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: priorityBg,
+                        borderRadius: BorderRadius.circular(999),
                       ),
-                      const SizedBox(width: 4),
-                      PopupMenuButton<String>(
-                        initialValue: widget.priority,
-                        onSelected: widget.onPriorityChanged,
-                        offset: const Offset(0, 28),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              widget.priority,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: priorityColor,
-                              ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: priorityColor,
                             ),
-                            const SizedBox(width: 2),
-                            const Icon(Icons.keyboard_arrow_down_rounded,
-                                size: 14, color: _kSecondaryText),
-                          ],
-                        ),
-                        itemBuilder: (context) => _kPriorityOptions
-                            .map((option) => PopupMenuItem(
-                                value: option, child: Text(option)))
-                            .toList(),
+                          ),
+                          const SizedBox(width: 4),
+                          PopupMenuButton<String>(
+                            initialValue: widget.priority,
+                            onSelected: widget.onPriorityChanged,
+                            offset: const Offset(0, 28),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  widget.priority,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: priorityColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                const Icon(Icons.keyboard_arrow_down_rounded,
+                                    size: 14, color: _kSecondaryText),
+                              ],
+                            ),
+                            itemBuilder: (context) => _kPriorityOptions
+                                .map((option) => PopupMenuItem(
+                                    value: option, child: Text(option)))
+                                .toList(),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 4),
-                // Delete/trash button
-                InkWell(
-                  onTap: widget.onClear,
-                  borderRadius: BorderRadius.circular(4),
-                  child: const Padding(
-                    padding: EdgeInsets.all(4),
-                    child: Icon(Icons.delete_outline_rounded,
-                        size: 18, color: _kSecondaryText),
-                  ),
+                    ),
+                    const SizedBox(width: 4),
+                    // Delete/trash button
+                    InkWell(
+                      onTap: widget.onClear,
+                      borderRadius: BorderRadius.circular(4),
+                      child: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Icon(Icons.delete_outline_rounded,
+                            size: 18, color: _kSecondaryText),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1545,33 +1611,42 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                         fontWeight: FontWeight.w500,
                         color: _kSecondaryText)),
                 const SizedBox(height: 6),
-                VoiceTextField(
-                  controller: widget.descController,
-                  focusNode: widget.descFocusNode,
-                  decoration: InputDecoration(
-                    hintText: 'Enter description',
-                    hintStyle:
-                        const TextStyle(color: _kSecondaryText, fontSize: 14),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: _kBorderColor),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 80),
+                  child: VoiceTextField(
+                    controller: widget.descController,
+                    focusNode: widget.descFocusNode,
+                    maxLines: 2,
+                    minLines: 1,
+                    enableVoice: false,
+                    enableKazAi: false,
+                    enableDocxImport: false,
+                    enableTextFormatting: false,
+                    decoration: InputDecoration(
+                      hintText: 'Enter description',
+                      hintStyle:
+                          const TextStyle(color: _kSecondaryText, fontSize: 14),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _kBorderColor),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _kBorderColor),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide:
+                            const BorderSide(color: _kAccentColor, width: 1.5),
+                      ),
+                      isDense: true,
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: _kBorderColor),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                          const BorderSide(color: _kAccentColor, width: 1.5),
-                    ),
-                    isDense: true,
+                    style: const TextStyle(fontSize: 14, color: _kPrimaryText),
                   ),
-                  style: const TextStyle(fontSize: 14, color: _kPrimaryText),
                 ),
                 const SizedBox(height: 16),
                 // ── Milestones sub-section (mapped from FEP) ──
@@ -1630,85 +1705,97 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                               TextStyle(fontSize: 12, color: _kSecondaryText),
                         )
                       else
-                        ...widget.availableMilestones
-                            .where((m) => m.id.trim().isNotEmpty)
-                            .map((milestone) {
-                          final selected = widget.selectedMilestoneIds
-                              .contains(milestone.id);
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: InkWell(
-                              onTap: () => widget.onToggleMilestone(
-                                  milestone.id, !selected),
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: selected
-                                      ? Colors.white
-                                      : const Color(0x80FFFFFF),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: selected
-                                        ? _kAccentColor
-                                        : const Color(0xFFFFE082),
-                                  ),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Checkbox(
-                                      value: selected,
-                                      onChanged: (value) =>
-                                          widget.onToggleMilestone(
-                                              milestone.id, value ?? false),
-                                      activeColor: _kAccentColor,
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 160),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: widget.availableMilestones
+                                  .where((m) => m.id.trim().isNotEmpty)
+                                  .map((milestone) {
+                                final selected = widget.selectedMilestoneIds
+                                    .contains(milestone.id);
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: InkWell(
+                                    onTap: () => widget.onToggleMilestone(
+                                        milestone.id, !selected),
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: selected
+                                            ? Colors.white
+                                            : const Color(0x80FFFFFF),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: selected
+                                              ? _kAccentColor
+                                              : const Color(0xFFFFE082),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            milestone.name.trim().isEmpty
-                                                ? 'Untitled milestone'
-                                                : milestone.name.trim(),
-                                            style: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                color: _kPrimaryText),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '${_formatMilestoneDate(milestone.dueDate)}${milestone.discipline.trim().isEmpty ? '' : ' • ${milestone.discipline.trim()}'}',
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: _kSecondaryText),
-                                          ),
-                                          if (milestone.comments
-                                              .trim()
-                                              .isNotEmpty) ...[
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              milestone.comments.trim(),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: _kSecondaryText),
+                                          IgnorePointer(
+                                            child: Checkbox(
+                                              value: selected,
+                                              onChanged: (_) {},
+                                              activeColor: _kAccentColor,
+                                              visualDensity: VisualDensity.compact,
                                             ),
-                                          ],
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  milestone.name.trim().isEmpty
+                                                      ? 'Untitled milestone'
+                                                      : milestone.name.trim(),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: _kPrimaryText),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  '${_formatMilestoneDate(milestone.dueDate)}${milestone.discipline.trim().isEmpty ? '' : ' • ${milestone.discipline.trim()}'}',
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: _kSecondaryText),
+                                                ),
+                                                if (milestone.comments
+                                                    .trim()
+                                                    .isNotEmpty) ...[
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    milestone.comments.trim(),
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color: _kSecondaryText),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
+                                  ),
+                                );
+                              }).toList(),
                             ),
-                          );
-                        }),
+                          ),
+                        ),
                       const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerRight,

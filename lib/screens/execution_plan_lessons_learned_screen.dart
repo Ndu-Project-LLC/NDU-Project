@@ -23,7 +23,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Lessons Learned',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -47,7 +47,7 @@ class ExecutionPlanLessonsLearnedScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Lessons Learned',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -110,7 +110,7 @@ class _LessonsLearnedSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Lessons Learned',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'issueTopic',
                       label: 'Topic',
@@ -206,7 +206,7 @@ class _LessonsLearnedSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileLessonsLearnedActions()
+          const _MobileLessonsLearnedActions()
         else
           const _DesktopLessonsLearnedActions(),
       ],

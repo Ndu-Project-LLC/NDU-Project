@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 /// Status workflow for quality items during execution
 enum ExecutionQualityStatus {
   planned('Planned', Icons.schedule, Color(0xFF6B7280)),
-  inProgress('In Progress', Icons.pending_actions, Color(0xFF3B82F6)),
+  inProgress('In Progress', Icons.pending_actions, Color(0xFFFFC812)),
   complete('Complete', Icons.check_circle, Color(0xFF10B981)),
   verified('Verified', Icons.verified, Color(0xFF059669)),
   blocked('Blocked', Icons.block, Color(0xFFEF4444)),

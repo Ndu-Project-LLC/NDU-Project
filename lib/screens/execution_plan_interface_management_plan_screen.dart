@@ -21,7 +21,7 @@ Future<void> _exportInterfaceManagementPlanPdf(BuildContext context) async {
     screenTitle: 'Interface Management Plan',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -46,7 +46,7 @@ class ExecutionPlanInterfaceManagementPlanScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Interface Management Plan',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -100,7 +100,7 @@ class _InterfaceManagementPlanFormState
       screenTitle: 'Interface Management Plan',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text(
             'Notes',
@@ -188,7 +188,7 @@ class _InterfaceManagementPlanFormState
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: const Text(
             'The Interface Management Plan defines the coordination framework, responsibilities, escalation procedures, and communication protocols for managing interfaces between project packages, disciplines, and external stakeholders.',
@@ -268,8 +268,8 @@ class _InterfaceManagementPlanSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0F000000), blurRadius: 10, offset: Offset(0, 6)),
         ],

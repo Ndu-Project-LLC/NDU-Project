@@ -61,11 +61,11 @@ class DesignPhaseProgressIndicator extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                  color: const Color(0xFFB8860B).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.analytics,
-                    color: Color(0xFF6366F1), size: 20),
+                    color: Color(0xFFB8860B), size: 20),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -94,7 +94,7 @@ class DesignPhaseProgressIndicator extends StatelessWidget {
                       strokeWidth: 6,
                       backgroundColor: const Color(0xFFF1F5F9),
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF6366F1)),
+                          Color(0xFFB8860B)),
                     ),
                     Center(
                       child: Text(
@@ -143,7 +143,7 @@ class DesignPhaseProgressIndicator extends StatelessWidget {
               minHeight: 8,
               backgroundColor: const Color(0xFFF1F5F9),
               valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+                  const AlwaysStoppedAnimation<Color>(Color(0xFFB8860B)),
             ),
           ),
         ],

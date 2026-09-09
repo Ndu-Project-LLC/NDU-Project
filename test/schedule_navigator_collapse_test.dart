@@ -9,7 +9,7 @@ import 'package:ndu_project/widgets/section_navigator.dart';
 /// Regression test for the bug where collapsing the navigator blanked the
 /// whole page content.
 class _Host extends StatefulWidget {
-  const _Host({this.storageKey, this.initiallyCollapsed = true});
+  const _Host() : initiallyCollapsed = true, storageKey = null;
 
   final String? storageKey;
   final bool initiallyCollapsed;

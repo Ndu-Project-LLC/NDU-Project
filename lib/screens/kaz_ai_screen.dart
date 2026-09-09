@@ -148,7 +148,7 @@ class KazAiScreen extends StatelessWidget {
         const SizedBox(height: 16),
         _heroFeature(
           icon: Icons.bolt_outlined,
-          iconBg: const Color(0xFFFD8A42).withOpacity(0.2),
+          iconBg: const Color(0xFFFD8A42).withValues(alpha: 0.2),
           iconColor: const Color(0xFFFD8A42),
           title: 'Action acceleration (Smart Continuity)',
           titleColor: const Color(0xFFFD8A42),
@@ -167,9 +167,9 @@ class KazAiScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFFF2F4F6).withOpacity(0.08),
+            color: const Color(0xFFF2F4F6).withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.12)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,10 +250,10 @@ class KazAiScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1D29),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 30,
             offset: const Offset(0, 16),
           ),
@@ -296,7 +296,7 @@ class KazAiScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Text(
@@ -414,7 +414,7 @@ class KazAiScreen extends StatelessWidget {
                           topRight: Radius.circular(16),
                           bottomRight: Radius.circular(16),
                         ),
-                        border: Border.all(color: Colors.white.withOpacity(0.15)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,7 +450,7 @@ class KazAiScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: const Color(0xFF0F172A),
-                border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08))),
+                border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
               ),
               child: Row(
                 children: [
@@ -460,9 +460,9 @@ class KazAiScreen extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                       ),
                       child: const Text(
                         "Ask KAZ AI to accelerate this week's milestone...",
@@ -492,7 +492,7 @@ class KazAiScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         border: Border(left: BorderSide(color: color, width: 4)),
       ),
       child: Row(
@@ -623,7 +623,7 @@ class KazAiScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1D29),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -637,7 +637,7 @@ class KazAiScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 42,
                   fontWeight: FontWeight.w900,
-                  color: Colors.white.withOpacity(0.06),
+                  color: Colors.white.withValues(alpha: 0.06),
                   height: 1,
                 ),
               ),
@@ -670,7 +670,7 @@ class KazAiScreen extends StatelessWidget {
                 .map((t) => Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.06),
+                        color: Colors.white.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -678,7 +678,7 @@ class KazAiScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                         ),
                       ),
                     ))
@@ -701,7 +701,7 @@ class KazAiScreen extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [

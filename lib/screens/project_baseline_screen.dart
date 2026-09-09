@@ -527,7 +527,7 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  } catch (e) {
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text('Unable to save baseline version.'),
  backgroundColor: Colors.red,
  ),

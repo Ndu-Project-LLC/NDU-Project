@@ -1915,7 +1915,7 @@ class _KazAiActionButtonState extends State<_KazAiActionButton> {
           SnackBar(
             content: Text('KAZ AI failed: ${aiErrorMessage(e)}'),
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Color(0xFFDC2626),
+            backgroundColor: const Color(0xFFDC2626),
           ),
         );
       }

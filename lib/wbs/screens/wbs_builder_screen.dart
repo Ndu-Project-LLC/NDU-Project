@@ -2066,7 +2066,7 @@ Guidelines:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('KAZ AI error: ${aiErrorMessage(e)}'),
-            backgroundColor: Color(0xFFEF4444),
+            backgroundColor: const Color(0xFFEF4444),
           ),
         );
       }

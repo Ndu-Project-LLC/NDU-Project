@@ -661,7 +661,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
     if (staff.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('No team members found to import.')));
+            const SnackBar(content: Text('No team members found to import.')));
       }
       return;
     }

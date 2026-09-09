@@ -98,7 +98,7 @@ IMPORTANT RULES:
           SnackBar(
             content: Text('AI Assist failed: ${aiErrorMessage(e)}'),
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Color(0xFFEF4444),
+            backgroundColor: const Color(0xFFEF4444),
           ),
         );
       }

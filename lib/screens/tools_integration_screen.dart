@@ -168,7 +168,7 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  debugPrint('Tools integration save error: $error');
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text('Unable to save tools integration changes right now. Please try again.'),
  ),
  );
@@ -583,13 +583,13 @@ showNavigationButtons: false,
  onPressed: policy.canCreate ? () => _showIntegrationDialog() : null),
  _actionButton(Icons.upload_outlined, 'Export inventory', onPressed: () {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Inventory export queued. All integration records will be included.')),
+ const SnackBar(content: Text('Inventory export queued. All integration records will be included.')),
  );
  }),
  _actionButton(Icons.health_and_safety_outlined, 'Start health check', onPressed: () {
  _refreshIntegrationStatuses();
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Health check initiated. All integration statuses are being refreshed.')),
+ const SnackBar(content: Text('Health check initiated. All integration statuses are being refreshed.')),
  );
  }),
  _primaryButton('Run manual sync'),
@@ -620,7 +620,7 @@ showNavigationButtons: false,
  onPressed: () {
  _refreshIntegrationStatuses();
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Manual sync triggered. Refreshing all integration statuses.')),
+ const SnackBar(content: Text('Manual sync triggered. Refreshing all integration statuses.')),
  );
  },
  icon: const Icon(Icons.sync, size: 18),
@@ -1653,7 +1653,7 @@ showNavigationButtons: false,
  debugPrint('KAZ AI integration generation failed: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI generation failed: ${aiErrorMessage(e)}'), backgroundColor: Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI generation failed: ${aiErrorMessage(e)}'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  } finally {
@@ -1682,7 +1682,7 @@ showNavigationButtons: false,
  debugPrint('KAZ AI field generation failed: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  }

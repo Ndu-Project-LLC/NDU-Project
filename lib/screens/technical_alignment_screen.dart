@@ -370,7 +370,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
     if (projectId == null || projectId.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Cannot save: No active project found.'),
             backgroundColor: Color(0xFFB91C1C),
           ),
@@ -395,7 +395,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       debugPrint('Error saving technical alignment: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
                 'Failed to save. Please check your permissions and try again.'),
             backgroundColor: Color(0xFFB91C1C),
@@ -460,7 +460,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
     final projectId = provider?.projectData.projectId;
     if (projectId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: No active project found.')),
+        const SnackBar(content: Text('Error: No active project found.')),
       );
       return;
     }
@@ -544,7 +544,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       _scheduleSave();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Technical Alignment generated successfully!'),
           backgroundColor: Colors.green,
         ),
@@ -888,10 +888,12 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                                   hint: 'e.g. Waterfall / Predictive',
                                   icon: Icons.delivery_dining_outlined,
                                   validator: (v) {
-                                    if (v == null || v.trim().isEmpty)
+                                    if (v == null || v.trim().isEmpty) {
                                       return 'Please enter a model name';
-                                    if (v.trim().length < 2)
+                                    }
+                                    if (v.trim().length < 2) {
                                       return 'Name must be at least 2 characters';
+                                    }
                                     return null;
                                   }),
                               const SizedBox(height: 16),
@@ -953,22 +955,27 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                                                 () => isGenerating = true);
                                             await Future.delayed(
                                                 const Duration(seconds: 1));
-                                            if (modelController.text.isEmpty)
+                                            if (modelController.text.isEmpty) {
                                               modelController.text =
                                                   'Hybrid Agile-Waterfall';
-                                            if (bestFitController.text.isEmpty)
+                                            }
+                                            if (bestFitController.text.isEmpty) {
                                               bestFitController.text =
                                                   'Projects with evolving requirements that still need governance gates';
-                                            if (evidenceController.text.isEmpty)
+                                            }
+                                            if (evidenceController.text.isEmpty) {
                                               evidenceController.text =
                                                   'Sprint demos, retrospective action items, change requests';
-                                            if (controlsController.text.isEmpty)
+                                            }
+                                            if (controlsController.text.isEmpty) {
                                               controlsController.text =
                                                   'Sprint reviews, backlog refinement, CI/CD pipeline';
+                                            }
                                             if (exitStandardController
-                                                .text.isEmpty)
+                                                .text.isEmpty) {
                                               exitStandardController.text =
                                                   'Definition of Done met, product owner acceptance';
+                                            }
                                             setDialogState(
                                                 () => isGenerating = false);
                                           },
@@ -1747,8 +1754,9 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                                             temperature: 0.6,
                                           );
                                           final cleaned = result.trim();
-                                          if (cleaned.isNotEmpty)
+                                          if (cleaned.isNotEmpty) {
                                             ctl.text = cleaned;
+                                          }
                                         }
                                       }
 
@@ -1773,7 +1781,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                                             content: Text(
                                                 'KAZ AI generation failed: ${aiErrorMessage(e)}'),
                                             backgroundColor:
-                                                Color(0xFFDC2626),
+                                                const Color(0xFFDC2626),
                                           ),
                                         );
                                       }
@@ -1784,9 +1792,10 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                                       evidenceCtl.dispose();
                                       controlsCtl.dispose();
                                       exitCtl.dispose();
-                                      if (mounted)
+                                      if (mounted) {
                                         setState(
                                             () => _isGeneratingModelAi = false);
+                                      }
                                     }
                                   },
                                   child: _isGeneratingModelAi
@@ -1885,13 +1894,14 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('KAZ AI failed: ${aiErrorMessage(e)}'),
-                          backgroundColor: Color(0xFFDC2626),
+                          backgroundColor: const Color(0xFFDC2626),
                         ),
                       );
                     }
                   } finally {
-                    if (context.mounted)
+                    if (context.mounted) {
                       setLocalState(() => isGenerating = false);
+                    }
                   }
                 },
           child: Container(
@@ -5572,7 +5582,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
         IconButton(
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              const SnackBar(
                   content: Text('KAZ AI: Generating suggestions...'),
                   duration: Duration(seconds: 2)),
             );

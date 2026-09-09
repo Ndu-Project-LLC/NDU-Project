@@ -631,7 +631,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
     if (imported.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('No contracts found to import.')));
+            const SnackBar(content: Text('No contracts found to import.')));
       }
       return;
     }

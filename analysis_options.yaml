@@ -93,27 +93,20 @@ linter:
     prefer_const_constructors_in_immutables: true
     prefer_const_declarations: true
     prefer_const_literals_to_create_immutables: true
-    prefer_const_fields: true
-
-    # Catch unnecessary ListView (non-builder) usage that builds all children
-    # eagerly.
-    prefer_const_captures: true
-
-    # Catch unused imports / dead code that bloats the bundle.
-    unused_import: true
-    unused_element: true
-    dead_code: true
 
     # Catch missing dispose() calls on controllers.
     cancel_subscriptions: true
     close_sinks: true
     use_build_context_synchronously: true
 
-    # Catch setState in initState that triggers an unnecessary rebuild.
-    avoid_init_to_state: true
-
     # Catch slow async patterns.
     avoid_slow_async_io: true
+
+    # NOTE: `prefer_const_fields`, `prefer_const_captures`, `avoid_init_to_state`
+    # are not registered linter rules, and `unused_import` / `unused_element` /
+    # `dead_code` are analyzer diagnostics (reported by default as warnings),
+    # not lints — they were previously listed here as no-ops that only produced
+    # `undefined_lint` warnings. The perf-relevant ones are enforced above.
 
     # Catch large widget files (flagged via lines_of_code, not a hard error).
     # These are warnings, not errors.

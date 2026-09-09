@@ -785,7 +785,7 @@ class _InviteDialog extends StatelessWidget {
 
             // Role selector
             DropdownButtonFormField<String>(
-              value: selectedRole,
+              initialValue: selectedRole,
               decoration: InputDecoration(
                 labelText: 'Role',
                 border: OutlineInputBorder(

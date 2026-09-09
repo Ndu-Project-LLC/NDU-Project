@@ -254,7 +254,7 @@ class _AgileBacklogGovernanceScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
               content: Text('Saved'), duration: Duration(seconds: 1)),
         );
       }

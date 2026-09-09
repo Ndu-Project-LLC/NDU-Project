@@ -940,7 +940,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('KAZ AI generation failed: $e');
  if (mounted) {
    ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  } finally {
@@ -977,7 +977,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('KAZ AI field generation failed: $e');
  if (mounted) {
    ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  }
@@ -1332,7 +1332,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('Backend design save error: $error');
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text(
  'Unable to save Backend Design changes right now. Please try again.',
  ),
@@ -1358,7 +1358,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ── KAZ AI row generator ──
  void _kazAiForRow() {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text('KAZ AI: Generating suggestions for this row...'),
  duration: Duration(seconds: 2),
  ),

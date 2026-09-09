@@ -314,7 +314,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
               content: Text('Saved'),
               duration: Duration(seconds: _savingIndicatorDuration)),
         );
@@ -335,7 +335,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     if (_selectedFramework == 'Waterfall') {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
                 'AI generation is only available for Agile frameworks (Scrum, Kanban, ScrumBan).'),
           ),
@@ -351,7 +351,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       if (contextText.trim().isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
                 content: Text(
                     'Not enough project context to generate. Fill in earlier sections first.')),
           );

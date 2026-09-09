@@ -148,7 +148,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
               content: Text('Saved'), duration: Duration(seconds: 1)),
         );
       }
@@ -511,7 +511,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
                 content: Text('AI did not return valid team data. Try again.')),
           );
         }

@@ -37,6 +37,8 @@ import 'package:ndu_project/cost_estimate/screens/variance_screen.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/models/staffing_row.dart';
+import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
 import 'package:ndu_project/wbs/utils/wbs_cost_coverage.dart';
@@ -132,7 +134,8 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
         // lines yet and the project captured initial cost items, import them.
         // Checked on every build (not just initState) so late-arriving
         // project data (async Firebase load) still seeds the dashboard.
-        if (estimate.lines.isEmpty && projectData.costEstimateItems.isNotEmpty) {
+        if (estimate.lines.isEmpty &&
+            projectData.costEstimateItems.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               provider.importFromProjectCostEstimateItems(
@@ -150,8 +153,7 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
         final wbs = wbsProvider.wbs;
         final wbsCounts = wbs != null ? countNodes(wbs) : null;
         final wbsFrameworkLabel = wbs?.framework.label;
-        final wbsDeliverableWord =
-            wbs?.framework.level1Label ?? 'deliverables';
+        final wbsDeliverableWord = wbs?.framework.level1Label ?? 'deliverables';
 
         return ResponsiveScaffold(
           activeItemLabel: 'Cost Estimate',
@@ -169,16 +171,24 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   subtitle: 'Navigate between cost estimate sections',
                   icon: Icons.attach_money_outlined,
                   tabs: const [
-                    SectionTab(icon: Icons.dashboard_outlined, label: 'Cost Dashboard'),
+                    SectionTab(
+                        icon: Icons.dashboard_outlined,
+                        label: 'Cost Dashboard'),
                     SectionTab(icon: Icons.build_outlined, label: 'Builder'),
                     SectionTab(icon: Icons.description_outlined, label: 'BOE'),
                     SectionTab(icon: Icons.auto_awesome, label: 'AI'),
-                    SectionTab(icon: Icons.people_outline, label: 'Stakeholders'),
-                    SectionTab(icon: Icons.account_balance_outlined, label: 'Accounting'),
-                    SectionTab(icon: Icons.check_circle_outline, label: 'Review'),
+                    SectionTab(
+                        icon: Icons.people_outline, label: 'Stakeholders'),
+                    SectionTab(
+                        icon: Icons.account_balance_outlined,
+                        label: 'Accounting'),
+                    SectionTab(
+                        icon: Icons.check_circle_outline, label: 'Review'),
                     SectionTab(icon: Icons.lock_outline, label: 'Baseline'),
                     SectionTab(icon: Icons.trending_up, label: 'Variance'),
-                    SectionTab(icon: Icons.account_tree_outlined, label: 'Cost by WBS'),
+                    SectionTab(
+                        icon: Icons.account_tree_outlined,
+                        label: 'Cost by WBS'),
                   ],
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
@@ -275,16 +285,24 @@ class _CostDashboardTab extends StatelessWidget {
 
     // Category breakdown (top-level summary categories)
     final categories = <_CatData>[
-      _CatData('Direct', t.direct, const Color(0xFFB8860B), Icons.engineering_outlined),
-      _CatData('Indirect', t.indirect, const Color(0xFFB8860B), Icons.account_tree_outlined),
-      _CatData('SSHER & Quality', t.sherQuality, const Color(0xFFD97706), Icons.health_and_safety_outlined),
-      _CatData('Risk', t.riskAllowances, const Color(0xFFF59E0B), Icons.shield_outlined),
-      _CatData('Contingency', t.contingency, const Color(0xFF10B981), Icons.savings_outlined),
-      _CatData('Escalation', t.escalation, const Color(0xFFD97706), Icons.trending_up_rounded),
-      _CatData('Taxes', t.taxes, const Color(0xFF64748B), Icons.receipt_long_outlined),
+      _CatData('Direct', t.direct, const Color(0xFFB8860B),
+          Icons.engineering_outlined),
+      _CatData('Indirect', t.indirect, const Color(0xFFB8860B),
+          Icons.account_tree_outlined),
+      _CatData('SSHER & Quality', t.sherQuality, const Color(0xFFD97706),
+          Icons.health_and_safety_outlined),
+      _CatData('Risk', t.riskAllowances, const Color(0xFFF59E0B),
+          Icons.shield_outlined),
+      _CatData('Contingency', t.contingency, const Color(0xFF10B981),
+          Icons.savings_outlined),
+      _CatData('Escalation', t.escalation, const Color(0xFFD97706),
+          Icons.trending_up_rounded),
+      _CatData('Taxes', t.taxes, const Color(0xFF64748B),
+          Icons.receipt_long_outlined),
     ];
     final activeCats = categories.where((c) => c.value > 0).toList();
-    final maxCat = activeCats.fold<double>(0, (m, c) => c.value > m ? c.value : m);
+    final maxCat =
+        activeCats.fold<double>(0, (m, c) => c.value > m ? c.value : m);
 
     // Lines grouped by CostCategory
     final byCategory = <CostCategory, List<CostLine>>{};
@@ -372,7 +390,8 @@ class _CostDashboardTab extends StatelessWidget {
                   children: [
                     for (var r = 0; r < rows; r++)
                       Padding(
-                        padding: EdgeInsets.only(bottom: r < rows - 1 ? gap : 0),
+                        padding:
+                            EdgeInsets.only(bottom: r < rows - 1 ? gap : 0),
                         child: Row(
                           children: [
                             for (var c = 0; c < cols; c++)
@@ -399,6 +418,10 @@ class _CostDashboardTab extends StatelessWidget {
             _buildCoverageCard(context, lines, currencySymbol),
             const SizedBox(height: 22),
 
+            // ── 2c. Personnel cost card (staffing pull, no AI) ───────
+            _buildPersonnelCard(context, lines, currencySymbol),
+            const SizedBox(height: 22),
+
             // ── 3. Two-column bento: Cost Breakdown + Composition donut ──
             if (t.costBaseline > 0) ...[
               LayoutBuilder(
@@ -408,17 +431,21 @@ class _CostDashboardTab extends StatelessWidget {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(flex: 7, child: _CostBreakdownCard(
-                          currencySymbol: currencySymbol,
-                          categories: activeCats,
-                          total: t.costBaseline,
-                        )),
+                        Expanded(
+                            flex: 7,
+                            child: _CostBreakdownCard(
+                              currencySymbol: currencySymbol,
+                              categories: activeCats,
+                              total: t.costBaseline,
+                            )),
                         const SizedBox(width: 14),
-                        Expanded(flex: 5, child: _CompositionDonutCard(
-                          currencySymbol: currencySymbol,
-                          categories: activeCats,
-                          total: t.costBaseline,
-                        )),
+                        Expanded(
+                            flex: 5,
+                            child: _CompositionDonutCard(
+                              currencySymbol: currencySymbol,
+                              categories: activeCats,
+                              total: t.costBaseline,
+                            )),
                       ],
                     );
                   }
@@ -511,8 +538,7 @@ class _CostDashboardTab extends StatelessWidget {
             Expanded(
               child: Text(
                 'Work-package pricing coverage appears here once a WBS is set up — every leaf work package needs its own cost estimate.',
-                style:
-                    TextStyle(color: Color(0xFF64748B), fontSize: 12.5),
+                style: TextStyle(color: Color(0xFF64748B), fontSize: 12.5),
               ),
             ),
           ],
@@ -520,8 +546,7 @@ class _CostDashboardTab extends StatelessWidget {
       );
     }
 
-    final coverage =
-        computeWbsCostCoverage(root: wbs.level0, lines: lines);
+    final coverage = computeWbsCostCoverage(root: wbs.level0, lines: lines);
     final pct = (coverage.pricedRatio * 100).clamp(0.0, 100.0);
     final allPriced = !coverage.hasUnpriced && coverage.totalWorkPackages > 0;
     final accent =
@@ -548,8 +573,7 @@ class _CostDashboardTab extends StatelessWidget {
                   color: softAccent,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.fact_check_outlined,
-                    size: 18, color: accent),
+                child: Icon(Icons.fact_check_outlined, size: 18, color: accent),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -566,8 +590,8 @@ class _CostDashboardTab extends StatelessWidget {
                     SizedBox(height: 2),
                     Text(
                       'Leaf work packages with a priced cost line, out of all leaf work packages in the WBS.',
-                      style: TextStyle(
-                          color: Color(0xFF64748B), fontSize: 11.5),
+                      style:
+                          TextStyle(color: Color(0xFF64748B), fontSize: 11.5),
                     ),
                   ],
                 ),
@@ -599,8 +623,8 @@ class _CostDashboardTab extends StatelessWidget {
               Expanded(
                 child: Text(
                   '${coverage.pricedWorkPackages} of ${coverage.totalWorkPackages} leaf work packages priced',
-                  style: const TextStyle(
-                      color: Color(0xFF475569), fontSize: 12),
+                  style:
+                      const TextStyle(color: Color(0xFF475569), fontSize: 12),
                 ),
               ),
               if (!allPriced)
@@ -627,6 +651,278 @@ class _CostDashboardTab extends StatelessWidget {
       ),
     );
   }
+
+  /// Personnel costs card — pulls Staff Team staffing rows into the estimate
+  /// as plain projectTeam cost lines computed at the code level
+  /// (people × months × monthly rate), no AI (Lusaka 22 call).
+  Widget _buildPersonnelCard(
+    BuildContext context,
+    List<CostLine> lines,
+    String currencySymbol,
+  ) {
+    return _PersonnelCostCard(
+      lines: lines,
+      currencySymbol: currencySymbol,
+    );
+  }
+
+  static String _fmt(double value) {
+    if (value >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(value % 1000000 == 0 ? 0 : 1)}M';
+    }
+    if (value >= 1000) {
+      return '${(value / 1000).toStringAsFixed(value % 1000 == 0 ? 0 : 1)}K';
+    }
+    return value.toStringAsFixed(value == value.roundToDouble() ? 0 : 2);
+  }
+}
+
+/// Loads the project's staffing rows (Staff Team Orchestration page) and lets
+/// the user pull them into the Cost Estimate as computed personnel cost lines.
+/// Pure calculation — `quantity × months × monthly rate` — no AI.
+class _PersonnelCostCard extends StatefulWidget {
+  final List<CostLine> lines;
+  final String currencySymbol;
+
+  const _PersonnelCostCard({
+    required this.lines,
+    required this.currencySymbol,
+  });
+
+  @override
+  State<_PersonnelCostCard> createState() => _PersonnelCostCardState();
+}
+
+class _PersonnelCostCardState extends State<_PersonnelCostCard> {
+  static const _ink = Color(0xFF0B1220);
+  static const _muted = Color(0xFF64748B);
+  static const _hairline = Color(0xFFE2E8F0);
+  static const _surface = Colors.white;
+  static const _surfaceAlt = Color(0xFFF8FAFC);
+
+  List<StaffingRow>? _rows;
+  bool _loading = true;
+  bool _pulling = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      final projectData = context.read<ProjectDataProvider>().projectData;
+      final projectId = projectData.projectId;
+      if (projectId == null || projectId.isEmpty) {
+        setState(() {
+          _rows = [];
+          _loading = false;
+        });
+        return;
+      }
+      final rows =
+          await ExecutionPhaseService.loadStaffingRows(projectId: projectId);
+      if (!mounted) return;
+      setState(() {
+        _rows = rows;
+        _loading = false;
+      });
+    } catch (e) {
+      debugPrint('_PersonnelCostCard load error: $e');
+      if (mounted)
+        setState(() {
+          _rows = [];
+          _loading = false;
+        });
+    }
+  }
+
+  /// Rows that are not yet represented in the estimate (same role + same
+  /// computed total as an existing projectTeam line).
+  List<StaffingRow> get _pending {
+    final rows = _rows ?? const <StaffingRow>[];
+    return rows.where((r) {
+      final role = r.role.trim();
+      if (role.isEmpty) return false;
+      final total = r.subtotal;
+      final already = widget.lines.any((l) =>
+          l.category == CostCategory.projectTeam &&
+          l.description == role &&
+          (l.total - total).abs() < 0.005);
+      return !already;
+    }).toList();
+  }
+
+  double get _pendingTotal => _pending.fold(0.0, (sum, r) => sum + r.subtotal);
+
+  Future<void> _pull() async {
+    final pending = _pending;
+    if (pending.isEmpty || _pulling) return;
+    setState(() => _pulling = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<CostEstimateProvider>();
+    final result = provider.pullPersonnelCosts(pending);
+    setState(() => _pulling = false);
+    messenger.showSnackBar(SnackBar(
+      content: Text(
+        result.pulled > 0
+            ? 'Added ${result.pulled} personnel cost line${result.pulled == 1 ? '' : 's'} '
+                '(${widget.currencySymbol}${result.addedTotal.toStringAsFixed(0)} total) '
+                '— computed from people × months × rate, no AI.'
+            : 'Personnel costs already reflected in the estimate.',
+        style: const TextStyle(fontSize: 12.5),
+      ),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: const Color(0xFF0B1220),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: _surfaceAlt,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _hairline),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Loading personnel costs from Staff Team...',
+                style: TextStyle(color: Color(0xFF64748B), fontSize: 12.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final rows = _rows ?? const <StaffingRow>[];
+    final pending = _pending;
+    final pendingTotal = _pendingTotal;
+    final inEstimate = rows.length - pending.length;
+    final allPulled = rows.isNotEmpty && pending.isEmpty;
+    final accent =
+        allPulled ? const Color(0xFF16A34A) : const Color(0xFFD97706);
+    final softAccent =
+        allPulled ? const Color(0xFFE7F8F0) : const Color(0xFFFFF3E0);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: softAccent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.groups_outlined, size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Personnel Costs (Staff Team)',
+                      style: TextStyle(
+                          color: _ink,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Roles from Staff Team Orchestration, priced as people × months × monthly rate — a built-in calculation, no AI.',
+                      style: TextStyle(color: _muted, fontSize: 11.5),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                rows.isEmpty ? '—' : widget.currencySymbol + _fmt(_estTotal),
+                style: TextStyle(
+                    color: accent,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    fontFeatures: const [FontFeature.tabularFigures()]),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (rows.isEmpty)
+            const Text(
+              'No staffing rows on the Staff Team page yet — add roles with people, months and a monthly rate there, then come back to pull them in.',
+              style: TextStyle(color: _muted, fontSize: 12),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    allPulled
+                        ? '$inEstimate of $inEstimate roles already priced in the estimate ✓'
+                        : '$pending of ${rows.length} roles not yet in the estimate — '
+                            '${widget.currencySymbol}${pendingTotal.toStringAsFixed(0)} '
+                            'to add.',
+                    style: TextStyle(
+                        color: allPulled
+                            ? const Color(0xFF166534)
+                            : const Color(0xFFB45309),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+                if (!allPulled)
+                  TextButton.icon(
+                    onPressed: _pulling ? null : _pull,
+                    icon: const Icon(Icons.arrow_downward, size: 14),
+                    label: Text('Pull ${pending.length} into Cost Estimate',
+                        style: const TextStyle(fontSize: 11)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFB45309),
+                      backgroundColor: const Color(0xFFFFF7ED),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Total value of all staffing rows (already-pulled + pending).
+  double get _estTotal => (widget.lines
+          .where((l) =>
+              l.category == CostCategory.projectTeam &&
+              l.subCategory == 'Personnel (staffing)')
+          .fold(0.0, (s, l) => s + l.total) +
+      _pendingTotal);
 
   static String _fmt(double value) {
     if (value >= 1000000) {
@@ -719,14 +1015,17 @@ class _HeroBand extends StatelessWidget {
                         color: const Color(0xFF1A1D1F).withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: const Color(0xFF1A1D1F).withValues(alpha: 0.18),
+                          color:
+                              const Color(0xFF1A1D1F).withValues(alpha: 0.18),
                         ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.dashboard_rounded,
-                              size: 13, color: const Color(0xFF1A1D1F).withValues(alpha: 0.8)),
+                              size: 13,
+                              color: const Color(0xFF1A1D1F)
+                                  .withValues(alpha: 0.8)),
                           const SizedBox(width: 6),
                           Text(
                             eyebrow,
@@ -764,7 +1063,8 @@ class _HeroBand extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: statusLive
                                   ? const Color(0xFF059669)
-                                  : const Color(0xFF1A1D1F).withValues(alpha: 0.5),
+                                  : const Color(0xFF1A1D1F)
+                                      .withValues(alpha: 0.5),
                               shape: BoxShape.circle,
                               boxShadow: statusLive
                                   ? const [
@@ -785,7 +1085,8 @@ class _HeroBand extends StatelessWidget {
                               letterSpacing: 0.8,
                               color: statusLive
                                   ? const Color(0xFF047857)
-                                  : const Color(0xFF1A1D1F).withValues(alpha: 0.78),
+                                  : const Color(0xFF1A1D1F)
+                                      .withValues(alpha: 0.78),
                             ),
                           ),
                         ],
@@ -816,7 +1117,6 @@ class _HeroBand extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-
               ],
             ),
           ),
@@ -848,7 +1148,8 @@ class _HeroChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: const Color(0xFF1A1D1F).withValues(alpha: 0.78)),
+          Icon(icon,
+              size: 14, color: const Color(0xFF1A1D1F).withValues(alpha: 0.78)),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -938,10 +1239,13 @@ class _HeroAction extends StatelessWidget {
       icon: Icon(icon, size: 14, color: const Color(0xFF1A1D1F)),
       label: Text(label,
           style: const TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF1A1D1F))),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1A1D1F))),
       style: OutlinedButton.styleFrom(
         backgroundColor: Colors.white.withValues(alpha: 0.18),
-        side: BorderSide(color: const Color(0xFF1A1D1F).withValues(alpha: 0.32)),
+        side:
+            BorderSide(color: const Color(0xFF1A1D1F).withValues(alpha: 0.32)),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -1422,12 +1726,15 @@ class _CategoryDetailsCard extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(flex: 5, child: _TableHeader('CATEGORY')),
-                Expanded(flex: 4, child: _TableHeader('SHARE', alignRight: true)),
-                Expanded(flex: 4, child: _TableHeader('VALUE', alignRight: true)),
+                Expanded(
+                    flex: 4, child: _TableHeader('SHARE', alignRight: true)),
+                Expanded(
+                    flex: 4, child: _TableHeader('VALUE', alignRight: true)),
               ],
             ),
           ),
-          const Divider(height: 1, thickness: 1, color: _CostDashboardTab._hairline),
+          const Divider(
+              height: 1, thickness: 1, color: _CostDashboardTab._hairline),
           // Rows
           for (final c in categories)
             _CategoryRow(
@@ -1494,7 +1801,8 @@ class _CategoryRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Icon(cat.icon, size: 14, color: cat.color.withValues(alpha: 0.85)),
+                Icon(cat.icon,
+                    size: 14, color: cat.color.withValues(alpha: 0.85)),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
@@ -1601,11 +1909,13 @@ class _LinesByCategoryCard extends StatelessWidget {
     }
     return _SectionCard(
       title: 'Lines by Category',
-      subtitle: '${entries.length} ${entries.length == 1 ? "category" : "categories"} · sorted by spend',
+      subtitle:
+          '${entries.length} ${entries.length == 1 ? "category" : "categories"} · sorted by spend',
       child: Column(
         children: entries.map((entry) {
           final catTotal = entry.value.fold(0.0, (s, l) => s + l.total);
-          final pct = maxTotal > 0 ? (catTotal / maxTotal).clamp(0.0, 1.0) : 0.0;
+          final pct =
+              maxTotal > 0 ? (catTotal / maxTotal).clamp(0.0, 1.0) : 0.0;
           final catColor = _categoryColor(entry.key);
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1798,7 +2108,8 @@ class _EmptyState extends StatelessWidget {
               onTap: onCta,
               borderRadius: BorderRadius.circular(10),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
@@ -1901,7 +2212,8 @@ class _TotalsSpotlightBar extends StatelessWidget {
             // Total Authorized — elevated dark spotlight
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
                 decoration: const BoxDecoration(
                   color: Color(0xFF0B1220),
                   borderRadius: BorderRadius.only(
@@ -1918,11 +2230,14 @@ class _TotalsSpotlightBar extends StatelessWidget {
                           width: 28,
                           height: 28,
                           decoration: BoxDecoration(
-                            color: _CostDashboardTab._brand.withValues(alpha: 0.22),
+                            color: _CostDashboardTab._brand
+                                .withValues(alpha: 0.22),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.account_balance_wallet_rounded,
-                              size: 15, color: _CostDashboardTab._brand),
+                          child: const Icon(
+                              Icons.account_balance_wallet_rounded,
+                              size: 15,
+                              color: _CostDashboardTab._brand),
                         ),
                         const SizedBox(width: 9),
                         const Text(
@@ -2106,9 +2421,7 @@ class _SectionCard extends StatelessWidget {
       ),
     );
   }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
+} // ═══════════════════════════════════════════════════════════════════════════
 // Category data model
 // ═══════════════════════════════════════════════════════════════════════════
 

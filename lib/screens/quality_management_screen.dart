@@ -125,7 +125,7 @@ Future<bool> _updateQualityData(
 
   if (context.mounted && !success) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Unable to save quality data'),
         behavior: SnackBarBehavior.floating,
         backgroundColor: Color(0xFFDC2626),
@@ -348,7 +348,7 @@ Future<void> _createTrainingActivityShortcut(
 
   if (context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Training activity created'),
         behavior: SnackBarBehavior.floating,
         backgroundColor: Color(0xFF16A34A),
@@ -944,7 +944,7 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
     );
     if (contextText.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content:
               Text('No project context available to generate the plan from.'),
           behavior: SnackBarBehavior.floating,
@@ -968,7 +968,7 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
     final trimmed = plan.trim();
     if (trimmed.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Unable to generate plan. Please try again.'),
           behavior: SnackBarBehavior.floating,
         ),
@@ -4436,7 +4436,7 @@ class _QualityStandardDialogState extends State<_QualityStandardDialog> {
   void _save() {
     if (_name.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Standard name is required')),
+        const SnackBar(content: Text('Standard name is required')),
       );
       return;
     }
@@ -4595,7 +4595,7 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
   void _save() {
     if (_title.text.trim().isEmpty || _metric.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
             content: Text('Objective title and metric are required')),
       );
       return;
@@ -4791,7 +4791,7 @@ class _WorkflowControlDialogState extends State<_WorkflowControlDialog> {
   void _save() {
     if (_name.text.trim().isEmpty || _owner.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Control name and owner are required')),
+        const SnackBar(content: Text('Control name and owner are required')),
       );
       return;
     }
@@ -4975,7 +4975,7 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
   void _save() {
     if (_task.text.trim().isEmpty || _responsible.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
             content: Text('Task name and responsible owner are required')),
       );
       return;
@@ -4990,7 +4990,7 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
 
     if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('End date cannot be before start date')),
+        const SnackBar(content: Text('End date cannot be before start date')),
       );
       return;
     }
@@ -5261,7 +5261,7 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
   void _save() {
     if (_title.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Audit title is required')),
+        const SnackBar(content: Text('Audit title is required')),
       );
       return;
     }
@@ -5274,7 +5274,7 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
         completedDate != null &&
         completedDate.isBefore(plannedDate)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
             content: Text('Completed date cannot be before planned date')),
       );
       return;
@@ -5732,7 +5732,7 @@ class _QualityChangeDialogState extends State<_QualityChangeDialog> {
   void _save() {
     if (_description.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Change description is required')),
+        const SnackBar(content: Text('Change description is required')),
       );
       return;
     }
@@ -5880,7 +5880,7 @@ class _TrainingShortcutDialogState extends State<_TrainingShortcutDialog> {
   void _save() {
     if (_title.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Training title is required')),
+        const SnackBar(content: Text('Training title is required')),
       );
       return;
     }
@@ -6022,14 +6022,14 @@ class _DashboardConfigDialogState extends State<_DashboardConfigDialog> {
 
     if (target == null || target <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Target time must be a positive number')),
+        const SnackBar(content: Text('Target time must be a positive number')),
       );
       return;
     }
 
     if (points == null || points < 3) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Max trend points must be 3 or more')),
+        const SnackBar(content: Text('Max trend points must be 3 or more')),
       );
       return;
     }

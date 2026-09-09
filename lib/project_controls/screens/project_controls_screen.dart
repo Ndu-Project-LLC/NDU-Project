@@ -16,6 +16,8 @@ import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/project_controls/models/project_controls_models.dart';
 import 'package:ndu_project/project_controls/providers/project_controls_provider.dart';
+import 'package:ndu_project/project_controls/providers/change_management_provider.dart';
+import 'package:ndu_project/project_controls/utils/cr_variance_attribution.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -60,6 +62,17 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
           // Work packages exist — sync BAC from Cost Estimate if it changed
           provider.syncFromCostEstimate(ceProvider.estimate);
         }
+      }
+      // Lusaka 22 — tie change requests into Project Controls: variance rows
+      // for affected work packages get the CR number as the reason.
+      final cmProvider = context.read<ChangeManagementProvider>();
+      final stamped = syncCrVarianceAttribution(
+        changeRequests: cmProvider.changeRequests,
+        provider: provider,
+      );
+      if (stamped > 0) {
+        debugPrint(
+            '[ProjectControls] $stamped variance row(s) attributed to change requests');
       }
     });
   }
@@ -1340,12 +1353,10 @@ class _ScopeTrackingTab extends StatelessWidget {
                               width: 26,
                               height: 26,
                               decoration: BoxDecoration(
-                                color:
-                                    PcPalette.gold.withValues(alpha: 0.15),
+                                color: PcPalette.gold.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(7),
                                 border: Border.all(
-                                  color:
-                                      PcPalette.gold.withValues(alpha: 0.4),
+                                  color: PcPalette.gold.withValues(alpha: 0.4),
                                 ),
                               ),
                               child: Center(
@@ -1790,6 +1801,18 @@ class _CostControlTab extends StatelessWidget {
         _buildAllowanceTrackingSection(projectData, totalAllowance),
       ],
     );
+  }
+
+  /// Change request number attributed to this work package's variance (if
+  /// any) — shown on the cost card so cost deltas are traceable to a CR.
+  String? _crNumberFor(WorkPackageControl wp) {
+    for (final sv in state.scheduleVariances) {
+      if (sv.workPackageId == wp.id &&
+          (sv.changeRequestNumber?.isNotEmpty ?? false)) {
+        return sv.changeRequestNumber;
+      }
+    }
+    return null;
   }
 
   // ──────────────────────────────────────────────────────────────────────
@@ -2453,6 +2476,7 @@ class _CostControlTab extends StatelessWidget {
     final cpiColor = wp.cpi >= 1.0 ? PcPalette.emerald : PcPalette.danger;
     final pctColor = pct > 1.0 ? PcPalette.danger : PcPalette.amber;
     final vacColor = wp.vac >= 0 ? PcPalette.emerald : PcPalette.danger;
+    final crNumber = _crNumberFor(wp);
 
     return PcHoverBuilder(
       builder: (hovered) {
@@ -2502,6 +2526,10 @@ class _CostControlTab extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (crNumber != null) ...[
+                    const SizedBox(width: 8),
+                    _CrReasonChip(crNumber: crNumber),
+                  ],
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -3538,10 +3566,23 @@ class _ForecastingTab extends StatelessWidget {
     );
   }
 
+  /// Change request number attributed to this work package's variance (if
+  /// any) — shown on the trend card so cost/schedule deltas are traceable.
+  String? _crNumberFor(WorkPackageControl wp) {
+    for (final sv in state.scheduleVariances) {
+      if (sv.workPackageId == wp.id &&
+          (sv.changeRequestNumber?.isNotEmpty ?? false)) {
+        return sv.changeRequestNumber;
+      }
+    }
+    return null;
+  }
+
   Widget _wpTrendCard(WorkPackageControl wp) {
     final cpiColor = wp.cpi >= 1.0 ? PcPalette.emerald : PcPalette.danger;
     final spiColor = wp.spi >= 1.0 ? PcPalette.emerald : PcPalette.danger;
     final pctComplete = wp.percentComplete?.round() ?? 0;
+    final crNumber = _crNumberFor(wp);
 
     return PcHoverBuilder(
       builder: (hovered) {
@@ -3590,6 +3631,10 @@ class _ForecastingTab extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (crNumber != null) ...[
+                    const SizedBox(width: 8),
+                    _CrReasonChip(crNumber: crNumber),
+                  ],
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -6292,6 +6337,45 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
   }
 }
 
+/// Amber chip showing the change request that a variance / cost row is
+/// attributed to (Lusaka 22 — "the reason will be because of the change
+/// request … whatever the number of this change request is").
+class _CrReasonChip extends StatelessWidget {
+  final String crNumber;
+  const _CrReasonChip({required this.crNumber});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3E0),
+        borderRadius: BorderRadius.circular(5),
+        border:
+            Border.all(color: const Color(0xFFFCD34D).withValues(alpha: 0.6)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.change_circle_outlined,
+              size: 11, color: Color(0xFFD97706)),
+          const SizedBox(width: 4),
+          Text(
+            crNumber,
+            style: const TextStyle(
+              color: Color(0xFFB45309),
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+              fontFamily: appFontFamily,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _DiffRow {
   final String field;
   final String a;
@@ -6860,6 +6944,11 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (sv.changeRequestNumber != null &&
+            sv.changeRequestNumber!.isNotEmpty) ...[
+          _CrReasonChip(crNumber: sv.changeRequestNumber!),
+          const SizedBox(height: 6),
+        ],
         SizedBox(
           height: 30,
           child: TextField(
@@ -7047,6 +7136,11 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
                 ),
               ),
               const SizedBox(height: 10),
+              if (sv.changeRequestNumber != null &&
+                  sv.changeRequestNumber!.isNotEmpty) ...[
+                _CrReasonChip(crNumber: sv.changeRequestNumber!),
+                const SizedBox(height: 10),
+              ],
               Row(
                 children: [
                   Expanded(child: _metaCell('Planned', plannedStr)),

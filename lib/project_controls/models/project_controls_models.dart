@@ -721,6 +721,12 @@ class ScheduleVariance {
   final String delayReason;
   final CompressionStrategy compressionStrategy;
 
+  /// The change request (e.g. `CR-2026-003`) that caused this variance —
+  /// the "reason" for the actual-vs-plan delta, per the Lusaka 22 call
+  /// ("the reason will be because of the change request … whatever the
+  /// number of this change request is").
+  final String? changeRequestNumber;
+
   const ScheduleVariance({
     required this.workPackageId,
     this.scheduleActivityId,
@@ -731,6 +737,7 @@ class ScheduleVariance {
     required this.floatDays,
     required this.delayReason,
     required this.compressionStrategy,
+    this.changeRequestNumber,
   });
 
   /// Variance in days vs planned finish (positive = late, negative = early).
@@ -758,6 +765,7 @@ class ScheduleVariance {
     double? floatDays,
     String? delayReason,
     CompressionStrategy? compressionStrategy,
+    String? changeRequestNumber,
   }) {
     return ScheduleVariance(
       workPackageId: workPackageId ?? this.workPackageId,
@@ -769,6 +777,7 @@ class ScheduleVariance {
       floatDays: floatDays ?? this.floatDays,
       delayReason: delayReason ?? this.delayReason,
       compressionStrategy: compressionStrategy ?? this.compressionStrategy,
+      changeRequestNumber: changeRequestNumber ?? this.changeRequestNumber,
     );
   }
 }

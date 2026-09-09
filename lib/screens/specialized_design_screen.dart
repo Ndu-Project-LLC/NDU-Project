@@ -569,7 +569,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('KAZ AI field generation failed: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  }

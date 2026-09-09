@@ -234,7 +234,7 @@ class _InfrastructureConsiderationsScreenState
 
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text(
  'Infrastructure considerations regenerated successfully')),
  );
@@ -285,7 +285,7 @@ class _InfrastructureConsiderationsScreenState
 
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text('Infrastructure regenerated successfully')),
  );
  }
@@ -1446,7 +1446,7 @@ class _InfrastructureConsiderationsScreenState
 
  if (previewRows.isEmpty) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text(
  'AI could not generate infrastructure suggestions. Add an entry manually or try again.',
  ),
@@ -1492,7 +1492,7 @@ class _InfrastructureConsiderationsScreenState
  await _saveInfrastructureConsiderationsData();
  if (!mounted) return false;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('AI infrastructure suggestions applied.')),
+ const SnackBar(content: Text('AI infrastructure suggestions applied.')),
  );
  return true;
  } catch (e) {
@@ -1522,7 +1522,7 @@ class _InfrastructureConsiderationsScreenState
 
  if (action == _MissingInfrastructureAction.manual) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text(
  'Continuing without infrastructure considerations. You can complete this later or let AI fill it in later.',
  ),
@@ -1539,7 +1539,7 @@ class _InfrastructureConsiderationsScreenState
  );
  if (!hasInfraData) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text(
  'AI could not generate infrastructure considerations right now. Continuing anyway so you can complete this later.',
  ),
@@ -1548,7 +1548,7 @@ class _InfrastructureConsiderationsScreenState
  }
  } else {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text(
  'Continuing without infrastructure considerations. You can complete this later.',
  ),
@@ -1862,7 +1862,7 @@ class _InfrastructureConsiderationsScreenState
 
  if (mounted) {
  messenger.showSnackBar(
- SnackBar(content: Text('Infrastructure field regenerated')),
+ const SnackBar(content: Text('Infrastructure field regenerated')),
  );
  }
  } catch (e) {

@@ -509,6 +509,83 @@ class CMApprovalStep {
   int get hashCode => id.hashCode;
 }
 
+// ─── Deliverable Impact ────────────────────────────────────────────────────
+// Per the Lusaka 22 requirements call: a change request must list the
+// actual deliverables it creates / modifies / removes (not just counts),
+// so approvers and close-out can see exactly what is impacted.
+
+enum DeliverableAction { add, modify, remove }
+
+extension DeliverableActionMeta on DeliverableAction {
+  String get label => switch (this) {
+        DeliverableAction.add => 'Add',
+        DeliverableAction.modify => 'Modify',
+        DeliverableAction.remove => 'Remove',
+      };
+
+  IconData get icon => switch (this) {
+        DeliverableAction.add => Icons.add_circle_outline,
+        DeliverableAction.modify => Icons.edit_outlined,
+        DeliverableAction.remove => Icons.remove_circle_outline,
+      };
+
+  Color get color => switch (this) {
+        DeliverableAction.add => const Color(0xFF10B981),
+        DeliverableAction.modify => const Color(0xFFF59E0B),
+        DeliverableAction.remove => const Color(0xFFEF4444),
+      };
+}
+
+/// A single deliverable impacted by a change request, with the action taken
+/// and optional notes (e.g. vendor quote references, document links).
+class CMImpactedDeliverable {
+  final String id;
+  final String name;
+  final DeliverableAction action;
+  final String? notes;
+
+  const CMImpactedDeliverable({
+    required this.id,
+    required this.name,
+    required this.action,
+    this.notes,
+  });
+
+  CMImpactedDeliverable copyWith({
+    String? name,
+    DeliverableAction? action,
+    String? notes,
+  }) {
+    return CMImpactedDeliverable(
+      id: id,
+      name: name ?? this.name,
+      action: action ?? this.action,
+      notes: notes ?? this.notes,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is CMImpactedDeliverable && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+// ─── Reserve Drawdown Source ───────────────────────────────────────────────
+// Per the Lusaka 22 requirements call: when a CR is approved, the approving
+// person decides whether the drawdown comes out of the contingency OR the
+// management reserve — never both at the same time.
+
+enum CMReserveSource { contingency, managementReserve }
+
+extension CMReserveSourceMeta on CMReserveSource {
+  String get label => switch (this) {
+        CMReserveSource.contingency => 'Contingency',
+        CMReserveSource.managementReserve => 'Management Reserve',
+      };
+}
+
 // ─── Implementation Status ────────────────────────────────────────────────
 
 enum ImplementationStatus { todo, inProgress, done }
@@ -624,6 +701,12 @@ class CMChangeRequest {
   final double? contingencyDrawdownRequested;
   final double? reserveDrawdownRequested;
   final List<ImplementationTask> implementationTasks;
+  // Lusaka 22 additions: named deliverables, approver-chosen drawdown
+  // source, and the actual cost recorded at close-out (actual vs estimate).
+  final List<CMImpactedDeliverable> deliverables;
+  final CMReserveSource? drawdownReserve;
+  final double? drawdownAmount;
+  final double? actualCost;
 
   const CMChangeRequest({
     required this.id,
@@ -663,6 +746,10 @@ class CMChangeRequest {
     this.contingencyDrawdownRequested,
     this.reserveDrawdownRequested,
     this.implementationTasks = const [],
+    this.deliverables = const [],
+    this.drawdownReserve,
+    this.drawdownAmount,
+    this.actualCost,
   });
 
   CMChangeRequest copyWith({
@@ -703,6 +790,10 @@ class CMChangeRequest {
     double? contingencyDrawdownRequested,
     double? reserveDrawdownRequested,
     List<ImplementationTask>? implementationTasks,
+    List<CMImpactedDeliverable>? deliverables,
+    CMReserveSource? drawdownReserve,
+    double? drawdownAmount,
+    double? actualCost,
   }) {
     return CMChangeRequest(
       id: id ?? this.id,
@@ -747,6 +838,10 @@ class CMChangeRequest {
       reserveDrawdownRequested:
           reserveDrawdownRequested ?? this.reserveDrawdownRequested,
       implementationTasks: implementationTasks ?? this.implementationTasks,
+      deliverables: deliverables ?? this.deliverables,
+      drawdownReserve: drawdownReserve ?? this.drawdownReserve,
+      drawdownAmount: drawdownAmount ?? this.drawdownAmount,
+      actualCost: actualCost ?? this.actualCost,
     );
   }
 

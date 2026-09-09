@@ -691,7 +691,7 @@ class _DeliverProjectClosureScreenState
     if (imported.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No scope items found to import.')),
+          const SnackBar(content: Text('No scope items found to import.')),
         );
       }
       return;

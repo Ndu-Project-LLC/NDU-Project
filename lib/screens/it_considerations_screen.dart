@@ -317,7 +317,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
               content: Text('IT considerations regenerated successfully')),
         );
       }
@@ -1228,7 +1228,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
 
       if (previewRows.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
               'AI could not generate IT suggestions. Add an entry manually or try again.',
             ),
@@ -1275,7 +1275,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
 
       if (!mounted) return false;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('AI IT suggestions applied.')),
+        const SnackBar(content: Text('AI IT suggestions applied.')),
       );
       return true;
     } catch (e) {
@@ -1308,7 +1308,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
 
       if (action == _MissingItConsiderationsAction.manual) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
               'Continuing without IT considerations. You can complete this later or let AI fill it in later.',
             ),
@@ -1324,7 +1324,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
             _hasRequiredItData(ProjectDataInherited.read(context).projectData);
         if (!hasITData) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text(
                 'AI could not generate IT considerations right now. Continuing anyway so you can complete this later.',
               ),
@@ -1333,7 +1333,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
               'Continuing without IT considerations. You can complete this later.',
             ),
@@ -1867,7 +1867,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
 
       if (mounted) {
         messenger.showSnackBar(
-          SnackBar(content: Text('IT tech field regenerated')),
+          const SnackBar(content: Text('IT tech field regenerated')),
         );
       }
     } catch (e) {

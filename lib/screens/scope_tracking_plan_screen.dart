@@ -141,7 +141,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  if (mounted) {
  setState(() => _items = newItems);
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text('Scope items seeded from planning requirements.'),
  behavior: SnackBarBehavior.floating,
  ),
@@ -277,7 +277,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
 
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text('Scope baseline set.'),
  behavior: SnackBarBehavior.floating,
  ),
@@ -1171,7 +1171,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  if (missing.isEmpty) {
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text('No missing scope items found.'),
  behavior: SnackBarBehavior.floating,
  ),

@@ -387,7 +387,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  if (newMembers.isEmpty) {
  if (showSnackbar && mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text(
  'No new members to sync — every staffing role is already linked.',
  ),
@@ -2055,7 +2055,7 @@ class _EditableTextBlockState extends State<_EditableTextBlock> {
  widget.onChanged(_controller.text);
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text(
  'AI-generated content inserted. Review and edit as needed.'),
  backgroundColor: Color(0xFF16A34A),
@@ -2069,8 +2069,8 @@ class _EditableTextBlockState extends State<_EditableTextBlock> {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
  content: Text('AI generation failed: ${aiErrorMessage(e)}'),
- backgroundColor: Color(0xFFDC2626),
- duration: Duration(seconds: 4),
+ backgroundColor: const Color(0xFFDC2626),
+ duration: const Duration(seconds: 4),
  ),
  );
  }

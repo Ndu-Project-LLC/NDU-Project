@@ -18,6 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 const String _storageKey = 'ndu_cost_estimate_v1';
@@ -75,8 +76,8 @@ class CostEstimateProvider extends ChangeNotifier {
         final state = data['state'] as Map<String, dynamic>? ?? {};
         _setupComplete = state['setupComplete'] as bool? ?? false;
         if (state['estimate'] != null) {
-          _estimate = _estimateFromJson(
-              state['estimate'] as Map<String, dynamic>);
+          _estimate =
+              _estimateFromJson(state['estimate'] as Map<String, dynamic>);
           _syncAuthenticatedOwner();
         }
         notifyListeners();
@@ -247,8 +248,8 @@ class CostEstimateProvider extends ChangeNotifier {
       className: className,
       deliveryModel: DeliveryModel.values
           .byName(json['deliveryModel'] as String? ?? 'waterfall'),
-      status: EstimateStatus.values
-          .byName(json['status'] as String? ?? 'draft'),
+      status:
+          EstimateStatus.values.byName(json['status'] as String? ?? 'draft'),
       currency: json['currency'] as String? ?? 'USD',
       lines: lines,
       boe: boe,
@@ -449,8 +450,7 @@ class CostEstimateProvider extends ChangeNotifier {
   bool isScheduledPurchaseRepresented(ScheduledPurchaseCandidate candidate) {
     final estimate = _estimate;
     if (estimate == null) return false;
-    return estimate.lines
-        .any((l) => isPurchaseLine(candidate, l));
+    return estimate.lines.any((l) => isPurchaseLine(candidate, l));
   }
 
   /// Pull scheduled purchases into the Cost Estimate as procurement cost
@@ -481,8 +481,7 @@ class CostEstimateProvider extends ChangeNotifier {
     var alreadyInEstimate = 0;
 
     for (final candidate in candidates) {
-      final existingCostLineId =
-          (candidate.activityCostLineId ?? '').trim();
+      final existingCostLineId = (candidate.activityCostLineId ?? '').trim();
       // Linked to an existing line? Skip.
       if (existingCostLineId.isNotEmpty &&
           estimate.lines.any((l) => l.id == existingCostLineId)) {
@@ -503,10 +502,9 @@ class CostEstimateProvider extends ChangeNotifier {
         category: CostCategory.procurement,
         subCategory: 'Scheduled purchase',
         description: title,
-        wbsRef:
-            (candidate.wbsRef ?? '').trim().isEmpty
-                ? null
-                : candidate.wbsRef!.trim(),
+        wbsRef: (candidate.wbsRef ?? '').trim().isEmpty
+            ? null
+            : candidate.wbsRef!.trim(),
         quantity: 1,
         unit: 'lump',
         rate: null,
@@ -542,6 +540,96 @@ class CostEstimateProvider extends ChangeNotifier {
     );
   }
 
+  /// Pull personnel (staffing) costs into the Cost Estimate as plain
+  /// `projectTeam` cost lines — no AI involved (Lusaka 22 call).
+  ///
+  /// The Staff Team Orchestration page already stores each role's number of
+  /// people, duration in months, and monthly cost per person. The subtotal is
+  /// computed here at the code level (`quantity × months × monthly rate` via
+  /// `StaffingRow.subtotal`), so the first estimate fully reflects personnel
+  /// cost without needing AI to "estimate" it.
+  ///
+  /// Idempotent: a row already represented in the estimate as a
+  /// `projectTeam` line with the same description AND total is never
+  /// duplicated (matches the scheduled-purchase pull behaviour).
+  PersonnelCostPullResult pullPersonnelCosts(List<StaffingRow> rows) {
+    final estimate = _estimate;
+    if (estimate == null || rows.isEmpty) {
+      return PersonnelCostPullResult.empty;
+    }
+
+    final newLines = [...estimate.lines];
+    var alreadyInEstimate = 0;
+    var addedTotal = 0.0;
+
+    for (final row in rows) {
+      final role = row.role.trim();
+      if (role.isEmpty) continue;
+      final total = row.subtotal;
+      // Already represented (same role + same computed total)? Skip.
+      final existing = estimate.lines.any((l) =>
+          l.category == CostCategory.projectTeam &&
+          l.description == role &&
+          (l.total - total).abs() < 0.005);
+      if (existing) {
+        alreadyInEstimate++;
+        continue;
+      }
+
+      final duration =
+          double.tryParse(row.durationMonths.replaceAll(',', '')) ?? 0.0;
+      final monthly = double.tryParse(
+              row.monthlyCost.replaceAll(',', '').replaceAll('\$', '')) ??
+          0.0;
+      final breakdown = total > 0
+          ? '${row.quantity} × ${_trimNum(duration)} mo × '
+              '\$${_trimNum(monthly)}/mo per person'
+          : null;
+
+      newLines.add(CostLine(
+        id: newId('line'),
+        category: CostCategory.projectTeam,
+        subCategory: 'Personnel (staffing)',
+        description: role,
+        quantity: row.quantity.toDouble(),
+        unit: 'people',
+        rate: null,
+        total: total,
+        inSchedule: false,
+        basisSource: CostSourceType.expertJudgment,
+        basisReference: breakdown,
+        aiGenerated: false,
+      ));
+      addedTotal += total;
+    }
+
+    if (newLines.length == estimate.lines.length) {
+      return PersonnelCostPullResult(
+        pulled: 0,
+        alreadyInEstimate: alreadyInEstimate,
+        addedTotal: 0,
+      );
+    }
+
+    final totals = ComputeUtils.computeTotals(newLines);
+    _estimate = estimate.copyWith(
+      lines: newLines,
+      totals: totals,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return PersonnelCostPullResult(
+      pulled: newLines.length - estimate.lines.length,
+      alreadyInEstimate: alreadyInEstimate,
+      addedTotal: addedTotal,
+    );
+  }
+
+  static String _trimNum(double v) {
+    return v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
+  }
+
   /// Pick the best project name: the explicit one if it's been customised,
   /// otherwise [ProjectDataHelper.lastKnownProjectName] (if captured), else
   /// the literal `'My Project'` default.
@@ -568,15 +656,14 @@ class CostEstimateProvider extends ChangeNotifier {
     buf.writeln('Delivery model: ${estimate.deliveryModel.label}');
     buf.writeln('Status: ${estimate.status.label}');
     buf.writeln('Currency: ${estimate.currency}');
-    final total = estimate.lines.fold<double>(0,
-        (s, l) => s + _effectiveLineTotalForContextScan(l));
-    buf.writeln(
-        'Total: ${total.toStringAsFixed(2)} ${estimate.currency}');
+    final total = estimate.lines
+        .fold<double>(0, (s, l) => s + _effectiveLineTotalForContextScan(l));
+    buf.writeln('Total: ${total.toStringAsFixed(2)} ${estimate.currency}');
     buf.writeln('Lines: ${estimate.lines.length}');
     if (estimate.lines.isNotEmpty) {
-      final sorted = [...estimate.lines]
-        ..sort((a, b) => _effectiveLineTotalForContextScan(b)
-            .compareTo(_effectiveLineTotalForContextScan(a)));
+      final sorted = [...estimate.lines]..sort((a, b) =>
+          _effectiveLineTotalForContextScan(b)
+              .compareTo(_effectiveLineTotalForContextScan(a)));
       final top = sorted.take(5).toList();
       buf.writeln('Top cost lines:');
       for (final l in top) {
@@ -763,7 +850,9 @@ class CostEstimateProvider extends ChangeNotifier {
       final hasConstraints = boe.constraints.isNotEmpty;
       final hasExclusions = boe.exclusions.isNotEmpty;
       if ((!hasAssumptions || !hasConstraints || !hasExclusions) &&
-          (data.assumptions.isNotEmpty || data.constraints.isNotEmpty || data.outOfScope.isNotEmpty)) {
+          (data.assumptions.isNotEmpty ||
+              data.constraints.isNotEmpty ||
+              data.outOfScope.isNotEmpty)) {
         final newBoe = boe.copyWith(
           assumptions: hasAssumptions ? boe.assumptions : data.assumptions,
           constraints: hasConstraints ? boe.constraints : data.constraints,
@@ -781,18 +870,28 @@ class CostEstimateProvider extends ChangeNotifier {
     // create approver records from real stakeholder emails (non-destructive).
     try {
       final review = _estimate!.review;
-      final hasApprovers = review != null && review.requiredApprovers.isNotEmpty;
-      final stakeholdersWithEmail = _estimate!.stakeholders.where((s) => s.email.trim().isNotEmpty).toList();
+      final hasApprovers =
+          review != null && review.requiredApprovers.isNotEmpty;
+      final stakeholdersWithEmail = _estimate!.stakeholders
+          .where((s) => s.email.trim().isNotEmpty)
+          .toList();
       if (!hasApprovers && stakeholdersWithEmail.isNotEmpty) {
-        final approvers = stakeholdersWithEmail.map((s) => Approver(
-              id: newId('ap'),
-              name: s.name,
-              email: s.email,
-              role: s.role,
-              approved: false,
-              approvedAt: null,
-            )).toList();
-        final newReview = (review ?? const ReviewApproval(requiredApprovers: [], acceptanceStep1: (confirmed: false, by: null, at: null), acceptanceStep2: (confirmed: false, by: null, at: null))).copyWith(
+        final approvers = stakeholdersWithEmail
+            .map((s) => Approver(
+                  id: newId('ap'),
+                  name: s.name,
+                  email: s.email,
+                  role: s.role,
+                  approved: false,
+                  approvedAt: null,
+                ))
+            .toList();
+        final newReview = (review ??
+                const ReviewApproval(
+                    requiredApprovers: [],
+                    acceptanceStep1: (confirmed: false, by: null, at: null),
+                    acceptanceStep2: (confirmed: false, by: null, at: null)))
+            .copyWith(
           requiredApprovers: approvers,
         );
         _estimate = _estimate!.copyWith(
@@ -824,8 +923,7 @@ class CostEstimateProvider extends ChangeNotifier {
   void removeStakeholder(String id) {
     if (_estimate == null) return;
     _estimate = _estimate!.copyWith(
-      stakeholders:
-          _estimate!.stakeholders.where((s) => s.id != id).toList(),
+      stakeholders: _estimate!.stakeholders.where((s) => s.id != id).toList(),
       updatedAt: DateTime.now(),
     );
     notifyListeners();
@@ -836,21 +934,24 @@ class CostEstimateProvider extends ChangeNotifier {
 
   void grantAccess(String email, RBACRole role) {
     if (_estimate == null) return;
-    final existing =
-        _estimate!.access.indexWhere((a) => a.userEmail == email);
+    final existing = _estimate!.access.indexWhere((a) => a.userEmail == email);
     final now = DateTime.now();
     List<AccessGrant> access;
     if (existing >= 0) {
-      access = _estimate!.access.asMap().map((i, a) => MapEntry(
-          i,
-          i == existing
-              ? AccessGrant(
-                  userEmail: email,
-                  role: role,
-                  grantedBy: currentUserEmail,
-                  grantedAt: now,
-                )
-              : a)).values.toList();
+      access = _estimate!.access
+          .asMap()
+          .map((i, a) => MapEntry(
+              i,
+              i == existing
+                  ? AccessGrant(
+                      userEmail: email,
+                      role: role,
+                      grantedBy: currentUserEmail,
+                      grantedAt: now,
+                    )
+                  : a))
+          .values
+          .toList();
     } else {
       access = [
         ..._estimate!.access,
@@ -1101,5 +1202,30 @@ class ScheduledPurchasePullResult {
     pulled: 0,
     alreadyInEstimate: 0,
     addedByActivityId: <String, String>{},
+  );
+}
+
+/// Result of [CostEstimateProvider.pullPersonnelCosts].
+class PersonnelCostPullResult {
+  /// Number of new personnel (projectTeam) cost lines created.
+  final int pulled;
+
+  /// Rows that were already represented — nothing created for them.
+  final int alreadyInEstimate;
+
+  /// Combined value of the newly pulled personnel lines (already computed
+  /// at the code level: people × months × monthly rate).
+  final double addedTotal;
+
+  const PersonnelCostPullResult({
+    required this.pulled,
+    required this.alreadyInEstimate,
+    required this.addedTotal,
+  });
+
+  static const empty = PersonnelCostPullResult(
+    pulled: 0,
+    alreadyInEstimate: 0,
+    addedTotal: 0,
   );
 }

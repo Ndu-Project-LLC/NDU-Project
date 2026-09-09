@@ -297,7 +297,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       if (!started) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text(kIsWeb
                   ? 'Voice input unavailable. Use Chrome/Edge/Safari over HTTPS and allow mic access. Firefox is not supported.'
                   : 'Speech recognition is not available on this device.'),
@@ -1015,7 +1015,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
       if (!started) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text(kIsWeb
                   ? 'Voice input unavailable. Use Chrome/Edge/Safari over HTTPS and allow mic access. Firefox is not supported.'
                   : 'Speech recognition is not available on this device.'),

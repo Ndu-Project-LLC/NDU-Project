@@ -338,14 +338,14 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFB8860B).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFB8860B).withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFB8860B).withOpacity(0.15),
+              color: const Color(0xFFB8860B).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.download_done_rounded, size: 20, color: Color(0xFF4F46E5)),
@@ -486,16 +486,16 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [scoreColor.withOpacity(0.1), scoreColor.withOpacity(0.05)]),
+        gradient: LinearGradient(colors: [scoreColor.withValues(alpha: 0.1), scoreColor.withValues(alpha: 0.05)]),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scoreColor.withOpacity(0.3)),
+        border: Border.all(color: scoreColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
           const Text('Overall Quality Score', style: TextStyle(fontSize: 14, color: Color(0xFF6B7280))),
           const SizedBox(height: 8),
           Text(score.toStringAsFixed(0), style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: scoreColor)),
-          Text(grade, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: scoreColor.withOpacity(0.7))),
+          Text(grade, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: scoreColor.withValues(alpha: 0.7))),
           const SizedBox(height: 4),
           Text(_getScoreInterpretation(score), style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
         ],
@@ -616,7 +616,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -888,7 +888,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: _getAuditTypeColor(audit.auditType).withOpacity(0.15),
+                    color: _getAuditTypeColor(audit.auditType).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(audit.auditType, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _getAuditTypeColor(audit.auditType))),
@@ -1100,7 +1100,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: ca.priority.color.withOpacity(0.5)),
+        side: BorderSide(color: ca.priority.color.withValues(alpha: 0.5)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1284,7 +1284,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
             decoration: BoxDecoration(
               gradient: LinearGradient(colors: [const Color(0xFFFFF8E1), const Color(0xFFFFF8E1)]),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFB8860B).withOpacity(0.3)),
+              border: Border.all(color: const Color(0xFFB8860B).withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1317,9 +1317,9 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -1337,7 +1337,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
       child: ListTile(
         dense: true,
         leading: CircleAvatar(
-          backgroundColor: _getCoqCategoryColor(entry.category).withOpacity(0.15),
+          backgroundColor: _getCoqCategoryColor(entry.category).withValues(alpha: 0.15),
           child: Text(entry.category[0], style: TextStyle(color: _getCoqCategoryColor(entry.category), fontWeight: FontWeight.bold)),
         ),
         title: Text(entry.description, style: const TextStyle(fontSize: 14)),
@@ -1365,7 +1365,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: status.color.withOpacity(0.12),
+        color: status.color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -1391,7 +1391,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
       child: Text(result.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: color)),
     );
   }
@@ -1399,7 +1399,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
   Widget _buildPriorityChip(CaPriority priority) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: priority.color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: priority.color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
       child: Text(priority.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: priority.color)),
     );
   }

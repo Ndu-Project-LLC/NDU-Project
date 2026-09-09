@@ -291,7 +291,7 @@ void _loadMilestoneData() {
  Future<void> _saveAndNavigate({bool skippedValidation = false}) async {
  if (skippedValidation && mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text(
  'Saved progress. You can complete remaining milestone details later.',
  ),
@@ -403,7 +403,7 @@ void _loadMilestoneData() {
  if (picked != null) {
  if (startDate != null && picked.isBefore(startDate)) {
  messenger.showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text('End date cannot be before start date'),
  backgroundColor: Colors.orange,
  ),
@@ -693,7 +693,7 @@ markdown. The notes field must be plain text (max ~80 words).
      final parsed = _parseMilestoneAiJson(response);
      if (parsed == null) {
        ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+         const SnackBar(
            content: Text('KAZ AI could not parse a suggestion. Try again.'),
            backgroundColor: Color(0xFFD97706),
            behavior: SnackBarBehavior.floating,
@@ -732,7 +732,7 @@ markdown. The notes field must be plain text (max ~80 words).
      ScaffoldMessenger.of(context).showSnackBar(
        SnackBar(
          content: Text('KAZ AI request failed: ${aiErrorMessage(e)}'),
-         backgroundColor: Color(0xFFDC2626),
+         backgroundColor: const Color(0xFFDC2626),
          behavior: SnackBarBehavior.floating,
        ),
      );
@@ -940,7 +940,7 @@ Generate milestones that cover the typical project lifecycle phases.''';
 
  if (!silent) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content:
  Text('Using default milestones - you can edit them as needed'),
  backgroundColor: Color(0xFFFFC812),
@@ -1092,7 +1092,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  _syncToProvider();
  if (!silent) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
+ const SnackBar(
  content: Text('Project dates generated'),
  backgroundColor: Color(0xFF10B981),
  ),

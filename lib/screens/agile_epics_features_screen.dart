@@ -247,7 +247,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
       if (wbs == null) {
         if (mounted && !silentIfNoWbs) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text(
                   'No WBS found for this project. Open the WBS module from the sidebar to create one first, then return here and click "Sync from WBS".'),
               duration: Duration(seconds: 6),
@@ -278,7 +278,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
       if (wbs.methodology == ProjectMethodology.waterfall) {
         if (mounted && !silentIfNoWbs) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text(
                   'WBS methodology is Waterfall — Epics/Features/Stories only apply to Agile or Hybrid. Open the WBS module to switch methodology.'),
               duration: Duration(seconds: 6),
@@ -306,7 +306,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
         );
       } else if (!silentIfNoWbs) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content:
                 Text('All WBS items already synced. No new items created.'),
             behavior: SnackBarBehavior.floating,
@@ -442,7 +442,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
       if (parsed.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
                 content: Text('AI did not return valid epics. Try again.')),
           );
         }
@@ -522,7 +522,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Features auto-generated for epics.'),
             backgroundColor: Color(0xFF059669),
           ),
@@ -1655,7 +1655,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                 setState(() {});
                 Navigator.pop(dialogCtx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text('Epic saved.'),
                     behavior: SnackBarBehavior.floating,
                     backgroundColor: Color(0xFF059669),
@@ -1815,7 +1815,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                 setState(() {});
                 Navigator.pop(dialogCtx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text('Feature saved.'),
                     behavior: SnackBarBehavior.floating,
                     backgroundColor: Color(0xFF059669),

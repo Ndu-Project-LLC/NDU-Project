@@ -1193,12 +1193,15 @@ class _OperationsData {
   List<String> blockers(String owner) {
     final out = <String>[];
     if (opsOwner.trim().isEmpty) out.add('Assign an operations owner.');
-    if (engineeringOwner.trim().isEmpty)
+    if (engineeringOwner.trim().isEmpty) {
       out.add('Assign an engineering owner for escalations.');
-    if (!runbooks.any((i) => i.done))
+    }
+    if (!runbooks.any((i) => i.done)) {
       out.add('Complete at least one production runbook.');
-    if (!monitoringItems.any((i) => i.done))
+    }
+    if (!monitoringItems.any((i) => i.done)) {
       out.add('Define monitoring coverage and alert routing.');
+    }
     if (!goLiveApproved) out.add('Operational sign-off is still pending.');
     return out;
   }
@@ -1404,15 +1407,19 @@ class _HypercareData {
   List<String> blockers(String owner) {
     final out = <String>[];
     if (hypercareLead.trim().isEmpty) out.add('Assign the hypercare lead.');
-    if (supportLead.trim().isEmpty)
+    if (supportLead.trim().isEmpty) {
       out.add('Assign the support lead for the stabilization window.');
-    if (warRoomChannel.trim().isEmpty)
+    }
+    if (warRoomChannel.trim().isEmpty) {
       out.add('Define the war-room or triage channel.');
-    if (!validationChecks.any((i) => i.done))
+    }
+    if (!validationChecks.any((i) => i.done)) {
       out.add(
           'Define and complete at least one post-go-live validation check.');
-    if (!handoverReady)
+    }
+    if (!handoverReady) {
       out.add('Handover back to steady-state support is not yet ready.');
+    }
     return out;
   }
 
@@ -1644,10 +1651,12 @@ class _DevOpsData {
     final out = <String>[];
     if (releaseOwner.trim().isEmpty) out.add('Assign the release owner.');
     if (platformOwner.trim().isEmpty) out.add('Assign the platform owner.');
-    if (rollbackStrategy.trim().isEmpty)
+    if (rollbackStrategy.trim().isEmpty) {
       out.add('Define the rollback or restore strategy.');
-    if (!observabilityChecks.any((i) => i.done))
+    }
+    if (!observabilityChecks.any((i) => i.done)) {
       out.add('Complete observability readiness checks.');
+    }
     if (!devOpsApproved) out.add('DevOps readiness approval is pending.');
     return out;
   }
@@ -1839,10 +1848,12 @@ class _CloseOutData {
     final out = <String>[];
     if (deliveryOwner.trim().isEmpty) out.add('Assign the delivery owner.');
     if (supportOwner.trim().isEmpty) out.add('Assign the support owner.');
-    if (!acceptanceItems.any((i) => i.done))
+    if (!acceptanceItems.any((i) => i.done)) {
       out.add('Record at least one completed acceptance item.');
-    if (!knowledgeTransfer.any((i) => i.done))
+    }
+    if (!knowledgeTransfer.any((i) => i.done)) {
       out.add('Complete at least one knowledge-transfer action.');
+    }
     if (!closeoutApproved) out.add('Close-out approval is pending.');
     return out;
   }

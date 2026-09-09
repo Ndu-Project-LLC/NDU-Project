@@ -713,7 +713,7 @@ class _VendorAccountCloseOutScreenState
     if (imported.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('No vendors found to import.')));
+            const SnackBar(content: Text('No vendors found to import.')));
       }
       return;
     }

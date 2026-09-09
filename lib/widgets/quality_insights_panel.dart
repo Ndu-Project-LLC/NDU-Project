@@ -330,7 +330,7 @@ class _RecommendationCard extends StatelessWidget {
           padding: EdgeInsets.all(compact ? 10 : 12),
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
-            color: _priorityColor.withOpacity(0.5),
+            color: _priorityColor.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: _priorityColor),
           ),
@@ -372,7 +372,7 @@ class _RecommendationCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -445,9 +445,9 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -468,7 +468,7 @@ class _SummaryCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w500,
-              color: color.withOpacity(0.8),
+              color: color.withValues(alpha: 0.8),
             ),
           ),
         ],

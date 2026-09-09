@@ -9,7 +9,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  CostEstimateProvider _fresh() {
+  CostEstimateProvider fresh() {
     final provider = CostEstimateProvider();
     provider.setup(
       projectName: 'P',
@@ -19,7 +19,7 @@ void main() {
     return provider;
   }
 
-  List<ScheduledPurchaseCandidate> _candidates() => const [
+  List<ScheduledPurchaseCandidate> candidates() => const [
         ScheduledPurchaseCandidate(
           activityId: 'buy_1',
           title: 'Buy CPE Pumps',
@@ -37,8 +37,8 @@ void main() {
       ];
 
   test('pulls purchases as procurement lines marked in-schedule', () {
-    final provider = _fresh();
-    final result = provider.pullScheduledPurchases(_candidates());
+    final provider = fresh();
+    final result = provider.pullScheduledPurchases(candidates());
 
     expect(result.pulled, 3);
     expect(result.alreadyInEstimate, 0);
@@ -68,20 +68,20 @@ void main() {
   });
 
   test('idempotent — second pull adds nothing and reports already', () {
-    final provider = _fresh();
-    final first = provider.pullScheduledPurchases(_candidates());
+    final provider = fresh();
+    final first = provider.pullScheduledPurchases(candidates());
     expect(first.pulled, 3);
 
-    final second = provider.pullScheduledPurchases(_candidates());
+    final second = provider.pullScheduledPurchases(candidates());
     expect(second.pulled, 0);
     expect(second.alreadyInEstimate, 3);
     expect(provider.estimate!.lines.length, 3);
   });
 
   test('activity already linked via costLineId counts as represented', () {
-    final provider = _fresh();
+    final provider = fresh();
     final result = provider.pullScheduledPurchases(
-        _candidates().take(1).toList());
+        candidates().take(1).toList());
     final stampedId = result.addedByActivityId['buy_1'];
 
     // Genuinely linked (costLineId resolves to a live line) → represented.
@@ -114,7 +114,7 @@ void main() {
 
   test('no estimate → empty result (module auto-setup covers this)', () {
     final provider = CostEstimateProvider();
-    final result = provider.pullScheduledPurchases(_candidates());
+    final result = provider.pullScheduledPurchases(candidates());
     expect(result.pulled, 0);
     expect(result.alreadyInEstimate, 0);
   });

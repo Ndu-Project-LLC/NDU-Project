@@ -176,7 +176,7 @@ class _ScopeTrackingImplementationScreenState
           SnackBar(
             content: Text('AI generation failed: ${aiErrorMessage(e)}'),
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Color(0xFFEF4444),
+            backgroundColor: const Color(0xFFEF4444),
           ),
         );
       }
@@ -947,7 +947,7 @@ class _ScopeTrackingImplementationScreenState
                     final scopeItem = scopeItemController.text.trim();
                     if (scopeItem.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                        const SnackBar(
                             content: Text('Scope Item is required.')),
                       );
                       return;

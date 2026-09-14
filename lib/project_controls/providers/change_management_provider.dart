@@ -167,6 +167,7 @@ class ChangeManagementProvider extends ChangeNotifier {
     double? contingencyDrawdownRequested,
     double? reserveDrawdownRequested,
     List<CMImpactedDeliverable> deliverables = const [],
+    List<CMAttachment> attachments = const [],
   }) {
     final crId = 'cm_${DateTime.now().millisecondsSinceEpoch}';
     final cr = CMChangeRequest(
@@ -200,6 +201,7 @@ class ChangeManagementProvider extends ChangeNotifier {
       contingencyDrawdownRequested: contingencyDrawdownRequested,
       reserveDrawdownRequested: reserveDrawdownRequested,
       deliverables: deliverables,
+      attachments: attachments,
     );
 
     _changeRequests = [..._changeRequests, cr];
@@ -1690,6 +1692,11 @@ class ChangeManagementProvider extends ChangeNotifier {
               ?.map((e) => e.toString())
               .toList() ??
           const [],
+      attachments: (data['attachments'] as List<dynamic>?)
+              ?.whereType<Map>()
+              .map((e) => CMAttachment.fromJson(Map<String, dynamic>.from(e)))
+              .toList() ??
+          const [],
       deliverablesAdded: data['deliverablesAdded'] as int? ?? 0,
       deliverablesModified: data['deliverablesModified'] as int? ?? 0,
       deliverablesRemoved: data['deliverablesRemoved'] as int? ?? 0,
@@ -1746,6 +1753,7 @@ class ChangeManagementProvider extends ChangeNotifier {
       'contingencyUsed': cr.contingencyUsed,
       'reserveUsed': cr.reserveUsed,
       'affectedWorkPackages': cr.affectedWorkPackages,
+      'attachments': cr.attachments.map((a) => a.toJson()).toList(),
       'deliverablesAdded': cr.deliverablesAdded,
       'deliverablesModified': cr.deliverablesModified,
       'deliverablesRemoved': cr.deliverablesRemoved,

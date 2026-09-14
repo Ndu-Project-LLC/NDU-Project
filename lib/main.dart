@@ -11,6 +11,8 @@ import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
 import 'package:ndu_project/services/currency_service.dart';
 import 'package:ndu_project/services/security_services.dart';
+import 'package:ndu_project/services/ai/ai_mode.dart';
+import 'package:ndu_project/widgets/local_ai_banner.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/providers/app_content_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
@@ -300,6 +302,10 @@ class _MyAppState extends State<MyApp> {
                       type: MaterialType.transparency,
                       child: Column(
                         children: [
+                          // Make it unmistakable that no AI provider is being
+                          // contacted — otherwise generated content looks like
+                          // live model output.
+                          if (AiMode.isLocal) const LocalAiBanner(),
                           // Persistent warning when Firebase failed to start —
                           // without it, broken sign-in looks like a bug to users.
                           if (!_firebaseReady)

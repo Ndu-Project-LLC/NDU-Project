@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:ndu_project/openai/openai_config.dart';
+import 'package:ndu_project/services/ai/local_ai_client.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -17,6 +18,10 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:go_router/go_router.dart';
+
+/// AI transport for this screen: served in code when [AiMode.isLocal].
+final http.Client _aiClient = LocalAiClient.wrap(http.Client());
+
 class TeamRolesResponsibilitiesScreen extends StatefulWidget {
  const TeamRolesResponsibilitiesScreen({super.key});
 
@@ -2655,9 +2660,8 @@ class _TeamMemberDialogState extends State<_TeamMemberDialog> {
 
  // --- AI Suggestion Helper (now in dialog state) ---
  Future<String> fetchOpenAiSuggestion(String field) async {
- final prompt = _buildPromptForField(field);
- final response = await http.post(
- OpenAiConfig.messagesUri(),
+ final prompt = _buildPromptForField(field);    final response = await _aiClient.post(
+      OpenAiConfig.messagesUri(),
  headers: OpenAiConfig.headers(),
  body: jsonEncode(OpenAiConfig.wrapBody({
  'model': OpenAiConfig.model,

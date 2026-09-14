@@ -23,6 +23,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
+import 'package:ndu_project/schedule/utils/schedule_wbs_timelines.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/services/schedule_cpm_service.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
@@ -1987,6 +1988,44 @@ class _ActivityScheduleTable extends StatefulWidget {
 }
 
 class _ActivityScheduleTableState extends State<_ActivityScheduleTable> {
+  /// Copies the scheduled start/finish of every WBS-linked activity onto its
+  /// WBS node (the package's planned window), and reports what happened.
+  void _pushTimelinesToWbs() {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final scheduleProvider = context.read<ScheduleProvider>();
+      final wbsProvider = context.read<WBSProvider>();
+      final schedule = scheduleProvider.schedule;
+      if (schedule == null) return;
+
+      final timelines = collectScheduleTimelines(schedule.activities);
+      if (timelines.isEmpty) {
+        messenger.showSnackBar(const SnackBar(
+          content: Text(
+              'No scheduled dates to attach yet — give the WBS-linked rows a '
+              'start and finish first.'),
+          behavior: SnackBarBehavior.floating,
+        ));
+        return;
+      }
+
+      final updated = wbsProvider.applyScheduleTimelines(timelines);
+      messenger.showSnackBar(SnackBar(
+        content: Text(updated == 0
+            ? 'WBS timelines are already up to date.'
+            : 'Attached scheduled dates to $updated WBS '
+                'package${updated == 1 ? '' : 's'}.'),
+        behavior: SnackBarBehavior.floating,
+      ));
+    } catch (error) {
+      debugPrint('Attach dates to WBS failed: $error');
+      messenger.showSnackBar(const SnackBar(
+        content: Text('Could not attach dates to the WBS.'),
+        behavior: SnackBarBehavior.floating,
+      ));
+    }
+  }
+
   /// User-added or AI-generated draft rows (NOT persisted to the schedule).
   /// They render below the real WBS-derived activities and can be removed
   /// inline. Real activities (from `rootActivity`) cannot be removed here —
@@ -2335,6 +2374,30 @@ class _ActivityScheduleTableState extends State<_ActivityScheduleTable> {
                     ),
                   ),
                 const Spacer(),
+                // Push the scheduled start/finish of each WBS-linked row back
+                // onto its WBS node, so the work package shows the timeline it
+                // is planned to run on. A WBS node carries plannedStart /
+                // plannedFinish but nothing wrote them before this.
+                if (wbsLinkedCount > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: OutlinedButton.icon(
+                      onPressed: _pushTimelinesToWbs,
+                      icon: const Icon(Icons.event_available_outlined,
+                          size: 14, color: TreasuryTokens.info),
+                      label: const Text('Attach dates to WBS',
+                          style: TextStyle(
+                              fontSize: 11, color: TreasuryTokens.info)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        side: BorderSide(
+                            color: TreasuryTokens.info.withValues(alpha: 0.35)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                  ),
                 // KAZ AI generate button
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),

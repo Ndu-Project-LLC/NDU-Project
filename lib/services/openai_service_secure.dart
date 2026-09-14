@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:ndu_project/openai/openai_config.dart';
+import 'package:ndu_project/services/ai/local_ai_client.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/staffing_row.dart';
@@ -523,8 +524,11 @@ class OpenAiServiceSecure {
   static const Duration _interRequestDelay = Duration(milliseconds: 120);
   static Future<void> _serializedQueue = Future<void>.value();
 
+  /// In local AI mode ([AiMode.isLocal]) the default client answers every
+  /// completion in code via [LocalAiEngine], so no request leaves the device.
+  /// In live mode the wrapper is transparent.
   OpenAiServiceSecure({http.Client? client})
-      : _client = client ?? http.Client();
+      : _client = LocalAiClient.wrap(client ?? http.Client());
 
   /// Releases the underlying [http.Client] connection pool.
   /// Call when this service instance is no longer needed (e.g. via a
@@ -11602,7 +11606,7 @@ Return ONLY JSON: {"items":[...]}'''
     }));
 
     try {
-      final response = await http.post(uri, headers: headers, body: body);
+      final response = await _client.post(uri, headers: headers, body: body);
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body) as Map<String, dynamic>;
         final content = parsed['choices']?[0]?['message']?['content'];
@@ -11777,7 +11781,7 @@ $escaped
     }));
 
     try {
-      final response = await http.post(uri, headers: headers, body: body);
+      final response = await _client.post(uri, headers: headers, body: body);
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body) as Map<String, dynamic>;
         final content = parsed['choices']?[0]?['message']?['content'];
@@ -11896,7 +11900,7 @@ $escaped
     }));
 
     try {
-      final response = await http.post(uri, headers: headers, body: body);
+      final response = await _client.post(uri, headers: headers, body: body);
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body) as Map<String, dynamic>;
         final content = parsed['choices']?[0]?['message']?['content'];
@@ -11992,7 +11996,7 @@ $escaped
     }));
 
     try {
-      final response = await http.post(uri, headers: headers, body: body);
+      final response = await _client.post(uri, headers: headers, body: body);
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body) as Map<String, dynamic>;
         final content = parsed['choices']?[0]?['message']?['content'];
@@ -12094,7 +12098,7 @@ $escaped
     }));
 
     try {
-      final response = await http.post(uri, headers: headers, body: body);
+      final response = await _client.post(uri, headers: headers, body: body);
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body) as Map<String, dynamic>;
         final content = parsed['choices']?[0]?['message']?['content'];
@@ -12198,7 +12202,7 @@ $escaped
     }));
 
     try {
-      final response = await http.post(uri, headers: headers, body: body);
+      final response = await _client.post(uri, headers: headers, body: body);
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body) as Map<String, dynamic>;
         final content = parsed['choices']?[0]?['message']?['content'];
@@ -12309,7 +12313,7 @@ $escaped
     }));
 
     try {
-      final response = await http.post(uri, headers: headers, body: body);
+      final response = await _client.post(uri, headers: headers, body: body);
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body) as Map<String, dynamic>;
         final content = parsed['choices']?[0]?['message']?['content'];

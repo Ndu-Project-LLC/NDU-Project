@@ -2,6 +2,71 @@
 
 This workspace is scaffolded for the FlutterFlow AI DSL.
 
+## Lightweight web build (run anytime)
+
+Builds a small, fast-loading web bundle to `build/web-lite/` and can serve it locally instantly — no Firebase CLI or deployment needed.
+
+```bash
+./scripts/build_web_lite.sh               # build + size report
+./scripts/build_web_lite.sh --serve       # build, then serve at http://localhost:8080
+./scripts/build_web_lite.sh --serve 3000  # build, then serve on a custom port
+./scripts/build_web_lite.sh --serve-only  # serve the existing build, no rebuild
+```
+
+What it does differently from the standard pipeline (`deploy.sh` → `build/web/`):
+
+- `--release` with `--tree-shake-icons` (icons shrink ~92%; production builds disable this)
+- `--pwa-strategy=none` — no service worker or offline cache bloat
+- Prunes engine payloads a dart2js build never downloads: `skwasm*`/`wimp*` (dart2wasm only), `experimental_webparagraph`, `*.js.symbols` (~22 MB off the bundle)
+- Stamps the build version (same cache-busting pipeline as production) and prints a size report with gzipped wire sizes
+
+The production pipeline is untouched: `./deploy.sh` and `scripts/deploy_staging.sh` still build to `build/web/`. For a plain serve-anytime run without building, `python3 scripts/serve_lite.py build/web-lite 8080` works on its own.
+
+## Local (no-AI) generation mode
+
+The app can run every KAZ AI surface **without any AI provider** — no proxy, no key, no network. Content is generated at the code level by a deterministic engine that returns the same shape of output the model would, so screens stay fully functional for demos, offline use, CI, and E2E runs.
+
+```bash
+# Build + serve a web bundle whose AI runs entirely in code
+./scripts/build_web_lite.sh --serve --local-ai
+
+# Or enable it for any flutter run/build
+flutter run -d chrome --dart-define=AI_MODE=local
+flutter build web --dart-define=AI_MODE=local
+```
+
+- `AI_MODE=live` (default) — normal behaviour: requests go to the server-side proxy.
+- `AI_MODE=local` (aliases: `no-ai`, `offline`) — every AI call is answered locally:
+  - `lib/services/ai/local_ai_client.dart` intercepts the AI HTTP client and short-circuits each completion.
+  - `lib/services/ai/local_ai_engine.dart` reads the request's prompt, finds the JSON shape the caller is parsing for, and fills it with deterministic, on-topic content (or prose when the caller wants text).
+  - `lib/services/ai/ai_mode.dart` exposes the switch.
+- Local mode also lifts the Firebase sign-in requirement for AI calls, so content generation works without an authenticated session.
+- Responses are flagged with `ndu_local_generation: true` for diagnostics.
+- An amber `LocalAiBanner` sits above every screen so locally generated content is never mistaken for live model output (dismissible for the session).
+
+### Verifying local generation end to end
+
+Two layers prove the app generates content by itself with no provider:
+
+```bash
+# 1. Service level — drives the real AI service with the network forcibly
+#    unavailable and asserts every surface still returns usable content.
+flutter test test/services/local_ai_engine_test.dart \
+             test/services/local_ai_client_test.dart \
+             test/services/local_ai_e2e_test.dart
+
+# 2. Bundle level — boots the built web bundle in headless Chromium and
+#    asserts the app mounts, loads main.dart.js + canvaskit.wasm, logs no
+#    console errors, and never contacts the AI proxy.
+./scripts/build_web_lite.sh --local-ai --no-stamp
+python3 scripts/serve_lite.py build/web-lite 8099 &
+node scripts/e2e_local_ai_web.mjs --url http://127.0.0.1:8099
+```
+
+`scripts/e2e_local_ai_web.mjs` needs no npm install: it drives the Chrome DevTools Protocol over Node's built-in WebSocket and reuses the Chromium that Playwright downloaded (override the binary with `CHROME_BIN`). CI runs both layers on every push and PR via `.github/workflows/local-ai-e2e.yml`.
+
+`NDU_E2E_DUMP_TEXT=1` dumps the app's accessibility text and DOM for debugging, and `--strict-console` turns console errors into failures.
+
 ## Quickstart
 
 ```bash

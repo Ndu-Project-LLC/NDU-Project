@@ -662,6 +662,56 @@ class ImplementationTask {
 
 // ─── Full Change Request ─────────────────────────────────────────────────
 
+/// A supporting document attached to a change request (drawing, cost
+/// estimate, vendor quote, RFI…). Uploaded to Firebase Storage; [downloadUrl]
+/// is what the reviewer opens and [storagePath] is what we delete on remove.
+class CMAttachment {
+  final String id;
+  final String name;
+  final String downloadUrl;
+  final String storagePath;
+  final int sizeBytes;
+  final DateTime uploadedAt;
+
+  const CMAttachment({
+    required this.id,
+    required this.name,
+    required this.downloadUrl,
+    required this.storagePath,
+    this.sizeBytes = 0,
+    required this.uploadedAt,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'downloadUrl': downloadUrl,
+        'storagePath': storagePath,
+        'sizeBytes': sizeBytes,
+        'uploadedAt': uploadedAt.toIso8601String(),
+      };
+
+  factory CMAttachment.fromJson(Map<String, dynamic> json) {
+    return CMAttachment(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      downloadUrl: json['downloadUrl']?.toString() ?? '',
+      storagePath: json['storagePath']?.toString() ?? '',
+      sizeBytes: (json['sizeBytes'] as num?)?.toInt() ?? 0,
+      uploadedAt:
+          DateTime.tryParse(json['uploadedAt']?.toString() ?? '') ??
+              DateTime.now(),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is CMAttachment && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
 class CMChangeRequest {
   final String id;
   final String crNumber;
@@ -707,6 +757,8 @@ class CMChangeRequest {
   final CMReserveSource? drawdownReserve;
   final double? drawdownAmount;
   final double? actualCost;
+  // Supporting documents uploaded in Section E of the Create CR form.
+  final List<CMAttachment> attachments;
 
   const CMChangeRequest({
     required this.id,
@@ -750,6 +802,7 @@ class CMChangeRequest {
     this.drawdownReserve,
     this.drawdownAmount,
     this.actualCost,
+    this.attachments = const [],
   });
 
   CMChangeRequest copyWith({
@@ -794,6 +847,7 @@ class CMChangeRequest {
     CMReserveSource? drawdownReserve,
     double? drawdownAmount,
     double? actualCost,
+    List<CMAttachment>? attachments,
   }) {
     return CMChangeRequest(
       id: id ?? this.id,
@@ -842,6 +896,7 @@ class CMChangeRequest {
       drawdownReserve: drawdownReserve ?? this.drawdownReserve,
       drawdownAmount: drawdownAmount ?? this.drawdownAmount,
       actualCost: actualCost ?? this.actualCost,
+      attachments: attachments ?? this.attachments,
     );
   }
 

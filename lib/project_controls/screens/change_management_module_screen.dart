@@ -20,6 +20,7 @@
 /// - Implementation & Baseline tracker with apply-to-baseline / rollback
 library;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -34,7 +35,11 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/utils/file_upload_helper.dart';
+import 'package:ndu_project/wbs/providers/wbs_provider.dart';
+import 'package:ndu_project/wbs/utils/wbs_scope_labels.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ChangeManagementModuleScreen extends StatefulWidget {
   const ChangeManagementModuleScreen({super.key});
@@ -2981,22 +2986,6 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
 // TAB: Create CR — multi-section form (5 sections A-E)
 // ═════════════════════════════════════════════════════════════════════════
 
-/// Static WBS list for the Scope Impact multi-select. In production this
-/// would come from the project controls provider, but to avoid cross-module
-/// coupling we surface a representative WBS drawn from the project's plan.
-const List<String> _kWbsOptions = [
-  'WP-1.1 Mobilization',
-  'WP-1.2 Site Prep',
-  'WP-2.1 Structural Steel',
-  'WP-2.2 Enclosure',
-  'WP-3.3 Electrical Rough-In',
-  'WP-3.4 Mechanical Rough-In',
-  'WP-4.2 HVAC',
-  'WP-4.3 Controls',
-  'WP-5.1 Commissioning',
-  'WP-6.1 Closeout',
-];
-
 class _CreateCRTab extends StatefulWidget {
   final ChangeManagementProvider provider;
   final ValueChanged<String> onCreated;
@@ -3041,8 +3030,31 @@ class _CreateCRTabState extends State<_CreateCRTab> {
   final List<_DeliverableRowData> _deliverableRows = [];
   _ScheduleUnit _scheduleUnit = _ScheduleUnit.days;
 
+  // Section E — supporting documents attached to this change request.
+  final List<CMAttachment> _attachments = [];
+  bool _uploadingDocument = false;
+
+  /// The project WBS, used to offer real work packages as scope impact.
+  WBSProvider? _wbsProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    try {
+      final provider = Provider.of<WBSProvider>(context, listen: false);
+      if (!identical(_wbsProvider, provider)) {
+        _wbsProvider?.removeListener(_onWbsChanged);
+        _wbsProvider = provider..addListener(_onWbsChanged);
+        unawaited(_ensureWbsLoaded());
+      }
+    } catch (_) {
+      // WBS provider not in scope — the picker falls back.
+    }
+  }
+
   @override
   void dispose() {
+    _wbsProvider?.removeListener(_onWbsChanged);
     for (final c in [
       _titleCtrl,
       _originatorCtrl,
@@ -3061,9 +3073,19 @@ class _CreateCRTabState extends State<_CreateCRTab> {
     super.dispose();
   }
 
-  /// Real work packages from the project WBS, falling back to the static
-  /// representative list when the project has none yet.
-  List<String> _wbsOptions(BuildContext context) {
+  /// Work packages offered by the Scope Impact picker.
+  ///
+  /// Sourced from the project's real work breakdown structure — the same
+  /// nodes the WBS module manages — so a change can only be attached to scope
+  /// that actually exists. This used to fall back to a hard-coded
+  /// representative list, which let users attach a change to invented
+  /// packages such as "WP-1.1 Mobilization".
+  List<String> _wbsOptions() {
+    // 1. The live WBS tree (authoritative).
+    final labels = wbsScopeLabels(_wbsProvider?.wbs);
+    if (labels.isNotEmpty) return labels;
+
+    // 2. Project-level work packages, if the WBS tree is not in memory.
     try {
       final data = ProjectDataHelper.getData(context);
       final real = data.workPackages
@@ -3077,9 +3099,102 @@ class _CreateCRTabState extends State<_CreateCRTab> {
           .toList();
       if (real.isNotEmpty) return real;
     } catch (_) {
-      // No project data in scope — fall through to the static list.
+      // No project data in scope — fall through.
     }
-    return _kWbsOptions;
+
+    // 3. Nothing yet. Deliberately empty: the empty state points the user at
+    //    the WBS rather than presenting scope that does not exist.
+    return const [];
+  }
+
+  Future<void> _ensureWbsLoaded() async {
+    final provider = _wbsProvider;
+    if (provider == null) return;
+    try {
+      final projectId = ProjectDataHelper.getData(context).projectId ?? '';
+      if (projectId.isEmpty) return;
+      await provider.ensureProjectLoaded(projectId);
+      if (mounted) setState(() {});
+    } catch (_) {
+      // WBS is optional context for this form — never block CR creation.
+    }
+  }
+
+  void _onWbsChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// Adds the picked document to the pending list on this CR.
+  Future<void> _pickAndUploadDocument() async {
+    if (_uploadingDocument) return;
+    final projectId =
+        (() {
+          try {
+            return ProjectDataHelper.getData(context).projectId ?? '';
+          } catch (_) {
+            return '';
+          }
+        })();
+    if (projectId.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Save the project before attaching documents to a change request.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _uploadingDocument = true);
+    try {
+      final result = await FileUploadHelper.pickAndUpload(
+        folder: 'change_requests',
+        projectId: projectId,
+        allowedExtensions: FileUploadHelper.documentExtensions,
+        context: mounted ? context : null,
+      );
+      if (!mounted) return;
+      if (result != null) {
+        setState(() {
+          _attachments.add(CMAttachment(
+            id: 'att_${DateTime.now().microsecondsSinceEpoch}',
+            name: result.fileName,
+            downloadUrl: result.downloadUrl,
+            storagePath: result.storagePath,
+            uploadedAt: DateTime.now(),
+          ));
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingDocument = false);
+    }
+  }
+
+  Future<void> _removeDocument(CMAttachment attachment) async {
+    setState(() => _attachments.remove(attachment));
+    await FileUploadHelper.deleteUploadedFile(attachment.storagePath,
+        context: mounted ? context : null);
+  }
+
+  Future<void> _openDocument(CMAttachment attachment) async {
+    final uri = Uri.tryParse(attachment.downloadUrl);
+    if (uri == null) return;
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open the document.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   bool get _isValid =>
@@ -3157,6 +3272,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
       contingencyDrawdownRequested: cont,
       reserveDrawdownRequested: res,
       deliverables: deliverables,
+      attachments: List<CMAttachment>.from(_attachments),
     );
     widget.onCreated(crId);
     // Reset form for next entry.
@@ -3339,8 +3455,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
             Row(children: [
               TextButton.icon(
                 onPressed: () => setState(() {
-                  final options = _wbsOptions(context);
-                  _selectedWbs.addAll(options);
+                  _selectedWbs.addAll(_wbsOptions());
                 }),
                 icon: const Icon(Icons.select_all, size: 14),
                 label: const Text('Select all'),
@@ -3366,12 +3481,21 @@ class _CreateCRTabState extends State<_CreateCRTab> {
             const SizedBox(height: 4),
             Builder(builder: (context) {
               final query = _wbsSearchCtrl.text.trim().toLowerCase();
-              final options = _wbsOptions(context);
+              final options = _wbsOptions();
               final filtered = query.isEmpty
                   ? options
                   : options
                       .where((w) => w.toLowerCase().contains(query))
                       .toList();
+              if (options.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                      'No work packages yet. Build the WBS (or sync work '
+                      'packages) so this change can be attached to real scope.',
+                      style: TextStyle(color: _textSecondary, fontSize: 12)),
+                );
+              }
               if (filtered.isEmpty) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -3565,22 +3689,14 @@ class _CreateCRTabState extends State<_CreateCRTab> {
           ]),
         ),
         const SizedBox(height: 16),
-        // SECTION E — DOCUMENTS (placeholder upload zone)
+        // SECTION E — DOCUMENTS
         _sectionCard(
           'E',
           'Documents',
           Icons.upload_file,
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             InkWell(
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                        'Document upload — wire to your file picker integration.'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
+              onTap: _uploadingDocument ? null : _pickAndUploadDocument,
               borderRadius: BorderRadius.circular(8),
               child: Container(
                 padding: const EdgeInsets.all(24),
@@ -3591,12 +3707,21 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                       color: _surfaceBorder, style: BorderStyle.solid),
                 ),
                 child: Column(children: [
-                  const Icon(Icons.upload_file,
-                      size: 36, color: Color(0xFFB8860B)),
+                  if (_uploadingDocument)
+                    const SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    )
+                  else
+                    const Icon(Icons.upload_file,
+                        size: 36, color: Color(0xFFB8860B)),
                   const SizedBox(height: 8),
-                  const Text(
-                      'Drop supporting documents here or click to upload',
-                      style: TextStyle(
+                  Text(
+                      _uploadingDocument
+                          ? 'Uploading…'
+                          : 'Drop supporting documents here or click to upload',
+                      style: const TextStyle(
                           color: _textPrimary,
                           fontSize: 12,
                           fontWeight: FontWeight.w600)),
@@ -3609,6 +3734,47 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                 ]),
               ),
             ),
+            if (_attachments.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              for (final attachment in _attachments)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: _surfaceBorder),
+                  ),
+                  child: Row(children: [
+                    const Icon(Icons.insert_drive_file,
+                        size: 16, color: Color(0xFFB8860B)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        attachment.name,
+                        style: const TextStyle(
+                            color: _textPrimary, fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Open',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => _openDocument(attachment),
+                      icon: const Icon(Icons.open_in_new,
+                          size: 16, color: Color(0xFFB8860B)),
+                    ),
+                    IconButton(
+                      tooltip: 'Remove',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => _removeDocument(attachment),
+                      icon: const Icon(Icons.close,
+                          size: 16, color: Color(0xFFEF4444)),
+                    ),
+                  ]),
+                ),
+            ],
           ]),
         ),
         const SizedBox(height: 24),
@@ -3634,9 +3800,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                 r.nameCtrl.dispose();
                 r.notesCtrl.dispose();
               }
-              _deliverableRows.clear();
-              _scheduleUnit = _ScheduleUnit.days;
-              _selectedWbs.clear();
+      _deliverableRows.clear();
+      _scheduleUnit = _ScheduleUnit.days;
+      _selectedWbs.clear();
+      _attachments.clear();
               _type = CMChangeType.scope;
               _priority = CMPriority.medium;
               _isEmergency = false;

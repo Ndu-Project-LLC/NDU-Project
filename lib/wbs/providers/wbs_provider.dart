@@ -498,6 +498,52 @@ class WBSProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
+  /// Stamps planned start/finish dates from the schedule onto the WBS nodes
+  /// the scheduled activities are linked to.
+  ///
+  /// [byNodeId] maps `WBSNode.id` to the planned window the schedule computed
+  /// for that package (see `collectScheduleTimelines`). The WBS node carries
+  /// `plannedStart` / `plannedFinish`, but nothing wrote them before this, so a
+  /// work package could never show its planned timeline.
+  ///
+  /// Existing dates are only overwritten when the schedule supplies a value,
+  /// so a node without a schedule date keeps whatever it had. Returns the
+  /// number of nodes whose dates actually changed.
+  int applyScheduleTimelines(
+      Map<String, ({DateTime? start, DateTime? finish})> byNodeId) {
+    final current = _wbs;
+    if (current == null || byNodeId.isEmpty) return 0;
+
+    var updated = 0;
+
+    WBSNode apply(WBSNode node) {
+      final window = byNodeId[node.id];
+      var next = node.copyWith(
+        children: node.children.map(apply).toList(growable: false),
+      );
+      if (window == null || (window.start == null && window.finish == null)) {
+        return next;
+      }
+
+      final start = window.start ?? node.plannedStart;
+      final finish = window.finish ?? node.plannedFinish;
+      if (start == node.plannedStart && finish == node.plannedFinish) {
+        return next;
+      }
+
+      updated++;
+      return next.copyWith(plannedStart: start, plannedFinish: finish);
+    }
+
+    final level0 = apply(current.level0);
+    if (updated == 0) return 0;
+
+    _wbs = current.copyWith(level0: level0);
+    notifyListeners();
+    _saveToStorage();
+    return updated;
+  }
+
   void updateNode(String id, WBSNode patch) {
     if (_wbs == null) return;
     final updatedLevel0 = recalcCodes(

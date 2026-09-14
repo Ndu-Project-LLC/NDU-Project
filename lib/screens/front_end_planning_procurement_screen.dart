@@ -5639,15 +5639,19 @@ class _FrontEndPlanningProcurementScreenState
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  CharterLockBanner(visible: charterLocked),
- CharterLockBanner.applyLock(
- locked: charterLocked,
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
+ // The charter lock stops *editing*, not reading or navigating. It used to
+ // wrap the whole column below, which also swallowed the tab strip and the
+ // "Next:" button — so once the charter was approved every tab (Scope
+ // Details, Procurement Workflow, ...) stopped responding and the page
+ // looked completely dead (voice note, 2026-09-10). Navigation now sits
+ // outside the lock, each editable block is wrapped on its own, and the
+ // item/vendor dialogs keep their own defense-in-depth lock checks.
  // Removed duplicate top bar to avoid a second app header.
  _buildStreamErrorBanner(),
  const SizedBox(height: 24),
- PlanningAiNotesCard(
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
+ child: PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Procurement',
  noteKey: _procurementNotesKey,
@@ -5660,6 +5664,7 @@ class _FrontEndPlanningProcurementScreenState
  .procurement,
  description:
  'Capture procurement priorities, vendors, and approval constraints.',
+ ),
  ),
  const SizedBox(height: 16),
  // ── Tab strip (clickable navigation across all procurement tabs) ────────
@@ -5692,17 +5697,26 @@ class _FrontEndPlanningProcurementScreenState
  ),
  if (_isPlanningMode) ...[
  const SizedBox(height: 20),
- _ProcurementPlanCard(
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
+ child: _ProcurementPlanCard(
  initialText: projectData
  .planningNotes[_procurementPlanNoteKey],
  checkpointId: _checkpointId,
  ),
+ ),
  ],
  const SizedBox(height: 32),
  const SizedBox(height: 24),
- AnimatedSwitcher(
+ // The tab body holds the editable forms for the selected tab, so it stays
+ // behind the lock. The tab strip above and the "Next:" button below are
+ // navigation and remain live even while the charter is approved.
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
+ child: AnimatedSwitcher(
  duration: const Duration(milliseconds: 250),
  child: _safeSection('Procurement tabs', _buildTabContent),
+ ),
  ),
  const SizedBox(height: 12),
  Align(
@@ -5712,9 +5726,6 @@ class _FrontEndPlanningProcurementScreenState
  const SizedBox(height: 24),
  _buildNextSectionButton(),
  const SizedBox(height: 40),
- ],
- ),
- ),
  ],
  ),
  ),

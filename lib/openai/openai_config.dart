@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+import 'package:ndu_project/services/ai/ai_mode.dart';
+import 'package:ndu_project/services/ai/local_ai_client.dart';
 import 'package:ndu_project/services/api_config_secure.dart';
 // Use relative import to ensure the library is part of this compilation unit
 import 'package:ndu_project/utils/diagram_model.dart';
@@ -41,6 +43,10 @@ class OpenAiConfig {
     final headers = <String, String>{
       'Content-Type': 'application/json',
     };
+    // Local generation is answered in code and never leaves the device, so it
+    // must not require a signed-in Firebase user. This is what lets the app
+    // run its AI surfaces with no backend, no key, and no network.
+    if (AiMode.isLocal) return headers;
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
@@ -262,7 +268,7 @@ bool isOpenAiCreditsExhausted(int statusCode, String body) {
 /// Lightweight autocomplete service backed by OpenAI Chat Completions API.
 class OpenAiAutocompleteService {
   OpenAiAutocompleteService._internal({http.Client? client})
-      : _client = client ?? http.Client();
+      : _client = LocalAiClient.wrap(client ?? http.Client());
 
   static final OpenAiAutocompleteService instance =
       OpenAiAutocompleteService._internal();
@@ -428,6 +434,8 @@ class OpenAiDiagramService {
   OpenAiDiagramService._internal();
   static final OpenAiDiagramService instance = OpenAiDiagramService._internal();
 
+  final http.Client _client = LocalAiClient.wrap(http.Client());
+
   Future<DiagramModel> generateDiagram({
     required String section,
     required String contextText,
@@ -469,7 +477,7 @@ Always return ONLY a valid JSON object with nodes and edges arrays.''',
     }));
 
     try {
-      final response = await http
+      final response = await _client
           .post(uri, headers: headers, body: body)
           .timeout(const Duration(seconds: 90));
       if (response.statusCode < 200 || response.statusCode >= 300) {

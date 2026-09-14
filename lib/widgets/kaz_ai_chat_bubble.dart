@@ -5,10 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
 import 'package:ndu_project/openai/openai_config.dart';
+import 'package:ndu_project/services/ai/local_ai_client.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
+/// KAZ chat transport. In local AI mode this answers every completion in code
+/// (see [LocalAiClient]); in live mode it is a transparent HTTP client.
+final http.Client _kazAiClient = LocalAiClient.wrap(http.Client());
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // KAZ AI Chat Bubble — World-Class AI + Support Agent Interface
 // Features:
@@ -600,7 +606,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         'messages': messages,
       }));
 
-      final response = await http
+      final response = await _kazAiClient
           .post(uri, headers: headers, body: body)
           .timeout(const Duration(seconds: 120));
 

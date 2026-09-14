@@ -137,7 +137,13 @@ async function main() {
   console.log(`▶ App URL: ${baseUrl}`);
 
   const userDataDir = mkdtempSync(join(tmpdir(), 'ndu-e2e-'));
-  const child = spawn(chrome, [
+
+  // `chrome-headless-shell` IS a headless browser and rejects/ignores
+  // `--headless`; a normal Chrome build needs the flag or it insists on a
+  // display and exits before DevTools ever opens (which is what happened on
+  // CI, where CHROME_BIN is the full /usr/bin/google-chrome). Pick per binary.
+  const isHeadlessShell = /headless[-_]?shell/i.test(chrome);
+  const launchArgs = [
     `--remote-debugging-port=${DEBUG_PORT}`,
     '--no-first-run',
     '--no-default-browser-check',
@@ -146,8 +152,22 @@ async function main() {
     '--disable-dev-shm-usage',
     '--window-size=1280,900',
     `--user-data-dir=${userDataDir}`,
+    ...(isHeadlessShell ? [] : ['--headless']),
     'about:blank',
-  ], { stdio: 'ignore' });
+  ];
+
+  // Keep Chrome's own stderr so a launch failure can explain itself instead of
+  // just reporting that DevTools never came up.
+  const chromeStderr = [];
+  const child = spawn(chrome, launchArgs, {
+    stdio: ['ignore', 'ignore', 'pipe'],
+  });
+  child.stderr?.on('data', (chunk) => {
+    for (const line of chunk.toString().split('\n')) {
+      if (line.trim()) chromeStderr.push(line.trim());
+    }
+    if (chromeStderr.length > 40) chromeStderr.splice(0, chromeStderr.length - 40);
+  });
 
   const cleanup = () => { try { child.kill('SIGKILL'); } catch { /* ignore */ } };
   process.on('exit', cleanup);    let failures = 0;
@@ -157,7 +177,18 @@ async function main() {
     const pass = (message) => console.log(`✓ ${message}`);
 
   try {
-    await waitForDevTools(DEBUG_PORT);
+    try {
+      await waitForDevTools(DEBUG_PORT, Number(argValue('--devtools-timeout', '30000')));
+    } catch (error) {
+      if (chromeStderr.length > 0) {
+        console.error('  Chrome stderr:');
+        for (const line of chromeStderr.slice(-12)) console.error(`    ${line}`);
+      }
+      if (child.exitCode !== null) {
+        console.error(`  Chrome exited early with code ${child.exitCode}`);
+      }
+      throw error;
+    }
 
     const targets = await (await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/list`)).json();
     const page = targets.find((t) => t.type === 'page');

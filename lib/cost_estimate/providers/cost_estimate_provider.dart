@@ -540,6 +540,119 @@ class CostEstimateProvider extends ChangeNotifier {
     );
   }
 
+  /// True when [line] already represents the scheduled work package described
+  /// by [candidate] — either through the explicit activity link
+  /// (`line.id == candidate.activityCostLineId`) or through an identical
+  /// in-schedule line (same WBS ref AND same description).
+  static bool isScheduleWorkPackageLine(
+      ScheduleWorkPackageCandidate candidate, CostLine line) {
+    if (candidate.activityCostLineId != null &&
+        candidate.activityCostLineId!.isNotEmpty &&
+        line.id == candidate.activityCostLineId) {
+      return true;
+    }
+    final ref = (candidate.wbsRef ?? '').trim();
+    final title = candidate.title.trim();
+    if (!line.inSchedule) return false;
+    if (ref.isNotEmpty) {
+      return (line.wbsRef ?? '').trim() == ref && line.description.trim() == title;
+    }
+    return line.description.trim() == title &&
+        (line.wbsRef ?? '').trim().isEmpty;
+  }
+
+  /// Whether any existing line already represents [candidate].
+  bool isScheduleWorkPackageRepresented(ScheduleWorkPackageCandidate candidate) {
+    final estimate = _estimate;
+    if (estimate == null) return false;
+    return estimate.lines.any((l) => isScheduleWorkPackageLine(candidate, l));
+  }
+
+  /// Pull **every scheduled work package** into the Cost Estimate as an
+  /// unpriced direct-cost line — the base case from the 2026-09-10 voice note:
+  /// "the cost estimate … is supposed to start with the work packages from the
+  /// Schedule as a direct cost".
+  ///
+  /// Everything else that can feed the estimate (FEP allowances, personnel,
+  /// scheduled purchases, planning procurement items, AI suggestions) is an
+  /// addition on top of this set, never a substitute for it.
+  ///
+  /// Lines are created at $0 with `inSchedule: true` because the Schedule
+  /// holds durations and dependencies, not money — the user prices each one in
+  /// the Builder / Cost-by-WBS views, where they show as "not yet priced". At
+  /// zero they cannot move any total until someone prices them.
+  ///
+  /// Idempotent: a work package already represented (linked through its
+  /// activity `costLineId`, or an identical in-schedule line) is skipped.
+  ScheduleWorkPackagePullResult pullScheduleWorkPackages(
+      List<ScheduleWorkPackageCandidate> candidates) {
+    final estimate = _estimate;
+    if (estimate == null || candidates.isEmpty) {
+      return ScheduleWorkPackagePullResult.empty;
+    }
+
+    final newLines = [...estimate.lines];
+    final addedByActivityId = <String, String>{};
+    var alreadyInEstimate = 0;
+
+    for (final candidate in candidates) {
+      final existingCostLineId = (candidate.activityCostLineId ?? '').trim();
+      if (existingCostLineId.isNotEmpty &&
+          estimate.lines.any((l) => l.id == existingCostLineId)) {
+        alreadyInEstimate++;
+        continue;
+      }
+      if (estimate.lines
+          .any((l) => isScheduleWorkPackageLine(candidate, l))) {
+        alreadyInEstimate++;
+        continue;
+      }
+
+      final id = newId('line');
+      newLines.add(CostLine(
+        id: id,
+        category: candidate.category,
+        subCategory: 'Schedule work package',
+        description: candidate.title.trim().isEmpty
+            ? 'Scheduled work package'
+            : candidate.title.trim(),
+        wbsRef: (candidate.wbsRef ?? '').trim().isEmpty
+            ? null
+            : candidate.wbsRef!.trim(),
+        quantity: 1,
+        unit: 'lump',
+        rate: null,
+        total: 0,
+        inSchedule: true,
+        basisSource: CostSourceType.historical,
+        aiGenerated: false,
+      ));
+      addedByActivityId[candidate.activityId] = id;
+    }
+
+    if (addedByActivityId.isEmpty) {
+      return ScheduleWorkPackagePullResult(
+        pulled: 0,
+        alreadyInEstimate: alreadyInEstimate,
+        addedByActivityId: const {},
+      );
+    }
+
+    final totals = ComputeUtils.computeTotals(newLines);
+    _estimate = estimate.copyWith(
+      lines: newLines,
+      totals: totals,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return ScheduleWorkPackagePullResult(
+      pulled: addedByActivityId.length,
+      alreadyInEstimate: alreadyInEstimate,
+      addedByActivityId: addedByActivityId,
+    );
+  }
+
   /// Pull personnel (staffing) costs into the Cost Estimate as plain
   /// `projectTeam` cost lines — no AI involved (Lusaka 22 call).
   ///
@@ -1199,6 +1312,62 @@ class ScheduledPurchasePullResult {
   });
 
   static const empty = ScheduledPurchasePullResult(
+    pulled: 0,
+    alreadyInEstimate: 0,
+    addedByActivityId: <String, String>{},
+  );
+}
+
+/// Description of a scheduled work package the Cost Estimate should carry as a
+/// direct cost. Constructed by callers from the Schedule tree (see
+/// `lib/schedule/utils/schedule_work_packages.dart`) — keeping the schedule
+/// model out of this file, exactly like [ScheduledPurchaseCandidate].
+class ScheduleWorkPackageCandidate {
+  /// `ScheduleActivity.id` — stamped back onto the activity as `costLineId`
+  /// after the pull so repeat pulls stay idempotent.
+  final String activityId;
+
+  /// `ScheduleActivity.name` — becomes the cost-line description.
+  final String title;
+
+  /// `ScheduleActivity.wbsCode` — links the line to the WBS node the work
+  /// package sits under.
+  final String? wbsRef;
+
+  /// Direct-cost category the schedule domain maps to.
+  final CostCategory category;
+
+  /// `ScheduleActivity.costLineId` when the activity is already linked.
+  final String? activityCostLineId;
+
+  const ScheduleWorkPackageCandidate({
+    required this.activityId,
+    required this.title,
+    required this.category,
+    this.wbsRef,
+    this.activityCostLineId,
+  });
+}
+
+/// Result of [CostEstimateProvider.pullScheduleWorkPackages].
+class ScheduleWorkPackagePullResult {
+  /// Number of new direct-cost lines created.
+  final int pulled;
+
+  /// Work packages that were already represented — nothing created for them.
+  final int alreadyInEstimate;
+
+  /// `ScheduleActivity.id` → new `CostLine.id` for every line created, so the
+  /// caller can stamp the activity's `costLineId`.
+  final Map<String, String> addedByActivityId;
+
+  const ScheduleWorkPackagePullResult({
+    required this.pulled,
+    required this.alreadyInEstimate,
+    required this.addedByActivityId,
+  });
+
+  static const empty = ScheduleWorkPackagePullResult(
     pulled: 0,
     alreadyInEstimate: 0,
     addedByActivityId: <String, String>{},

@@ -175,6 +175,12 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                         icon: Icons.dashboard_outlined,
                         label: 'Cost Dashboard'),
                     SectionTab(icon: Icons.build_outlined, label: 'Builder'),
+                    // Cost by WBS sits directly beside the Builder: it is the
+                    // read-back view of what the Builder writes, and the product
+                    // owner asked for it to stop being the last tab (2026-09-10).
+                    SectionTab(
+                        icon: Icons.account_tree_outlined,
+                        label: 'Cost by WBS'),
                     SectionTab(icon: Icons.description_outlined, label: 'BOE'),
                     SectionTab(icon: Icons.auto_awesome, label: 'AI'),
                     SectionTab(
@@ -186,9 +192,6 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                         icon: Icons.check_circle_outline, label: 'Review'),
                     SectionTab(icon: Icons.lock_outline, label: 'Baseline'),
                     SectionTab(icon: Icons.trending_up, label: 'Variance'),
-                    SectionTab(
-                        icon: Icons.account_tree_outlined,
-                        label: 'Cost by WBS'),
                   ],
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
@@ -203,6 +206,8 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   children: [
                     _CostDashboardTab(provider: provider),
                     const BuilderScreen(),
+                    // Must stay in the same order as the SectionTab strip above.
+                    const CostByWBSTab(),
                     const BOEScreen(),
                     const AIAssistantScreen(),
                     const StakeholdersScreen(),
@@ -210,7 +215,6 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                     const ReviewScreen(),
                     const BaselineScreen(),
                     const VarianceScreen(),
-                    const CostByWBSTab(),
                   ],
                 ),
               ),
@@ -353,18 +357,25 @@ class _CostDashboardTab extends StatelessWidget {
                 final rows = (4 / cols).ceil();
                 final tileW = (constraints.maxWidth - gap * (cols - 1)) / cols;
                 final kpis = <_KpiSpec>[
+                  // The owner could not tell which figure was the total
+                  // (2026-09-10): "I cannot tell which one was the total cost
+                  // ... say total estimated cost". It is the leftmost card and
+                  // now says so outright.
                   _KpiSpec(
-                    label: 'Cost Baseline',
+                    label: 'Total Estimated Cost',
                     value: '$currencySymbol${_fmt(t.costBaseline)}',
-                    sub: 'Total estimated cost',
+                    sub: 'Direct + indirect + risk + contingency',
                     icon: Icons.shield_outlined,
                     tint: const Color(0xFFD97706),
                     tintSoft: const Color(0xFFFFF3E0),
                   ),
+                  // "Should be total authorised. But it's not authorised, right?
+                  // You've been estimating right now." — the figure is a
+                  // reserve-inclusive estimate, not an authorisation.
                   _KpiSpec(
-                    label: 'Total Authorized',
+                    label: 'Incl. Mgmt Reserve',
                     value: '$currencySymbol${_fmt(t.totalAuthorizedBudget)}',
-                    sub: 'Baseline + mgmt reserve',
+                    sub: 'Reserve estimated, not yet authorised',
                     icon: Icons.account_balance_wallet_outlined,
                     tint: const Color(0xFFB8860B),
                     tintSoft: const Color(0xFFEEF0FF),

@@ -627,6 +627,15 @@ class WBSProvider extends ChangeNotifier {
 
   void linkCostLine(String nodeId, String costLineId) {
     if (_wbs == null) return;
+    // Linking is idempotent: re-linking an existing pair is a no-op rather
+    // than appending a duplicate id. Rollups filter the *lines*, so a
+    // duplicate never double-counted cost — but it bloated `costLineIds`, and
+    // `countAllLinkedCostLines` over-reported because of it.
+    final existing = findNode(nodeId);
+    if (existing == null) return;
+    if ((existing.costLineIds ?? const <String>[]).contains(costLineId)) {
+      return;
+    }
     final updatedLevel0 = _findAndUpdateNode(_wbs!.level0, nodeId, (n) {
       final List<String> ids = [...(n.costLineIds ?? <String>[]), costLineId];
       return n.copyWith(costLineIds: ids);

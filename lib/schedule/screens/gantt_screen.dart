@@ -34,8 +34,10 @@ class GanttScreen extends StatelessWidget {
             ),
           );
         }
-        final allActivities = _flatten(schedule.activities);
-        final rows = _buildRows(allActivities);
+        final gantt = _buildRows(schedule.activities);
+        final rows = gantt.rows;
+        final unscheduledCount = gantt.unscheduled;
+        final totalCount = gantt.total;
 
         if (rows.isEmpty) {
           return Center(
@@ -104,7 +106,7 @@ class GanttScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '${allActivities.length} activities · $criticalCount on critical path · $weekCount-week view',
+                '$totalCount activities · $criticalCount on critical path · $weekCount-week view',
                 style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
               ),
               const SizedBox(height: 16),
@@ -214,6 +216,7 @@ class GanttScreen extends StatelessWidget {
                       child: Text(
                         '${rows.length} activities displayed. '
                         '$criticalCount on critical path. '
+                        '${unscheduledCount > 0 ? "$unscheduledCount work package${unscheduledCount == 1 ? ' has' : 's have'} no dates yet and cannot be placed on the timeline — " : ''}'
                         'Use "Run CPM" in the Builder tab to recompute dates and critical path.',
                         style: const TextStyle(
                             color: Color(0xFF495057),
@@ -231,35 +234,79 @@ class GanttScreen extends StatelessWidget {
     );
   }
 
-  List<ScheduleActivity> _flatten(List<ScheduleActivity> roots) {
-    final result = <ScheduleActivity>[];
-    void walk(ScheduleActivity node) {
-      result.add(node);
-      for (final c in node.children) {
-        walk(c);
+  /// Rows for the timeline, plus how many work packages could not be placed.
+  ///
+  /// Containers are included and their window is ROLLED UP from their
+  /// descendants (earliest start → latest finish), which is what the product
+  /// owner asked for (2026-09-10): "it's supposed to show the duration of each
+  /// work package and roll up to each one".
+  ///
+  /// This replaces two silent drops that made real work packages disappear from
+  /// the Gantt while the tree view still listed them:
+  ///   - every `ActivityType.summary` node was skipped — and `_typeForPackage`
+  ///     falls back to `summary` for any work-package classification it does not
+  ///     recognise, so unrecognised work packages vanished outright;
+  ///   - any activity missing either date was skipped. Those genuinely cannot be
+  ///     drawn on a time axis, so they are now COUNTED and surfaced instead of
+  ///     vanishing without explanation.
+  ({List<_GanttRowData> rows, int unscheduled, int total}) _buildRows(
+      List<ScheduleActivity> roots) {
+    final rows = <_GanttRowData>[];
+    var unscheduled = 0;
+    var total = 0;
+
+    void count(ScheduleActivity node) {
+      total++;
+      for (final child in node.children) {
+        count(child);
       }
     }
 
-    for (final r in roots) {
-      walk(r);
+    for (final root in roots) {
+      count(root);
     }
-    return result;
-  }
 
-  List<_GanttRowData> _buildRows(List<ScheduleActivity> activities) {
-    final result = <_GanttRowData>[];
-    for (final a in activities) {
-      if (a.type == ActivityType.summary) continue;
-      final start = a.startDate;
-      final end = a.endDate;
-      if (start == null || end == null) continue;
-      result.add(_GanttRowData(
+    /// Earliest start / latest finish across [node] and all its descendants.
+    ({DateTime? start, DateTime? finish}) windowOf(ScheduleActivity node) {
+      var start = node.startDate;
+      var finish = node.endDate;
+      for (final child in node.children) {
+        final w = windowOf(child);
+        if (w.start != null && (start == null || w.start!.isBefore(start))) {
+          start = w.start;
+        }
+        if (w.finish != null && (finish == null || w.finish!.isAfter(finish))) {
+          finish = w.finish;
+        }
+      }
+      return (start: start, finish: finish);
+    }
+
+    void addRow(ScheduleActivity a) {
+      final window = windowOf(a);
+      var start = window.start;
+      var finish = window.finish;
+      // A node carrying only one date can still be placed using its planned
+      // duration — CPM may not have run yet to fill in the other end.
+      final durationDays = (a.duration ?? 0).round();
+      if (start != null && finish == null && durationDays > 0) {
+        finish = start.add(Duration(days: durationDays - 1));
+      } else if (finish != null && start == null && durationDays > 0) {
+        start = finish.subtract(Duration(days: durationDays - 1));
+      }
+      if (start == null || finish == null) {
+        // Count leaf work packages only, so an undated branch reports once
+        // rather than once per ancestor.
+        if (a.children.isEmpty) unscheduled++;
+        return;
+      }
+      rows.add(_GanttRowData(
         code: a.code,
         name: a.name,
         domainColor: a.domain.color,
         isCritical: a.isCriticalPath,
         startDate: start,
-        endDate: end,
+        endDate: finish,
         sprintLabel: a.sprintLabel ?? '',
         releaseLabel: a.releaseLabel ?? '',
         agileEpicTitle: a.agileEpicTitle ?? '',
@@ -269,8 +316,28 @@ class GanttScreen extends StatelessWidget {
         prerequisiteCount: a.prerequisites?.length ?? 0,
       ));
     }
-    result.sort((a, b) => a.startDate.compareTo(b.startDate));
-    return result;
+
+    void draw(ScheduleActivity node) {
+      addRow(node);
+      for (final child in node.children) {
+        draw(child);
+      }
+    }
+
+    for (final root in roots) {
+      // The project root is the schedule itself, not a work package, so it is
+      // descended into but never drawn as its own row.
+      if (root.children.isEmpty) {
+        addRow(root);
+      } else {
+        for (final child in root.children) {
+          draw(child);
+        }
+      }
+    }
+
+    rows.sort((a, b) => a.startDate.compareTo(b.startDate));
+    return (rows: rows, unscheduled: unscheduled, total: total);
   }
 }
 
@@ -389,9 +456,16 @@ class _GanttRow extends StatelessWidget {
 
     return Column(
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+        // The table sits in a HORIZONTAL scroll view, so its cross axis
+        // (height) is unbounded. `CrossAxisAlignment.stretch` against unbounded
+        // height forces the children to infinite height and throws during
+        // layout — which meant NO row could be drawn at all. IntrinsicHeight
+        // gives the row a concrete height (tall enough for a wrapped label)
+        // that stretch can then apply to both cells.
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             Container(
               width: leftColWidth,
               constraints: const BoxConstraints(minHeight: 76),
@@ -511,7 +585,8 @@ class _GanttRow extends StatelessWidget {
                 ],
               ),
             ),
-          ],
+            ],
+          ),
         ),
         const Divider(color: Color(0xFFE4E7EC), height: 1, thickness: 0.5),
       ],

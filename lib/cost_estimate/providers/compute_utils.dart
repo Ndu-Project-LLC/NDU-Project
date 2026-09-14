@@ -171,7 +171,32 @@ class VarianceByCategory {
   });
 }
 
-/// Format a currency amount.
+/// Group the whole-number part of [amount] with thousands separators, and NO
+/// currency symbol.
+///
+/// For callers that render the symbol themselves from user preferences
+/// (`UserPreferencesService.currencySymbolSync`). Prefixing that symbol onto
+/// [formatCurrency] — which already emits one — is what produced the doubled
+/// `$$4.2M` the product owner flagged in the 2026-09-10 review, and using
+/// [formatCurrency] directly drops the symbol entirely for any currency it
+/// does not hardcode (ZMW, ZAR, …).
+///
+/// The sign is NOT included; callers that need it format `abs()` and prepend
+/// it themselves, the way [formatCurrency] does.
+///
+/// The separator pattern needs the `\d` escapes: without them `d` is a literal
+/// letter, the pattern never matches a digit, and no comma is ever inserted.
+String formatAmountGrouped(double amount) => amount.toInt().abs().toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
+
+/// Format a currency amount, symbol included.
+///
+/// Whole units only — cents are intentionally dropped (the compact form used
+/// on dashboard tiles and rollups).
+///
+/// The sign is placed before the symbol (`-$5,000`, not `$-5000`).
 String formatCurrency(double amount, [String currency = 'USD']) {
   final symbol = switch (currency) {
     'USD' => '\$',
@@ -179,7 +204,10 @@ String formatCurrency(double amount, [String currency = 'USD']) {
     'GBP' => '£',
     _ => '',
   };
-  return '$symbol${amount.toInt().toString().replaceAllMapped(RegExp(r'(d{1,3})(?=(d{3})+(?!d))'), (Match m) => '${m[1]},')}';
+  // Sign is derived from the same truncated value that gets formatted, so
+  // -0.4 renders as "$0" rather than "-$0".
+  final whole = amount.toInt();
+  return '${whole < 0 ? '-' : ''}$symbol${formatAmountGrouped(amount)}';
 }
 
 /// Format a variance delta with sign.

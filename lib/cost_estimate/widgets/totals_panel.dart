@@ -124,7 +124,7 @@ class TotalsPanel extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _KpiCard(
-                        label: 'Cost Baseline',
+                        label: 'Total Estimated Cost',
                         value: '$currencySymbol${_formatCompact(t.costBaseline)}',
                         icon: Icons.shield_outlined,
                         color: const Color(0xFFD97706),
@@ -133,7 +133,7 @@ class TotalsPanel extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _KpiCard(
-                        label: 'Total Authorized',
+                        label: 'Incl. Mgmt Reserve',
                         value: '$currencySymbol${_formatCompact(t.totalAuthorizedBudget)}',
                         icon: Icons.account_balance_wallet_outlined,
                         color: const Color(0xFFB8860B),

@@ -493,8 +493,13 @@ class CostByWBSTab extends StatelessWidget {
                                 style: const TextStyle(
                                     color: _textSecondary, fontSize: 10)),
                             const SizedBox(width: 8),
+                            // Must match the variance-aware rule used for
+                            // `unlinkedTotal` just above, otherwise a removed
+                            // or changed line shows one number in this list and
+                            // a different one in the total it feeds.
                             Text(
-                                '$currencySymbol${line.total.toStringAsFixed(0)}',
+                                formatCurrency(
+                                    _effectiveLineTotal(line), currency),
                                 style: const TextStyle(
                                     color: _textPrimary,
                                     fontSize: 12,

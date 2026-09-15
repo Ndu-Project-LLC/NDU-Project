@@ -445,7 +445,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -465,11 +465,11 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.08),
+                    color: const Color(0xFFFFC812).withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text('WBS linked',
-                      style: TextStyle(fontSize: 11, color: Colors.blue[700])),
+                  child: const Text('WBS linked',
+                      style: TextStyle(fontSize: 11, color: Color(0xFFB8860B))),
                 ),
               IconButton(
                 icon: const Icon(Icons.delete_outline,

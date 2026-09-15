@@ -8,18 +8,28 @@ library;
 
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 
+/// What a single line actually contributes to a total.
+///
+/// A line with no variance contributes its own total. A `remove` line
+/// contributes the negative of the baseline money it takes away, and a `change`
+/// line contributes only its delta — never its (re-stated) new total, which
+/// already includes the original amount.
+///
+/// Top-level and exported so every surface that shows a line's money agrees
+/// with [ComputeUtils.computeTotals]: the schedule's cost badges, the WBS
+/// package card and the totals panel all read this one rule.
+double effectiveLineTotal(CostLine l) {
+  if (l.varianceType == VarianceType.remove) {
+    return -(l.varianceBaselineTotal ?? 0);
+  }
+  if (l.varianceType == VarianceType.change) {
+    return l.varianceDelta ?? 0;
+  }
+  return l.total;
+}
+
 class ComputeUtils {
   static EstimateTotals computeTotals(List<CostLine> lines) {
-    double effectiveLineTotal(CostLine l) {
-      if (l.varianceType == VarianceType.remove) {
-        return -(l.varianceBaselineTotal ?? 0);
-      }
-      if (l.varianceType == VarianceType.change) {
-        return l.varianceDelta ?? 0;
-      }
-      return l.total;
-    }
-
     double sumCats(List<CostCategory> cats) {
       return lines
           .where((l) => cats.contains(l.category))
@@ -171,7 +181,32 @@ class VarianceByCategory {
   });
 }
 
-/// Format a currency amount.
+/// Group the whole-number part of [amount] with thousands separators, and NO
+/// currency symbol.
+///
+/// For callers that render the symbol themselves from user preferences
+/// (`UserPreferencesService.currencySymbolSync`). Prefixing that symbol onto
+/// [formatCurrency] — which already emits one — is what produced the doubled
+/// `$$4.2M` the product owner flagged in the 2026-09-10 review, and using
+/// [formatCurrency] directly drops the symbol entirely for any currency it
+/// does not hardcode (ZMW, ZAR, …).
+///
+/// The sign is NOT included; callers that need it format `abs()` and prepend
+/// it themselves, the way [formatCurrency] does.
+///
+/// The separator pattern needs the `\d` escapes: without them `d` is a literal
+/// letter, the pattern never matches a digit, and no comma is ever inserted.
+String formatAmountGrouped(double amount) => amount.toInt().abs().toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
+
+/// Format a currency amount, symbol included.
+///
+/// Whole units only — cents are intentionally dropped (the compact form used
+/// on dashboard tiles and rollups).
+///
+/// The sign is placed before the symbol (`-$5,000`, not `$-5000`).
 String formatCurrency(double amount, [String currency = 'USD']) {
   final symbol = switch (currency) {
     'USD' => '\$',
@@ -179,7 +214,10 @@ String formatCurrency(double amount, [String currency = 'USD']) {
     'GBP' => '£',
     _ => '',
   };
-  return '$symbol${amount.toInt().toString().replaceAllMapped(RegExp(r'(d{1,3})(?=(d{3})+(?!d))'), (Match m) => '${m[1]},')}';
+  // Sign is derived from the same truncated value that gets formatted, so
+  // -0.4 renders as "$0" rather than "-$0".
+  final whole = amount.toInt();
+  return '${whole < 0 ? '-' : ''}$symbol${formatAmountGrouped(amount)}';
 }
 
 /// Format a variance delta with sign.

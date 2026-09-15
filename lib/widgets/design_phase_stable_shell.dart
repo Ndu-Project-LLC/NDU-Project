@@ -4,6 +4,10 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 
+/// Bottom padding reserved for the floating chat bubble FAB
+/// (the floating Save pill was removed per user request).
+const double kFloatingBottomReservedHeight = 96.0;
+
 class DesignPhaseStableShell extends StatelessWidget {
   const DesignPhaseStableShell({
     super.key,
@@ -62,8 +66,19 @@ class DesignPhaseStableShell extends StatelessWidget {
               Expanded(
                 child: Stack(
                   children: [
-                    child,
+                    // Pad child content so the floating Save pill +
+                    // chat bubble FAB never overlap body content.
+                    Positioned.fill(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: kFloatingBottomReservedHeight,
+                        ),
+                        child: child,
+                      ),
+                    ),
                     const KazAiChatBubble(positioned: true),
+                    // Global Save pill removed per user request — auto-save
+                    // keeps persistence working without it.
                   ],
                 ),
               ),
@@ -100,14 +115,31 @@ class DesignPhaseStableShell extends StatelessWidget {
                     onExportPdf: onExportPdf,
                     onAiAssist: onAiAssist,
                   ),
-                  Expanded(child: child),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        // Pad child content so the floating Save pill +
+                        // chat bubble FAB never overlap body content.
+                        Positioned.fill(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: kFloatingBottomReservedHeight,
+                            ),
+                            child: child,
+                          ),
+                        ),
+                        const KazAiChatBubble(positioned: true),
+                        // Global Save pill removed per user request —
+                        // auto-save keeps persistence working without it.
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: const KazAiChatBubble(positioned: false),
     );
   }
 }

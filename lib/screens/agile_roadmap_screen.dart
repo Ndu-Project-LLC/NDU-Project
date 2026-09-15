@@ -30,7 +30,11 @@ class AgileRoadmapScreen extends StatefulWidget {
 }
 
 class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+  // TickerProviderStateMixin (NOT SingleTickerProviderStateMixin): this State
+  // creates TWO tickers — the TabController and the fade AnimationController
+  // — and SingleTickerProviderStateMixin asserts when a second ticker is
+  // created, crashing the whole screen ("multiple tickers were created").
   late TabController _tabController;
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
@@ -136,7 +140,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
     final double horizontalPadding = isMobile ? 18 : 32;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,15 +207,14 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF064E3B),
-            Color(0xFF047857),
-            Color(0xFF059669),
+            Color(0xFFF59E0B),
+            Color(0xFFFBBF24),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF059669).withValues(alpha: 0.3),
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -230,12 +233,12 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.map, color: Color(0xFF6EE7B7), size: 16),
+                Icon(Icons.map, color: Color(0xFF78350F), size: 16),
                 SizedBox(width: 6),
                 Text(
                   'AGILE ROADMAP',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF141414),
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.2,
@@ -250,7 +253,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: Color(0xFF141414),
               height: 1.1,
             ),
           ),
@@ -261,7 +264,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
             'and where the project currently sits within the overall delivery roadmap.',
             style: TextStyle(
               fontSize: 14,
-              color: Color(0xFFA7F3D0),
+              color: Color(0xFF78350F),
               height: 1.6,
             ),
           ),
@@ -292,12 +295,12 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: const Color(0xFF6EE7B7)),
+          Icon(icon, size: 16, color: const Color(0xFF78350F)),
           const SizedBox(width: 8),
           Text(
             label,
             style: const TextStyle(
-              color: Colors.white,
+              color: Color(0xFF141414),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -314,14 +317,14 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: TabBar(
         controller: _tabController,
         isScrollable: true,
-        labelColor: const Color(0xFF059669),
+        labelColor: const Color(0xFFB45309),
         unselectedLabelColor: const Color(0xFF6B7280),
-        indicatorColor: const Color(0xFF059669),
+        indicatorColor: const Color(0xFFD97706),
         indicatorSize: TabBarIndicatorSize.label,
         labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(fontSize: 13),
@@ -357,11 +360,9 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFECFDF5), Color(0xFFF0FDF4)],
-            ),
+            color: const Color(0xFFFFFBEB),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFF86EFAC)),
+            border: Border.all(color: const Color(0xFFFDE68A)),
           ),
           child: Row(
             children: [
@@ -369,8 +370,8 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF059669), Color(0xFF047857)],
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFD97706), Color(0xFFB45309)],
                   ),
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -387,7 +388,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF059669),
+                        color: Color(0xFFD97706),
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -399,7 +400,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF064E3B),
+                        color: Color(0xFF78350F),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -407,7 +408,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                       '$totalSprints sprints • $totalReleases releases • $totalEpics epics',
                       style: const TextStyle(
                         fontSize: 13,
-                        color: Color(0xFF065F46),
+                        color: Color(0xFF92400E),
                       ),
                     ),
                   ],
@@ -424,20 +425,20 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
               : (constraints.maxWidth > 500 ? 2 : 1);
           final widgets = [
             _execWidget('Overall Progress', '${_calculateProgress()}%',
-                Icons.trending_up, const Color(0xFF059669)),
+                Icons.trending_up, const Color(0xFFD97706)),
             _execWidget(
                 'Current Sprint',
                 _sprints.isEmpty
                     ? '—'
                     : _sprints.first['sprintName']?.toString() ?? 'Sprint 1',
                 Icons.play_circle_outline,
-                const Color(0xFF0EA5E9)),
+                const Color(0xFFFFC812)),
             _execWidget('Upcoming Milestones', '$totalMilestones',
                 Icons.flag_outlined, const Color(0xFFF59E0B)),
-            _execWidget('Roadmap Health', 'Green', Icons.health_and_safety,
-                const Color(0xFF10B981)),
+            _execWidget('Roadmap Health', 'Amber', Icons.health_and_safety,
+                const Color(0xFFD97706)),
             _execWidget('Delivery Confidence', 'High', Icons.verified,
-                const Color(0xFF6366F1)),
+                const Color(0xFFB8860B)),
             _execWidget(
                 'Release Forecast',
                 _releases.isEmpty
@@ -445,7 +446,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                     : _releases.first['releaseLabel']?.toString() ??
                         'Release 1',
                 Icons.rocket_launch,
-                const Color(0xFF8B5CF6)),
+                const Color(0xFFB8860B)),
           ];
           return Wrap(
             spacing: 16,
@@ -463,7 +464,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           'Based on current roadmap data, delivery is on track. '
               'AI recommends focusing on the next ${_sprints.length > 1 ? '2 sprints' : 'sprint'} '
               'to maintain velocity. No critical dependencies detected.',
-          const Color(0xFFA855F7),
+          const Color(0xFFFFC812),
         ),
       ],
     );
@@ -567,7 +568,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -596,9 +597,9 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
   Widget _buildTimelineNode(Map<String, String> item) {
     final status = (item['status'] ?? '').toLowerCase();
     final color = status == 'completed'
-        ? const Color(0xFF10B981)
+        ? const Color(0xFFD97706)
         : status == 'active'
-            ? const Color(0xFF0EA5E9)
+            ? const Color(0xFFFFC812)
             : const Color(0xFFD1D5DB);
 
     return Padding(
@@ -678,7 +679,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -698,7 +699,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                 _hierarchyLevel(
                     'Epics',
                     'No epics yet — flows from Epics & Features',
-                    const Color(0xFF7C3AED),
+                    const Color(0xFFB8860B),
                     Icons.layers)
               else
                 ..._epics.map((e) => Padding(
@@ -708,7 +709,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                         e['title']?.toString() ??
                             e['name']?.toString() ??
                             'Epic',
-                        const Color(0xFF7C3AED),
+                        const Color(0xFFB8860B),
                         Icons.layers,
                       ),
                     )),
@@ -718,7 +719,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                 _hierarchyLevel(
                     'Sprints',
                     'No sprints yet — flows from Sprint Calendar',
-                    const Color(0xFF059669),
+                    const Color(0xFFD97706),
                     Icons.event)
               else
                 ..._sprints.take(3).map((s) => Padding(
@@ -726,7 +727,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                       child: _hierarchyLevel(
                         'Sprint',
                         s['sprintName']?.toString() ?? 'Sprint',
-                        const Color(0xFF059669),
+                        const Color(0xFFD97706),
                         Icons.event,
                       ),
                     )),
@@ -798,7 +799,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: Column(
             children: [
@@ -817,7 +818,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                         strokeWidth: 14,
                         backgroundColor: const Color(0xFFE5E7EB),
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFF059669)),
+                            Color(0xFFF59E0B)),
                       ),
                     ),
                     Column(
@@ -860,7 +861,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Color(0xFFF3F4F6),
+        color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -892,7 +893,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: _milestones.isEmpty
               ? const Center(
@@ -980,7 +981,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           'AI Dependency Analysis',
           'AI continuously analyzes epic, feature, story, and cross-team dependencies. '
               'Critical path identification and impact analysis are performed automatically as new work items are added.',
-          const Color(0xFF0891B2),
+          const Color(0xFFD97706),
         ),
         const SizedBox(height: 20),
         Container(
@@ -988,7 +989,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1004,11 +1005,11 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                 runSpacing: 12,
                 children: [
                   _depType('Epic Dependencies', Icons.layers,
-                      const Color(0xFF7C3AED)),
+                      const Color(0xFFB8860B)),
                   _depType('Feature Dependencies', Icons.extension,
-                      const Color(0xFF0EA5E9)),
+                      const Color(0xFFFFC812)),
                   _depType('Story Dependencies', Icons.assignment,
-                      const Color(0xFF10B981)),
+                      const Color(0xFFD97706)),
                   _depType('Cross-team Dependencies', Icons.group_work,
                       const Color(0xFFF59E0B)),
                   _depType(

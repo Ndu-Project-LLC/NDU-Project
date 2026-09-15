@@ -26,7 +26,7 @@ class PremiumEditDialog extends StatelessWidget {
       shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 12,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 550),
         child: Column(
@@ -38,7 +38,6 @@ class PremiumEditDialog extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               decoration: const BoxDecoration(
                 color: Color(0xFFF9FAFB),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
               ),
               child: Row(
@@ -87,8 +86,6 @@ class PremiumEditDialog extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
                 color: Color(0xFFF9FAFB),
-                borderRadius:
-                    BorderRadius.vertical(bottom: Radius.circular(20)),
                 border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
               ),
               child: Row(
@@ -158,7 +155,7 @@ class PremiumEditDialog extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Color(0xFFD1D5DB)),
+        border: Border.all(color: const Color(0xFFD1D5DB)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: VoiceTextField(

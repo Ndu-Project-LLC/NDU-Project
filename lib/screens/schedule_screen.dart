@@ -1780,7 +1780,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Future<void> _importWorkPackagesFromDesignAndExecution() async {
-    final data = ProjectDataHelper.getData(context);
+    try {
+      final data = ProjectDataHelper.getData(context);
     final newPackages = <WorkPackage>[];
 
     // Import from Design Planning Document
@@ -1898,8 +1899,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       showSnackbar: false,
     );
 
-    setState(() {});
-    _showInfo('Imported ${newPackages.length} Work Packages.');
+      setState(() {});
+      _showInfo('Imported ${newPackages.length} Work Packages.');
+    } catch (error, stackTrace) {
+      debugPrint('Work package import failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        _showInfo('Could not import Work Packages. Please try again.');
+      }
+    }
   }
 
   Future<void> _generateIntegratedPackageChainsFromWbs() async {
@@ -2938,7 +2946,7 @@ class _WbsNodeTile extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -2946,7 +2954,7 @@ class _WbsNodeTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1D4ED8),
+                      color: Color(0xFFFFC812),
                     ),
                   ),
                 ),
@@ -3983,7 +3991,7 @@ class _BoardColumn extends StatelessWidget {
             color: color,
             borderRadius: BorderRadius.circular(12),
             border: isActive
-                ? Border.all(color: const Color(0xFF3B82F6), width: 2)
+                ? Border.all(color: const Color(0xFFFFC812), width: 2)
                 : null,
           ),
           child: Column(
@@ -4151,7 +4159,7 @@ class _BoardTaskCard extends StatelessWidget {
               minHeight: 6,
               backgroundColor: const Color(0xFFE5E7EB),
               valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF3B82F6),
+                Color(0xFFFFC812),
               ),
             ),
           ),
@@ -4496,7 +4504,7 @@ class _ScheduleValidationDialog extends StatelessWidget {
                   _ValidationStat(
                     label: 'Tasks',
                     value: report.taskCount.toString(),
-                    color: const Color(0xFF2563EB),
+                    color: const Color(0xFFFFC812),
                   ),
                   _ValidationStat(
                     label: 'Unassigned',
@@ -4543,12 +4551,12 @@ class _ScheduleValidationDialog extends StatelessWidget {
                   _ValidationStat(
                     label: 'Critical Path',
                     value: report.cpm.criticalPathIds.length.toString(),
-                    color: const Color(0xFF7C3AED),
+                    color: const Color(0xFFB8860B),
                   ),
                   _ValidationStat(
                     label: 'Spec Coverage',
                     value: report.specCoverageWarnings.length.toString(),
-                    color: const Color(0xFF0891B2),
+                    color: const Color(0xFFD97706),
                   ),
                   _ValidationStat(
                     label: 'Resource Conflicts',
@@ -5346,7 +5354,7 @@ class _WorkPackageCardState extends State<_WorkPackageCard> {
     final normalized = status.toLowerCase();
     switch (normalized) {
       case 'in_progress':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'complete':
       case 'completed':
         return const Color(0xFF10B981);
@@ -5619,7 +5627,7 @@ class _WorkPackageCardState extends State<_WorkPackageCard> {
                 minHeight: 6,
                 backgroundColor: const Color(0xFFE5E7EB),
                 valueColor:
-                    const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                    const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
               ),
             ),
           ],
@@ -5814,7 +5822,7 @@ class _ProcurementActivityCard extends StatelessWidget {
               minHeight: 6,
               backgroundColor: const Color(0xFFE5E7EB),
               valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                  const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
             ),
           ),
         ],
@@ -5827,9 +5835,9 @@ class _ProcurementActivityCard extends StatelessWidget {
       case 'rfq':
         return const Color(0xFFF59E0B);
       case 'evaluating':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'awarded':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       case 'contracted':
         return const Color(0xFF10B981);
       default:
@@ -5959,7 +5967,7 @@ class _CostVsScheduleTab extends StatelessWidget {
               _CostStatCard(
                 title: 'Total Budget',
                 amount: totalBudget,
-                color: const Color(0xFF3B82F6),
+                color: const Color(0xFFFFC812),
               ),
               const SizedBox(width: 12),
               _CostStatCard(
@@ -5971,7 +5979,7 @@ class _CostVsScheduleTab extends StatelessWidget {
               _CostStatCard(
                 title: 'Cost Estimates',
                 amount: totalEstimate,
-                color: const Color(0xFF8B5CF6),
+                color: const Color(0xFFB8860B),
               ),
               const SizedBox(width: 12),
               _CostStatCard(

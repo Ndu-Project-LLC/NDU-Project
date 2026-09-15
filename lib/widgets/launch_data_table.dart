@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
@@ -23,11 +24,13 @@ class _TableLayoutInherited extends InheritedWidget {
   final double tableWidth;
   final List<LaunchColumn> columns;
   final bool hasRowActions;
+  final String title;
 
   const _TableLayoutInherited({
     required this.tableWidth,
     required this.columns,
     required this.hasRowActions,
+    required this.title,
     required super.child,
   });
 
@@ -41,7 +44,8 @@ class _TableLayoutInherited extends InheritedWidget {
   bool updateShouldNotify(_TableLayoutInherited oldWidget) =>
       tableWidth != oldWidget.tableWidth ||
       columns != oldWidget.columns ||
-      hasRowActions != oldWidget.hasRowActions;
+      hasRowActions != oldWidget.hasRowActions ||
+      title != oldWidget.title;
 }
 
 class _EditingMode extends InheritedWidget {
@@ -314,9 +318,9 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
-                foregroundColor: const Color(0xFF059669),
-                side: const BorderSide(color: Color(0xFF6EE7B7)),
-                backgroundColor: const Color(0xFFECFDF5),
+                foregroundColor: const Color(0xFFB45309),
+                side: const BorderSide(color: Color(0xFFFFC812)),
+                backgroundColor: const Color(0xFFFFF8E1),
               ),
             ),
             const SizedBox(width: 8),
@@ -329,8 +333,8 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
-                foregroundColor: const Color(0xFF2563EB),
-                side: const BorderSide(color: Color(0xFF93C5FD)),
+                foregroundColor: const Color(0xFFFFC812),
+                side: const BorderSide(color: Color(0xFFFFC812)),
               ),
             ),
             const SizedBox(width: 8),
@@ -448,6 +452,7 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
       tableWidth: tableWidth,
       columns: effectiveColumns,
       hasRowActions: hasRowActions,
+      title: widget.title,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -563,6 +568,7 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
             tableWidth: tableWidth,
             columns: effectiveColumns,
             hasRowActions: hasRowActions,
+            title: widget.title,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -572,6 +578,7 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
                 // so the rows render correctly inside the parent
                 // SingleChildScrollView. Previously used
                 // ListView.builder(shrinkWrap: true, physics: NeverScrollable)
+                // ListView.builder(physics: const NeverScrollableScrollPhysics(), physics: NeverScrollable)
                 // which silently reported 0 height in this nested context,
                 // making all body rows invisible even though rowCount > 0.
                 if (rows.isEmpty)
@@ -733,7 +740,21 @@ class LaunchDataRow extends StatefulWidget {
 
 class _LaunchDataRowState extends State<LaunchDataRow> {
   bool _hovering = false;
-  bool _isEditing = false;
+  int _refreshTick = 0;
+  List<Widget>? _overriddenCells;
+
+  List<Widget> get _cells => _overriddenCells ?? widget.cells;
+
+  @override
+  void didUpdateWidget(covariant LaunchDataRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The parent rebuilt the row with fresh cells (e.g. after the underlying
+    // data changed). Prefer those over any locally refreshed override so the
+    // row never shows stale values.
+    if (!identical(oldWidget.cells, widget.cells)) {
+      _overriddenCells = null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -754,101 +775,80 @@ class _LaunchDataRowState extends State<LaunchDataRow> {
           Container(
             width: tableLayout?.tableWidth,
             decoration: BoxDecoration(
-              color: _isEditing
-                  ? const Color(0xFFFFFDF5)
-                  : (_hovering ? const Color(0xFFF8FAFC) : Colors.white),
-              border: _isEditing
-                  ? const Border(
-                      left: BorderSide(color: Color(0xFFF59E0B), width: 3))
-                  : null,
+              color: _hovering ? const Color(0xFFF8FAFC) : Colors.white,
             ),
             padding: const EdgeInsets.symmetric(
               horizontal: _tableHorizontalPadding,
               vertical: 10,
             ),
-            child: _EditingMode(
-              isEditing: _isEditing,
-              child: Row(
-                children: [
-                  if (columns == null)
-                    ...widget.cells
-                  else
-                    ..._buildColumnSlots(
-                      columns,
-                      (_, index) {
-                        if (index >= widget.cells.length) {
-                          return const SizedBox.shrink();
-                        }
-                        return _CellSlot(child: widget.cells[index]);
-                      },
-                    ),
-                  if (hasActions)
-                    SizedBox(
-                      width: _actionColumnWidth,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          if (widget.onKazAi != null)
-                            Tooltip(
-                              message: 'KAZ AI',
-                              child: IconButton(
-                                icon: const Icon(Icons.auto_awesome,
-                                    size: 16, color: Color(0xFFF59E0B)),
-                                onPressed: widget.onKazAi,
-                                padding: const EdgeInsets.all(4),
-                                constraints: const BoxConstraints(
-                                    minWidth: 28, minHeight: 28),
-                                splashRadius: 14,
-                              ),
-                            ),
-                          if (widget.onKazAi != null &&
-                              (widget.onEdit != null ||
-                                  widget.onDelete != null))
-                            const SizedBox(width: 2),
-                          if (widget.onEdit != null)
-                            Tooltip(
-                              message: _isEditing ? 'Save' : 'Edit',
-                              child: IconButton(
-                                icon: Icon(
-                                  _isEditing
-                                      ? Icons.check_circle_rounded
-                                      : Icons.edit_outlined,
-                                  size: 16,
-                                  color: _isEditing
-                                      ? const Color(0xFF10B981)
-                                      : const Color(0xFF9CA3AF),
-                                ),
-                                onPressed: () {
-                                  setState(() => _isEditing = !_isEditing);
-                                  // Call onEdit when exiting edit mode (Save)
-                                  if (!_isEditing) {
-                                    widget.onEdit?.call();
-                                  }
-                                },
-                                padding: const EdgeInsets.all(4),
-                                constraints: const BoxConstraints(
-                                    minWidth: 28, minHeight: 28),
-                                splashRadius: 14,
-                              ),
-                            ),
-                          if (widget.onEdit != null && widget.onDelete != null)
-                            const SizedBox(width: 2),
-                          if (widget.onDelete != null)
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline,
-                                  size: 16, color: Color(0xFFEF4444)),
-                              onPressed: widget.onDelete,
-                              tooltip: 'Delete',
+            child: Row(
+              children: [
+                if (columns == null)
+                  ..._cells
+                else
+                  ..._buildColumnSlots(
+                    columns,
+                    (_, index) {
+                      if (index >= _cells.length) {
+                        return const SizedBox.shrink();
+                      }
+                      return _CellSlot(child: _cells[index]);
+                    },
+                  ),
+                if (hasActions)
+                  SizedBox(
+                    width: _actionColumnWidth,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        if (widget.onKazAi != null)
+                          Tooltip(
+                            message: 'KAZ AI',
+                            child: IconButton(
+                              icon: const Icon(Icons.auto_awesome,
+                                  size: 16, color: Color(0xFFF59E0B)),
+                              onPressed: widget.onKazAi,
                               padding: const EdgeInsets.all(4),
                               constraints: const BoxConstraints(
                                   minWidth: 28, minHeight: 28),
                               splashRadius: 14,
                             ),
-                        ],
-                      ),
+                          ),
+                        if (widget.onKazAi != null &&
+                            (widget.onEdit != null ||
+                                widget.onDelete != null))
+                          const SizedBox(width: 2),
+                        if (widget.onEdit != null)
+                          Tooltip(
+                            message: 'Edit',
+                            child: IconButton(
+                              icon: const Icon(Icons.edit_outlined,
+                                  size: 16, color: Color(0xFF9CA3AF)),
+                              onPressed: () =>
+                                  _openEditDialog(context, columns),
+                              padding: const EdgeInsets.all(4),
+                              constraints: const BoxConstraints(
+                                  minWidth: 28, minHeight: 28),
+                              splashRadius: 14,
+                            ),
+                          ),
+                        if (widget.onEdit != null && widget.onDelete != null)
+                          const SizedBox(width: 2),
+                        if (widget.onDelete != null)
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline,
+                                size: 16, color: Color(0xFFEF4444)),
+                            onPressed: widget.onDelete,
+                            tooltip: 'Delete',
+                            padding: const EdgeInsets.all(4),
+                            constraints: const BoxConstraints(
+                                minWidth: 28, minHeight: 28),
+                            splashRadius: 14,
+                          ),
+                      ],
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
           if (widget.showDivider)
@@ -856,6 +856,112 @@ class _LaunchDataRowState extends State<LaunchDataRow> {
         ],
       ),
     );
+  }
+
+  /// Opens the modal edit dialog for this row. The fields are derived from
+  /// the table's columns and pre-filled with the row's current cell values.
+  /// Saving writes each changed value back through the row's existing cell
+  /// `onChanged` hooks — the same persistence path inline editing used.
+  Future<void> _openEditDialog(
+      BuildContext context, List<LaunchColumn>? columns) async {
+    if (columns == null || columns.isEmpty) {
+      widget.onEdit?.call();
+      return;
+    }
+    final cells = _cells;
+    final initialValues = <String, String>{};
+    final applyChanges = <String, ValueChanged<String>>{};
+    final editableColumns = <LaunchColumn>[];
+
+    for (var i = 0; i < columns.length && i < cells.length; i++) {
+      final cell = cells[i];
+      final column = columns[i];
+      String? value;
+      ValueChanged<String>? apply;
+      if (cell is LaunchEditableCell) {
+        value = cell.value;
+        apply = cell.onChanged;
+      } else if (cell is LaunchDateCell) {
+        value = cell.value;
+        apply = cell.onChanged;
+      } else if (cell is LaunchStatusDropdown) {
+        value = cell.value;
+        apply = (v) => cell.onChanged(v);
+      } else {
+        continue;
+      }
+      initialValues[column.label] = value;
+      applyChanges[column.label] = apply;
+      editableColumns.add(column);
+    }
+
+    if (editableColumns.isEmpty) {
+      widget.onEdit?.call();
+      return;
+    }
+
+    final layout = _TableLayoutInherited.of(context);
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (ctx) => _AddItemDialog(
+        title: layout?.title ?? 'Item',
+        columns: editableColumns,
+        initialValues: initialValues,
+        isEdit: true,
+      ),
+    );
+    if (result == null || !mounted) return;
+
+    final changedLabels = <String>{};
+    for (final column in editableColumns) {
+      final newValue = result[column.label];
+      final oldValue = initialValues[column.label] ?? '';
+      if (newValue == null || newValue.trim() == oldValue.trim()) continue;
+      applyChanges[column.label]!(newValue);
+      changedLabels.add(column.label);
+    }
+    widget.onEdit?.call();
+
+    if (changedLabels.isEmpty) return;
+
+    // Rebuild only the changed cells so the row reflects the saved values even
+    // when the parent screen does not rebuild the table itself.
+    final updated = List<Widget>.of(cells);
+    for (var i = 0; i < columns.length && i < updated.length; i++) {
+      final label = columns[i].label;
+      if (!changedLabels.contains(label)) continue;
+      final value = result[label]!;
+      final old = updated[i];
+      final tick = _refreshTick++;
+      if (old is LaunchEditableCell) {
+        updated[i] = LaunchEditableCell(
+          key: ValueKey('launch_edit_cell_${label}_$tick'),
+          value: value,
+          onChanged: old.onChanged,
+          hint: old.hint,
+          width: old.width,
+          bold: old.bold,
+          expand: old.expand,
+        );
+      } else if (old is LaunchDateCell) {
+        updated[i] = LaunchDateCell(
+          key: ValueKey('launch_edit_date_${label}_$tick'),
+          value: value,
+          onChanged: old.onChanged,
+          hint: old.hint,
+          width: old.width,
+        );
+      } else if (old is LaunchStatusDropdown) {
+        updated[i] = LaunchStatusDropdown(
+          key: ValueKey('launch_edit_status_${label}_$tick'),
+          value: value,
+          items: old.items,
+          onChanged: old.onChanged,
+          width: old.width,
+        );
+      }
+    }
+    if (mounted) setState(() => _overriddenCells = updated);
   }
 }
 
@@ -952,7 +1058,7 @@ class _LaunchEditableCellState extends State<LaunchEditableCell> {
     }
 
     final borderColor =
-        _isFocused ? const Color(0xFF2563EB) : const Color(0xFFE5E7EB);
+        _isFocused ? const Color(0xFFFFC812) : const Color(0xFFE5E7EB);
     final bgColor = _isFocused ? Colors.white : const Color(0xFFF9FAFB);
 
     final child = Focus(
@@ -963,6 +1069,11 @@ class _LaunchEditableCellState extends State<LaunchEditableCell> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: borderColor, width: _isFocused ? 1.5 : 1),
         ),
+        // Internal padding around the VoiceTextField so the Open Editor
+        // button row + TextField body have breathing room from the cell's
+        // border. Previously the field hugged the border on all sides,
+        // making cells feel cramped especially in narrow columns.
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         child: VoiceTextField(
           controller: _controller,
           onChanged: widget.onChanged,
@@ -975,9 +1086,13 @@ class _LaunchEditableCellState extends State<LaunchEditableCell> {
             hintText: widget.hint,
             hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
             border: InputBorder.none,
+            // Increased from horizontal: 10, vertical: 8 with isDense: true
+            // to give the actual text input area generous inner spacing.
+            // Combined with the cell's outer padding, the field now feels
+            // open and readable instead of squeezed.
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            isDense: true,
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            isDense: false,
           ),
         ),
       ),
@@ -1078,7 +1193,7 @@ class _LaunchDateCellState extends State<LaunchDateCell> {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: _isHovering
-                    ? const Color(0xFF2563EB)
+                    ? const Color(0xFFFFC812)
                     : const Color(0xFFE5E7EB),
                 width: _isHovering ? 1.5 : 1,
               ),
@@ -1301,7 +1416,7 @@ class LaunchStatusDropdown extends StatelessWidget {
       return const Color(0xFF10B981);
     }
     if (s.contains('progress') || s.contains('active') || s.contains('track')) {
-      return const Color(0xFF2563EB);
+      return const Color(0xFFFFC812);
     }
     if (s.contains('overdue') || s.contains('at risk') || s.contains('delay')) {
       return const Color(0xFFEF4444);
@@ -1350,15 +1465,21 @@ Future<bool> launchConfirmDelete(BuildContext context,
   return result ?? false;
 }
 
-/// World-class Add Item dialog with staggered field entrance animations,
-/// inline validation, success feedback, and keyboard shortcuts.
+/// Item dialog (add or edit) with staggered field entrance animations,
+/// inline validation, success feedback, and keyboard shortcuts. In add mode
+/// fields start blank and text fields are required; in edit mode fields are
+/// pre-filled from [initialValues] and may be cleared.
 class _AddItemDialog extends StatefulWidget {
   final String title;
   final List<LaunchColumn> columns;
+  final Map<String, String> initialValues;
+  final bool isEdit;
 
   const _AddItemDialog({
     required this.title,
     required this.columns,
+    this.initialValues = const {},
+    this.isEdit = false,
   });
 
   @override
@@ -1397,14 +1518,17 @@ class _AddItemDialogState extends State<_AddItemDialog>
       _focusNodes[col.label] = FocusNode();
       switch (col.fieldType) {
         case LaunchFieldType.text:
-          _controllers[col.label] = TextEditingController();
+          _controllers[col.label] =
+              TextEditingController(text: widget.initialValues[col.label]);
         case LaunchFieldType.date:
-          _dateValues[col.label] = '';
+          _dateValues[col.label] = widget.initialValues[col.label] ?? '';
         case LaunchFieldType.dropdown:
-          _dropdownValues[col.label] =
-              (col.dropdownItems != null && col.dropdownItems!.isNotEmpty)
+          final initial = (widget.initialValues[col.label] ?? '').trim();
+          _dropdownValues[col.label] = initial.isNotEmpty
+              ? initial
+              : ((col.dropdownItems != null && col.dropdownItems!.isNotEmpty)
                   ? col.dropdownItems!.first
-                  : null;
+                  : null);
       }
     }
   }
@@ -1423,6 +1547,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
 
   void _validate() {
     _errors.clear();
+    // Editing is allowed to produce empty values, matching inline editing.
+    if (widget.isEdit) return;
     for (final col in widget.columns) {
       if (col.fieldType == LaunchFieldType.text) {
         final text = _controllers[col.label]?.text.trim() ?? '';
@@ -1448,10 +1574,13 @@ class _AddItemDialogState extends State<_AddItemDialog>
       child: Focus(
         autofocus: true,
         child: LaunchModalShell(
-          icon: Icons.add_rounded,
-          title: 'Add to ${widget.title}',
-          subtitle:
-              'Fill in the fields below to add a new entry to this table.',
+          icon: widget.isEdit ? Icons.edit_outlined : Icons.add_rounded,
+          title: widget.isEdit
+              ? 'Edit ${widget.title}'
+              : 'Add to ${widget.title}',
+          subtitle: widget.isEdit
+              ? 'Update the entry details in the fields below.'
+              : 'Fill in the fields below to add a new entry to this table.',
           body: AnimatedBuilder(
             animation: _fadeIn,
             builder: (context, child) {
@@ -1529,7 +1658,7 @@ class _AddItemDialogState extends State<_AddItemDialog>
         Row(
           children: [
             LaunchModalLabel(col.label),
-            if (col.fieldType == LaunchFieldType.text) ...[
+            if (!widget.isEdit && col.fieldType == LaunchFieldType.text) ...[
               const SizedBox(width: 4),
               const Text('*',
                   style: TextStyle(
@@ -1637,7 +1766,7 @@ class _AddItemDialogState extends State<_AddItemDialog>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI failed: $e')),
+          SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -1698,8 +1827,12 @@ class _AddItemDialogState extends State<_AddItemDialog>
   }
 
   Widget _buildDropdownField(LaunchColumn col) {
-    final items = col.dropdownItems ?? [];
+    final items = [...?col.dropdownItems];
     final current = _dropdownValues[col.label];
+    // Ensure a pre-existing value (edit mode) is always selectable.
+    if (current != null && current.isNotEmpty && !items.contains(current)) {
+      items.add(current);
+    }
     return DropdownButtonFormField<String>(
       initialValue: current,
       isExpanded: true,
@@ -1745,7 +1878,9 @@ class _AddItemDialogState extends State<_AddItemDialog>
         icon: _showSuccess
             ? const Icon(Icons.check_circle_rounded, size: 16)
             : const Icon(Icons.check_rounded, size: 16),
-        label: Text(_showSuccess ? 'Added!' : 'Add Item'),
+        label: Text(_showSuccess
+            ? (widget.isEdit ? 'Saved!' : 'Added!')
+            : (widget.isEdit ? 'Save Changes' : 'Add Item')),
         style: ElevatedButton.styleFrom(
           backgroundColor:
               _showSuccess ? const Color(0xFF10B981) : const Color(0xFFFFC107),
@@ -1779,18 +1914,20 @@ class _AddItemDialogState extends State<_AddItemDialog>
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Item Added Successfully',
-              style: TextStyle(
+            Text(
+              widget.isEdit ? 'Changes Saved' : 'Item Added Successfully',
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF111827),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'The new entry has been added to the table.',
-              style: TextStyle(
+            Text(
+              widget.isEdit
+                  ? 'The entry has been updated in the table.'
+                  : 'The new entry has been added to the table.',
+              style: const TextStyle(
                 fontSize: 13,
                 color: Color(0xFF6B7280),
               ),
@@ -1879,9 +2016,9 @@ class _ExpandTableChip extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Icon(Icons.fullscreen,
                     size: 16, color: Color(0xFF4B5563)),
                 SizedBox(width: 6),

@@ -10,6 +10,17 @@ import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/utils/text_sanitizer.dart';
 import 'package:ndu_project/widgets/open_editor_button.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Returns true if the 'Open Editor' button should be hidden app-wide.
+Future<bool> isOpenEditorDisabled() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('pref_disable_open_editor') ?? false;
+  } catch (_) {
+    return false;
+  }
+}
 
 /// Debouncer utility to limit API calls while typing
 class _Debouncer {
@@ -92,6 +103,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
   bool _voiceAvailable = true;
   bool _isImportingDoc = false;
   bool _isRewriting = false;
+  bool _openEditorDisabled = false;
   final VoiceInputService _voiceService = VoiceInputService.instance;
   StreamSubscription<VoiceResult>? _voiceResultSub;
   StreamSubscription<VoiceStatus>? _voiceStatusSub;
@@ -190,9 +202,15 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
     _controller.addListener(_onTextChanged);
     _focusNode.addListener(_handleFocusChanged);
     _initVoice();
+    _loadOpenEditorDisabled();
     if (_aiEnabled && _autoGenerateEnabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoGenerate());
     }
+  }
+
+  Future<void> _loadOpenEditorDisabled() async {
+    final disabled = await isOpenEditorDisabled();
+    if (mounted) setState(() => _openEditorDisabled = disabled);
   }
 
   Future<void> _initVoice() async {
@@ -690,15 +708,17 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
                 }
               },
             ),
-            const SizedBox(width: 8),
-            OpenEditorButton(
-              actions: _buildEditorActions(),
-              isLoading: _isListening ||
-                  _loading ||
-                  _isRewriting ||
-                  _isImportingDoc ||
-                  _autoGenerating,
-            ),
+            if (!_openEditorDisabled) ...[
+              const SizedBox(width: 8),
+              OpenEditorButton(
+                actions: _buildEditorActions(),
+                isLoading: _isListening ||
+                    _loading ||
+                    _isRewriting ||
+                    _isImportingDoc ||
+                    _autoGenerating,
+              ),
+            ],
           ],
         ),
         const SizedBox(height: 8),
@@ -724,12 +744,12 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
                 fillColor: Colors.white,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide:
-                      BorderSide(color: Color(0xFFFFD700), width: 1.6),
+                      const BorderSide(color: Color(0xFFFFD700), width: 1.6),
                 ),
                 suffixIcon: null,
               ),
@@ -759,12 +779,12 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
         ],
         if (_aiEnabled && _isBasicPlanProject && _aiLimitReached) ...[
           const SizedBox(height: 10),
-          _AiLimitBanner(
+          const _AiLimitBanner(
             message:
                 'AI suggestions are not available for this section on the Basic plan.',
-            background: const Color(0xFFF3F4F6),
-            border: const Color(0xFFE5E7EB),
-            textColor: const Color(0xFF6B7280),
+            background: Color(0xFFF3F4F6),
+            border: Color(0xFFE5E7EB),
+            textColor: Color(0xFF6B7280),
           ),
         ] else if (_aiEnabled && _showLastChanceNote) ...[
           const SizedBox(height: 10),
@@ -781,9 +801,9 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
-              color: Color(0xFFFEF2F2),
+              color: const Color(0xFFFEF2F2),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Color(0xFFFCA5A5)),
+              border: Border.all(color: const Color(0xFFFCA5A5)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -884,7 +904,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
           icon: Icons.upload_file,
           label: 'Import from .docx / .doc',
           tooltip: 'Extract text from a Word document',
-          accent: const Color(0xFF0EA5E9),
+          accent: const Color(0xFFFFC812),
           onTap: _isImportingDoc ? () {} : _importDocument,
           enabled: !_isImportingDoc,
         ),
@@ -903,7 +923,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
           icon: Icons.refresh,
           label: 'Regenerate this field',
           tooltip: 'Re-run the original AI generation for this field',
-          accent: const Color(0xFF2563EB),
+          accent: const Color(0xFFFFC812),
           onTap: widget.onRegenerate!,
         ),
       if (widget.onUndo != null && widget.canUndo)
@@ -943,7 +963,6 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
 
 class _AiLimitBanner extends StatelessWidget {
   const _AiLimitBanner({
-    super.key,
     required this.message,
     required this.background,
     required this.border,

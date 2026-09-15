@@ -427,7 +427,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
         label: 'Customized',
         value: '$customizedCount',
         icon: Icons.auto_fix_high_outlined,
-        color: const Color(0xFF7C3AED),
+        color: const Color(0xFFB8860B),
       ),
     ];
 
@@ -763,7 +763,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
           selected: selected == option,
           onSelected: (_) => onSelected(option),
           selectedColor: _colorForCategory(option).withValues(alpha: 0.14),
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           side: BorderSide(
             color: selected == option
                 ? _colorForCategory(option).withValues(alpha: 0.35)
@@ -1813,8 +1813,8 @@ Color _colorForCategory(String category) {
   final normalized = category.trim().toLowerCase();
   if (normalized.contains('init')) return const Color(0xFF4F46E5);
   if (normalized.contains('risk')) return const Color(0xFFDC2626);
-  if (normalized.contains('arch')) return const Color(0xFF0EA5E9);
-  if (normalized.contains('decision')) return const Color(0xFF7C3AED);
+  if (normalized.contains('arch')) return const Color(0xFFFFC812);
+  if (normalized.contains('decision')) return const Color(0xFFB8860B);
   if (normalized.contains('plan')) return const Color(0xFF16A34A);
   if (normalized.contains('new')) return const Color(0xFF4F46E5);
   if (normalized.contains('disabled')) return const Color(0xFFF59E0B);

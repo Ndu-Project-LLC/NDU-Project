@@ -2,6 +2,13 @@ const functions = require('firebase-functions/v1');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 const { Resend } = require('resend');
+const {
+  getLocalLlmConfig,
+  buildOpenAiBody,
+  buildLocalBody,
+  forwardCompletion,
+  OPENAI_URL,
+} = require('./llm-router');
 
 // Initialize admin only if not already initialized
 if (!admin.apps.length) {
@@ -38,32 +45,33 @@ function generateOtp() {
 }
 
 
-// Lazy-load config to avoid deployment timeouts
-function getRuntimeConfig() {
-  try {
-    return typeof functions.config === 'function' ? functions.config() : {};
-  } catch (e) {
-    console.warn('Failed to load runtime config:', e);
-    return {};
-  }
-}
-
+// ── CORS / runtime origins ─────────────────────────────────────────────────
+// NOTE: legacy functions.config() support was removed — the Cloud Runtime
+// Configuration API it depends on shuts down in March 2026, after which any
+// function still referencing it cannot be deployed. Non-secret runtime values
+// now come from process.env (set via functions/.env at deploy time) with code
+// defaults matching the values that previously lived in `functions:config`.
 function getCorsAllowedOrigins() {
-  const runtimeConfig = getRuntimeConfig();
-  const appConfig = runtimeConfig.app || {};
-  const configuredBaseUrl = appConfig.base_url || appConfig.baseUrl || '';
-  const configAllowedOrigins = appConfig.allowed_origins || appConfig.allowedOrigins || '';
   const envAllowedOrigins = process.env.APP_ALLOWED_ORIGINS || '';
-  const APP_BASE_URL = process.env.APP_BASE_URL || configuredBaseUrl || 'https://ndu-d3f60.web.app';
-  const EXTRA_ALLOWED_ORIGINS = [configAllowedOrigins, envAllowedOrigins]
-    .flatMap((value) => value.split(','))
-    .map((origin) => origin.trim())
-    .filter(Boolean);
+  const APP_BASE_URL = process.env.APP_BASE_URL || 'https://admin.nduproject.com';
+  // 'ndu-project-1.onrender.com' was previously stored in functions:config as
+  // app.allowed_origins. The *.nduproject.com regex below already covers
+  // admin.nduproject.com, so only the legacy onrender deployment needs an
+  // explicit entry. APP_ALLOWED_ORIGINS (comma-separated) can extend this list.
+  const EXTRA_ALLOWED_ORIGINS = ['https://ndu-project-1.onrender.com']
+    .concat(envAllowedOrigins
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean));
   return [
     /^(http|https):\/\/localhost(:\d+)?$/,
     /^(http|https):\/\/127\.0\.0\.1(:\d+)?$/,
-    /\.web\.app$/,
-    /\.firebaseapp\.com$/,
+    // HIGH #5: anchored, project-scoped regexes — Firebase Hosting gives
+    // *.web.app and *.firebaseapp.com subdomains to anyone, so an
+    // attacker could register attacker.web.app and pass the old
+    // unanchored /\.web\.app$/ regex. Anchored to the specific project.
+    /^https:\/\/ndu-d3f60\.web\.app$/,
+    /^https:\/\/ndu-d3f60\.firebaseapp\.com$/,
     /^https:\/\/staging\.admin\.nduproject\.com$/,
     /^https:\/\/.*\.nduproject\.com$/, // Allow all nduproject.com subdomains
     /^https:\/\/nduproject\.com$/, // Allow bare domain
@@ -121,8 +129,13 @@ function setCorsHeaders(req, res) {
 
 // (transformToClaudeFormat removed — project uses OpenAI, not Claude/Anthropic)
 
+function rawPayloadPurpose(body) {
+  const payload = body?.payload || body || {};
+  return payload?.purpose === 'autocomplete' ? 'autocomplete' : 'full';
+}
+
 function getRequestOrigin(req) {
-  return req.headers.origin || APP_BASE_URL;
+  return req.headers.origin || getCorsAllowedOrigins().find((origin) => typeof origin === 'string') || 'https://ndu-d3f60.web.app';
 }
 
 function getPayPalBaseUrl(clientId) {
@@ -231,34 +244,39 @@ async function validateCouponForTier(couponCode, tier, originalPriceCents) {
 }
 
 /**
- * Secure OpenAI API Proxy
+ * Secure AI Proxy (self-hosted first, OpenAI fallback)
  * 
- * This Cloud Function acts as a secure proxy to OpenAI's Chat Completions API,
- * keeping the API key server-side and never exposing it to client code or version control.
+ * This Cloud Function acts as a secure proxy for the app's AI completions:
+ *   - Primary: the self-hosted LLM server (llm-server/, Ollama on the Oracle
+ *     Always-Free VM) — near-zero cost.
+ *   - Fallback: OpenAI's Chat Completions API — used only when the self-hosted
+ *     server is unreachable, keeping AI features available.
  * 
- * The app already sends OpenAI-format requests (chat/completions with messages array),
- * so this proxy forwards them directly to OpenAI without format transformation.
+ * Secrets stay server-side and are never exposed to client code or version
+ * control. The app sends OpenAI-format requests (chat/completions with a
+ * messages array); this proxy normalizes them per upstream (see llm-router.js).
  * 
  * Setup Instructions:
- * 1. Set your OpenAI API key as a secret in Firebase:
+ * 1. (Recommended) Point LLM_SERVER_URL at the self-hosted server and set the
+ *    LLM_SERVER_API_TOKEN secret:
+ *    firebase functions:secrets:set LLM_SERVER_API_TOKEN
+ * 2. Set your OpenAI API key as a fallback secret:
  *    firebase functions:secrets:set OPENAI_API_KEY
- *    
- * 2. Deploy this function:
+ * 3. Deploy this function:
  *    firebase deploy --only functions
- *    
- * 3. The app's SecureAPIConfig.baseUrl should point to this Cloud Function URL.
+ * 4. The app's SecureAPIConfig.baseUrl should point to this Cloud Function URL.
  * 
  * Security Features:
- * - API key stored as Firebase secret (never in code or environment)
- * - Optional Firebase Auth verification
+ * - API keys stored as Firebase secrets (never in code or environment)
+ * - Firebase Auth verification on every request
  * - CORS configured for your app domain only
  * - Request validation and sanitization
  */
 
 exports.openaiProxy = functions
   .runWith({
-    secrets: ['OPENAI_API_KEY'],
-    timeoutSeconds: 60,
+    secrets: ['OPENAI_API_KEY', 'LLM_SERVER_API_TOKEN'],
+    timeoutSeconds: 300,
     memory: '256MB'
   })
   .https.onRequest(async (req, res) => {
@@ -273,53 +291,120 @@ exports.openaiProxy = functions
       res.status(405).json({ error: 'Method not allowed. Use POST.' });
       return;
     }
-    
+
+    // AUTH REQUIRED — without this, anyone with the function URL can bill
+    // OpenAI completions to the project's account (CORS does not stop curl/Postman).
+    const decodedToken = await verifyAuthToken(req);
+    if (!decodedToken) {
+      res.status(401).json({ error: 'Authentication required.' });
+      return;
+    }
+
+    const rawPayload = req.body?.payload || req.body || {};
+
     try {
+      // Keep inline autocomplete traffic in a separate, tighter bucket so it
+      // cannot consume the quota reserved for substantive AI actions.
+      const requestPurpose = rawPayloadPurpose(req.body);
+      const rateLimitAction = requestPurpose === 'autocomplete'
+          ? 'openai_autocomplete'
+          : 'openai_proxy';
+      const rateLimit = requestPurpose === 'autocomplete' ? 12 : 30;
+      await checkRateLimit(decodedToken.uid, rateLimitAction, rateLimit);
+
       const apiKey = process.env.OPENAI_API_KEY;
+      const localConfig = getLocalLlmConfig();
+
+      if (!apiKey && !localConfig) {
+        console.error('No AI upstream configured. Set the OPENAI_API_KEY Firebase secret and/or LLM_SERVER_URL.');
+        res.status(500).json({ error: 'Service configuration error' });
+        return;
+      }
+
+      if (!Array.isArray(rawPayload.messages) || rawPayload.messages.length === 0) {
+        res.status(400).json({ error: 'Request must include a non-empty messages array.' });
+        return;
+      }
+
+      // ── Primary: self-hosted LLM (Ollama on the Oracle Always-Free VM) ──
+      // Cost-free path — OpenAI credits are only spent when this is down.
+      if (localConfig) {
+        const localOutcome = await forwardCompletion({
+          url: localConfig.url,
+          headers: {
+            'content-type': 'application/json',
+            ...(localConfig.apiToken
+              ? { authorization: `Bearer ${localConfig.apiToken}` }
+              : {}),
+          },
+          body: buildLocalBody(rawPayload, localConfig),
+          timeoutMs: localConfig.timeoutMs,
+        });
+
+        if (localOutcome.status >= 200 && localOutcome.status < 300) {
+          res.status(localOutcome.status).json(localOutcome.data);
+          return;
+        }
+
+        // Any non-2xx (including 429/5xx) or network failure falls back to
+        // OpenAI so AI features stay available while the VM is down.
+        console.warn(
+          `Local LLM request failed (${localOutcome.status}); falling back to OpenAI.`,
+          localOutcome.data?.error || localOutcome.data?.message || ''
+        );
+      }
+
+      // ── Fallback: OpenAI (only reached when the local server is down or not configured) ──
       if (!apiKey) {
         console.error('No API key configured. Set the OPENAI_API_KEY Firebase secret.');
         res.status(500).json({ error: 'Service configuration error' });
         return;
       }
-      
-      // The app sends OpenAI-format requests directly — no transformation needed.
-      // Just forward the payload as-is to OpenAI's Chat Completions API.
-      const rawPayload = req.body.payload || req.body;
 
-      // Ensure the payload has the required fields for OpenAI Chat Completions
-      const openaiBody = {
-        model: rawPayload.model || 'gpt-4o',
-        messages: rawPayload.messages || [],
-        temperature: rawPayload.temperature ?? 0.7,
-        max_tokens: rawPayload.max_tokens || rawPayload.max_completion_tokens || 2000,
-        stream: false,
-      };
-      
-      // Copy over any additional fields the client may have sent
-      if (rawPayload.response_format) openaiBody.response_format = rawPayload.response_format;
-      if (rawPayload.top_p) openaiBody.top_p = rawPayload.top_p;
-      if (rawPayload.frequency_penalty) openaiBody.frequency_penalty = rawPayload.frequency_penalty;
-      if (rawPayload.presence_penalty) openaiBody.presence_penalty = rawPayload.presence_penalty;
+      // GPT-5.x models (GPT-4o was retired in Feb 2026) reject max_tokens and
+      // only accept temperature/top_p when reasoning effort is 'none', so we
+      // normalize to max_completion_tokens and default reasoning_effort to
+      // 'none' unless the client explicitly requested another effort level.
+      const openaiBody = buildOpenAiBody(rawPayload);
 
-      // Forward the request to OpenAI Chat Completions API
-      const openaiUrl = 'https://api.openai.com/v1/chat/completions';
-      
-      const openaiResponse = await fetch(openaiUrl, {
+      // Bound the OpenAI fallback so a hung upstream can never outlive the
+      // client's request timeout (the Cloud Function itself allows 300s).
+      const openaiResponse = await fetch(OPENAI_URL, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
           'authorization': `Bearer ${apiKey}`,
         },
-        body: JSON.stringify(openaiBody)
+        body: JSON.stringify(openaiBody),
+        signal: AbortSignal.timeout(55000),
       });
       
       const data = await openaiResponse.json();
+
+      // Preserve provider throttling semantics so clients can back off instead
+      // of treating a temporary quota limit as a permanent server failure.
+      if (openaiResponse.status === 429) {
+        const retryAfter = openaiResponse.headers.get('retry-after');
+        if (retryAfter) res.set('Retry-After', retryAfter);
+        res.status(429).json(data);
+        return;
+      }
       
       // Return OpenAI's response to the client
       res.status(openaiResponse.status).json(data);
       
     } catch (error) {
       console.error('OpenAI proxy error:', error);
+      if ((error instanceof functions.https.HttpsError &&
+          error.code === 'resource-exhausted') ||
+          error?.code === 'resource-exhausted') {
+        res.set('Retry-After', '60');
+        res.status(429).json({
+          error: 'Rate limit exceeded',
+          message: error.message,
+        });
+        return;
+      }
       res.status(500).json({ 
         error: 'Failed to process request',
         message: error.message 
@@ -1590,7 +1675,29 @@ exports.sendTwoFactorCode = functions
     }
 
     const emailLower = email.toLowerCase().trim();
-    await checkRateLimit(emailLower, 'sendTwoFactorCode', 5);
+
+    // HIGH #2 mitigation: sendTwoFactorCode is callable WITHOUT auth (the
+    // sign-in 2FA flow needs it — see lib/services/security_services.dart
+    // line 877-879). The audit's "require context.auth" recommendation
+    // would break the sign-in flow. Instead, mitigate the email-bomb risk
+    // with a per-source-IP rate limit (10 emails/hour per source IP) in
+    // addition to the per-target-email rate limit (3 emails/hour per
+    // email, tightened from 5). The per-IP limit prevents one attacker
+    // from spamming many different email addresses; the per-email limit
+    // bounds the volume any single victim can receive.
+    const fwdFor = (context.rawRequest && context.rawRequest.headers && context.rawRequest.headers['x-forwarded-for']) || '';
+    const clientIp = fwdFor.toString().split(',')[0].trim()
+      || (context.rawRequest && context.rawRequest.ip)
+      || 'unknown';
+    if (clientIp && clientIp !== 'unknown') {
+      try {
+        await checkRateLimit(clientIp, 'sendTwoFactorCode_ip', 10);
+      } catch (e) {
+        console.warn(`[sendTwoFactorCode] Per-IP rate limit hit for ${clientIp}: ${e.message}`);
+        throw e;
+      }
+    }
+    await checkRateLimit(emailLower, 'sendTwoFactorCode', 3);
 
     const resend = getResendClient();
     const otp = generateOtp();
@@ -2067,29 +2174,37 @@ exports.handleResendWebhook = functions
       return;
     }
 
-    // ── Signature verification ────────────────────────────────────────
+    // ── Signature verification (MANDATORY) ───────────────────────────────
+    // HIGH/MEDIUM audit finding: previously this was best-effort — if
+    // RESEND_WEBHOOK_SECRET was unset OR the signature check threw, the
+    // webhook was processed anyway. That allowed any external party to
+    // POST forged events and mutate teamInvitations (deliveryStatus,
+    // failureReason, etc.) knowing only a messageId (which is logged).
+    // Now: hard-fail. No secret → 401. Bad signature → 401. Throw → 401.
     const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      try {
-        const signature = req.headers['resend-signature'] || '';
-        const timestamp = req.headers['resend-timestamp'] || '';
-        const body = JSON.stringify(req.body);
-        const payload = `${timestamp}.${body}`;
-        const expectedSig = crypto
-          .createHmac('sha256', webhookSecret)
-          .update(payload)
-          .digest('hex');
-        if (signature !== expectedSig) {
-          console.error('[Webhook] Invalid signature — rejecting');
-          res.status(401).json({ error: 'Invalid signature' });
-          return;
-        }
-      } catch (e) {
-        console.error('[Webhook] Signature check error:', e);
-        // Continue anyway — signature verification is best-effort
+    if (!webhookSecret) {
+      console.error('[Webhook] RESEND_WEBHOOK_SECRET not set — refusing to process webhook. Set via: firebase functions:secrets:set RESEND_WEBHOOK_SECRET');
+      res.status(401).json({ error: 'Webhook secret not configured.' });
+      return;
+    }
+    try {
+      const signature = req.headers['resend-signature'] || '';
+      const timestamp = req.headers['resend-timestamp'] || '';
+      const body = JSON.stringify(req.body);
+      const payload = `${timestamp}.${body}`;
+      const expectedSig = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(payload)
+        .digest('hex');
+      if (signature !== expectedSig) {
+        console.error('[Webhook] Invalid signature — rejecting');
+        res.status(401).json({ error: 'Invalid signature' });
+        return;
       }
-    } else {
-      console.warn('[Webhook] RESEND_WEBHOOK_SECRET not set — skipping signature verification');
+    } catch (e) {
+      console.error('[Webhook] Signature check error:', e);
+      res.status(401).json({ error: 'Signature verification failed.' });
+      return;
     }
 
     const event = req.body;
@@ -2177,6 +2292,422 @@ exports.handleResendWebhook = functions
 
     res.status(200).json({ received: true });
   });
+
+// ============================================================================
+// CHARTER APPROVAL EMAIL
+// ============================================================================
+exports.sendCharterApprovalEmail = functions
+  .runWith({
+    secrets: ['RESEND_API_KEY'],
+    timeoutSeconds: 30,
+    memory: '256MB'
+  })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'You must be signed in.');
+    }
+
+    const { toEmail, toName, projectName, approverRole, deepLinkUrl, isFallback } = data;
+
+    if (!toEmail || typeof toEmail !== 'string' || !toEmail.includes('@')) {
+      throw new functions.https.HttpsError('invalid-argument', 'A valid approver email is required.');
+    }
+
+    const project = projectName || 'Untitled Project';
+    const role = approverRole || 'Approver';
+    const senderName = context.auth.token.name || context.auth.token.email || 'Project Owner';
+    const link = deepLinkUrl || 'https://nduproject.tech';
+
+    await checkRateLimit(context.auth.uid, 'charter_email', 10);
+
+    const resend = getResendClient();
+
+    const fallbackNote = isFallback
+      ? '<p style="font-size:13px;color:#92400e;background:#fef3c7;border-radius:8px;padding:12px 16px;margin:0 0 24px;">\u26a0\ufe0f You have been identified as the approver because the originally named sponsor/owner is not a registered user. As the highest-role user, you are authorized to approve this charter.</p>'
+      : '';
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:40px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr><td style="background:#051424;padding:32px 40px;text-align:center;">
+          <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:1px;">NDU <span style="color:#f8bd2a;">PROJECT</span></div>
+          <div style="font-size:11px;color:#909096;letter-spacing:3px;margin-top:4px;">NAVIGATE. DELIVER. UPGRADE.</div>
+        </td></tr>
+        <tr><td style="padding:40px;">
+          <h1 style="font-size:22px;font-weight:700;color:#1a1d1f;margin:0 0 16px;">Charter Approval Required</h1>
+          <p style="font-size:15px;color:#495057;line-height:1.6;margin:0 0 24px;"><strong>${senderName}</strong> has submitted the Project Charter for <strong>${project}</strong> and it requires your review and approval.</p>
+          ${fallbackNote}
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:12px;margin:0 0 24px;">
+            <tr><td style="padding:20px;">
+              <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">Project</p>
+              <p style="font-size:15px;font-weight:600;color:#1a1d1f;margin:0 0 16px;">${project}</p>
+              <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">Your Role</p>
+              <p style="font-size:15px;font-weight:600;color:#1a1d1f;margin:0;">${role}</p>
+            </td></tr>
+          </table>
+          <p style="font-size:14px;color:#6b7280;line-height:1.6;margin:0 0 32px;">Please review the Front End Execution Plan and confirm that all applicable subject matter experts have reviewed the relevant sections before approving.</p>
+          <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
+            <tr><td style="background:#ffc107;border-radius:12px;">
+              <a href="${link}" style="display:inline-block;padding:14px 36px;font-size:15px;font-weight:700;color:#1a1d1f;text-decoration:none;">Review &amp; Approve Charter &rarr;</a>
+            </td></tr>
+          </table>
+          <p style="font-size:13px;color:#9ca3af;line-height:1.5;margin:0 0 8px;">Or copy this link into your browser:</p>
+          <p style="font-size:13px;color:#6366f1;word-break:break-all;margin:0 0 32px;">${link}</p>
+          <div style="border-top:1px solid #e4e7ec;padding-top:24px;">
+            <p style="font-size:12px;color:#9ca3af;margin:0;">This approval request was sent by ${senderName} via NDU Project. If you weren't expecting this, you can safely ignore this email.</p>
+          </div>
+        </td></tr>
+      </table>
+      <p style="font-size:11px;color:#9ca3af;margin:24px 0 0;">\u00a9 2026 NDU Project. All rights reserved.</p>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+    try {
+      const { data: emailResult, error } = await resend.emails.send({
+        from: RESEND_FROM_EMAIL,
+        to: toEmail,
+        subject: `Action Required: Approve Project Charter \u2014 ${project}`,
+        html: htmlBody,
+        text: `${senderName} has submitted the Project Charter for ${project} and it requires your review and approval. Visit ${link} to review and approve.`,
+      });
+
+      if (error) {
+        console.error('Resend charter email error:', error);
+        throw new functions.https.HttpsError('internal', `Failed to send charter email: ${error.message}`);
+      }
+
+      console.log(`Charter approval email sent to ${toEmail}: ${emailResult?.id}`);
+
+      // Track in Firestore
+      await db.collection('charter_approval_emails').add({
+        toEmail: toEmail.toLowerCase().trim(),
+        toName: toName || '',
+        toRole: role,
+        subject: `Action Required: Approve Project Charter \u2014 ${project}`,
+        projectId: data.projectId || '',
+        projectName: project,
+        status: 'sent',
+        deliveryStatus: 'pending',
+        messageId: emailResult?.id || null,
+        sentBy: context.auth.uid,
+        isFallbackApprover: isFallback || false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      await logSecurityEvent('charter_approval_email_sent', context.auth.uid, { toEmail, project });
+
+      return { success: true, messageId: emailResult?.id };
+
+    } catch (error) {
+      console.error('Charter approval email error:', error);
+      if (error instanceof functions.https.HttpsError) throw error;
+      throw new functions.https.HttpsError('internal', `Failed to send charter email: ${error.message}`);
+    }
+  });
+
+// ============================================================================
+// PROJECT MANAGER INVITATION EMAIL
+// ============================================================================
+// Sends an email from noreply@nduproject.tech to a user who has been assigned
+// as the Project Manager for a project. The user is pre-populated from the
+// site's registered users collection (callers query 'users' and surface them
+// in an Autocomplete — see _showAssignManagerDialog in
+// lib/screens/project_charter_sections.dart). The Cloud Function accepts a
+// `resend` flag so the caller can re-send the invitation without re-creating
+// the underlying assignment (the user already has the role).
+//
+// Firestore collection: 'manager_invitations' (one document per send, with
+// toEmail / toName / projectName / projectId / sentBy / sentAt / isResend /
+// messageId). The collection is queried by the caller to detect whether a
+// 'Resend' button should appear on the Assign Project Manager dialog.
+//
+// Called from Flutter:
+//   FirebaseFunctions.instance.httpsCallable('sendManagerInvite')
+//       .call({ toEmail, toName, projectName, projectId, managerName, resend });
+// ============================================================================
+exports.sendManagerInvite = functions
+  .runWith({
+    secrets: ['RESEND_API_KEY'],
+    timeoutSeconds: 30,
+    memory: '256MB'
+  })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'You must be signed in.');
+    }
+
+    const {
+      toEmail,
+      toName,
+      projectName,
+      projectId,
+      managerName,
+      resend
+    } = data || {};
+
+    if (!toEmail || typeof toEmail !== 'string' || !toEmail.includes('@')) {
+      throw new functions.https.HttpsError('invalid-argument', 'A valid manager email is required.');
+    }
+
+    const project = (projectName && String(projectName).trim().length > 0)
+      ? String(projectName).trim()
+      : 'Untitled Project';
+    const managerDisplay = (managerName && String(managerName).trim().length > 0)
+      ? String(managerName).trim()
+      : (toName && String(toName).trim().length > 0 ? String(toName).trim() : 'there');
+    const senderName = context.auth.token.name || context.auth.token.email || 'Project Owner';
+    const isResend = Boolean(resend);
+
+    await checkRateLimit(context.auth.uid, 'manager_invite', 15); // 15 sends/hour per sender
+
+    const resendClient = getResendClient();
+
+    const subject = isResend
+      ? `Reminder: You are the Project Manager for ${project}`
+      : `You've been assigned as Project Manager for ${project}`;
+
+    const ctaUrl = projectId && String(projectId).trim().length > 0
+      ? `https://nduproject.tech/#/project-charter?projectId=${encodeURIComponent(String(projectId).trim())}`
+      : 'https://nduproject.tech/#/project-charter';
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:40px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr><td style="background:#051424;padding:32px 40px;text-align:center;">
+          <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:1px;">NDU <span style="color:#f8bd2a;">PROJECT</span></div>
+          <div style="font-size:11px;color:#909096;letter-spacing:3px;margin-top:4px;">NAVIGATE. DELIVER. UPGRADE.</div>
+        </td></tr>
+        <tr><td style="padding:40px;">
+          <h1 style="font-size:22px;font-weight:700;color:#1a1d1f;margin:0 0 16px;">${isResend ? 'Reminder: ' : ''}You're the Project Manager</h1>
+          <p style="font-size:15px;color:#495057;line-height:1.6;margin:0 0 24px;"><strong>${senderName}</strong> has assigned you as the Project Manager for <strong>${project}</strong>. You will be responsible for planning, execution, and delivery of this project on the NDU Project platform.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:12px;margin:0 0 24px;">
+            <tr><td style="padding:20px;">
+              <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">Project</p>
+              <p style="font-size:15px;font-weight:600;color:#1a1d1f;margin:0 0 16px;">${project}</p>
+              <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">Your Role</p>
+              <p style="font-size:15px;font-weight:600;color:#1a1d1f;margin:0;">Project Manager</p>
+            </td></tr>
+          </table>
+          <p style="font-size:14px;color:#6b7280;line-height:1.6;margin:0 0 32px;">Please sign in to NDU Project to review the project charter, front-end execution plan, and milestone schedule before kicking off execution.</p>
+          <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
+            <tr><td style="background:#ffc107;border-radius:12px;">
+              <a href="${ctaUrl}" style="display:inline-block;padding:14px 36px;font-size:15px;font-weight:700;color:#1a1d1f;text-decoration:none;">Open Project Charter &rarr;</a>
+            </td></tr>
+          </table>
+          <p style="font-size:13px;color:#9ca3af;line-height:1.5;margin:0 0 8px;">Or copy this link into your browser:</p>
+          <p style="font-size:13px;color:#6366f1;word-break:break-all;margin:0 0 32px;">${ctaUrl}</p>
+          <div style="border-top:1px solid #e4e7ec;padding-top:24px;">
+            <p style="font-size:12px;color:#9ca3af;margin:0;">This assignment was made by ${senderName} via NDU Project. If you believe this was sent in error, you can safely ignore this email.</p>
+          </div>
+        </td></tr>
+      </table>
+      <p style="font-size:11px;color:#9ca3af;margin:24px 0 0;">&copy; 2026 NDU Project. All rights reserved.</p>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+    try {
+      const { data: emailResult, error } = await resendClient.emails.send({
+        from: RESEND_FROM_EMAIL,
+        to: toEmail,
+        subject: subject,
+        html: htmlBody,
+        text: `${senderName} has assigned you as Project Manager for ${project}. Visit ${ctaUrl} to review and start.`
+      });
+
+      if (error) {
+        console.error('Resend manager invite error:', error);
+        throw new functions.https.HttpsError('internal', `Failed to send manager invite: ${error.message}`);
+      }
+
+      console.log(`Manager invite email sent to ${toEmail}: ${emailResult?.id} (resend=${isResend})`);
+
+      // Track in Firestore so the caller can detect 'already invited' state.
+      await db.collection('manager_invitations').add({
+        toEmail: toEmail.toLowerCase().trim(),
+        toName: managerDisplay,
+        projectName: project,
+        projectId: projectId || '',
+        sentBy: context.auth.uid,
+        isResend: isResend,
+        messageId: emailResult?.id || null,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      await logSecurityEvent('manager_invite_sent', context.auth.uid, { toEmail, project, isResend });
+
+      return { success: true, messageId: emailResult?.id, isResend: isResend };
+
+    } catch (error) {
+      console.error('Manager invite email error:', error);
+      if (error instanceof functions.https.HttpsError) throw error;
+      throw new functions.https.HttpsError('internal', `Failed to send manager invite: ${error.message}`);
+    }
+  });
+
+// ============================================================================
+// ADMIN: PROFILE-ONBOARDING SURVEY RESPONSES
+// ============================================================================
+//
+// Returns every user's profile-onboarding (survey) answers in a single
+// payload for the admin panel's "Survey Responses" screen. Uses the
+// Admin SDK so the read bypasses Firestore rules — this means the screen
+// works whether or not the firestore.rules change that grants admins
+// direct read access to users/{uid}/profile/onboarding has been deployed
+// (which it can't be from CI without a STAGING_DEPLOY_TOKEN).
+//
+// Authorisation:
+//   - Caller must be signed in (context.auth.uid present).
+//   - Caller's email must be in ADMIN_EMAILS (same list used by
+//     getUserInvoices / sendManagerInvite / sendCharterApprovalEmail).
+//   - Returns 403 otherwise.
+//
+// Response shape:
+//   {
+//     users: [
+//       {
+//         uid: "...",
+//         email: "...",
+//         displayName: "...",
+//         createdAt: "2026-08-17T11:38:05.000Z" | null,
+//         isAdmin: true | false,
+//         isActive: true | false,
+//         onboarding: {
+//           position: "...",
+//           positionOther: "...",
+//           isDecisionMaker: true | false | null,
+//           country: "...",
+//           countryOther: "...",
+//           currency: "...",
+//           currencyOther: "...",
+//           currentTools: ["..."],
+//           currentToolsOther: "...",
+//           organizationOverview: "...",
+//           invitedEmails: ["..."],
+//           maxTeamSizePerProject: 25,
+//           tierAtSignup: "growth",
+//           completedAt: "2026-08-17T11:38:05.000Z" | null,
+//           skipped: false,
+//           updatedAt: "2026-08-17T11:38:05.000Z"
+//         } | null
+//       },
+//       ...
+//     ]
+//   }
+exports.getAdminSurveyResponses = functions
+  .runWith({ timeoutSeconds: 60, memory: '256MB' })
+  .https.onCall(async (data, context) => {
+    // ── Auth gate ───────────────────────────────────────────────────────
+    if (!context.auth || !context.auth.uid) {
+      throw new functions.https.HttpsError('unauthenticated', 'Sign in required.');
+    }
+    const ADMIN_EMAILS = ['chungu424@gmail.com'];
+    const callerEmail = (context.auth.token && context.auth.token.email) || '';
+    if (!ADMIN_EMAILS.includes(callerEmail)) {
+      throw new functions.https.HttpsError('permission-denied', 'Admin access required.');
+    }
+
+    try {
+      // ── Read all user docs (top-level collection) ──
+      // We deliberately do NOT paginate — the admin panel expects a single
+      // snapshot. If the user base grows past ~50k we should switch to a
+      // cursor-based variant, but for the current scale this is fine.
+      const usersSnapshot = await db.collection('users').get();
+
+      // ── Read every user's profile/onboarding doc in parallel ─────────
+      // Collection-group query is faster than N reads, but the per-user get
+      // pattern is simpler and matches the existing per-user lookups used by
+      // the rest of the admin codebase. Batching is bounded by the user count.
+      const users = [];
+      await Promise.all(usersSnapshot.docs.map(async (userDoc) => {
+        const userData = userDoc.data();
+        let onboarding = null;
+        try {
+          const onboardingSnap = await db
+            .collection('users')
+            .doc(userDoc.id)
+            .collection('profile')
+            .doc('onboarding')
+            .get();
+          if (onboardingSnap.exists) {
+            const data = onboardingSnap.data();
+            // Serialise Firestore Timestamps to ISO strings so the client
+            // can pass them straight to Dart's DateTime.parse.
+            const toIso = (ts) => {
+              if (!ts) return null;
+              if (ts.toDate) return ts.toDate().toISOString();
+              if (ts instanceof Date) return ts.toISOString();
+              if (typeof ts === 'string') return ts;
+              return null;
+            };
+            onboarding = {
+              position: data.position || null,
+              positionOther: data.positionOther || null,
+              isDecisionMaker: typeof data.isDecisionMaker === 'boolean' ? data.isDecisionMaker : null,
+              country: data.country || null,
+              countryOther: data.countryOther || null,
+              currency: data.currency || null,
+              currencyOther: data.currencyOther || null,
+              currentTools: Array.isArray(data.currentTools) ? data.currentTools : [],
+              currentToolsOther: data.currentToolsOther || null,
+              organizationOverview: data.organizationOverview || null,
+              invitedEmails: Array.isArray(data.invitedEmails) ? data.invitedEmails : [],
+              maxTeamSizePerProject: typeof data.maxTeamSizePerProject === 'number' ? data.maxTeamSizePerProject : null,
+              tierAtSignup: data.tierAtSignup || null,
+              completedAt: toIso(data.completedAt),
+              skipped: data.skipped === true,
+              updatedAt: toIso(data.updatedAt),
+            };
+          }
+        } catch (err) {
+          // Per-user failure shouldn't break the whole payload — just log
+          // and surface this user with onboarding: null.
+          console.error(`Failed to read onboarding for ${userDoc.id}:`, err);
+        }
+
+        const createdRaw = userData.createdAt;
+        const createdIso = createdRaw && createdRaw.toDate
+          ? createdRaw.toDate().toISOString()
+          : (createdRaw instanceof Date ? createdRaw.toISOString() : null);
+
+        users.push({
+          uid: userDoc.id,
+          email: userData.email || '',
+          displayName: userData.displayName || '',
+          createdAt: createdIso,
+          isAdmin: userData.isAdmin === true,
+          isActive: userData.isActive !== false, // default true
+          onboarding,
+        });
+      }));
+
+      await logSecurityEvent('admin_survey_responses_read', context.auth.uid, {
+        userCount: users.length,
+      });
+
+      return { users };
+    } catch (error) {
+      console.error('getAdminSurveyResponses error:', error);
+      throw new functions.https.HttpsError('internal', `Failed to fetch survey responses: ${error.message}`);
+    }
+  });
+
+// ============================================================================
+// SECURITY UTILITIES (shared across all Cloud Functions)
+// ============================================================================
 
 // Export security utilities for use in other functions
 module.exports.security = {

@@ -28,7 +28,7 @@ class ProgramBasicsScreen extends StatelessWidget {
  Widget build(BuildContext context) {
  return Scaffold(
  // Use a white page background per spec
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: Stack(
  children: [
  SafeArea(
@@ -380,7 +380,7 @@ class ProjectDetailsScreen extends StatelessWidget {
  Widget build(BuildContext context) {
  return Scaffold(
  // Use white background for the follow-on step as well
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -501,7 +501,7 @@ void _showAiHintDialog(BuildContext context) {
  builder: (ctx) {
  return Center(
  child: Dialog(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  insetPadding:
  const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
  shape:

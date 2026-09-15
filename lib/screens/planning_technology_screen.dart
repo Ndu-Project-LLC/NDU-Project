@@ -297,7 +297,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  content: SizedBox(
  width: MediaQuery.of(context).size.width * 0.82,
  child: ConstrainedBox(
- constraints: const BoxConstraints(maxWidth: 1100),
+ constraints: const BoxConstraints(maxWidth: 720),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
@@ -912,7 +912,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  );
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Stack(
  children: [
@@ -1524,8 +1524,8 @@ onBack: () =>
  screenTitle: 'Planning Technology',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_technology_notes'] ?? 'No data recorded.'),
  ],
@@ -1617,7 +1617,7 @@ class _StatusBadge extends StatelessWidget {
  final color = normalized.contains('deployed')
  ? const Color(0xFF166534)
  : normalized.contains('implemented')
- ? const Color(0xFF1D4ED8)
+ ? const Color(0xFFFFC812)
  : normalized.contains('dismissed')
  ? const Color(0xFF991B1B)
  : const Color(0xFF92400E);

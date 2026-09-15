@@ -23,7 +23,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Stakeholder Identification',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -47,7 +47,7 @@ class ExecutionPlanStakeholderIdentificationScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Stakeholder Identification',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -99,7 +99,7 @@ class _StakeholderIdentificationSectionState
       screenTitle: 'Stakeholder Identification',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text(
             'Notes',
@@ -332,7 +332,7 @@ class _StakeholderIdentificationSectionState
             children: [
               CsvTableImportButton(
                 tableTitle: 'Stakeholders',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'stakeholderGroup',
                       label: 'Stakeholder Group',
@@ -393,7 +393,7 @@ class _StakeholderIdentificationSectionState
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileStakeholderIdentificationActions()
+          const _MobileStakeholderIdentificationActions()
         else
           const _DesktopStakeholderIdentificationActions(),
       ],

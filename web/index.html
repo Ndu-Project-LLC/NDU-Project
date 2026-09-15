@@ -137,10 +137,17 @@
   <script>
     (function() {
       // NDU_BUILD_STAMP is replaced at build time by scripts/stamp_build_version.py
+      // with a 10-digit epoch timestamp (e.g. '1786708977').
+      //
+      // IMPORTANT: We must NOT compare NDU_BUILD against the literal string
+      // 'NDU_BUILD_STAMP' to detect the un-stamped source, because the stamp
+      // script does a naive text.replace() on ALL occurrences — including any
+      // literal placeholder in this comparison — which would make the check
+      // always-true after stamping and break the cache-busting redirect.
+      // Instead, we detect the un-stamped source by checking that the value
+      // is a 10-digit epoch timestamp.
       var NDU_BUILD = 'NDU_BUILD_STAMP';
-      // If the stamp wasn't replaced (e.g. running `flutter run` locally),
-      // fall back to a fixed value so the redirect logic doesn't loop.
-      if (NDU_BUILD === 'NDU_BUILD_STAMP' || !NDU_BUILD) {
+      if (!NDU_BUILD || !/^\d{10}$/.test(NDU_BUILD)) {
         NDU_BUILD = 'dev-local';
       }
       try {
@@ -189,6 +196,39 @@
             localStorage.setItem('__ndu_build', NDU_BUILD);
             location.replace(url.toString());
             return;
+          }
+
+          // 5. Fetch version.json (cache-busted via random query param) and
+          //    compare the latest deployed stamp to NDU_BUILD (which is
+          //    embedded in this index.html). If they differ, this index.html
+          //    is STALE — the browser's HTTP cache (max-age=600 on GitHub
+          //    Pages) is serving an old version. Redirect to the new stamp
+          //    so the browser fetches fresh HTML/JS from the origin.
+          //
+          //    This runs ASYNC — it does NOT block page load. If a new
+          //    deploy is detected, the redirect kills the in-progress
+          //    bootstrap. The user sees a brief flash before redirect,
+          //    but always ends up on the latest version.
+          //
+          //    Without this check, users with cached OLD index.html will
+          //    continue to see the OLD app for up to 10 minutes after
+          //    each deploy because the existing redirect logic above
+          //    only redirects to the OLD stamp embedded in OLD index.html.
+          try {
+            fetch('version.json?cb=' + Date.now() + Math.random().toString(36).slice(2), {cache: 'no-cache'})
+              .then(function(r) { return r.ok ? r.json() : null; })
+              .then(function(data) {
+                if (!data || !data.build) return;
+                if (data.build === NDU_BUILD) return; // same — no redirect needed
+                // New deploy detected — redirect with new stamp.
+                var u = new URL(location.href);
+                u.searchParams.set('_ndu', data.build);
+                localStorage.setItem('__ndu_build', data.build);
+                location.replace(u.toString());
+              })
+              .catch(function() { /* network error — ignore, fall through */ });
+          } catch(e) {
+            console.warn('[NDU] version.json fetch error:', e);
           }
         }
 

@@ -25,7 +25,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Execution Plan Solutions',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -103,7 +103,7 @@ class _ExecutionPlanSolutionsScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: 'Executive Plan Strategy',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -120,7 +120,7 @@ class _ExecutionPlanSolutionsScreenState
             const SizedBox(height: 32),
             const SectionIntro(title: 'Executive Plan Strategy'),
             const SizedBox(height: 28),
-            ExecutionPlanForm(
+            const ExecutionPlanForm(
               title: 'Executive Plan Strategy',
               hintText: 'Input your notes here...',
               noteKey: 'execution_plan_strategy',
@@ -135,7 +135,7 @@ class _ExecutionPlanSolutionsScreenState
                 children: [
                   CsvTableImportButton(
                     tableTitle: 'Execution Tools',
-                    columns: [
+                    columns: const [
                       CsvColumnSpec(
                           key: 'tool',
                           label: 'Tool',

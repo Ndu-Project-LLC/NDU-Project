@@ -135,7 +135,7 @@ class EditableContentText extends StatelessWidget {
     }
 
     // In edit mode, make it clickable with visual indicator
-    final accent = isStaticEditMode ? const Color(0xFFB45309) : Colors.blue;
+    final accent = isStaticEditMode ? const Color(0xFFB45309) : const Color(0xFFFFC812);
     return InkWell(
       onTap: () => _showEditDialog(context, isStaticEditMode: isStaticEditMode),
       borderRadius: BorderRadius.circular(4),

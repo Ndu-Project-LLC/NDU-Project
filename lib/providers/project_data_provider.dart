@@ -11,7 +11,18 @@ import 'package:ndu_project/services/project_intelligence_service.dart';
 
 /// Provider that manages project data state across the entire application
 class ProjectDataProvider extends ChangeNotifier {
-  ProjectDataProvider();
+  ProjectDataProvider() {
+    // Register as the app-wide provider so router-level observers without a
+    // BuildContext (e.g. [ContinuityRouteObserver]) can refresh the
+    // deterministic continuity snapshot on every page push. Mirrors the
+    // existing [lastKnownProjectId] app-wide static pattern.
+    active = this;
+  }
+
+  /// Most-recently-created app-level [ProjectDataProvider] instance. Used by
+  /// the router-level [ContinuityRouteObserver] to call
+  /// [prepareForCheckpoint] when the user navigates between pages.
+  static ProjectDataProvider? active;
 
   /// Most-recently-loaded project ID across all [ProjectDataProvider]
   /// instances in the app. Used by the router-level [ActivityAutoLogger]
@@ -42,6 +53,13 @@ class ProjectDataProvider extends ChangeNotifier {
     _autoSaveDebounce = Timer(const Duration(seconds: 2), () {
       saveToFirebase();
     });
+  }
+
+  @override
+  void dispose() {
+    _autoSaveDebounce?.cancel();
+    _autoSaveDebounce = null;
+    super.dispose();
   }
 
   /// Computes a rough progress percentage from the current checkpoint.
@@ -784,13 +802,11 @@ class ProjectDataProvider extends ChangeNotifier {
     if (!solutionExists) return false;
 
     _projectData.setPreferredSolution(solutionId);
-    // Lock the Business Case sections now that a preferred solution
-    // has been chosen. The dedicated IT/Infrastructure Considerations
-    // pages remain editable (they belong to the FEP, not the Business
-    // Case), but the Business Case workflow screens (Scope Statement,
-    // Potential Solutions, Risk Identification, Core Stakeholders,
-    // Initial Cost Estimate, Preferred Solution Analysis) become
-    // view-only.
+    // Lock ALL Business Case sections now that a preferred solution
+    // has been chosen: Scope Statement, Potential Solutions, Risk
+    // Identification, IT Considerations, Infrastructure Considerations,
+    // Core Stakeholders, Initial Cost Estimate and Preferred Solution
+    // Analysis all become view-only.
     _projectData = _projectData.copyWith(
       frontEndPlanning: _projectData.frontEndPlanning.copyWith(
         businessCaseLocked: true,

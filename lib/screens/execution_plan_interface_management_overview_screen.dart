@@ -25,7 +25,7 @@ class ExecutionPlanInterfaceManagementOverviewScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Interface Management Overview',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -68,7 +68,7 @@ class _ExecutionPlanDetailsSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,7 +143,7 @@ class _InterfaceManagementSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,15 +352,15 @@ class _InterfaceManagementSection extends StatelessWidget {
   Color _typeColor(String type) {
     switch (type) {
       case 'Technical':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Contractual':
         return const Color(0xFFD97706);
       case 'Organizational':
         return const Color(0xFF10B981);
       case 'Physical':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Procedural':
-        return const Color(0xFFEC4899);
+        return const Color(0xFFD97706);
       default:
         return const Color(0xFF6B7280);
     }

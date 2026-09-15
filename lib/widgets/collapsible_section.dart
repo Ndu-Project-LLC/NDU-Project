@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
 
-/// A collapsible section with a header row that the user can tap to
-/// expand or collapse the child content. The header shows a title,
-/// an optional item count badge, and a chevron icon that rotates.
-///
-/// Used on the Project and Portfolio dashboards to make the "Project
-/// status" grid retractable.
+/// A reusable collapsible section widget that allows users to expand/collapse
+/// content panels. This helps save screen space on Launch Phase screens.
 class CollapsibleSection extends StatefulWidget {
+  final String title;
+  final IconData? icon;
+  final Color? iconColor;
+  final Widget child;
+  final bool initiallyExpanded;
+  final EdgeInsets? padding;
+  final Widget? trailing;
+
   const CollapsibleSection({
     super.key,
     required this.title,
+    this.icon,
+    this.iconColor,
     required this.child,
-    this.itemCount,
     this.initiallyExpanded = true,
-    this.accentColor = const Color(0xFF0F172A),
+    this.padding,
+    this.trailing,
   });
-
-  final String title;
-  final Widget child;
-  final int? itemCount;
-  final bool initiallyExpanded;
-  final Color accentColor;
 
   @override
   State<CollapsibleSection> createState() => _CollapsibleSectionState();
@@ -29,26 +29,24 @@ class CollapsibleSection extends StatefulWidget {
 class _CollapsibleSectionState extends State<CollapsibleSection>
     with SingleTickerProviderStateMixin {
   late bool _isExpanded;
-  late final AnimationController _controller;
-  late final Animation<double> _expandAnimation;
-  late final Animation<double> _chevronRotation;
+  late AnimationController _controller;
+  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
     _isExpanded = widget.initiallyExpanded;
     _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
       vsync: this,
-      duration: const Duration(milliseconds: 280),
-      value: _isExpanded ? 1.0 : 0.0,
     );
-    _expandAnimation = CurvedAnimation(
+    _animation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOutCubic,
+      curve: Curves.easeInOut,
     );
-    _chevronRotation = Tween<double>(begin: 0.0, end: 0.5).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    if (_isExpanded) {
+      _controller.value = 1.0;
+    }
   }
 
   @override
@@ -57,87 +55,97 @@ class _CollapsibleSectionState extends State<CollapsibleSection>
     super.dispose();
   }
 
-  void _toggle() {
-    setState(() => _isExpanded = !_isExpanded);
-    if (_isExpanded) {
-      _controller.forward();
-    } else {
-      _controller.reverse();
-    }
+  void _toggleExpanded() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+      if (_isExpanded) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Header (tappable) ──────────────────────────────────────────
-        InkWell(
-          onTap: _toggle,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-            child: Row(
-              children: [
-                Text(
-                  widget.title,
-                  style: TextStyle(
-                    decoration: TextDecoration.none,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: widget.accentColor,
-                  ),
-                ),
-                if (widget.itemCount != null) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '${widget.itemCount}',
-                      style: const TextStyle(
-                        decoration: TextDecoration.none,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF64748B),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header - always visible, clickable to toggle
+          InkWell(
+            onTap: _toggleExpanded,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            child: Container(
+              padding: widget.padding ??
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                children: [
+                  if (widget.icon != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: (widget.iconColor ?? const Color(0xFF6B7280))
+                            .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
                       ),
+                      child: Icon(
+                        widget.icon,
+                        size: 20,
+                        color: widget.iconColor ?? const Color(0xFF6B7280),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: Text(
+                      widget.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                  ),
+                  if (widget.trailing != null) ...[
+                    widget.trailing!,
+                    const SizedBox(width: 8),
+                  ],
+                  AnimatedRotation(
+                    turns: _isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 300),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 24,
+                      color: Color(0xFF6B7280),
                     ),
                   ),
                 ],
-                const Spacer(),
-                AnimatedBuilder(
-                  animation: _chevronRotation,
-                  builder: (context, _) {
-                    return Transform.rotate(
-                      angle: _chevronRotation.value * 3.14159265,
-                      child: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        size: 22,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    );
-                  },
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-        // ── Collapsible content ─────────────────────────────────────────
-        SizeTransition(
-          sizeFactor: _expandAnimation,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 12),
-              widget.child,
-            ],
+          // Collapsible content
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: widget.child,
+            crossFadeState:
+                _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

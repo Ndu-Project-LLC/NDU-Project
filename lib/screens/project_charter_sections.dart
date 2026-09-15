@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,7 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/user_model.dart';
 import 'package:ndu_project/services/charter_approval_service.dart';
-import 'package:ndu_project/services/user_service.dart';
+import 'package:ndu_project/utils/charter_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/charter_tech_proc_helper.dart';
 import 'package:ndu_project/widgets/expandable_text.dart';
@@ -16,7 +17,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 // ─── Brand Color Tokens ───
 class BrandColors {
  static const background = Color(0xFFF7F9FB);
- static const primary = Color(0xFF005BB3);
+ static const primary = Color(0xFFFFC812);
  static const primaryContainer = Color(0xFF0073DF);
  static const onPrimary = Color(0xFFFFFFFF);
  static const onPrimaryContainer = Color(0xFFFEFCFF);
@@ -127,6 +128,11 @@ class CharterHeroHeader extends StatelessWidget {
  ? data!.projectName
  : 'Untitled Project';
 
+ // When the charter is approved, the FEP is locked — all
+ // regeneration / editing affordances disappear from the charter
+ // surface so the approved snapshot is preserved.
+ final isLocked = CharterLockHelper.isFepLocked(data);
+
  return Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -146,7 +152,7 @@ class CharterHeroHeader extends StatelessWidget {
  Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- if (onRegenerateAll != null) ...[
+ if (onRegenerateAll != null && !isLocked) ...[
  const SizedBox(width: 8),
  PageRegenerateAllButton(
  onRegenerateAll: onRegenerateAll!,
@@ -243,7 +249,7 @@ class CharterDashboardStats extends StatelessWidget {
  _buildStatItem('OPPORTUNITIES', opportunities, const Color(0xFF4ADE80),
  isMobile, mobileWidth: mobileItemWidth),
  if (!isMobile) _buildDivider(),
- _buildStatItem('DURATION', duration, const Color(0xFF60A5FA), isMobile, mobileWidth: mobileItemWidth),
+ _buildStatItem('DURATION', duration, const Color(0xFFFFC812), isMobile, mobileWidth: mobileItemWidth),
  if (!isMobile) _buildDivider(),
  _buildStatItem(
  'RISK',
@@ -366,13 +372,30 @@ class CharterDashboardStats extends StatelessWidget {
 class CharterMetaInfoScroll extends StatefulWidget {
  final ProjectDataModel? data;
 
- const CharterMetaInfoScroll({super.key, required this.data});
+ /// Optional key attached to the Project Manager card so an external
+ /// spotlight walkthrough (see SpotlightWalkthrough) can highlight the
+ /// card — and let taps fall through to it.
+ final GlobalKey? pmCardKey;
+
+ const CharterMetaInfoScroll({super.key, required this.data, this.pmCardKey});
 
  @override
- State<CharterMetaInfoScroll> createState() => _CharterMetaInfoScrollState();
+ State<CharterMetaInfoScroll> createState() => CharterMetaInfoScrollState();
 }
 
-class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
+class CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
+ /// Opens the "Assign Project Manager" dialog. Exposed publicly so the
+ /// Project Charter screen can trigger the exact same assign flow from
+ /// the spotlight walkthrough's "Assign Manager Now" CTA (the dialog is
+ /// the single write path for charterProjectManagerName).
+ Future<void> showAssignManagerDialog() async {
+ final data = widget.data;
+ if (data == null) return;
+ // Read-only once approved — keep the gate identical to the card tap.
+ if (CharterLockHelper.isFepLocked(data)) return;
+ await _showAssignManagerDialog(data);
+ }
+
  @override
  Widget build(BuildContext context) {
  if (widget.data == null) return const SizedBox();
@@ -380,6 +403,11 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  final data = widget.data!;
  final hasManager = data.charterProjectManagerName.isNotEmpty;
  final hasSponsor = data.charterProjectSponsorName.isNotEmpty;
+ // Charter is read-only once approved — the "Assign Manager"
+ // affordance disappears so the approved baseline is preserved.
+ final isLocked = CharterLockHelper.isFepLocked(data);
+
+ final pmNeedsAssignment = !hasManager && !isLocked;
 
  final items = [
  _MetaInfoItem(
@@ -390,7 +418,13 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  : 'Assign Manager',
  iconBgColor: BrandColors.secondaryContainer,
  iconFgColor: const Color(0xFF636262),
- onTap: hasManager ? null : () => _showAssignManagerDialog(data),
+ onTap: (hasManager || isLocked)
+ ? null
+ : () => _showAssignManagerDialog(data),
+ // Highlight the PM card while it is the one blocking progress —
+ // this is the card the spotlight walkthrough points at.
+ cardKey: widget.pmCardKey,
+ highlight: pmNeedsAssignment,
  ),
  // Sponsor card — system suggests the highest role-based authority
  // (admin, then active user, then signed-in user) as the sponsor.
@@ -527,17 +561,17 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
                    Container(
                      padding: const EdgeInsets.all(10),
                      decoration: BoxDecoration(
-                       color: const Color(0xFFEFF6FF),
+                       color: const Color(0xFFFFF8E1),
                        borderRadius: BorderRadius.circular(8),
                        border: Border.all(
-                           color: const Color(0xFF005BB3)
+                           color: const Color(0xFFFFC812)
                                .withValues(alpha: 0.2)),
                      ),
                      child: Row(
                        crossAxisAlignment: CrossAxisAlignment.start,
                        children: [
                          const Icon(Icons.lightbulb_outline,
-                             size: 16, color: Color(0xFF005BB3)),
+                             size: 16, color: Color(0xFFFFC812)),
                          const SizedBox(width: 8),
                          Expanded(
                            child: Column(
@@ -548,7 +582,7 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
                                  style: TextStyle(
                                      fontSize: 11,
                                      fontWeight: FontWeight.w700,
-                                     color: Color(0xFF005BB3)),
+                                     color: Color(0xFFFFC812)),
                                ),
                                const SizedBox(height: 2),
                                Text(
@@ -572,7 +606,7 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
                                        style: TextStyle(fontSize: 11)),
                                    style: TextButton.styleFrom(
                                      foregroundColor:
-                                         const Color(0xFF005BB3),
+                                         const Color(0xFFFFC812),
                                      padding: const EdgeInsets.symmetric(
                                          horizontal: 8, vertical: 2),
                                      minimumSize: Size.zero,
@@ -759,144 +793,340 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  }
 
  Future<void> _showAssignManagerDialog(ProjectDataModel data) async {
- final nameController = TextEditingController();
- final emailController = TextEditingController();
- final formKey = GlobalKey<FormState>();
+   final nameController = TextEditingController();
+   final emailController = TextEditingController();
+   final formKey = GlobalKey<FormState>();
 
- final result = await showDialog<Map<String, String>>(
- context: context,
- builder: (dialogContext) {
- return AlertDialog(
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(20)),
- title: Row(
- children: [
- Container(
- padding: const EdgeInsets.all(8),
- decoration: BoxDecoration(
- color: const Color(0xFFFEF3C7),
- borderRadius: BorderRadius.circular(10),
- ),
- child: const Icon(Icons.person_add_outlined,
- color: Color(0xFFB45309), size: 24),
- ),
- const SizedBox(width: 12),
- const Text('Assign Project Manager'),
- ],
- ),
- content: SizedBox(
- width: 400,
- child: Form(
- key: formKey,
- child: Column(
- mainAxisSize: MainAxisSize.min,
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Assign a project manager to this project. '
- 'A manager must be assigned before proceeding to the next step.',
- style: TextStyle(color: Colors.grey, fontSize: 13),
- ),
- const SizedBox(height: 20),
- TextFormField(
- controller: nameController,
- autofocus: true,
- decoration: InputDecoration(
- labelText: 'Manager Name',
- hintText: 'e.g. John Doe',
- border: OutlineInputBorder(
- borderRadius: BorderRadius.circular(12)),
- filled: true,
- fillColor: Colors.grey[50],
- ),
- validator: (value) {
- if (value == null || value.trim().isEmpty) {
- return 'Please enter a manager name';
- }
- if (value.trim().length < 2) {
- return 'Name must be at least 2 characters';
- }
- return null;
- },
- ),
- const SizedBox(height: 12),
- TextFormField(
- controller: emailController,
- decoration: InputDecoration(
- labelText: 'Email (optional)',
- hintText: 'e.g. john.doe@company.com',
- border: OutlineInputBorder(
- borderRadius: BorderRadius.circular(12)),
- filled: true,
- fillColor: Colors.grey[50],
- ),
- ),
- ],
- ),
- ),
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(),
- child: const Text('Cancel'),
- ),
- ElevatedButton(
- onPressed: () {
- if (formKey.currentState?.validate() ?? false) {
- Navigator.of(dialogContext).pop({
- 'name': nameController.text.trim(),
- 'email': emailController.text.trim(),
- });
- }
- },
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFFFC812),
- foregroundColor: Colors.black,
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- ),
- child: const Text('Assign'),
- ),
- ],
- );
- },
- );
+   // Load registered users BEFORE opening the dialog so the
+   // Autocomplete is fully populated by the time the user can interact.
+   // Also detect whether this manager was already invited (so we can
+   // surface a 'Resend invite' affordance instead of 'Assign').
+   List<UserModel> allUsers = const [];
+   bool isSendingInvite = false;
+   bool wasPreviouslyInvited = false;
 
- if (result == null) return;
+   try {
+     final snap = await FirebaseFirestore.instance
+         .collection('users')
+         .limit(200)
+         .get();
+     allUsers = snap.docs.map((d) => UserModel.fromJson(d.data())).toList();
+     final existingEmail = (data.charterEmail ?? '').trim().toLowerCase();
+     final existingName = data.charterProjectManagerName.trim();
+     if (existingEmail.isNotEmpty && existingName.isNotEmpty) {
+       final invSnap = await FirebaseFirestore.instance
+           .collection('manager_invitations')
+           .where('toEmail', isEqualTo: existingEmail)
+           .limit(1)
+           .get();
+       wasPreviouslyInvited = invSnap.docs.isNotEmpty;
+     }
+   } catch (e) {
+     debugPrint('Manager users load failed: $e');
+   }
 
- // Persist the manager assignment to Firestore via ProjectDataHelper
- try {
- await ProjectDataHelper.updateAndSave(
- context: context,
- checkpoint: 'project_charter',
- dataUpdater: (current) => current.copyWith(
- charterProjectManagerName: result['name']!,
- ),
- showSnackbar: false,
- );
+   final result = await showDialog<Map<String, String>>(
+     context: context,
+     builder: (dialogContext) {
+       return StatefulBuilder(
+         builder: (dialogContext, setDialogState) {
+         return AlertDialog(
+         shape: RoundedRectangleBorder(
+             borderRadius: BorderRadius.circular(20)),
+         title: Row(
+           children: [
+             Container(
+               padding: const EdgeInsets.all(8),
+               decoration: BoxDecoration(
+                 color: const Color(0xFFFEF3C7),
+                 borderRadius: BorderRadius.circular(10),
+               ),
+               child: const Icon(Icons.person_add_outlined,
+                   color: Color(0xFFB45309), size: 24),
+             ),
+             const SizedBox(width: 12),
+             const Text('Assign Project Manager'),
+           ],
+         ),
+         content: SizedBox(
+           width: 400,
+           child: Form(
+             key: formKey,
+             child: Column(
+               mainAxisSize: MainAxisSize.min,
+               crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+                 const Text(
+                   'Assign a project manager to this project. '
+                   'A manager must be assigned before proceeding to the next step. '
+                   'Start typing a name to pick from registered users — '
+                   'the email is auto-filled.',
+                   style: TextStyle(color: Colors.grey, fontSize: 13),
+                 ),
+                 const SizedBox(height: 20),
+                 // Manager Name — Autocomplete from registered users.
+                 Autocomplete<UserModel>(
+                     initialValue: TextEditingValue(
+                       text: data.charterProjectManagerName,
+                     ),
+                     displayStringForOption: (u) => u.displayName,
+                     optionsBuilder: (textEditingValue) {
+                       final q = textEditingValue.text.trim().toLowerCase();
+                       if (q.isEmpty) return allUsers;
+                       return allUsers.where((u) {
+                         final name = u.displayName.toLowerCase();
+                         final email = (u.email ?? '').toLowerCase();
+                         return name.contains(q) || email.contains(q);
+                       });
+                     },
+                     onSelected: (selection) {
+                       nameController.text = selection.displayName;
+                       emailController.text = selection.email ?? '';
+                       setDialogState(() {});
+                     },
+                     fieldViewBuilder:
+                         (ctx, controller, focusNode, onSubmitted) {
+                       controller.addListener(() {
+                         if (nameController.text != controller.text) {
+                           nameController.text = controller.text;
+                         }
+                       });
+                       return TextFormField(
+                         controller: controller,
+                         focusNode: focusNode,
+                         autofocus: true,
+                         decoration: InputDecoration(
+                           labelText: 'Manager Name',
+                           hintText: 'e.g. John Doe',
+                           border: OutlineInputBorder(
+                               borderRadius: BorderRadius.circular(12)),
+                           filled: true,
+                           fillColor: Colors.grey[50],
+                         ),
+                         validator: (value) {
+                           if (value == null || value.trim().isEmpty) {
+                             return 'Please enter a manager name';
+                           }
+                           if (value.trim().length < 2) {
+                             return 'Name must be at least 2 characters';
+                           }
+                           return null;
+                         },
+                       );
+                     },
+                     optionsViewBuilder: (ctx, onSelected, options) {
+                       return Align(
+                         alignment: Alignment.topLeft,
+                         child: Material(
+                           elevation: 4,
+                           borderRadius: BorderRadius.circular(12),
+                           child: ConstrainedBox(
+                             constraints: const BoxConstraints(maxHeight: 220),
+                             child: ListView.builder(
+                               padding: EdgeInsets.zero,
+                               shrinkWrap: true,
+                               physics: const NeverScrollableScrollPhysics(),
+                               itemCount: options.length,
+                               itemBuilder: (c, i) {
+                                 final u = options.elementAt(i);
+                                 return ListTile(
+                                   dense: true,
+                                   leading: CircleAvatar(
+                                     backgroundColor: const Color(0xFFFFC812),
+                                     child: Text(
+                                       u.displayName.isNotEmpty
+                                           ? u.displayName[0].toUpperCase()
+                                           : '?',
+                                       style: const TextStyle(color: Colors.white),
+                                     ),
+                                   ),
+                                   title: Text(u.displayName),
+                                   subtitle: Text(u.email ?? ''),
+                                   onTap: () => onSelected(u),
+                                 );
+                               },
+                             ),
+                           ),
+                         ),
+                       );
+                     },
+                   ),
+                 const SizedBox(height: 12),
+                 // Email — auto-filled when a registered user is selected,
+                 // still editable for the manual external-email path.
+                 TextFormField(
+                   controller: emailController,
+                   decoration: InputDecoration(
+                     labelText: 'Email (optional)',
+                     hintText: 'e.g. john.doe@company.com',
+                     border: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(12)),
+                     filled: true,
+                     fillColor: Colors.grey[50],
+                     suffixIcon: emailController.text.isNotEmpty
+                         ? const Icon(Icons.mail_outline,
+                             size: 18, color: Color(0xFF10B981))
+                         : null,
+                   ),
+                   onChanged: (_) => setDialogState(() {}),
+                 ),
+                 if (wasPreviouslyInvited)
+                   const Padding(
+                     padding: EdgeInsets.only(top: 8),
+                     child: Row(
+                       children: [
+                         Icon(Icons.check_circle_outline,
+                             size: 14, color: Color(0xFF10B981)),
+                         SizedBox(width: 6),
+                         Expanded(
+                           child: Text(
+                             'This manager has already been invited. '
+                             'Saving will resend the invitation email.',
+                             style: TextStyle(
+                                 fontSize: 11,
+                                 color: Color(0xFF10B981)),
+                           ),
+                         ),
+                       ],
+                     ),
+                   ),
+               ],
+             ),
+           ),
+         ),
+         actions: [
+           TextButton(
+             onPressed: () => Navigator.of(dialogContext).pop(),
+             child: const Text('Cancel'),
+           ),
+           ElevatedButton(
+             onPressed: isSendingInvite
+                 ? null
+                 : () async {
+                     if (!(formKey.currentState?.validate() ?? false)) {
+                       return;
+                     }
+                     setDialogState(() => isSendingInvite = true);
+                     try {
+                       // Persist the manager assignment to Firestore first
+                       // so the project data model reflects the new PM
+                       // before we send the email invitation.
+                       await ProjectDataHelper.updateAndSave(
+                         context: context,
+                         checkpoint: 'project_charter',
+                         dataUpdater: (current) => current.copyWith(
+                           charterProjectManagerName: nameController.text.trim(),
+                           charterEmail: emailController.text.trim().isNotEmpty
+                               ? emailController.text.trim()
+                               : current.charterEmail,
+                         ),
+                         showSnackbar: false,
+                       );
 
- if (mounted) {
- setState(() {});
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('${result['name']} assigned as Project Manager'),
- backgroundColor: Colors.green,
- ),
- );
- }
- } catch (e) {
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Failed to assign manager: $e'),
- backgroundColor: Colors.red,
- ),
- );
- }
- } finally {
- nameController.dispose();
- emailController.dispose();
- }
+                       // Send (or resend) the @nduproject.tech invitation
+                       // via the sendManagerInvite Cloud Function. Failures
+                       // don't roll back the assignment — the user is told
+                       // the email failed and offered a resend later.
+                       String? sendError;
+                       if (emailController.text.trim().isNotEmpty) {
+                         try {
+                           final callable = FirebaseFunctions.instance
+                               .httpsCallable('sendManagerInvite');
+                           await callable.call({
+                             'toEmail': emailController.text.trim(),
+                             'toName': nameController.text.trim(),
+                             'managerName': nameController.text.trim(),
+                             'projectName': data.projectName ?? '',
+                             'projectId': (data.projectId ?? '').trim(),
+                             'resend': wasPreviouslyInvited,
+                           });
+                         } on FirebaseFunctionsException catch (e) {
+                           sendError = e.message ?? e.code;
+                           debugPrint(
+                               'sendManagerInvite failed: ${e.code} ${e.message}');
+                         } catch (e) {
+                           sendError = e.toString();
+                           debugPrint('sendManagerInvite error: $e');
+                         }
+                       }
+
+                       if (!dialogContext.mounted) return;
+                       Navigator.of(dialogContext).pop({
+                         'name': nameController.text.trim(),
+                         'email': emailController.text.trim(),
+                         'inviteError': sendError ?? '',
+                       });
+                     } catch (e) {
+                       if (!dialogContext.mounted) return;
+                       Navigator.of(dialogContext).pop();
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(
+                           content: Text('Failed to assign manager: $e'),
+                           backgroundColor: Colors.red,
+                         ),
+                       );
+                     } finally {
+                       if (dialogContext.mounted) {
+                         setDialogState(() => isSendingInvite = false);
+                       }
+                     }
+                   },
+             style: ElevatedButton.styleFrom(
+               backgroundColor: const Color(0xFFFFC812),
+               foregroundColor: Colors.black,
+               shape: RoundedRectangleBorder(
+                   borderRadius: BorderRadius.circular(12)),
+             ),
+             child: isSendingInvite
+                 ? const SizedBox(
+                     width: 18,
+                     height: 18,
+                     child: CircularProgressIndicator(
+                         strokeWidth: 2, color: Colors.black),
+                   )
+                 : Text(wasPreviouslyInvited ? 'Resend Invite' : 'Assign'),
+           ),
+         ],
+       );
+         },
+       );
+     },
+   );
+
+   if (result == null) {
+     nameController.dispose();
+     emailController.dispose();
+     return;
+   }
+
+   // The persist + invite-send already happened inside the dialog (so the
+   // dialog could show a spinner on the Assign button). Here we just
+   // refresh the parent + surface a status SnackBar.
+   if (mounted) {
+     setState(() {});
+     final inviteError = (result['inviteError'] ?? '').toString();
+     if (inviteError.isEmpty) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+           content: Text(result['email']!.isNotEmpty
+               ? '${result['name']} assigned as Project Manager and invite sent to ${result['email']}.'
+               : '${result['name']} assigned as Project Manager.'),
+           backgroundColor: Colors.green,
+         ),
+       );
+     } else {
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+           content: Text(
+               '${result['name']} assigned as Project Manager, but the invite email failed: $inviteError. You can resend later.'),
+           backgroundColor: const Color(0xFFD97706),
+         ),
+       );
+     }
+   }
+
+   nameController.dispose();
+   emailController.dispose();
  }
 }
 
@@ -907,6 +1137,8 @@ class _MetaInfoItem {
  final Color iconBgColor;
  final Color iconFgColor;
  final VoidCallback? onTap;
+ final GlobalKey? cardKey;
+ final bool highlight;
 
  const _MetaInfoItem({
  required this.icon,
@@ -915,6 +1147,8 @@ class _MetaInfoItem {
  required this.iconBgColor,
  required this.iconFgColor,
  this.onTap,
+ this.cardKey,
+ this.highlight = false,
  });
 }
 
@@ -925,10 +1159,22 @@ class _MetaInfoCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
+ final decoration = item.highlight
+ ? kCardBorderDecoration.copyWith(
+ border: Border.all(color: const Color(0xFFFFC812), width: 1.5),
+ boxShadow: const [
+ BoxShadow(
+ color: Color(0x29FFC812),
+ offset: Offset(0, 2),
+ blurRadius: 10,
+ ),
+ ],
+ )
+ : kCardBorderDecoration;
  final card = Container(
  width: 200,
  padding: const EdgeInsets.all(16),
- decoration: kCardBorderDecoration,
+ decoration: decoration,
  child: Row(
  children: [
  Container(
@@ -972,16 +1218,24 @@ class _MetaInfoCard extends StatelessWidget {
  ),
  );
 
+ Widget wrapped;
  if (item.onTap != null) {
- return GestureDetector(
+ wrapped = GestureDetector(
  onTap: item.onTap,
  child: MouseRegion(
  cursor: SystemMouseCursors.click,
  child: card,
  ),
  );
+ } else {
+ wrapped = card;
  }
- return card;
+ // Attach the external spotlight key (if provided) to the final card so
+ // the walkthrough highlights exactly what the user is told to tap.
+ if (item.cardKey != null) {
+ return KeyedSubtree(key: item.cardKey, child: wrapped);
+ }
+ return wrapped;
  }
 }
 
@@ -997,6 +1251,8 @@ class CharterProjectDefinition extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  if (data == null) return const SizedBox();
+
+ final isLocked = CharterLockHelper.isFepLocked(data);
 
  final projectPurposeText = data!.projectObjective.trim().isNotEmpty
  ? data!.projectObjective
@@ -1014,7 +1270,7 @@ class CharterProjectDefinition extends StatelessWidget {
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
  sectionTitleWithIcon(Icons.description_outlined, 'Project Purpose'),
- if (onGenerate != null)
+ if (onGenerate != null && !isLocked)
  TextButton.icon(
  onPressed: onGenerate,
  icon: const Icon(Icons.auto_awesome, size: 16),
@@ -1330,7 +1586,7 @@ class CharterFinancialOverview extends StatelessWidget {
  BrandColors.error,
  Color(0xFF10B981),
  BrandColors.tertiaryFixedDim,
- Color(0xFF8B5CF6),
+ Color(0xFFB8860B),
  ];
  return table[index % table.length];
  }
@@ -1441,6 +1697,8 @@ class CharterScope extends StatelessWidget {
  Widget build(BuildContext context) {
  if (data == null) return const SizedBox();
 
+ final isLocked = CharterLockHelper.isFepLocked(data);
+
  final inScopeItems = data!.withinScope
  .where((s) => s.trim().isNotEmpty)
  .toList();
@@ -1460,7 +1718,9 @@ class CharterScope extends StatelessWidget {
  sectionTitleWithIcon(Icons.zoom_in_outlined, 'Project Scope'),
  // AI Generate removed — scope comes from the Project Details
  // page. Show an Edit button that takes the user back there.
- if (onEdit != null)
+ // When the charter is approved, the entire FEP is locked,
+ // so the edit affordance disappears.
+ if (onEdit != null && !isLocked)
  TextButton.icon(
  onPressed: onEdit,
  icon: const Icon(Icons.edit_outlined, size: 16),
@@ -1704,7 +1964,6 @@ class CharterRisks extends StatelessWidget {
  const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
  decoration: BoxDecoration(
  color: Colors.white,
- borderRadius: BorderRadius.circular(8),
  border: Border(
  left: BorderSide(color: borderColor, width: 4),
  ),
@@ -1882,6 +2141,9 @@ class _CharterTechnicalProcurementBentoState
 
     final vendorCount = data.vendors.length;
     final contractCount = data.contractors.length;
+    // Charter is read-only once approved — the "View Preferred Solution"
+    // affordance disappears so the approved baseline is preserved.
+    final isLocked = CharterLockHelper.isFepLocked(data);
 
     // IT considerations + Infrastructure source from the preferred
     // solution when one is locked. The user can still update the
@@ -1909,7 +2171,8 @@ class _CharterTechnicalProcurementBentoState
             // AI Generate removed per user request — IT considerations and
             // Infrastructure come from the preferred solution (Business Case
             // section, which is locked once a preferred solution is selected).
-            if (widget.onEdit != null)
+            // When the charter is approved, the edit affordance disappears.
+            if (widget.onEdit != null && !isLocked)
               TextButton.icon(
                 onPressed: widget.onEdit,
                 icon: const Icon(Icons.visibility_outlined, size: 16),
@@ -2724,9 +2987,22 @@ class _CharterFloatingApprovalBarState
     }
     setState(() => _sendingEmail = true);
     try {
+      // Construct a deep link to the Project Charter screen so the email's
+      // "Review & Approve Charter →" button lands the sponsor on the actual
+      // charter page (where they can review and tap "Click to Approve") —
+      // not on the bare homepage where nothing happens. The GoRouter route
+      // `/project-charter` resolves to ProjectCharterScreen, and Flutter web
+      // uses hash-based routing by default so the URL is `/#/project-charter`.
+      // projectId is appended as a query param so the charter screen can
+      // pre-select the right project when the sponsor has multiple.
+      final projectId = (data.projectId ?? '').trim();
+      final deepLinkUrl = projectId.isEmpty
+          ? 'https://nduproject.tech/#/project-charter'
+          : 'https://nduproject.tech/#/project-charter?projectId=$projectId';
       final result = await CharterApprovalService.sendApprovalRequestEmail(
         data: data,
         approver: _resolved,
+        deepLinkUrl: deepLinkUrl,
       );
       if (!mounted) return;
       final msg = switch (result.result) {
@@ -2859,9 +3135,9 @@ class _CharterFloatingApprovalBarState
               );
             }
             return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                info,
+                Expanded(child: info),
+                const SizedBox(width: 12),
                 actions,
               ],
             );
@@ -3453,140 +3729,3 @@ class _CharterAssumptionsState extends State<CharterAssumptions> {
  }
 }
 
-/// Beautiful visual walkthrough shown when no Project Manager is assigned.
-class AssignManagerWalkthrough extends StatefulWidget {
- final VoidCallback onAssignTapped;
- const AssignManagerWalkthrough({super.key, required this.onAssignTapped});
-
- @override
- State<AssignManagerWalkthrough> createState() => _AssignManagerWalkthroughState();
-}
-
-class _AssignManagerWalkthroughState extends State<AssignManagerWalkthrough>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _bobController;
-
-  @override
-  void initState() {
-    super.initState();
-    _bobController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _bobController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFF8E1), Color(0xFFFFE8A3)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF5C518), width: 1.2),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFC812),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.person_add_alt_1, color: Colors.black, size: 26),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text('Assign your Project Manager',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDC2626),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text('Required',
-                          style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Before you can move forward in the Project Charter, you need to assign a Project Manager. Here\'s how:',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF5B4300)),
-                ),
-                const SizedBox(height: 12),
-                _walkthroughStep(1, 'Tap the "PROJECT MANAGER" card below', Icons.touch_app_outlined),
-                _walkthroughStep(2, 'Enter the manager\'s name in the dialog', Icons.edit_outlined),
-                _walkthroughStep(3, 'Click "Assign" — you\'re all set!', Icons.check_circle_outline),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed: widget.onAssignTapped,
-                  icon: const Icon(Icons.person_add_outlined, size: 18),
-                  label: const Text('Assign Manager Now'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFC812),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          AnimatedBuilder(
-            animation: _bobController,
-            builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(0, _bobController.value * 6 - 3),
-                child: child,
-              );
-            },
-            child: const Padding(
-              padding: EdgeInsets.only(top: 4),
-              child: Icon(Icons.south, color: Color(0xFFB45309), size: 22),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _walkthroughStep(int n, String text, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
-        children: [
-          Container(
-            width: 22,
-            height: 22,
-            decoration: const BoxDecoration(color: Color(0xFF005BB3), shape: BoxShape.circle),
-            alignment: Alignment.center,
-            child: Text('$n', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
-          ),
-          const SizedBox(width: 8),
-          Icon(icon, size: 16, color: const Color(0xFF5B4300)),
-          const SizedBox(width: 6),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13, color: Color(0xFF1F2937)))),
-        ],
-      ),
-    );
-  }
-}

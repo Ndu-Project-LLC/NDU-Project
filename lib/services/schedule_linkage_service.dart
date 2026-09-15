@@ -126,9 +126,9 @@ class ScheduleLinkageService {
     String milestoneId,
   ) {
     try {
-      return data.scheduleActivities.firstWhere(
+      return data.scheduleActivities.where(
         (a) => a.id == milestoneId && a.isMilestone,
-      );
+      ).firstOrNull;
     } catch (e) {
       return null;
     }
@@ -140,9 +140,9 @@ class ScheduleLinkageService {
     String wbsId,
   ) {
     try {
-      return data.scheduleActivities.firstWhere(
+      return data.scheduleActivities.where(
         (a) => a.wbsId == wbsId,
-      );
+      ).firstOrNull;
     } catch (e) {
       return null;
     }

@@ -18,6 +18,14 @@ class ProcurementItemsListView extends StatelessWidget {
     required this.onAddItem,
     required this.onEditItem,
     required this.onDeleteItem,
+    this.onSearchChanged,
+    this.onCategoryChanged,
+    this.onStatusChanged,
+    this.categoryOptions = const <String>['All Categories'],
+    this.statusOptions = const <String>['All Statuses'],
+    this.selectedCategory = 'All Categories',
+    this.selectedStatus = 'All Statuses',
+    this.onPullToWbsCost,
   });
 
   final List<ProcurementItemModel> items;
@@ -28,6 +36,14 @@ class ProcurementItemsListView extends StatelessWidget {
   final VoidCallback onAddItem;
   final ValueChanged<ProcurementItemModel> onEditItem;
   final ValueChanged<ProcurementItemModel> onDeleteItem;
+  final ValueChanged<String>? onSearchChanged;
+  final ValueChanged<String>? onCategoryChanged;
+  final ValueChanged<String>? onStatusChanged;
+  final List<String> categoryOptions;
+  final List<String> statusOptions;
+  final String selectedCategory;
+  final String selectedStatus;
+  final ValueChanged<ProcurementItemModel>? onPullToWbsCost;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +73,16 @@ class ProcurementItemsListView extends StatelessWidget {
           totalBudgetLabel: currencyFormat.format(totalBudget),
         ),
         const SizedBox(height: 24),
-        _ItemsToolbar(onAddItem: onAddItem),
+        _ItemsToolbar(
+          onAddItem: onAddItem,
+          onSearchChanged: onSearchChanged,
+          onCategoryChanged: onCategoryChanged,
+          onStatusChanged: onStatusChanged,
+          categoryOptions: categoryOptions,
+          statusOptions: statusOptions,
+          selectedCategory: selectedCategory,
+          selectedStatus: selectedStatus,
+        ),
         const SizedBox(height: 20),
         _ItemsGrid(
           items: items,
@@ -65,6 +90,7 @@ class ProcurementItemsListView extends StatelessWidget {
           onAddItem: onAddItem,
           onEditItem: onEditItem,
           onDeleteItem: onDeleteItem,
+          onPullToWbsCost: onPullToWbsCost,
         ),
         const SizedBox(height: 28),
         _TrackableAndTimeline(
@@ -97,7 +123,7 @@ class _SummaryMetricsRow extends StatelessWidget {
     final cards = [
       ProcurementSummaryCard(
         icon: Icons.inventory_2_outlined,
-        iconBackground: const Color(0xFFEFF6FF),
+        iconBackground: const Color(0xFFFFF8E1),
         value: '$totalItems',
         label: 'Total Items',
       ),
@@ -110,14 +136,14 @@ class _SummaryMetricsRow extends StatelessWidget {
       ),
       ProcurementSummaryCard(
         icon: Icons.access_time,
-        iconBackground: const Color(0xFFF5F3FF),
+        iconBackground: const Color(0xFFFFF8E1),
         value: '$pendingApprovals',
         label: 'Pending Approvals',
         valueColor: const Color(0xFF1F2937),
       ),
       ProcurementSummaryCard(
         icon: Icons.attach_money,
-        iconBackground: const Color(0xFFECFEFF),
+        iconBackground: const Color(0xFFFFF8E1),
         value: totalBudgetLabel,
         label: 'Total Budget',
         valueColor: const Color(0xFF047857),
@@ -150,9 +176,25 @@ class _SummaryMetricsRow extends StatelessWidget {
 }
 
 class _ItemsToolbar extends StatelessWidget {
-  const _ItemsToolbar({required this.onAddItem});
+  const _ItemsToolbar({
+    required this.onAddItem,
+    this.onSearchChanged,
+    this.onCategoryChanged,
+    this.onStatusChanged,
+    required this.categoryOptions,
+    required this.statusOptions,
+    required this.selectedCategory,
+    required this.selectedStatus,
+  });
 
   final VoidCallback onAddItem;
+  final ValueChanged<String>? onSearchChanged;
+  final ValueChanged<String>? onCategoryChanged;
+  final ValueChanged<String>? onStatusChanged;
+  final List<String> categoryOptions;
+  final List<String> statusOptions;
+  final String selectedCategory;
+  final String selectedStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -162,13 +204,25 @@ class _ItemsToolbar extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SearchField(),
+          _SearchField(onChanged: onSearchChanged),
           const SizedBox(height: 12),
-          const Row(
+          Row(
             children: [
-              Expanded(child: _DropdownField(label: 'All Categories')),
-              SizedBox(width: 12),
-              Expanded(child: _DropdownField(label: 'All Statuses')),
+              Expanded(
+                child: _DropdownField(
+                  label: selectedCategory,
+                  options: categoryOptions,
+                  onChanged: onCategoryChanged,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _DropdownField(
+                  label: selectedStatus,
+                  options: statusOptions,
+                  onChanged: onStatusChanged,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -182,13 +236,28 @@ class _ItemsToolbar extends StatelessWidget {
 
     return Row(
       children: [
-        const SizedBox(width: 320, child: _SearchField()),
+        SizedBox(
+          width: 320,
+          child: _SearchField(onChanged: onSearchChanged),
+        ),
         const SizedBox(width: 16),
-        const SizedBox(
-            width: 190, child: _DropdownField(label: 'All Categories')),
+        SizedBox(
+          width: 190,
+          child: _DropdownField(
+            label: selectedCategory,
+            options: categoryOptions,
+            onChanged: onCategoryChanged,
+          ),
+        ),
         const SizedBox(width: 16),
-        const SizedBox(
-            width: 190, child: _DropdownField(label: 'All Statuses')),
+        SizedBox(
+          width: 190,
+          child: _DropdownField(
+            label: selectedStatus,
+            options: statusOptions,
+            onChanged: onStatusChanged,
+          ),
+        ),
         const Spacer(),
         _AddItemButton(onPressed: onAddItem),
       ],
@@ -197,7 +266,9 @@ class _ItemsToolbar extends StatelessWidget {
 }
 
 class _SearchField extends StatelessWidget {
-  const _SearchField();
+  const _SearchField({this.onChanged});
+
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -205,11 +276,12 @@ class _SearchField extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: const VoiceTextField(
-        decoration: InputDecoration(
+      child: VoiceTextField(
+        onChanged: onChanged,
+        decoration: const InputDecoration(
           border: InputBorder.none,
           icon: Icon(Icons.search, color: Color(0xFF94A3B8)),
           hintText: 'Search items...',
@@ -221,28 +293,23 @@ class _SearchField extends StatelessWidget {
 }
 
 class _DropdownField extends StatelessWidget {
-  const _DropdownField({required this.label});
+  const _DropdownField({
+    required this.label,
+    required this.options,
+    this.onChanged,
+  });
 
   final String label;
+  final List<String> options;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final options = label == 'All Categories'
-        ? const ['All Categories', 'Materials', 'Equipment', 'Services']
-        : const [
-            'All Statuses',
-            'Planning',
-            'RFQ Review',
-            'Vendor Selection',
-            'Ordered',
-            'Delivered'
-          ];
-
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: DropdownButtonHideUnderline(
@@ -260,7 +327,9 @@ class _DropdownField extends StatelessWidget {
                 ),
               )
               .toList(),
-          onChanged: (_) {},
+          onChanged: (value) {
+            if (value != null) onChanged?.call(value);
+          },
         ),
       ),
     );
@@ -277,7 +346,7 @@ class _AddItemButton extends StatelessWidget {
     return ElevatedButton.icon(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF2563EB),
+        backgroundColor: const Color(0xFFFFC812),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         shape: RoundedRectangleBorder(
@@ -298,6 +367,7 @@ class _ItemsGrid extends StatelessWidget {
     required this.onAddItem,
     required this.onEditItem,
     required this.onDeleteItem,
+    this.onPullToWbsCost,
   });
 
   final List<ProcurementItemModel> items;
@@ -305,6 +375,7 @@ class _ItemsGrid extends StatelessWidget {
   final VoidCallback onAddItem;
   final ValueChanged<ProcurementItemModel> onEditItem;
   final ValueChanged<ProcurementItemModel> onDeleteItem;
+  final ValueChanged<ProcurementItemModel>? onPullToWbsCost;
 
   @override
   Widget build(BuildContext context) {
@@ -343,6 +414,9 @@ class _ItemsGrid extends StatelessWidget {
               currencyFormat: currencyFormat,
               onEdit: () => onEditItem(item),
               onDelete: () => onDeleteItem(item),
+              onPullToWbsCost: onPullToWbsCost == null
+                  ? null
+                  : () => onPullToWbsCost!(item),
             ),
           );
         }),
@@ -358,6 +432,7 @@ class _ProcurementItemCard extends StatelessWidget {
     required this.currencyFormat,
     required this.onEdit,
     required this.onDelete,
+    this.onPullToWbsCost,
   });
 
   final ProcurementItemModel item;
@@ -365,6 +440,7 @@ class _ProcurementItemCard extends StatelessWidget {
   final NumberFormat currencyFormat;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback? onPullToWbsCost;
 
   @override
   Widget build(BuildContext context) {
@@ -373,7 +449,7 @@ class _ProcurementItemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -412,6 +488,14 @@ class _ProcurementItemCard extends StatelessWidget {
                 onTap: onEdit,
               ),
               const SizedBox(width: 4),
+              if (onPullToWbsCost != null) ...[
+                _ActionIcon(
+                  icon: Icons.account_tree_outlined,
+                  tooltip: 'Pull to WBS and Cost',
+                  onTap: onPullToWbsCost!,
+                ),
+                const SizedBox(width: 4),
+              ],
               _ActionIcon(
                 icon: Icons.delete_outline,
                 tooltip: 'Delete',
@@ -498,7 +582,7 @@ class _BadgePill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Color(0xFFF1F5F9),
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -589,7 +673,7 @@ class _TrackableItemsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -659,7 +743,7 @@ class _TrackableRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEFF6FF) : Colors.transparent,
+          color: isSelected ? const Color(0xFFFFF8E1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -669,7 +753,7 @@ class _TrackableRow extends StatelessWidget {
               height: 28,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF2563EB)
+                    ? const Color(0xFFFFC812)
                     : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -711,7 +795,7 @@ class _TrackableRow extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(0xFFF1F5F9),
+                color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -744,7 +828,7 @@ class _TrackingTimelineCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(

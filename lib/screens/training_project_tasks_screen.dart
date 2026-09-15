@@ -6,6 +6,7 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 class _LessonItem {
  String id;
@@ -62,6 +63,7 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  @override
  Widget build(BuildContext context) {
  return Scaffold(
+ floatingActionButton: const KazAiChatBubble(positioned: false),
  backgroundColor: Colors.grey[50],
  body: SafeArea(
  top: true,
@@ -265,7 +267,7 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  builder: (ctx) => StatefulBuilder(
  builder: (ctx, setDialogState) => LaunchModalShell(
  icon: Icons.edit_rounded,
- accent: const Color(0xFF0EA5E9),
+ accent: const Color(0xFFFFC812),
  title: 'Edit Lesson',
  subtitle: 'Update the lesson details.',
  body: Column(
@@ -368,7 +370,7 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  children: [
  CircleAvatar(
  radius: 16,
- backgroundColor: Colors.blue[400],
+ backgroundColor: const Color(0xFFFBBF24),
  backgroundImage:
  photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
  child: photoUrl.isEmpty

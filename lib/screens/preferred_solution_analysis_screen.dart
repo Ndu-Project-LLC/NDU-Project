@@ -23,7 +23,6 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/screens/initiation_phase_screen.dart';
-import 'package:ndu_project/screens/potential_solutions_screen.dart';
 import 'package:ndu_project/screens/risk_identification_screen.dart';
 import 'package:ndu_project/screens/it_considerations_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
@@ -34,10 +33,10 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/widgets/select_project_kaz_button.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/page_hint_dialog.dart';
 import 'package:ndu_project/widgets/solution_detail_section.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -61,7 +60,12 @@ class PreferredSolutionAnalysisScreen extends StatefulWidget {
 
 class _PreferredSolutionAnalysisScreenState
     extends State<PreferredSolutionAnalysisScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+  // TickerProviderStateMixin (NOT SingleTickerProviderStateMixin): when the
+  // solution list updates, the old TabController is disposed and a NEW one is
+  // created on the same vsync. SingleTickerProviderStateMixin asserts on the
+  // second createTicker call ("multiple tickers were created") and crashes
+  // the screen, so a multi-ticker provider is required here.
   static const String _finalSelectionWarning =
       'This selection will form the basis of the entire project and cannot be changed once confirmed. Please ensure you have reviewed all options carefully.';
   static const Set<String> _authorizedSelectionRoles = {
@@ -86,7 +90,6 @@ class _PreferredSolutionAnalysisScreenState
   String? _projectNameError;
   Timer? _notesSaveTimer;
   String _currentUserRole = 'Member';
-  int? _expandedSolutionIndex;
 
   @override
   void initState() {
@@ -255,12 +258,15 @@ class _PreferredSolutionAnalysisScreenState
 
   Future<void> _loadAnalysis() async {
     // Business Case lock — once a preferred solution has been selected,
-    // this screen is view-only. Block AI generation.
+    // this screen is view-only. AI generation is blocked, but the page must
+    // still DISPLAY the information already captured in the Business Case
+    // (risks, stakeholders, IT and infrastructure considerations), so the
+    // analysis is populated from project data instead of returning empty.
     if (BusinessCaseLockHelper.isBusinessCaseLocked(
         ProjectDataHelper.getData(context))) {
       if (mounted) {
-        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
         setState(() => _isLoading = false);
+        _enrichAnalysisFromProjectData();
       }
       return;
     }
@@ -355,12 +361,7 @@ class _PreferredSolutionAnalysisScreenState
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = (e.toString().contains('Failed to fetch') ||
-                e.toString().contains('ClientException') ||
-                e.toString().contains('XMLHttpRequest') ||
-                e.toString().contains('Connection refused'))
-            ? 'AI assist is being set up. Please try again later or enter content manually.'
-            : e.toString();
+        _error = aiErrorMessage(e);
       });
     } finally {
       if (mounted) {
@@ -637,7 +638,7 @@ class _PreferredSolutionAnalysisScreenState
     final sidebarWidth = AppBreakpoints.sidebarWidth(context);
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: isMobile
           ? const Drawer(
               child: InitiationLikeSidebar(
@@ -705,7 +706,7 @@ class _PreferredSolutionAnalysisScreenState
               width: 40,
               height: 40,
               decoration: const BoxDecoration(
-                  color: Colors.blue, shape: BoxShape.circle),
+                  color: Color(0xFFFFC812), shape: BoxShape.circle),
               child: const Icon(Icons.person, color: Colors.white, size: 20)),
           if (!isMobile) ...[
             const SizedBox(width: 12),
@@ -1122,6 +1123,9 @@ class _PreferredSolutionAnalysisScreenState
               const SizedBox(height: 16),
             ],
             if (!_isLoading) ...[
+              // Working notes at the top
+              _buildNotesField(),
+              const SizedBox(height: 16),
               _buildViewToggle(),
               const SizedBox(height: 12),
               _showTableView ? _buildTabSection() : _buildCardBasedView(),
@@ -1131,9 +1135,6 @@ class _PreferredSolutionAnalysisScreenState
               const SizedBox(height: 16),
               // Action links row
               _buildActionLinksRow(),
-              const SizedBox(height: 16),
-              // Working notes
-              _buildNotesField(),
               const SizedBox(height: 24),
             ],
             if (_isLoading) const SizedBox(height: 24),
@@ -1263,58 +1264,6 @@ class _PreferredSolutionAnalysisScreenState
     }
 
     return null;
-  }
-
-  Widget _buildBottomPreferredActions() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Next Step',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Review all potential solutions and select preferred option.',
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 14),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton.icon(
-              onPressed: _analysis.isEmpty ? null : _handleNextToSelectionPage,
-              icon: const Icon(Icons.arrow_forward, size: 18),
-              label: const Text('Next'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFD700),
-                foregroundColor: Colors.black,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 0,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   String? _resolveSolutionIdForIndex(
@@ -1805,61 +1754,6 @@ class _PreferredSolutionAnalysisScreenState
                 TextStyle(fontSize: 14, color: Color(0xFF6B7280), height: 1.4)),
       ],
     );
-  }
-
-  Future<void> _confirmRegenerateAll() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Regenerate All Solutions'),
-        content: const Text(
-          'This will regenerate all KAZ AI-generated solution analysis on this page. Your current content will be lost. Continue?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Regenerate All'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      await _regenerateAllAnalysis();
-    }
-  }
-
-  Future<void> _regenerateAllAnalysis() async {
-    // Business Case lock — view-only when a preferred solution is selected.
-    if (BusinessCaseLockHelper.isBusinessCaseLocked(
-        ProjectDataHelper.getData(context))) {
-      if (mounted) {
-        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
-      }
-      return;
-    }
-    setState(() => _isLoading = true);
-    try {
-      await _loadExistingDataAndAnalysis();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('All solutions regenerated successfully')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to regenerate: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
   }
 
   // ignore: unused_element
@@ -2535,7 +2429,7 @@ class _PreferredSolutionAnalysisScreenState
       builder: (ctx) => Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 620, maxHeight: 860),
+          constraints: const BoxConstraints(maxHeight: 860),
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -3412,16 +3306,6 @@ class _PreferredSolutionAnalysisScreenState
     );
   }
 
-  void _toggleSolutionAccordion(int index) {
-    setState(() {
-      if (_expandedSolutionIndex == index) {
-        _expandedSolutionIndex = null;
-      } else {
-        _expandedSolutionIndex = index;
-      }
-    });
-  }
-
   Widget _buildActionLinksRow() {
     return Container(
       padding: const EdgeInsets.only(top: 12),
@@ -3525,69 +3409,6 @@ class _PreferredSolutionAnalysisScreenState
     );
   }
 
-  Widget _buildComparisonTableFillWidth(
-      ProjectDataModel projectData, double tableWidth) {
-    // Define the categories for comparison
-    final categories = [
-      'Solution Description',
-      'Risk Identification',
-      'IT Considerations',
-      'Infrastructure Considerations',
-      'Core Stakeholders',
-      'Cost Benefit Analysis Overview',
-    ];
-
-    // Category column: ~15% of table width (min 100, max 180)
-    final categoryWidth = (tableWidth * 0.15).clamp(100.0, 180.0);
-    // Solution columns split remaining width equally
-    final remainingWidth = tableWidth - categoryWidth;
-    final solutionColumnWidth = remainingWidth / _analysis.length;
-
-    return Table(
-      border: TableBorder(
-        horizontalInside: BorderSide(color: Colors.grey.shade200),
-        verticalInside: BorderSide(color: Colors.grey.shade200),
-      ),
-      defaultVerticalAlignment: TableCellVerticalAlignment.top,
-      columnWidths: {
-        0: FixedColumnWidth(categoryWidth),
-        for (int i = 0; i < _analysis.length; i++)
-          i + 1: FixedColumnWidth(solutionColumnWidth),
-      },
-      children: [
-        // Header Row
-        TableRow(
-          decoration: const BoxDecoration(
-            color: Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
-            ),
-          ),
-          children: [
-            _buildTableHeaderCell('Category'),
-            for (int i = 0; i < _analysis.length; i++)
-              _buildSolutionHeaderCell(i, _analysis[i].solution.title),
-          ],
-        ),
-        // Data Rows
-        for (final category in categories)
-          TableRow(
-            children: [
-              _buildCategoryCellClickable(category),
-              for (int i = 0; i < _analysis.length; i++)
-                _buildExpandableComparisonCell(
-                  category: category,
-                  index: i,
-                  analysis: _analysis[i],
-                  projectData: projectData,
-                ),
-            ],
-          ),
-      ],
-    );
-  }
-
   // Track expanded state for each cell
   final Map<String, bool> _expandedCells = {};
 
@@ -3646,7 +3467,7 @@ class _PreferredSolutionAnalysisScreenState
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF2563EB),
+                        color: Color(0xFFFFC812),
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -3655,7 +3476,7 @@ class _PreferredSolutionAnalysisScreenState
                           ? Icons.keyboard_arrow_up
                           : Icons.keyboard_arrow_down,
                       size: 14,
-                      color: const Color(0xFF2563EB),
+                      color: const Color(0xFFFFC812),
                     ),
                   ],
                 ),
@@ -5272,519 +5093,6 @@ class _PreferredSolutionAnalysisScreenState
 }
 
 // ─── Accordion Card Widget for each solution ───────────────────────
-class _SolutionAccordionCard extends StatelessWidget {
-  const _SolutionAccordionCard({
-    required this.index,
-    required this.analysis,
-    required this.isExpanded,
-    required this.onToggle,
-    required this.onViewSolution,
-    required this.onViewCostAnalysis,
-    required this.projectData,
-  });
-
-  final int index;
-  final _SolutionAnalysisData analysis;
-  final bool isExpanded;
-  final VoidCallback onToggle;
-  final VoidCallback onViewSolution;
-  final VoidCallback onViewCostAnalysis;
-  final ProjectDataModel projectData;
-
-  static const List<Color> _numberBgColors = [
-    Color(0xFFFFEDD5), // orange-100
-    Color(0xFFFEF9C3), // yellow-100
-    Color(0xFFFFEDD5), // orange-100
-  ];
-  static const List<Color> _numberBorderColors = [
-    Color(0xFFFDBA74), // orange-300
-    Color(0xFFFDE047), // yellow-300
-    Color(0xFFFDBA74), // orange-300
-  ];
-  static const List<Color> _numberTextColors = [
-    Color(0xFFEA580C), // orange-600
-    Color(0xFFCA8A04), // yellow-600
-    Color(0xFFEA580C), // orange-600
-  ];
-
-  Color get _bg => _numberBgColors[index % 3];
-  Color get _border => _numberBorderColors[index % 3];
-  Color get _text => _numberTextColors[index % 3];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Accordion header
-          InkWell(
-            onTap: onToggle,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  // Number circle
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: _bg,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: _border),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      '${index + 1}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: _text,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      analysis.solution.title.trim().isNotEmpty
-                          ? analysis.solution.title
-                          : 'Proposed Solution ${index + 1}',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1a1a1a),
-                      ),
-                    ),
-                  ),
-                  // View This Solution link
-                  InkWell(
-                    onTap: onViewSolution,
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.open_in_new_outlined,
-                            size: 14, color: Color(0xFF0084ff)),
-                        SizedBox(width: 4),
-                        Text(
-                          'View This Solution',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF0084ff),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Expand/collapse icon
-                  AnimatedRotation(
-                    turns: isExpanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: const Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 20,
-                      color: Color(0xFF666666),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Accordion content
-          AnimatedCrossFade(
-            firstChild: const SizedBox(width: double.infinity, height: 0),
-            secondChild: _buildAccordionContent(),
-            crossFadeState: isExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 250),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAccordionContent() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 16),
-          // Solution Description
-          _buildCategorySection(
-            title: 'Solution Description',
-            child: Text(
-              analysis.solution.description.trim().isNotEmpty
-                  ? analysis.solution.description
-                  : 'Describe how this option addresses the project\'s needs, assumptions, constraints, and expected benefits.',
-              style: TextStyle(
-                fontSize: 14,
-                color: analysis.solution.description.trim().isNotEmpty
-                    ? const Color(0xFF1a1a1a)
-                    : const Color(0xFF666666),
-                height: 1.5,
-              ),
-            ),
-          ),
-          _categoryDivider(),
-          // Risk Identification
-          _buildCategorySection(
-            title: 'Risk Identification',
-            child: _buildBulletList(analysis.risks, maxItems: 2),
-          ),
-          _categoryDivider(),
-          // IT Considerations
-          _buildCategorySection(
-            title: 'IT Considerations',
-            child: _buildBulletList(analysis.technologies, maxItems: 4),
-          ),
-          _categoryDivider(),
-          // Infrastructure Considerations
-          _buildCategorySection(
-            title: 'Infrastructure Considerations',
-            child: _buildBulletList(analysis.infrastructure, maxItems: 2),
-          ),
-          _categoryDivider(),
-          // Core Stakeholders
-          _buildCategorySection(
-            title: 'Core Stakeholders',
-            child: _buildStakeholdersContent(),
-          ),
-          _categoryDivider(),
-          // Cost Benefit Analysis Overview
-          _buildCategorySection(
-            title: 'Cost Benefit Analysis Overview',
-            child: _buildCostBenefitContent(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategorySection({
-    required String title,
-    required Widget child,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF666666),
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 4),
-        child,
-      ],
-    );
-  }
-
-  Widget _categoryDivider() {
-    return const Divider(height: 24, color: Color(0xFFE5E7EB));
-  }
-
-  Widget _buildBulletList(List<String> items, {int maxItems = 3}) {
-    if (items.isEmpty) {
-      return const Text(
-        'No data available',
-        style: TextStyle(fontSize: 14, color: Color(0xFF666666)),
-      );
-    }
-    final displayItems = items.take(maxItems).toList();
-    final hasMore = items.length > maxItems;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ...displayItems.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('— ',
-                      style: TextStyle(fontSize: 14, color: Color(0xFF666666))),
-                  Expanded(
-                    child: Text(
-                      item.trim(),
-                      style: const TextStyle(
-                          fontSize: 14, color: Color(0xFF1a1a1a)),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            )),
-        if (hasMore)
-          InkWell(
-            onTap: onViewSolution,
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'View more',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF0084ff),
-                  ),
-                ),
-                SizedBox(width: 4),
-                Icon(Icons.keyboard_arrow_down,
-                    size: 14, color: Color(0xFF0084ff)),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildStakeholdersContent() {
-    final internal = analysis.internalStakeholders ?? const [];
-    final external = analysis.externalStakeholders ?? const [];
-    final allStakeholders = analysis.stakeholders;
-
-    if (internal.isEmpty && external.isEmpty && allStakeholders.isEmpty) {
-      return const Text(
-        'No stakeholder data available',
-        style: TextStyle(fontSize: 14, color: Color(0xFF666666)),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (internal.isNotEmpty) ...[
-          const Text('Internal:',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF1a1a1a))),
-          ...internal.take(3).map((item) => Padding(
-                padding: const EdgeInsets.only(left: 8, bottom: 2),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('— ',
-                        style:
-                            TextStyle(fontSize: 14, color: Color(0xFF666666))),
-                    Expanded(
-                        child: Text(item.trim(),
-                            style: const TextStyle(
-                                fontSize: 14, color: Color(0xFF1a1a1a)),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis)),
-                  ],
-                ),
-              )),
-        ],
-        if (external.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          const Text('External:',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF1a1a1a))),
-          ...external.take(2).map((item) => Padding(
-                padding: const EdgeInsets.only(left: 8, bottom: 2),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('— ',
-                        style:
-                            TextStyle(fontSize: 14, color: Color(0xFF666666))),
-                    Expanded(
-                        child: Text(item.trim(),
-                            style: const TextStyle(
-                                fontSize: 14, color: Color(0xFF1a1a1a)),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis)),
-                  ],
-                ),
-              )),
-        ],
-        if (internal.isEmpty && external.isEmpty && allStakeholders.isNotEmpty)
-          ...allStakeholders.take(3).map((item) => Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('— ',
-                        style:
-                            TextStyle(fontSize: 14, color: Color(0xFF666666))),
-                    Expanded(
-                        child: Text(item.trim(),
-                            style: const TextStyle(
-                                fontSize: 14, color: Color(0xFF1a1a1a)),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis)),
-                  ],
-                ),
-              )),
-        InkWell(
-          onTap: onViewSolution,
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('View more',
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF0084ff))),
-              SizedBox(width: 4),
-              Icon(Icons.keyboard_arrow_down,
-                  size: 14, color: Color(0xFF0084ff)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCostBenefitContent() {
-    final costs = analysis.costs;
-    if (costs.isEmpty) {
-      return const Text(
-        'No cost data available',
-        style: TextStyle(fontSize: 14, color: Color(0xFF666666)),
-      );
-    }
-
-    final totalCost =
-        costs.fold<double>(0, (sum, c) => sum + (c.estimatedCost));
-    // Calculate total benefits (approximate from ROI)
-    final totalBenefits = costs.fold<double>(0, (sum, c) {
-      final roi = c.roiPercent;
-      return sum + (c.estimatedCost * (1 + roi / 100));
-    });
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Total cost: \$${_formatCurrency(totalCost)}',
-            style: const TextStyle(fontSize: 14, color: Color(0xFF1a1a1a))),
-        Text('Total benefits: \$${_formatCurrency(totalBenefits)}',
-            style: const TextStyle(fontSize: 14, color: Color(0xFF1a1a1a))),
-        const SizedBox(height: 8),
-        ...costs.take(2).map((c) => Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Text(
-                '— ${c.item}: ${c.estimatedCost.toStringAsFixed(2)}...',
-                style: const TextStyle(fontSize: 14, color: Color(0xFF1a1a1a)),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            )),
-        const SizedBox(height: 4),
-        InkWell(
-          onTap: onViewSolution,
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('View more',
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF0084ff))),
-              SizedBox(width: 4),
-              Icon(Icons.keyboard_arrow_down,
-                  size: 14, color: Color(0xFF0084ff)),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        // Action links at bottom of cost section
-        Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          children: [
-            InkWell(
-              onTap: onViewSolution,
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.visibility_outlined,
-                      size: 14, color: Color(0xFF0084ff)),
-                  SizedBox(width: 4),
-                  Text('View This Solution',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF0084ff))),
-                ],
-              ),
-            ),
-            InkWell(
-              onTap: onViewSolution,
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.keyboard_arrow_down,
-                      size: 14, color: Color(0xFF0084ff)),
-                  SizedBox(width: 4),
-                  Text('View more',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF0084ff))),
-                ],
-              ),
-            ),
-            InkWell(
-              onTap: onViewCostAnalysis,
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.open_in_new_outlined,
-                      size: 14, color: Color(0xFF0084ff)),
-                  SizedBox(width: 4),
-                  Text('Open Cost Analysis',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF0084ff))),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  String _formatCurrency(double value) {
-    if (value >= 1000000) {
-      return '${(value / 1000000).toStringAsFixed(1)}M';
-    } else if (value >= 1000) {
-      return '${(value / 1000).toStringAsFixed(1)}K';
-    }
-    return value.toStringAsFixed(0);
-  }
-}
-
 class _SolutionAnalysisData {
   final AiSolutionItem solution;
   final List<String> stakeholders;
@@ -5852,7 +5160,7 @@ class _ProjectSelectionDialogState extends State<_ProjectSelectionDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 640),
@@ -5890,6 +5198,7 @@ class _ProjectSelectionDialogState extends State<_ProjectSelectionDialog> {
                 child: Scrollbar(
                   child: ListView(
                     shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     children: [
                       for (int i = 0; i < widget.solutions.length; i++)
                         _ProjectOptionCard(
@@ -6095,9 +5404,9 @@ class _PreferredSolutionComparisonScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final pagePadding = AppBreakpoints.pagePadding(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         titleSpacing: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
@@ -6897,21 +6206,21 @@ class _PreferredSolutionDetailsScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.blue.shade200),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.attach_money,
-                          size: 16, color: Colors.blue.shade700),
+                      const Icon(Icons.attach_money,
+                          size: 16, color: Color(0xFFB8860B)),
                       const SizedBox(width: 6),
                       Text(
                         'Currency: $currency',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: Colors.blue.shade700,
+                          color: Color(0xFFB8860B),
                         ),
                       ),
                     ],
@@ -7172,9 +6481,9 @@ class _PreferredSolutionDetailsScreenState
               _buildStatChip(Icons.warning_amber, '$_riskCount Risks',
                   _riskCount > 0 ? const Color(0xFFEF4444) : Colors.grey),
               _buildStatChip(Icons.computer, '$_techCount Technologies',
-                  _techCount > 0 ? const Color(0xFF3B82F6) : Colors.grey),
+                  _techCount > 0 ? const Color(0xFFFFC812) : Colors.grey),
               _buildStatChip(Icons.construction, '$_infraCount Infrastructure',
-                  _infraCount > 0 ? const Color(0xFF8B5CF6) : Colors.grey),
+                  _infraCount > 0 ? const Color(0xFFB8860B) : Colors.grey),
               _buildStatChip(
                   Icons.people,
                   '$_stakeholderCount Stakeholders',
@@ -7273,7 +6582,7 @@ class _PreferredSolutionDetailsScreenState
     if (analysis.technologies.isEmpty &&
         (analysis.itConsiderationText?.isEmpty ?? true)) {
       return _buildEmptyState(
-          'No IT considerations recorded', Icons.computer, Colors.blue);
+          'No IT considerations recorded', Icons.computer, const Color(0xFFFFC812));
     }
 
     return Column(
@@ -7300,21 +6609,21 @@ class _PreferredSolutionDetailsScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
+                        color: const Color(0xFFFFF8E1),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.code,
-                              size: 14, color: Color(0xFF3B82F6)),
+                              size: 14, color: Color(0xFFFFC812)),
                           const SizedBox(width: 6),
                           Text(
                             tech,
                             style: const TextStyle(
                               fontSize: 13,
-                              color: Color(0xFF1E40AF),
+                              color: Color(0xFFFFC812),
                             ),
                           ),
                         ],
@@ -7331,7 +6640,7 @@ class _PreferredSolutionDetailsScreenState
     if (analysis.infrastructure.isEmpty &&
         (analysis.infraConsiderationText?.isEmpty ?? true)) {
       return _buildEmptyState('No infrastructure considerations',
-          Icons.construction, Colors.purple);
+          Icons.construction, const Color(0xFFB8860B));
     }
 
     return Column(
@@ -7350,14 +6659,14 @@ class _PreferredSolutionDetailsScreenState
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F3FF),
+                color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFDDD6FE)),
+                border: Border.all(color: const Color(0xFFFEF3C7)),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.check_circle,
-                      size: 18, color: Color(0xFF8B5CF6)),
+                      size: 18, color: Color(0xFFB8860B)),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(item, style: const TextStyle(fontSize: 14)),
@@ -7376,7 +6685,7 @@ class _PreferredSolutionDetailsScreenState
 
     if (!hasStakeholders) {
       return _buildEmptyState(
-          'No stakeholders identified', Icons.people, Colors.teal);
+          'No stakeholders identified', Icons.people, const Color(0xFFD97706));
     }
 
     return Column(
@@ -7389,7 +6698,7 @@ class _PreferredSolutionDetailsScreenState
         ],
         if (analysis.internalStakeholders?.isNotEmpty ?? false)
           _buildStakeholderGroup('Internal Stakeholders',
-              analysis.internalStakeholders!, const Color(0xFF0891B2)),
+              analysis.internalStakeholders!, const Color(0xFFD97706)),
         if (analysis.stakeholders.isNotEmpty &&
             (analysis.externalStakeholders?.isEmpty ?? true) &&
             (analysis.internalStakeholders?.isEmpty ?? true))
@@ -7511,9 +6820,9 @@ class _PreferredSolutionDetailsScreenState
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF374151)),
@@ -7583,7 +6892,7 @@ class _PreferredSolutionDetailsScreenState
                     // IT Considerations
                     _buildSectionCard(
                       icon: Icons.computer,
-                      iconColor: const Color(0xFF3B82F6),
+                      iconColor: const Color(0xFFFFC812),
                       title: 'IT Considerations',
                       subtitle: analysis.technologies.isEmpty
                           ? 'No data'
@@ -7595,7 +6904,7 @@ class _PreferredSolutionDetailsScreenState
                     // Infrastructure
                     _buildSectionCard(
                       icon: Icons.construction,
-                      iconColor: const Color(0xFF8B5CF6),
+                      iconColor: const Color(0xFFB8860B),
                       title: 'Infrastructure Considerations',
                       subtitle: analysis.infrastructure.isEmpty
                           ? 'No data'
@@ -7619,7 +6928,7 @@ class _PreferredSolutionDetailsScreenState
                     // Scope Statement
                     _buildSectionCard(
                       icon: Icons.description,
-                      iconColor: const Color(0xFF6366F1),
+                      iconColor: const Color(0xFFB8860B),
                       title: 'Scope Statement',
                       subtitle: analysis.solution.description.isEmpty
                           ? 'Not provided'
@@ -7632,7 +6941,7 @@ class _PreferredSolutionDetailsScreenState
                               style: const TextStyle(fontSize: 14, height: 1.6),
                             )
                           : _buildEmptyState('No scope statement provided',
-                              Icons.description, Colors.indigo),
+                              Icons.description, const Color(0xFFB8860B)),
                     ),
 
                     const SizedBox(height: 100), // Space for bottom buttons

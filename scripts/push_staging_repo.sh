@@ -12,7 +12,7 @@
 #
 set -euo pipefail
 
-STAGING_REPO_LOCAL="${STAGING_REPO_LOCAL:-/home/z/my-project/ndu_staging_repo}"
+STAGING_REPO_LOCAL="${STAGING_REPO_LOCAL:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 STAGING_REPO_GITHUB="Ndu-Project-LLC/ndu-staging"
 
 log()  { printf '\033[1;34m▶\033[0m %s\n' "$*"; }
@@ -42,14 +42,16 @@ done
 # If no explicit URL, try to extract token from NDU-Project's git config
 if [ -z "$REMOTE_URL" ] && [ -z "$TOKEN" ]; then
   log "No token provided — attempting to extract from NDU-Project's git config..."
-  if [ -f /home/z/my-project/ndu_target_repo/.git/config ]; then
+  # Try to extract token from parent repo's git config
+  PARENT_GIT_CONFIG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/.git/config"
+  if [ -f "$PARENT_GIT_CONFIG" ]; then
     TOKEN=$(python3 -c "
 import re
-with open('/home/z/my-project/ndu_target_repo/.git/config') as f:
+with open('$PARENT_GIT_CONFIG') as f:
     m = re.search(r'https://([^@]+)@github\.com', f.read())
     print(m.group(1) if m else '')
 " 2>/dev/null || echo "")
-    [ -n "$TOKEN" ] && ok "Token extracted from NDU-Project git config" || warn "Could not extract token"
+    [ -n "$TOKEN" ] && ok "Token extracted from parent repo git config" || warn "Could not extract token"
   fi
 fi
 

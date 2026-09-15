@@ -24,6 +24,13 @@ import 'package:ndu_project/cost_estimate/widgets/totals_panel.dart';
 import 'package:ndu_project/cost_estimate/widgets/add_line_dialog.dart';
 import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
+// `EstimationMethod` is declared in the WBS model library too, so that import
+// hides it and the Cost Estimate's copy stays unambiguous.
+import 'package:ndu_project/schedule/providers/schedule_provider.dart';
+import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
+import 'package:ndu_project/schedule/utils/schedule_work_packages.dart';
+import 'package:ndu_project/wbs/models/wbs_models.dart' hide EstimationMethod;
+import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 
 class BuilderScreen extends StatefulWidget {
   const BuilderScreen({super.key});
@@ -72,15 +79,15 @@ class _BuilderScreenState extends State<BuilderScreen>
   // Tab accent tints — warm Treasury palette progression
   static const _tabTints = <Color>[
     Color(0xFFD97706), // Direct — amber (brand deep)
-    Color(0xFF8B5CF6), // Indirect — violet
-    Color(0xFFEC4899), // SSHER & Quality — pink
-    Color(0xFF06B6D4), // Additional — cyan
+    Color(0xFFB8860B), // Indirect — violet
+    Color(0xFFD97706), // SSHER & Quality — pink
+    Color(0xFFD97706), // Additional — cyan
   ];
   static const _tabTintsSoft = <Color>[
     Color(0xFFFFF3E0),
     Color(0xFFF4EEFF),
-    Color(0xFFFCE7F3),
-    Color(0xFFCFFAFE),
+    Color(0xFFFFF8E1),
+    Color(0xFFFFF8E1),
   ];
 
   @override
@@ -155,6 +162,15 @@ class _BuilderScreenState extends State<BuilderScreen>
                     ),
                   ],
                   actions: [
+                    // The base case sits ahead of "Add line": the estimate
+                    // starts from the Schedule's work packages (2026-09-10).
+                    if (canEditNow)
+                      TreasuryHeroAction(
+                        icon: Icons.download_rounded,
+                        label: 'Start from Schedule',
+                        primary: false,
+                        onTap: () => _startFromSchedule(context),
+                      ),
                     if (canEditNow)
                       TreasuryHeroAction(
                         icon: Icons.add_rounded,
@@ -205,7 +221,7 @@ class _BuilderScreenState extends State<BuilderScreen>
                           : '${currencySymbol}0',
                       sub: 'Mean cost across estimate',
                       icon: Icons.analytics_outlined,
-                      tint: const Color(0xFF6366F1),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFEEF0FF),
                     ),
                   ],
@@ -251,10 +267,10 @@ class _BuilderScreenState extends State<BuilderScreen>
                     ),
                     const SizedBox(width: 14),
                     // Totals sidebar
-                    SizedBox(
+                    const SizedBox(
                       width: 320,
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 0),
+                        padding: EdgeInsets.only(top: 0),
                         child: TotalsPanel(),
                       ),
                     ),
@@ -292,8 +308,17 @@ class _BuilderScreenState extends State<BuilderScreen>
                   categories.isNotEmpty ? categories.first : CostCategory.labor),
             )
           : null,
-      child: lines.isEmpty
-          ? TreasuryEmptyState(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // The product owner asked for the direct/indirect distinction to be
+          // spelled out on the page (2026-09-10): "you can verify that direct
+          // and indirect costs … can't be fed by the same thing … or there will
+          // be a duplicate".
+          _subTabDefinitionNote(tabIndex),
+          const SizedBox(height: 14),
+          if (lines.isEmpty)
+            TreasuryEmptyState(
               icon: Icons.receipt_long_rounded,
               title: 'No ${_subTabs[tabIndex].$1.toLowerCase()} yet',
               body:
@@ -304,7 +329,8 @@ class _BuilderScreenState extends State<BuilderScreen>
                       categories.isNotEmpty ? categories.first : CostCategory.labor)
                   : null,
             )
-          : Column(
+          else
+            Column(
               children: [
                 for (final line in lines)
                   Padding(
@@ -320,7 +346,135 @@ class _BuilderScreenState extends State<BuilderScreen>
                   ),
               ],
             ),
+        ],
+      ),
     );
+  }
+
+  /// Plain-language definition of each sub-tab's cost group, in the order of
+  /// [_subTabs]. Direct cost is the scheduled delivery work; indirect cost is
+  /// what supports the project without belonging to it. Keeping them visibly
+  /// separate is what stops the same source feeding both and double-counting.
+  static const _subTabDefinitions = <String>[
+    'Direct cost is everything tied to delivering THIS project — the scheduled '
+        'work packages and the contracts that carry them out.',
+    'Indirect cost supports the project without belonging to it — shared '
+        'staff, overheads, offices and systems used across projects. It must '
+        'not be fed by the same sources as direct cost.',
+    'SSHER & Quality covers the safety, health, environment and quality '
+        'provisions carried for the project.',
+    'Additional elements sit outside the delivery work — risk allowances, '
+        'contingency, escalation, taxes and management reserve.',
+  ];
+
+  Widget _subTabDefinitionNote(int tabIndex) {
+    final index = tabIndex < _subTabDefinitions.length ? tabIndex : 0;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: TreasuryTokens.brandSoft,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: TreasuryTokens.brand.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline_rounded,
+              size: 15, color: TreasuryTokens.ink),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _subTabDefinitions[index],
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.45,
+                color: TreasuryTokens.ink,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Seed the estimate with **every work package on the Schedule** as an
+  /// unpriced direct-cost line — the base case from the 2026-09-10 voice note:
+  /// "the cost estimate … is supposed to start with the work packages from the
+  /// Schedule as a direct cost".
+  ///
+  /// Plain data movement, no AI. Each new line is stamped back onto its
+  /// schedule activity (`costLineId`) and linked to the WBS node the work
+  /// package sits under, so repeat pulls stay idempotent and the Cost-by-WBS
+  /// view can match by foreign key rather than by name.
+  void _startFromSchedule(BuildContext context) {
+    final messenger = ScaffoldMessenger.of(context);
+    final scheduleProvider = context.read<ScheduleProvider>();
+    final wbsProvider = context.read<WBSProvider>();
+    final costProvider = context.read<CostEstimateProvider>();
+
+    final schedule = scheduleProvider.schedule;
+    final activities = schedule?.activities ?? const [];
+    if (activities.isEmpty) {
+      messenger.showSnackBar(const SnackBar(
+        content: Text('The Schedule has no work packages yet. Build the '
+            'schedule first — the estimate starts from it.'),
+        behavior: SnackBarBehavior.floating,
+      ));
+      return;
+    }
+
+    final candidates = collectScheduleWorkPackages(activities)
+        .map((wp) => ScheduleWorkPackageCandidate(
+              activityId: wp.activityId,
+              title: wp.title,
+              wbsRef: wp.wbsRef,
+              activityCostLineId: wp.activityCostLineId,
+              category: wp.category,
+            ))
+        .toList(growable: false);
+
+    final result = costProvider.pullScheduleWorkPackages(candidates);
+
+    // Link each created line back to its activity and WBS node.
+    if (result.addedByActivityId.isNotEmpty) {
+      final wbs = wbsProvider.wbs;
+      final nodeIdByCode = <String, String>{};
+      if (wbs != null) {
+        for (final flat in flattenWBS(wbs)) {
+          final path = flat.path.trim();
+          if (path.isNotEmpty) nodeIdByCode[path] = flat.id;
+        }
+      }
+      // Snapshot taken before any mutation: `findActivityById` only reads.
+      final roots = scheduleProvider.schedule?.activities ?? const [];
+      result.addedByActivityId.forEach((activityId, lineId) {
+        final activity = findActivityById(roots, activityId);
+        if (activity == null) return;
+        scheduleProvider.updateActivity(
+          activityId,
+          activity.copyWith(costLineId: lineId),
+        );
+        final code = (activity.wbsCode ?? '').trim();
+        if (code.isEmpty) return;
+        final nodeId = nodeIdByCode[code];
+        if (nodeId != null) wbsProvider.linkCostLine(nodeId, lineId);
+      });
+    }
+
+    messenger.showSnackBar(SnackBar(
+      content: Text(
+        result.pulled > 0
+            ? 'Started from the Schedule — added ${result.pulled} work '
+                'package${result.pulled == 1 ? '' : 's'} as direct cost. Price '
+                'them to build the baseline.'
+            : (result.alreadyInEstimate > 0
+                ? 'All ${candidates.length} scheduled work package'
+                    '${candidates.length == 1 ? '' : 's'} are already in the estimate.'
+                : 'Nothing to add — the Schedule has no work packages to estimate.'),
+      ),
+      duration: const Duration(seconds: 6),
+      behavior: SnackBarBehavior.floating,
+    ));
   }
 
   void _showAddLineDialog(
@@ -503,7 +657,7 @@ class _BaselinedNotice extends StatelessWidget {
               color: TreasuryTokens.warning.withValues(alpha: 0.20),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.lock_rounded,
+            child: const Icon(Icons.lock_rounded,
                 size: 15, color: TreasuryTokens.warning),
           ),
           const SizedBox(width: 12),
@@ -513,7 +667,7 @@ class _BaselinedNotice extends StatelessWidget {
               children: [
                 Text(
                   'Estimate is baselined (v$version)',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: TreasuryTokens.ink,
@@ -522,7 +676,7 @@ class _BaselinedNotice extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Edits create variance entries. Re-baselines remaining: $remaining',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 11.5,
                     color: TreasuryTokens.muted,
                   ),
@@ -576,7 +730,7 @@ class _TreasuryLineRow extends StatelessWidget {
                 color: TreasuryTokens.brand.withValues(alpha: 0.20),
               ),
             ),
-            child: Icon(Icons.receipt_long_rounded,
+            child: const Icon(Icons.receipt_long_rounded,
                 size: 18, color: TreasuryTokens.brandDeep),
           ),
           const SizedBox(width: 12),
@@ -604,18 +758,18 @@ class _TreasuryLineRow extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF3B82F6)
+                          color: const Color(0xFFFFC812)
                               .withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: const Color(0xFF3B82F6)
+                            color: const Color(0xFFFFC812)
                                 .withValues(alpha: 0.35),
                           ),
                         ),
                         child: const Text(
                           'AI',
                           style: TextStyle(
-                            color: Color(0xFF3B82F6),
+                            color: Color(0xFFFFC812),
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.4,
@@ -652,27 +806,27 @@ class _TreasuryLineRow extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.label_outline,
+                    const Icon(Icons.label_outline,
                         size: 11,
                         color: TreasuryTokens.mutedSoft),
                     const SizedBox(width: 4),
                     Text(
                       line.category.label,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         color: TreasuryTokens.muted,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Icon(Icons.source_outlined,
+                    const Icon(Icons.source_outlined,
                         size: 11,
                         color: TreasuryTokens.mutedSoft),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         line.basisSource.label,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
                           color: TreasuryTokens.muted,
                         ),
@@ -690,7 +844,11 @@ class _TreasuryLineRow extends StatelessWidget {
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerRight,
             child: Text(
-              '$currencySymbol${formatCurrency(line.total, 'USD')}',
+              // `formatCurrency` already prefixes a symbol, so combining it
+              // with `currencySymbol` rendered "$$4.2M". Group the number and
+              // let the preference supply the symbol (which also keeps non-
+              // USD/EUR/GBP currencies like ZMW from losing their symbol).
+              '$currencySymbol${formatAmountGrouped(line.total)}',
               style: const TextStyle(
                 color: TreasuryTokens.ink,
                 fontSize: 15,

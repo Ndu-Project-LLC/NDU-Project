@@ -6,7 +6,6 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'dart:async';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -64,18 +63,181 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
   }
 
   void _addNewMeeting() {
-    final newMeeting = MeetingRow(
-      meetingType: '',
-      frequency: '',
-      keyParticipants: [],
-      durationHours: '',
-      meetingObjective: '',
-      actionItems: '',
-      notes: '',
-      status: 'Scheduled',
+    final typeCtrl = TextEditingController();
+    final freqCtrl = TextEditingController(text: 'Weekly');
+    final durationCtrl = TextEditingController(text: '1');
+    final objectiveCtrl = TextEditingController();
+    final actionItemsCtrl = TextEditingController();
+    final notesCtrl = TextEditingController();
+    List<String> selectedRoles = [];
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black54,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.event_note_outlined,
+                    color: Color(0xFF4338CA), size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Text('Add Meeting',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _FieldLabel('Meeting Type'),
+                _DialogTextField(
+                    controller: typeCtrl,
+                    hint: 'e.g. Weekly Sync, Stakeholder Update'),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const _FieldLabel('Frequency'),
+                          DropdownButtonFormField<String>(
+                            initialValue: freqCtrl.text,
+                            decoration: _dialogInputDecoration(),
+                            items: const [
+                              DropdownMenuItem(
+                                  value: 'Daily', child: Text('Daily')),
+                              DropdownMenuItem(
+                                  value: 'Weekly', child: Text('Weekly')),
+                              DropdownMenuItem(
+                                  value: 'Bi-Weekly',
+                                  child: Text('Bi-Weekly')),
+                              DropdownMenuItem(
+                                  value: 'Monthly', child: Text('Monthly')),
+                              DropdownMenuItem(
+                                  value: 'Quarterly',
+                                  child: Text('Quarterly')),
+                            ],
+                            onChanged: (v) {
+                              if (v != null) setDialogState(() => freqCtrl.text = v);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const _FieldLabel('Duration (hrs)'),
+                          _DialogTextField(
+                              controller: durationCtrl, hint: 'e.g. 1'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                const _FieldLabel('Key Participants'),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: _staffRoles.map((role) {
+                    final selected = selectedRoles.contains(role);
+                    return FilterChip(
+                      label: Text(role,
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: selected
+                                  ? Colors.white
+                                  : const Color(0xFF4B5563))),
+                      selected: selected,
+                      selectedColor: const Color(0xFF4338CA),
+                      backgroundColor: const Color(0xFFF3F4F6),
+                      checkmarkColor: Colors.white,
+                      onSelected: (val) {
+                        setDialogState(() {
+                          if (val) {
+                            selectedRoles.add(role);
+                          } else {
+                            selectedRoles.remove(role);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 14),
+                const _FieldLabel('Meeting Objective'),
+                _DialogTextField(
+                    controller: objectiveCtrl,
+                    hint: 'Short, actionable objective',
+                    maxLines: 2),
+                const SizedBox(height: 14),
+                const _FieldLabel('Action Items'),
+                _DialogTextField(
+                    controller: actionItemsCtrl,
+                    hint: 'Optional bullet list',
+                    maxLines: 2),
+                const SizedBox(height: 14),
+                const _FieldLabel('Notes'),
+                _DialogTextField(
+                    controller: notesCtrl,
+                    hint: 'Optional notes',
+                    maxLines: 2),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (typeCtrl.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(
+                        content: Text('Meeting type is required')),
+                  );
+                  return;
+                }
+                final newMeeting = MeetingRow(
+                  meetingType: typeCtrl.text.trim(),
+                  frequency: freqCtrl.text.trim(),
+                  keyParticipants: selectedRoles,
+                  durationHours: durationCtrl.text.trim(),
+                  meetingObjective: objectiveCtrl.text.trim(),
+                  actionItems: actionItemsCtrl.text.trim(),
+                  notes: notesCtrl.text.trim(),
+                  status: 'Scheduled',
+                );
+                final updated = [..._meetings, newMeeting];
+                widget.onMeetingsChanged(updated);
+                Navigator.of(ctx).pop();
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF4338CA),
+              ),
+              child: const Text('Add Meeting'),
+            ),
+          ],
+        ),
+      ),
     );
-    final updated = [..._meetings, newMeeting];
-    widget.onMeetingsChanged(updated);
   }
 
   /// CSV column specs for the Meeting Cadence table. These mirror the
@@ -278,7 +440,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -348,7 +510,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
                         horizontal: 12, vertical: 10),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
-                    foregroundColor: const Color(0xFF2563EB),
+                    foregroundColor: const Color(0xFF4338CA),
                   ),
                 ),
               ],
@@ -363,15 +525,15 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.all(32),
+    return const Padding(
+      padding: EdgeInsets.all(32),
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.event_note_outlined,
+            Icon(Icons.event_note_outlined,
                 color: Color(0xFF9CA3AF), size: 32),
-            const SizedBox(height: 12),
-            const Text(
+            SizedBox(height: 12),
+            Text(
               'No meetings scheduled yet. Add details to get started.',
               style: TextStyle(
                 fontSize: 13,
@@ -388,13 +550,16 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
   Widget _buildTable() {
     return Column(
       children: [
-        // Table Header - dark navy (matching LaunchDataTable)
+        // Table Header - light theme (matching project style)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: const BoxDecoration(
-            color: Color(0xFF1F2937),
+            color: Color(0xFFF9FAFB),
+            border: Border(
+              bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+            ),
           ),
-          child: Row(
+          child: const Row(
             children: [
               _TableHeaderCell('Meeting Type', flex: 2),
               _TableHeaderCell('Frequency', flex: 2),
@@ -449,7 +614,7 @@ class _SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -463,7 +628,7 @@ class _SummaryCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFEEF2FF),
+              color: const Color(0xFFFFF8E1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, size: 20, color: const Color(0xFF4338CA)),
@@ -515,7 +680,7 @@ class _TableHeaderCell extends StatelessWidget {
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
-          color: Color(0xFFFFFFFF),
+          color: Color(0xFF374151),
           letterSpacing: 0.3,
         ),
       ),
@@ -604,7 +769,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                   children: [
                     // Meeting Type
                     DropdownButtonFormField<String>(
-                      value: selectedMeetingType.isEmpty
+                      initialValue: selectedMeetingType.isEmpty
                           ? null
                           : selectedMeetingType,
                       decoration: const InputDecoration(
@@ -637,7 +802,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                     const SizedBox(height: 12),
                     // Frequency
                     DropdownButtonFormField<String>(
-                      value:
+                      initialValue:
                           selectedFrequency.isEmpty ? null : selectedFrequency,
                       decoration: const InputDecoration(
                         labelText: 'Frequency *',
@@ -671,7 +836,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Color(0xFFE5E7EB)),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -763,7 +928,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                     const SizedBox(height: 12),
                     // Status
                     DropdownButtonFormField<String>(
-                      value: selectedStatus.isEmpty ? null : selectedStatus,
+                      initialValue: selectedStatus.isEmpty ? null : selectedStatus,
                       decoration: const InputDecoration(
                         labelText: 'Status',
                         isDense: true,
@@ -845,6 +1010,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
           child: StatefulBuilder(
             builder: (context, setDialogState) => ListView.builder(
               shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: widget.availableRoles.length,
               itemBuilder: (context, index) {
                 final role = widget.availableRoles[index];
@@ -1144,6 +1310,7 @@ class _MultiSelectCell extends StatelessWidget {
           child: StatefulBuilder(
             builder: (context, setState) => ListView.builder(
               shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: availableRoles.length,
               itemBuilder: (context, index) {
                 final role = availableRoles[index];
@@ -1202,7 +1369,7 @@ class _MultiSelectCell extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
@@ -1287,7 +1454,7 @@ class _ObjectiveCell extends StatelessWidget {
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Color(0xFF2563EB)),
+                        strokeWidth: 2, color: Color(0xFFFFC812)),
                   )
                 : const Icon(Icons.refresh, size: 16, color: Color(0xFF64748B)),
             onPressed: isRegenerating ? null : onRegenerate,
@@ -1350,4 +1517,68 @@ class _ReadOnlyText extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Dialog helper widgets ──────────────────────────────────────────────
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.label);
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF374151),
+        ),
+      ),
+    );
+  }
+}
+
+class _DialogTextField extends StatelessWidget {
+  const _DialogTextField({
+    required this.controller,
+    this.hint = '',
+    this.maxLines = 1,
+  });
+
+  final TextEditingController controller;
+  final String hint;
+  final int maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: _dialogInputDecoration().copyWith(hintText: hint),
+    );
+  }
+}
+
+InputDecoration _dialogInputDecoration() {
+  return InputDecoration(
+    filled: true,
+    fillColor: const Color(0xFFF9FAFB),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: Color(0xFF4338CA), width: 1.5),
+    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    isDense: true,
+  );
 }

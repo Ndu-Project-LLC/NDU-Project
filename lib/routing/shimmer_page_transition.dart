@@ -17,6 +17,11 @@ CustomTransitionPage<void> shimmerTransitionPage({
 }) {
   return CustomTransitionPage<void>(
     key: state.pageKey,
+    // Carry the matched route name onto the page so NavigatorObservers
+    // (e.g. [ContinuityRouteObserver]) can resolve which project checkpoint
+    // this page belongs to. Without it, route.settings.name is null on every
+    // push and the deterministic continuity snapshot would never refresh.
+    name: state.name,
     transitionDuration: transitionDuration,
     reverseTransitionDuration: reverseDuration,
     child: child,

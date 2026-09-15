@@ -241,7 +241,7 @@ class _TwoFactorVerificationScreenState
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         top: true,
         child: SingleChildScrollView(
@@ -276,7 +276,7 @@ class _TwoFactorVerificationScreenState
                   Center(
                     child: Text(
                       widget.email,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: headlineAccent,
@@ -345,7 +345,7 @@ class _TwoFactorVerificationScreenState
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
+                                        borderSide: const BorderSide(
                                           color: headlineAccent,
                                           width: 2,
                                         ),
@@ -432,7 +432,7 @@ class _TwoFactorVerificationScreenState
                                   onTap: _isSending ? null : _sendCode,
                                   child: Text(
                                     _isSending ? 'Sending...' : 'Resend Code',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: headlineAccent,
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,

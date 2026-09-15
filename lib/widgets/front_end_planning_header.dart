@@ -117,7 +117,7 @@ class _WhiteButton extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         foregroundColor: Colors.black87,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         side: const BorderSide(color: Color(0xFFE5E7EB)),

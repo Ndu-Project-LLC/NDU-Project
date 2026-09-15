@@ -25,7 +25,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Execution Plan Details',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -142,7 +142,7 @@ class _ExecutionPlanDetailsScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: widget.activeItemLabel,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -166,7 +166,7 @@ class _ExecutionPlanDetailsScreenState
             if (widget.showPlanDetails) ...[
               const SectionIntro(title: 'Execution Plan Details'),
               const SizedBox(height: 28),
-              ExecutionPlanForm(
+              const ExecutionPlanForm(
                 title: 'Execution Plan Details',
                 hintText: 'Input your notes here...',
                 noteKey: 'execution_plan_details',
@@ -242,7 +242,7 @@ class _EarlyWorksSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Early Works',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'tool',
                       label: 'Execution Tool',
@@ -302,7 +302,7 @@ class _EarlyWorksSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileEarlyWorksActions()
+          const _MobileEarlyWorksActions()
         else
           const _DesktopEarlyWorksActions(),
       ],

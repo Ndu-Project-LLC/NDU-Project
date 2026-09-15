@@ -69,7 +69,7 @@ class _AgileAcceptanceCriteriaScreenState
   AcceptanceCriteriaTemplate? get _selectedTemplate {
     if (_selectedTemplateId == null) return null;
     try {
-      return _templates.firstWhere((t) => t.id == _selectedTemplateId);
+      return _templates.where((t) => t.id == _selectedTemplateId).firstOrNull;
     } catch (_) {
       return null;
     }
@@ -792,7 +792,7 @@ class _AgileAcceptanceCriteriaScreenState
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Color(0xFFF9FAFB),
+          color: const Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: _kBorder),
         ),
@@ -903,8 +903,8 @@ class _AgileAcceptanceCriteriaScreenState
       screenTitle: 'Acceptance Criteria Planning',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',

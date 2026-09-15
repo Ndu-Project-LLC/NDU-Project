@@ -23,7 +23,7 @@ Future<void> _exportInfrastructurePlanPdf(BuildContext context) async {
     screenTitle: 'Infrastructure Plan',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -48,7 +48,7 @@ class ExecutionPlanInfrastructurePlanScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Plan - Infrastructure Plan',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -192,7 +192,7 @@ class _PlanningInfrastructureCostSectionState
       screenTitle: 'Infrastructure Plan',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text(
             'Notes',
@@ -389,7 +389,7 @@ class _PlanningInfrastructureCostSectionState
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Color(0xFFE5E7EB)),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: const Text(
               'No infrastructure cost items yet. Add hosting, environments, network, tooling, migration, or platform costs here.',
@@ -404,7 +404,7 @@ class _PlanningInfrastructureCostSectionState
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Color(0xFFE5E7EB)),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,7 +444,7 @@ class _PlanningInfrastructureCostSectionState
                               currency.format(item.potentialCost),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF2563EB),
+                                color: Color(0xFFFFC812),
                               ),
                             ),
                             if (item.owner.trim().isNotEmpty)

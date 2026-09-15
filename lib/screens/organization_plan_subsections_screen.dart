@@ -7,13 +7,9 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
-import 'package:ndu_project/screens/team_training_building_screen.dart';
 import 'package:ndu_project/services/user_service.dart';
-import 'package:ndu_project/services/raci_assignment_service.dart';
-import 'package:ndu_project/services/raci_matrix_seeder.dart';
 import 'package:ndu_project/services/subscription_service.dart';
 import 'package:ndu_project/services/subscription_pricing_service.dart';
-import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/staffing_reminder_helper.dart';
@@ -23,10 +19,10 @@ import 'package:ndu_project/widgets/premium_edit_dialog.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/raci_deliverable_matrix.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/services/currency_service.dart';
 Future<void> _exportPlanningSubsectionPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
   await PdfExportHelper.exportScreenPdf(
@@ -164,6 +160,21 @@ class _OrganizationStaffingPlanScreenState
     'Hired',
   ];
 
+  String _normalizedCurrencyCode(String code) {
+    final normalized = code.trim().toUpperCase();
+    return CurrencyService.supportedCurrencies.any((c) => c.code == normalized)
+        ? normalized
+        : 'USD';
+  }
+
+  Future<void> _saveStaffingCurrency(BuildContext context, String code) async {
+    final normalized = _normalizedCurrencyCode(code);
+    final provider = ProjectDataHelper.getProvider(context);
+    provider.updateCostBenefitCurrency(normalized);
+    if (mounted) setState(() {});
+    await provider.saveToFirebase(checkpoint: 'organization_staffing_plan');
+  }
+
   Future<void> _saveStaffing(
       BuildContext context, List<StaffingRequirement> updated) async {
     await ProjectDataHelper.saveAndNavigate(
@@ -195,6 +206,7 @@ class _OrganizationStaffingPlanScreenState
         categoryOptions: _categoryOptions,
         statusOptions: _statusOptions,
         projectLocation: projectData.location,
+        currencyCode: _normalizedCurrencyCode(projectData.costBenefitCurrency),
       ),
     );
     if (result == null) return;
@@ -219,6 +231,7 @@ class _OrganizationStaffingPlanScreenState
         categoryOptions: _categoryOptions,
         statusOptions: _statusOptions,
         projectLocation: projectData.location,
+        currencyCode: _normalizedCurrencyCode(projectData.costBenefitCurrency),
       ),
     );
     if (result == null) return;
@@ -705,12 +718,13 @@ class _OrganizationStaffingPlanScreenState
     final nduAccessCount =
         staffing.where((s) => s.nduProjectAccess).length;
     final reminders = StaffingReminderHelper.generateReminders(staffing);
+    final currencyCode = _normalizedCurrencyCode(projectData.costBenefitCurrency);
 
     final metrics = <_MetricData>[
       _MetricData('Total Positions', staffing.length.toString(),
-          const Color(0xFF3B82F6)),
+          const Color(0xFFFFC812)),
       _MetricData(
-          'Total Personnel', totalPersonnel.toString(), const Color(0xFF8B5CF6)),
+          'Total Personnel', totalPersonnel.toString(), const Color(0xFFB8860B)),
       _MetricData('NDU Access', nduAccessCount.toString(),
           const Color(0xFF10B981)),
       _MetricData('Active Reminders', reminders.length.toString(),
@@ -718,7 +732,7 @@ class _OrganizationStaffingPlanScreenState
     ];
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -814,11 +828,11 @@ class _OrganizationStaffingPlanScreenState
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(
+                              const Padding(
+                                padding: EdgeInsets.fromLTRB(
                                     16, 12, 12, 4),
                                 child: Row(
-                                  children: const [
+                                  children: [
                                     Icon(Icons.table_rows_outlined,
                                         size: 18,
                                         color: Color(0xFF6B7280)),
@@ -906,6 +920,10 @@ class _OrganizationStaffingPlanScreenState
                                           _addStaffing(context),
                                       onAiSuggestDates: () =>
                                           _showAiSuggestDatesDialog(context),
+                                      currencyCode: currencyCode,
+                                      onCurrencyChanged: (code) {
+                                        _saveStaffingCurrency(context, code);
+                                      },
                                     ),
                                     // ── Tab 2: Staffing Timeline (Gantt) ──
                                     _StaffingTimelineTab(
@@ -917,6 +935,10 @@ class _OrganizationStaffingPlanScreenState
                                     _EstimatedCostTab(
                                       requirements: staffing,
                                       projectData: projectData,
+                                      currencyCode: currencyCode,
+                                      onCurrencyChanged: (code) {
+                                        _saveStaffingCurrency(context, code);
+                                      },
                                       onEdit: (i, req) =>
                                           _editStaffing(context, i, req),
                                     ),
@@ -991,14 +1013,14 @@ class _NduSuggestionBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFBFDBFE)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.auto_awesome, color: Color(0xFF2563EB), size: 22),
+          const Icon(Icons.auto_awesome, color: Color(0xFFFFC812), size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1009,7 +1031,7 @@ class _NduSuggestionBanner extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E3A8A),
+                    color: Color(0xFFB8860B),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1034,8 +1056,8 @@ class _NduSuggestionBanner extends StatelessWidget {
                 icon: const Icon(Icons.person_add_alt_1, size: 16),
                 label: const Text('Add Position'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF1E40AF),
-                  side: const BorderSide(color: Color(0xFFBFDBFE)),
+                  foregroundColor: const Color(0xFFFFC812),
+                  side: const BorderSide(color: Color(0xFFFDE68A)),
                 ),
               ),
               ElevatedButton.icon(
@@ -1043,7 +1065,7 @@ class _NduSuggestionBanner extends StatelessWidget {
                 icon: const Icon(Icons.auto_awesome, size: 16),
                 label: const Text('AI Suggest NDU Access'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: const Color(0xFFFFC812),
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -1215,9 +1237,9 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
     final overTier = totalAfter > widget.tierCapacity;
 
     return AlertDialog(
-      title: Row(
-        children: const [
-          Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+      title: const Row(
+        children: [
+          Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
           SizedBox(width: 8),
           Expanded(
             child: Text('AI Suggested NDU Project Access'),
@@ -1235,10 +1257,10 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
+                  color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(8),
                   border:
-                      Border.all(color: const Color(0xFFBFDBFE)),
+                      Border.all(color: const Color(0xFFFDE68A)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1305,6 +1327,7 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
                   constraints: const BoxConstraints(maxHeight: 220),
                   child: ListView.builder(
                     shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: widget.currentStaffing.length,
                     itemBuilder: (ctx, i) {
                       final req = widget.currentStaffing[i];
@@ -1343,7 +1366,7 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
                               color: hasAccess
                                   ? const Color(0xFF059669)
                                   : suggested
-                                      ? const Color(0xFF2563EB)
+                                      ? const Color(0xFFFFC812)
                                       : const Color(0xFF6B7280),
                               fontWeight: hasAccess || suggested
                                   ? FontWeight.w700
@@ -1374,6 +1397,7 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
                   constraints: const BoxConstraints(maxHeight: 220),
                   child: ListView.builder(
                     shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: widget.suggestedAdditions.length,
                     itemBuilder: (ctx, i) {
                       final add = widget.suggestedAdditions[i];
@@ -1430,7 +1454,7 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
           icon: const Icon(Icons.check, size: 16),
           label: Text('Apply ($totalAfter role${totalAfter == 1 ? '' : 's'})'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2563EB),
+            backgroundColor: const Color(0xFFFFC812),
             foregroundColor: Colors.white,
           ),
         ),
@@ -1455,6 +1479,7 @@ class _StaffingRequirementDialog extends StatefulWidget {
     required this.categoryOptions,
     required this.statusOptions,
     required this.projectLocation,
+    required this.currencyCode,
   });
 
   final String title;
@@ -1465,6 +1490,7 @@ class _StaffingRequirementDialog extends StatefulWidget {
   final List<String> categoryOptions;
   final List<String> statusOptions;
   final String projectLocation;
+  final String currencyCode;
 
   @override
   State<_StaffingRequirementDialog> createState() =>
@@ -1624,7 +1650,7 @@ class _StaffingRequirementDialogState
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.badge_outlined, color: Color(0xFF2563EB)),
+          const Icon(Icons.badge_outlined, color: Color(0xFFFFC812)),
           const SizedBox(width: 8),
           Expanded(child: Text(widget.title)),
         ],
@@ -1702,6 +1728,7 @@ class _StaffingRequirementDialogState
                   ),
                   child: ListView.builder(
                     shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: _userSuggestions.length,
                     itemBuilder: (ctx, i) {
                       final user = _userSuggestions[i];
@@ -1710,7 +1737,7 @@ class _StaffingRequirementDialogState
                       return ListTile(
                         dense: true,
                         leading: CircleAvatar(
-                          backgroundColor: const Color(0xFFE0E7FF),
+                          backgroundColor: const Color(0xFFFFF8E1),
                           child: Text(
                             (user.displayName.isNotEmpty
                                     ? user.displayName[0]
@@ -1731,7 +1758,7 @@ class _StaffingRequirementDialogState
                         trailing: alreadySelected
                             ? const Icon(Icons.check, color: Color(0xFF059669))
                             : const Icon(Icons.add_circle_outline,
-                                color: Color(0xFF2563EB)),
+                                color: Color(0xFFFFC812)),
                         onTap: () {
                           setState(() {
                             _nameCtrl.text = user.displayName;
@@ -2060,7 +2087,7 @@ class _StaffingRequirementDialogState
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const _DialogLabel('Monthly Cost (USD)'),
+                            _DialogLabel('Monthly Cost (${widget.currencyCode})'),
                             TextField(
                               controller: _monthlyCostCtrl,
                               keyboardType:
@@ -2268,11 +2295,11 @@ class _OrganizationRolesResponsibilitiesScreenState
 
     final List<_MetricData> metrics = [
       _MetricData(
-          'Total Roles', roles.length.toString(), const Color(0xFF3B82F6)),
+          'Total Roles', roles.length.toString(), const Color(0xFFFFC812)),
       _MetricData(
           'Total Personnel',
           totalPersonnel.toString(),
-          const Color(0xFF8B5CF6)),
+          const Color(0xFFB8860B)),
       _MetricData(
           'Disciplines',
           roles.map<String>((r) => r.workstream).toSet().length.toString(),
@@ -2641,6 +2668,7 @@ class _OrganizationRolesResponsibilitiesScreenState
                   constraints: const BoxConstraints(maxHeight: 460),
                   child: ListView.builder(
                     shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: predefined.length,
                     itemBuilder: (context, index) {
                       final role = predefined[index];
@@ -2970,7 +2998,7 @@ class _OrganizationRaciMatrixScreenState
     final horizontalPadding = isMobile ? 20.0 : 32.0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -3143,7 +3171,28 @@ class _PlanningSubsectionScreen extends StatefulWidget {
 }
 
 class _PlanningSubsectionScreenState extends State<_PlanningSubsectionScreen> {
-  bool _isTableView = false;
+  bool _isTableView = true;
+  String _searchQuery = '';
+
+  List<RoleDefinition> get _filteredRoles {
+    if (_searchQuery.trim().isEmpty) return widget.config.roles;
+    final q = _searchQuery.toLowerCase();
+    return widget.config.roles.where((r) {
+      return r.title.toLowerCase().contains(q) ||
+          r.workstream.toLowerCase().contains(q) ||
+          r.description.toLowerCase().contains(q);
+    }).toList();
+  }
+
+  List<_SectionData> get _filteredSections {
+    if (_searchQuery.trim().isEmpty) return widget.config.sections;
+    final q = _searchQuery.toLowerCase();
+    return widget.config.sections.where((s) {
+      return s.title.toLowerCase().contains(q) ||
+          s.subtitle.toLowerCase().contains(q) ||
+          s.bullets.any((b) => b.text.toLowerCase().contains(q));
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -3152,7 +3201,7 @@ class _PlanningSubsectionScreenState extends State<_PlanningSubsectionScreen> {
     final horizontalPadding = isMobile ? 20.0 : 32.0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -3232,9 +3281,73 @@ class _PlanningSubsectionScreenState extends State<_PlanningSubsectionScreen> {
                                 ),
                                 const SizedBox(height: 16),
                               ],
+                              // Search bar
+                              if (config.roles.isNotEmpty) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                        color: const Color(0xFFE5E7EB)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.search,
+                                          size: 18,
+                                          color: Color(0xFF6B7280)),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: TextField(
+                                          decoration: const InputDecoration(
+                                            hintText:
+                                                'Search roles by name, discipline, or description...',
+                                            border: InputBorder.none,
+                                            isDense: true,
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                    vertical: 8),
+                                          ),
+                                          style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Color(0xFF111827)),
+                                          onChanged: (value) => setState(
+                                              () => _searchQuery = value),
+                                        ),
+                                      ),
+                                      if (_searchQuery.isNotEmpty)
+                                        IconButton(
+                                          icon: const Icon(Icons.clear,
+                                              size: 16,
+                                              color: Color(0xFF6B7280)),
+                                          onPressed: () => setState(
+                                              () => _searchQuery = ''),
+                                        ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF3F4F6),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          '${_filteredRoles.length} of ${config.roles.length}',
+                                          style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFF6B7280)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
                               if (_isTableView && config.roles.isNotEmpty)
                                 _RolesTable(
-                                  roles: config.roles,
+                                  roles: _filteredRoles,
                                   onEdit: widget.onEditRole,
                                   onDelete: widget.onDeleteRole,
                                   onUpdateHeadcount:
@@ -3244,7 +3357,7 @@ class _PlanningSubsectionScreenState extends State<_PlanningSubsectionScreen> {
                                 Wrap(
                                   spacing: gap,
                                   runSpacing: gap,
-                                  children: config.sections
+                                  children: _filteredSections
                                       .map((section) => SizedBox(
                                           width: halfWidth,
                                           child: _SectionCard(data: section)))
@@ -3574,7 +3687,7 @@ class _RolesTableRow extends StatelessWidget {
           padding:
               const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFFE0E7FF),
+            color: const Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
@@ -4235,6 +4348,8 @@ class _StaffingPlanTabContent extends StatelessWidget {
     required this.onToggleNduAccess,
     required this.onAddPosition,
     required this.onAiSuggestDates,
+    required this.currencyCode,
+    required this.onCurrencyChanged,
   });
 
   final List<StaffingRequirement> requirements;
@@ -4243,6 +4358,8 @@ class _StaffingPlanTabContent extends StatelessWidget {
   final void Function(int index, bool value) onToggleNduAccess;
   final VoidCallback onAddPosition;
   final VoidCallback onAiSuggestDates;
+  final String currencyCode;
+  final ValueChanged<String> onCurrencyChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -4257,13 +4374,40 @@ class _StaffingPlanTabContent extends StatelessWidget {
             runSpacing: 8,
             alignment: WrapAlignment.start,
             children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: currencyCode,
+                    isDense: true,
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF374151)),
+                    hint: const Text('Currency'),
+                    items: CurrencyService.supportedCurrencies
+                        .map((currency) => DropdownMenuItem<String>(
+                              value: currency.code,
+                              child: Text(
+                                  '${currency.code} (${currency.symbol})'),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) onCurrencyChanged(value);
+                    },
+                  ),
+                ),
+              ),
               OutlinedButton.icon(
                 onPressed: onAddPosition,
                 icon: const Icon(Icons.person_add_alt_1, size: 16),
                 label: const Text('Add Position'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF1E40AF),
-                  side: const BorderSide(color: Color(0xFFBFDBFE)),
+                  foregroundColor: const Color(0xFFFFC812),
+                  side: const BorderSide(color: Color(0xFFFDE68A)),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 ),
@@ -4273,7 +4417,7 @@ class _StaffingPlanTabContent extends StatelessWidget {
                 icon: const Icon(Icons.auto_awesome, size: 16),
                 label: const Text('AI Suggest Dates'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7C3AED),
+                  backgroundColor: const Color(0xFFB8860B),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding:
@@ -4434,7 +4578,7 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
             Container(
               padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
               decoration: const BoxDecoration(
-                color: Color(0xFFF5F3FF),
+                color: Color(0xFFFFF8E1),
                 borderRadius:
                     BorderRadius.vertical(top: Radius.circular(16)),
               ),
@@ -4443,11 +4587,11 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEDE9FE),
+                      color: const Color(0xFFFFF8E1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.auto_awesome,
-                        color: Color(0xFF7C3AED), size: 20),
+                        color: Color(0xFFB8860B), size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -4504,12 +4648,12 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isAccepted
-                            ? const Color(0xFFF5F3FF)
+                            ? const Color(0xFFFFF8E1)
                             : Colors.white,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: isAccepted
-                              ? const Color(0xFFC4B5FD)
+                              ? const Color(0xFFFDE68A)
                               : const Color(0xFFE5E7EB),
                         ),
                       ),
@@ -4527,7 +4671,7 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
                                 }
                               });
                             },
-                            activeColor: const Color(0xFF7C3AED),
+                            activeColor: const Color(0xFFB8860B),
                           ),
                           const SizedBox(width: 4),
                           Expanded(
@@ -4570,7 +4714,7 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
                                       _DateChip(
                                         label: 'Milestone',
                                         value: s.matchedMilestone!,
-                                        color: const Color(0xFF6366F1),
+                                        color: const Color(0xFFB8860B),
                                       ),
                                   ],
                                 ),
@@ -4589,8 +4733,6 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
                 color: Color(0xFFF9FAFB),
-                borderRadius:
-                    BorderRadius.vertical(bottom: Radius.circular(16)),
                 border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
               ),
               child: Row(
@@ -4613,7 +4755,7 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
                             ? null
                             : () => Navigator.pop(context, _accepted),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF7C3AED),
+                          backgroundColor: const Color(0xFFB8860B),
                           foregroundColor: Colors.white,
                         ),
                         child: const Text('Apply Selected'),
@@ -5124,9 +5266,9 @@ class _TimelineRow extends StatelessWidget {
 
                   // Bar color shifts based on role.
                   final title = parsed.requirement.title.toLowerCase();
-                  Color barColor = const Color(0xFF3B82F6);
+                  Color barColor = const Color(0xFFFFC812);
                   if (title.contains('manager') || title.contains('lead')) {
-                    barColor = const Color(0xFF8B5CF6);
+                    barColor = const Color(0xFFB8860B);
                   } else if (title.contains('developer') ||
                       title.contains('tech') ||
                       title.contains('engineer') ||
@@ -5137,7 +5279,7 @@ class _TimelineRow extends StatelessWidget {
                     barColor = const Color(0xFFF59E0B);
                   } else if (title.contains('contract') ||
                       title.contains('procurement')) {
-                    barColor = const Color(0xFFEC4899);
+                    barColor = const Color(0xFFD97706);
                   } else if (title.contains('ssher') ||
                       title.contains('safety')) {
                     barColor = const Color(0xFFEF4444);
@@ -5216,11 +5358,15 @@ class _EstimatedCostTab extends StatefulWidget {
   const _EstimatedCostTab({
     required this.requirements,
     required this.projectData,
+    required this.currencyCode,
+    required this.onCurrencyChanged,
     required this.onEdit,
   });
 
   final List<StaffingRequirement> requirements;
   final ProjectDataModel projectData;
+  final String currencyCode;
+  final ValueChanged<String> onCurrencyChanged;
   final void Function(int index, StaffingRequirement req) onEdit;
 
   @override
@@ -5271,6 +5417,8 @@ class _EstimatedCostTabState extends State<_EstimatedCostTab> {
 
     return _EstimatedCostTable(
       requirements: widget.requirements,
+      currencyCode: widget.currencyCode,
+      onCurrencyChanged: widget.onCurrencyChanged,
       onEdit: widget.onEdit,
     );
   }
@@ -5343,19 +5491,48 @@ class _LockedCostPlaceholder extends StatelessWidget {
   }
 }
 
-class _EstimatedCostTable extends StatelessWidget {
+class _EstimatedCostTable extends StatefulWidget {
   const _EstimatedCostTable({
     required this.requirements,
+    required this.currencyCode,
+    required this.onCurrencyChanged,
     required this.onEdit,
   });
 
   final List<StaffingRequirement> requirements;
+  final String currencyCode;
+  final ValueChanged<String> onCurrencyChanged;
   final void Function(int index, StaffingRequirement req) onEdit;
 
   @override
+  State<_EstimatedCostTable> createState() => _EstimatedCostTableState();
+}
+
+class _EstimatedCostTableState extends State<_EstimatedCostTable> {
+  late String _selectedCurrency;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCurrency = widget.currencyCode;
+  }
+
+  @override
+  void didUpdateWidget(covariant _EstimatedCostTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currencyCode != widget.currencyCode &&
+        _selectedCurrency != widget.currencyCode) {
+      _selectedCurrency = widget.currencyCode;
+    }
+  }
+
+  String get _currencySymbol => CurrencyService.getSymbol(_selectedCurrency);
+
+  @override
   Widget build(BuildContext context) {
-    final currencyFmt = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
-    final columns = const <_StaffingColumnDef>[
+    final currencyFmt =
+        NumberFormat.currency(symbol: _currencySymbol, decimalDigits: 0);
+    const columns = <_StaffingColumnDef>[
       _StaffingColumnDef('#', 48),
       _StaffingColumnDef('Position', 180),
       _StaffingColumnDef('Name', 150),
@@ -5370,9 +5547,9 @@ class _EstimatedCostTable extends StatelessWidget {
     final contentWidth =
         columns.fold<double>(0, (sum, c) => sum + c.width) + 32;
 
-    final totalHeadcount = requirements.fold<int>(
+    final totalHeadcount = widget.requirements.fold<int>(
         0, (sum, r) => sum + (r.headcount > 0 ? r.headcount : 1));
-    final grandTotal = requirements.fold<double>(
+    final grandTotal = widget.requirements.fold<double>(
         0, (sum, r) => sum + r.estimatedTotal);
 
     return Padding(
@@ -5384,7 +5561,37 @@ class _EstimatedCostTable extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
+              // Currency selector
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedCurrency,
+                    isDense: true,
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF374151)),
+                    items: CurrencyService.supportedCurrencies
+                        .map((currency) => DropdownMenuItem<String>(
+                              value: currency.code,
+                              child: Text(
+                                  '${currency.code} (${currency.symbol})'),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setState(() => _selectedCurrency = value);
+                      widget.onCurrencyChanged(value);
+                    },
+                  ),
+                ),
+              ),
               OutlinedButton.icon(
                 onPressed: () => _showExpanded(context),
                 icon: const Icon(Icons.fullscreen, size: 16),
@@ -5458,7 +5665,7 @@ class _EstimatedCostTable extends StatelessWidget {
                                 .toList(),
                           ),
                         ),
-                        if (requirements.isEmpty)
+                        if (widget.requirements.isEmpty)
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 36),
@@ -5474,7 +5681,7 @@ class _EstimatedCostTable extends StatelessWidget {
                             ),
                           )
                         else
-                          ...requirements.asMap().entries.map((entry) {
+                          ...widget.requirements.asMap().entries.map((entry) {
                             final i = entry.key;
                             final r = entry.value;
                             final monthly = r.monthlyCost;
@@ -5574,7 +5781,7 @@ class _EstimatedCostTable extends StatelessWidget {
                                           style: const TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w700,
-                                              color: const Color(0xFF047857)))),
+                                              color: Color(0xFF047857)))),
                                   SizedBox(
                                     width: columns[9].width,
                                     child: Center(
@@ -5582,7 +5789,7 @@ class _EstimatedCostTable extends StatelessWidget {
                                         icon: const Icon(Icons.edit_outlined,
                                             size: 16,
                                             color: Color(0xFF6B7280)),
-                                        onPressed: () => onEdit(i, r),
+                                        onPressed: () => widget.onEdit(i, r),
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
                                       ),
@@ -5682,8 +5889,10 @@ class _EstimatedCostTable extends StatelessWidget {
               const Divider(height: 16),
               Expanded(
                 child: _EstimatedCostTable(
-                  requirements: requirements,
-                  onEdit: onEdit,
+                  requirements: widget.requirements,
+                  currencyCode: _selectedCurrency,
+                  onCurrencyChanged: widget.onCurrencyChanged,
+                  onEdit: widget.onEdit,
                 ),
               ),
             ],
@@ -5747,7 +5956,7 @@ class _TopHeader extends StatelessWidget {
 }
 
 class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon, this.onTap});
+  const _CircleIconButton({required this.icon}) : onTap = null;
 
   final IconData icon;
   final VoidCallback? onTap;
@@ -5763,7 +5972,7 @@ class _CircleIconButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
       ),
@@ -5784,7 +5993,7 @@ class _UserChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -5880,7 +6089,7 @@ class _MetricCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -5951,8 +6160,8 @@ class _SectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 6)),
         ],
@@ -6121,7 +6330,7 @@ class _SectionEmptyState extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
@@ -6129,7 +6338,7 @@ class _SectionEmptyState extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: Color(0xFFFFF7ED),
+              color: const Color(0xFFFFF7ED),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: const Color(0xFFF59E0B)),

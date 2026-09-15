@@ -21,7 +21,6 @@ import 'package:ndu_project/widgets/compact_action_button.dart';
 import 'package:ndu_project/widgets/shimmer_loading.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/screens/group_into_portfolio_screen.dart';
-import 'package:ndu_project/screens/project_activities_log_screen.dart';
 
 class PortfolioDashboardScreen extends StatefulWidget {
  final String? portfolioId;
@@ -51,7 +50,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  static const _muted = Color(0xFF64748B);
  static const _outline = Color(0xFFE2E8F0);
  static const _gold = Color(0xFFD97706);
- static const _blue = Color(0xFF6366F1);
+ static const _blue = Color(0xFFB8860B);
  static const _blueDeep = Color(0xFF4F46E5);
  static const _emerald = Color(0xFF059669);
  static const _amber = Color(0xFFD97706);
@@ -276,7 +275,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
                           : RefreshIndicator(
                               onRefresh: _loadData,
                               color: _blue,
-                              backgroundColor: Colors.white,
+                              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                               strokeWidth: 3,
                               child: SingleChildScrollView(
                                 physics: const AlwaysScrollableScrollPhysics(),

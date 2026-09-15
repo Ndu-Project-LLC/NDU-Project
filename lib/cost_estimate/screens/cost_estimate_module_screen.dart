@@ -18,6 +18,7 @@ library;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -25,6 +26,7 @@ import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/widgets/context_banner.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
+import 'package:ndu_project/cost_estimate/utils/risk_cost_lines.dart';
 import 'package:ndu_project/cost_estimate/screens/setup_wizard_screen.dart';
 import 'package:ndu_project/cost_estimate/screens/builder_screen.dart';
 import 'package:ndu_project/cost_estimate/screens/boe_screen.dart';
@@ -37,9 +39,11 @@ import 'package:ndu_project/cost_estimate/screens/variance_screen.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/models/staffing_row.dart';
+import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
-import 'package:ndu_project/widgets/cross_section_sync_card.dart';
+import 'package:ndu_project/wbs/utils/wbs_cost_coverage.dart';
 import 'package:go_router/go_router.dart';
 
 class CostEstimateModuleScreen extends StatefulWidget {
@@ -61,29 +65,81 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
     vsync: this,
   );
 
+  /// Guards the build-time project sync so a project change triggers exactly
+  /// one load pass (the next build sees a mismatched scope until it finishes).
+  bool _projectSyncScheduled = false;
+
   @override
   void initState() {
     super.initState();
     _tabController.addListener(_onTabChanged);
-    // Auto-complete setup with defaults so the user goes straight to the
-    // Cost Estimate dashboard without seeing the setup wizard. The project
-    // name is read from the central ProjectDataHelper (which captures the
-    // name from the Initiation Phase's ProjectDataModel) — falling back to
-    // 'My Project' when no name has been captured yet.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncActiveProject());
+  }
+
+  /// Project id the Cost Estimate storage is scoped by right now — `'default'`
+  /// when no project is loaded.
+  static String _scopeIdFor(String? projectId) {
+    final trimmed = (projectId ?? '').trim();
+    return trimmed.isEmpty ? 'default' : trimmed;
+  }
+
+  /// Loads THIS project's Cost Estimate (and auto-creates one for a project
+  /// that has none yet) before the dashboard renders.
+  ///
+  /// Storage is project-scoped, so this runs on entry AND whenever the active
+  /// project changes. Without it the module would keep showing the previously
+  /// opened project's cost lines, BOE, stakeholders and risk allowances —
+  /// content from a different project.
+  ///
+  /// The project name is read from the central [ProjectDataModel] (falling
+  /// back to [ProjectDataHelper], which captures the name from the Initiation
+  /// Phase) — `'My Project'` when nothing has been captured yet.
+  Future<void> _syncActiveProject() async {
+    if (!mounted) return;
+    final projectData = context.read<ProjectDataProvider>().projectData;
+    final provider = context.read<CostEstimateProvider>();
+    final projectId = (projectData.projectId ?? '').trim();
+
+    if (provider.activeProjectId != _scopeIdFor(projectId)) {
+      final projectName = projectData.projectName.trim().isNotEmpty
+          ? projectData.projectName.trim()
+          : (ProjectDataHelper.readProjectNameFromContext(context) ??
+              'My Project');
+      await provider.ensureProjectLoaded(projectId,
+          projectName: projectName);
       if (!mounted) return;
-      final provider = context.read<CostEstimateProvider>();
-      if (provider.estimate == null || !provider.setupComplete) {
-        final projectName =
-            ProjectDataHelper.readProjectNameFromContext(context) ??
-                'My Project';
-        provider.setup(
-          projectName: projectName,
-          className: EstimateClass.class3,
-          deliveryModel: DeliveryModel.waterfall,
-        );
+    }
+
+    // Auto-complete setup with defaults so the user goes straight to the
+    // Cost Estimate dashboard without seeing the setup wizard.
+    if (provider.estimate == null || !provider.setupComplete) {
+      final projectName = projectData.projectName.trim().isNotEmpty
+          ? projectData.projectName.trim()
+          : (ProjectDataHelper.readProjectNameFromContext(context) ??
+              'My Project');
+      provider.setup(
+        projectId: projectId,
+        projectName: projectName,
+        className: EstimateClass.class3,
+        deliveryModel: DeliveryModel.waterfall,
+      );
+    }
+
+    // Auto-import cost items from the Initial Cost Estimate if the cost
+    // estimate has no lines yet. This populates the Cost by WBS tab with data
+    // from the project's cost estimate items.
+    if (provider.estimate != null && provider.estimate!.lines.isEmpty) {
+      if (projectData.costEstimateItems.isNotEmpty) {
+        provider.importFromProjectCostEstimateItems(
+            projectData.costEstimateItems);
       }
-    });
+      // Non-destructive seeding: pull real stakeholder/BOE/review info from
+      // the central ProjectDataModel when corresponding sections in the
+      // estimate are empty.
+      provider.ensureSeededFromProjectData(projectData);
+    }
+
+    if (mounted) setState(() {});
   }
 
   void _onTabChanged() {
@@ -113,6 +169,40 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
 
         // ---- Context banner data ----
         final projectData = projectProvider.projectData;
+
+        // Storage is project-scoped: if the provider is still bound to another
+        // project (or to none yet), load THIS project's estimate before
+        // anything on the page reads it. Driven from build as well as
+        // initState, so switching projects while the module stays mounted
+        // re-scopes it instead of leaving the other project's estimate up.
+        final scopeId = _scopeIdFor(projectData.projectId);
+        if (provider.activeProjectId != scopeId && !_projectSyncScheduled) {
+          _projectSyncScheduled = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            _projectSyncScheduled = false;
+            await _syncActiveProject();
+          });
+        }
+
+        // Auto-populate from the Initiation Phase: if the estimate has no
+        // lines yet and the project captured initial cost items, import them.
+        // Checked on every build (not just initState) so late-arriving
+        // project data (async Firebase load) still seeds the dashboard — but
+        // only once the estimate is bound to THIS project, so another
+        // project's estimate can never be seeded.
+        if (provider.activeProjectId == scopeId &&
+            estimate.lines.isEmpty &&
+            projectData.costEstimateItems.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              provider.importFromProjectCostEstimateItems(
+                  projectData.costEstimateItems);
+              // Non-destructive: seeds stakeholder/BOE/review info from the
+              // central ProjectDataModel where the estimate sections are empty.
+              provider.ensureSeededFromProjectData(projectData);
+            }
+          });
+        }
         final projectName = (projectData.projectName).trim().isNotEmpty
             ? projectData.projectName
             : estimate.projectName;
@@ -120,15 +210,14 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
         final wbs = wbsProvider.wbs;
         final wbsCounts = wbs != null ? countNodes(wbs) : null;
         final wbsFrameworkLabel = wbs?.framework.label;
-        final wbsDeliverableWord =
-            wbs?.framework.level1Label ?? 'deliverables';
+        final wbsDeliverableWord = wbs?.framework.level1Label ?? 'deliverables';
 
         return ResponsiveScaffold(
           activeItemLabel: 'Cost Estimate',
           appBarTitle: 'Cost Estimate',
           breadcrumbPhase: 'Planning Phase',
           breadcrumbTitle: 'Cost Estimate',
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
               // ── World-class Section Navigator (always visible, pinned) ─
@@ -139,46 +228,33 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   subtitle: 'Navigate between cost estimate sections',
                   icon: Icons.attach_money_outlined,
                   tabs: const [
-                    SectionTab(icon: Icons.dashboard_outlined, label: 'Cost Dashboard'),
+                    SectionTab(
+                        icon: Icons.dashboard_outlined,
+                        label: 'Cost Dashboard'),
                     SectionTab(icon: Icons.build_outlined, label: 'Builder'),
+                    // Cost by WBS sits directly beside the Builder: it is the
+                    // read-back view of what the Builder writes, and the product
+                    // owner asked for it to stop being the last tab (2026-09-10).
+                    SectionTab(
+                        icon: Icons.account_tree_outlined,
+                        label: 'Cost by WBS'),
                     SectionTab(icon: Icons.description_outlined, label: 'BOE'),
                     SectionTab(icon: Icons.auto_awesome, label: 'AI'),
-                    SectionTab(icon: Icons.people_outline, label: 'Stakeholders'),
-                    SectionTab(icon: Icons.account_balance_outlined, label: 'Accounting'),
-                    SectionTab(icon: Icons.check_circle_outline, label: 'Review'),
+                    SectionTab(
+                        icon: Icons.people_outline, label: 'Stakeholders'),
+                    SectionTab(
+                        icon: Icons.account_balance_outlined,
+                        label: 'Accounting'),
+                    SectionTab(
+                        icon: Icons.check_circle_outline, label: 'Review'),
                     SectionTab(icon: Icons.lock_outline, label: 'Baseline'),
                     SectionTab(icon: Icons.trending_up, label: 'Variance'),
-                    SectionTab(icon: Icons.account_tree_outlined, label: 'Cost by WBS'),
                   ],
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
+                  isCollapsible: true,
+                  initiallyCollapsed: true,
                 ),
-              ),
-              // ── Context banner (drawn from Initiation + WBS) ──────────
-              ContextBanner(
-                storageKey: 'cost_estimate_module_context_banner',
-                items: [
-                  ContextBannerItem(
-                    label: 'Project',
-                    value: projectName,
-                    icon: Icons.flag_outlined,
-                  ),
-                  if (wbs != null && wbsCounts != null)
-                    ContextBannerItem(
-                      label: 'WBS',
-                      value:
-                          '${wbsFrameworkLabel ?? 'WBS'} · ${wbsCounts.level1} $wbsDeliverableWord',
-                      icon: Icons.account_tree_outlined,
-                    ),
-                  ContextBannerItem(
-                    label: 'Solutions',
-                    value: '$solutionsCount potential',
-                    icon: Icons.lightbulb_outline,
-                  ),
-                ],
-              ),
-              const CrossSectionSyncCard(
-                currentSection: CrossSection.costEstimate,
               ),
               // Tab content
               Expanded(
@@ -187,6 +263,8 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   children: [
                     _CostDashboardTab(provider: provider),
                     const BuilderScreen(),
+                    // Must stay in the same order as the SectionTab strip above.
+                    const CostByWBSTab(),
                     const BOEScreen(),
                     const AIAssistantScreen(),
                     const StakeholdersScreen(),
@@ -194,30 +272,6 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                     const ReviewScreen(),
                     const BaselineScreen(),
                     const VarianceScreen(),
-                    const CostByWBSTab(),
-                  ],
-                ),
-              ),
-              // ── Bottom navigation ──
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: () => Navigator.of(context).maybePop(),
-                      icon: const Icon(Icons.arrow_back, size: 18),
-                      label: const Text('Back'),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () => Navigator.of(context).maybePop(),
-                      icon: const Icon(Icons.arrow_forward, size: 18),
-                      label: const Text('Next: Scope Tracking Plan'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFC812),
-                        foregroundColor: Colors.black,
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -257,6 +311,13 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
 //      elevated as a dark "spotlight" tile with the brand-yellow figure.
 // ═══════════════════════════════════════════════════════════════════════════
 
+/// Test seam for the dashboard's Risk Allowances card (see
+/// [_RiskCostCard.registerSource]): when non-null, the card loads the risk
+/// register from this function instead of Firestore. Always null in
+/// production — only a test sets it.
+@visibleForTesting
+List<Map<String, String>>? Function()? riskRegisterSourceOverride;
+
 class _CostDashboardTab extends StatelessWidget {
   final CostEstimateProvider provider;
   const _CostDashboardTab({required this.provider});
@@ -292,16 +353,24 @@ class _CostDashboardTab extends StatelessWidget {
 
     // Category breakdown (top-level summary categories)
     final categories = <_CatData>[
-      _CatData('Direct', t.direct, const Color(0xFF6366F1), Icons.engineering_outlined),
-      _CatData('Indirect', t.indirect, const Color(0xFF8B5CF6), Icons.account_tree_outlined),
-      _CatData('SSHER & Quality', t.sherQuality, const Color(0xFFEC4899), Icons.health_and_safety_outlined),
-      _CatData('Risk', t.riskAllowances, const Color(0xFFF59E0B), Icons.shield_outlined),
-      _CatData('Contingency', t.contingency, const Color(0xFF10B981), Icons.savings_outlined),
-      _CatData('Escalation', t.escalation, const Color(0xFF06B6D4), Icons.trending_up_rounded),
-      _CatData('Taxes', t.taxes, const Color(0xFF64748B), Icons.receipt_long_outlined),
+      _CatData('Direct', t.direct, const Color(0xFFB8860B),
+          Icons.engineering_outlined),
+      _CatData('Indirect', t.indirect, const Color(0xFFB8860B),
+          Icons.account_tree_outlined),
+      _CatData('SSHER & Quality', t.sherQuality, const Color(0xFFD97706),
+          Icons.health_and_safety_outlined),
+      _CatData('Risk', t.riskAllowances, const Color(0xFFF59E0B),
+          Icons.shield_outlined),
+      _CatData('Contingency', t.contingency, const Color(0xFF10B981),
+          Icons.savings_outlined),
+      _CatData('Escalation', t.escalation, const Color(0xFFD97706),
+          Icons.trending_up_rounded),
+      _CatData('Taxes', t.taxes, const Color(0xFF64748B),
+          Icons.receipt_long_outlined),
     ];
     final activeCats = categories.where((c) => c.value > 0).toList();
-    final maxCat = activeCats.fold<double>(0, (m, c) => c.value > m ? c.value : m);
+    final maxCat =
+        activeCats.fold<double>(0, (m, c) => c.value > m ? c.value : m);
 
     // Lines grouped by CostCategory
     final byCategory = <CostCategory, List<CostLine>>{};
@@ -327,60 +396,52 @@ class _CostDashboardTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── 1. Hero command band ─────────────────────────────────
-            _HeroBand(
-              eyebrow: 'COST ESTIMATE · DASHBOARD',
-              title: 'Cost Dashboard',
-              subtitle:
-                  '$lineCount cost lines · $className · $currencySymbol baseline',
-              statusLabel: statusLabel,
-              statusLive: isBaselined,
-              contextChips: [
-                _HeroChip(
-                    icon: Icons.flag_outlined, label: 'Project', value: estimate.projectName),
-                _HeroChip(
-                    icon: Icons.class_outlined,
-                    label: 'Class',
-                    value: className),
-                _HeroChip(
-                    icon: Icons.payments_outlined,
-                    label: 'Currency',
-                    value: estimate.currency),
-              ],
-              actions: [
-                _HeroAction(
-                  icon: Icons.build_outlined,
-                  label: 'Open Builder',
-                  primary: true,
-                  onTap: () => _scrollToBuilder(context),
-                ),
-              ],
-            ),
+            // ── Hero command band removed per product decision 2026-08-17 ──
+            // The _HeroBand (eyebrow + title + subtitle + status pill +
+            // Project/Class/Currency chips + 'Open Builder' action) was a
+            // large gradient banner consuming ~280px of prime above-the-fold
+            // real estate on the Cost Dashboard. Removed because:
+            //   1. The same context (project, class, currency) is already
+            //      surfaced by the Cost Estimate module's top-of-page
+            //      title and the SectionNavigator tab strip.
+            //   2. The 'Open Builder' CTA is redundant — the Builder tab
+            //      is one tap away in the SectionNavigator.
+            //   3. The status (DRAFT vs BASELINED) is also surfaced inline
+            //      on the Baseline tab.
+            // Removing this frees the dashboard's KPI cards + charts to
+            // appear immediately on page load.
             const SizedBox(height: 22),
 
             // ── 2. Premium KPI strip ─────────────────────────────────
             LayoutBuilder(
               builder: (context, constraints) {
                 final wide = constraints.maxWidth >= 1100;
-                final gap = 14.0;
+                const gap = 14.0;
                 final cols = wide ? 4 : 2;
                 final rows = (4 / cols).ceil();
                 final tileW = (constraints.maxWidth - gap * (cols - 1)) / cols;
                 final kpis = <_KpiSpec>[
+                  // The owner could not tell which figure was the total
+                  // (2026-09-10): "I cannot tell which one was the total cost
+                  // ... say total estimated cost". It is the leftmost card and
+                  // now says so outright.
                   _KpiSpec(
-                    label: 'Cost Baseline',
+                    label: 'Total Estimated Cost',
                     value: '$currencySymbol${_fmt(t.costBaseline)}',
-                    sub: 'Total estimated cost',
+                    sub: 'Direct + indirect + risk + contingency',
                     icon: Icons.shield_outlined,
                     tint: const Color(0xFFD97706),
                     tintSoft: const Color(0xFFFFF3E0),
                   ),
+                  // "Should be total authorised. But it's not authorised, right?
+                  // You've been estimating right now." — the figure is a
+                  // reserve-inclusive estimate, not an authorisation.
                   _KpiSpec(
-                    label: 'Total Authorized',
+                    label: 'Incl. Mgmt Reserve',
                     value: '$currencySymbol${_fmt(t.totalAuthorizedBudget)}',
-                    sub: 'Baseline + mgmt reserve',
+                    sub: 'Reserve estimated, not yet authorised',
                     icon: Icons.account_balance_wallet_outlined,
-                    tint: const Color(0xFF6366F1),
+                    tint: const Color(0xFFB8860B),
                     tintSoft: const Color(0xFFEEF0FF),
                   ),
                   _KpiSpec(
@@ -396,7 +457,7 @@ class _CostDashboardTab extends StatelessWidget {
                     value: '$currencySymbol${_fmt(avgPerLine)}',
                     sub: 'Mean cost per line',
                     icon: Icons.analytics_outlined,
-                    tint: const Color(0xFF8B5CF6),
+                    tint: const Color(0xFFB8860B),
                     tintSoft: const Color(0xFFF4EEFF),
                   ),
                 ];
@@ -404,7 +465,8 @@ class _CostDashboardTab extends StatelessWidget {
                   children: [
                     for (var r = 0; r < rows; r++)
                       Padding(
-                        padding: EdgeInsets.only(bottom: r < rows - 1 ? gap : 0),
+                        padding:
+                            EdgeInsets.only(bottom: r < rows - 1 ? gap : 0),
                         child: Row(
                           children: [
                             for (var c = 0; c < cols; c++)
@@ -427,6 +489,18 @@ class _CostDashboardTab extends StatelessWidget {
             ),
             const SizedBox(height: 22),
 
+            // ── 2b. Leaf work-package coverage KPI card ──────────────
+            _buildCoverageCard(context, lines, currencySymbol),
+            const SizedBox(height: 22),
+
+            // ── 2c. Personnel cost card (staffing pull, no AI) ───────
+            _buildPersonnelCard(context, lines, currencySymbol),
+            const SizedBox(height: 22),
+
+            // ── 2d. Risk register card (matrix → Risk Allowance pull) ─
+            _buildRiskCard(context, lines, currencySymbol),
+            const SizedBox(height: 22),
+
             // ── 3. Two-column bento: Cost Breakdown + Composition donut ──
             if (t.costBaseline > 0) ...[
               LayoutBuilder(
@@ -436,17 +510,21 @@ class _CostDashboardTab extends StatelessWidget {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(flex: 7, child: _CostBreakdownCard(
-                          currencySymbol: currencySymbol,
-                          categories: activeCats,
-                          total: t.costBaseline,
-                        )),
+                        Expanded(
+                            flex: 7,
+                            child: _CostBreakdownCard(
+                              currencySymbol: currencySymbol,
+                              categories: activeCats,
+                              total: t.costBaseline,
+                            )),
                         const SizedBox(width: 14),
-                        Expanded(flex: 5, child: _CompositionDonutCard(
-                          currencySymbol: currencySymbol,
-                          categories: activeCats,
-                          total: t.costBaseline,
-                        )),
+                        Expanded(
+                            flex: 5,
+                            child: _CompositionDonutCard(
+                              currencySymbol: currencySymbol,
+                              categories: activeCats,
+                              total: t.costBaseline,
+                            )),
                       ],
                     );
                   }
@@ -513,6 +591,729 @@ class _CostDashboardTab extends StatelessWidget {
     // ignore: avoid_print
     debugPrint('Open Builder tapped from Cost Dashboard');
   }
+
+  /// Live coverage of leaf work packages that already carry a priced cost
+  /// line — the "price every smallest-level work package" core KPI.
+  Widget _buildCoverageCard(
+    BuildContext context,
+    List<CostLine> lines,
+    String currencySymbol,
+  ) {
+    final wbsProvider = context.watch<WBSProvider>();
+    final wbs = wbsProvider.wbs;
+    if (wbs == null) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: _surfaceAlt,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _hairline),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.account_tree_outlined,
+                size: 18, color: Color(0xFFB8860B)),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Work-package pricing coverage appears here once a WBS is set up — every leaf work package needs its own cost estimate.',
+                style: TextStyle(color: Color(0xFF64748B), fontSize: 12.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final coverage = computeWbsCostCoverage(root: wbs.level0, lines: lines);
+    final pct = (coverage.pricedRatio * 100).clamp(0.0, 100.0);
+    final allPriced = !coverage.hasUnpriced && coverage.totalWorkPackages > 0;
+    final accent =
+        allPriced ? const Color(0xFF16A34A) : const Color(0xFFD97706);
+    final softAccent =
+        allPriced ? const Color(0xFFE7F8F0) : const Color(0xFFFFF3E0);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: softAccent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.fact_check_outlined, size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Work-Package Pricing Coverage',
+                      style: TextStyle(
+                          color: Color(0xFF0B1220),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Leaf work packages with a priced cost line, out of all leaf work packages in the WBS.',
+                      style:
+                          TextStyle(color: Color(0xFF64748B), fontSize: 11.5),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '${pct.toStringAsFixed(0)}%',
+                style: TextStyle(
+                    color: accent,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    fontFeatures: const [FontFeature.tabularFigures()]),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: coverage.pricedRatio,
+              minHeight: 8,
+              backgroundColor: const Color(0xFFF1F5F9),
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${coverage.pricedWorkPackages} of ${coverage.totalWorkPackages} leaf work packages priced',
+                  style:
+                      const TextStyle(color: Color(0xFF475569), fontSize: 12),
+                ),
+              ),
+              if (!allPriced)
+                Text(
+                  '${coverage.unpriced.length} still need a cost — add them in Cost by WBS or the Schedule builder.',
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                      color: Color(0xFFB45309),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600),
+                )
+              else
+                const Text(
+                  'Every leaf work package is priced at its own level ✓',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                      color: Color(0xFF166534),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Personnel costs card — pulls Staff Team staffing rows into the estimate
+  /// as plain projectTeam cost lines computed at the code level
+  /// (people × months × monthly rate), no AI (Lusaka 22 call).
+  Widget _buildPersonnelCard(
+    BuildContext context,
+    List<CostLine> lines,
+    String currencySymbol,
+  ) {
+    return _PersonnelCostCard(
+      lines: lines,
+      currencySymbol: currencySymbol,
+    );
+  }
+
+  /// Risk register card — pulls the Risk Assessment register into the
+  /// estimate as Risk Allowance lines computed at the code level (stated
+  /// amount, or the probability × impact matrix cell), no AI (Lusaka 22
+  /// call: "whatever the total comes out to should show up on the cost
+  /// estimate as well").
+  Widget _buildRiskCard(
+    BuildContext context,
+    List<CostLine> lines,
+    String currencySymbol,
+  ) {
+    return _RiskCostCard(
+      lines: lines,
+      currencySymbol: currencySymbol,
+      registerSource: riskRegisterSourceOverride,
+    );
+  }
+
+  static String _fmt(double value) {
+    if (value >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(value % 1000000 == 0 ? 0 : 1)}M';
+    }
+    if (value >= 1000) {
+      return '${(value / 1000).toStringAsFixed(value % 1000 == 0 ? 0 : 1)}K';
+    }
+    return value.toStringAsFixed(value == value.roundToDouble() ? 0 : 2);
+  }
+}
+
+/// Loads the project's staffing rows (Staff Team Orchestration page) and lets
+/// the user pull them into the Cost Estimate as computed personnel cost lines.
+/// Pure calculation — `quantity × months × monthly rate` — no AI.
+class _PersonnelCostCard extends StatefulWidget {
+  final List<CostLine> lines;
+  final String currencySymbol;
+
+  const _PersonnelCostCard({
+    required this.lines,
+    required this.currencySymbol,
+  });
+
+  @override
+  State<_PersonnelCostCard> createState() => _PersonnelCostCardState();
+}
+
+class _PersonnelCostCardState extends State<_PersonnelCostCard> {
+  static const _ink = Color(0xFF0B1220);
+  static const _muted = Color(0xFF64748B);
+  static const _hairline = Color(0xFFE2E8F0);
+  static const _surface = Colors.white;
+  static const _surfaceAlt = Color(0xFFF8FAFC);
+
+  List<StaffingRow>? _rows;
+  bool _loading = true;
+  bool _pulling = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      final projectData = context.read<ProjectDataProvider>().projectData;
+      final projectId = projectData.projectId;
+      if (projectId == null || projectId.isEmpty) {
+        setState(() {
+          _rows = [];
+          _loading = false;
+        });
+        return;
+      }
+      final rows =
+          await ExecutionPhaseService.loadStaffingRows(projectId: projectId);
+      if (!mounted) return;
+      setState(() {
+        _rows = rows;
+        _loading = false;
+      });
+    } catch (e) {
+      debugPrint('_PersonnelCostCard load error: $e');
+      if (mounted)
+        setState(() {
+          _rows = [];
+          _loading = false;
+        });
+    }
+  }
+
+  /// Rows that are not yet represented in the estimate (same role + same
+  /// computed total as an existing projectTeam line).
+  List<StaffingRow> get _pending {
+    final rows = _rows ?? const <StaffingRow>[];
+    return rows.where((r) {
+      final role = r.role.trim();
+      if (role.isEmpty) return false;
+      final total = r.subtotal;
+      final already = widget.lines.any((l) =>
+          l.category == CostCategory.projectTeam &&
+          l.description == role &&
+          (l.total - total).abs() < 0.005);
+      return !already;
+    }).toList();
+  }
+
+  double get _pendingTotal => _pending.fold(0.0, (s, r) => s + r.subtotal);
+
+  Future<void> _pull() async {
+    final pending = _pending;
+    if (pending.isEmpty || _pulling) return;
+    setState(() => _pulling = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<CostEstimateProvider>();
+    final result = provider.pullPersonnelCosts(pending);
+    setState(() => _pulling = false);
+    messenger.showSnackBar(SnackBar(
+      content: Text(
+        result.pulled > 0
+            ? 'Added ${result.pulled} personnel cost line${result.pulled == 1 ? '' : 's'} '
+                '(${widget.currencySymbol}${result.addedTotal.toStringAsFixed(0)} total) '
+                '— computed from people × months × rate, no AI.'
+            : 'Personnel costs already reflected in the estimate.',
+        style: const TextStyle(fontSize: 12.5),
+      ),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: const Color(0xFF0B1220),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: _surfaceAlt,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _hairline),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Loading personnel costs from Staff Team...',
+                style: TextStyle(color: Color(0xFF64748B), fontSize: 12.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final rows = _rows ?? const <StaffingRow>[];
+    final pending = _pending;
+    final pendingTotal = _pendingTotal;
+    final inEstimate = rows.length - pending.length;
+    final allPulled = rows.isNotEmpty && pending.isEmpty;
+    final accent =
+        allPulled ? const Color(0xFF16A34A) : const Color(0xFFD97706);
+    final softAccent =
+        allPulled ? const Color(0xFFE7F8F0) : const Color(0xFFFFF3E0);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: softAccent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.groups_outlined, size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Personnel Costs (Staff Team)',
+                      style: TextStyle(
+                          color: _ink,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Roles from Staff Team Orchestration, priced as people × months × monthly rate — a built-in calculation, no AI.',
+                      style: TextStyle(color: _muted, fontSize: 11.5),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                rows.isEmpty ? '—' : widget.currencySymbol + _fmt(_estTotal),
+                style: TextStyle(
+                    color: accent,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    fontFeatures: const [FontFeature.tabularFigures()]),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (rows.isEmpty)
+            const Text(
+              'No staffing rows on the Staff Team page yet — add roles with people, months and a monthly rate there, then come back to pull them in.',
+              style: TextStyle(color: _muted, fontSize: 12),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    allPulled
+                        ? '$inEstimate of $inEstimate roles already priced in the estimate ✓'
+                        : '$pending of ${rows.length} roles not yet in the estimate — '
+                            '${widget.currencySymbol}${pendingTotal.toStringAsFixed(0)} '
+                            'to add.',
+                    style: TextStyle(
+                        color: allPulled
+                            ? const Color(0xFF166534)
+                            : const Color(0xFFB45309),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+                if (!allPulled)
+                  TextButton.icon(
+                    onPressed: _pulling ? null : _pull,
+                    icon: const Icon(Icons.arrow_downward, size: 14),
+                    label: Text('Pull ${pending.length} into Cost Estimate',
+                        style: const TextStyle(fontSize: 11)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFB45309),
+                      backgroundColor: const Color(0xFFFFF7ED),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Total value of all staffing rows (already-pulled + pending).
+  double get _estTotal => (widget.lines
+          .where((l) =>
+              l.category == CostCategory.projectTeam &&
+              l.subCategory == 'Personnel (staffing)')
+          .fold(0.0, (s, l) => s + l.total) +
+      _pendingTotal);
+
+  static String _fmt(double value) {
+    if (value >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(value % 1000000 == 0 ? 0 : 1)}M';
+    }
+    if (value >= 1000) {
+      return '${(value / 1000).toStringAsFixed(value % 1000 == 0 ? 0 : 1)}K';
+    }
+    return value.toStringAsFixed(value == value.roundToDouble() ? 0 : 2);
+  }
+}
+
+/// Loads the project's risk register (Risk Assessment page) and lets the user
+/// pull it into the Cost Estimate as computed Risk Allowance lines. Pure
+/// calculation — stated amount, or the probability × impact matrix cell —
+/// no AI (Lusaka 22 call).
+class _RiskCostCard extends StatefulWidget {
+  final List<CostLine> lines;
+  final String currencySymbol;
+
+  /// Test seam: when set, the card reads the risk register from here instead
+  /// of Firestore (exactly the same `Map<String, String>` shape the Firestore
+  /// docs are mapped into). Production builds never set it, so they keep the
+  /// live `risk_assessment_entries` read.
+  final List<Map<String, String>>? Function()? registerSource;
+
+  const _RiskCostCard({
+    required this.lines,
+    required this.currencySymbol,
+    this.registerSource,
+  });
+
+  @override
+  State<_RiskCostCard> createState() => _RiskCostCardState();
+}
+
+class _RiskCostCardState extends State<_RiskCostCard> {
+  static const _ink = Color(0xFF0B1220);
+  static const _muted = Color(0xFF64748B);
+  static const _hairline = Color(0xFFE2E8F0);
+  static const _surface = Colors.white;
+  static const _surfaceAlt = Color(0xFFF8FAFC);
+
+  List<Map<String, String>>? _risks;
+  bool _loading = true;
+  bool _pulling = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      final override = widget.registerSource;
+      if (override != null) {
+        if (!mounted) return;
+        setState(() {
+          _risks = override() ?? const <Map<String, String>>[];
+          _loading = false;
+        });
+        return;
+      }
+      final projectData = context.read<ProjectDataProvider>().projectData;
+      final projectId = projectData.projectId;
+      if (projectId == null || projectId.isEmpty) {
+        setState(() {
+          _risks = [];
+          _loading = false;
+        });
+        return;
+      }
+      final snapshot = await FirebaseFirestore.instance
+          .collection('projects')
+          .doc(projectId)
+          .collection('risk_assessment_entries')
+          .get();
+      if (!mounted) return;
+      final risks = snapshot.docs
+          .map((doc) {
+            final data = doc.data();
+            return {
+              'id': data['id']?.toString() ?? '',
+              'description': data['description']?.toString() ?? '',
+              'probability': data['probability']?.toString() ?? '',
+              'impact': data['impact']?.toString() ?? '',
+              'score': data['score']?.toString() ?? '',
+              'status': data['status']?.toString() ?? '',
+            };
+          })
+          .toList(growable: false);
+      setState(() {
+        _risks = risks;
+        _loading = false;
+      });
+    } catch (e) {
+      debugPrint('_RiskCostCard load error: $e');
+      if (mounted) {
+        setState(() {
+          _risks = [];
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  /// Risks that are not yet represented in the estimate (same description
+  /// + same total as an existing riskAllowance line).
+  List<RiskCostLine> get _pending {
+    final risks = _risks ?? const <Map<String, String>>[];
+    final candidates = collectRiskCostLines(
+      risks: risks,
+      matrixCellExposure: defaultMatrixCellExposure,
+    );
+    return candidates.where((r) {
+      final already = widget.lines.any((l) =>
+          l.category == CostCategory.riskAllowance &&
+          l.description == r.description &&
+          (l.total - r.total).abs() < 0.005);
+      return !already;
+    }).toList();
+  }
+
+  double get _pendingTotal => _pending.fold(0.0, (s, r) => s + r.total);
+
+  Future<void> _pull() async {
+    final pending = _pending;
+    if (pending.isEmpty || _pulling) return;
+    setState(() => _pulling = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<CostEstimateProvider>();
+    final result = provider.pullRiskCostLines(pending);
+    if (!mounted) return;
+    setState(() => _pulling = false);
+    messenger.showSnackBar(SnackBar(
+      content: Text(
+        result.pulled > 0
+            ? 'Added ${result.pulled} risk allowance line${result.pulled == 1 ? '' : 's'} '
+                '(${widget.currencySymbol}${result.addedTotal.toStringAsFixed(0)} total) '
+                '— from the risk register, no AI.'
+            : 'Risk allowances already reflected in the estimate.',
+        style: const TextStyle(fontSize: 12.5),
+      ),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: const Color(0xFF0B1220),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: _surfaceAlt,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _hairline),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Loading risks from the Risk Assessment register...',
+                style: TextStyle(color: Color(0xFF64748B), fontSize: 12.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final risks = _risks ?? const <Map<String, String>>[];
+    final pending = _pending;
+    final pendingTotal = _pendingTotal;
+    final inEstimate = risks.length - pending.length;
+    final allPulled = risks.isNotEmpty && pending.isEmpty;
+    final accent =
+        allPulled ? const Color(0xFF16A34A) : const Color(0xFFD97706);
+    final softAccent =
+        allPulled ? const Color(0xFFE7F8F0) : const Color(0xFFFFF3E0);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: softAccent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.warning_amber_rounded,
+                    size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Risk Allowances (Risk Register)',
+                      style: TextStyle(
+                          color: _ink,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Risks from the Risk Assessment matrix, priced at their stated amount or their probability × impact cell — a built-in calculation, no AI.',
+                      style: TextStyle(color: _muted, fontSize: 11.5),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                risks.isEmpty ? '—' : widget.currencySymbol + _fmt(_estTotal),
+                style: TextStyle(
+                    color: accent,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    fontFeatures: const [FontFeature.tabularFigures()]),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (risks.isEmpty)
+            const Text(
+              'No risks in the Risk Assessment register yet — add risks with probability and impact there, then come back to pull the total into the estimate.',
+              style: TextStyle(color: _muted, fontSize: 12),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    allPulled
+                        ? '$inEstimate of $inEstimate risks reflected in the estimate ✓'
+                        : '${pending.length} of ${risks.length} risks not yet in the estimate — '
+                            '${widget.currencySymbol}${pendingTotal.toStringAsFixed(0)} '
+                            'to add.',
+                    style: TextStyle(
+                        color: allPulled
+                            ? const Color(0xFF166534)
+                            : const Color(0xFFB45309),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+                if (!allPulled)
+                  TextButton.icon(
+                    onPressed: _pulling ? null : _pull,
+                    icon: const Icon(Icons.arrow_downward, size: 14),
+                    label: Text('Pull ${pending.length} into Cost Estimate',
+                        style: const TextStyle(fontSize: 11)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFB45309),
+                      backgroundColor: const Color(0xFFFFF7ED),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Total value of the register (already-pulled + pending).
+  double get _estTotal => (widget.lines
+          .where((l) =>
+              l.category == CostCategory.riskAllowance &&
+              l.subCategory == 'Risk (register)')
+          .fold(0.0, (s, l) => s + l.total) +
+      _pendingTotal);
 
   static String _fmt(double value) {
     if (value >= 1000000) {
@@ -605,14 +1406,17 @@ class _HeroBand extends StatelessWidget {
                         color: const Color(0xFF1A1D1F).withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: const Color(0xFF1A1D1F).withValues(alpha: 0.18),
+                          color:
+                              const Color(0xFF1A1D1F).withValues(alpha: 0.18),
                         ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.dashboard_rounded,
-                              size: 13, color: const Color(0xFF1A1D1F).withValues(alpha: 0.8)),
+                              size: 13,
+                              color: const Color(0xFF1A1D1F)
+                                  .withValues(alpha: 0.8)),
                           const SizedBox(width: 6),
                           Text(
                             eyebrow,
@@ -650,7 +1454,8 @@ class _HeroBand extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: statusLive
                                   ? const Color(0xFF059669)
-                                  : const Color(0xFF1A1D1F).withValues(alpha: 0.5),
+                                  : const Color(0xFF1A1D1F)
+                                      .withValues(alpha: 0.5),
                               shape: BoxShape.circle,
                               boxShadow: statusLive
                                   ? const [
@@ -671,7 +1476,8 @@ class _HeroBand extends StatelessWidget {
                               letterSpacing: 0.8,
                               color: statusLive
                                   ? const Color(0xFF047857)
-                                  : const Color(0xFF1A1D1F).withValues(alpha: 0.78),
+                                  : const Color(0xFF1A1D1F)
+                                      .withValues(alpha: 0.78),
                             ),
                           ),
                         ],
@@ -701,13 +1507,6 @@ class _HeroBand extends StatelessWidget {
                     color: const Color(0xFF1A1D1F).withValues(alpha: 0.72),
                     fontWeight: FontWeight.w500,
                   ),
-                ),
-                const SizedBox(height: 18),
-                // Context chips
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: contextChips,
                 ),
               ],
             ),
@@ -740,7 +1539,8 @@ class _HeroChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: const Color(0xFF1A1D1F).withValues(alpha: 0.78)),
+          Icon(icon,
+              size: 14, color: const Color(0xFF1A1D1F).withValues(alpha: 0.78)),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -830,10 +1630,13 @@ class _HeroAction extends StatelessWidget {
       icon: Icon(icon, size: 14, color: const Color(0xFF1A1D1F)),
       label: Text(label,
           style: const TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF1A1D1F))),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1A1D1F))),
       style: OutlinedButton.styleFrom(
         backgroundColor: Colors.white.withValues(alpha: 0.18),
-        side: BorderSide(color: const Color(0xFF1A1D1F).withValues(alpha: 0.32)),
+        side:
+            BorderSide(color: const Color(0xFF1A1D1F).withValues(alpha: 0.32)),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -929,7 +1732,7 @@ class _KpiTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   spec.label.toUpperCase(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.7,
@@ -947,19 +1750,19 @@ class _KpiTile extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               spec.value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.6,
                 color: _CostDashboardTab._ink,
-                fontFeatures: const [FontFeature.tabularFigures()],
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             spec.sub,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11.5,
               color: _CostDashboardTab._mutedSoft,
               fontWeight: FontWeight.w500,
@@ -1061,7 +1864,7 @@ class _CostBreakdownCard extends StatelessWidget {
                         children: [
                           Text(
                             c.label,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w600,
                               color: _CostDashboardTab._inkSoft,
@@ -1070,11 +1873,11 @@ class _CostBreakdownCard extends StatelessWidget {
                           ),
                           Text(
                             '$currencySymbol${_CostDashboardTab._fmt(c.value)} · ${pct.toStringAsFixed(1)}%',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 10.5,
                               color: _CostDashboardTab._muted,
                               fontWeight: FontWeight.w500,
-                              fontFeatures: const [FontFeature.tabularFigures()],
+                              fontFeatures: [FontFeature.tabularFigures()],
                             ),
                           ),
                         ],
@@ -1131,7 +1934,7 @@ class _CompositionDonutCard extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    const Text(
                       'BASELINE',
                       style: TextStyle(
                         fontSize: 9.5,
@@ -1143,18 +1946,18 @@ class _CompositionDonutCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '$currencySymbol${_CostDashboardTab._fmt(total)}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.4,
                         color: _CostDashboardTab._ink,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                        fontFeatures: [FontFeature.tabularFigures()],
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${categories.length} active ${categories.length == 1 ? "category" : "categories"}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         color: _CostDashboardTab._mutedSoft,
                         fontWeight: FontWeight.w500,
@@ -1186,7 +1989,7 @@ class _CompositionDonutCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         c.label,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           color: _CostDashboardTab._inkSoft,
                           fontWeight: FontWeight.w500,
@@ -1196,11 +1999,11 @@ class _CompositionDonutCard extends StatelessWidget {
                     ),
                     Text(
                       '${pct.toStringAsFixed(1)}%',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: _CostDashboardTab._muted,
                         fontWeight: FontWeight.w700,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                        fontFeatures: [FontFeature.tabularFigures()],
                       ),
                     ),
                   ],
@@ -1258,7 +2061,7 @@ class _DonutPainter extends CustomPainter {
     // Each segment's sweep is proportional to its share of totalActive.
     // We start at -90deg (12 o'clock) and sweep clockwise.
     var startAngle = -math.pi / 2;
-    final gapRad = gapDegrees * math.pi / 180;
+    const gapRad = gapDegrees * math.pi / 180;
 
     for (final seg in activeSegments) {
       final sweep = (seg.value / totalActive) * 2 * math.pi;
@@ -1309,17 +2112,20 @@ class _CategoryDetailsCard extends StatelessWidget {
       child: Column(
         children: [
           // Header row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             child: Row(
-              children: const [
+              children: [
                 Expanded(flex: 5, child: _TableHeader('CATEGORY')),
-                Expanded(flex: 4, child: _TableHeader('SHARE', alignRight: true)),
-                Expanded(flex: 4, child: _TableHeader('VALUE', alignRight: true)),
+                Expanded(
+                    flex: 4, child: _TableHeader('SHARE', alignRight: true)),
+                Expanded(
+                    flex: 4, child: _TableHeader('VALUE', alignRight: true)),
               ],
             ),
           ),
-          const Divider(height: 1, thickness: 1, color: _CostDashboardTab._hairline),
+          const Divider(
+              height: 1, thickness: 1, color: _CostDashboardTab._hairline),
           // Rows
           for (final c in categories)
             _CategoryRow(
@@ -1344,7 +2150,7 @@ class _TableHeader extends StatelessWidget {
     return Text(
       label,
       textAlign: alignRight ? TextAlign.right : TextAlign.left,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 9.5,
         fontWeight: FontWeight.w800,
         letterSpacing: 0.8,
@@ -1386,7 +2192,8 @@ class _CategoryRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Icon(cat.icon, size: 14, color: cat.color.withValues(alpha: 0.85)),
+                Icon(cat.icon,
+                    size: 14, color: cat.color.withValues(alpha: 0.85)),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
@@ -1493,11 +2300,13 @@ class _LinesByCategoryCard extends StatelessWidget {
     }
     return _SectionCard(
       title: 'Lines by Category',
-      subtitle: '${entries.length} ${entries.length == 1 ? "category" : "categories"} · sorted by spend',
+      subtitle:
+          '${entries.length} ${entries.length == 1 ? "category" : "categories"} · sorted by spend',
       child: Column(
         children: entries.map((entry) {
           final catTotal = entry.value.fold(0.0, (s, l) => s + l.total);
-          final pct = maxTotal > 0 ? (catTotal / maxTotal).clamp(0.0, 1.0) : 0.0;
+          final pct =
+              maxTotal > 0 ? (catTotal / maxTotal).clamp(0.0, 1.0) : 0.0;
           final catColor = _categoryColor(entry.key);
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1591,32 +2400,32 @@ class _LinesByCategoryCard extends StatelessWidget {
       case CostCategory.procurement:
       case CostCategory.travelTraining:
       case CostCategory.construction:
-        return const Color(0xFF6366F1); // Direct (indigo)
+        return const Color(0xFFB8860B); // Direct (indigo)
       case CostCategory.projectTeam:
       case CostCategory.overheads:
       case CostCategory.ga:
       case CostCategory.facilities:
       case CostCategory.insuranceCompliance:
-        return const Color(0xFF8B5CF6); // Indirect (violet)
+        return const Color(0xFFB8860B); // Indirect (violet)
       case CostCategory.ssher:
       case CostCategory.quality:
-        return const Color(0xFFEC4899); // SSHER & Quality (pink)
+        return const Color(0xFFD97706); // SSHER & Quality (pink)
       case CostCategory.riskAllowance:
         return const Color(0xFFF59E0B); // Risk (amber)
       case CostCategory.contingency:
         return const Color(0xFF10B981); // Contingency (emerald)
       case CostCategory.mgmtReserve:
-        return const Color(0xFF06B6D4); // Mgmt reserve (cyan)
+        return const Color(0xFFD97706); // Mgmt reserve (cyan)
       case CostCategory.escalation:
-        return const Color(0xFF06B6D4); // Escalation (cyan)
+        return const Color(0xFFD97706); // Escalation (cyan)
       case CostCategory.taxes:
         return const Color(0xFF64748B); // Taxes (slate)
       case CostCategory.financing:
-        return const Color(0xFF0EA5E9); // Financing (sky)
+        return const Color(0xFFFFC812); // Financing (sky)
       case CostCategory.startup:
-        return const Color(0xFF14B8A6); // Startup (teal)
+        return const Color(0xFFD97706); // Startup (teal)
       case CostCategory.warranty:
-        return const Color(0xFFA855F7); // Warranty (purple)
+        return const Color(0xFFFFC812); // Warranty (purple)
       case CostCategory.decommissioning:
         return const Color(0xFF64748B); // Decommissioning (slate)
     }
@@ -1676,7 +2485,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             body,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12.5,
               color: _CostDashboardTab._muted,
               height: 1.55,
@@ -1690,7 +2499,8 @@ class _EmptyState extends StatelessWidget {
               onTap: onCta,
               borderRadius: BorderRadius.circular(10),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
@@ -1793,7 +2603,8 @@ class _TotalsSpotlightBar extends StatelessWidget {
             // Total Authorized — elevated dark spotlight
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
                 decoration: const BoxDecoration(
                   color: Color(0xFF0B1220),
                   borderRadius: BorderRadius.only(
@@ -1810,11 +2621,14 @@ class _TotalsSpotlightBar extends StatelessWidget {
                           width: 28,
                           height: 28,
                           decoration: BoxDecoration(
-                            color: _CostDashboardTab._brand.withValues(alpha: 0.22),
+                            color: _CostDashboardTab._brand
+                                .withValues(alpha: 0.22),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Icon(Icons.account_balance_wallet_rounded,
-                              size: 15, color: _CostDashboardTab._brand),
+                          child: const Icon(
+                              Icons.account_balance_wallet_rounded,
+                              size: 15,
+                              color: _CostDashboardTab._brand),
                         ),
                         const SizedBox(width: 9),
                         const Text(
@@ -1834,12 +2648,12 @@ class _TotalsSpotlightBar extends StatelessWidget {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         '$currencySymbol${_CostDashboardTab._fmt(totalAuthorized)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.4,
                           color: _CostDashboardTab._brand,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                          fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
                     ),
@@ -1891,7 +2705,7 @@ class _SpotlightColumn extends StatelessWidget {
               Flexible(
                 child: Text(
                   label.toUpperCase(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.0,
@@ -1908,12 +2722,12 @@ class _SpotlightColumn extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.4,
                 color: _CostDashboardTab._ink,
-                fontFeatures: const [FontFeature.tabularFigures()],
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
           ),
@@ -1979,7 +2793,7 @@ class _SectionCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         subtitle!,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11.5,
                           color: _CostDashboardTab._muted,
                           fontWeight: FontWeight.w500,
@@ -1998,9 +2812,7 @@ class _SectionCard extends StatelessWidget {
       ),
     );
   }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
+} // ═══════════════════════════════════════════════════════════════════════════
 // Category data model
 // ═══════════════════════════════════════════════════════════════════════════
 

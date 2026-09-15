@@ -43,7 +43,7 @@ class _FrontEndPlanningScreenState extends State<FrontEndPlanningScreen> {
  screenTitle: 'Project Summary',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
  ],
@@ -61,7 +61,7 @@ class _FrontEndPlanningScreenState extends State<FrontEndPlanningScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Project Summary',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [

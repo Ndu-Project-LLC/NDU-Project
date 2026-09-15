@@ -9,6 +9,22 @@ class PortfolioModel {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// Portfolio manager's user ID (Firebase Auth uid). Empty string means
+  /// no manager assigned. Displayed in the portfolio card alongside the
+  /// project count so the user can see who's accountable.
+  /// Populated from the registered users collection — see
+  /// [PortfolioService.createPortfolio] and the create-portfolio modal.
+  final String managerId;
+
+  /// Portfolio manager's display name — denormalized at write time so
+  /// the dashboard doesn't have to join against the users collection for
+  /// every portfolio card. Stays in sync via [PortfolioService.assignManager].
+  final String managerName;
+
+  /// Portfolio manager's email — denormalized alongside [managerName] so
+  /// the UI can show a "mailto:" link or contact chip without a join.
+  final String managerEmail;
+
   const PortfolioModel({
     required this.id,
     required this.name,
@@ -17,6 +33,9 @@ class PortfolioModel {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.managerId = '',
+    this.managerName = '',
+    this.managerEmail = '',
   });
 
   factory PortfolioModel.fromFirestore(
@@ -42,6 +61,9 @@ class PortfolioModel {
       status: data['status']?.toString() ?? 'Active',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      managerId: data['managerId']?.toString() ?? '',
+      managerName: data['managerName']?.toString() ?? '',
+      managerEmail: data['managerEmail']?.toString() ?? '',
     );
   }
 
@@ -52,6 +74,9 @@ class PortfolioModel {
         'status': status,
         'createdAt': Timestamp.fromDate(createdAt),
         'updatedAt': Timestamp.fromDate(updatedAt),
+        if (managerId.isNotEmpty) 'managerId': managerId,
+        if (managerName.isNotEmpty) 'managerName': managerName,
+        if (managerEmail.isNotEmpty) 'managerEmail': managerEmail,
       };
 
   PortfolioModel copyWith({
@@ -62,6 +87,9 @@ class PortfolioModel {
     String? status,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? managerId,
+    String? managerName,
+    String? managerEmail,
   }) =>
       PortfolioModel(
         id: id ?? this.id,
@@ -71,6 +99,9 @@ class PortfolioModel {
         status: status ?? this.status,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
+        managerId: managerId ?? this.managerId,
+        managerName: managerName ?? this.managerName,
+        managerEmail: managerEmail ?? this.managerEmail,
       );
 
   @override

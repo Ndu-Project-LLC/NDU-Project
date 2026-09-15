@@ -16,15 +16,27 @@ class ProjectControlsFirestoreService {
   ProjectControlsFirestoreService._();
   static final instance = ProjectControlsFirestoreService._();
 
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  // Deferred so constructing the singleton never touches Firebase (unit
+  // tests construct providers without initializing Firebase).
+  late final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  /// Get the current user's UID, or empty string if not signed in.
-  String get _uid => FirebaseAuth.instance.currentUser?.uid ?? '';
+  /// Get the current user's UID, or empty string if not signed in (or if
+  /// Firebase is unavailable — e.g. unit tests).
+  String get _uid {
+    try {
+      return FirebaseAuth.instance.currentUser?.uid ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
 
   /// Reference to the user's project controls root document.
   /// Structure: users/{uid}/projectControls/current
-  DocumentReference<Map<String, dynamic>> get _root =>
-      _db.collection('users').doc(_uid).collection('projectControls').doc('current');
+  DocumentReference<Map<String, dynamic>> get _root => _db
+      .collection('users')
+      .doc(_uid)
+      .collection('projectControls')
+      .doc('current');
 
   // ─── Load all data ──────────────────────────────────────────────────
 
@@ -71,8 +83,8 @@ class ProjectControlsFirestoreService {
       ]);
 
       return ProjectControlsState(
-        deliveryModel: DeliveryModel.values.byName(
-            data['deliveryModel'] as String? ?? 'waterfall'),
+        deliveryModel: DeliveryModel.values
+            .byName(data['deliveryModel'] as String? ?? 'waterfall'),
         isBaselined: data['isBaselined'] as bool? ?? false,
         isExecutionActive: data['isExecutionActive'] as bool? ?? false,
         workPackages: results[0] as List<WorkPackageControl>,
@@ -228,8 +240,8 @@ class ProjectControlsFirestoreService {
       velocity: (d['velocity'] as num?)?.toDouble(),
       sprint: d['sprint'] as String?,
       release: d['release'] as String?,
-      progressMethod: ProgressMethod.values.byName(
-          d['progressMethod'] as String? ?? 'physicalPercent'),
+      progressMethod: ProgressMethod.values
+          .byName(d['progressMethod'] as String? ?? 'physicalPercent'),
     );
   }
 
@@ -240,7 +252,8 @@ class ProjectControlsFirestoreService {
 
   Future<List<ChangeRequest>> _loadChangeRequests() async {
     try {
-      final snap = await _crCol.orderBy('dateSubmitted', descending: true).get();
+      final snap =
+          await _crCol.orderBy('dateSubmitted', descending: true).get();
       return snap.docs.map(_crFromDoc).toList();
     } catch (e) {
       debugPrint('[PC Firestore] load changeRequests error: $e');
@@ -316,7 +329,8 @@ class ProjectControlsFirestoreService {
         final step = s as Map<String, dynamic>;
         return ApprovalStep(
           id: step['id'] as String? ?? '',
-          role: ApprovalRole.values.byName(step['role'] as String? ?? 'projectManager'),
+          role: ApprovalRole.values
+              .byName(step['role'] as String? ?? 'projectManager'),
           assigneeName: step['assigneeName'] as String?,
           approved: step['approved'] as bool? ?? false,
           approvedAt: (step['approvedAt'] as Timestamp?)?.toDate(),
@@ -337,11 +351,13 @@ class ProjectControlsFirestoreService {
       requestor: d['requestor'] as String? ?? '',
       justification: d['justification'] as String? ?? '',
       rootCause: d['rootCause'] as String?,
-      category: ChangeCategory.values.byName(d['category'] as String? ?? 'scope'),
+      category:
+          ChangeCategory.values.byName(d['category'] as String? ?? 'scope'),
       priority: d['priority'] as String? ?? 'Medium',
       status: ChangeStatus.values.byName(d['status'] as String? ?? 'draft'),
       impact: ImpactAnalysis(
-        scheduleImpactDays: (impactData?['scheduleImpactDays'] as num?)?.toDouble(),
+        scheduleImpactDays:
+            (impactData?['scheduleImpactDays'] as num?)?.toDouble(),
         costImpactAmount: (impactData?['costImpactAmount'] as num?)?.toDouble(),
         scopeImpact: impactData?['scopeImpact'] as String?,
         resourceImpact: impactData?['resourceImpact'] as String?,
@@ -357,7 +373,8 @@ class ProjectControlsFirestoreService {
         interfacesImpact: impactData?['interfacesImpact'] as String?,
       ),
       approval: approval,
-      dateSubmitted: (d['dateSubmitted'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      dateSubmitted:
+          (d['dateSubmitted'] as Timestamp?)?.toDate() ?? DateTime.now(),
       approvedAt: (d['approvedAt'] as Timestamp?)?.toDate(),
       implementedAt: (d['implementedAt'] as Timestamp?)?.toDate(),
       isAgileRoutineRefinement: d['isAgileRoutineRefinement'] as bool? ?? false,
@@ -430,8 +447,8 @@ class ProjectControlsFirestoreService {
         actualCost: (wp['actualCost'] as num?)?.toDouble() ?? 0,
         earnedValue: (wp['earnedValue'] as num?)?.toDouble() ?? 0,
         plannedValue: (wp['plannedValue'] as num?)?.toDouble() ?? 0,
-        progressMethod: ProgressMethod.values.byName(
-            wp['progressMethod'] as String? ?? 'physicalPercent'),
+        progressMethod: ProgressMethod.values
+            .byName(wp['progressMethod'] as String? ?? 'physicalPercent'),
       );
     }).toList();
 
@@ -456,7 +473,10 @@ class ProjectControlsFirestoreService {
 
   Future<List<AuditEntry>> _loadAuditTrail() async {
     try {
-      final snap = await _auditCol.orderBy('timestamp', descending: true).limit(500).get();
+      final snap = await _auditCol
+          .orderBy('timestamp', descending: true)
+          .limit(500)
+          .get();
       return snap.docs.map(_auditFromDoc).toList();
     } catch (e) {
       debugPrint('[PC Firestore] load auditTrail error: $e');
@@ -514,8 +534,9 @@ class ProjectControlsFirestoreService {
           actualFinish: (d['actualFinish'] as Timestamp?)?.toDate(),
           floatDays: (d['floatDays'] as num?)?.toDouble() ?? 0,
           delayReason: d['delayReason'] as String? ?? '',
-          compressionStrategy: CompressionStrategy.values.byName(
-              d['compressionStrategy'] as String? ?? 'none'),
+          compressionStrategy: CompressionStrategy.values
+              .byName(d['compressionStrategy'] as String? ?? 'none'),
+          changeRequestNumber: d['changeRequestNumber'] as String?,
         );
       }).toList();
     } catch (e) {
@@ -538,6 +559,9 @@ class ProjectControlsFirestoreService {
         'floatDays': sv.floatDays,
         'delayReason': sv.delayReason,
         'compressionStrategy': sv.compressionStrategy.name,
+        if (sv.changeRequestNumber != null &&
+            sv.changeRequestNumber!.isNotEmpty)
+          'changeRequestNumber': sv.changeRequestNumber,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
@@ -611,10 +635,11 @@ class ProjectControlsFirestoreService {
         final d = doc.data();
         return ResourceAllocation(
           resourceName: d['resourceName'] as String? ?? '',
-          discipline: ResourceDiscipline.values.byName(
-              d['discipline'] as String? ?? 'pm'),
+          discipline: ResourceDiscipline.values
+              .byName(d['discipline'] as String? ?? 'pm'),
           weeklyHours: List<double>.from(
-              (d['weeklyHours'] as List?)?.map((e) => (e as num).toDouble()) ?? []),
+              (d['weeklyHours'] as List?)?.map((e) => (e as num).toDouble()) ??
+                  []),
           capacityHoursPerWeek:
               (d['capacityHoursPerWeek'] as num?)?.toDouble() ?? 40,
         );
@@ -652,10 +677,14 @@ class ProjectControlsFirestoreService {
         final d = doc.data();
         return ReportRecord(
           id: doc.id,
-          type: ReportType.values.byName(d['type'] as String? ?? 'costVariance'),
-          generatedAt: (d['generatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          dateRangeStart: (d['dateRangeStart'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          dateRangeEnd: (d['dateRangeEnd'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          type:
+              ReportType.values.byName(d['type'] as String? ?? 'costVariance'),
+          generatedAt:
+              (d['generatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          dateRangeStart:
+              (d['dateRangeStart'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          dateRangeEnd:
+              (d['dateRangeEnd'] as Timestamp?)?.toDate() ?? DateTime.now(),
           generatedBy: d['generatedBy'] as String? ?? '',
           summaryText: d['summaryText'] as String? ?? '',
         );

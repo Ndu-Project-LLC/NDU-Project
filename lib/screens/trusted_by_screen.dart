@@ -113,7 +113,7 @@ class TrustedByScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF0B1C30),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: Colors.white.withOpacity(0.15)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                 ),
                 child: const Text(
                   'BUILT FOR STRATEGIC EXCELLENCE',
@@ -193,9 +193,9 @@ class TrustedByScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFD8A42).withOpacity(0.15),
+              color: const Color(0xFFFD8A42).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFD8A42).withOpacity(0.3)),
+              border: Border.all(color: const Color(0xFFFD8A42).withValues(alpha: 0.3)),
             ),
             child: Icon(org.icon, color: const Color(0xFFFD8A42), size: 24),
           ),
@@ -237,8 +237,8 @@ class TrustedByScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF0A0A0A),
         border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.08)),
-          bottom: BorderSide(color: Colors.white.withOpacity(0.08)),
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
         ),
       ),
       child: Center(
@@ -321,7 +321,7 @@ class TrustedByScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF232323),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -402,7 +402,7 @@ class TrustedByScreen extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  side: BorderSide(color: Colors.white.withOpacity(0.2), width: 2),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.2), width: 2),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 child: const Text(

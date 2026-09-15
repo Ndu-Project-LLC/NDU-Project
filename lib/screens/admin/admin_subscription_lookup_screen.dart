@@ -40,9 +40,9 @@ class _AdminSubscriptionLookupScreenState
     NavigationContextService.instance
         .setLastAdminDashboard(AppRoutes.adminHome);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),

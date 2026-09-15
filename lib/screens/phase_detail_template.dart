@@ -102,7 +102,7 @@ class PhaseDetailScreen extends StatelessWidget {
  final double verticalPadding = isMobile ? 24 : 32;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,

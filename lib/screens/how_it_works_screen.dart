@@ -140,7 +140,7 @@ class HowItWorksScreen extends StatelessWidget {
             'the Project Delivery Operating System (PDOS) scales seamlessly across all levels.',
             style: TextStyle(
               fontSize: 16,
-              color: Color(0xFFC7D2FE),
+              color: Color(0xFFFEF3C7),
               height: 1.7,
             ),
           ),
@@ -150,11 +150,11 @@ class HowItWorksScreen extends StatelessWidget {
             runSpacing: 12,
             children: [
               _heroBadge(Icons.flash_on, 'Agile', const Color(0xFF10B981)),
-              _heroBadge(Icons.water_drop, 'Waterfall', const Color(0xFF3B82F6)),
-              _heroBadge(Icons.merge, 'Hybrid', const Color(0xFF8B5CF6)),
+              _heroBadge(Icons.water_drop, 'Waterfall', const Color(0xFFFFC812)),
+              _heroBadge(Icons.merge, 'Hybrid', const Color(0xFFB8860B)),
               _heroBadge(Icons.assignment, 'Projects', const Color(0xFFF59E0B)),
-              _heroBadge(Icons.view_module, 'Programs', const Color(0xFF0EA5E9)),
-              _heroBadge(Icons.dashboard, 'Portfolios', const Color(0xFFEC4899)),
+              _heroBadge(Icons.view_module, 'Programs', const Color(0xFFFFC812)),
+              _heroBadge(Icons.dashboard, 'Portfolios', const Color(0xFFD97706)),
             ],
           ),
         ],
@@ -214,14 +214,14 @@ class HowItWorksScreen extends StatelessWidget {
         number: '01',
         title: 'Initiation',
         icon: Icons.flag_rounded,
-        color: Color(0xFF3B82F6),
+        color: Color(0xFFFFC812),
         duration: 'Weeks 1–4',
       ),
       const _PhaseTimelineItem(
         number: '02',
         title: 'Planning',
         icon: Icons.architecture_rounded,
-        color: Color(0xFF8B5CF6),
+        color: Color(0xFFB8860B),
         duration: 'Weeks 4–12',
       ),
       const _PhaseTimelineItem(
@@ -370,7 +370,7 @@ class HowItWorksScreen extends StatelessWidget {
           number: '01',
           title: 'Initiation',
           icon: Icons.flag_rounded,
-          color: const Color(0xFF3B82F6),
+          color: const Color(0xFFFFC812),
           description:
               'Charter approval, stakeholder alignment, cost-benefit analysis, and preferred solution selection — all gated before planning begins.',
           activities: [
@@ -394,7 +394,7 @@ class HowItWorksScreen extends StatelessWidget {
           number: '02',
           title: 'Planning',
           icon: Icons.architecture_rounded,
-          color: const Color(0xFF8B5CF6),
+          color: const Color(0xFFB8860B),
           description:
               'Full project framework: WBS, cost estimate, schedule, procurement, risk, quality, and organizational planning for projects, programs, and portfolios.',
           activities: [
@@ -707,14 +707,14 @@ class HowItWorksScreen extends StatelessWidget {
                     child: _buildMethodologyCard(
                         'Waterfall',
                         Icons.water_drop,
-                        const Color(0xFF3B82F6),
+                        const Color(0xFFFFC812),
                         'Sequential phase-gated delivery with WBS, Gantt schedules, and milestone tracking for engineering and construction.')),
                 const SizedBox(width: 16),
                 Expanded(
                     child: _buildMethodologyCard(
                         'Hybrid',
                         Icons.merge,
-                        const Color(0xFF8B5CF6),
+                        const Color(0xFFB8860B),
                         'Blended approach combining structured upfront planning with iterative execution for complex, multi-disciplinary projects.')),
               ],
             )
@@ -730,13 +730,13 @@ class HowItWorksScreen extends StatelessWidget {
                 _buildMethodologyCard(
                     'Waterfall',
                     Icons.water_drop,
-                    const Color(0xFF3B82F6),
+                    const Color(0xFFFFC812),
                     'Sequential phase-gated delivery with WBS, Gantt schedules, and milestone tracking for engineering and construction.'),
                 const SizedBox(height: 16),
                 _buildMethodologyCard(
                     'Hybrid',
                     Icons.merge,
-                    const Color(0xFF8B5CF6),
+                    const Color(0xFFB8860B),
                     'Blended approach combining structured upfront planning with iterative execution for complex, multi-disciplinary projects.'),
               ],
             ),
@@ -790,14 +790,14 @@ class HowItWorksScreen extends StatelessWidget {
         title: 'Phase-Gated Quality',
         description:
             'Every phase has readiness gates that ensure completeness before progressing — no skipped steps, no surprises.',
-        color: Color(0xFF3B82F6),
+        color: Color(0xFFFFC812),
       ),
       const _WhyItWorksItem(
         icon: Icons.insights_outlined,
         title: 'AI-Powered Guidance',
         description:
             'KAZ AI assistant embedded throughout — generating content, analyzing risks, and recommending next steps.',
-        color: Color(0xFFA855F7),
+        color: Color(0xFFFFC812),
       ),
       const _WhyItWorksItem(
         icon: Icons.layers_outlined,
@@ -960,7 +960,7 @@ class HowItWorksScreen extends StatelessWidget {
                 label: const Text('Start Your Project',
                     style: TextStyle(fontWeight: FontWeight.w700)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   foregroundColor: const Color(0xFF064E3B),
                   padding: const EdgeInsets.symmetric(
                       horizontal: 24, vertical: 14),

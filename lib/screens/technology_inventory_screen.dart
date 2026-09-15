@@ -187,7 +187,7 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  const SizedBox(width: 8),
  CsvTableImportButton(
  tableTitle: 'Technology Inventory',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'name', label: 'Technology Name', required: true),
  CsvColumnSpec(key: 'category', label: 'Category', required: true, allowedValues: ['Language', 'Framework', 'Database', 'Tool', 'Platform', 'Service']),
  CsvColumnSpec(key: 'version', label: 'Version'),
@@ -223,7 +223,7 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  const SizedBox(width: 8),
  CsvTableImportButton(
  tableTitle: 'Technology Inventory',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'name', label: 'Technology Name', required: true),
  CsvColumnSpec(key: 'category', label: 'Category', required: true, allowedValues: ['Language', 'Framework', 'Database', 'Tool', 'Platform', 'Service']),
  CsvColumnSpec(key: 'version', label: 'Version'),

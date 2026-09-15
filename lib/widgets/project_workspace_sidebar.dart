@@ -79,7 +79,7 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppLogo(
+          const AppLogo(
             height: 56,
             width: 148,
           ),
@@ -104,7 +104,7 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
           ),
           const SizedBox(height: 14),
           // Brand banner above the "StackOne" label, spanning sidebar width
-          RepaintBoundary(
+          const RepaintBoundary(
             child: SizedBox(
               width: double.infinity,
               height: 96,
@@ -128,7 +128,7 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
           Container(
             height: 42,
             decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB),
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: _kSurfaceBorder),
             ),
@@ -245,7 +245,7 @@ class _SidebarItem extends StatelessWidget {
     final borderColor =
         isActive ? _kAccentColor.withValues(alpha: 0.35) : Colors.transparent;
     final iconColor = isActive ? _kAccentColor : const Color(0xFF6B7280);
-    final labelColor = _kTextPrimary;
+    const labelColor = _kTextPrimary;
     return Material(
       color: Colors.transparent,
       child: InkWell(

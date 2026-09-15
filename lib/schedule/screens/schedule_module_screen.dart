@@ -24,6 +24,7 @@ import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/screens/builder_screen.dart';
 import 'package:ndu_project/schedule/screens/gantt_screen.dart';
 import 'package:ndu_project/schedule/screens/list_view_screen.dart';
+import 'package:ndu_project/schedule/widgets/schedule_wbs_packages_card.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
@@ -368,9 +369,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
         final estimate = costProvider.estimate;
         final currency = estimate?.currency ?? 'USD';
         final costTotal = estimate != null
-            ? estimate.lines.fold<double>(
-                0,
-                (s, l) => s + _effectiveScheduleContextLineTotal(l))
+            ? estimate.lines.fold<double>(0, (s, l) => s + effectiveLineTotal(l))
             : 0.0;
 
         // Scheduled purchases → Cost Estimate candidates (core pull flow).
@@ -570,6 +569,13 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                     ),
                   ),
                 ),
+              // ── WBS packages carried by this schedule ─────────────────
+              // The owner's ask (2026-09-10): the schedule must be able to put
+              // out everything that is on the WBS, so every package can find
+              // itself on the schedule, take its start/finish from the WBS,
+              // and carry a cost item that then shows up in the Cost Estimate
+              // and in the WBS cost views.
+              const ScheduleWbsPackagesCard(),
               // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ──────────
               const CrossSectionSyncCard(
                 currentSection: CrossSection.schedule,
@@ -590,20 +596,6 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
         );
       },
     );
-  }
-
-  /// Mirror of [ComputeUtils] effective line total so the schedule context
-  /// banner can show a variance-aware total without re-implementing the full
-  /// totals computation. Kept private to avoid widening the cost estimate
-  /// compute utils API.
-  double _effectiveScheduleContextLineTotal(CostLine l) {
-    if (l.varianceType == VarianceType.remove) {
-      return -(l.varianceBaselineTotal ?? 0);
-    }
-    if (l.varianceType == VarianceType.change) {
-      return l.varianceDelta ?? 0;
-    }
-    return l.total;
   }
 
   int _countWithSource(ScheduleActivity a, String source) {

@@ -8,18 +8,28 @@ library;
 
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 
+/// What a single line actually contributes to a total.
+///
+/// A line with no variance contributes its own total. A `remove` line
+/// contributes the negative of the baseline money it takes away, and a `change`
+/// line contributes only its delta — never its (re-stated) new total, which
+/// already includes the original amount.
+///
+/// Top-level and exported so every surface that shows a line's money agrees
+/// with [ComputeUtils.computeTotals]: the schedule's cost badges, the WBS
+/// package card and the totals panel all read this one rule.
+double effectiveLineTotal(CostLine l) {
+  if (l.varianceType == VarianceType.remove) {
+    return -(l.varianceBaselineTotal ?? 0);
+  }
+  if (l.varianceType == VarianceType.change) {
+    return l.varianceDelta ?? 0;
+  }
+  return l.total;
+}
+
 class ComputeUtils {
   static EstimateTotals computeTotals(List<CostLine> lines) {
-    double effectiveLineTotal(CostLine l) {
-      if (l.varianceType == VarianceType.remove) {
-        return -(l.varianceBaselineTotal ?? 0);
-      }
-      if (l.varianceType == VarianceType.change) {
-        return l.varianceDelta ?? 0;
-      }
-      return l.total;
-    }
-
     double sumCats(List<CostCategory> cats) {
       return lines
           .where((l) => cats.contains(l.category))

@@ -2,11 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
+import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/models/planning_contracting_models.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
 import 'package:ndu_project/models/procurement/procurement_ui_extensions.dart';
 import 'package:ndu_project/models/procurement/procurement_workflow_step.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/procurement/utils/procurement_cost_line.dart';
 import 'package:ndu_project/screens/planning_contracting_screen.dart';
 import 'package:ndu_project/services/contract_service.dart'
  as planning_contracts;
@@ -39,6 +43,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/procurement/procurement_section_error_card.dart';
+import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 class PlanningProcurementV2Screen extends StatefulWidget {
  const PlanningProcurementV2Screen({super.key});
 
@@ -89,14 +94,18 @@ class _PlanningProcurementV2ScreenState
  'Budget Tracking',
  'Workflows',
  'Reports',
- ];
+ ];  final List<StreamSubscription<dynamic>> _subscriptions = [];
 
- final List<StreamSubscription<dynamic>> _subscriptions = [];
+  /// The tab strip sits above the content in one long scroll view, so tapping
+  /// a pill and staying parked where the previous (much longer) tab left the
+  /// page reads as "the tab did nothing". Selecting a tab now scrolls its
+  /// content into view — see [_selectTab].
+  final GlobalKey _tabContentKey = GlobalKey();
 
- int _selectedTab = 0;
- String _projectId = '';
- bool _didInitialize = false;
- bool _seedCheckRunning = false;
+  int _selectedTab = 0;
+  String _projectId = '';  /// Project whose streams are currently bound (see [_syncActiveProject]).
+  String? _boundProjectId;
+  bool _seedCheckRunning = false;
  bool _workflowLoading = false;
  bool _workflowSaving = false;
  bool _customizeWorkflowByScope = false;
@@ -135,40 +144,91 @@ class _PlanningProcurementV2ScreenState
  List<SavingsOpportunity> _savingsOpportunities = const [];
  List<ComplianceMetric> _complianceMetrics = const [];
 
- StreamSubscription<List<VendorModel>>? _vendorsSub;
+ StreamSubscription<List<VendorModel>>? _vendorsSub;  /// Binds the page to the ACTIVE project — and re-binds when it changes.
+  ///
+  /// This used to run once, guarded by a plain `_didInitialize` flag. Opening
+  /// the page before the project data had finished loading therefore latched
+  /// `_projectId` to an empty string *for the rest of the session*: the page
+  /// never subscribed to a single stream, so every tab rendered empty and the
+  /// whole screen looked broken (voice note, 2026-09-10: "nothing is working …
+  /// just everything else on the page").
+  ///
+  /// The flag is now the *project the streams are bound to*. Because
+  /// [ProjectDataHelper.getData] is read listening, project data changes
+  /// re-enter here, which is what lets a late-arriving project id (and a
+  /// project switch) bind correctly instead of being ignored.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncActiveProject();
+  }
 
- @override
- void didChangeDependencies() {
- super.didChangeDependencies();
- if (_didInitialize) return;
+  void _syncActiveProject() {
+    final String projectId;
+    try {
+      projectId = (ProjectDataHelper.getData(context).projectId ?? '').trim();
+    } catch (_) {
+      return; // No project context on this screen — nothing to bind yet.
+    }
+    // No project selected, or already bound to this one: nothing to do. An
+    // empty id must NOT latch anything, so a project arriving later still
+    // initialises the page (see [shouldBindProject]).
+    if (!shouldBindProject(
+        boundProjectId: _boundProjectId, projectId: projectId)) {
+      return;
+    }
 
- final data = ProjectDataHelper.getData(context);
- _projectId = data.projectId ?? '';
- _didInitialize = true;
+    _boundProjectId = projectId;
+    _projectId = projectId;
+    _bindProject(projectId);
+  }
 
- if (_projectId.isEmpty) {
- return;
- }
+  /// Tears down the previous project's streams, clears its data, then loads
+  /// everything for [projectId].
+  ///
+  /// The reset matters as much as the subscribe: without it, switching project
+  /// would keep showing the previous project's items until Firebase answered.
+  void _bindProject(String projectId) {
+    for (final subscription in _subscriptions) {
+      subscription.cancel();
+    }
+    _subscriptions.clear();
+    _vendorsSub?.cancel();
+    _vendorsSub = null;
 
- _subscribeToData();
- Future.microtask(() async {
- if (!mounted) return;
- await _loadProcurementWorkflowData();
- if (!mounted) return;
- await ScheduleLinkageService.checkAndSyncOnOpen(context);
- if (!mounted) return;
- await _checkAutoSeed();
- });
- }
+    setState(() {
+      _items = const [];
+      _trackableItems = const [];
+      _selectedTrackableIndex = 0;
+      _pos = const [];
+      _rfqs = const [];
+      _contracts = const [];
+      _vendors = const [];
+      _selectedVendorIds.clear();
+      _seedCheckRunning = false;
+    });
 
- @override
- void dispose() {
- for (final subscription in _subscriptions) {
- subscription.cancel();
- }
- _vendorsSub?.cancel();
- super.dispose();
- }
+    _subscribeToData();
+    unawaited(_bootstrapProjectData());
+  }
+
+  Future<void> _bootstrapProjectData() async {
+    if (!mounted) return;
+    await _loadProcurementWorkflowData();
+    if (!mounted) return;
+    await ScheduleLinkageService.checkAndSyncOnOpen(context);
+    if (!mounted) return;
+    await _checkAutoSeed();
+  }
+
+  @override
+  void dispose() {
+    for (final subscription in _subscriptions) {
+      subscription.cancel();
+    }
+    _vendorsSub?.cancel();
+    super.dispose();
+  }
 
  /// Build-path safety net: if a data-driven section throws (e.g. a
  /// "Bad state: No element" from unexpected Firestore data), isolate the
@@ -217,13 +277,16 @@ class _PlanningProcurementV2ScreenState
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  PlanningPhaseHeader(title: 'Procurement', onExportPdf: _exportPdf),
- const SizedBox(height: 16),
- _safeSection('Overview header', () => _buildHeader(context)),
- const SizedBox(height: 24),
- _buildTabBar(),
- const SizedBox(height: 24),
- _safeSection(_tabLabels[_selectedTab], _buildTabContent),
- const SizedBox(height: 96),
+ const SizedBox(height: 16),                _safeSection('Overview header', () => _buildHeader(context)),
+                const SizedBox(height: 24),
+                _buildTabBar(),
+                const SizedBox(height: 24),
+                KeyedSubtree(
+                  key: _tabContentKey,
+                  child: _safeSection(
+                      _tabLabels[_selectedTab], _buildTabContent),
+                ),
+                const SizedBox(height: 96),
  ],
  ),
  ),
@@ -325,12 +388,12 @@ class _PlanningProcurementV2ScreenState
  spacing: 10,
  runSpacing: 10,
  children: List<Widget>.generate(_tabLabels.length, (index) {
- final selected = index == _selectedTab;
- return ChoiceChip(
- label: Text(_tabLabels[index]),
- selected: selected,
- onSelected: (_) => setState(() => _selectedTab = index),
- selectedColor: const Color(0xFF111827),
+ final selected = index == _selectedTab;          return ChoiceChip(
+            label: Text(_tabLabels[index]),
+            selected: selected,
+            onSelected: (_) => _selectTab(index),
+            showCheckmark: false,
+            selectedColor: const Color(0xFF111827),
  labelStyle: TextStyle(
  color: selected ? Colors.white : const Color(0xFF111827),
  fontWeight: FontWeight.w600,
@@ -347,10 +410,25 @@ class _PlanningProcurementV2ScreenState
  );
  }),
  );
- }
+ }  /// Switches to [index] and brings its content into view.
+  void _selectTab(int index) {
+    if (index == _selectedTab) return;
+    setState(() => _selectedTab = index);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final target = _tabContentKey.currentContext;
+      if (target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        alignment: 0,
+      );
+    });
+  }
 
- Widget _buildTabContent() {
- switch (_selectedTab) {
+  Widget _buildTabContent() {
+    switch (_selectedTab) {
  case 0:
  return _buildOverviewTab();
  case 1:
@@ -537,13 +615,11 @@ class _PlanningProcurementV2ScreenState
  value: '${_pos.length}',
  icon: Icons.receipt_long_outlined,
  ),
- const SizedBox(height: 12),
- OutlinedButton.icon(
- onPressed: () =>
- setState(() => _selectedTab = 7),
- icon: const Icon(Icons.auto_awesome, size: 16),
- label: const Text('View Reports'),
- ),
+ const SizedBox(height: 12),              OutlinedButton.icon(
+                onPressed: () => _selectTab(7),
+                icon: const Icon(Icons.auto_awesome, size: 16),
+                label: const Text('View Reports'),
+              ),
  ],
  ),
  ),
@@ -777,34 +853,110 @@ class _PlanningProcurementV2ScreenState
  !(cost.source == 'project_procurement_item' &&
  cost.reconciliationReference == 'procurement:${item.id}')),
  existingCost,
- ];
+ ];    await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'procurement',
+      dataUpdater: (data) => data.copyWith(
+        workPackages: updatedPackages,
+        costEstimateItems: updatedCosts,
+      ),
+      showSnackbar: false,
+    );
+    await ProcurementService.updateItemScheduleLink(
+      _projectId,
+      item.id,
+      wbsId: wbsItem.id,
+      milestoneId: item.linkedMilestoneId,
+      requiredByDate: item.requiredByDate,
+    );
 
- await ProjectDataHelper.updateAndSave(
- context: context,
- checkpoint: 'procurement',
- dataUpdater: (data) => data.copyWith(
- workPackages: updatedPackages,
- costEstimateItems: updatedCosts,
- ),
- showSnackbar: false,
- );
- await ProcurementService.updateItemScheduleLink(
- _projectId,
- item.id,
- wbsId: wbsItem.id,
- milestoneId: item.linkedMilestoneId,
- requiredByDate: item.requiredByDate,
- );
- if (!mounted) return;
- _showProcurementMessage('${item.name} is linked to WBS and Cost Estimate.');
- } catch (error) {
- if (mounted) _showProcurementMessage('Unable to link procurement item: $error');
- } finally {
- if (mounted) setState(() => _syncingItemId = null);
- }
- }
+    // The value has to land on the SCOPE, not only on a legacy record. Writing
+    // the project blob above used to be the whole story, so the budget moved
+    // nowhere the WBS module, the Cost Estimate overview or Cost by WBS could
+    // read it — which is what "the scope value should move from procurement to
+    // scope details" was about (voice note, 2026-09-10). The same money is now
+    // written into the live estimate and linked onto the WBS node.
+    final landedOnScope =
+        await _writeProcurementValueToEstimateAndWbs(item, wbsItem);
 
- Future<void> _syncProcurementSchedule() async {
+    if (!mounted) return;
+    _showProcurementMessage(landedOnScope
+        ? '${item.name} — ${_currency.format(item.budget)} linked to WBS ${wbsItem.wbsCode} and the Cost Estimate.'
+        : '${item.name} is linked to WBS and Cost Estimate.');
+  } catch (error) {
+    if (mounted) _showProcurementMessage('Unable to link procurement item: $error');
+  } finally {
+    if (mounted) setState(() => _syncingItemId = null);
+  }
+}
+
+  static final NumberFormat _currency =
+      NumberFormat.currency(symbol: r'$', decimalDigits: 0);
+
+  /// Writes the item's budget into the live Cost Estimate as a procurement
+  /// line, then links that line onto the matching WBS node so the value rolls
+  /// up under the scope it belongs to.
+  ///
+  /// Idempotent: the line carries `basisReference = procurement:<item id>`, so
+  /// re-running the pull refreshes the one line instead of stacking up copies.
+  /// Returns whether the estimate was reached at all — the legacy write above
+  /// still counts as a successful link.
+  Future<bool> _writeProcurementValueToEstimateAndWbs(
+    ProcurementItemModel item,
+    WorkItem wbsItem,
+  ) async {
+    if (!mounted) return false;
+    final costProvider = context.read<CostEstimateProvider>();
+    final wbsProvider = context.read<WBSProvider>();
+    final data = ProjectDataHelper.getData(context, listen: false);
+    final projectName =
+        data.projectName.trim().isEmpty ? 'Project' : data.projectName.trim();
+    final reference = procurementCostReference(item.id);
+
+    await costProvider.ensureProjectLoaded(_projectId, projectName: projectName);
+    if (!mounted) return false;
+    if (costProvider.estimate == null || !costProvider.setupComplete) {
+      costProvider.setup(
+        projectId: _projectId,
+        projectName: projectName,
+        className: EstimateClass.class3,
+        deliveryModel: DeliveryModel.waterfall,
+      );
+    }
+
+    CostLine? existing;
+    for (final line in costProvider.estimate?.lines ?? const <CostLine>[]) {
+      if (line.basisReference == reference) {
+        existing = line;
+        break;
+      }
+    }
+
+    final line = procurementItemCostLine(
+      item: item,
+      wbsRef: wbsItem.wbsCode,
+      existingLineId: existing?.id,
+    );
+
+    if (existing == null) {
+      costProvider.addLine(line);
+    } else {
+      costProvider.updateLine(existing.id, line);
+    }
+
+    // Link the line onto the WBS node the WBS module knows, resolving the
+    // picked item by id first and falling back to its code — the legacy
+    // `wbsTree` work item and the WBS module's node are not guaranteed to
+    // share an id, but they do share the dotted code.
+    final node = wbsProvider.findNode(wbsItem.id) ??
+        findWbsNodeByCode(wbsProvider.wbs, wbsItem.wbsCode);
+    if (node != null) {
+      wbsProvider.linkCostLine(node.id, line.id);
+    }
+    return true;
+  }
+
+  Future<void> _syncProcurementSchedule() async {
  try {
  await ScheduleLinkageService.checkAndSyncOnOpen(context);
  if (mounted) {

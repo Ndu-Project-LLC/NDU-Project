@@ -36,6 +36,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/file_upload_helper.dart';
+import 'package:ndu_project/project_controls/widgets/change_request_scope_picker.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/utils/wbs_scope_labels.dart';
 import 'package:go_router/go_router.dart';
@@ -2029,6 +2030,21 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
     return chips;
   }
 
+  /// One-tap change request from the register.
+  ///
+  /// "Quick" means fewer taps, not less of a change request. This dialog used
+  /// to submit only a title, description and type, so a change raised here
+  /// could not say which scope it touched and could not carry a single
+  /// document — the two things the owner asked for outright (voice note,
+  /// 2026-09-10):
+  ///
+  /// > "on the scope impact, you should be able to choose which scope is
+  /// > attached to that change … it's supposed to draw things that are also on
+  /// > the work breakdown structures"
+  /// > "as you create a change request, the document upload is not working"
+  ///
+  /// The scope impact is now the shared [ChangeRequestScopePicker] over the
+  /// live WBS, and documents upload through [FileUploadHelper].
   void _showNewCRDialog(BuildContext context) {
     final titleCtrl = TextEditingController();
     final descCtrl = TextEditingController();
@@ -2036,6 +2052,37 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
     var type = CMChangeType.scope;
     var priority = CMPriority.medium;
     var isEmergency = false;
+    final selectedScope = <String>{};
+    final attachments = <CMAttachment>[];
+    var uploading = false;
+
+    Future<void> uploadDocument(StateSetter setDialogState) async {
+      if (uploading) return;
+      final projectId = (ProjectDataHelper.getData(context).projectId ?? '')
+          .trim();
+      setDialogState(() => uploading = true);
+      try {
+        final result = await FileUploadHelper.pickAndUpload(
+          folder: 'change_requests',
+          projectId: projectId.isEmpty ? 'general' : projectId,
+          allowedExtensions: FileUploadHelper.documentExtensions,
+          context: context,
+        );
+        if (result == null) return;
+        setDialogState(() {
+          attachments.add(CMAttachment(
+            id: 'att_${DateTime.now().microsecondsSinceEpoch}',
+            name: result.fileName,
+            downloadUrl: result.downloadUrl,
+            storagePath: result.storagePath,
+            sizeBytes: result.sizeBytes,
+            uploadedAt: DateTime.now(),
+          ));
+        });
+      } finally {
+        setDialogState(() => uploading = false);
+      }
+    }
 
     showDialog(
       context: context,
@@ -2048,55 +2095,128 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                   fontSize: 18,
                   fontWeight: FontWeight.w700)),
           content: SizedBox(
-            width: 400,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                    controller: titleCtrl,
-                    decoration: const InputDecoration(labelText: 'Title'),
-                    style: const TextStyle(color: Color(0xFF1A1D1F))),
-                const SizedBox(height: 12),
-                TextField(
-                    controller: descCtrl,
-                    maxLines: 2,
-                    decoration: const InputDecoration(labelText: 'Description'),
-                    style: const TextStyle(color: Color(0xFF1A1D1F))),
-                const SizedBox(height: 12),
-                TextField(
-                    controller: justCtrl,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                        labelText: 'Business Justification'),
-                    style: const TextStyle(color: Color(0xFF1A1D1F))),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<CMChangeType>(
-                    initialValue: type,
-                    decoration: const InputDecoration(labelText: 'Change Type'),
-                    items: CMChangeType.values
-                        .map((t) =>
-                            DropdownMenuItem(value: t, child: Text(t.label)))
-                        .toList(),
-                    onChanged: (v) => setState(() => type = v!)),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<CMPriority>(
-                    initialValue: priority,
-                    decoration: const InputDecoration(labelText: 'Priority'),
-                    items: CMPriority.values
-                        .map((p) =>
-                            DropdownMenuItem(value: p, child: Text(p.label)))
-                        .toList(),
-                    onChanged: (v) => setState(() => priority = v!)),
-                const SizedBox(height: 8),
-                CheckboxListTile(
-                    value: isEmergency,
-                    onChanged: (v) => setState(() => isEmergency = v ?? false),
-                    title: const Text('Emergency Change',
-                        style: TextStyle(fontSize: 13)),
-                    dense: true,
-                    activeColor: LightModeColors.accent,
-                    contentPadding: EdgeInsets.zero),
-              ],
+            width: 460,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                      controller: titleCtrl,
+                      decoration: const InputDecoration(labelText: 'Title'),
+                      style: const TextStyle(color: Color(0xFF1A1D1F))),
+                  const SizedBox(height: 12),
+                  TextField(
+                      controller: descCtrl,
+                      maxLines: 2,
+                      decoration:
+                          const InputDecoration(labelText: 'Description'),
+                      style: const TextStyle(color: Color(0xFF1A1D1F))),
+                  const SizedBox(height: 12),
+                  TextField(
+                      controller: justCtrl,
+                      maxLines: 2,
+                      decoration: const InputDecoration(
+                          labelText: 'Business Justification'),
+                      style: const TextStyle(color: Color(0xFF1A1D1F))),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<CMChangeType>(
+                      initialValue: type,
+                      decoration:
+                          const InputDecoration(labelText: 'Change Type'),
+                      items: CMChangeType.values
+                          .map((t) =>
+                              DropdownMenuItem(value: t, child: Text(t.label)))
+                          .toList(),
+                      onChanged: (v) => setState(() => type = v!)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<CMPriority>(
+                      initialValue: priority,
+                      decoration: const InputDecoration(labelText: 'Priority'),
+                      items: CMPriority.values
+                          .map((p) =>
+                              DropdownMenuItem(value: p, child: Text(p.label)))
+                          .toList(),
+                      onChanged: (v) => setState(() => priority = v!)),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                      value: isEmergency,
+                      onChanged: (v) => setState(() => isEmergency = v ?? false),
+                      title: const Text('Emergency Change',
+                          style: TextStyle(fontSize: 13)),
+                      dense: true,
+                      activeColor: LightModeColors.accent,
+                      contentPadding: EdgeInsets.zero),
+                  const SizedBox(height: 8),
+                  // Scope impact — always from the WBS.
+                  ChangeRequestScopePicker(
+                    selected: selectedScope,
+                    onChanged: (next) =>
+                        setState(() => selectedScope
+                          ..clear()
+                          ..addAll(next)),
+                  ),
+                  const SizedBox(height: 8),
+                  // Supporting documents.
+                  Row(
+                    children: [
+                      const Icon(Icons.attach_file,
+                          size: 16, color: Color(0xFF6B7280)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          attachments.isEmpty
+                              ? 'No supporting documents yet'
+                              : '${attachments.length} document'
+                                  '${attachments.length == 1 ? '' : 's'} attached',
+                          style: const TextStyle(
+                              color: Color(0xFF6B7280), fontSize: 12),
+                        ),
+                      ),
+                      if (uploading)
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      else
+                        TextButton.icon(
+                          onPressed: () => uploadDocument(setState),
+                          icon: const Icon(Icons.upload_file, size: 16),
+                          label: const Text('Add document'),
+                          style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFFD97706)),
+                        ),
+                    ],
+                  ),
+                  for (final attachment in attachments)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.insert_drive_file,
+                              size: 14, color: Color(0xFFD97706)),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              attachment.name,
+                              style: const TextStyle(fontSize: 12),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Remove',
+                            visualDensity: VisualDensity.compact,
+                            onPressed: () => setState(
+                                () => attachments.remove(attachment)),
+                            icon: const Icon(Icons.close,
+                                size: 14, color: Color(0xFFEF4444)),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -2115,6 +2235,8 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                         priority: priority,
                         businessJustification: justCtrl.text.trim(),
                         isEmergency: isEmergency,
+                        affectedWorkPackages: selectedScope.toList(),
+                        attachments: List<CMAttachment>.from(attachments),
                       );
                   Navigator.pop(ctx);
                   widget.onSelectCR(crId);
@@ -3163,6 +3285,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
             name: result.fileName,
             downloadUrl: result.downloadUrl,
             storagePath: result.storagePath,
+            sizeBytes: result.sizeBytes,
             uploadedAt: DateTime.now(),
           ));
         });

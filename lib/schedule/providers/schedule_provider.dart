@@ -11,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/services/schedule_cpm_service.dart';
+import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
+import 'package:ndu_project/schedule/utils/schedule_wbs_packages.dart';
 import 'package:ndu_project/utils/project_scoped_storage.dart';
 
 /// Project-scoped storage key prefix — see [projectScopedPrefsKey].
@@ -578,6 +580,156 @@ class ScheduleProvider extends ChangeNotifier {
       3 => ScheduleDomain.procurement,
       _ => ScheduleDomain.execution,
     };
+  }
+
+  /// Schedule ← WBS: puts the WBS work packages the schedule does not carry yet
+  /// onto the schedule.
+  ///
+  /// Product rule (voice note, 2026-09-10): "the schedule should be able to put
+  /// out everything that's like on the WBS [and it] should be able to find
+  /// itself on the schedule". The owner had work packages that existed in the
+  /// WBS but nowhere on the schedule, with no way to bring them across.
+  ///
+  /// Each [WbsPackagePull] becomes one leaf activity that keeps the link home —
+  /// `wbsNodeId` (the FK the Gantt, the Cost Estimate and Project Controls all
+  /// read) and the denormalised `wbsCode` — and starts from the package's own
+  /// planned window when the WBS has one. The activity name is the package's
+  /// `code — name` label, so the schedule row reads exactly like the WBS row.
+  ///
+  /// Idempotent by construction: a package whose node id is already linked from
+  /// any activity in the tree is skipped, so re-running the pull after a partial
+  /// import offers only what is still missing. Returns the number created.
+  int attachWbsPackages(List<WbsPackagePull> packages) {
+    if (packages.isEmpty) return 0;
+    final schedule = _schedule;
+    if (schedule == null || schedule.activities.isEmpty) return 0;
+
+    final alreadyLinked = <String>{
+      for (final activity in schedule.activities
+          .expand((root) => ScheduleCpmService.flatten([root])))
+        if ((activity.wbsNodeId ?? '').trim().isNotEmpty)
+          activity.wbsNodeId!.trim(),
+    };
+
+    final additions = <ScheduleActivity>[];
+    for (final package in packages) {
+      final nodeId = package.nodeId.trim();
+      if (nodeId.isEmpty || alreadyLinked.contains(nodeId)) continue;
+      alreadyLinked.add(nodeId);
+
+      final start = package.plannedStart;
+      final finish = package.plannedFinish;
+      additions.add(ScheduleActivity(
+        id: newSchedId('act'),
+        level: package.level.clamp(1, 4),
+        code: '',
+        name: package.label.trim().isEmpty ? package.name : package.label,
+        description: package.description,
+        type: ActivityType.task,
+        domain: _domainForLevel(package.level),
+        duration: start != null && finish != null
+            ? finish.difference(start).inDays + 1
+            : null,
+        durationUnit: 'day',
+        dependencies: const [],
+        aiGenerated: false,
+        wbsNodeId: nodeId,
+        wbsCode: package.code.trim().isEmpty ? null : package.code.trim(),
+        startDate: start,
+        endDate: finish,
+        status: 'planned',
+        importSource: 'wbs',
+        children: const [],
+      ));
+    }
+
+    if (additions.isEmpty) return 0;
+
+    final root = schedule.activities.first;
+    final updatedRoot = recalcActivityCodes(
+      root.copyWith(children: [...root.children, ...additions]),
+    );
+    _schedule = schedule.copyWith(
+      activities: [updatedRoot, ...schedule.activities.skip(1)],
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return additions.length;
+  }
+
+  /// Fills the planned window the WBS carries onto the schedule activities
+  /// linked to each node — the WBS → Schedule half of the timeline link.
+  ///
+  /// The other direction already exists (`WBSProvider.applyScheduleTimelines`
+  /// stamps the schedule's dates onto the WBS). This one covers the case where
+  /// the package's start and finish were agreed on the WBS first, and the
+  /// schedule row is what is blank.
+  ///
+  /// Only activities with **no** dates of their own are written, so a CPM pass
+  /// or a hand-entered window is never silently overwritten. Returns the number
+  /// of activities that gained a date.
+  int applyWbsPlannedDates(
+      Map<String, ({DateTime? start, DateTime? finish})> byNodeId) {
+    if (byNodeId.isEmpty) return 0;
+    final schedule = _schedule;
+    if (schedule == null || schedule.activities.isEmpty) return 0;
+
+    var updated = 0;
+
+    ScheduleActivity apply(ScheduleActivity activity) {
+      final children = activity.children.map(apply).toList(growable: false);
+      final nodeId = (activity.wbsNodeId ?? '').trim();
+      final window = nodeId.isEmpty ? null : byNodeId[nodeId];
+      if (window == null ||
+          (window.start == null && window.finish == null) ||
+          activity.startDate != null ||
+          activity.endDate != null) {
+        return children.isEmpty
+            ? activity
+            : activity.copyWith(children: children);
+      }
+
+      updated++;
+      return activity.copyWith(
+        startDate: window.start,
+        endDate: window.finish,
+        duration: window.start != null && window.finish != null
+            ? window.finish!.difference(window.start!).inDays + 1
+            : activity.duration,
+        children: children,
+      );
+    }
+
+    final updatedRoots =
+        schedule.activities.map(apply).toList(growable: false);
+    if (updated == 0) return 0;
+
+    _schedule = schedule.copyWith(
+      activities: updatedRoots,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return updated;
+  }
+
+  /// Stamps a Cost Estimate line onto the schedule activity it prices, so the
+  /// schedule row can show that it is costed (and the estimate keeps pointing
+  /// back at the row that created it).
+  ///
+  /// Returns the activity's WBS node id when it has one, so the caller can link
+  /// the same line onto the WBS node and close the Schedule → Cost → WBS loop.
+  String? attachCostLineToActivity(String activityId, String costLineId) {
+    final schedule = _schedule;
+    if (schedule == null) return null;
+    final activity = findActivityById(schedule.activities, activityId);
+    if (activity == null) return null;
+
+    updateActivity(activity.id, activity.copyWith(costLineId: costLineId));
+
+    final nodeId = (activity.wbsNodeId ?? '').trim();
+    return nodeId.isEmpty ? null : nodeId;
   }
 
   /// Import AgileTask (story) records into the schedule as ScheduleActivity entries.

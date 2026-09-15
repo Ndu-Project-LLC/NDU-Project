@@ -17,6 +17,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/cost_estimate/utils/risk_cost_lines.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -743,6 +744,90 @@ class CostEstimateProvider extends ChangeNotifier {
     return v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
   }
 
+  /// Pull the Risk Register into the Cost Estimate as plain `riskAllowance`
+  /// cost lines — no AI involved (Lusaka 22 call: "the risk also has a risk
+  /// matrix … whatever the total comes out to should show up on the cost
+  /// estimate as well").
+  ///
+  /// Selection/valuation rules live in `risk_cost_lines.dart` (pure, tested):
+  /// a risk's stated amount wins; otherwise its probability × impact matrix
+  /// cell defaults the exposure. Closed risks are skipped.
+  ///
+  /// Idempotent: a risk already represented in the estimate as a
+  /// `riskAllowance` line with the same description AND total is never
+  /// duplicated (matches the personnel pull behaviour).
+  RiskCostPullResult pullRiskCostLines(List<RiskCostLine> risks) {
+    final estimate = _estimate;
+    if (estimate == null || risks.isEmpty) {
+      return RiskCostPullResult.empty;
+    }
+
+    final newLines = [...estimate.lines];
+    var alreadyInEstimate = 0;
+    var addedTotal = 0.0;
+
+    for (final risk in risks) {
+      final description = risk.description.trim();
+      if (description.isEmpty) continue;
+      final total = risk.total;
+
+      // Already represented (same description + same total)? Skip.
+      final existing = estimate.lines.any((l) =>
+          l.category == CostCategory.riskAllowance &&
+          l.description == description &&
+          (l.total - total).abs() < 0.005);
+      if (existing) {
+        alreadyInEstimate++;
+        continue;
+      }
+
+      final probability = risk.probability.trim();
+      final impact = risk.impact.trim();
+      final matrixLabel = (probability.isNotEmpty || impact.isNotEmpty)
+          ? ' · P: ${probability.isEmpty ? '—' : probability} × I: ${impact.isEmpty ? '—' : impact}'
+          : '';
+
+      newLines.add(CostLine(
+        id: newId('line'),
+        category: CostCategory.riskAllowance,
+        subCategory: 'Risk (register)',
+        description: description,
+        quantity: null,
+        unit: 'allowance',
+        rate: null,
+        total: total,
+        inSchedule: false,
+        basisSource: CostSourceType.expertJudgment,
+        basisReference:
+            'Risk register${risk.riskId.trim().isEmpty ? '' : ' ${risk.riskId.trim()}'}$matrixLabel',
+        aiGenerated: false,
+      ));
+      addedTotal += total;
+    }
+
+    if (newLines.length == estimate.lines.length) {
+      return RiskCostPullResult(
+        pulled: 0,
+        alreadyInEstimate: alreadyInEstimate,
+        addedTotal: 0,
+      );
+    }
+
+    final totals = ComputeUtils.computeTotals(newLines);
+    _estimate = estimate.copyWith(
+      lines: newLines,
+      totals: totals,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return RiskCostPullResult(
+      pulled: newLines.length - estimate.lines.length,
+      alreadyInEstimate: alreadyInEstimate,
+      addedTotal: addedTotal,
+    );
+  }
+
   /// Pick the best project name: the explicit one if it's been customised,
   /// otherwise [ProjectDataHelper.lastKnownProjectName] (if captured), else
   /// the literal `'My Project'` default.
@@ -1393,6 +1478,31 @@ class PersonnelCostPullResult {
   });
 
   static const empty = PersonnelCostPullResult(
+    pulled: 0,
+    alreadyInEstimate: 0,
+    addedTotal: 0,
+  );
+}
+
+/// Result of [CostEstimateProvider.pullRiskCostLines].
+class RiskCostPullResult {
+  /// Number of new risk-allowance cost lines created.
+  final int pulled;
+
+  /// Risks that were already represented — nothing created for them.
+  final int alreadyInEstimate;
+
+  /// Combined value of the newly pulled risk lines (stated amount, or the
+  /// probability × impact matrix cell default).
+  final double addedTotal;
+
+  const RiskCostPullResult({
+    required this.pulled,
+    required this.alreadyInEstimate,
+    required this.addedTotal,
+  });
+
+  static const empty = RiskCostPullResult(
     pulled: 0,
     alreadyInEstimate: 0,
     addedTotal: 0,

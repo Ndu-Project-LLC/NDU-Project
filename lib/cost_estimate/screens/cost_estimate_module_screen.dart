@@ -18,6 +18,7 @@ library;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -25,6 +26,7 @@ import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/widgets/context_banner.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
+import 'package:ndu_project/cost_estimate/utils/risk_cost_lines.dart';
 import 'package:ndu_project/cost_estimate/screens/setup_wizard_screen.dart';
 import 'package:ndu_project/cost_estimate/screens/builder_screen.dart';
 import 'package:ndu_project/cost_estimate/screens/boe_screen.dart';
@@ -433,6 +435,10 @@ class _CostDashboardTab extends StatelessWidget {
             _buildPersonnelCard(context, lines, currencySymbol),
             const SizedBox(height: 22),
 
+            // ── 2d. Risk register card (matrix → Risk Allowance pull) ─
+            _buildRiskCard(context, lines, currencySymbol),
+            const SizedBox(height: 22),
+
             // ── 3. Two-column bento: Cost Breakdown + Composition donut ──
             if (t.costBaseline > 0) ...[
               LayoutBuilder(
@@ -677,6 +683,22 @@ class _CostDashboardTab extends StatelessWidget {
     );
   }
 
+  /// Risk register card — pulls the Risk Assessment register into the
+  /// estimate as Risk Allowance lines computed at the code level (stated
+  /// amount, or the probability × impact matrix cell), no AI (Lusaka 22
+  /// call: "whatever the total comes out to should show up on the cost
+  /// estimate as well").
+  Widget _buildRiskCard(
+    BuildContext context,
+    List<CostLine> lines,
+    String currencySymbol,
+  ) {
+    return _RiskCostCard(
+      lines: lines,
+      currencySymbol: currencySymbol,
+    );
+  }
+
   static String _fmt(double value) {
     if (value >= 1000000) {
       return '${(value / 1000000).toStringAsFixed(value % 1000000 == 0 ? 0 : 1)}M';
@@ -766,7 +788,7 @@ class _PersonnelCostCardState extends State<_PersonnelCostCard> {
     }).toList();
   }
 
-  double get _pendingTotal => _pending.fold(0.0, (sum, r) => sum + r.subtotal);
+  double get _pendingTotal => _pending.fold(0.0, (s, r) => s + r.subtotal);
 
   Future<void> _pull() async {
     final pending = _pending;
@@ -932,6 +954,285 @@ class _PersonnelCostCardState extends State<_PersonnelCostCard> {
           .where((l) =>
               l.category == CostCategory.projectTeam &&
               l.subCategory == 'Personnel (staffing)')
+          .fold(0.0, (s, l) => s + l.total) +
+      _pendingTotal);
+
+  static String _fmt(double value) {
+    if (value >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(value % 1000000 == 0 ? 0 : 1)}M';
+    }
+    if (value >= 1000) {
+      return '${(value / 1000).toStringAsFixed(value % 1000 == 0 ? 0 : 1)}K';
+    }
+    return value.toStringAsFixed(value == value.roundToDouble() ? 0 : 2);
+  }
+}
+
+/// Loads the project's risk register (Risk Assessment page) and lets the user
+/// pull it into the Cost Estimate as computed Risk Allowance lines. Pure
+/// calculation — stated amount, or the probability × impact matrix cell —
+/// no AI (Lusaka 22 call).
+class _RiskCostCard extends StatefulWidget {
+  final List<CostLine> lines;
+  final String currencySymbol;
+
+  const _RiskCostCard({
+    required this.lines,
+    required this.currencySymbol,
+  });
+
+  @override
+  State<_RiskCostCard> createState() => _RiskCostCardState();
+}
+
+class _RiskCostCardState extends State<_RiskCostCard> {
+  static const _ink = Color(0xFF0B1220);
+  static const _muted = Color(0xFF64748B);
+  static const _hairline = Color(0xFFE2E8F0);
+  static const _surface = Colors.white;
+  static const _surfaceAlt = Color(0xFFF8FAFC);
+
+  List<Map<String, String>>? _risks;
+  bool _loading = true;
+  bool _pulling = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      final projectData = context.read<ProjectDataProvider>().projectData;
+      final projectId = projectData.projectId;
+      if (projectId == null || projectId.isEmpty) {
+        setState(() {
+          _risks = [];
+          _loading = false;
+        });
+        return;
+      }
+      final snapshot = await FirebaseFirestore.instance
+          .collection('projects')
+          .doc(projectId)
+          .collection('risk_assessment_entries')
+          .get();
+      if (!mounted) return;
+      final risks = snapshot.docs
+          .map((doc) {
+            final data = doc.data();
+            return {
+              'id': data['id']?.toString() ?? '',
+              'description': data['description']?.toString() ?? '',
+              'probability': data['probability']?.toString() ?? '',
+              'impact': data['impact']?.toString() ?? '',
+              'score': data['score']?.toString() ?? '',
+              'status': data['status']?.toString() ?? '',
+            };
+          })
+          .toList(growable: false);
+      setState(() {
+        _risks = risks;
+        _loading = false;
+      });
+    } catch (e) {
+      debugPrint('_RiskCostCard load error: $e');
+      if (mounted) {
+        setState(() {
+          _risks = [];
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  /// Risks that are not yet represented in the estimate (same description
+  /// + same total as an existing riskAllowance line).
+  List<RiskCostLine> get _pending {
+    final risks = _risks ?? const <Map<String, String>>[];
+    final candidates = collectRiskCostLines(
+      risks: risks,
+      matrixCellExposure: defaultMatrixCellExposure,
+    );
+    return candidates.where((r) {
+      final already = widget.lines.any((l) =>
+          l.category == CostCategory.riskAllowance &&
+          l.description == r.description &&
+          (l.total - r.total).abs() < 0.005);
+      return !already;
+    }).toList();
+  }
+
+  double get _pendingTotal => _pending.fold(0.0, (s, r) => s + r.total);
+
+  Future<void> _pull() async {
+    final pending = _pending;
+    if (pending.isEmpty || _pulling) return;
+    setState(() => _pulling = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<CostEstimateProvider>();
+    final result = provider.pullRiskCostLines(pending);
+    if (!mounted) return;
+    setState(() => _pulling = false);
+    messenger.showSnackBar(SnackBar(
+      content: Text(
+        result.pulled > 0
+            ? 'Added ${result.pulled} risk allowance line${result.pulled == 1 ? '' : 's'} '
+                '(${widget.currencySymbol}${result.addedTotal.toStringAsFixed(0)} total) '
+                '— from the risk register, no AI.'
+            : 'Risk allowances already reflected in the estimate.',
+        style: const TextStyle(fontSize: 12.5),
+      ),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: const Color(0xFF0B1220),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: _surfaceAlt,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _hairline),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Loading risks from the Risk Assessment register...',
+                style: TextStyle(color: Color(0xFF64748B), fontSize: 12.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final risks = _risks ?? const <Map<String, String>>[];
+    final pending = _pending;
+    final pendingTotal = _pendingTotal;
+    final inEstimate = risks.length - pending.length;
+    final allPulled = risks.isNotEmpty && pending.isEmpty;
+    final accent =
+        allPulled ? const Color(0xFF16A34A) : const Color(0xFFD97706);
+    final softAccent =
+        allPulled ? const Color(0xFFE7F8F0) : const Color(0xFFFFF3E0);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: softAccent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.warning_amber_rounded,
+                    size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Risk Allowances (Risk Register)',
+                      style: TextStyle(
+                          color: _ink,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Risks from the Risk Assessment matrix, priced at their stated amount or their probability × impact cell — a built-in calculation, no AI.',
+                      style: TextStyle(color: _muted, fontSize: 11.5),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                risks.isEmpty ? '—' : widget.currencySymbol + _fmt(_estTotal),
+                style: TextStyle(
+                    color: accent,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    fontFeatures: const [FontFeature.tabularFigures()]),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (risks.isEmpty)
+            const Text(
+              'No risks in the Risk Assessment register yet — add risks with probability and impact there, then come back to pull the total into the estimate.',
+              style: TextStyle(color: _muted, fontSize: 12),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    allPulled
+                        ? '$inEstimate of $inEstimate risks reflected in the estimate ✓'
+                        : '${pending.length} of ${risks.length} risks not yet in the estimate — '
+                            '${widget.currencySymbol}${pendingTotal.toStringAsFixed(0)} '
+                            'to add.',
+                    style: TextStyle(
+                        color: allPulled
+                            ? const Color(0xFF166534)
+                            : const Color(0xFFB45309),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+                if (!allPulled)
+                  TextButton.icon(
+                    onPressed: _pulling ? null : _pull,
+                    icon: const Icon(Icons.arrow_downward, size: 14),
+                    label: Text('Pull ${pending.length} into Cost Estimate',
+                        style: const TextStyle(fontSize: 11)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFB45309),
+                      backgroundColor: const Color(0xFFFFF7ED),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Total value of the register (already-pulled + pending).
+  double get _estTotal => (widget.lines
+          .where((l) =>
+              l.category == CostCategory.riskAllowance &&
+              l.subCategory == 'Risk (register)')
           .fold(0.0, (s, l) => s + l.total) +
       _pendingTotal);
 

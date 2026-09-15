@@ -754,11 +754,12 @@ EstimateBasis createEmptyEstimateBasis() => const EstimateBasis(
 Schedule createEmptySchedule({
   required String projectName,
   required String deliveryModel,
+  String projectId = 'default',
 }) {
   final now = DateTime.now();
   return Schedule(
     id: newSchedId('sched'),
-    projectId: 'default',
+    projectId: projectId,
     projectName: projectName,
     basis: createEmptyBasis(deliveryModel),
     activities: [

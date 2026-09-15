@@ -56,35 +56,59 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
   );
   bool _syncedAll = false;
 
+  /// Guards the build-time project sync so a project change triggers exactly
+  /// one load pass (the next build sees a mismatched scope until it finishes).
+  bool _projectSyncScheduled = false;
+
   @override
   void initState() {
     super.initState();
     _tabController.addListener(_onTabChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _autoSetupFromProjectContext();
-      _autoSyncAll();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _syncActiveProject();
+      await _autoSyncAll();
     });
   }
 
-  /// Auto-setup the schedule using the project's already-captured context
-  /// (project name + overall framework from the Project Framework screen).
+  /// Project id the Schedule storage is scoped by right now — `'default'` when
+  /// no project is loaded.
+  static String _scopeIdFor(String? projectId) {
+    final trimmed = (projectId ?? '').trim();
+    return trimmed.isEmpty ? 'default' : trimmed;
+  }
+
+  /// Loads THIS project's schedule — and auto-creates one for a project with
+  /// none yet — using the project's already-captured context (project name +
+  /// overall framework from the Project Framework screen).
+  ///
+  /// Storage is project-scoped, so this runs on entry AND whenever the active
+  /// project changes. Without it the module would keep showing the previously
+  /// opened project's activities, basis and reviewers.
   ///
   /// This SKIPS the 2-step Setup Wizard (which used to ask for project name
   /// + delivery model / "methodology"). The methodology is already captured
   /// upstream on the Project Framework screen, so re-asking here is redundant.
   /// Falls back to 'WATERFALL' if the framework is somehow unset.
-  Future<void> _autoSetupFromProjectContext() async {
+  Future<void> _syncActiveProject() async {
     if (!mounted) return;
     final provider = context.read<ScheduleProvider>();
-    if (provider.setupComplete && provider.schedule != null) return;
-
     final data = ProjectDataHelper.getData(context, listen: false);
+    final projectId = (data.projectId ?? '').trim();
     final projectName =
         data.projectName.trim().isNotEmpty ? data.projectName.trim() : 'Project';
+
+    if (provider.activeProjectId != _scopeIdFor(projectId)) {
+      await provider.ensureProjectLoaded(projectId, projectName: projectName);
+      if (!mounted) return;
+    }
+
+    if (provider.setupComplete && provider.schedule != null) return;
+
     final frameworkRaw = (data.overallFramework ?? '').trim();
     final deliveryModel = _normalizeDeliveryModel(frameworkRaw) ?? 'WATERFALL';
 
     provider.setup(
+      projectId: projectId,
       projectName: projectName,
       deliveryModel: deliveryModel,
     );
@@ -129,14 +153,26 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
     final messenger = ScaffoldMessenger.of(context);
     if (!mounted) return;
 
+    // Resolve every provider up front so nothing reads the BuildContext after
+    // an await.
     final costProvider = context.read<CostEstimateProvider>();
+    final scheduleProvider = context.read<ScheduleProvider>();
+    final wbsProvider = context.read<WBSProvider>();
+    final data = ProjectDataHelper.getData(context, listen: false);
+    final projectId = (data.projectId ?? '').trim();
+    final projectName =
+        data.projectName.trim().isNotEmpty ? data.projectName.trim() : 'Project';
+    // Bind the estimate to THIS project first — otherwise the purchases of the
+    // project on screen would be pulled into whichever project's estimate the
+    // provider still held.
+    await costProvider.ensureProjectLoaded(projectId,
+        projectName: projectName);
+    if (!mounted) return;
     // Auto-setup mirrors the Cost Estimate module: opening the module
     // creates a default estimate, so the pull is always one click.
     if (costProvider.estimate == null || !costProvider.setupComplete) {
-      final data = ProjectDataHelper.getData(context, listen: false);
-      final projectName =
-          data.projectName.trim().isNotEmpty ? data.projectName.trim() : 'Project';
       costProvider.setup(
+        projectId: projectId,
         projectName: projectName,
         className: EstimateClass.class3,
         deliveryModel: DeliveryModel.waterfall,
@@ -145,8 +181,6 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
 
     final result = costProvider.pullScheduledPurchases(candidates);
     if (result.pulled > 0) {
-      final scheduleProvider = context.read<ScheduleProvider>();
-      final wbsProvider = context.read<WBSProvider>();
       final wbs = wbsProvider.wbs;
       // Map WBS codes → node ids so lines can also get the bidirectional
       // costLineIds link (matching what the Cost Estimate dialog does).
@@ -258,6 +292,21 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
     return Consumer3<ScheduleProvider, WBSProvider, CostEstimateProvider>(
       builder: (context, provider, wbsProvider, costProvider, _) {
         final schedule = provider.schedule;
+        final data = ProjectDataHelper.getData(context, listen: false);
+
+        // Storage is project-scoped: if the provider is still bound to another
+        // project (or to none yet), load THIS project's schedule. Driven from
+        // build as well as initState, so switching projects while the module
+        // stays mounted re-scopes it instead of leaving the other project's
+        // schedule on screen.
+        final scopeId = _scopeIdFor(data.projectId);
+        if (provider.activeProjectId != scopeId && !_projectSyncScheduled) {
+          _projectSyncScheduled = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            _projectSyncScheduled = false;
+            await _syncActiveProject();
+          });
+        }
 
         // While auto-setup is in-flight (first frame), render a minimal
         // loading placeholder instead of the Setup Wizard. The
@@ -292,7 +341,6 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
 
         // ---- Context banner data ----
         final projectName = schedule.projectName;
-        final data = ProjectDataHelper.getData(context, listen: false);
 
         // Keep the schedule's delivery model in sync with the project's
         // Project Details methodology selection (Waterfall / Agile / Hybrid)

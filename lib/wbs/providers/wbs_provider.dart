@@ -15,11 +15,17 @@ import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart'
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/models/wbs_templates.dart';
+import 'package:ndu_project/utils/project_scoped_storage.dart';
 import 'package:ndu_project/wbs/providers/wbs_cost_rollup.dart';
 import 'package:ndu_project/wbs/services/wbs_firestore_service.dart';
 
+/// Legacy single-project entry, kept only as a read-only migration fallback.
 const String _legacyStorageKey = 'ndu_wbs_v2';
-const String _storageKeyPrefix = 'ndu_wbs_v2_project_';
+
+/// Logical storage name — [projectScopedPrefsKey] expands this to
+/// `ndu_wbs_v2_project_<projectId>`, the exact key existing installs already
+/// use (an empty project id maps to the `default` scope).
+const String _storageName = 'ndu_wbs_v2';
 
 class WBSProvider extends ChangeNotifier {
   WBS? _wbs;
@@ -27,6 +33,9 @@ class WBSProvider extends ChangeNotifier {
   bool _isLoadingFromStorage = true;
   bool _viewModeSimple = true;
   String _activeProjectId = 'default';
+
+  /// The project whose WBS this provider currently holds.
+  String get activeProjectId => _activeProjectId;
 
   /// Dedup guard for [ensureProjectLoaded] so concurrent callers (e.g. the
   /// auto-sync on page load and a manual "Sync from WBS" button press firing
@@ -47,7 +56,7 @@ class WBSProvider extends ChangeNotifier {
   }
 
   String _storageKeyForProject(String projectId) =>
-      '$_storageKeyPrefix${projectId.isEmpty ? 'default' : projectId}';
+      projectScopedPrefsKey(_storageName, projectId);
 
   WBSProvider() {
     _loadFromStorage();

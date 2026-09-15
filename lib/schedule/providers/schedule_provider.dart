@@ -11,45 +11,168 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/services/schedule_cpm_service.dart';
+import 'package:ndu_project/utils/project_scoped_storage.dart';
 
-const String _storageKey = 'ndu_schedule_v1';
+/// Project-scoped storage key prefix — see [projectScopedPrefsKey].
+///
+/// Storage used to be one global entry (`ndu_schedule_v1`), so every project in
+/// the workspace read back whichever project's schedule was saved last.
+/// Records under that legacy key are now adopted once, by the project they
+/// belong to, and then removed.
+const String _storageKeyPrefix = 'ndu_schedule_v2';
+const String _legacyStorageKey = 'ndu_schedule_v1';
 
 class ScheduleProvider extends ChangeNotifier {
   Schedule? _schedule;
   bool _setupComplete = false;
 
+  /// Project whose schedule is currently held in [_schedule] (see
+  /// [ensureProjectLoaded]) — [unattributedProjectId] until one is loaded.
+  String _activeProjectId = unattributedProjectId;
+
+  /// True until the constructor's bootstrap read of the current scope settles.
+  bool _isLoadingFromStorage = true;
+
   Schedule? get schedule => _schedule;
   bool get setupComplete => _setupComplete;
+
+  /// The project whose schedule this provider currently holds.
+  String get activeProjectId => _activeProjectId;
 
   ScheduleProvider() {
     _loadFromStorage();
   }
 
+  String _storageKeyForProject(String projectId) =>
+      projectScopedPrefsKey(_storageKeyPrefix, projectId);
+
   Future<void> _loadFromStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_storageKey);
+      final raw = prefs.getString(_storageKeyForProject(_activeProjectId));
       if (raw != null) {
-        final data = jsonDecode(raw) as Map<String, dynamic>;
-        final state = data['state'] as Map<String, dynamic>? ?? {};
-        _setupComplete = state['setupComplete'] as bool? ?? false;
-        // Simplified deserialization — in production, use full JSON mapping
-        if (state['schedule'] != null) {
-          _schedule =
-              _scheduleFromJson(state['schedule'] as Map<String, dynamic>);
-        }
-        notifyListeners();
+        _applyStoredState(jsonDecode(raw) as Map<String, dynamic>);
       }
     } catch (e) {
       debugPrint('Error loading schedule: $e');
+    } finally {
+      _isLoadingFromStorage = false;
+      notifyListeners();
     }
   }
 
-  Future<void> _saveToStorage() async {
+  /// Applies a decoded `{'state': {...}}` payload to this provider.
+  void _applyStoredState(Map<String, dynamic> decoded) {
+    final state = decoded['state'] as Map<String, dynamic>? ?? {};
+    _setupComplete = state['setupComplete'] as bool? ?? false;
+    final scheduleJson = state['schedule'] as Map<String, dynamic>?;
+    _schedule =
+        scheduleJson != null ? _scheduleFromJson(scheduleJson) : null;
+  }
+
+  /// Makes [projectId]'s own schedule the one in memory before any caller reads
+  /// [schedule].
+  ///
+  /// Screens must call this on entry (and whenever the active project changes):
+  /// storage is project-scoped, so without it the provider would keep showing
+  /// the previously opened project's activities, basis and reviewers. A legacy
+  /// global record is adopted here — once — by the project it belongs to and
+  /// then removed, so it can never appear inside another project.
+  ///
+  /// An empty [projectId] selects the [unattributedProjectId] scope rather than
+  /// silently keeping another project's schedule on screen.
+  Future<void> ensureProjectLoaded(
+    String projectId, {
+    String? projectName,
+  }) async {
+    final pid = projectId.trim().isEmpty
+        ? unattributedProjectId
+        : projectId.trim();
+
+    // Wait for the constructor's bootstrap read so we don't race it.
+    while (_isLoadingFromStorage) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+
+    if (_activeProjectId == pid) return;
+
+    // Reset before loading, so a missing/failed load can never leave the
+    // previous project's schedule on screen.
+    _activeProjectId = pid;
+    _schedule = null;
+    _setupComplete = false;
+    notifyListeners();
+
     try {
       final prefs = await SharedPreferences.getInstance();
-      final s = _schedule;
-      final data = {
+      final raw = prefs.getString(_storageKeyForProject(pid));
+      if (raw != null) {
+        _applyStoredState(jsonDecode(raw) as Map<String, dynamic>);
+        notifyListeners();
+        return;
+      }
+      await _adoptLegacyRecord(prefs, pid, projectName);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading project-scoped schedule: $e');
+    }
+  }
+
+  /// Adopts the pre-scoping global record ([_legacyStorageKey]) for [pid] when
+  /// it belongs to that project, then moves it onto the project's own key and
+  /// clears the legacy entry so it is claimed exactly once.
+  Future<void> _adoptLegacyRecord(
+    SharedPreferences prefs,
+    String pid,
+    String? projectName,
+  ) async {
+    final raw = prefs.getString(_legacyStorageKey);
+    if (raw == null) return;
+    final decoded = jsonDecode(raw) as Map<String, dynamic>;
+    final state = decoded['state'] as Map<String, dynamic>? ?? {};
+    final scheduleJson = state['schedule'] as Map<String, dynamic>?;
+    if (scheduleJson == null) return;
+    if (!legacyRecordBelongsToProject(
+      projectId: pid,
+      projectName: projectName,
+      legacyProjectId: scheduleJson['projectId']?.toString(),
+      legacyProjectName: scheduleJson['projectName']?.toString(),
+    )) {
+      return;
+    }
+
+    _applyStoredState(decoded);
+    final adopted = _schedule;
+    if (adopted != null && adopted.projectId != pid) {
+      final resolvedName = (projectName ?? '').trim();
+      _schedule = adopted.copyWith(
+        projectId: pid,
+        projectName: resolvedName.isEmpty ? adopted.projectName : resolvedName,
+      );
+    }
+    await _saveToStorage();
+    await prefs.remove(_legacyStorageKey);
+  }
+
+  Future<void> _saveToStorage() async {
+    // Snapshot the target key and payload BEFORE awaiting: a project switch that
+    // lands while this write is in flight must not retarget it at another
+    // project's key or serialise the wrong state.
+    final key = _storageKeyForProject(_activeProjectId);
+    final payload = jsonEncode(_statePayload());
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(key, payload);
+    } catch (e) {
+      debugPrint('Error saving schedule: $e');
+    }
+  }
+
+  /// Serialises the current state — written under the ACTIVE PROJECT's key
+  /// only, so a save can never write one project's schedule into another's.
+  Map<String, dynamic> _statePayload() {
+    final s = _schedule;
+    return {
         'state': {
           'schedule': s != null
               ? {
@@ -66,16 +189,13 @@ class ScheduleProvider extends ChangeNotifier {
               : null,
           'setupComplete': _setupComplete,
         },
-      };
-      await prefs.setString(_storageKey, jsonEncode(data));
-    } catch (e) {
-      debugPrint('Error saving schedule: $e');
-    }
+    };
   }
 
   Schedule _scheduleFromJson(Map<String, dynamic> json) {
     final deliveryModel = json['deliveryModel'] as String? ?? 'WATERFALL';
     final s = createEmptySchedule(
+      projectId: json['projectId'] as String? ?? unattributedProjectId,
       projectName: json['projectName'] as String? ?? 'Project',
       deliveryModel: deliveryModel,
     );
@@ -179,8 +299,18 @@ class ScheduleProvider extends ChangeNotifier {
 
   // ─── Setup ──────────────────────────────────────────────────────────────
 
-  void setup({required String projectName, required String deliveryModel}) {
+  void setup({
+    required String projectName,
+    required String deliveryModel,
+    String projectId = '',
+  }) {
+    // Bind the new schedule to the active project so it is persisted (and read
+    // back) under that project's own key — never the shared `default` scope.
+    _activeProjectId = projectId.trim().isNotEmpty
+        ? projectId.trim()
+        : _activeProjectId;
     _schedule = createEmptySchedule(
+      projectId: _activeProjectId,
       projectName: projectName,
       deliveryModel: deliveryModel,
     );

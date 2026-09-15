@@ -41,7 +41,22 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 _SCRIPT_DIR = Path(__file__).resolve().parent
 _PROJECT_ROOT = _SCRIPT_DIR.parent
 
-SERVE_DIR = str(_PROJECT_ROOT / "serve")
+# What to serve. This used to be a `serve/` staging directory that nothing in
+# this repo ever creates — so the server started, bound 8080, and answered 404
+# for every request, which looks exactly like "localhost does not load".
+# Prefer the actual build output; only use `serve/` if someone staged it.
+def _default_serve_dir() -> str:
+    for candidate in (
+        _PROJECT_ROOT / "build" / "web-lite",
+        _PROJECT_ROOT / "build" / "web",
+        _PROJECT_ROOT / "serve",
+    ):
+        if candidate.is_dir():
+            return str(candidate)
+    return str(_PROJECT_ROOT / "build" / "web-lite")
+
+
+SERVE_DIR = _default_serve_dir()
 PORT = 8080
 PID_FILE = str(_PROJECT_ROOT / "server.pid")
 LOG_FILE = str(_PROJECT_ROOT / "server.log")
@@ -359,6 +374,13 @@ def start() -> int:
     if existing and _is_running(existing):
         print(f"Server already running (PID {existing}) on port {PORT}.")
         return 0
+
+    # Checked before daemonizing so the message reaches the terminal: serving
+    # a directory that does not exist just returns 404 for everything.
+    if not Path(SERVE_DIR).is_dir():
+        print(f"✗ Build directory not found: {SERVE_DIR}", file=sys.stderr)
+        print("  Run ./scripts/build_web_lite.sh first, then retry.", file=sys.stderr)
+        return 1
 
     try:
         Path(PID_FILE).unlink()

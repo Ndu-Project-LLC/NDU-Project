@@ -3,7 +3,10 @@ set -eu
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 MODEL="${LLM_MODEL:-ndu-assistant:latest}"
-PORT="${LLM_PORT:-8080}"
+# 8088, not 8080: the Flutter web preview (scripts/build_web_lite.sh --serve)
+# owns 8080, and both defaulting to it meant whichever started second died with
+# "Address already in use" and the browser showed the other service.
+PORT="${LLM_PORT:-8088}"
 
 if ! command -v ollama >/dev/null 2>&1; then
   echo "Ollama is required. Install it from https://ollama.com/download" >&2

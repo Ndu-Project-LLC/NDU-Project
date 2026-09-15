@@ -52,9 +52,18 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
     super.initState();
     _tabController = TabController(length: 10, vsync: this);
     // Sync from Cost Estimate module if available (no demo data fallback)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = context.read<ProjectControlsProvider>();
       final ceProvider = context.read<CostEstimateProvider>();
+      // The Cost Estimate is project-scoped: bind it to the active project
+      // before seeding, so Project Controls can never be seeded from another
+      // project's estimate (and vice versa).
+      final projectData = context.read<ProjectDataProvider>().projectData;
+      await ceProvider.ensureProjectLoaded(
+        (projectData.projectId ?? '').trim(),
+        projectName: projectData.projectName.trim(),
+      );
+      if (!mounted) return;
       if (ceProvider.estimate != null && ceProvider.setupComplete) {
         if (provider.state.workPackages.isEmpty) {
           provider.syncFromCostEstimate(ceProvider.estimate);

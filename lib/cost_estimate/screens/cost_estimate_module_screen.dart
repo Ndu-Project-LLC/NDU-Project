@@ -65,43 +65,81 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
     vsync: this,
   );
 
+  /// Guards the build-time project sync so a project change triggers exactly
+  /// one load pass (the next build sees a mismatched scope until it finishes).
+  bool _projectSyncScheduled = false;
+
   @override
   void initState() {
     super.initState();
     _tabController.addListener(_onTabChanged);
-    // Auto-complete setup with defaults so the user goes straight to the
-    // Cost Estimate dashboard without seeing the setup wizard. The project
-    // name is read from the central ProjectDataHelper (which captures the
-    // name from the Initiation Phase's ProjectDataModel) — falling back to
-    // 'My Project' when no name has been captured yet.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncActiveProject());
+  }
+
+  /// Project id the Cost Estimate storage is scoped by right now — `'default'`
+  /// when no project is loaded.
+  static String _scopeIdFor(String? projectId) {
+    final trimmed = (projectId ?? '').trim();
+    return trimmed.isEmpty ? 'default' : trimmed;
+  }
+
+  /// Loads THIS project's Cost Estimate (and auto-creates one for a project
+  /// that has none yet) before the dashboard renders.
+  ///
+  /// Storage is project-scoped, so this runs on entry AND whenever the active
+  /// project changes. Without it the module would keep showing the previously
+  /// opened project's cost lines, BOE, stakeholders and risk allowances —
+  /// content from a different project.
+  ///
+  /// The project name is read from the central [ProjectDataModel] (falling
+  /// back to [ProjectDataHelper], which captures the name from the Initiation
+  /// Phase) — `'My Project'` when nothing has been captured yet.
+  Future<void> _syncActiveProject() async {
+    if (!mounted) return;
+    final projectData = context.read<ProjectDataProvider>().projectData;
+    final provider = context.read<CostEstimateProvider>();
+    final projectId = (projectData.projectId ?? '').trim();
+
+    if (provider.activeProjectId != _scopeIdFor(projectId)) {
+      final projectName = projectData.projectName.trim().isNotEmpty
+          ? projectData.projectName.trim()
+          : (ProjectDataHelper.readProjectNameFromContext(context) ??
+              'My Project');
+      await provider.ensureProjectLoaded(projectId,
+          projectName: projectName);
       if (!mounted) return;
-      final provider = context.read<CostEstimateProvider>();
-      if (provider.estimate == null || !provider.setupComplete) {
-        final projectName =
-            ProjectDataHelper.readProjectNameFromContext(context) ??
-                'My Project';
-        provider.setup(
-          projectName: projectName,
-          className: EstimateClass.class3,
-          deliveryModel: DeliveryModel.waterfall,
-        );
+    }
+
+    // Auto-complete setup with defaults so the user goes straight to the
+    // Cost Estimate dashboard without seeing the setup wizard.
+    if (provider.estimate == null || !provider.setupComplete) {
+      final projectName = projectData.projectName.trim().isNotEmpty
+          ? projectData.projectName.trim()
+          : (ProjectDataHelper.readProjectNameFromContext(context) ??
+              'My Project');
+      provider.setup(
+        projectId: projectId,
+        projectName: projectName,
+        className: EstimateClass.class3,
+        deliveryModel: DeliveryModel.waterfall,
+      );
+    }
+
+    // Auto-import cost items from the Initial Cost Estimate if the cost
+    // estimate has no lines yet. This populates the Cost by WBS tab with data
+    // from the project's cost estimate items.
+    if (provider.estimate != null && provider.estimate!.lines.isEmpty) {
+      if (projectData.costEstimateItems.isNotEmpty) {
+        provider.importFromProjectCostEstimateItems(
+            projectData.costEstimateItems);
       }
-      // Auto-import cost items from the Initial Cost Estimate if the
-      // cost estimate has no lines yet. This populates the Cost by WBS
-      // tab with data from the project's cost estimate items.
-      if (provider.estimate != null && provider.estimate!.lines.isEmpty) {
-        final projectData = context.read<ProjectDataProvider>().projectData;
-        if (projectData.costEstimateItems.isNotEmpty) {
-          provider.importFromProjectCostEstimateItems(
-              projectData.costEstimateItems);
-        }
-        // Non-destructive seeding: pull real stakeholder/BOE/review info
-        // from the central ProjectDataModel when corresponding sections
-        // in the estimate are empty.
-        provider.ensureSeededFromProjectData(projectData);
-      }
-    });
+      // Non-destructive seeding: pull real stakeholder/BOE/review info from
+      // the central ProjectDataModel when corresponding sections in the
+      // estimate are empty.
+      provider.ensureSeededFromProjectData(projectData);
+    }
+
+    if (mounted) setState(() {});
   }
 
   void _onTabChanged() {
@@ -132,11 +170,28 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
         // ---- Context banner data ----
         final projectData = projectProvider.projectData;
 
+        // Storage is project-scoped: if the provider is still bound to another
+        // project (or to none yet), load THIS project's estimate before
+        // anything on the page reads it. Driven from build as well as
+        // initState, so switching projects while the module stays mounted
+        // re-scopes it instead of leaving the other project's estimate up.
+        final scopeId = _scopeIdFor(projectData.projectId);
+        if (provider.activeProjectId != scopeId && !_projectSyncScheduled) {
+          _projectSyncScheduled = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            _projectSyncScheduled = false;
+            await _syncActiveProject();
+          });
+        }
+
         // Auto-populate from the Initiation Phase: if the estimate has no
         // lines yet and the project captured initial cost items, import them.
         // Checked on every build (not just initState) so late-arriving
-        // project data (async Firebase load) still seeds the dashboard.
-        if (estimate.lines.isEmpty &&
+        // project data (async Firebase load) still seeds the dashboard — but
+        // only once the estimate is bound to THIS project, so another
+        // project's estimate can never be seeded.
+        if (provider.activeProjectId == scopeId &&
+            estimate.lines.isEmpty &&
             projectData.costEstimateItems.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
@@ -255,6 +310,13 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
 //      columns (Cost Baseline | Mgmt Reserve | Total Authorized), the third
 //      elevated as a dark "spotlight" tile with the brand-yellow figure.
 // ═══════════════════════════════════════════════════════════════════════════
+
+/// Test seam for the dashboard's Risk Allowances card (see
+/// [_RiskCostCard.registerSource]): when non-null, the card loads the risk
+/// register from this function instead of Firestore. Always null in
+/// production — only a test sets it.
+@visibleForTesting
+List<Map<String, String>>? Function()? riskRegisterSourceOverride;
 
 class _CostDashboardTab extends StatelessWidget {
   final CostEstimateProvider provider;
@@ -696,6 +758,7 @@ class _CostDashboardTab extends StatelessWidget {
     return _RiskCostCard(
       lines: lines,
       currencySymbol: currencySymbol,
+      registerSource: riskRegisterSourceOverride,
     );
   }
 
@@ -976,9 +1039,16 @@ class _RiskCostCard extends StatefulWidget {
   final List<CostLine> lines;
   final String currencySymbol;
 
+  /// Test seam: when set, the card reads the risk register from here instead
+  /// of Firestore (exactly the same `Map<String, String>` shape the Firestore
+  /// docs are mapped into). Production builds never set it, so they keep the
+  /// live `risk_assessment_entries` read.
+  final List<Map<String, String>>? Function()? registerSource;
+
   const _RiskCostCard({
     required this.lines,
     required this.currencySymbol,
+    this.registerSource,
   });
 
   @override
@@ -1005,6 +1075,15 @@ class _RiskCostCardState extends State<_RiskCostCard> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
+      final override = widget.registerSource;
+      if (override != null) {
+        if (!mounted) return;
+        setState(() {
+          _risks = override() ?? const <Map<String, String>>[];
+          _loading = false;
+        });
+        return;
+      }
       final projectData = context.read<ProjectDataProvider>().projectData;
       final projectId = projectData.projectId;
       if (projectId == null || projectId.isEmpty) {

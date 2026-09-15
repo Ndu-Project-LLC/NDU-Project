@@ -21,8 +21,16 @@ import 'package:ndu_project/cost_estimate/utils/risk_cost_lines.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/project_scoped_storage.dart';
 
-const String _storageKey = 'ndu_cost_estimate_v1';
+/// Project-scoped storage key prefix — see [projectScopedPrefsKey].
+///
+/// Storage used to be one global entry (`ndu_cost_estimate_v1`), so every
+/// project in the workspace read back whichever project's estimate was saved
+/// last. Records under that legacy key are now adopted once, by the project
+/// they belong to, and then removed.
+const String _storageKeyPrefix = 'ndu_cost_estimate_v2';
+const String _legacyStorageKey = 'ndu_cost_estimate_v1';
 const String _legacyOwnerEmail = 'you@ndu.project';
 
 /// The authenticated owner's real email address.
@@ -54,6 +62,17 @@ class CostEstimateProvider extends ChangeNotifier {
   RBACRole _currentRole = RBACRole.admin;
   bool _setupComplete = false;
 
+  /// Project whose estimate is currently held in [_estimate] (see
+  /// [ensureProjectLoaded]) — [unattributedProjectId] until one is loaded.
+  String _activeProjectId = unattributedProjectId;
+
+  /// True until the constructor's bootstrap read of the current scope settles.
+  bool _isLoadingFromStorage = true;
+
+  /// The project whose estimate this provider currently holds. Screens can use
+  /// it to confirm they are reading the project they think they are.
+  String get activeProjectId => _activeProjectId;
+
   CostEstimate? get estimate {
     _syncAuthenticatedOwner();
     return _estimate;
@@ -68,24 +87,115 @@ class CostEstimateProvider extends ChangeNotifier {
 
   // ---- Persistence ----
 
+  String _storageKeyForProject(String projectId) =>
+      projectScopedPrefsKey(_storageKeyPrefix, projectId);
+
   Future<void> _loadFromStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_storageKey);
+      final raw = prefs.getString(_storageKeyForProject(_activeProjectId));
       if (raw != null) {
-        final data = jsonDecode(raw) as Map<String, dynamic>;
-        final state = data['state'] as Map<String, dynamic>? ?? {};
-        _setupComplete = state['setupComplete'] as bool? ?? false;
-        if (state['estimate'] != null) {
-          _estimate =
-              _estimateFromJson(state['estimate'] as Map<String, dynamic>);
-          _syncAuthenticatedOwner();
-        }
-        notifyListeners();
+        _applyStoredState(jsonDecode(raw) as Map<String, dynamic>);
       }
     } catch (e) {
       debugPrint('Error loading cost estimate: $e');
+    } finally {
+      _isLoadingFromStorage = false;
+      notifyListeners();
     }
+  }
+
+  /// Applies a decoded `{'state': {...}}` payload to this provider.
+  void _applyStoredState(Map<String, dynamic> decoded) {
+    final state = decoded['state'] as Map<String, dynamic>? ?? {};
+    _setupComplete = state['setupComplete'] as bool? ?? false;
+    final estimateJson = state['estimate'] as Map<String, dynamic>?;
+    _estimate = estimateJson != null ? _estimateFromJson(estimateJson) : null;
+    if (_estimate != null) _syncAuthenticatedOwner();
+  }
+
+  /// Makes [projectId]'s own estimate the one in memory before any caller reads
+  /// [estimate].
+  ///
+  /// Screens must call this on entry (and whenever the active project
+  /// changes): storage is project-scoped, so without it the provider would keep
+  /// showing the previously opened project's lines, BOE and stakeholders. A
+  /// legacy global record is adopted here — once — by the project it belongs
+  /// to and then removed, so it can never appear inside another project.
+  ///
+  /// An empty [projectId] selects the [unattributedProjectId] scope rather than
+  /// silently keeping another project's estimate on screen.
+  Future<void> ensureProjectLoaded(
+    String projectId, {
+    String? projectName,
+  }) async {
+    final pid = projectId.trim().isEmpty
+        ? unattributedProjectId
+        : projectId.trim();
+
+    // Wait for the constructor's bootstrap read so we don't race it.
+    while (_isLoadingFromStorage) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+
+    if (_activeProjectId == pid) return;
+
+    // Reset before loading, so a missing/failed load can never leave the
+    // previous project's estimate on screen.
+    _activeProjectId = pid;
+    _estimate = null;
+    _setupComplete = false;
+    notifyListeners();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_storageKeyForProject(pid));
+      if (raw != null) {
+        _applyStoredState(jsonDecode(raw) as Map<String, dynamic>);
+        notifyListeners();
+        return;
+      }
+      await _adoptLegacyRecord(prefs, pid, projectName);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading project-scoped cost estimate: $e');
+    }
+  }
+
+  /// Adopts the pre-scoping global record ([_legacyStorageKey]) for [pid] when
+  /// it belongs to that project, then moves it onto the project's own key and
+  /// clears the legacy entry so it is claimed exactly once.
+  Future<void> _adoptLegacyRecord(
+    SharedPreferences prefs,
+    String pid,
+    String? projectName,
+  ) async {
+    final raw = prefs.getString(_legacyStorageKey);
+    if (raw == null) return;
+    final decoded = jsonDecode(raw) as Map<String, dynamic>;
+    final state = decoded['state'] as Map<String, dynamic>? ?? {};
+    final estimateJson = state['estimate'] as Map<String, dynamic>?;
+    if (estimateJson == null) return;
+    if (!legacyRecordBelongsToProject(
+      projectId: pid,
+      projectName: projectName,
+      legacyProjectId: estimateJson['projectId']?.toString(),
+      legacyProjectName: estimateJson['projectName']?.toString(),
+    )) {
+      return;
+    }
+
+    _applyStoredState(decoded);
+    final adopted = _estimate;
+    if (adopted != null && adopted.projectId != pid) {
+      final resolvedName = (projectName ?? '').trim();
+      _estimate = adopted.copyWith(
+        projectId: pid,
+        projectName: resolvedName.isEmpty ? adopted.projectName : resolvedName,
+      );
+    }
+    await _saveToStorage();
+    await prefs.remove(_legacyStorageKey);
   }
 
   /// Replaces the former demo identity with the authenticated owner and
@@ -150,9 +260,23 @@ class CostEstimateProvider extends ChangeNotifier {
   }
 
   Future<void> _saveToStorage() async {
+    // Snapshot the target key and payload BEFORE awaiting: a project switch that
+    // lands while this write is in flight must not retarget it at another
+    // project's key or serialise the wrong state.
+    final key = _storageKeyForProject(_activeProjectId);
+    final payload = jsonEncode(_statePayload());
     try {
       final prefs = await SharedPreferences.getInstance();
-      final data = {
+      await prefs.setString(key, payload);
+    } catch (e) {
+      debugPrint('Error saving cost estimate: $e');
+    }
+  }
+
+  /// Serialises the current state — written under the ACTIVE PROJECT's key
+  /// only, so a save can never write one project's estimate into another's.
+  Map<String, dynamic> _statePayload() {
+    return {
         'state': {
           'estimate': _estimate != null
               ? {
@@ -187,11 +311,7 @@ class CostEstimateProvider extends ChangeNotifier {
               : null,
           'setupComplete': _setupComplete,
         },
-      };
-      await prefs.setString(_storageKey, jsonEncode(data));
-    } catch (e) {
-      debugPrint('Error saving cost estimate: $e');
-    }
+    };
   }
 
   CostEstimate _estimateFromJson(Map<String, dynamic> json) {
@@ -303,10 +423,16 @@ class CostEstimateProvider extends ChangeNotifier {
     required String projectName,
     required EstimateClass className,
     required DeliveryModel deliveryModel,
+    String projectId = '',
   }) {
     final resolvedName = _resolveProjectName(projectName);
+    // Bind the new estimate to the active project so it is persisted (and read
+    // back) under that project's own key — never the shared `default` scope.
+    _activeProjectId = projectId.trim().isNotEmpty
+        ? projectId.trim()
+        : _activeProjectId;
     _estimate = createEmptyEstimate(
-      projectId: 'default',
+      projectId: _activeProjectId,
       projectName: resolvedName,
       className: className,
       deliveryModel: deliveryModel,

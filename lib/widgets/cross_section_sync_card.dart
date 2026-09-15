@@ -76,9 +76,34 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
   // Default to collapsed to keep the page content visible on load.
   bool _collapsed = true;
 
+  @override
+  void initState() {
+    super.initState();
+    // The Cost Estimate and Schedule are project-scoped: bind them to the
+    // active project before this card reads them, so the lifecycle assessment
+    // and the sync below can never act on another project's content.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bindActiveProject());
+  }
+
+  Future<void> _bindActiveProject() async {
+    if (!mounted) return;
+    final data = context.read<ProjectDataProvider>().projectData;
+    final projectId = (data.projectId ?? '').trim();
+    final projectName =
+        data.projectName.trim().isEmpty ? null : data.projectName.trim();
+    await Future.wait<void>([
+      context.read<CostEstimateProvider>().ensureProjectLoaded(projectId,
+          projectName: projectName),
+      context.read<ScheduleProvider>().ensureProjectLoaded(projectId,
+          projectName: projectName),
+    ]);
+  }
+
   Future<void> _runSync() async {
     setState(() => _syncing = true);
     try {
+      await _bindActiveProject();
+      if (!mounted) return;
       final wbsProvider = context.read<WBSProvider>();
       final scheduleProvider = context.read<ScheduleProvider>();
       final pcProvider = context.read<ProjectControlsProvider>();

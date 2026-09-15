@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 
 class SetupWizardScreen extends StatefulWidget {
   const SetupWizardScreen({super.key});
@@ -137,9 +138,12 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     if (_step < 1) {
       setState(() => _step++);
     } else {
+      // Bind the schedule to the project the user is working in so it is
+      // stored (and read back) under that project's own key.
       context.read<ScheduleProvider>().setup(
             projectName: _projectName.trim(),
             deliveryModel: _deliveryModel!,
+            projectId: ProjectDataHelper.getData(context).projectId ?? '',
           );
     }
   }

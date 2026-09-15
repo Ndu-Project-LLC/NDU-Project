@@ -18,6 +18,7 @@
 # Usage:
 #   ./scripts/build_web_lite.sh               # build + size report
 #   ./scripts/build_web_lite.sh --serve       # build, then serve at :8080
+#                                             (next free port if 8080 is taken)
 #   ./scripts/build_web_lite.sh --serve 3000  # build, then serve on a port
 #   ./scripts/build_web_lite.sh --serve-only  # serve existing build (no rebuild)
 #   ./scripts/build_web_lite.sh --no-stamp    # skip build-version stamping
@@ -183,7 +184,7 @@ echo "║  ✓ DONE — $BUILD_DIR is ready                                     
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "Run it anytime:"
-echo "  ./scripts/build_web_lite.sh --serve           # http://localhost:$PORT"
+echo "  ./scripts/build_web_lite.sh --serve           # :$PORT, or the next free port"
 echo "  ./scripts/build_web_lite.sh --serve 3000      # custom port"
 echo ""
 
@@ -196,6 +197,12 @@ if [[ "$SERVE" == "true" ]]; then
     exit 1
   fi
 
-  echo "▶ Serving $BUILD_DIR at http://localhost:$PORT  (Ctrl+C to stop)"
+  # Don't claim a URL before the port is actually bound: port $PORT is also
+  # the local LLM gate's default (llm-server/start-local.sh) and the fast
+  # server's (serve_flutter_web_fast.py), and a losing bind used to print
+  # "Serving ... at :8080" and then die with a traceback. serve_lite.py
+  # probes the port and prints the URL it really ended up on.
+  echo "▶ Serving $BUILD_DIR  (Ctrl+C to stop)"
+  echo "  Port: $PORT if free — otherwise the next free port, with the URL printed below."
   exec "$SCRIPT_DIR/serve_lite.py" "$BUILD_DIR" "$PORT"
 fi

@@ -111,7 +111,13 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
  // Auto-import cost items from the Initial Cost Estimate if the
  // cost estimate has no lines yet. This populates the Cost by WBS
  // tab with data from the project's cost estimate items.
+ //
+ // The Cost Estimate is project-scoped too, so bind it to THIS project
+ // before reading/writing it — otherwise the WBS could be seeded from (or
+ // the estimate mutated with) another project's data.
  final ceProvider = context.read<CostEstimateProvider>();
+ await ceProvider.ensureProjectLoaded(projectId, projectName: projectName);
+ if (!mounted) return;
  if (ceProvider.estimate != null && ceProvider.estimate!.lines.isEmpty) {
  if (projectData.costEstimateItems.isNotEmpty) {
  ceProvider.importFromProjectCostEstimateItems(

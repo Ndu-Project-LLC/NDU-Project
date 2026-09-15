@@ -2,17 +2,89 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/pbs/models/pbs_models.dart';
 import 'package:ndu_project/pbs/providers/pbs_provider.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 
-class PBSModuleScreen extends StatelessWidget {
+class PBSModuleScreen extends StatefulWidget {
   const PBSModuleScreen({super.key});
+
+  @override
+  State<PBSModuleScreen> createState() => _PBSModuleScreenState();
+}
+
+class _PBSModuleScreenState extends State<PBSModuleScreen> {
+  /// Guards the build-time project sync so a project change triggers exactly
+  /// one load pass (the next build sees a mismatched scope until it finishes).
+  bool _projectSyncScheduled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncActiveProject());
+  }
+
+  /// Project id the PBS storage is scoped by right now — `'default'` when no
+  /// project is loaded.
+  static String _scopeIdFor(String? projectId) {
+    final trimmed = (projectId ?? '').trim();
+    return trimmed.isEmpty ? 'default' : trimmed;
+  }
+
+  /// The active project's data, or null when this screen is rendered without a
+  /// project context (e.g. a standalone preview).
+  ProjectDataModel? get _projectData {
+    try {
+      return ProjectDataHelper.getData(context, listen: false);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String get _activeProjectId => (_projectData?.projectId ?? '').trim();
+
+  /// Display name used for a newly created PBS.
+  String get _activeProjectName {
+    final name = (_projectData?.projectName ?? '').trim();
+    return name.isEmpty ? 'Project Products' : name;
+  }
+
+  /// Loads THIS project's PBS before the module renders.
+  ///
+  /// Storage is project-scoped, so this runs on entry AND whenever the active
+  /// project changes — otherwise the module would keep showing the previously
+  /// opened project's product breakdown.
+  Future<void> _syncActiveProject() async {
+    if (!mounted) return;
+    final provider = context.read<PBSProvider>();
+    final projectId = _activeProjectId;
+    if (provider.activeProjectId == _scopeIdFor(projectId)) return;
+    final name = (_projectData?.projectName ?? '').trim();
+    await provider.ensureProjectLoaded(projectId,
+        projectName: name.isEmpty ? null : name);
+    if (!mounted) return;
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<PBSProvider>(
       builder: (context, pbsProvider, _) {
+        // Storage is project-scoped: if the provider is still bound to another
+        // project (or to none yet), load THIS project's PBS. Driven from build
+        // as well as initState, so switching projects while the module stays
+        // mounted re-scopes it.
+        final scopeId = _scopeIdFor(_activeProjectId);
+        if (pbsProvider.activeProjectId != scopeId &&
+            !_projectSyncScheduled) {
+          _projectSyncScheduled = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            _projectSyncScheduled = false;
+            await _syncActiveProject();
+          });
+        }
         if (pbsProvider.isLoadingFromStorage) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -53,7 +125,8 @@ class PBSModuleScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
-            onPressed: () => provider.initPBS('default', 'Project Products'),
+            onPressed: () =>
+                provider.initPBS(_activeProjectId, _activeProjectName),
             icon: const Icon(Icons.add, size: 16),
             label: const Text('Initialize PBS'),
           ),
@@ -456,7 +529,7 @@ class PBSModuleScreen extends StatelessWidget {
           FilledButton(
             onPressed: () {
               provider.clearPBS();
-              provider.initPBS('default', 'Project Products');
+              provider.initPBS(_activeProjectId, _activeProjectName);
               Navigator.of(dialogContext).pop();
             },
             child: const Text('Reinitialize'),

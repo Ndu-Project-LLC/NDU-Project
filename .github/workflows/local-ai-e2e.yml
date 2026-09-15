@@ -61,7 +61,10 @@ jobs:
 
       - name: Serve the bundle
         run: |
-          python3 scripts/serve_lite.py build/web-lite 8099 &
+          # NDU_STRICT_PORT makes a busy port a hard error instead of moving to
+          # the next free port — the smoke test below polls 8099 specifically,
+          # so a silent port change would fail there confusingly.
+          NDU_STRICT_PORT=1 python3 scripts/serve_lite.py build/web-lite 8099 &
           for _ in $(seq 1 30); do
             if curl -sf -o /dev/null http://127.0.0.1:8099/; then
               echo "Server is up"

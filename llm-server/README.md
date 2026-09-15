@@ -39,8 +39,15 @@ with the local endpoint compiled into the app:
 
 ```bash
 flutter run -d chrome \
-  --dart-define=OPENAI_PROXY_ENDPOINT=http://127.0.0.1:8080
+  --dart-define=OPENAI_PROXY_ENDPOINT=http://127.0.0.1:8088
 ```
+
+The local gate listens on **8088**, not 8080: `scripts/build_web_lite.sh
+--serve` (the lightweight web preview) owns 8080 on a workstation. Both
+defaulting to 8080 used to mean whichever started second died with
+"Address already in use" while the browser showed the other service. Override
+with `LLM_PORT=<port> ./start-local.sh` if your own setup needs something else
+(the deployed VM keeps 8080 — see below).
 
 Local auth mode accepts the Firebase ID token already sent by the app and is
 safe for this script because the gate is bound to `127.0.0.1`. It must not be

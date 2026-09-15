@@ -66,9 +66,21 @@ class _IntegrationDashboardScreenState
     try {
       final project = context.read<ProjectDataProvider>().projectData;
       final wbs = context.read<WBSProvider>().wbs;
-      final schedule = context.read<ScheduleProvider>().schedule;
+      // The Schedule and Cost Estimate are project-scoped — bind them to the
+      // active project before reporting on them, so the integration read never
+      // mixes in another project's activities or cost lines.
+      final projectId = (project.projectId ?? '').trim();
+      final projectName = project.projectName.trim();
+      final scheduleProvider = context.read<ScheduleProvider>();
+      final costProvider = context.read<CostEstimateProvider>();
+      await scheduleProvider.ensureProjectLoaded(projectId,
+          projectName: projectName);
+      await costProvider.ensureProjectLoaded(projectId,
+          projectName: projectName);
+      if (!mounted) return;
+      final schedule = scheduleProvider.schedule;
       final controls = context.read<ProjectControlsProvider>().state;
-      final estimate = context.read<CostEstimateProvider>().estimate;
+      final estimate = costProvider.estimate;
 
       // Convert legacy scope items to the validator DTO. Note:
       // PlanningDashboardItem has no wbsId field in the legacy model,

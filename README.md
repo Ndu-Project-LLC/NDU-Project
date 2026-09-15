@@ -9,6 +9,7 @@ Builds a small, fast-loading web bundle to `build/web-lite/` and can serve it lo
 ```bash
 ./scripts/build_web_lite.sh               # build + size report
 ./scripts/build_web_lite.sh --serve       # build, then serve at http://localhost:8080
+                                          # (next free port if 8080 is taken)
 ./scripts/build_web_lite.sh --serve 3000  # build, then serve on a custom port
 ./scripts/build_web_lite.sh --serve-only  # serve the existing build, no rebuild
 ```
@@ -21,6 +22,26 @@ What it does differently from the standard pipeline (`deploy.sh` → `build/web/
 - Stamps the build version (same cache-busting pipeline as production) and prints a size report with gzipped wire sizes
 
 The production pipeline is untouched: `./deploy.sh` and `scripts/deploy_staging.sh` still build to `build/web/`. For a plain serve-anytime run without building, `python3 scripts/serve_lite.py build/web-lite 8080` works on its own.
+
+### If localhost does not load
+
+- **Port 8080 is contended.** The web preview, the local LLM gate
+  (`llm-server/start-local.sh`) and `scripts/serve_flutter_web_fast.py` all
+  used to default to it; the one that lost the bind printed
+  "Serving … at :8080" and *then* died with an `OSError` traceback, so what the
+  browser showed was a different service. `scripts/serve_lite.py` now probes
+  the port first, names the process holding it, serves on the next free port,
+  and prints the URL it actually bound. The local LLM gate defaults to **8088**.
+  Pass `--strict` (or set `NDU_STRICT_PORT=1`) to make a busy port an error
+  instead of a port change — CI does this.
+- **`flutter run -d chrome` needs a real Chromium.** `CHROME_EXECUTABLE` must
+  point at a binary that answers `--version` immediately. Arc.app does not — it
+  never returns, so `flutter devices` hangs and no web device is ever listed.
+  The `~/.local/bin/ndu-web-chrome` wrapper resolves the newest available
+  Chromium build instead. Without a working browser, `flutter devices` shows no
+  Chrome and the dev server never opens a port.
+- **No browser required:** `flutter run -d web-server --web-port=8080` serves
+  the app for any browser, and the static preview above needs none at all.
 
 ## Local (no-AI) generation mode
 

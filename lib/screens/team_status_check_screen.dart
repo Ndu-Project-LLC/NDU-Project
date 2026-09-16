@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// TEAM STATUS CHECK
@@ -39,11 +40,11 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
   List<_OperationsRow> _operationsRows = [];
   // Status check entries
   List<_StatusCheckEntry> _statusEntries = [];
-  final TextEditingController _memberController = TextEditingController();
-  final TextEditingController _periodController = TextEditingController();
+  final TextEditingController _memberController = SpellCheckTextEditingController();
+  final TextEditingController _periodController = SpellCheckTextEditingController();
   final TextEditingController _accomplishmentsController =
-      TextEditingController();
-  final TextEditingController _blockersController = TextEditingController();
+      SpellCheckTextEditingController();
+  final TextEditingController _blockersController = SpellCheckTextEditingController();
 
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
 

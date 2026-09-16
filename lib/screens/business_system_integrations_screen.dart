@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/services/business_system_integration_service.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Screen for connecting CRM / ERP / Accounting integrations to a program.
 ///
@@ -424,10 +425,10 @@ class _ProviderConfigDialogState extends State<_ProviderConfigDialog> {
  void initState() {
  super.initState();
  _apiKeyController =
- TextEditingController(text: widget.existing?.apiKey ?? '');
+ SpellCheckTextEditingController(text: widget.existing?.apiKey ?? '');
  _baseUrlController =
- TextEditingController(text: widget.existing?.baseUrlOverride ?? '');
- _oauthRedirectController = TextEditingController();
+ SpellCheckTextEditingController(text: widget.existing?.baseUrlOverride ?? '');
+ _oauthRedirectController = SpellCheckTextEditingController();
  _autoSync = widget.existing?.autoSync ?? true;
  }
 

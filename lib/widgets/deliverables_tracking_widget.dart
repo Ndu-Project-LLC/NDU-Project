@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/inline_editable_text.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Deliverables Tracking sub-page with Timeline view and full CRUD
 class DeliverablesTrackingWidget extends StatefulWidget {
@@ -364,7 +365,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
   }
 
   Future<void> _showFullEditDialog() async {
-    final titleController = TextEditingController(text: _deliverable.title);
+    final titleController = SpellCheckTextEditingController(text: _deliverable.title);
     // Prose fields - no bullets
     final descriptionController =
         RichTextEditingController(text: _deliverable.description);
@@ -374,7 +375,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
         AutoBulletTextController(text: _deliverable.blockers);
     final nextStepsController =
         AutoBulletTextController(text: _deliverable.nextSteps);
-    final ownerController = TextEditingController(text: _deliverable.owner);
+    final ownerController = SpellCheckTextEditingController(text: _deliverable.owner);
 
     var selectedStatus = _deliverable.status;
     DateTime? selectedDueDate = _deliverable.dueDate;
@@ -419,7 +420,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
                   ),
                   const SizedBox(height: 12),
                   VoiceTextField(
-                    controller: TextEditingController(
+                    controller: SpellCheckTextEditingController(
                       text: selectedDueDate != null
                           ? DateFormat('yyyy-MM-dd').format(selectedDueDate!)
                           : '',

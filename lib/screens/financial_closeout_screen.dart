@@ -9,6 +9,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Section 7 — Financial Closeout
 ///
@@ -31,11 +32,11 @@ class FinancialCloseoutScreen extends StatefulWidget {
 }
 
 class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
-  final TextEditingController _notesController = TextEditingController();
-  final TextEditingController _summaryController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
+  final TextEditingController _summaryController = SpellCheckTextEditingController();
   final TextEditingController _reconciliationController =
-      TextEditingController();
-  final TextEditingController _analysisController = TextEditingController();
+      SpellCheckTextEditingController();
+  final TextEditingController _analysisController = SpellCheckTextEditingController();
 
   bool _isLoading = true;
   bool _hasLoaded = false;

@@ -34,6 +34,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class DesignPhaseScreen extends StatefulWidget {
  const DesignPhaseScreen(
  {super.key, this.activeItemLabel = 'Design Management'});
@@ -2810,9 +2811,9 @@ Future<void> _loadProgress(String projectId) async {
  }
 
  void _showAddCollaboratorDialog(BuildContext context) {
- final nameController = TextEditingController();
- final roleController = TextEditingController();
- final emailController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
+ final roleController = SpellCheckTextEditingController();
+ final emailController = SpellCheckTextEditingController();
  final provider = context.read<ProjectDataProvider>();
 
  // Known-credential suggestions: existing project collaborators first
@@ -3918,7 +3919,7 @@ Future<void> _loadProgress(String projectId) async {
  }
 
  Future<void> _showAddDocumentUploadDialog() async {
- final titleController = TextEditingController();
+ final titleController = SpellCheckTextEditingController();
  String docType = 'Output';
  String? uploadedFileName;
  String? uploadedFileUrl;
@@ -4154,8 +4155,8 @@ Future<void> _loadProgress(String projectId) async {
  }
 
  Future<void> _showAddToolUploadDialog() async {
- final nameController = TextEditingController();
- final urlController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
+ final urlController = SpellCheckTextEditingController();
  bool isInternal = false;
  String? uploadedFileName;
  String? uploadedFileUrl;

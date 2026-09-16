@@ -27,6 +27,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class RequirementsImplementationScreen extends StatefulWidget {
  const RequirementsImplementationScreen({super.key});
 
@@ -37,7 +38,7 @@ class RequirementsImplementationScreen extends StatefulWidget {
 
 class _RequirementsImplementationScreenState
  extends State<RequirementsImplementationScreen> {
- final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  Timer? _saveDebounce;
  bool _isLoading = false;
  bool _suspendSave = false;
@@ -47,11 +48,11 @@ class _RequirementsImplementationScreenState
  final Set<String> _selectedFilters = {'All requirements'};
  String _sectionApprovalStatus = 'Draft';
  final TextEditingController _sectionApprovedByController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _sectionApprovalDateController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _sectionApprovalNotesController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final List<_DesignSpecDocumentRow> _documents = [];
  final List<_ApprovalGateData> _customApprovalGates = [];
 
@@ -667,12 +668,12 @@ class _RequirementsImplementationScreenState
  required List<String> ownerOptions,
  }) async {
  final formKey = GlobalKey<FormState>();
- final nameController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
  final nameFocus = FocusNode();
- final categoryController = TextEditingController();
- final versionController = TextEditingController();
- final linkedSpecIdController = TextEditingController();
- final linkController = TextEditingController();
+ final categoryController = SpellCheckTextEditingController();
+ final versionController = SpellCheckTextEditingController();
+ final linkedSpecIdController = SpellCheckTextEditingController();
+ final linkController = SpellCheckTextEditingController();
  String selectedOwner = ownerOptions.isEmpty ? '' : ownerOptions.first;
  String selectedStatus = 'Draft';
  String selectedCategory = '';
@@ -3574,25 +3575,25 @@ class _RequirementsImplementationScreenState
  required bool isNew,
  int? editIndex,
  }) {
- final reqIdController = TextEditingController(text: row.requirementId);
- final titleController = TextEditingController(text: row.title);
- final ownerController = TextEditingController(text: row.owner);
- final definitionController = TextEditingController(text: row.definition);
+ final reqIdController = SpellCheckTextEditingController(text: row.requirementId);
+ final titleController = SpellCheckTextEditingController(text: row.title);
+ final ownerController = SpellCheckTextEditingController(text: row.owner);
+ final definitionController = SpellCheckTextEditingController(text: row.definition);
  var selectedReqType = row.requirementType;
  var selectedRuleType = row.ruleType;
  var selectedSourceType = row.sourceType;
  final artifactLabelController =
- TextEditingController(text: row.designArtifactLabel);
+ SpellCheckTextEditingController(text: row.designArtifactLabel);
  var selectedArtifactType = row.designArtifactType;
  var selectedValidationStatus = row.validationStatus;
  final criteriaController =
- TextEditingController(text: row.acceptanceCriteria);
- final testMethodController = TextEditingController(text: row.testMethod);
- final sourceDocController = TextEditingController(text: row.sourceDocument);
+ SpellCheckTextEditingController(text: row.acceptanceCriteria);
+ final testMethodController = SpellCheckTextEditingController(text: row.testMethod);
+ final sourceDocController = SpellCheckTextEditingController(text: row.sourceDocument);
  final artifactUrlController =
- TextEditingController(text: row.designArtifactUrl);
+ SpellCheckTextEditingController(text: row.designArtifactUrl);
  var selectedGapStatus = row.gapStatus;
- final conflictNoteController = TextEditingController(text: row.conflictNote);
+ final conflictNoteController = SpellCheckTextEditingController(text: row.conflictNote);
  var selectedConflictImpact = row.conflictImpact;
 
  showDialog<void>(
@@ -3988,7 +3989,7 @@ class _RequirementsImplementationScreenState
  required ValueChanged<String> onChanged,
  }) {
  return VoiceTextField(
- controller: TextEditingController(text: value),
+ controller: SpellCheckTextEditingController(text: value),
  onChanged: onChanged,
  maxLines: maxLines,
  style: const TextStyle(fontSize: 13, color: Color(0xFF1F2937)),
@@ -4131,9 +4132,9 @@ class _RequirementsImplementationScreenState
  // --- Add / Delete custom approval gates ---
 
  Future<void> _showAddApprovalGateDialog() async {
- final gateController = TextEditingController();
- final descController = TextEditingController();
- final approverController = TextEditingController();
+ final gateController = SpellCheckTextEditingController();
+ final descController = SpellCheckTextEditingController();
+ final approverController = SpellCheckTextEditingController();
  var selectedPriority = 'High';
  var selectedStatus = 'Not Started';
 
@@ -4553,18 +4554,18 @@ class _VerificationPopupDialogState extends State<_VerificationPopupDialog> {
  void initState() {
  super.initState();
  _current = widget.requirement;
- _reqIdController = TextEditingController(text: _current.requirementId);
- _titleController = TextEditingController(text: _current.title);
- _definitionController = TextEditingController(text: _current.definition);
+ _reqIdController = SpellCheckTextEditingController(text: _current.requirementId);
+ _titleController = SpellCheckTextEditingController(text: _current.title);
+ _definitionController = SpellCheckTextEditingController(text: _current.definition);
  _artifactLabelController =
- TextEditingController(text: _current.designArtifactLabel);
+ SpellCheckTextEditingController(text: _current.designArtifactLabel);
  _criteriaController =
- TextEditingController(text: _current.acceptanceCriteria);
- _testMethodController = TextEditingController(text: _current.testMethod);
+ SpellCheckTextEditingController(text: _current.acceptanceCriteria);
+ _testMethodController = SpellCheckTextEditingController(text: _current.testMethod);
  _sourceDocController =
- TextEditingController(text: _current.sourceDocument);
+ SpellCheckTextEditingController(text: _current.sourceDocument);
  _artifactUrlController =
- TextEditingController(text: _current.designArtifactUrl);
+ SpellCheckTextEditingController(text: _current.designArtifactUrl);
  }
 
  @override

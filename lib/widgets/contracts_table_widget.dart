@@ -12,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Custom Contracts Table with inline editing, CRUD actions, and AI capabilities
 class ContractsTableWidget extends StatelessWidget {
@@ -429,17 +430,17 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
   }
 
   Future<void> _showFullEditDialog() async {
-    final nameController = TextEditingController(text: _contract.name);
+    final nameController = SpellCheckTextEditingController(text: _contract.name);
     final descriptionController =
-        TextEditingController(text: _contract.description);
+        SpellCheckTextEditingController(text: _contract.description);
     // Key Terms (scope) - use AutoBulletTextController
     final keyTermsController = AutoBulletTextController(text: _contract.scope);
     // Contract Notes - regular TextEditingController (prose)
     final notesController = RichTextEditingController(text: _contract.notes);
     final disciplineController =
-        TextEditingController(text: _contract.discipline);
+        SpellCheckTextEditingController(text: _contract.discipline);
     final estimatedValueController =
-        TextEditingController(text: _contract.estimatedValue.toString());
+        SpellCheckTextEditingController(text: _contract.estimatedValue.toString());
 
     var selectedContractType = _contract.contractType;
     var selectedStatus = _contract.status;

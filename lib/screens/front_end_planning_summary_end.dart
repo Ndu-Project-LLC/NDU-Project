@@ -13,6 +13,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 /// Front End Planning – Summary screen
 /// Mirrors the provided layout with shared workspace chrome,
 /// large notes area, summary text panel, and AI hint + Next controls.
@@ -43,8 +44,8 @@ class _FrontEndPlanningSummaryEndScreenState extends State<FrontEndPlanningSumma
  );
  }
 
- final TextEditingController _notes = TextEditingController();
- final TextEditingController _summaryNotes = TextEditingController();
+ final TextEditingController _notes = SpellCheckTextEditingController();
+ final TextEditingController _summaryNotes = SpellCheckTextEditingController();
 
  @override
  void dispose() {

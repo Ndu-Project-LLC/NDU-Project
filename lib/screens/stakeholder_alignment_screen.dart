@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class StakeholderAlignmentScreen extends StatefulWidget {
   const StakeholderAlignmentScreen({super.key});
@@ -406,9 +407,9 @@ class _StakeholderAlignmentScreenState
   }
 
   Future<void> _showAddStakeholderDialog() async {
-    final nameController = TextEditingController();
-    final roleController = TextEditingController();
-    final feedbackController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
+    final roleController = SpellCheckTextEditingController();
+    final feedbackController = SpellCheckTextEditingController();
     final engagementStrategyController = AutoBulletTextController();
 
     String? selectedStakeholder;

@@ -41,6 +41,7 @@ import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/utils/wbs_scope_labels.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ChangeManagementModuleScreen extends StatefulWidget {
   const ChangeManagementModuleScreen({super.key});
@@ -845,7 +846,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
   // Filter state — uses sentinel values for "All".
   String _statusFilter = 'All';
   String _priorityFilter = 'All';
-  final _searchCtrl = TextEditingController();
+  final _searchCtrl = SpellCheckTextEditingController();
   bool _isTableView = false; // false = card view, true = table view
 
   static const _statusOptions = [
@@ -1834,9 +1835,9 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
     var source = preferredSource;
     final suggested =
         cr.contingencyDrawdownRequested ?? cr.reserveDrawdownRequested ?? 0;
-    final amountCtrl = TextEditingController(
+    final amountCtrl = SpellCheckTextEditingController(
         text: suggested > 0 ? suggested.toStringAsFixed(0) : '');
-    final commentsCtrl = TextEditingController();
+    final commentsCtrl = SpellCheckTextEditingController();
 
     await showDialog<void>(
       context: context,
@@ -1926,8 +1927,8 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
   /// actual-vs-estimate variance for this change.
   Future<void> _showCloseDialog(CMChangeRequest cr) async {
     final estimate = cr.initialCostEstimate ?? 0;
-    final actualCtrl = TextEditingController();
-    final notesCtrl = TextEditingController();
+    final actualCtrl = SpellCheckTextEditingController();
+    final notesCtrl = SpellCheckTextEditingController();
 
     await showDialog<void>(
       context: context,
@@ -2046,9 +2047,9 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
   /// The scope impact is now the shared [ChangeRequestScopePicker] over the
   /// live WBS, and documents upload through [FileUploadHelper].
   void _showNewCRDialog(BuildContext context) {
-    final titleCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
-    final justCtrl = TextEditingController();
+    final titleCtrl = SpellCheckTextEditingController();
+    final descCtrl = SpellCheckTextEditingController();
+    final justCtrl = SpellCheckTextEditingController();
     var type = CMChangeType.scope;
     var priority = CMPriority.medium;
     var isEmergency = false;
@@ -3125,30 +3126,30 @@ class _CreateCRTabState extends State<_CreateCRTab> {
   static const _bgColor = Color(0xFFF9FAFB);
 
   // Section A — Identification
-  final _titleCtrl = TextEditingController();
-  final _originatorCtrl = TextEditingController();
+  final _titleCtrl = SpellCheckTextEditingController();
+  final _originatorCtrl = SpellCheckTextEditingController();
   DateTime _dateRaised = DateTime.now();
   CMChangeType _type = CMChangeType.scope;
   CMPriority _priority = CMPriority.medium;
   bool _isEmergency = false;
 
   // Section B — Description
-  final _descCtrl = TextEditingController();
-  final _justCtrl = TextEditingController();
-  final _altCtrl = TextEditingController();
+  final _descCtrl = SpellCheckTextEditingController();
+  final _justCtrl = SpellCheckTextEditingController();
+  final _altCtrl = SpellCheckTextEditingController();
 
   // Section C — Scope Impact
   final Set<String> _selectedWbs = {};
 
   // Section D — Cost & Schedule
-  final _costCtrl = TextEditingController();
-  final _schedCtrl = TextEditingController();
-  final _contingencyCtrl = TextEditingController();
-  final _reserveCtrl = TextEditingController();
+  final _costCtrl = SpellCheckTextEditingController();
+  final _schedCtrl = SpellCheckTextEditingController();
+  final _contingencyCtrl = SpellCheckTextEditingController();
+  final _reserveCtrl = SpellCheckTextEditingController();
 
   // Lusaka 22 — searchable work-package picker, deliverables list editor,
   // and schedule impact expressed as a number + unit (days/weeks/months).
-  final _wbsSearchCtrl = TextEditingController();
+  final _wbsSearchCtrl = SpellCheckTextEditingController();
   final List<_DeliverableRowData> _deliverableRows = [];
   _ScheduleUnit _scheduleUnit = _ScheduleUnit.days;
 
@@ -4250,9 +4251,9 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
       _dueDates.clear();
       for (var i = 0; i < cr.impact.all.length; i++) {
         _narrativeCtrls[i] =
-            TextEditingController(text: cr.impact.all[i].narrative ?? '');
+            SpellCheckTextEditingController(text: cr.impact.all[i].narrative ?? '');
         _ownerCtrls[i] =
-            TextEditingController(text: cr.impact.all[i].owner ?? '');
+            SpellCheckTextEditingController(text: cr.impact.all[i].owner ?? '');
         _dueDates[i] = cr.impact.all[i].dueDate;
       }
     }
@@ -4663,7 +4664,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
     final cr = widget.selectedCR;
     if (cr == null) return;
     var role = ApprovalRole.projectControls;
-    final nameCtrl = TextEditingController();
+    final nameCtrl = SpellCheckTextEditingController();
     DateTime? dueDate;
     showDialog(
       context: context,
@@ -4768,10 +4769,10 @@ class _WorkflowTabState extends State<_WorkflowTab> {
       String stepId, String roleLabel, ApprovalDecision decision) {
     final cr = widget.selectedCR;
     if (cr == null) return;
-    final commentsCtrl = TextEditingController();
-    final escalationTargetCtrl = TextEditingController();
-    final escalationReasonCtrl = TextEditingController();
-    final delegatedFromCtrl = TextEditingController();
+    final commentsCtrl = SpellCheckTextEditingController();
+    final escalationTargetCtrl = SpellCheckTextEditingController();
+    final escalationReasonCtrl = SpellCheckTextEditingController();
+    final delegatedFromCtrl = SpellCheckTextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -6416,8 +6417,8 @@ class _MoreWorkPackagesDropdown extends StatelessWidget {
 
 /// One row of the deliverables list editor on the Create CR form.
 class _DeliverableRowData {
-  final TextEditingController nameCtrl = TextEditingController();
-  final TextEditingController notesCtrl = TextEditingController();
+  final TextEditingController nameCtrl = SpellCheckTextEditingController();
+  final TextEditingController notesCtrl = SpellCheckTextEditingController();
   DeliverableAction action = DeliverableAction.add;
 }
 

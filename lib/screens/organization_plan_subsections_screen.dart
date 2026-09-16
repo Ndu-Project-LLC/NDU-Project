@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/raci_deliverable_matrix.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/services/currency_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 Future<void> _exportPlanningSubsectionPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
   await PdfExportHelper.exportScreenPdf(
@@ -1524,15 +1525,15 @@ class _StaffingRequirementDialogState
     final hasPosition =
         widget.positionOptions.contains(r.title);
     _selectedPosition = hasPosition ? r.title : widget.customPositionOption;
-    _customPositionCtrl = TextEditingController(
+    _customPositionCtrl = SpellCheckTextEditingController(
       text: _selectedPosition == widget.customPositionOption ? r.title : '',
     );
-    _nameCtrl = TextEditingController(text: r.personName);
-    _locationCtrl = TextEditingController(text: r.location);
-    _notesCtrl = TextEditingController(text: r.notes);
-    _monthlyCostCtrl = TextEditingController(
+    _nameCtrl = SpellCheckTextEditingController(text: r.personName);
+    _locationCtrl = SpellCheckTextEditingController(text: r.location);
+    _notesCtrl = SpellCheckTextEditingController(text: r.notes);
+    _monthlyCostCtrl = SpellCheckTextEditingController(
         text: r.monthlyCost > 0 ? r.monthlyCost.toStringAsFixed(0) : '');
-    _plannedMonthsCtrl = TextEditingController(
+    _plannedMonthsCtrl = SpellCheckTextEditingController(
         text: r.plannedMonths > 0 ? r.plannedMonths.toStringAsFixed(1) : '');
     _employmentLabel = r.employmentType == 'PT' ? 'Part Time' : 'Full Time';
     _categoryLabel = r.employeeType.trim().isEmpty
@@ -2751,11 +2752,11 @@ class _OrganizationRolesResponsibilitiesScreenState
     final rootContext = context;
     String selectedTitle =
         _roleTitleOptions.contains(role.title) ? role.title : _customRoleOption;
-    final customTitleController = TextEditingController(
+    final customTitleController = SpellCheckTextEditingController(
       text: selectedTitle == _customRoleOption ? role.title : '',
     );
-    final workstreamController = TextEditingController(text: role.workstream);
-    final descController = TextEditingController(text: role.description);
+    final workstreamController = SpellCheckTextEditingController(text: role.workstream);
+    final descController = SpellCheckTextEditingController(text: role.description);
     int headcount = role.headcount > 0 ? role.headcount : 1;
 
     showDialog(
@@ -2850,9 +2851,9 @@ class _OrganizationRolesResponsibilitiesScreenState
   void _addRole(BuildContext context) {
     final rootContext = context;
     String selectedTitle = _roleTitleOptions.first;
-    final customTitleController = TextEditingController();
-    final workstreamController = TextEditingController();
-    final descController = TextEditingController();
+    final customTitleController = SpellCheckTextEditingController();
+    final workstreamController = SpellCheckTextEditingController();
+    final descController = SpellCheckTextEditingController();
     int headcount = 1;
 
     showDialog(
@@ -3778,7 +3779,7 @@ class _HeadcountCellState extends State<_HeadcountCell> {
   void initState() {
     super.initState();
     _controller =
-        TextEditingController(text: widget.headcount.toString());
+        SpellCheckTextEditingController(text: widget.headcount.toString());
   }
 
   @override
@@ -6581,7 +6582,7 @@ class _DialogHeadcountStepperState extends State<_DialogHeadcountStepper> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: '${widget.headcount}');
+    _controller = SpellCheckTextEditingController(text: '${widget.headcount}');
   }
 
   @override

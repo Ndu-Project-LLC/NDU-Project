@@ -16,6 +16,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class FrontEndPlanningInfrastructureScreen extends StatefulWidget {
  const FrontEndPlanningInfrastructureScreen({super.key});
 
@@ -30,7 +31,7 @@ class FrontEndPlanningInfrastructureScreen extends StatefulWidget {
 
 class _FrontEndPlanningInfrastructureScreenState
  extends State<FrontEndPlanningInfrastructureScreen> {
- final TextEditingController _notes = TextEditingController();
+ final TextEditingController _notes = SpellCheckTextEditingController();
  List<InfrastructurePlanningItem> _items = [];
  Timer? _infrastructurePromptTimer;
  bool _hasShownPrompt = false;
@@ -127,18 +128,18 @@ class _FrontEndPlanningInfrastructureScreenState
  InfrastructurePlanningItem? existing,
  }) async {
  final nameController =
- TextEditingController(text: existing?.name.trim() ?? '');
+ SpellCheckTextEditingController(text: existing?.name.trim() ?? '');
  final summaryController =
- TextEditingController(text: existing?.summary.trim() ?? '');
+ SpellCheckTextEditingController(text: existing?.summary.trim() ?? '');
  final detailsController =
- TextEditingController(text: existing?.details.trim() ?? '');
- final costController = TextEditingController(
+ SpellCheckTextEditingController(text: existing?.details.trim() ?? '');
+ final costController = SpellCheckTextEditingController(
  text: existing != null && existing.potentialCost > 0
  ? existing.potentialCost.toStringAsFixed(0)
  : '',
  );
  final ownerController =
- TextEditingController(text: existing?.owner.trim() ?? '');
+ SpellCheckTextEditingController(text: existing?.owner.trim() ?? '');
  var status = existing?.status.trim().isNotEmpty == true
  ? existing!.status.trim()
  : 'Planned';

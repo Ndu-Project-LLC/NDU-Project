@@ -16,6 +16,7 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// A self-contained screen that lets the user select up to 7 projects
 /// and group them into a new portfolio.
@@ -49,7 +50,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
   static const _blue = Color(0xFFB8860B);
 
   // ── State ──
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
   Set<String> _selectedIds = {};
 
@@ -92,7 +93,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
   }
 
   Future<void> _handleCreatePortfolio() async {
-    final nameController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
     final formKey = GlobalKey<FormState>();
     // Task 13: portfolio manager assignment. We load the account's
     // registered users once when the dialog opens, and let the user pick

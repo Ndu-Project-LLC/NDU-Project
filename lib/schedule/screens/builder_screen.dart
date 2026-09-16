@@ -48,6 +48,7 @@ import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
 import 'package:ndu_project/cost_estimate/widgets/add_line_dialog.dart';
 import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
 import 'package:ndu_project/schedule/widgets/integrated_schedule_methodology.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class BuilderScreen extends StatefulWidget {
   const BuilderScreen({super.key});
@@ -901,12 +902,12 @@ class _BuilderScreenState extends State<BuilderScreen> {
 
   void _showTimelineSetupDialog(
       BuildContext context, ScheduleProvider provider, ScheduleActivity root) {
-    final startCtrl = TextEditingController(
+    final startCtrl = SpellCheckTextEditingController(
       text: root.startDate != null
           ? DateFormat('MM/dd/yy').format(root.startDate!)
           : '01/06/26',
     );
-    final endCtrl = TextEditingController(
+    final endCtrl = SpellCheckTextEditingController(
       text: root.endDate != null
           ? DateFormat('MM/dd/yy').format(root.endDate!)
           : '12/31/26',
@@ -1063,7 +1064,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
 
   void _showAddDialog(BuildContext context, ScheduleProvider provider,
       String parentId, int level) {
-    final nameCtrl = TextEditingController();
+    final nameCtrl = SpellCheckTextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -2081,13 +2082,13 @@ class _ActivityScheduleTableState extends State<_ActivityScheduleTable> {
 
 
   Future<void> _showAddSampleDialog(BuildContext context) async {
-    final nameCtrl = TextEditingController();
-    final durationCtrl = TextEditingController();
-    final startCtrl = TextEditingController(text: _formatDate(DateTime.now()));
-    final finishCtrl = TextEditingController(
+    final nameCtrl = SpellCheckTextEditingController();
+    final durationCtrl = SpellCheckTextEditingController();
+    final startCtrl = SpellCheckTextEditingController(text: _formatDate(DateTime.now()));
+    final finishCtrl = SpellCheckTextEditingController(
         text: _formatDate(DateTime.now().add(const Duration(days: 30))));
-    final predsCtrl = TextEditingController();
-    final resourcesCtrl = TextEditingController();
+    final predsCtrl = SpellCheckTextEditingController();
+    final resourcesCtrl = SpellCheckTextEditingController();
 
     final result = await showDialog<bool>(
       context: context,

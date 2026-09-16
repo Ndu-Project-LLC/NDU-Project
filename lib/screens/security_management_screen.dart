@@ -17,6 +17,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 enum _SecurityTab { dashboard, roles, permissions, settings, accessLogs }
 
@@ -208,9 +209,9 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
   }
 
   Future<void> _openRoleDialog() async {
-    final nameController = TextEditingController();
-    final tierController = TextEditingController(text: 'Tier 1');
-    final descriptionController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
+    final tierController = SpellCheckTextEditingController(text: 'Tier 1');
+    final descriptionController = SpellCheckTextEditingController();
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -276,10 +277,10 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
   }
 
   Future<void> _openPermissionDialog() async {
-    final nameController = TextEditingController();
-    final resourceController = TextEditingController();
-    final actionController = TextEditingController();
-    final descriptionController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
+    final resourceController = SpellCheckTextEditingController();
+    final actionController = SpellCheckTextEditingController();
+    final descriptionController = SpellCheckTextEditingController();
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -344,9 +345,9 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
   }
 
   Future<void> _openSettingDialog() async {
-    final nameController = TextEditingController();
-    final valueController = TextEditingController();
-    final descriptionController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
+    final valueController = SpellCheckTextEditingController();
+    final descriptionController = SpellCheckTextEditingController();
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -605,7 +606,7 @@ class _SecurityNotesCard extends StatefulWidget {
 }
 
 class _SecurityNotesCardState extends State<_SecurityNotesCard> {
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = SpellCheckTextEditingController();
   final _saveDebounce = _Debouncer();
   bool _saving = false;
   DateTime? _lastSavedAt;
@@ -1095,9 +1096,9 @@ class _SettingsViewState extends State<_SettingsView> {
     super.initState();
     final initial = widget.initialSettings;
     _sessionTimeoutController =
-        TextEditingController(text: initial.sessionTimeoutMinutes.toString());
+        SpellCheckTextEditingController(text: initial.sessionTimeoutMinutes.toString());
     _minPasswordLengthController =
-        TextEditingController(text: initial.minPasswordLength.toString());
+        SpellCheckTextEditingController(text: initial.minPasswordLength.toString());
     _requireMfa = initial.requireMfa;
     _requireUppercase = initial.requireUppercase;
     _requireNumbers = initial.requireNumbers;
@@ -1428,7 +1429,7 @@ class _AccessLogsView extends StatefulWidget {
 }
 
 class _AccessLogsViewState extends State<_AccessLogsView> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String? _statusFilter;
   late final VoidCallback _searchListener;
 

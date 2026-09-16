@@ -27,6 +27,7 @@ import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 // ─── Design Tokens ───────────────────────────────────────────────────────────
 class _Tokens {
  _Tokens._();
@@ -249,7 +250,7 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
   @override
   void initState() {
     super.initState();
-    _projectNameController = TextEditingController();
+    _projectNameController = SpellCheckTextEditingController();
     _projectObjectiveController = RichTextEditingController();
     _projectNameFocus = FocusNode()..addListener(_onFocusChange);
     _projectObjectiveFocus = FocusNode()..addListener(_onFocusChange);
@@ -635,7 +636,7 @@ goal.nameController.removeListener(_onFieldChanged);
  missingFields.add('Overall Framework');
  }
  if (projectGoals.isEmpty) {
- missingFields.add('Project Goals');
+ missingFields.add('Project Objectives');
  }
 
  if (missingFields.isNotEmpty) {
@@ -670,7 +671,8 @@ goal.nameController.removeListener(_onFieldChanged);
  if (projectGoals.isEmpty) {
  ScaffoldMessenger.of(context).showSnackBar(
  const SnackBar(
- content: Text('Please add at least one Project Goal before proceeding.'),
+ content: Text(
+              'Please add at least one Project Objective before proceeding.'),
  backgroundColor: Color(0xFFEF4444),
  duration: Duration(seconds: 3),
  ),
@@ -1063,8 +1065,8 @@ class _Goal {
  String? name,
  this.framework,
  String? description,
- }) : controller = TextEditingController(text: description),
- nameController = TextEditingController(text: name),
+ }) : controller = SpellCheckTextEditingController(text: description),
+ nameController = SpellCheckTextEditingController(text: name),
  nameFocus = FocusNode(),
  descFocus = FocusNode();
 
@@ -1738,18 +1740,17 @@ class _MobileGoalsSection extends StatelessWidget {
  Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Project Goals',
- style: TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: _Tokens.onSurface,
- ),
- ),
- SizedBox(height: 2),
- Text(
- 'Indicate upto 5 key high-level outcomes for this project',
+ children: [                Text(
+                  'Project Objectives',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _Tokens.onSurface,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Indicate upto 5 key high-level outcomes for this project',
  style: TextStyle(
  fontSize: 11,
  color: _Tokens.onSurfaceVariant,

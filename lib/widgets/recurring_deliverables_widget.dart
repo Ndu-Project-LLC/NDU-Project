@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/progress_quick_actions.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Recurring Deliverables Tracking sub-page
 class RecurringDeliverablesWidget extends StatefulWidget {
@@ -294,11 +295,11 @@ class _RecurringRowWidgetState extends State<_RecurringRowWidget> {
   }
 
   Future<void> _showEditDialog() async {
-    final titleController = TextEditingController(text: _item.title);
+    final titleController = SpellCheckTextEditingController(text: _item.title);
     final descriptionController =
-        TextEditingController(text: _item.description);
-    final ownerController = TextEditingController(text: _item.owner);
-    final notesController = TextEditingController(text: _item.notes);
+        SpellCheckTextEditingController(text: _item.description);
+    final ownerController = SpellCheckTextEditingController(text: _item.owner);
+    final notesController = SpellCheckTextEditingController(text: _item.notes);
     var selectedFrequency = _item.frequency;
     var selectedStatus = _item.status;
     DateTime? nextOccurrence = _item.nextOccurrence;

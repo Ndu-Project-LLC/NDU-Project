@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 // ─── Data Models ─────────────────────────────────────────────────────────────
 
 class _StructuralItem {
@@ -514,8 +515,8 @@ class EngineeringDesignScreen extends StatefulWidget {
 }
 
 class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
- final TextEditingController _notesController = TextEditingController();
- final TextEditingController _keyDecisionsController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
+ final TextEditingController _keyDecisionsController = SpellCheckTextEditingController();
  final _Debouncer _saveDebouncer = _Debouncer();
 
  bool _isLoading = false;
@@ -1106,11 +1107,11 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  Future<void> _openStructuralItemDialog(
  {_StructuralItem? existing}) async {
  final layerController =
- TextEditingController(text: existing?.layer ?? '');
+ SpellCheckTextEditingController(text: existing?.layer ?? '');
  final descController =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  final specController =
- TextEditingController(text: existing?.specification ?? '');
+ SpellCheckTextEditingController(text: existing?.specification ?? '');
  String status = existing?.status ?? _structuralStatusOptions.first;
  String owner = existing?.owner ?? 'Owner';
 
@@ -1171,7 +1172,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: owner),
+ controller: SpellCheckTextEditingController(text: owner),
  decoration: const InputDecoration(
  labelText: 'Owner',
  border: OutlineInputBorder(),
@@ -1231,11 +1232,11 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  Future<void> _openComponentItemDialog(
  {_ComponentItem? existing}) async {
  final nameController =
- TextEditingController(text: existing?.component ?? '');
+ SpellCheckTextEditingController(text: existing?.component ?? '');
  final respController =
- TextEditingController(text: existing?.responsibility ?? '');
+ SpellCheckTextEditingController(text: existing?.responsibility ?? '');
  final ifaceController =
- TextEditingController(text: existing?.interfaceType ?? '');
+ SpellCheckTextEditingController(text: existing?.interfaceType ?? '');
  String status = existing?.status ?? _componentStatusOptions.first;
  String owner = existing?.owner ?? 'Owner';
 
@@ -1296,7 +1297,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: owner),
+ controller: SpellCheckTextEditingController(text: owner),
  decoration: const InputDecoration(
  labelText: 'Owner',
  border: OutlineInputBorder(),
@@ -1357,11 +1358,11 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  Future<void> _openCalculationItemDialog(
  {_CalculationItem? existing}) async {
  final calcController =
- TextEditingController(text: existing?.calculation ?? '');
+ SpellCheckTextEditingController(text: existing?.calculation ?? '');
  final typeController =
- TextEditingController(text: existing?.type ?? '');
+ SpellCheckTextEditingController(text: existing?.type ?? '');
  final stdController =
- TextEditingController(text: existing?.standard ?? '');
+ SpellCheckTextEditingController(text: existing?.standard ?? '');
  String status = existing?.status ?? _calculationStatusOptions.first;
  String peStamp = existing?.peStamp ?? _peStampOptions.first;
  String reviewer = existing?.reviewer ?? 'Reviewer';
@@ -1439,7 +1440,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: reviewer),
+ controller: SpellCheckTextEditingController(text: reviewer),
  decoration: const InputDecoration(
  labelText: 'Reviewer',
  border: OutlineInputBorder(),
@@ -1501,11 +1502,11 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  Future<void> _openComplianceItemDialog(
  {_ComplianceItem? existing}) async {
  final stdController =
- TextEditingController(text: existing?.standard ?? '');
+ SpellCheckTextEditingController(text: existing?.standard ?? '');
  final scopeController =
- TextEditingController(text: existing?.scope ?? '');
+ SpellCheckTextEditingController(text: existing?.scope ?? '');
  final applController =
- TextEditingController(text: existing?.applicability ?? '');
+ SpellCheckTextEditingController(text: existing?.applicability ?? '');
  String complianceStatus =
  existing?.complianceStatus ?? _complianceStatusOptions.first;
  String evidence = existing?.evidence ?? '';
@@ -1566,7 +1567,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: evidence),
+ controller: SpellCheckTextEditingController(text: evidence),
  decoration: const InputDecoration(
  labelText: 'Evidence',
  border: OutlineInputBorder(),
@@ -1575,7 +1576,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: owner),
+ controller: SpellCheckTextEditingController(text: owner),
  decoration: const InputDecoration(
  labelText: 'Owner',
  border: OutlineInputBorder(),
@@ -1637,9 +1638,9 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  Future<void> _openEcnItemDialog({_EcnItem? existing}) async {
  final ecnIdController =
- TextEditingController(text: existing?.ecnId ?? '');
+ SpellCheckTextEditingController(text: existing?.ecnId ?? '');
  final titleController =
- TextEditingController(text: existing?.title ?? '');
+ SpellCheckTextEditingController(text: existing?.title ?? '');
  String priority = existing?.priority ?? _ecnPriorityOptions.first;
  String status = existing?.status ?? _ecnStatusOptions.first;
  String originator = existing?.originator ?? 'Originator';
@@ -1710,7 +1711,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: originator),
+ controller: SpellCheckTextEditingController(text: originator),
  decoration: const InputDecoration(
  labelText: 'Originator',
  border: OutlineInputBorder(),
@@ -1719,7 +1720,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: approver),
+ controller: SpellCheckTextEditingController(text: approver),
  decoration: const InputDecoration(
  labelText: 'Approver',
  border: OutlineInputBorder(),
@@ -1728,7 +1729,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: date),
+ controller: SpellCheckTextEditingController(text: date),
  decoration: const InputDecoration(
  labelText: 'Date',
  border: OutlineInputBorder(),
@@ -1790,7 +1791,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  Future<void> _openReadinessGateDialog({_ReadinessGate? existing}) async {
  final gateController =
- TextEditingController(text: existing?.gate ?? '');
+ SpellCheckTextEditingController(text: existing?.gate ?? '');
  String owner = existing?.owner ?? 'Owner';
  String status = existing?.status ?? _readinessStatusOptions.first;
 
@@ -1815,7 +1816,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: owner),
+ controller: SpellCheckTextEditingController(text: owner),
  decoration: const InputDecoration(
  labelText: 'Owner',
  border: OutlineInputBorder(),

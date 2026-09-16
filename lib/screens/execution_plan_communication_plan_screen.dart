@@ -15,6 +15,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -328,15 +329,15 @@ class _CommunicationPlanTable extends StatelessWidget {
       BuildContext context, CommunicationPlanModel? entry, String projectId) {
     final isEdit = entry != null;
     final stakeholderController =
-        TextEditingController(text: entry?.stakeholder ?? '');
+        SpellCheckTextEditingController(text: entry?.stakeholder ?? '');
     final infoTypeController =
-        TextEditingController(text: entry?.infoType ?? '');
+        SpellCheckTextEditingController(text: entry?.infoType ?? '');
     String frequency = entry?.frequency ?? 'Weekly';
     String channel = entry?.channel ?? 'Email';
-    final ownerController = TextEditingController(text: entry?.owner ?? '');
+    final ownerController = SpellCheckTextEditingController(text: entry?.owner ?? '');
     String status = entry?.status ?? 'Planned';
     final commentsController =
-        TextEditingController(text: entry?.comments ?? '');
+        SpellCheckTextEditingController(text: entry?.comments ?? '');
 
     const frequencies = [
       'Daily',

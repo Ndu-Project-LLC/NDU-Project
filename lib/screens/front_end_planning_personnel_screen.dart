@@ -13,6 +13,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class FrontEndPlanningPersonnelScreen extends StatefulWidget {
  const FrontEndPlanningPersonnelScreen({super.key});
 
@@ -27,7 +28,7 @@ class FrontEndPlanningPersonnelScreen extends StatefulWidget {
 
 class _FrontEndPlanningPersonnelScreenState
  extends State<FrontEndPlanningPersonnelScreen> {
- final TextEditingController _notes = TextEditingController();
+ final TextEditingController _notes = SpellCheckTextEditingController();
  List<StaffingRow> _rows = [];
  bool _isSyncReady = false;
 
@@ -96,20 +97,20 @@ class _FrontEndPlanningPersonnelScreenState
  }
 
  Future<void> _upsertRow({StaffingRow? existing}) async {
- final roleController = TextEditingController(text: existing?.role ?? '');
- final quantityController = TextEditingController(
+ final roleController = SpellCheckTextEditingController(text: existing?.role ?? '');
+ final quantityController = SpellCheckTextEditingController(
  text: existing != null ? existing.quantity.toString() : '1');
  final durationController =
- TextEditingController(text: existing?.durationMonths ?? '');
+ SpellCheckTextEditingController(text: existing?.durationMonths ?? '');
  final monthlyCostController =
- TextEditingController(text: existing?.monthlyCost ?? '');
+ SpellCheckTextEditingController(text: existing?.monthlyCost ?? '');
  final startDateController =
- TextEditingController(text: existing?.startDate ?? '');
+ SpellCheckTextEditingController(text: existing?.startDate ?? '');
  final descriptionController =
- TextEditingController(text: existing?.roleDescription ?? '');
+ SpellCheckTextEditingController(text: existing?.roleDescription ?? '');
  final skillsController =
- TextEditingController(text: existing?.skillRequirements ?? '');
- final notesController = TextEditingController(text: existing?.notes ?? '');
+ SpellCheckTextEditingController(text: existing?.skillRequirements ?? '');
+ final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
  var isInternal = existing?.isInternal ?? true;
  var status = existing?.status.trim().isNotEmpty == true
  ? existing!.status.trim()

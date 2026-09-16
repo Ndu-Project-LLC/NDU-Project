@@ -17,6 +17,7 @@ import 'package:ndu_project/widgets/activity_log_panel.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/my_raci_assignments_panel.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ProjectActivitiesLogScreen extends StatefulWidget {
  const ProjectActivitiesLogScreen({super.key});
@@ -86,7 +87,7 @@ class _ProjectActivitiesLogScreenState
  }
  }
 
- final TextEditingController _searchController = TextEditingController();
+ final TextEditingController _searchController = SpellCheckTextEditingController();
 
  String _searchQuery = '';
  Set<String> _selectedStatuses = <String>{};
@@ -448,30 +449,30 @@ class _ProjectActivitiesLogScreenState
  final allowStructuralEdit = isCreate || isCustom;
  final now = DateTime.now();
 
- final titleController = TextEditingController(text: existing?.title ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
  final descriptionController =
- TextEditingController(text: existing?.description ?? '');
- final sourceController = TextEditingController(
+ SpellCheckTextEditingController(text: existing?.description ?? '');
+ final sourceController = SpellCheckTextEditingController(
  text: existing?.sourceSection ?? 'manual_activity',
  );
- final phaseController = TextEditingController(
+ final phaseController = SpellCheckTextEditingController(
  text: existing?.phase.isNotEmpty == true
  ? existing!.phase
  : 'Planning Phase',
  );
- final disciplineController = TextEditingController(
+ final disciplineController = SpellCheckTextEditingController(
  text: existing?.discipline.isNotEmpty == true
  ? existing!.discipline
  : 'Project Management',
  );
- final roleController = TextEditingController(
+ final roleController = SpellCheckTextEditingController(
  text: existing?.role.isNotEmpty == true ? existing!.role : 'Project Lead',
  );
  final assignedToController =
- TextEditingController(text: existing?.assignedTo ?? '');
+ SpellCheckTextEditingController(text: existing?.assignedTo ?? '');
  final dueDateController =
- TextEditingController(text: existing?.dueDate ?? '');
- final appliesToController = TextEditingController(
+ SpellCheckTextEditingController(text: existing?.dueDate ?? '');
+ final appliesToController = SpellCheckTextEditingController(
  text: (existing?.applicableSections ?? const <String>[]).join(', '),
  );
 

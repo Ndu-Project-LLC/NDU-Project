@@ -2,6 +2,7 @@ import 'package:ndu_project/widgets/expanding_text_field.dart';
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class SsherItemInput {
  final String department;
  final String teamMember;
@@ -69,9 +70,9 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  @override
  void initState() {
  super.initState();
- _memberCtrl = TextEditingController(text: widget.initialData?.teamMember ?? '');
- _concernCtrl = TextEditingController(text: widget.initialData?.concern ?? '');
- _mitigationCtrl = TextEditingController(text: widget.initialData?.mitigation ?? '');
+ _memberCtrl = SpellCheckTextEditingController(text: widget.initialData?.teamMember ?? '');
+ _concernCtrl = SpellCheckTextEditingController(text: widget.initialData?.concern ?? '');
+ _mitigationCtrl = SpellCheckTextEditingController(text: widget.initialData?.mitigation ?? '');
  _department = widget.initialData?.department ?? 'Operations';
  _riskLevel = widget.initialData?.riskLevel ?? 'High';
 

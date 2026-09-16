@@ -4,6 +4,7 @@ import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class LaunchEntry {
   const LaunchEntry({
@@ -62,7 +63,7 @@ class LaunchEditableSection extends StatefulWidget {
 }
 
 class _LaunchEditableSectionState extends State<LaunchEditableSection> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
   bool _showTableView = true;
 
@@ -576,9 +577,9 @@ Future<LaunchEntry?> showLaunchEntryDialog(
   bool includeStatus = true,
   LaunchEntry? initialEntry,
 }) {
-  final TextEditingController titleController = TextEditingController(text: initialEntry?.title ?? '');
-  final TextEditingController detailsController = TextEditingController(text: initialEntry?.details ?? '');
-  final TextEditingController statusController = TextEditingController(text: initialEntry?.status ?? '');
+  final TextEditingController titleController = SpellCheckTextEditingController(text: initialEntry?.title ?? '');
+  final TextEditingController detailsController = SpellCheckTextEditingController(text: initialEntry?.details ?? '');
+  final TextEditingController statusController = SpellCheckTextEditingController(text: initialEntry?.status ?? '');
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   const BorderSide neutralBorder = BorderSide(color: Color(0xFFE2E8F0));

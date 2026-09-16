@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const String _currencySymbol = r'$';
 
 class ScheduleManagementBoardScreen extends StatefulWidget {
@@ -222,7 +223,7 @@ class _ScheduleToolbar extends StatelessWidget {
  final bool isMobile;
 
  Future<void> _showCreateTaskDialog(BuildContext context) async {
- final controller = TextEditingController();
+ final controller = SpellCheckTextEditingController();
  try {
  final created = await showDialog<String>(
  context: context,
@@ -725,7 +726,7 @@ class _BoardFooter extends StatelessWidget {
  final bool isMobile;
 
  Future<void> _showAddNoteDialog(BuildContext context) async {
- final controller = TextEditingController();
+ final controller = SpellCheckTextEditingController();
  try {
  final note = await showDialog<String>(
  context: context,

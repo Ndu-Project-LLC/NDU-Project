@@ -23,6 +23,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class SkipBusinessCaseDialog {
   SkipBusinessCaseDialog._();
@@ -32,7 +33,7 @@ class SkipBusinessCaseDialog {
   static Future<bool> show(BuildContext context) async {
     final provider = ProjectDataHelper.getProvider(context);
     final data = provider.projectData;
-    final controller = TextEditingController(
+    final controller = SpellCheckTextEditingController(
       text: data.projectDescription.isNotEmpty
           ? data.projectDescription
           : data.notes,

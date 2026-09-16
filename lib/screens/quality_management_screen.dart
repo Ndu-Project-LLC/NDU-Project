@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 enum _QualityTab { plan, targets, qaTracking, qcTracking, metrics, register }
 
@@ -1581,10 +1582,10 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
   void initState() {
     super.initState();
     ApiKeyManager.initializeApiKey();
-    _planController = TextEditingController();
-    _reviewCadenceController = TextEditingController();
-    _escalationPathController = TextEditingController();
-    _changeControlController = TextEditingController();
+    _planController = SpellCheckTextEditingController();
+    _reviewCadenceController = SpellCheckTextEditingController();
+    _escalationPathController = SpellCheckTextEditingController();
+    _changeControlController = SpellCheckTextEditingController();
   }
 
   @override
@@ -4389,17 +4390,17 @@ class _QualityStandardDialogState extends State<_QualityStandardDialog> {
   @override
   void initState() {
     super.initState();
-    _name = TextEditingController(text: widget.initialValue?.name ?? '');
-    _source = TextEditingController(text: widget.initialValue?.source ?? '');
+    _name = SpellCheckTextEditingController(text: widget.initialValue?.name ?? '');
+    _source = SpellCheckTextEditingController(text: widget.initialValue?.source ?? '');
     _category =
-        TextEditingController(text: widget.initialValue?.category ?? '');
+        SpellCheckTextEditingController(text: widget.initialValue?.category ?? '');
     _description =
-        TextEditingController(text: widget.initialValue?.description ?? '');
+        SpellCheckTextEditingController(text: widget.initialValue?.description ?? '');
     _applicability =
-        TextEditingController(text: widget.initialValue?.applicability ?? '');
-    _effectiveDate = TextEditingController(
+        SpellCheckTextEditingController(text: widget.initialValue?.applicability ?? '');
+    _effectiveDate = SpellCheckTextEditingController(
         text: _normalizedDateText(widget.initialValue?.effectiveDate ?? ''));
-    _reviewDate = TextEditingController(
+    _reviewDate = SpellCheckTextEditingController(
         text: _normalizedDateText(widget.initialValue?.reviewDate ?? ''));
   }
 
@@ -4565,15 +4566,15 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
   void initState() {
     super.initState();
     final initial = widget.initialValue;
-    _title = TextEditingController(text: initial?.title ?? '');
+    _title = SpellCheckTextEditingController(text: initial?.title ?? '');
     _acceptance =
-        TextEditingController(text: initial?.acceptanceCriteria ?? '');
-    _metric = TextEditingController(text: initial?.successMetric ?? '');
-    _target = TextEditingController(text: initial?.targetValue ?? '');
-    _current = TextEditingController(text: initial?.currentValue ?? '');
-    _linkedReq = TextEditingController(text: initial?.linkedRequirement ?? '');
-    _linkedWbs = TextEditingController(text: initial?.linkedWbs ?? '');
-    _status = TextEditingController(text: initial?.status ?? 'Draft');
+        SpellCheckTextEditingController(text: initial?.acceptanceCriteria ?? '');
+    _metric = SpellCheckTextEditingController(text: initial?.successMetric ?? '');
+    _target = SpellCheckTextEditingController(text: initial?.targetValue ?? '');
+    _current = SpellCheckTextEditingController(text: initial?.currentValue ?? '');
+    _linkedReq = SpellCheckTextEditingController(text: initial?.linkedRequirement ?? '');
+    _linkedWbs = SpellCheckTextEditingController(text: initial?.linkedWbs ?? '');
+    _status = SpellCheckTextEditingController(text: initial?.status ?? 'Draft');
     _owner = initial?.owner.isNotEmpty == true
         ? initial!.owner
         : widget.ownerOptions.first;
@@ -4766,12 +4767,12 @@ class _WorkflowControlDialogState extends State<_WorkflowControlDialog> {
   void initState() {
     super.initState();
     final initial = widget.initialValue;
-    _name = TextEditingController(text: initial?.name ?? '');
-    _method = TextEditingController(text: initial?.method ?? '');
-    _tools = TextEditingController(text: initial?.tools ?? '');
-    _checklist = TextEditingController(text: initial?.checklist ?? '');
-    _frequency = TextEditingController(text: initial?.frequency ?? '');
-    _standards = TextEditingController(text: initial?.standardsReference ?? '');
+    _name = SpellCheckTextEditingController(text: initial?.name ?? '');
+    _method = SpellCheckTextEditingController(text: initial?.method ?? '');
+    _tools = SpellCheckTextEditingController(text: initial?.tools ?? '');
+    _checklist = SpellCheckTextEditingController(text: initial?.checklist ?? '');
+    _frequency = SpellCheckTextEditingController(text: initial?.frequency ?? '');
+    _standards = SpellCheckTextEditingController(text: initial?.standardsReference ?? '');
     _owner = initial?.owner.isNotEmpty == true
         ? initial!.owner
         : widget.ownerOptions.first;
@@ -4927,16 +4928,16 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
   void initState() {
     super.initState();
     final initial = widget.initialValue;
-    _task = TextEditingController(text: initial?.task ?? '');
-    _percent = TextEditingController(
+    _task = SpellCheckTextEditingController(text: initial?.task ?? '');
+    _percent = SpellCheckTextEditingController(
         text: (initial?.percentComplete ?? 0).toStringAsFixed(0));
-    _start = TextEditingController(
+    _start = SpellCheckTextEditingController(
       text: _normalizedDateText(initial?.startDate ?? ''),
     );
-    _end = TextEditingController(
+    _end = SpellCheckTextEditingController(
       text: _normalizedDateText(initial?.endDate ?? ''),
     );
-    _comments = TextEditingController(text: initial?.comments ?? '');
+    _comments = SpellCheckTextEditingController(text: initial?.comments ?? '');
     _responsible = initial?.responsible.isNotEmpty == true
         ? initial!.responsible
         : widget.ownerOptions.first;
@@ -5213,16 +5214,16 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
   void initState() {
     super.initState();
     final initial = widget.initialValue;
-    _title = TextEditingController(text: initial?.title ?? '');
-    _scope = TextEditingController(text: initial?.scope ?? '');
-    _planned = TextEditingController(
+    _title = SpellCheckTextEditingController(text: initial?.title ?? '');
+    _scope = SpellCheckTextEditingController(text: initial?.scope ?? '');
+    _planned = SpellCheckTextEditingController(
       text: _normalizedDateText(initial?.plannedDate ?? ''),
     );
-    _completed = TextEditingController(
+    _completed = SpellCheckTextEditingController(
       text: _normalizedDateText(initial?.completedDate ?? ''),
     );
-    _findings = TextEditingController(text: initial?.findings ?? '');
-    _notes = TextEditingController(text: initial?.notes ?? '');
+    _findings = SpellCheckTextEditingController(text: initial?.findings ?? '');
+    _notes = SpellCheckTextEditingController(text: initial?.notes ?? '');
     _owner = initial?.owner.isNotEmpty == true
         ? initial!.owner
         : widget.ownerOptions.first;
@@ -5469,14 +5470,14 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
   void initState() {
     super.initState();
     final initial = widget.initialValue;
-    _title = TextEditingController(text: initial?.title ?? '');
-    _rootCause = TextEditingController(text: initial?.rootCause ?? '');
-    _action = TextEditingController(text: initial?.action ?? '');
-    _dueDate = TextEditingController(
+    _title = SpellCheckTextEditingController(text: initial?.title ?? '');
+    _rootCause = SpellCheckTextEditingController(text: initial?.rootCause ?? '');
+    _action = SpellCheckTextEditingController(text: initial?.action ?? '');
+    _dueDate = SpellCheckTextEditingController(
       text: _normalizedDateText(initial?.dueDate ?? ''),
     );
     _verification =
-        TextEditingController(text: initial?.verificationNotes ?? '');
+        SpellCheckTextEditingController(text: initial?.verificationNotes ?? '');
     _owner = initial?.owner.isNotEmpty == true
         ? initial!.owner
         : widget.ownerOptions.first;
@@ -5696,17 +5697,17 @@ class _QualityChangeDialogState extends State<_QualityChangeDialog> {
   void initState() {
     super.initState();
     final initial = widget.initialValue;
-    _description = TextEditingController(text: initial?.description ?? '');
-    _reason = TextEditingController(text: initial?.reason ?? '');
-    _requestedBy = TextEditingController(text: initial?.requestedBy ?? '');
-    _approvedBy = TextEditingController(text: initial?.approvedBy ?? '');
-    _date = TextEditingController(
+    _description = SpellCheckTextEditingController(text: initial?.description ?? '');
+    _reason = SpellCheckTextEditingController(text: initial?.reason ?? '');
+    _requestedBy = SpellCheckTextEditingController(text: initial?.requestedBy ?? '');
+    _approvedBy = SpellCheckTextEditingController(text: initial?.approvedBy ?? '');
+    _date = SpellCheckTextEditingController(
       text: _normalizedDateText(
         initial?.date ?? '',
         fallbackToToday: true,
       ),
     );
-    _status = TextEditingController(text: initial?.status ?? 'Draft');
+    _status = SpellCheckTextEditingController(text: initial?.status ?? 'Draft');
   }
 
   Future<void> _pickDate() async {
@@ -5862,10 +5863,10 @@ class _TrainingShortcutDialogState extends State<_TrainingShortcutDialog> {
   @override
   void initState() {
     super.initState();
-    _title = TextEditingController(text: widget.defaultTitle);
-    _description = TextEditingController();
-    _date = TextEditingController(text: _formatDate(DateTime.now()));
-    _duration = TextEditingController(text: '60 mins');
+    _title = SpellCheckTextEditingController(text: widget.defaultTitle);
+    _description = SpellCheckTextEditingController();
+    _date = SpellCheckTextEditingController(text: _formatDate(DateTime.now()));
+    _duration = SpellCheckTextEditingController(text: '60 mins');
   }
 
   @override
@@ -6000,10 +6001,10 @@ class _DashboardConfigDialogState extends State<_DashboardConfigDialog> {
   @override
   void initState() {
     super.initState();
-    _target = TextEditingController(
+    _target = SpellCheckTextEditingController(
       text: widget.initialValue.targetTimeToResolutionDays.toStringAsFixed(1),
     );
-    _trendPoints = TextEditingController(
+    _trendPoints = SpellCheckTextEditingController(
       text: widget.initialValue.maxTrendPoints.toString(),
     );
     _allowOverride = widget.initialValue.allowManualMetricsOverride;
@@ -6115,21 +6116,21 @@ class _MetricsEditDialogState extends State<_MetricsEditDialog> {
   void initState() {
     super.initState();
     final m = widget.metrics;
-    _ddValue = TextEditingController(text: m.defectDensity.value);
-    _ddChange = TextEditingController(text: m.defectDensity.change);
+    _ddValue = SpellCheckTextEditingController(text: m.defectDensity.value);
+    _ddChange = SpellCheckTextEditingController(text: m.defectDensity.change);
     _ddTrend = m.defectDensity.trendDirection;
 
-    _csValue = TextEditingController(text: m.customerSatisfaction.value);
-    _csChange = TextEditingController(text: m.customerSatisfaction.change);
+    _csValue = SpellCheckTextEditingController(text: m.customerSatisfaction.value);
+    _csChange = SpellCheckTextEditingController(text: m.customerSatisfaction.change);
     _csTrend = m.customerSatisfaction.trendDirection;
 
-    _otdValue = TextEditingController(text: m.onTimeDelivery.value);
-    _otdChange = TextEditingController(text: m.onTimeDelivery.change);
+    _otdValue = SpellCheckTextEditingController(text: m.onTimeDelivery.value);
+    _otdChange = SpellCheckTextEditingController(text: m.onTimeDelivery.change);
     _otdTrend = m.onTimeDelivery.trendDirection;
 
-    _defectTrend = TextEditingController(text: m.defectTrendData.join(', '));
+    _defectTrend = SpellCheckTextEditingController(text: m.defectTrendData.join(', '));
     _satisfactionTrend =
-        TextEditingController(text: m.satisfactionTrendData.join(', '));
+        SpellCheckTextEditingController(text: m.satisfactionTrendData.join(', '));
   }
 
   @override

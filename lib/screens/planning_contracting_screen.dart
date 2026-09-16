@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBrandYellow = Color(0xFFFFC812);
 const Color _kFabYellow = Color(0xFFFBBF24);
@@ -1204,12 +1205,12 @@ Color _statusColor(String status) {
 
 void _showCreateContractDialog(BuildContext context, String? projectId) {
  if (projectId == null || projectId.isEmpty) return;
- final nameCtrl = TextEditingController();
- final descCtrl = TextEditingController();
- final valueCtrl = TextEditingController();
- final scopeCtrl = TextEditingController();
- final disciplineCtrl = TextEditingController();
- final contractorCtrl = TextEditingController();
+ final nameCtrl = SpellCheckTextEditingController();
+ final descCtrl = SpellCheckTextEditingController();
+ final valueCtrl = SpellCheckTextEditingController();
+ final scopeCtrl = SpellCheckTextEditingController();
+ final disciplineCtrl = SpellCheckTextEditingController();
+ final contractorCtrl = SpellCheckTextEditingController();
  String contractType = 'Not Sure';
  String paymentType = 'TBD';
  String contractStartPhase = 'Not Sure';
@@ -1429,11 +1430,11 @@ Future<void> _showEditPackageDialog(
  final projectData = ProjectDataHelper.getData(context);
  final scopeOptions = _planningScopeOptionsFromData(projectData);
  final summaryCtrl =
- TextEditingController(text: contract.packageSummary ?? contract.description);
- final engineerEstimateCtrl = TextEditingController(
+ SpellCheckTextEditingController(text: contract.packageSummary ?? contract.description);
+ final engineerEstimateCtrl = SpellCheckTextEditingController(
  text: contract.engineerEstimate?.toStringAsFixed(0) ?? '');
  final plannedValueCtrl =
- TextEditingController(text: contract.estimatedValue.toStringAsFixed(0));
+ SpellCheckTextEditingController(text: contract.estimatedValue.toStringAsFixed(0));
  String selectedAwardStrategy = contract.awardStrategy ?? 'Sole Source';
  String selectedContractType =
  contract.contractType.isNotEmpty ? contract.contractType : 'Not Sure';
@@ -2540,11 +2541,11 @@ void _showRfpDialog(
  String projectId, {
  PlanningRfq? existingRfq,
 }) {
- final titleCtrl = TextEditingController(text: existingRfq?.title ?? '');
+ final titleCtrl = SpellCheckTextEditingController(text: existingRfq?.title ?? '');
  final scopeCtrl =
- TextEditingController(text: existingRfq?.scopeOfWork ?? '');
- final notesCtrl = TextEditingController(text: existingRfq?.notes ?? '');
- final vendorsCtrl = TextEditingController(
+ SpellCheckTextEditingController(text: existingRfq?.scopeOfWork ?? '');
+ final notesCtrl = SpellCheckTextEditingController(text: existingRfq?.notes ?? '');
+ final vendorsCtrl = SpellCheckTextEditingController(
  text: (existingRfq?.invitedContractors ?? const []).join(', '));
  String linkedPackageId = existingRfq?.linkedScopeId ?? '';
  String rfqStatus = existingRfq?.status ?? 'Draft';
@@ -3142,21 +3143,21 @@ Future<void> _showEvaluationDialog(
  List<PlanningRfq> rfqs,
 ) async {
  final vendorCtrl =
- TextEditingController(text: contract.recommendedVendor ?? '');
- final awardValueCtrl = TextEditingController(
+ SpellCheckTextEditingController(text: contract.recommendedVendor ?? '');
+ final awardValueCtrl = SpellCheckTextEditingController(
  text: contract.recommendedAwardValue?.toStringAsFixed(0) ?? '');
  final comparisonCtrl =
- TextEditingController(text: contract.vendorComparisonSummary ?? '');
+ SpellCheckTextEditingController(text: contract.vendorComparisonSummary ?? '');
  final technicalNotesCtrl =
- TextEditingController(text: contract.technicalGateNotes ?? '');
+ SpellCheckTextEditingController(text: contract.technicalGateNotes ?? '');
  String selectedRfqId =
  _selectedRfqForContract(contract, rfqs)?.id ?? '';
  final initialCriteria = _selectedRfqForContract(contract, rfqs)?.evaluationCriteria ??
  const <EvaluationCriteria>[];
- final criteriaCtrl = TextEditingController(
+ final criteriaCtrl = SpellCheckTextEditingController(
  text: _formatCriteriaEditor(initialCriteria),
  );
- final vendorListCtrl = TextEditingController(
+ final vendorListCtrl = SpellCheckTextEditingController(
  text: _vendorCandidatesForEvaluation(
  contract,
  _selectedRfqForContract(contract, rfqs),
@@ -4401,8 +4402,8 @@ Future<void> _showNegotiationDialog(
  ContractModel contract,
 ) async {
  final objectivesCtrl =
- TextEditingController(text: contract.negotiationObjectives ?? '');
- final itemsCtrl = TextEditingController(
+ SpellCheckTextEditingController(text: contract.negotiationObjectives ?? '');
+ final itemsCtrl = SpellCheckTextEditingController(
  text: (contract.negotiationItems ?? const [])
  .map((item) =>
  '${item.item}|${item.ourPosition}|${item.theirPosition}|${item.status}')
@@ -4718,9 +4719,9 @@ class _BudgetEditableTable extends StatelessWidget {
  final String projectId;
 
  void _showEditModal(BuildContext context, ContractModel contract) {
- final baseController = TextEditingController(
+ final baseController = SpellCheckTextEditingController(
  text: contract.estimatedValue.toStringAsFixed(0));
- final pctController = TextEditingController(
+ final pctController = SpellCheckTextEditingController(
  text: (contract.contingencyPercent ?? 0).toStringAsFixed(0));
 
  showDialog(
@@ -4797,9 +4798,9 @@ class _BudgetEditableTable extends StatelessWidget {
  }
 
  void _showAddModal(BuildContext context) {
- final nameController = TextEditingController();
- final baseController = TextEditingController(text: '0');
- final pctController = TextEditingController(text: '0');
+ final nameController = SpellCheckTextEditingController();
+ final baseController = SpellCheckTextEditingController(text: '0');
+ final pctController = SpellCheckTextEditingController(text: '0');
 
  showDialog(
  context: context,
@@ -5062,7 +5063,7 @@ class _NumberInputCellState extends State<_NumberInputCell> {
  @override
  void initState() {
  super.initState();
- _controller = TextEditingController(text: widget.value.toStringAsFixed(0));
+ _controller = SpellCheckTextEditingController(text: widget.value.toStringAsFixed(0));
  }
 
  @override
@@ -5363,8 +5364,8 @@ class _CriteriaRowState extends State<_CriteriaRow> {
  @override
  void initState() {
  super.initState();
- _nameController = TextEditingController(text: widget.criterion.name);
- _weightController = TextEditingController(
+ _nameController = SpellCheckTextEditingController(text: widget.criterion.name);
+ _weightController = SpellCheckTextEditingController(
  text: widget.criterion.weight.toStringAsFixed(0));
  }
 

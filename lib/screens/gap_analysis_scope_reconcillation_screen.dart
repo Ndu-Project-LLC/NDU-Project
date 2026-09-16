@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class GapAnalysisScopeReconcillationScreen extends StatefulWidget {
   const GapAnalysisScopeReconcillationScreen({
@@ -1240,16 +1241,16 @@ class _GapRegisterCard extends StatelessWidget {
 
   void _showGapEntryEditor(BuildContext context, {_GapEntry? existing}) {
     final isEdit = existing != null;
-    final titleController = TextEditingController(text: existing?.title ?? '');
-    final ownerController = TextEditingController(text: existing?.owner ?? '');
+    final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
+    final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
     final nextStepController =
-        TextEditingController(text: existing?.nextStep ?? '');
+        SpellCheckTextEditingController(text: existing?.nextStep ?? '');
     final impactAreaController =
-        TextEditingController(text: existing?.impactArea ?? '');
+        SpellCheckTextEditingController(text: existing?.impactArea ?? '');
     final targetDateController =
-        TextEditingController(text: existing?.targetDate ?? '');
+        SpellCheckTextEditingController(text: existing?.targetDate ?? '');
     final evidenceController =
-        TextEditingController(text: existing?.evidence ?? '');
+        SpellCheckTextEditingController(text: existing?.evidence ?? '');
     String selectedStage = existing?.stage ?? 'Moderate';
     String selectedCategory = existing?.category ?? 'Scope';
     String selectedSeverity = existing?.severity ?? 'Medium';
@@ -1778,11 +1779,11 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
     _RootCauseItem? existing,
   }) {
     final isEdit = existing != null;
-    final textController = TextEditingController(text: existing?.text ?? '');
+    final textController = SpellCheckTextEditingController(text: existing?.text ?? '');
     final freqController =
-        TextEditingController(text: existing?.frequency ?? '');
+        SpellCheckTextEditingController(text: existing?.frequency ?? '');
     final recController =
-        TextEditingController(text: existing?.recommendation ?? '');
+        SpellCheckTextEditingController(text: existing?.recommendation ?? '');
     String selectedCategory = existing?.category ?? 'Process';
     String selectedMethod = existing?.methodology ?? '5 Whys';
     String selectedImpact = existing?.impact ?? 'Medium';
@@ -2831,14 +2832,14 @@ class _ReconciliationPlanningCard extends StatelessWidget {
 
   void _showPlanEditor(BuildContext context, {_PlanEntry? existing}) {
     final isEdit = existing != null;
-    final titleController = TextEditingController(text: existing?.title ?? '');
-    final dueController = TextEditingController(text: existing?.due ?? '');
-    final ownerController = TextEditingController(text: existing?.owner ?? '');
+    final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
+    final dueController = SpellCheckTextEditingController(text: existing?.due ?? '');
+    final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
     final gapRefController =
-        TextEditingController(text: existing?.gapReference ?? '');
+        SpellCheckTextEditingController(text: existing?.gapReference ?? '');
     final depController =
-        TextEditingController(text: existing?.dependency ?? '');
-    final notesController = TextEditingController(text: existing?.notes ?? '');
+        SpellCheckTextEditingController(text: existing?.dependency ?? '');
+    final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
     String selectedStatus = existing?.status ?? 'Not started';
     String selectedPhase = existing?.phase ?? 'Execution';
     int completionPct = existing?.completionPct ?? 0;
@@ -3256,16 +3257,16 @@ class _ImpactAssessmentCard extends StatelessWidget {
 
   void _showImpactEditor(BuildContext context, {_ImpactRow? existing}) {
     final isEdit = existing != null;
-    final areaController = TextEditingController(text: existing?.area ?? '');
+    final areaController = SpellCheckTextEditingController(text: existing?.area ?? '');
     final detailController =
-        TextEditingController(text: existing?.detail ?? '');
+        SpellCheckTextEditingController(text: existing?.detail ?? '');
     final deliverableController =
-        TextEditingController(text: existing?.affectedDeliverable ?? '');
+        SpellCheckTextEditingController(text: existing?.affectedDeliverable ?? '');
     final exposureController =
-        TextEditingController(text: existing?.financialExposure ?? '');
-    final ownerController = TextEditingController(text: existing?.owner ?? '');
+        SpellCheckTextEditingController(text: existing?.financialExposure ?? '');
+    final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
     final mitigationController =
-        TextEditingController(text: existing?.mitigationLink ?? '');
+        SpellCheckTextEditingController(text: existing?.mitigationLink ?? '');
     String selectedRating = existing?.rating ?? 'Medium';
     String selectedTrend = existing?.trend ?? 'Stable';
     String selectedDomain = existing?.domain ?? 'Schedule';
@@ -4177,7 +4178,7 @@ class _ScenarioMatrixDialog extends StatefulWidget {
 }
 
 class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   final Set<String> _categoryFilters = {'All'};
 
   Future<void> _exportPdf() async {
@@ -4308,9 +4309,9 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
   Future<void> _openEditDialog(BuildContext context,
       {ScenarioRecord? record, List<ScenarioRecord>? currentList}) async {
     final id = record?.id ?? DateTime.now().microsecondsSinceEpoch.toString();
-    final titleCtrl = TextEditingController(text: record?.title ?? '');
-    final detailCtrl = TextEditingController(text: record?.detail ?? '');
-    final ownerCtrl = TextEditingController(text: record?.owner ?? '');
+    final titleCtrl = SpellCheckTextEditingController(text: record?.title ?? '');
+    final detailCtrl = SpellCheckTextEditingController(text: record?.detail ?? '');
+    final ownerCtrl = SpellCheckTextEditingController(text: record?.owner ?? '');
     var category = record?.category ?? 'Custom';
     var owner = record?.owner ?? '';
     var severity = record?.severity ?? 2;
@@ -5151,8 +5152,8 @@ class _ReconciliationWorkflowCardState
   }
 
   Future<void> _openAddWorkflowItem() async {
-    final titleController = TextEditingController();
-    final descController = TextEditingController();
+    final titleController = SpellCheckTextEditingController();
+    final descController = SpellCheckTextEditingController();
     String status = _columns.first.label;
 
     try {

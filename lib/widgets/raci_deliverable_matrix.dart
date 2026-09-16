@@ -6,6 +6,7 @@ import 'package:ndu_project/services/raci_matrix_seeder.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/providers/user_role_provider.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Renders the new RACI Deliverable Matrix.
 ///
@@ -294,10 +295,10 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
     final roleProvider = UserRoleInherited.of(context);
     final currentUserRole = roleProvider.siteRole.displayName;
     
-    final approverNameController = TextEditingController(
+    final approverNameController = SpellCheckTextEditingController(
       text: approval.approverName.isNotEmpty ? approval.approverName : currentUserDisplayName,
     );
-    final approverRoleController = TextEditingController(
+    final approverRoleController = SpellCheckTextEditingController(
       text: approval.approverRole.isNotEmpty ? approval.approverRole : currentUserRole,
     );
     bool checked = false;

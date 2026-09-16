@@ -41,6 +41,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SafeSection — Build-time error boundary that prevents a single failing child
@@ -210,7 +211,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     final cleaned = _stripLeadingBullet(text);
     // Risk descriptions are single-item prose, so use a plain controller —
     // no auto-bullet dots should ever appear inside these text fields.
-    final controller = TextEditingController(text: cleaned);
+    final controller = SpellCheckTextEditingController(text: cleaned);
     controller.addListener(_onDataChanged);
     return controller;
   }
@@ -266,7 +267,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     _solutions = List<AiSolutionItem>.from(widget.solutions);
     // Initialize solution title controllers
     _solutionTitleControllers = _solutions.map((s) {
-      final controller = TextEditingController(text: s.title);
+      final controller = SpellCheckTextEditingController(text: s.title);
       controller.addListener(_onDataChanged);
       return controller;
     }).toList();
@@ -341,7 +342,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
 
     _solutions = derivedSolutions;
     _solutionTitleControllers = _solutions.map((s) {
-      final controller = TextEditingController(text: s.title);
+      final controller = SpellCheckTextEditingController(text: s.title);
       controller.addListener(_onDataChanged);
       return controller;
     }).toList();
@@ -555,7 +556,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
           row['risk2']?.trim() ?? '',
           row['risk3']?.trim() ?? '',
         ];
-        _solutionTitleControllers.add(TextEditingController(text: solutionTitle)
+        _solutionTitleControllers.add(SpellCheckTextEditingController(text: solutionTitle)
           ..addListener(_onDataChanged));
         _riskControllers.add(List.generate(3, (r) {
           final c = _createRiskController(text: risks[r]);
@@ -1801,7 +1802,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                       const SizedBox(height: 8),
                       VoiceTextField(
                         readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
-                        controller: TextEditingController(text: ''),
+                        controller: SpellCheckTextEditingController(text: ''),
                         style: const TextStyle(
                             fontSize: 13, color: Colors.black54),
                         decoration: const InputDecoration(
@@ -1828,11 +1829,11 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     final hasControllers =
         index < _riskControllers.length && _riskControllers[index].length >= 3;
     final risk1Controller =
-        hasControllers ? _riskControllers[index][0] : TextEditingController();
+        hasControllers ? _riskControllers[index][0] : SpellCheckTextEditingController();
     final risk2Controller =
-        hasControllers ? _riskControllers[index][1] : TextEditingController();
+        hasControllers ? _riskControllers[index][1] : SpellCheckTextEditingController();
     final risk3Controller =
-        hasControllers ? _riskControllers[index][2] : TextEditingController();
+        hasControllers ? _riskControllers[index][2] : SpellCheckTextEditingController();
 
     if (isMobile) {
       return Container(

@@ -9,6 +9,7 @@ import 'package:ndu_project/utils/table_import_helper.dart';
 import 'dart:async';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Specialized Resource Grid widget for Team Meetings page
 /// Features: Summary cards, meeting planner table with role integration, AI agenda generation
@@ -63,12 +64,12 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
   }
 
   void _addNewMeeting() {
-    final typeCtrl = TextEditingController();
-    final freqCtrl = TextEditingController(text: 'Weekly');
-    final durationCtrl = TextEditingController(text: '1');
-    final objectiveCtrl = TextEditingController();
-    final actionItemsCtrl = TextEditingController();
-    final notesCtrl = TextEditingController();
+    final typeCtrl = SpellCheckTextEditingController();
+    final freqCtrl = SpellCheckTextEditingController(text: 'Weekly');
+    final durationCtrl = SpellCheckTextEditingController(text: '1');
+    final objectiveCtrl = SpellCheckTextEditingController();
+    final actionItemsCtrl = SpellCheckTextEditingController();
+    final notesCtrl = SpellCheckTextEditingController();
     List<String> selectedRoles = [];
 
     showDialog(
@@ -736,18 +737,18 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
 
   Future<void> _showEditDialog(BuildContext context) async {
     final meetingTypeController =
-        TextEditingController(text: _meeting.meetingType);
-    final frequencyController = TextEditingController(text: _meeting.frequency);
+        SpellCheckTextEditingController(text: _meeting.meetingType);
+    final frequencyController = SpellCheckTextEditingController(text: _meeting.frequency);
     final durationController =
-        TextEditingController(text: _meeting.durationHours);
+        SpellCheckTextEditingController(text: _meeting.durationHours);
     final objectiveController =
         RichTextEditingController(text: _meeting.meetingObjective);
     final actionItemsController =
         RichAutoBulletTextController(text: _meeting.actionItems);
     final notesController = RichTextEditingController(text: _meeting.notes);
     final nextDateController =
-        TextEditingController(text: _meeting.nextScheduledDate ?? '');
-    final statusController = TextEditingController(text: _meeting.status);
+        SpellCheckTextEditingController(text: _meeting.nextScheduledDate ?? '');
+    final statusController = SpellCheckTextEditingController(text: _meeting.status);
 
     var selectedParticipants = List<String>.from(_meeting.keyParticipants);
     var selectedMeetingType = _meeting.meetingType;
@@ -1408,7 +1409,7 @@ class _EditableCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return VoiceTextField(
-      controller: TextEditingController(text: value)
+      controller: SpellCheckTextEditingController(text: value)
         ..selection = TextSelection.collapsed(offset: value.length),
       onChanged: onChanged,
       textAlign: TextAlign.center,
@@ -1465,7 +1466,7 @@ class _ObjectiveCell extends StatelessWidget {
         ),
         // Text field
         VoiceTextField(
-          controller: TextEditingController(text: value)
+          controller: SpellCheckTextEditingController(text: value)
             ..selection = TextSelection.collapsed(offset: value.length),
           onChanged: onChanged,
           maxLines: 2,

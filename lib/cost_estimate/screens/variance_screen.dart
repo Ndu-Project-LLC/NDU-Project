@@ -17,6 +17,7 @@ import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart'
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class VarianceScreen extends StatelessWidget {
   const VarianceScreen({super.key});
@@ -385,9 +386,9 @@ class VarianceScreen extends StatelessWidget {
 
   void _showRebaselineDialog(BuildContext context,
       CostEstimateProvider provider, CostEstimate estimate, bool isWaterfall) {
-    final reasonCtrl = TextEditingController();
-    final mocCtrl = TextEditingController();
-    final agileCtrl = TextEditingController();
+    final reasonCtrl = SpellCheckTextEditingController();
+    final mocCtrl = SpellCheckTextEditingController();
+    final agileCtrl = SpellCheckTextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => _TreasuryRebaselineDialog(

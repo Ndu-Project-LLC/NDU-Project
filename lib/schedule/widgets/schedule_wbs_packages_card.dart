@@ -46,6 +46,7 @@ import 'package:ndu_project/schedule/utils/schedule_wbs_packages.dart';
 import 'package:ndu_project/schedule/utils/schedule_wbs_timelines.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ScheduleWbsPackagesCard extends StatefulWidget {
   const ScheduleWbsPackagesCard({super.key});
@@ -70,7 +71,7 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
   bool _showAll = false;
   bool _busy = false;
   String _query = '';
-  final TextEditingController _searchCtrl = TextEditingController();
+  final TextEditingController _searchCtrl = SpellCheckTextEditingController();
 
   @override
   void dispose() {

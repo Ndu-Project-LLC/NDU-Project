@@ -1244,9 +1244,7 @@ class ProjectDataHelper {
   /// charter has been signed off.
   static bool isCharterApproved(BuildContext context, {bool listen = false}) {
     try {
-      final data = getData(context, listen: listen);
-      return (data.frontEndPlanning.charterApproved == true) ||
-          (data.charterApprovalDate != null);
+      return isCharterApprovedIn(getData(context, listen: listen));
     } catch (_) {
       // If the provider isn't available (e.g. on a screen that doesn't
       // have project context, such as a global admin screen), default
@@ -1255,6 +1253,18 @@ class ProjectDataHelper {
       return false;
     }
   }
+
+  /// [isCharterApproved] from a model instead of a [BuildContext].
+  ///
+  /// Heavy pages should read the lock through this in a `Selector` (or
+  /// `Consumer`) rather than subscribing the whole page with
+  /// `isCharterApproved(context, listen: true)`. The provider notifies on
+  /// every autosave debounce and again when the Firestore write lands, so a
+  /// page-level listener rebuilds its entire tree — usually a large table —
+  /// while the user is scrolling or typing.
+  static bool isCharterApprovedIn(ProjectDataModel data) =>
+      (data.frontEndPlanning.charterApproved == true) ||
+      (data.charterApprovalDate != null);
 
   /// Get provider from context
   static ProjectDataProvider getProvider(BuildContext context) {
@@ -1459,7 +1469,9 @@ class ProjectDataHelper {
   ///
   /// - `Estimate`: creates auto benefit line items from opportunities and auto
   ///   cost estimate items from allowances.
-  /// - `Schedule`: creates auto milestones.
+  /// - `Schedule`: no longer writes anything. Opportunities and allowances are
+  ///   not milestones, so the Apply-To tag must not materialise them as
+  ///   `Opportunity:` / `Allowance:` rows on the Project Milestones table.
   /// - `Training`: creates auto training activities.
   ///
   /// Auto-generated entries are refreshed each call and won't overwrite manual
@@ -1469,7 +1481,7 @@ class ProjectDataHelper {
     final fep = data.frontEndPlanning;
 
     final mergedMilestones =
-        _mergeAutoScheduleMilestones(data.keyMilestones, fep);
+        _stripAutoScheduleMilestones(data.keyMilestones);
     final mergedTraining =
         _mergeAutoTrainingActivities(data.trainingActivities, fep);
     final mergedCostAnalysis =
@@ -1597,61 +1609,27 @@ class ProjectDataHelper {
     return parts.join(' | ');
   }
 
-  static List<Milestone> _mergeAutoScheduleMilestones(
-    List<Milestone> current,
-    FrontEndPlanningData fep,
-  ) {
-    final manual = current
+  /// Keeps the Project Milestones table to milestones only.
+  ///
+  /// Project Opportunities and Allowances are review items, not milestones, so
+  /// they must never appear there. Earlier builds wrote them in as
+  /// `Opportunity: …` / `Allowance: …` rows tagged with
+  /// [_autoScheduleMarker]; this drops both those rows and the leftover rows
+  /// they produced, so the defect does not survive an upgrade.
+  static List<Milestone> _stripAutoScheduleMilestones(
+      List<Milestone> current) {
+    return current
         .where((m) => !m.comments.contains(_autoScheduleMarker))
+        .where((m) => !_looksLikeNonMilestone(m.name))
         .toList();
+  }
 
-    final generated = <Milestone>[];
-
-    for (final opp in fep.opportunityItems) {
-      if (!_hasTag(opp.appliesTo, 'Schedule')) continue;
-      final title =
-          _withFallback(opp.opportunity, 'Opportunity ${generated.length + 1}');
-      final scheduleSavings = opp.potentialScheduleSavings.trim();
-      final marker = '$_autoScheduleMarker | opp:${opp.id}';
-      generated.add(
-        Milestone(
-          name: 'Opportunity: $title',
-          discipline: _withFallback(opp.discipline, 'Planning'),
-          dueDate: '',
-          comments: _buildAutoNote(
-            source: marker,
-            owner: opp.assignedTo,
-            extra: scheduleSavings.isNotEmpty
-                ? 'Potential schedule savings: $scheduleSavings'
-                : null,
-          ),
-        ),
-      );
-    }
-
-    for (final allowance in fep.allowanceItems) {
-      if (!_hasTag(allowance.appliesTo, 'Schedule')) continue;
-      if (allowance.name.trim().isEmpty && allowance.notes.trim().isEmpty) {
-        continue;
-      }
-      final title = _withFallback(
-          allowance.name, 'Allowance ${allowance.number.toString()}');
-      final marker = '$_autoScheduleMarker | allow:${allowance.id}';
-      generated.add(
-        Milestone(
-          name: 'Allowance: $title',
-          discipline: _withFallback(allowance.type, 'Planning'),
-          dueDate: '',
-          comments: _buildAutoNote(
-            source: marker,
-            owner: allowance.assignedTo,
-            extra: allowance.notes.trim().isNotEmpty ? allowance.notes : null,
-          ),
-        ),
-      );
-    }
-
-    return [...manual, ...generated];
+  /// True for rows an earlier build generated from an opportunity or an
+  /// allowance (`"Opportunity: …"`, `"Allowance: …"`).
+  static bool _looksLikeNonMilestone(String name) {
+    final lower = name.trim().toLowerCase();
+    return lower.startsWith('opportunity:') ||
+        lower.startsWith('allowance:');
   }
 
   static List<TrainingActivity> _mergeAutoTrainingActivities(

@@ -7,6 +7,7 @@ import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class _LessonItem {
  String id;
@@ -254,8 +255,8 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  }
 
  void _showEditDialog(BuildContext context, _LessonItem item) {
- final lessonCtrl = TextEditingController(text: item.lesson);
- final submittedByCtrl = TextEditingController(text: item.submittedBy);
+ final lessonCtrl = SpellCheckTextEditingController(text: item.lesson);
+ final submittedByCtrl = SpellCheckTextEditingController(text: item.submittedBy);
  var type = item.type;
  var category = item.category;
  var phase = item.phase;

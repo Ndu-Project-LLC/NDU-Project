@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kAccentColor = Color(0xFFFFC812);
 const Color _kTextPrimary = Color(0xFF1A1D1F);
@@ -20,7 +21,7 @@ class ProjectWorkspaceSidebar extends StatefulWidget {
 }
 
 class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
 
   @override

@@ -25,6 +25,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -47,9 +48,9 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
   String? _storyCacheProjectId;
   bool _isLoading = true;
   bool _isGenerating = false;
-  TextEditingController _ceremonyController = TextEditingController();
+  TextEditingController _ceremonyController = SpellCheckTextEditingController();
   String _searchQuery = '';
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   Timer? _saveDebounce;
 
   final DateFormat _dateFormat = DateFormat('MMM dd, yyyy');
@@ -98,7 +99,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
       final features = await EpicFeatureService.loadAllFeatures(pid);
       if (!mounted) return;
       _ceremonyController.dispose();
-      _ceremonyController = TextEditingController(
+      _ceremonyController = SpellCheckTextEditingController(
           text: calendarData['ceremonies'] as String? ?? '');
       setState(() {
         _sprints = sprints;
@@ -802,14 +803,14 @@ class _SprintEditDialogState extends State<_SprintEditDialog> {
   void initState() {
     super.initState();
     final e = widget.existing;
-    _nameCtrl = TextEditingController(text: e?.name ?? '');
-    _goalCtrl = TextEditingController(text: e?.goal ?? '');
+    _nameCtrl = SpellCheckTextEditingController(text: e?.name ?? '');
+    _goalCtrl = SpellCheckTextEditingController(text: e?.goal ?? '');
     _orderCtrl =
-        TextEditingController(text: (e?.order ?? _nextOrder()).toString());
+        SpellCheckTextEditingController(text: (e?.order ?? _nextOrder()).toString());
     _capacityCtrl =
-        TextEditingController(text: (e?.capacityPoints ?? 0).toString());
-    _focusCtrl = TextEditingController(text: (e?.focusFactor ?? 1).toString());
-    _squadCtrl = TextEditingController(text: e?.squadName ?? '');
+        SpellCheckTextEditingController(text: (e?.capacityPoints ?? 0).toString());
+    _focusCtrl = SpellCheckTextEditingController(text: (e?.focusFactor ?? 1).toString());
+    _squadCtrl = SpellCheckTextEditingController(text: e?.squadName ?? '');
     _startDate = e?.startDate;
     _endDate = e?.endDate;
   }

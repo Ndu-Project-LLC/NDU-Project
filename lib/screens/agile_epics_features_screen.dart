@@ -24,6 +24,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -84,7 +85,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
   TextEditingController _getController(
       Map<String, TextEditingController> map, String key, String initialValue) {
     if (!map.containsKey(key)) {
-      map[key] = TextEditingController(text: initialValue);
+      map[key] = SpellCheckTextEditingController(text: initialValue);
     }
     return map[key]!;
   }

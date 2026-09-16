@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/progress_quick_actions.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Status Reports & Asks Tracking sub-page
 class StatusReportsWidget extends StatefulWidget {
@@ -293,15 +294,15 @@ class _StatusReportRowWidgetState extends State<_StatusReportRowWidget> {
 
   Future<void> _showEditDialog() async {
     final reportTypeController =
-        TextEditingController(text: _report.reportType);
+        SpellCheckTextEditingController(text: _report.reportType);
     final stakeholderController =
-        TextEditingController(text: _report.stakeholder);
-    final summaryController = TextEditingController(text: _report.summary);
-    final keyWinsController = TextEditingController(text: _report.keyWins);
-    final blockersController = TextEditingController(text: _report.blockers);
-    final asksController = TextEditingController(text: _report.asks);
-    final followUpsController = TextEditingController(text: _report.followUps);
-    final notesController = TextEditingController(text: _report.notes);
+        SpellCheckTextEditingController(text: _report.stakeholder);
+    final summaryController = SpellCheckTextEditingController(text: _report.summary);
+    final keyWinsController = SpellCheckTextEditingController(text: _report.keyWins);
+    final blockersController = SpellCheckTextEditingController(text: _report.blockers);
+    final asksController = SpellCheckTextEditingController(text: _report.asks);
+    final followUpsController = SpellCheckTextEditingController(text: _report.followUps);
+    final notesController = SpellCheckTextEditingController(text: _report.notes);
     DateTime selectedDate = _report.reportDate;
     var selectedStatus = _report.status;
 

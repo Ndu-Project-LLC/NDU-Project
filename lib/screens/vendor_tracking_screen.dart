@@ -22,6 +22,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class VendorTrackingScreen extends StatefulWidget {
   const VendorTrackingScreen({super.key});
@@ -614,13 +615,13 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
 
   Future<void> _showPerformanceEntryDialog({_KpiRow? existing}) async {
     final isEdit = existing != null;
-    final metricCtl = TextEditingController(text: existing?.metric ?? '');
-    final valueCtl = TextEditingController(
+    final metricCtl = SpellCheckTextEditingController(text: existing?.metric ?? '');
+    final valueCtl = SpellCheckTextEditingController(
         text: existing != null ? '${(existing.value * 100).round()}' : '');
-    final targetCtl = TextEditingController(
+    final targetCtl = SpellCheckTextEditingController(
         text: existing != null ? '${(existing.target * 100).round()}' : '85');
-    final ownerCtl = TextEditingController(text: existing?.owner ?? '');
-    final trendCtl = TextEditingController(text: existing?.trend ?? '');
+    final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+    final trendCtl = SpellCheckTextEditingController(text: existing?.trend ?? '');
     try {
       await showDialog(
         context: context,
@@ -1066,10 +1067,10 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
 
   Future<void> _showSignalDialog({_RiskSignalRow? existing}) async {
     final isEdit = existing != null;
-    final signalCtl = TextEditingController(text: existing?.signal ?? '');
-    final descCtl = TextEditingController(text: existing?.description ?? '');
-    final ownerCtl = TextEditingController(text: existing?.owner ?? '');
-    final catCtl = TextEditingController(text: existing?.category ?? '');
+    final signalCtl = SpellCheckTextEditingController(text: existing?.signal ?? '');
+    final descCtl = SpellCheckTextEditingController(text: existing?.description ?? '');
+    final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+    final catCtl = SpellCheckTextEditingController(text: existing?.category ?? '');
     String severity = existing?.severity ?? 'Medium';
     String status = existing?.status ?? 'Open';
 
@@ -1417,9 +1418,9 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
 
   Future<void> _showActionDialog({_ActionRow? existing}) async {
     final isEdit = existing != null;
-    final titleCtl = TextEditingController(text: existing?.title ?? '');
-    final dueCtl = TextEditingController(text: existing?.dueDate ?? '');
-    final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+    final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
+    final dueCtl = SpellCheckTextEditingController(text: existing?.dueDate ?? '');
+    final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
     String priority = existing?.priority ?? 'Medium';
     String status = existing?.status ?? 'Pending invite';
 
@@ -1584,31 +1585,31 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
       );
       return;
     }
-    final nameController = TextEditingController(text: vendor?.name ?? '');
+    final nameController = SpellCheckTextEditingController(text: vendor?.name ?? '');
     var selectedCategory = vendor?.category ?? 'Logistics';
     var selectedCriticality = vendor?.criticality ?? 'Medium';
-    final slaController = TextEditingController(text: vendor?.sla ?? '92%');
-    final slaPerformanceController = TextEditingController(
+    final slaController = SpellCheckTextEditingController(text: vendor?.sla ?? '92%');
+    final slaPerformanceController = SpellCheckTextEditingController(
         text: vendor?.slaPerformance.toString() ?? '0.85');
     final leadTimeController =
-        TextEditingController(text: vendor?.leadTime ?? '14 Days');
+        SpellCheckTextEditingController(text: vendor?.leadTime ?? '14 Days');
     // Required Deliverables (SLA Terms) - use AutoBulletTextController
     final requiredDeliverablesController =
         AutoBulletTextController(text: vendor?.requiredDeliverables ?? '');
-    final ratingController = TextEditingController(text: vendor?.rating ?? 'B');
+    final ratingController = SpellCheckTextEditingController(text: vendor?.rating ?? 'B');
     final statusController =
-        TextEditingController(text: vendor?.status ?? 'Active');
+        SpellCheckTextEditingController(text: vendor?.status ?? 'Active');
     final nextReviewController =
-        TextEditingController(text: vendor?.nextReview ?? '');
+        SpellCheckTextEditingController(text: vendor?.nextReview ?? '');
     var selectedContractId = vendor?.contractId;
-    final onTimeController = TextEditingController(
+    final onTimeController = SpellCheckTextEditingController(
         text: vendor?.onTimeDelivery.toString() ?? '0.86');
-    final incidentController = TextEditingController(
+    final incidentController = SpellCheckTextEditingController(
         text: vendor?.incidentResponse.toString() ?? '0.72');
     final qualityController =
-        TextEditingController(text: vendor?.qualityScore.toString() ?? '0.79');
+        SpellCheckTextEditingController(text: vendor?.qualityScore.toString() ?? '0.79');
     final costController =
-        TextEditingController(text: vendor?.costAdherence.toString() ?? '0.65');
+        SpellCheckTextEditingController(text: vendor?.costAdherence.toString() ?? '0.65');
     // Vendor Notes - regular TextEditingController (prose)
     final notesController =
         RichTextEditingController(text: vendor?.notes ?? '');

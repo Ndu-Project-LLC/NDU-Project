@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// A reusable section wrapper that adds:
 /// 1. Search bar to filter table content
@@ -42,7 +43,7 @@ class SearchableTableSection extends StatefulWidget {
 enum TableViewType { table, card }
 
 class _SearchableTableSectionState extends State<SearchableTableSection> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   TableViewType _viewType = TableViewType.table;
   String _query = '';
 

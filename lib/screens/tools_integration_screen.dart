@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ToolsIntegrationScreen extends StatefulWidget {
  const ToolsIntegrationScreen({super.key});
 
@@ -1735,12 +1736,12 @@ showNavigationButtons: false,
 
  void _showIntegrationDialog({_IntegrationRow? existing}) {
  final isEdit = existing != null;
- final nameCtl = TextEditingController(text: existing?.name ?? '');
- final subtitleCtl = TextEditingController(text: existing?.subtitle ?? '');
- final providerCtl = TextEditingController(text: existing?.provider ?? 'Figma');
- final scopesCtl = TextEditingController(text: existing?.scopes ?? '');
- final mapsToCtl = TextEditingController(text: existing?.mapsTo ?? '');
- final featuresCtl = TextEditingController(text: existing?.features ?? '');
+ final nameCtl = SpellCheckTextEditingController(text: existing?.name ?? '');
+ final subtitleCtl = SpellCheckTextEditingController(text: existing?.subtitle ?? '');
+ final providerCtl = SpellCheckTextEditingController(text: existing?.provider ?? 'Figma');
+ final scopesCtl = SpellCheckTextEditingController(text: existing?.scopes ?? '');
+ final mapsToCtl = SpellCheckTextEditingController(text: existing?.mapsTo ?? '');
+ final featuresCtl = SpellCheckTextEditingController(text: existing?.features ?? '');
  String status = existing?.status ?? 'Not connected';
  IconData icon = existing?.icon ?? Icons.extension;
  Color iconColor = existing?.iconColor ?? const Color(0xFF64748B);
@@ -1888,11 +1889,11 @@ showNavigationButtons: false,
 
  void _showKpiEntryDialog({_KpiRow? existing}) {
  final isEdit = existing != null;
- final metricCtl = TextEditingController(text: existing?.metric ?? '');
- final valueCtl = TextEditingController(text: existing != null ? '${(existing.value * 100).round()}' : '');
- final targetCtl = TextEditingController(text: existing != null ? '${(existing.target * 100).round()}' : '90');
- final ownerCtl = TextEditingController(text: existing?.owner ?? '');
- final trendCtl = TextEditingController(text: existing?.trend ?? '');
+ final metricCtl = SpellCheckTextEditingController(text: existing?.metric ?? '');
+ final valueCtl = SpellCheckTextEditingController(text: existing != null ? '${(existing.value * 100).round()}' : '');
+ final targetCtl = SpellCheckTextEditingController(text: existing != null ? '${(existing.target * 100).round()}' : '90');
+ final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+ final trendCtl = SpellCheckTextEditingController(text: existing?.trend ?? '');
 
  showDialog(
  context: context,
@@ -1966,9 +1967,9 @@ showNavigationButtons: false,
 
  void _showRiskSignalDialog({_RiskSignalRow? existing}) {
  final isEdit = existing != null;
- final signalCtl = TextEditingController(text: existing?.signal ?? '');
- final descCtl = TextEditingController(text: existing?.description ?? '');
- final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+ final signalCtl = SpellCheckTextEditingController(text: existing?.signal ?? '');
+ final descCtl = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String severity = existing?.severity ?? 'Medium';
  String category = existing?.category ?? 'Governance';
  String status = existing?.status ?? 'Open';
@@ -2071,9 +2072,9 @@ showNavigationButtons: false,
 
  void _showActionDialog({_ActionRow? existing}) {
  final isEdit = existing != null;
- final titleCtl = TextEditingController(text: existing?.title ?? '');
- final ownerCtl = TextEditingController(text: existing?.owner ?? '');
- final dueDateCtl = TextEditingController(text: existing?.dueDate ?? 'TBD');
+ final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+ final dueDateCtl = SpellCheckTextEditingController(text: existing?.dueDate ?? 'TBD');
  String priority = existing?.priority ?? 'Medium';
  String status = existing?.status ?? 'Not Started';
 
@@ -2420,10 +2421,10 @@ showNavigationButtons: false,
 
  void _showApprovalGateDialog({_ApprovalGateData? existing}) {
  final isEdit = existing != null;
- final gateCtl = TextEditingController(text: existing?.gate ?? '');
- final descCtl = TextEditingController(text: existing?.description ?? '');
- final approverCtl = TextEditingController(text: existing?.approver ?? '');
- final targetDateCtl = TextEditingController(text: existing?.targetDate ?? 'TBD');
+ final gateCtl = SpellCheckTextEditingController(text: existing?.gate ?? '');
+ final descCtl = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final approverCtl = SpellCheckTextEditingController(text: existing?.approver ?? '');
+ final targetDateCtl = SpellCheckTextEditingController(text: existing?.targetDate ?? 'TBD');
  String department = existing?.department ?? 'Security';
  String priority = existing?.priority ?? 'High';
  String status = existing?.status ?? 'Not Started';
@@ -2550,12 +2551,12 @@ showNavigationButtons: false,
 
  void _showDataFlowDialog({_DataFlowRow? existing}) {
  final isEdit = existing != null;
- final sourceCtl = TextEditingController(text: existing?.source ?? '');
- final targetCtl = TextEditingController(text: existing?.target ?? '');
- final dataTypeCtl = TextEditingController(text: existing?.dataType ?? '');
- final apiMethodCtl = TextEditingController(text: existing?.apiMethod ?? 'REST GET');
- final frequencyCtl = TextEditingController(text: existing?.frequency ?? '');
- final transformCtl = TextEditingController(text: existing?.transformation ?? '');
+ final sourceCtl = SpellCheckTextEditingController(text: existing?.source ?? '');
+ final targetCtl = SpellCheckTextEditingController(text: existing?.target ?? '');
+ final dataTypeCtl = SpellCheckTextEditingController(text: existing?.dataType ?? '');
+ final apiMethodCtl = SpellCheckTextEditingController(text: existing?.apiMethod ?? 'REST GET');
+ final frequencyCtl = SpellCheckTextEditingController(text: existing?.frequency ?? '');
+ final transformCtl = SpellCheckTextEditingController(text: existing?.transformation ?? '');
  String status = existing?.status ?? 'Active';
 
  showDialog(

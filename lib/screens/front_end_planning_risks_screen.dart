@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 /// Front End Planning – Project Risks page
 /// Matches the provided screenshot with:
 /// - Top bar (back/forward, centered title, user chip)
@@ -44,7 +45,7 @@ class _FrontEndPlanningRisksScreenState
  extends State<FrontEndPlanningRisksScreen> {
  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
  final GlobalKey _riskTableKey = GlobalKey();
- final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  bool _isSyncReady = false;
  bool _isApplyingNotesSummary = false;
  bool _hasShownDueDiligencePrompt = false;
@@ -546,15 +547,15 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  if (index < 0 || index >= _rows.length) return;
  final current = _rows[index];
 
- final idCtrl = TextEditingController(text: current.id);
- final requirementCtrl = TextEditingController(text: current.requirement);
- final riskCtrl = TextEditingController(text: current.risk);
- final descriptionCtrl = TextEditingController(text: current.description);
- final categoryCtrl = TextEditingController(text: current.category);
- final mitigationCtrl = TextEditingController(text: current.mitigation);
- final disciplineCtrl = TextEditingController(text: current.discipline);
- final projectRoleCtrl = TextEditingController(text: current.projectRole);
- final ownerCtrl = TextEditingController(text: current.owner);
+ final idCtrl = SpellCheckTextEditingController(text: current.id);
+ final requirementCtrl = SpellCheckTextEditingController(text: current.requirement);
+ final riskCtrl = SpellCheckTextEditingController(text: current.risk);
+ final descriptionCtrl = SpellCheckTextEditingController(text: current.description);
+ final categoryCtrl = SpellCheckTextEditingController(text: current.category);
+ final mitigationCtrl = SpellCheckTextEditingController(text: current.mitigation);
+ final disciplineCtrl = SpellCheckTextEditingController(text: current.discipline);
+ final projectRoleCtrl = SpellCheckTextEditingController(text: current.projectRole);
+ final ownerCtrl = SpellCheckTextEditingController(text: current.owner);
  // Dropdown options
  const requirementTypeOptions = [
  'Technical',

@@ -4,6 +4,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const _kAccentColor = Color(0xFFFFC107);
 const _kPrimaryText = Color(0xFF1E293B);
@@ -63,9 +64,9 @@ class _MilestoneEditDialogState extends State<MilestoneEditDialog> {
     super.initState();
     final existing = widget.existing;
     _isNew = existing == null;
-    _nameCtrl = TextEditingController(text: existing?.name ?? '');
-    _refsCtrl = TextEditingController(text: existing?.references ?? '');
-    _commentsCtrl = TextEditingController(text: existing?.comments ?? '');
+    _nameCtrl = SpellCheckTextEditingController(text: existing?.name ?? '');
+    _refsCtrl = SpellCheckTextEditingController(text: existing?.references ?? '');
+    _commentsCtrl = SpellCheckTextEditingController(text: existing?.comments ?? '');
     _dueDate = existing?.dueDate ?? '';
     _breakdownType = _initBreakdownType(existing?.discipline ?? '');
   }

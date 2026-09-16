@@ -32,6 +32,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
 
@@ -44,7 +45,7 @@ class ScheduleScreen extends StatefulWidget {
 }
 
 class _ScheduleScreenState extends State<ScheduleScreen> {
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   final List<_ScheduleRow> _activityRows = [];
 
   String _selectedMethodology = 'Waterfall';
@@ -783,41 +784,41 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     String status = _normalizeScheduleStatus(row?.status ?? 'pending');
     String priority = _normalizeSchedulePriority(row?.priority ?? 'medium');
 
-    final titleController = TextEditingController(
+    final titleController = SpellCheckTextEditingController(
       text: row?.titleController.text.trim() ?? '',
     );
-    final durationController = TextEditingController(
+    final durationController = SpellCheckTextEditingController(
       text: row?.durationController.text.trim().isNotEmpty == true
           ? row!.durationController.text.trim()
           : '5',
     );
-    final assigneeController = TextEditingController(
+    final assigneeController = SpellCheckTextEditingController(
       text: row?.assigneeController.text.trim() ?? '',
     );
-    final disciplineController = TextEditingController(
+    final disciplineController = SpellCheckTextEditingController(
       text: row?.disciplineController.text.trim() ?? '',
     );
-    final progressController = TextEditingController(
+    final progressController = SpellCheckTextEditingController(
       text: row?.progressController.text.trim().isNotEmpty == true
           ? row!.progressController.text.trim()
           : '0',
     );
-    final startDateController = TextEditingController(
+    final startDateController = SpellCheckTextEditingController(
       text: row?.startDateController.text.trim() ?? '',
     );
-    final dueDateController = TextEditingController(
+    final dueDateController = SpellCheckTextEditingController(
       text: row?.dueDateController.text.trim() ?? '',
     );
-    final hoursController = TextEditingController(
+    final hoursController = SpellCheckTextEditingController(
       text: row?.hoursController.text.trim() ?? '',
     );
-    final estimatingBasisController = TextEditingController(
+    final estimatingBasisController = SpellCheckTextEditingController(
       text: row?.estimatingBasisController.text.trim() ?? '',
     );
-    final milestoneController = TextEditingController(
+    final milestoneController = SpellCheckTextEditingController(
       text: row?.milestoneController.text.trim() ?? '',
     );
-    final dependencyIdsController = TextEditingController(
+    final dependencyIdsController = SpellCheckTextEditingController(
       text: row?.normalizedDependencyIds.join(', ') ?? '',
     );
 
@@ -4236,22 +4237,22 @@ class _ScheduleRow {
     this.onChanged,
   })  : status = _normalizeScheduleStatus(status),
         priority = _normalizeSchedulePriority(priority),
-        titleController = TextEditingController(text: title),
+        titleController = SpellCheckTextEditingController(text: title),
         durationController =
-            TextEditingController(text: durationDays.toString()),
-        assigneeController = TextEditingController(text: assignee),
-        disciplineController = TextEditingController(text: discipline),
-        progressController = TextEditingController(
+            SpellCheckTextEditingController(text: durationDays.toString()),
+        assigneeController = SpellCheckTextEditingController(text: assignee),
+        disciplineController = SpellCheckTextEditingController(text: discipline),
+        progressController = SpellCheckTextEditingController(
           text: ((progressPercent * 100).clamp(0, 100)).round().toString(),
         ),
-        startDateController = TextEditingController(text: startDate),
-        dueDateController = TextEditingController(text: dueDate),
-        hoursController = TextEditingController(
+        startDateController = SpellCheckTextEditingController(text: startDate),
+        dueDateController = SpellCheckTextEditingController(text: dueDate),
+        hoursController = SpellCheckTextEditingController(
           text: estimatedHours == 0 ? '' : estimatedHours.toStringAsFixed(1),
         ),
         estimatingBasisController =
-            TextEditingController(text: estimatingBasis),
-        milestoneController = TextEditingController(text: milestone),
+            SpellCheckTextEditingController(text: estimatingBasis),
+        milestoneController = SpellCheckTextEditingController(text: milestone),
         dependencyIds = dependencyIds ??
             (predecessorId == null ? <String>[] : <String>[predecessorId]) {
     if (onChanged != null) {

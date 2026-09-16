@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kAccentColor = Color(0xFFFFC107);
 const Color _kPrimaryText = Color(0xFF1E293B);
@@ -93,7 +94,7 @@ class _ProjectFrameworkNextScreenState
   String _potentialSolution = '';
   String _projectObjective = '';
   String _currentFilter = 'View All';
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
 
   Timer? _saveDebounce;
 
@@ -172,9 +173,9 @@ class _ProjectFrameworkNextScreenState
 
       // Initialize dynamic lists with the required number of goals
       for (int i = 0; i < goalCount; i++) {
-        _goalTitleControllers.add(TextEditingController());
-        _goalDescControllers.add(TextEditingController());
-        _goalYearControllers.add(TextEditingController());
+        _goalTitleControllers.add(SpellCheckTextEditingController());
+        _goalDescControllers.add(SpellCheckTextEditingController());
+        _goalYearControllers.add(SpellCheckTextEditingController());
         _goalIds.add('');
         _goalMilestoneIds.add(<String>[]);
         _goalPriorities.add('Medium Priority');
@@ -301,9 +302,9 @@ class _ProjectFrameworkNextScreenState
   void _addGoal() {
     setState(() {
       final idx = _goalTitleControllers.length;
-      _goalTitleControllers.add(TextEditingController());
-      _goalDescControllers.add(TextEditingController());
-      _goalYearControllers.add(TextEditingController());
+      _goalTitleControllers.add(SpellCheckTextEditingController());
+      _goalDescControllers.add(SpellCheckTextEditingController());
+      _goalYearControllers.add(SpellCheckTextEditingController());
       _goalIds.add('');
       _goalMilestoneIds.add(<String>[]);
       _goalPriorities.add('Medium Priority');

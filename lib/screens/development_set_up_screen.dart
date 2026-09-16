@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Development Set Up — CRUD-Enabled Overhaul
@@ -702,13 +703,13 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
 
  Future<void> _openEnvDialog({_EnvProvisionItem? existing}) async {
  final isEdit = existing != null;
- final envCtrl = TextEditingController(text: existing?.environment ?? '');
- final typeCtrl = TextEditingController(text: existing?.type ?? '');
- final statusCtrl = TextEditingController(text: existing?.status ?? 'Not Started');
- final urlCtrl = TextEditingController(text: existing?.accessUrl ?? '');
- final ownerCtrl = TextEditingController(text: existing?.owner ?? '');
- final dateCtrl = TextEditingController(text: existing?.targetDate ?? '');
- final notesCtrl = TextEditingController(text: existing?.notes ?? '');
+ final envCtrl = SpellCheckTextEditingController(text: existing?.environment ?? '');
+ final typeCtrl = SpellCheckTextEditingController(text: existing?.type ?? '');
+ final statusCtrl = SpellCheckTextEditingController(text: existing?.status ?? 'Not Started');
+ final urlCtrl = SpellCheckTextEditingController(text: existing?.accessUrl ?? '');
+ final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+ final dateCtrl = SpellCheckTextEditingController(text: existing?.targetDate ?? '');
+ final notesCtrl = SpellCheckTextEditingController(text: existing?.notes ?? '');
  await showDialog(
  context: context,
  builder: (ctx) => AlertDialog(
@@ -831,12 +832,12 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
 
  Future<void> _openCicdDialog({_CicdPipelineItem? existing}) async {
  final isEdit = existing != null;
- final stageCtrl = TextEditingController(text: existing?.stage ?? '');
- final toolCtrl = TextEditingController(text: existing?.tool ?? '');
- final statusCtrl = TextEditingController(text: existing?.status ?? 'Pending');
- final triggerCtrl = TextEditingController(text: existing?.trigger ?? '');
- final gateCtrl = TextEditingController(text: existing?.gateCriteria ?? '');
- final ownerCtrl = TextEditingController(text: existing?.owner ?? '');
+ final stageCtrl = SpellCheckTextEditingController(text: existing?.stage ?? '');
+ final toolCtrl = SpellCheckTextEditingController(text: existing?.tool ?? '');
+ final statusCtrl = SpellCheckTextEditingController(text: existing?.status ?? 'Pending');
+ final triggerCtrl = SpellCheckTextEditingController(text: existing?.trigger ?? '');
+ final gateCtrl = SpellCheckTextEditingController(text: existing?.gateCriteria ?? '');
+ final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  await showDialog(
  context: context,
  builder: (ctx) => AlertDialog(
@@ -959,13 +960,13 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
 
  Future<void> _openToolDialog({_DevToolItem? existing}) async {
  final isEdit = existing != null;
- final toolCtrl = TextEditingController(text: existing?.tool ?? '');
- final catCtrl = TextEditingController(text: existing?.category ?? '');
- final licCtrl = TextEditingController(text: existing?.license ?? '');
- final usersCtrl = TextEditingController(text: existing?.assignedUsers ?? '');
- final statusCtrl = TextEditingController(text: existing?.status ?? 'Active');
- final expiryCtrl = TextEditingController(text: existing?.expiry ?? '');
- final ownerCtrl = TextEditingController(text: existing?.owner ?? '');
+ final toolCtrl = SpellCheckTextEditingController(text: existing?.tool ?? '');
+ final catCtrl = SpellCheckTextEditingController(text: existing?.category ?? '');
+ final licCtrl = SpellCheckTextEditingController(text: existing?.license ?? '');
+ final usersCtrl = SpellCheckTextEditingController(text: existing?.assignedUsers ?? '');
+ final statusCtrl = SpellCheckTextEditingController(text: existing?.status ?? 'Active');
+ final expiryCtrl = SpellCheckTextEditingController(text: existing?.expiry ?? '');
+ final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  await showDialog(
  context: context,
  builder: (ctx) => AlertDialog(
@@ -1088,15 +1089,15 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
 
  Future<void> _openQualityDialog({_QualityGateItem? existing}) async {
  final isEdit = existing != null;
- final gateCtrl = TextEditingController(text: existing?.gate ?? '');
- final critCtrl = TextEditingController(text: existing?.criteria ?? '');
+ final gateCtrl = SpellCheckTextEditingController(text: existing?.gate ?? '');
+ final critCtrl = SpellCheckTextEditingController(text: existing?.criteria ?? '');
  var selectedMethodology = _methodologyOptions.contains(existing?.methodology)
  ? existing!.methodology
  : _methodologyOptions.first;
  var selectedStatus = _qualityStatusOptions.contains(existing?.status)
  ? existing!.status
  : _qualityStatusOptions.first;
- final apprCtrl = TextEditingController(text: existing?.approver ?? '');
+ final apprCtrl = SpellCheckTextEditingController(text: existing?.approver ?? '');
  DateTime? selectedTargetDate;
  if (existing?.targetDate != null && existing!.targetDate.isNotEmpty) {
  selectedTargetDate = DateFormat('MMM dd, yyyy').tryParse(existing.targetDate) ??
@@ -1295,12 +1296,12 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
 
  Future<void> _openSecurityDialog({_SecurityBaselineItem? existing}) async {
  final isEdit = existing != null;
- final ctrlCtrl = TextEditingController(text: existing?.control ?? '');
- final frameFieldCtrl = TextEditingController(text: existing?.framework ?? '');
- final statusCtrl = TextEditingController(text: existing?.status ?? 'Not Started');
- final evidCtrl = TextEditingController(text: existing?.evidence ?? '');
- final ownerCtrl = TextEditingController(text: existing?.owner ?? '');
- final dateCtrl = TextEditingController(text: existing?.reviewDate ?? '');
+ final ctrlCtrl = SpellCheckTextEditingController(text: existing?.control ?? '');
+ final frameFieldCtrl = SpellCheckTextEditingController(text: existing?.framework ?? '');
+ final statusCtrl = SpellCheckTextEditingController(text: existing?.status ?? 'Not Started');
+ final evidCtrl = SpellCheckTextEditingController(text: existing?.evidence ?? '');
+ final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+ final dateCtrl = SpellCheckTextEditingController(text: existing?.reviewDate ?? '');
  await showDialog(
  context: context,
  builder: (ctx) => AlertDialog(
@@ -1431,11 +1432,11 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
 
  Future<void> _openApprovalDialog({_ApprovalGateItem? existing}) async {
  final isEdit = existing != null;
- final gateCtrl = TextEditingController(text: existing?.gate ?? '');
- final descCtrl = TextEditingController(text: existing?.description ?? '');
- final statusCtrl = TextEditingController(text: existing?.status ?? 'Not Started');
- final apprCtrl = TextEditingController(text: existing?.approver ?? '');
- final dateCtrl = TextEditingController(text: existing?.targetDate ?? 'TBD');
+ final gateCtrl = SpellCheckTextEditingController(text: existing?.gate ?? '');
+ final descCtrl = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final statusCtrl = SpellCheckTextEditingController(text: existing?.status ?? 'Not Started');
+ final apprCtrl = SpellCheckTextEditingController(text: existing?.approver ?? '');
+ final dateCtrl = SpellCheckTextEditingController(text: existing?.targetDate ?? 'TBD');
  await showDialog(
  context: context,
  builder: (ctx) => AlertDialog(

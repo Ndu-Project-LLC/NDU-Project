@@ -8,6 +8,8 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/open_editor_button.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_check_dialogs.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Returns true if the 'Open Editor' button should be hidden app-wide.
@@ -248,9 +250,22 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? TextEditingController();
+    _controller = widget.controller ?? SpellCheckTextEditingController();
+    _syncSpellCheckOptions();
     _checkAvailability();
     _loadOpenEditorDisabled();
+  }
+
+  /// Obfuscated fields (passwords) never get underlined.
+  void _syncSpellCheckOptions() {
+    final controller = _controller;
+    if (controller is SpellCheckTextEditingController) {
+      controller.spellCheckEnabled = !widget.obscureText;
+    }
+  }
+
+  void _openSpellCheck() {
+    showSpellCheckDialog(context, controller: _controller);
   }
 
   Future<void> _loadOpenEditorDisabled() async {
@@ -262,8 +277,9 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
   void didUpdateWidget(VoiceTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
-      _controller = widget.controller ?? TextEditingController();
+      _controller = widget.controller ?? SpellCheckTextEditingController();
     }
+    _syncSpellCheckOptions();
   }
 
   Future<void> _checkAvailability() async {
@@ -399,6 +415,9 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     final textField = TextField(
       controller: _controller,
       focusNode: widget.focusNode,
+      // Right-click / long-press a flagged word for its corrections.
+      contextMenuBuilder: (context, editableTextState) =>
+          buildSpellCheckContextMenu(context, editableTextState, _controller),
       decoration: effectiveDecoration,
       keyboardType: widget.keyboardType,
       textInputAction: widget.textInputAction,
@@ -483,7 +502,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     required bool docxEnabled,
     required bool kazAiEnabled,
   }) {
-    return <EditorAction>[
+    final actions = <EditorAction>[
       if (kazAiEnabled)
         EditorAction(
           id: 'ai',
@@ -526,6 +545,27 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
           },
         ),
     ];
+
+    // Offer the review from the Open Editor popup, but only where that popup
+    // already exists. Adding it to a field that has no other actions would
+    // summon the Open Editor button and change that field's layout.
+    if (!widget.obscureText &&
+        !widget.readOnly &&
+        actions.any((a) => a.enabled)) {
+      actions.insert(
+        0,
+        EditorAction(
+          id: 'spell_check',
+          icon: Icons.spellcheck,
+          label: 'Spelling & grammar',
+          tooltip: 'Review spelling and grammar in this field',
+          accent: const Color(0xFF2563EB),
+          onTap: _openSpellCheck,
+        ),
+      );
+    }
+
+    return actions;
   }
 }
 
@@ -960,10 +1000,23 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
   @override
   void initState() {
     super.initState();
-    _controller =
-        widget.controller ?? TextEditingController(text: widget.initialValue);
+    _controller = widget.controller ??
+        SpellCheckTextEditingController(text: widget.initialValue);
+    _syncSpellCheckOptions();
     _checkAvailability();
     _loadOpenEditorDisabled();
+  }
+
+  /// Obfuscated fields (passwords) never get underlined.
+  void _syncSpellCheckOptions() {
+    final controller = _controller;
+    if (controller is SpellCheckTextEditingController) {
+      controller.spellCheckEnabled = !widget.obscureText;
+    }
+  }
+
+  void _openSpellCheck() {
+    showSpellCheckDialog(context, controller: _controller);
   }
 
   Future<void> _loadOpenEditorDisabled() async {
@@ -975,13 +1028,14 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
   void didUpdateWidget(VoiceTextFormField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
-      _controller =
-          widget.controller ?? TextEditingController(text: widget.initialValue);
+      _controller = widget.controller ??
+          SpellCheckTextEditingController(text: widget.initialValue);
     } else if (widget.controller == null &&
         widget.initialValue != oldWidget.initialValue &&
         widget.initialValue != _controller.text) {
       _controller.text = widget.initialValue ?? '';
     }
+    _syncSpellCheckOptions();
   }
 
   Future<void> _checkAvailability() async {
@@ -1107,6 +1161,9 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
 
     final textField = TextFormField(
       controller: _controller,
+      // Right-click / long-press a flagged word for its corrections.
+      contextMenuBuilder: (context, editableTextState) =>
+          buildSpellCheckContextMenu(context, editableTextState, _controller),
       focusNode: widget.focusNode,
       decoration: widget.decoration ?? const InputDecoration(),
       keyboardType: widget.keyboardType,
@@ -1198,7 +1255,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     required bool docxEnabled,
     required bool kazAiEnabled,
   }) {
-    return <EditorAction>[
+    final actions = <EditorAction>[
       if (kazAiEnabled)
         EditorAction(
           id: 'ai',
@@ -1240,5 +1297,26 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
           },
         ),
     ];
+
+    // Offer the review from the Open Editor popup, but only where that popup
+    // already exists. Adding it to a field that has no other actions would
+    // summon the Open Editor button and change that field's layout.
+    if (!widget.obscureText &&
+        !widget.readOnly &&
+        actions.any((a) => a.enabled)) {
+      actions.insert(
+        0,
+        EditorAction(
+          id: 'spell_check',
+          icon: Icons.spellcheck,
+          label: 'Spelling & grammar',
+          tooltip: 'Review spelling and grammar in this field',
+          accent: const Color(0xFF2563EB),
+          onTap: _openSpellCheck,
+        ),
+      );
+    }
+
+    return actions;
   }
 }

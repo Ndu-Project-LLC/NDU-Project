@@ -15,6 +15,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const Color _kBackground = Color(0xFFF7F8FC);
 const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
@@ -906,9 +907,9 @@ class _AddDeliverableDialog extends StatefulWidget {
 
 class _AddDeliverableDialogState extends State<_AddDeliverableDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _assigneeController = TextEditingController();
+  final _titleController = SpellCheckTextEditingController();
+  final _descriptionController = SpellCheckTextEditingController();
+  final _assigneeController = SpellCheckTextEditingController();
 
   DeliverableCategory _selectedCategory = DeliverableCategory.governance;
   RoadmapDeliverablePriority _selectedPriority =
@@ -1104,9 +1105,9 @@ class _EditDeliverableDialogState extends State<_EditDeliverableDialog> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.deliverable.title);
+    _titleController = SpellCheckTextEditingController(text: widget.deliverable.title);
     _descriptionController =
-        TextEditingController(text: widget.deliverable.description);
+        SpellCheckTextEditingController(text: widget.deliverable.description);
     _selectedStatus = widget.deliverable.status;
     _selectedPriority = widget.deliverable.priority;
     _selectedDueDate = widget.deliverable.dueDate;

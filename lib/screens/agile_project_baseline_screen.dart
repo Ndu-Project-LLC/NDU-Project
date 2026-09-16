@@ -31,6 +31,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -62,10 +63,10 @@ class _AgileProjectBaselineScreenState
  'Other',
  ];
 
- final TextEditingController _releaseLabelController = TextEditingController();
- final TextEditingController _capacityController = TextEditingController();
+ final TextEditingController _releaseLabelController = SpellCheckTextEditingController();
+ final TextEditingController _capacityController = SpellCheckTextEditingController();
  final TextEditingController _approverSearchController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final FocusNode _approverFocusNode = FocusNode();
  final TextEditingController _approvalNotesController =
  RichTextEditingController();
@@ -1933,7 +1934,7 @@ class _AssumptionRowState {
  required this.impact,
  required String text,
  required VoidCallback onChanged,
- }) : textController = TextEditingController(text: text) {
+ }) : textController = SpellCheckTextEditingController(text: text) {
  textController.addListener(onChanged);
  _listener = onChanged;
  }

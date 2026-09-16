@@ -12,6 +12,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ExecutionPlanAgileDeliveryPlanScreen extends StatelessWidget {
   const ExecutionPlanAgileDeliveryPlanScreen({super.key});
@@ -188,7 +189,7 @@ class PlanDecisionSectionState extends State<PlanDecisionSection> {
   void initState() {
     super.initState();
     for (final field in widget.fields) {
-      _controllers[field.keyName] = TextEditingController();
+      _controllers[field.keyName] = SpellCheckTextEditingController();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadFromFirestore());
   }

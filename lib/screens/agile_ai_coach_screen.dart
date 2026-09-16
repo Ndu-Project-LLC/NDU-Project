@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE AI COACH — AI Capability Cards, Chat, Maturity Scorecard
@@ -35,7 +36,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
 
   bool _isLoading = true;
   bool _isSaving = false;
-  final TextEditingController _chatCtrl = TextEditingController();
+  final TextEditingController _chatCtrl = SpellCheckTextEditingController();
   final ScrollController _chatScroll = ScrollController();
   final List<_ChatMessage> _chat = [];
 

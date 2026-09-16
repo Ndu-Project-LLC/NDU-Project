@@ -16,6 +16,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 enum _TechnologyTab {
  inventory('Technology Inventory'),
  aiIntegrations('AI Integrations'),
@@ -276,13 +277,13 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  Future<void> _openInventoryDialog({int? index}) async {
  final existing = index != null ? _inventory[index] : <String, dynamic>{};
  final name =
- TextEditingController(text: existing['name']?.toString() ?? '');
+ SpellCheckTextEditingController(text: existing['name']?.toString() ?? '');
  final category =
- TextEditingController(text: existing['category']?.toString() ?? '');
+ SpellCheckTextEditingController(text: existing['category']?.toString() ?? '');
  final cost =
- TextEditingController(text: existing['cost']?.toString() ?? '');
+ SpellCheckTextEditingController(text: existing['cost']?.toString() ?? '');
  final vendor =
- TextEditingController(text: existing['vendor']?.toString() ?? '');
+ SpellCheckTextEditingController(text: existing['vendor']?.toString() ?? '');
 
  String status =
  _normalizeStatus(existing['status']?.toString() ?? 'Proposed/Pending');
@@ -410,10 +411,10 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  final existing = index != null ? list[index] : <String, dynamic>{};
 
  final name =
- TextEditingController(text: existing['name']?.toString() ?? '');
+ SpellCheckTextEditingController(text: existing['name']?.toString() ?? '');
  final description =
- TextEditingController(text: existing['description']?.toString() ?? '');
- final cost = TextEditingController(
+ SpellCheckTextEditingController(text: existing['description']?.toString() ?? '');
+ final cost = SpellCheckTextEditingController(
  text: existing['cost']?.toString() ??
  existing['implementationCost']?.toString() ??
  '',
@@ -507,10 +508,10 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
 
  Future<void> _openDefinitionDialog({int? index}) async {
  final existing = index != null ? _definitions[index] : <String, dynamic>{};
- final term = TextEditingController(
+ final term = SpellCheckTextEditingController(
  text: existing['term']?.toString() ?? existing['name']?.toString() ?? '',
  );
- final definition = TextEditingController(
+ final definition = SpellCheckTextEditingController(
  text: existing['definition']?.toString() ??
  existing['description']?.toString() ??
  '',
@@ -573,17 +574,17 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  Future<void> _openRecommendationDialog({int? index}) async {
  final existing =
  index != null ? _recommendations[index] : <String, dynamic>{};
- final recommendation = TextEditingController(
+ final recommendation = SpellCheckTextEditingController(
  text: existing['recommendation']?.toString() ??
  existing['title']?.toString() ??
  '',
  );
  final description =
- TextEditingController(text: existing['description']?.toString() ?? '');
- final cost = TextEditingController(
+ SpellCheckTextEditingController(text: existing['description']?.toString() ?? '');
+ final cost = SpellCheckTextEditingController(
  text: existing['estimatedCost']?.toString() ?? '');
  final vendor =
- TextEditingController(text: existing['vendor']?.toString() ?? '');
+ SpellCheckTextEditingController(text: existing['vendor']?.toString() ?? '');
 
  final save = await showDialog<bool>(
  context: context,

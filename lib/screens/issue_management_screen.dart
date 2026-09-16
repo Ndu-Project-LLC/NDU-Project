@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class IssueManagementScreen extends StatefulWidget {
  const IssueManagementScreen({super.key});
 
@@ -994,11 +995,11 @@ class _NewIssueDialog extends StatefulWidget {
 
 class _NewIssueDialogState extends State<_NewIssueDialog> {
  final _formKey = GlobalKey<FormState>();
- final TextEditingController _titleCtrl = TextEditingController();
- final TextEditingController _descriptionCtrl = TextEditingController();
- final TextEditingController _assigneeCtrl = TextEditingController();
- final TextEditingController _dueDateCtrl = TextEditingController();
- final TextEditingController _milestoneCtrl = TextEditingController();
+ final TextEditingController _titleCtrl = SpellCheckTextEditingController();
+ final TextEditingController _descriptionCtrl = SpellCheckTextEditingController();
+ final TextEditingController _assigneeCtrl = SpellCheckTextEditingController();
+ final TextEditingController _dueDateCtrl = SpellCheckTextEditingController();
+ final TextEditingController _milestoneCtrl = SpellCheckTextEditingController();
 
  final List<String> _types = const [
  'Scope',

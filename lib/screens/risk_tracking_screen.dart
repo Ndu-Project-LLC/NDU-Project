@@ -16,6 +16,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class RiskTrackingScreen extends StatefulWidget {
   const RiskTrackingScreen({super.key});
 
@@ -1532,12 +1533,12 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  // ─── CRUD: Escalation Readiness ────────────────────────────────────────────
 
  void _openAddEscalationDialog() {
- final eventController = TextEditingController();
- final triggerController = TextEditingController();
- final responsibleController = TextEditingController();
- final targetController = TextEditingController();
- final windowController = TextEditingController();
- final decisionController = TextEditingController();
+ final eventController = SpellCheckTextEditingController();
+ final triggerController = SpellCheckTextEditingController();
+ final responsibleController = SpellCheckTextEditingController();
+ final targetController = SpellCheckTextEditingController();
+ final windowController = SpellCheckTextEditingController();
+ final decisionController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
  var selectedLevel = 'L2-Management';
  var selectedStatus = 'Pending';
@@ -1678,12 +1679,12 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  }
 
  void _openEditEscalationDialog(_EscalationReadiness esc) {
- final eventController = TextEditingController(text: esc.event);
- final triggerController = TextEditingController(text: esc.triggerCondition);
- final responsibleController = TextEditingController(text: esc.responsibleParty);
- final targetController = TextEditingController(text: esc.escalationTarget);
- final windowController = TextEditingController(text: esc.responseWindow);
- final decisionController = TextEditingController(text: esc.decisionRequired);
+ final eventController = SpellCheckTextEditingController(text: esc.event);
+ final triggerController = SpellCheckTextEditingController(text: esc.triggerCondition);
+ final responsibleController = SpellCheckTextEditingController(text: esc.responsibleParty);
+ final targetController = SpellCheckTextEditingController(text: esc.escalationTarget);
+ final windowController = SpellCheckTextEditingController(text: esc.responseWindow);
+ final decisionController = SpellCheckTextEditingController(text: esc.decisionRequired);
  final formKey = GlobalKey<FormState>();
  var selectedLevel = esc.level;
  var selectedStatus = esc.status;
@@ -1901,10 +1902,10 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  // ─── CRUD: Risk Register ─────────────────────────────────────────────────
 
  void _openAddRiskDialog() {
- final titleController = TextEditingController();
- final ownerController = TextEditingController();
- final probabilityController = TextEditingController();
- final nextReviewController = TextEditingController();
+ final titleController = SpellCheckTextEditingController();
+ final ownerController = SpellCheckTextEditingController();
+ final probabilityController = SpellCheckTextEditingController();
+ final nextReviewController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
  var selectedImpact = 'High';
  var selectedStatus = 'Mitigating';
@@ -2059,10 +2060,10 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  }
 
  void _openEditRiskDialog(_RiskItem risk) {
- final titleController = TextEditingController(text: risk.title);
- final ownerController = TextEditingController(text: risk.owner);
- final probabilityController = TextEditingController(text: risk.probability);
- final nextReviewController = TextEditingController(text: risk.nextReview);
+ final titleController = SpellCheckTextEditingController(text: risk.title);
+ final ownerController = SpellCheckTextEditingController(text: risk.owner);
+ final probabilityController = SpellCheckTextEditingController(text: risk.probability);
+ final nextReviewController = SpellCheckTextEditingController(text: risk.nextReview);
  final formKey = GlobalKey<FormState>();
  var selectedImpact = risk.impact;
  var selectedStatus = risk.status;
@@ -2199,11 +2200,11 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  // ─── CRUD: Mitigation Plans ───────────────────────────────────────────────
 
  void _openAddMitigationDialog() {
- final idController = TextEditingController();
- final riskIdController = TextEditingController();
- final strategyController = TextEditingController();
- final ownerController = TextEditingController();
- final targetDateController = TextEditingController();
+ final idController = SpellCheckTextEditingController();
+ final riskIdController = SpellCheckTextEditingController();
+ final strategyController = SpellCheckTextEditingController();
+ final ownerController = SpellCheckTextEditingController();
+ final targetDateController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
  var selectedCategory = 'General';
  var selectedStatus = 'Not started';
@@ -2355,9 +2356,9 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  }
 
  void _openEditMitigationDialog(_MitigationPlan plan) {
- final strategyController = TextEditingController(text: plan.strategy);
- final ownerController = TextEditingController(text: plan.owner);
- final targetDateController = TextEditingController(text: plan.targetDate);
+ final strategyController = SpellCheckTextEditingController(text: plan.strategy);
+ final ownerController = SpellCheckTextEditingController(text: plan.owner);
+ final targetDateController = SpellCheckTextEditingController(text: plan.targetDate);
  final formKey = GlobalKey<FormState>();
  var selectedCategory = plan.category;
  var selectedStatus = plan.status;
@@ -2519,9 +2520,9 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  // ─── CRUD: Risk Signals ──────────────────────────────────────────────────
 
  void _openAddSignalDialog() {
- final titleController = TextEditingController();
- final descriptionController = TextEditingController();
- final linkedRiskController = TextEditingController();
+ final titleController = SpellCheckTextEditingController();
+ final descriptionController = SpellCheckTextEditingController();
+ final linkedRiskController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
  var selectedCategory = 'Leading';
  var selectedSeverity = 'Medium';
@@ -2638,9 +2639,9 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  }
 
  void _openEditSignalDialog(_RiskSignal signal) {
- final titleController = TextEditingController(text: signal.title);
- final descriptionController = TextEditingController(text: signal.description);
- final linkedRiskController = TextEditingController(text: signal.linkedRisk);
+ final titleController = SpellCheckTextEditingController(text: signal.title);
+ final descriptionController = SpellCheckTextEditingController(text: signal.description);
+ final linkedRiskController = SpellCheckTextEditingController(text: signal.linkedRisk);
  final formKey = GlobalKey<FormState>();
  var selectedCategory = signal.category;
  var selectedSeverity = signal.severity;

@@ -7,6 +7,7 @@ import 'package:ndu_project/pbs/models/pbs_models.dart';
 import 'package:ndu_project/pbs/providers/pbs_provider.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class PBSModuleScreen extends StatefulWidget {
   const PBSModuleScreen({super.key});
@@ -313,8 +314,8 @@ class _PBSModuleScreenState extends State<PBSModuleScreen> {
 
   Future<void> _showAddNodeDialog(
       BuildContext context, PBSProvider provider, String parentId) async {
-    final nameCtrl = TextEditingController();
-    final codeCtrl = TextEditingController();
+    final nameCtrl = SpellCheckTextEditingController();
+    final codeCtrl = SpellCheckTextEditingController();
     ProductType selectedType = ProductType.component;
     double quantity = 1;
     String uom = 'EA';
@@ -411,8 +412,8 @@ class _PBSModuleScreenState extends State<PBSModuleScreen> {
 
   Future<void> _showNodeDetail(
       BuildContext context, PBSProvider provider, PBSNode node) async {
-    final nameCtrl = TextEditingController(text: node.name);
-    final descCtrl = TextEditingController(text: node.description);
+    final nameCtrl = SpellCheckTextEditingController(text: node.name);
+    final descCtrl = SpellCheckTextEditingController(text: node.description);
     PBSStatus selectedStatus = node.status;
 
     await showDialog(

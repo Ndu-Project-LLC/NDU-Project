@@ -24,6 +24,7 @@ import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 /// Front End Planning – Milestone screen
 /// Allows users to define project start date, key milestones, and end date.
 class FrontEndPlanningMilestoneScreen extends StatefulWidget {
@@ -163,14 +164,14 @@ void _loadMilestoneData() {
  ..clear()
  ..addAll(
  _milestones.map(
- (milestone) => TextEditingController(text: milestone.name),
+ (milestone) => SpellCheckTextEditingController(text: milestone.name),
  ),
  );
  _milestoneDisciplineControllers
  ..clear()
  ..addAll(
  _milestones.map(
- (milestone) => TextEditingController(text: milestone.discipline),
+ (milestone) => SpellCheckTextEditingController(text: milestone.discipline),
  ),
  );
  _milestoneCommentControllers
@@ -464,11 +465,11 @@ void _loadMilestoneData() {
            ? _milestones[editIndex]
            : null;
 
-   final nameCtrl = TextEditingController(text: existing?.name ?? '');
-   final dateCtrl = TextEditingController(text: existing?.dueDate ?? '');
+   final nameCtrl = SpellCheckTextEditingController(text: existing?.name ?? '');
+   final dateCtrl = SpellCheckTextEditingController(text: existing?.dueDate ?? '');
    final disciplineCtrl =
-       TextEditingController(text: existing?.discipline ?? '');
-   final notesCtrl = TextEditingController(text: existing?.comments ?? '');
+       SpellCheckTextEditingController(text: existing?.discipline ?? '');
+   final notesCtrl = SpellCheckTextEditingController(text: existing?.comments ?? '');
    final formKey = GlobalKey<FormState>();
 
    final result = await showDialog<bool>(

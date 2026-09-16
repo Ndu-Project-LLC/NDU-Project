@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -42,8 +43,8 @@ class _AgileAcceptanceCriteriaScreenState
   Timer? _autoSaveDebounce;
 
   // Per-template detail fields for the selected template
-  final TextEditingController _templateNameCtrl = TextEditingController();
-  final TextEditingController _templateDescCtrl = TextEditingController();
+  final TextEditingController _templateNameCtrl = SpellCheckTextEditingController();
+  final TextEditingController _templateDescCtrl = SpellCheckTextEditingController();
   WorkItemType _selectedWorkItemType = WorkItemType.userStory;
   AcFormat _selectedFormat = AcFormat.checklist;
 
@@ -232,7 +233,7 @@ class _AgileAcceptanceCriteriaScreenState
 
   TextEditingController _ctrlForCriterion(AcceptanceCriterion c) {
     if (!_criterionCtrls.containsKey(c.id)) {
-      _criterionCtrls[c.id] = TextEditingController(text: c.description);
+      _criterionCtrls[c.id] = SpellCheckTextEditingController(text: c.description);
       _criterionCtrls[c.id]!.addListener(() {
         c.description = _criterionCtrls[c.id]!.text;
       });

@@ -21,6 +21,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 /// Front End Planning – Allowance screen
 /// Refactored to support structured "Program-Aware Financial Inputs".
 ///
@@ -46,7 +47,7 @@ class FrontEndPlanningAllowanceScreen extends StatefulWidget {
 
 class _FrontEndPlanningAllowanceScreenState
  extends State<FrontEndPlanningAllowanceScreen> {
- final TextEditingController _notes = TextEditingController();
+ final TextEditingController _notes = SpellCheckTextEditingController();
 
  // Local state for list items
  List<AllowanceItem> _allowanceItems = [];
@@ -365,12 +366,12 @@ class _FrontEndPlanningAllowanceScreenState
 
  Future<void> _showItemDialog({AllowanceItem? item}) async {
  final isEditing = item != null;
- final nameController = TextEditingController(text: item?.name ?? '');
+ final nameController = SpellCheckTextEditingController(text: item?.name ?? '');
  final descriptionController =
- TextEditingController(text: item?.description ?? '');
+ SpellCheckTextEditingController(text: item?.description ?? '');
  final amountController =
- TextEditingController(text: item?.amount.toString() ?? '0');
- final estimatedCostOrQtyController = TextEditingController(
+ SpellCheckTextEditingController(text: item?.amount.toString() ?? '0');
+ final estimatedCostOrQtyController = SpellCheckTextEditingController(
  text: item?.estimatedCostOrQuantity.isNotEmpty == true
  ? item!.estimatedCostOrQuantity
  : (item != null && item.amount > 0
@@ -378,29 +379,29 @@ class _FrontEndPlanningAllowanceScreenState
  : ''),
  );
  final scheduleImpactController =
- TextEditingController(text: item?.scheduleImpact ?? '');
- final scheduleImpactWeeksController = TextEditingController(
+ SpellCheckTextEditingController(text: item?.scheduleImpact ?? '');
+ final scheduleImpactWeeksController = SpellCheckTextEditingController(
  text: item != null && item.scheduleImpactWeeks > 0
  ? item.scheduleImpactWeeks.toStringAsFixed(1)
  : '',
  );
  final responsibleDisciplineController =
- TextEditingController(text: item?.responsibleDiscipline ?? '');
+ SpellCheckTextEditingController(text: item?.responsibleDiscipline ?? '');
  final assumptionsController =
- TextEditingController(text: item?.assumptions ?? '');
+ SpellCheckTextEditingController(text: item?.assumptions ?? '');
  final appliesToController =
- TextEditingController(text: item?.appliesTo.join(', ') ?? '');
+ SpellCheckTextEditingController(text: item?.appliesTo.join(', ') ?? '');
  final assignedToController =
- TextEditingController(text: item?.assignedTo ?? '');
- final notesController = TextEditingController(text: item?.notes ?? '');
+ SpellCheckTextEditingController(text: item?.assignedTo ?? '');
+ final notesController = SpellCheckTextEditingController(text: item?.notes ?? '');
  final triggerContextController =
- TextEditingController(text: item?.triggerContext ?? '');
+ SpellCheckTextEditingController(text: item?.triggerContext ?? '');
  String selectedType = item?.type ?? 'Contingency';
  String releaseStatus = item?.releaseStatus ?? 'Reserved';
- final releasedAmountController = TextEditingController(
+ final releasedAmountController = SpellCheckTextEditingController(
  text: item != null ? item.releasedAmount.toString() : '0',
  );
- final actualAmountController = TextEditingController(
+ final actualAmountController = SpellCheckTextEditingController(
  text: item != null ? item.actualAmount.toString() : '0',
  );
 

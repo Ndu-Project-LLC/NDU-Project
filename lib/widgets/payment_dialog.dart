@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/addon_users_selector.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _pageBackground = Color(0xFFFFFFFF);
 const Color _primaryText = Color(0xFF0F0F0F);
@@ -75,7 +76,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
   bool _isCheckingEligibility = true;
 
   // Coupon state
-  final _couponController = TextEditingController();
+  final _couponController = SpellCheckTextEditingController();
   AppliedCouponResult? _appliedCoupon;
   bool _isValidatingCoupon = false;
   String? _couponError;

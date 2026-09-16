@@ -39,6 +39,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 enum ProcurementScreenMode { fep, planning }
 
 enum _MissingProcurementAction {
@@ -526,8 +527,8 @@ class _FrontEndPlanningProcurementScreenState
  Future<_ProcurementWorkflowStep?> _showWorkflowStepDialog({
  _ProcurementWorkflowStep? initialStep,
  }) async {
- final nameController = TextEditingController(text: initialStep?.name ?? '');
- final durationController = TextEditingController(
+ final nameController = SpellCheckTextEditingController(text: initialStep?.name ?? '');
+ final durationController = SpellCheckTextEditingController(
  text: (initialStep?.duration ?? 1).toString(),
  );
  var unit = initialStep?.unit == 'month' ? 'month' : 'week';
@@ -2291,8 +2292,8 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openInviteVendorDialog() async {
- final nameController = TextEditingController();
- final emailController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
+ final emailController = SpellCheckTextEditingController();
 
  final sent = await showDialog<bool>(
  context: context,
@@ -4330,10 +4331,10 @@ class _FrontEndPlanningProcurementScreenState
  Future<ProcurementStrategyModel?> _showStrategyDialog({
  ProcurementStrategyModel? existing,
  }) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
  final categoryController =
- TextEditingController(text: existing?.category ?? '');
- final itemCountController = TextEditingController(
+ SpellCheckTextEditingController(text: existing?.category ?? '');
+ final itemCountController = SpellCheckTextEditingController(
  text: (existing?.itemCount ?? 0).toString(),
  );
  var selectedStatus = existing?.status ?? StrategyStatus.draft;
@@ -13465,7 +13466,7 @@ class _ScoreCell extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  final controller =
- TextEditingController(text: value == 0 ? '' : value.toStringAsFixed(0));
+ SpellCheckTextEditingController(text: value == 0 ? '' : value.toStringAsFixed(0));
 
  return SizedBox(
  width: 100,

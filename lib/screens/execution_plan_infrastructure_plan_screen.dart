@@ -16,6 +16,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 Future<void> _exportInfrastructurePlanPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
   await PdfExportHelper.exportScreenPdf(
@@ -206,19 +207,19 @@ class _PlanningInfrastructureCostSectionState
   Future<void> _editItem({
     InfrastructurePlanningItem? existing,
   }) async {
-    final nameController = TextEditingController(text: existing?.name ?? '');
+    final nameController = SpellCheckTextEditingController(text: existing?.name ?? '');
     final summaryController =
-        TextEditingController(text: existing?.summary ?? '');
+        SpellCheckTextEditingController(text: existing?.summary ?? '');
     final detailsController =
-        TextEditingController(text: existing?.details ?? '');
-    final costController = TextEditingController(
+        SpellCheckTextEditingController(text: existing?.details ?? '');
+    final costController = SpellCheckTextEditingController(
       text: existing == null || existing.potentialCost == 0
           ? ''
           : existing.potentialCost.toStringAsFixed(2),
     );
-    final ownerController = TextEditingController(text: existing?.owner ?? '');
+    final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
     final statusController =
-        TextEditingController(text: existing?.status ?? 'Planned');
+        SpellCheckTextEditingController(text: existing?.status ?? 'Planned');
 
     final result = await showDialog<InfrastructurePlanningItem>(
       context: context,

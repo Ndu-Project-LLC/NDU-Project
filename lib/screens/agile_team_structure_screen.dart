@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/launch_modal.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -123,7 +124,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
       _teamControllers.clear();
       // Dispose and recreate notes controller
       _noteControllers['notes']?.dispose();
-      final notesCtrl = TextEditingController(text: notesText);
+      final notesCtrl = SpellCheckTextEditingController(text: notesText);
       _noteControllers['notes'] = notesCtrl;
       setState(() {
         _teams = rows;
@@ -376,10 +377,10 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
   }
 
   Future<void> _addTeam() async {
-    final nameController = TextEditingController();
-    final countController = TextEditingController(text: '1');
-    final roleController = TextEditingController();
-    final skillsController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
+    final countController = SpellCheckTextEditingController(text: '1');
+    final roleController = SpellCheckTextEditingController();
+    final skillsController = SpellCheckTextEditingController();
     String? nameError;
 
     final team = await showDialog<TeamRow>(
@@ -688,10 +689,10 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
   List<TextEditingController> _controllersForTeam(TeamRow team) {
     if (!_teamControllers.containsKey(team.id)) {
       _teamControllers[team.id] = [
-        TextEditingController(text: team.name),
-        TextEditingController(text: team.count),
-        TextEditingController(text: team.role),
-        TextEditingController(text: team.skills),
+        SpellCheckTextEditingController(text: team.name),
+        SpellCheckTextEditingController(text: team.count),
+        SpellCheckTextEditingController(text: team.role),
+        SpellCheckTextEditingController(text: team.skills),
       ];
       // Sync controller text back to the TeamRow on change
       _teamControllers[team.id]![0].addListener(() {
@@ -771,7 +772,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
   }
 
   Widget _buildNotesSection() {
-    _noteControllers.putIfAbsent('notes', () => TextEditingController());
+    _noteControllers.putIfAbsent('notes', () => SpellCheckTextEditingController());
     return _buildEnhancedField(
       key: 'notes',
       label: 'Additional Notes',

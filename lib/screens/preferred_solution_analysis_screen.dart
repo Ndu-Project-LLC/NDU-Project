@@ -42,6 +42,15 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+
+/// The three ways the candidates can be read on the Preferred Solution
+/// Analysis page.
+///
+/// - [compare] — every candidate side by side, one row per comparison category
+/// - [table] — one candidate at a time, tabbed, in full
+/// - [cards] — every candidate as a card, for a quick scan
+enum _AnalysisView { compare, table, cards }
 
 class PreferredSolutionAnalysisScreen extends StatefulWidget {
   final String notes;
@@ -85,7 +94,14 @@ class _PreferredSolutionAnalysisScreenState
   bool _businessCaseExpanded = true;
   List<_SolutionAnalysisData> _analysis = const [];
   int? _selectedSolutionIndex;
-  bool _showTableView = true; // Default to table view (Task 10)
+  /// Which of the three analysis views is on screen.
+  ///
+  /// The owner asked for both views to live on this page — "they should be
+  /// able to see them side to side, they should be able to see them in the
+  /// stuff you were showing now" (Lusaka 24 review) — so the same three
+  /// candidates can be read across ([compare]), one at a time ([table]) or as
+  /// cards ([cards]) without leaving the analysis.
+  _AnalysisView _view = _AnalysisView.compare;
   late final TextEditingController _projectNameController;
   String? _projectNameError;
   Timer? _notesSaveTimer;
@@ -105,7 +121,7 @@ class _PreferredSolutionAnalysisScreenState
     _tabController = TabController(length: _solutions.length, vsync: this);
     _notesController = RichTextEditingController(text: widget.notes);
     _notesController.addListener(_handleNotesChanged);
-    _projectNameController = TextEditingController();
+    _projectNameController = SpellCheckTextEditingController();
     _analysis = _solutions
         .map((s) => _SolutionAnalysisData(
               solution: s,
@@ -1128,7 +1144,11 @@ class _PreferredSolutionAnalysisScreenState
               const SizedBox(height: 16),
               _buildViewToggle(),
               const SizedBox(height: 12),
-              _showTableView ? _buildTabSection() : _buildCardBasedView(),
+              switch (_view) {
+                _AnalysisView.compare => _buildCompareView(),
+                _AnalysisView.table => _buildTabSection(),
+                _AnalysisView.cards => _buildCardBasedView(),
+              },
               const SizedBox(height: 16),
               // Selection summary
               _buildSelectionSummary(),
@@ -1173,7 +1193,7 @@ class _PreferredSolutionAnalysisScreenState
             const SizedBox(width: 4),
             Expanded(
               child: Text(
-                'Preferred Solution - $projectName',
+                'Preferred Solution Analysis - $projectName',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -1216,12 +1236,16 @@ class _PreferredSolutionAnalysisScreenState
               ),
             ),
             const Spacer(),
-            // Next button
+            // Next button — the analysis comes first in the flow, so the
+            // button names the page it leads to rather than a bare "Next".
             ElevatedButton.icon(
               onPressed: _analysis.isEmpty ? null : _handleNextToSelectionPage,
               icon: const Icon(Icons.arrow_forward, size: 16),
-              label: const Text('Next',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
+              label: Text(
+                  _effectiveSelectedSolutionIndex() == null
+                      ? 'Next: Preferred Solution'
+                      : 'Next: Preferred Solution (Solution ${_effectiveSelectedSolutionIndex()! + 1} selected)',
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFFC107),
                 foregroundColor: const Color(0xFF1a1a1a),
@@ -1960,7 +1984,27 @@ class _PreferredSolutionAnalysisScreenState
     );
   }
 
-  /// View-mode toggle (Table / Cards). Defaults to Table per Task 10.
+  /// The side-by-side comparison of every candidate, with expandable cells.
+  Widget _buildCompareView() {
+    if (_analysis.isEmpty) return _buildEmptyState();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'All solutions side by side. Expand any cell for the full detail.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: _buildComparisonTable(ProjectDataHelper.getData(context)),
+        ),
+      ],
+    );
+  }
+
+  /// View-mode toggle (Compare / Table / Cards).
   Widget _buildViewToggle() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -1975,31 +2019,35 @@ class _PreferredSolutionAnalysisScreenState
             mainAxisSize: MainAxisSize.min,
             children: [
               _viewToggleChip(
+                label: 'Compare',
+                icon: Icons.view_column_outlined,
+                selected: _view == _AnalysisView.compare,
+                onTap: () => _setAnalysisView(_AnalysisView.compare),
+              ),
+              const SizedBox(width: 4),
+              _viewToggleChip(
                 label: 'Table',
                 icon: Icons.table_chart_outlined,
-                selected: _showTableView,
-                onTap: () {
-                  if (!_showTableView) {
-                    setState(() => _showTableView = true);
-                  }
-                },
+                selected: _view == _AnalysisView.table,
+                onTap: () => _setAnalysisView(_AnalysisView.table),
               ),
               const SizedBox(width: 4),
               _viewToggleChip(
                 label: 'Cards',
                 icon: Icons.view_agenda_outlined,
-                selected: !_showTableView,
-                onTap: () {
-                  if (_showTableView) {
-                    setState(() => _showTableView = false);
-                  }
-                },
+                selected: _view == _AnalysisView.cards,
+                onTap: () => _setAnalysisView(_AnalysisView.cards),
               ),
             ],
           ),
         ),
       ],
     );
+  }
+
+  void _setAnalysisView(_AnalysisView view) {
+    if (_view == view) return;
+    setState(() => _view = view);
   }
 
   Widget _viewToggleChip({
@@ -2049,7 +2097,6 @@ class _PreferredSolutionAnalysisScreenState
     );
   }
 
-  // ignore: unused_element
   Widget _buildTabSection() {
     if (_analysis.isEmpty) {
       return _buildEmptyState();
@@ -3261,8 +3308,8 @@ class _PreferredSolutionAnalysisScreenState
           const SizedBox(height: 8),
           Text(
             hasSelection
-                ? 'Selected candidate: Solution ${_selectedSolutionIndex! + 1} of ${_analysis.length} - $selectedTitle'
-                : 'No solution selected yet',
+                ? 'Selected solution: Solution ${_selectedSolutionIndex! + 1} of ${_analysis.length} - $selectedTitle'
+                : 'No solution selected yet — choose the solution to take forward, then continue to the Preferred Solution page.',
             style: TextStyle(
               fontSize: 14,
               color: hasSelection
@@ -3341,7 +3388,6 @@ class _PreferredSolutionAnalysisScreenState
     );
   }
 
-  // ignore: unused_element
   Widget _buildComparisonTable(ProjectDataModel projectData) {
     // Define the categories for comparison
     final categories = [
@@ -5147,7 +5193,7 @@ class _ProjectSelectionDialogState extends State<_ProjectSelectionDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
+    _nameController = SpellCheckTextEditingController();
   }
 
   @override

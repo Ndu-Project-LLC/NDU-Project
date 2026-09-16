@@ -15,6 +15,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class LongLeadEquipmentOrderingScreen extends StatefulWidget {
  const LongLeadEquipmentOrderingScreen({super.key});
 
@@ -25,7 +26,7 @@ class LongLeadEquipmentOrderingScreen extends StatefulWidget {
 
 class _LongLeadEquipmentOrderingScreenState
  extends State<LongLeadEquipmentOrderingScreen> {
- final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  final _Debouncer _saveDebounce = _Debouncer();
  bool _isLoading = false;
  bool _suspendNotesSave = false;
@@ -621,10 +622,10 @@ class _LongLeadEquipmentOrderingScreenState
     showDeleteSuccessSnackBar(context, itemLabel: 'Action');
  }  Future<void> _openCategoryDialog() async {
     final draft = _EquipmentCategory.empty();
-    final titleController = TextEditingController();
-    final descriptionController = TextEditingController();
-    final thresholdController = TextEditingController();
-    final ownerController = TextEditingController();
+    final titleController = SpellCheckTextEditingController();
+    final descriptionController = SpellCheckTextEditingController();
+    final thresholdController = SpellCheckTextEditingController();
+    final ownerController = SpellCheckTextEditingController();
     String criticality = _criticalityOptions[1];
 
     final saved = await showDialog<bool>(
@@ -718,12 +719,12 @@ class _LongLeadEquipmentOrderingScreenState
  _scheduleSave();
  }  Future<void> _openEquipmentDialog() async {
     final draft = _EquipmentItem.empty();
-    final nameController = TextEditingController();
-    final categoryController = TextEditingController();
-    final vendorController = TextEditingController();
-    final leadTimeController = TextEditingController();
-    final deliveryController = TextEditingController();
-    final ownerController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
+    final categoryController = SpellCheckTextEditingController();
+    final vendorController = SpellCheckTextEditingController();
+    final leadTimeController = SpellCheckTextEditingController();
+    final deliveryController = SpellCheckTextEditingController();
+    final ownerController = SpellCheckTextEditingController();
     String status = _equipmentStatusOptions.first;
 
     final saved = await showDialog<bool>(
@@ -833,10 +834,10 @@ class _LongLeadEquipmentOrderingScreenState
  _scheduleSave();
  }  Future<void> _openActionDialog() async {
     final draft = _ProcurementAction.empty();
-    final titleController = TextEditingController();
-    final ownerController = TextEditingController();
-    final dueDateController = TextEditingController();
-    final notesController = TextEditingController();
+    final titleController = SpellCheckTextEditingController();
+    final ownerController = SpellCheckTextEditingController();
+    final dueDateController = SpellCheckTextEditingController();
+    final notesController = SpellCheckTextEditingController();
     String status = _actionStatusOptions.first;
 
     final saved = await showDialog<bool>(

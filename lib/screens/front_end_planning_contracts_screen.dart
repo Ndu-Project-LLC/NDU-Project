@@ -23,6 +23,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const String _contractingCollection = 'contracting';
 const String _contractPlanNoteKey = 'planning_contract_plan';
 const String _contractPlanMarketKey = 'planning_contract_market';
@@ -108,7 +109,7 @@ class FrontEndPlanningContractsScreen extends StatefulWidget {
 
 class _FrontEndPlanningContractsScreenState
  extends State<FrontEndPlanningContractsScreen> {
- final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  int _selectedTabIndex = 0;
  bool _isSeedingContracts = false;
 
@@ -664,15 +665,15 @@ class CreateContractScreen extends StatefulWidget {
 
 class _CreateContractScreenState extends State<CreateContractScreen> {
  final _formKey = GlobalKey<FormState>();
- final TextEditingController _contractNameController = TextEditingController();
- final TextEditingController _descriptionController = TextEditingController();
+ final TextEditingController _contractNameController = SpellCheckTextEditingController();
+ final TextEditingController _descriptionController = SpellCheckTextEditingController();
  final TextEditingController _estimatedValueController =
- TextEditingController();
- final TextEditingController _scopeController = TextEditingController();
- final TextEditingController _disciplineController = TextEditingController();
- final TextEditingController _notesController = TextEditingController();
+ SpellCheckTextEditingController();
+ final TextEditingController _scopeController = SpellCheckTextEditingController();
+ final TextEditingController _disciplineController = SpellCheckTextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  final TextEditingController _contractorNameController =
- TextEditingController();
+ SpellCheckTextEditingController();
 
  String _contractType = 'Not Sure';
  String _paymentType = 'Not Sure';
@@ -2878,7 +2879,7 @@ class _CollapsibleAiTextCardState extends State<_CollapsibleAiTextCard> {
  if (_didInit) return;
  final data = ProjectDataHelper.getData(context);
  final saved = data.planningNotes[widget.noteKey] ?? '';
- _controller = TextEditingController(text: saved);
+ _controller = SpellCheckTextEditingController(text: saved);
  _didInit = true;
  }
 
@@ -3332,8 +3333,8 @@ class _TimelineSectionState extends State<_TimelineSection> {
 
  Future<void> _editEstimate(BuildContext context, int number) async {
  final minController =
- TextEditingController(text: (_minDays[number] ?? 0).toString());
- final maxController = TextEditingController(
+ SpellCheckTextEditingController(text: (_minDays[number] ?? 0).toString());
+ final maxController = SpellCheckTextEditingController(
  text: (_maxDays[number] ?? (_minDays[number] ?? 0)).toString());
 
  await showDialog(
@@ -4007,7 +4008,7 @@ class ContractDetailsScreen extends StatefulWidget {
 
 class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
  final TextEditingController _additionalInfoController =
- TextEditingController();
+ SpellCheckTextEditingController();
  int _selectedTabIndex = 0;
  bool _detailsLoaded = false;
  bool _isGeneratingDetails = false;
@@ -4445,7 +4446,7 @@ class ContractingStatusScreen extends StatefulWidget {
 
 class _ContractingStatusScreenState extends State<ContractingStatusScreen> {
  final TextEditingController _additionalInfoController =
- TextEditingController();
+ SpellCheckTextEditingController();
  String _selectedView = 'Overview';
  String _selectedContract = 'Select contract';
  String _selectedContractorStatus = 'All Status';
@@ -6970,21 +6971,32 @@ class _ContractorsTable extends StatelessWidget {
  child: _buildInlineView(),
  tableBuilder: (fsContext) => _buildTableContent(),
  );
- }
-
- Widget _buildInlineView() {
- final Widget table = _buildTableContent();
- if (isMobile) {
- return SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: ConstrainedBox(
- constraints: const BoxConstraints(minWidth: 960),
- child: table,
- ),
- );
- }
- return table;
- }
+ }  Widget _buildInlineView() {
+    final Widget table = _buildTableContent();
+    if (isMobile) {
+      // Bounded width, not `minWidth` alone: inside a horizontal scroll view
+      // `minWidth` leaves maxWidth unbounded, which makes every Row with an
+      // Expanded child in `table` throw "RenderFlex children have non-zero flex
+      // but incoming width constraints are unbounded". LayoutBuilder sits
+      // outside the scroll view, so it still sees the bounded viewport width —
+      // keeping the original intent (never narrower than 960) while pinning the
+      // width so the flex children have something to divide up.
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final double width =
+              constraints.maxWidth > 960 ? constraints.maxWidth : 960;
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: width,
+              child: table,
+            ),
+          );
+        },
+      );
+    }
+    return table;
+  }
 
  Widget _buildTableContent() {
  return Column(

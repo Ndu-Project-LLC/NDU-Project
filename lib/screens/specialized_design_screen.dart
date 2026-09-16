@@ -22,6 +22,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class SpecializedDesignScreen extends StatefulWidget {
  const SpecializedDesignScreen({super.key});
@@ -921,9 +922,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── CRUD Dialogs ─────────────────────────────────────────────────
 
  Future<void> _showSecurityDialog({SecurityPatternRow? existing}) async {
- final patternCtrl = TextEditingController(text: existing?.pattern ?? '');
- final decisionCtrl = TextEditingController(text: existing?.decision ?? '');
- final ownerCtrl = TextEditingController(text: existing?.owner ?? '');
+ final patternCtrl = SpellCheckTextEditingController(text: existing?.pattern ?? '');
+ final decisionCtrl = SpellCheckTextEditingController(text: existing?.decision ?? '');
+ final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String status = existing?.status ?? 'Draft';
 
  final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
@@ -964,9 +965,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showPerformanceDialog({PerformancePatternRow? existing}) async {
- final hotspotCtrl = TextEditingController(text: existing?.hotspot ?? '');
- final focusCtrl = TextEditingController(text: existing?.focus ?? '');
- final slaCtrl = TextEditingController(text: existing?.sla ?? '');
+ final hotspotCtrl = SpellCheckTextEditingController(text: existing?.hotspot ?? '');
+ final focusCtrl = SpellCheckTextEditingController(text: existing?.focus ?? '');
+ final slaCtrl = SpellCheckTextEditingController(text: existing?.sla ?? '');
  String status = existing?.status ?? 'Draft';
 
  final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
@@ -1007,9 +1008,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showIntegrationDialog({IntegrationFlowRow? existing}) async {
- final flowCtrl = TextEditingController(text: existing?.flow ?? '');
- final systemCtrl = TextEditingController(text: existing?.system ?? '');
- final ownerCtrl = TextEditingController(text: existing?.owner ?? '');
+ final flowCtrl = SpellCheckTextEditingController(text: existing?.flow ?? '');
+ final systemCtrl = SpellCheckTextEditingController(text: existing?.system ?? '');
+ final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String status = existing?.status ?? 'Draft';
 
  final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
@@ -1050,10 +1051,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showComplianceDialog({_ComplianceRow? existing}) async {
- final standardCtrl = TextEditingController(text: existing?.standard ?? '');
- final descCtrl = TextEditingController(text: existing?.description ?? '');
- final ownerCtrl = TextEditingController(text: existing?.owner ?? '');
- final evidenceCtrl = TextEditingController(text: existing?.evidence ?? '');
+ final standardCtrl = SpellCheckTextEditingController(text: existing?.standard ?? '');
+ final descCtrl = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+ final evidenceCtrl = SpellCheckTextEditingController(text: existing?.evidence ?? '');
  String status = existing?.status ?? 'Not assessed';
 
  final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
@@ -1097,10 +1098,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showReviewGateDialog({_ReviewGateRow? existing}) async {
- final gateCtrl = TextEditingController(text: existing?.gate ?? '');
- final descCtrl = TextEditingController(text: existing?.description ?? '');
- final approverCtrl = TextEditingController(text: existing?.approver ?? '');
- final deptCtrl = TextEditingController(text: existing?.department ?? '');
+ final gateCtrl = SpellCheckTextEditingController(text: existing?.gate ?? '');
+ final descCtrl = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final approverCtrl = SpellCheckTextEditingController(text: existing?.approver ?? '');
+ final deptCtrl = SpellCheckTextEditingController(text: existing?.department ?? '');
  String priority = existing?.priority ?? 'High';
  String status = existing?.status ?? 'Pending';
 

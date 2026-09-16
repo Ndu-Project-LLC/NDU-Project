@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/services/subscription_pricing_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Admin screen for editing the subscription pricing config.
 ///
@@ -43,9 +44,9 @@ class _AdminPricingConfigScreenState extends State<AdminPricingConfigScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _currencyCodeController = TextEditingController();
-    _currencySymbolController = TextEditingController();
-    _annualDiscountController = TextEditingController();
+    _currencyCodeController = SpellCheckTextEditingController();
+    _currencySymbolController = SpellCheckTextEditingController();
+    _annualDiscountController = SpellCheckTextEditingController();
     _loadConfig();
   }
 
@@ -98,7 +99,7 @@ class _AdminPricingConfigScreenState extends State<AdminPricingConfigScreen>
         controllers.addonPrice[role]?.dispose();
         final price = tier.addonPricePerRole[role];
         controllers.addonPrice[role] =
-            TextEditingController(text: (price ?? 0).toStringAsFixed(2));
+            SpellCheckTextEditingController(text: (price ?? 0).toStringAsFixed(2));
       }
     }
   }
@@ -584,17 +585,17 @@ class _AdminPricingConfigScreenState extends State<AdminPricingConfigScreen>
 
 /// Bundle of TextEditingControllers for one tier's editable fields.
 class _TierControllers {
-  final label = TextEditingController();
-  final subtitle = TextEditingController();
-  final monthlyPrice = TextEditingController();
-  final monthlyOriginal = TextEditingController();
-  final includedUsers = TextEditingController();
-  final maxUsers = TextEditingController();
+  final label = SpellCheckTextEditingController();
+  final subtitle = SpellCheckTextEditingController();
+  final monthlyPrice = SpellCheckTextEditingController();
+  final monthlyOriginal = SpellCheckTextEditingController();
+  final includedUsers = SpellCheckTextEditingController();
+  final maxUsers = SpellCheckTextEditingController();
   final Map<PricingRoleId, TextEditingController> addonPrice = {};
 
   _TierControllers() {
     for (final role in PricingRoleId.values) {
-      addonPrice[role] = TextEditingController();
+      addonPrice[role] = SpellCheckTextEditingController();
     }
   }
 

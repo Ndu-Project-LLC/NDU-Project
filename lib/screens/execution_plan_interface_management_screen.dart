@@ -15,6 +15,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -334,16 +335,16 @@ class _InterfaceRegisterTable extends StatelessWidget {
       BuildContext context, InterfaceRegisterModel? entry, String projectId) {
     final isEdit = entry != null;
     final interfaceIdController =
-        TextEditingController(text: entry?.interfaceId ?? '');
+        SpellCheckTextEditingController(text: entry?.interfaceId ?? '');
     final interfaceNameController =
-        TextEditingController(text: entry?.interfaceName ?? '');
+        SpellCheckTextEditingController(text: entry?.interfaceName ?? '');
     String interfaceType = entry?.interfaceType ?? 'Physical';
-    final partyAController = TextEditingController(text: entry?.partyA ?? '');
-    final partyBController = TextEditingController(text: entry?.partyB ?? '');
+    final partyAController = SpellCheckTextEditingController(text: entry?.partyA ?? '');
+    final partyBController = SpellCheckTextEditingController(text: entry?.partyB ?? '');
     String status = entry?.status ?? 'Active';
     String frequency = entry?.frequency ?? 'Daily';
     final commentsController =
-        TextEditingController(text: entry?.comments ?? '');
+        SpellCheckTextEditingController(text: entry?.comments ?? '');
 
     const interfaceTypes = [
       'Physical',

@@ -15,6 +15,14 @@
 //   ...
 //   CharterLockBanner(visible: locked),
 //   CharterLockBanner.applyLock(locked: locked, child: editableForm),
+//
+// Note: `listen: true` subscribes the whole page to every provider
+// notification, and autosave notifies often — on a page with a large table
+// that shows up as stutter while scrolling or typing. On heavy pages, wrap the
+// subtree in a `Selector<ProjectDataProvider, bool>` over
+// `ProjectDataHelper.isCharterApprovedIn(provider.projectData)` so it
+// rebuilds only when the lock flips (see
+// `front_end_planning_requirements_screen.dart` for an example).
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import 'package:flutter/material.dart';

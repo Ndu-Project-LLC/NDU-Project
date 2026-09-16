@@ -15,6 +15,7 @@ import 'package:ndu_project/services/security_services.dart';
 import 'package:ndu_project/screens/project_dashboard_screen.dart';
 import 'package:ndu_project/screens/pricing_screen.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -24,8 +25,8 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailController = SpellCheckTextEditingController();
+  final _passwordController = SpellCheckTextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   bool _rememberMe = false;

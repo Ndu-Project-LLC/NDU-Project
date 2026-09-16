@@ -17,6 +17,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -338,14 +339,14 @@ class _EnablingWorksPlanTable extends StatelessWidget {
   static void _showEnablingWorkDialog(BuildContext context,
       ExecutionEnablingWorkModel? work, String projectId) {
     final isEdit = work != null;
-    final aspectController = TextEditingController(text: work?.aspect ?? '');
+    final aspectController = SpellCheckTextEditingController(text: work?.aspect ?? '');
     final descriptionController =
-        TextEditingController(text: work?.description ?? '');
+        SpellCheckTextEditingController(text: work?.description ?? '');
     final durationController =
-        TextEditingController(text: work?.duration ?? '');
-    final costController = TextEditingController(text: work?.cost ?? '');
+        SpellCheckTextEditingController(text: work?.duration ?? '');
+    final costController = SpellCheckTextEditingController(text: work?.cost ?? '');
     final commentsController =
-        TextEditingController(text: work?.comments ?? '');
+        SpellCheckTextEditingController(text: work?.comments ?? '');
 
     showDialog(
       context: context,

@@ -23,6 +23,7 @@ import 'package:printing/printing.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class DemobilizeTeamScreen extends StatefulWidget {
   const DemobilizeTeamScreen({super.key});
@@ -37,7 +38,7 @@ class DemobilizeTeamScreen extends StatefulWidget {
 
 class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
   List<LaunchTeamMember> _teamRoster = [];
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   List<LaunchKnowledgeTransfer> _knowledgeTransfers = [];
   List<LaunchFollowUpItem> _vendorOffboarding = [];
   List<LaunchCommunicationItem> _communications = [];

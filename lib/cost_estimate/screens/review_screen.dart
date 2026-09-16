@@ -21,6 +21,7 @@ import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart'
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ReviewScreen extends StatelessWidget {
   const ReviewScreen({super.key});
@@ -260,9 +261,9 @@ class ReviewScreen extends StatelessWidget {
       ...estimate.stakeholders.map((s) => s.email),
       ...estimate.access.map((a) => a.userEmail),
     }.toList();
-    final subjectCtrl = TextEditingController(
+    final subjectCtrl = SpellCheckTextEditingController(
         text: 'Cost Estimate Review Required — ${estimate.projectName}');
-    final bodyCtrl = TextEditingController(text: '''Hello,
+    final bodyCtrl = SpellCheckTextEditingController(text: '''Hello,
 
 A cost estimate for ${estimate.projectName} is ready for review.
 

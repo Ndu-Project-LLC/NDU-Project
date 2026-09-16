@@ -25,6 +25,7 @@ import 'package:ndu_project/services/security_services.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -4540,9 +4541,9 @@ class _AccessCollaboratorsPanel extends StatefulWidget {
 
 class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
   static const _accent = Color(0xFFFFC107);
-  final _emailController = TextEditingController();
-  final _nameController = TextEditingController();
-  final _messageController = TextEditingController(
+  final _emailController = SpellCheckTextEditingController();
+  final _nameController = SpellCheckTextEditingController();
+  final _messageController = SpellCheckTextEditingController(
     text: 'You have been invited to collaborate in NDU Project.',
   );
 
@@ -6113,7 +6114,7 @@ class InviteVerificationDialog extends StatefulWidget {
 
 class _InviteVerificationDialogState extends State<InviteVerificationDialog> {
   final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
+      List.generate(6, (_) => SpellCheckTextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   bool _isLoading = false;

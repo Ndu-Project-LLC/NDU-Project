@@ -24,6 +24,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class DeliverProjectClosureScreen extends StatefulWidget {
   const DeliverProjectClosureScreen({super.key});
@@ -49,7 +50,7 @@ class _DeliverProjectClosureScreenState
     super.dispose();
   }
 
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   List<LaunchScopeItem> _scopeItems = [];
   List<LaunchMilestone> _milestones = [];
   List<LaunchFollowUpItem> _outstandingItems = [];
@@ -1538,9 +1539,9 @@ class _ScopeEditDialogState extends State<_ScopeEditDialog> {
   @override
   void initState() {
     super.initState();
-    _deliverableCtrl = TextEditingController(text: widget.deliverable);
-    _criteriaCtrl = TextEditingController(text: widget.criteria);
-    _dateCtrl = TextEditingController(text: widget.date);
+    _deliverableCtrl = SpellCheckTextEditingController(text: widget.deliverable);
+    _criteriaCtrl = SpellCheckTextEditingController(text: widget.criteria);
+    _dateCtrl = SpellCheckTextEditingController(text: widget.date);
     _status = widget.status;
   }
 

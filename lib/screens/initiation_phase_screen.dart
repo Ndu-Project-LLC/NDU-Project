@@ -42,6 +42,7 @@ import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/utils/navigation_route_resolver.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class InitiationPhaseScreen extends StatefulWidget {
   final bool scrollToBusinessCase;
@@ -959,7 +960,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
                             errorText: nameError,
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12))),
-                        controller: TextEditingController(text: projectName),
+                        controller: SpellCheckTextEditingController(text: projectName),
                         onChanged: (v) => projectName = v,
                       ),
                       const SizedBox(height: 20),

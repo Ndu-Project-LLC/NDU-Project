@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class AdminContentScreen extends StatefulWidget {
  const AdminContentScreen({super.key});
@@ -575,13 +576,13 @@ class _ContentEditorDialogState extends State<_ContentEditorDialog> {
  void initState() {
  super.initState();
  _keyController =
- TextEditingController(text: widget.existingContent?.key ?? '');
+ SpellCheckTextEditingController(text: widget.existingContent?.key ?? '');
  _valueController =
- TextEditingController(text: widget.existingContent?.value ?? '');
- _categoryController = TextEditingController(
+ SpellCheckTextEditingController(text: widget.existingContent?.value ?? '');
+ _categoryController = SpellCheckTextEditingController(
  text: widget.existingContent?.category ?? 'general');
  _descriptionController =
- TextEditingController(text: widget.existingContent?.description ?? '');
+ SpellCheckTextEditingController(text: widget.existingContent?.description ?? '');
  }
 
  @override

@@ -25,6 +25,7 @@ import 'package:provider/provider.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/utils/wbs_scope_labels.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ChangeRequestScopePicker extends StatefulWidget {
   const ChangeRequestScopePicker({
@@ -58,7 +59,7 @@ class _ChangeRequestScopePickerState extends State<ChangeRequestScopePicker> {
   static const _textPrimary = Color(0xFF1A1D1F);
   static const _textSecondary = Color(0xFF6B7280);
 
-  final TextEditingController _searchCtrl = TextEditingController();
+  final TextEditingController _searchCtrl = SpellCheckTextEditingController();
 
   /// Project whose WBS this picker has loaded — so switching project reloads
   /// instead of leaving another project's scope on screen.

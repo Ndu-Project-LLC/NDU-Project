@@ -20,6 +20,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const Color _kBackground = Colors.white;
 const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
@@ -1177,8 +1178,8 @@ Future<Map<String, dynamic>?> _showSprintDialog(
  BuildContext context, {
  RoadmapSprint? existing,
 }) async {
- final nameCtl = TextEditingController(text: existing?.name ?? '');
- final goalCtl = TextEditingController(text: existing?.goal ?? '');
+ final nameCtl = SpellCheckTextEditingController(text: existing?.name ?? '');
+ final goalCtl = SpellCheckTextEditingController(text: existing?.goal ?? '');
  DateTime? startDate = existing?.startDate;
  DateTime? endDate = existing?.endDate;
  final formKey = GlobalKey<FormState>();
@@ -1280,13 +1281,13 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
  required List<RoadmapDeliverable> allDeliverables,
  RoadmapDeliverable? existing,
 }) async {
- final titleCtl = TextEditingController(text: existing?.title ?? '');
- final descCtl = TextEditingController(text: existing?.description ?? '');
- final assigneeCtl = TextEditingController(text: existing?.assignee ?? '');
+ final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final descCtl = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final assigneeCtl = SpellCheckTextEditingController(text: existing?.assignee ?? '');
  final criteriaCtl =
- TextEditingController(text: existing?.acceptanceCriteria ?? '');
- final notesCtl = TextEditingController(text: existing?.notes ?? '');
- final blockersCtl = TextEditingController(text: existing?.blockers ?? '');
+ SpellCheckTextEditingController(text: existing?.acceptanceCriteria ?? '');
+ final notesCtl = SpellCheckTextEditingController(text: existing?.notes ?? '');
+ final blockersCtl = SpellCheckTextEditingController(text: existing?.blockers ?? '');
  String sprintId = existing?.sprintId ?? selectedSprintId;
  var status = existing?.status ?? RoadmapDeliverableStatus.notStarted;
  var priority = existing?.priority ?? RoadmapDeliverablePriority.medium;

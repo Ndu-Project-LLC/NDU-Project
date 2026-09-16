@@ -11,6 +11,7 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/team_invitation_service.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ProgramTeammatesScreen extends StatefulWidget {
   const ProgramTeammatesScreen({super.key});
@@ -23,8 +24,8 @@ class ProgramTeammatesScreen extends StatefulWidget {
 class _ProgramTeammatesScreenState extends State<ProgramTeammatesScreen> {
   static const int _maxMembers = 7;
 
-  final _emailController = TextEditingController();
-  final _nameController = TextEditingController();
+  final _emailController = SpellCheckTextEditingController();
+  final _nameController = SpellCheckTextEditingController();
   String _selectedRole = 'Viewer';
   bool _isInviting = false;
   String? _inviteError;

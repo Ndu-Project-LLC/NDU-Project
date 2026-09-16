@@ -6,6 +6,7 @@ import 'package:excel/excel.dart' hide Border;
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// World-class CSV / XLSX Import Dialog
 ///
@@ -58,7 +59,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
   final bool _isDragging = false;
   bool _showPreview = false;
   bool _isFileLoading = false;
-  final _pasteController = TextEditingController();
+  final _pasteController = SpellCheckTextEditingController();
 
   @override
   void initState() {
@@ -89,6 +90,32 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
     });
   }
 
+  /// Picks the sheet that holds importable rows.
+  ///
+  /// Templates ship two sheets — `Data` (the rows) and `Definitions` (what
+  /// each column means) — and a user's own workbook often has a cover or
+  /// notes sheet in front. Reading "the first sheet" therefore read the
+  /// wrong one and produced import errors on a template we handed out
+  /// ourselves, so the Data sheet is looked up by name first.
+  Sheet _dataSheet(Excel excel) {
+    final named = excel.tables[CsvImportHelper.dataSheetName];
+    if (named != null) return named;
+
+    const nonData = {
+      CsvImportHelper.definitionsSheetName,
+      'definitions',
+      'instructions',
+      'read me',
+      'readme',
+      'notes',
+      'cover',
+    };
+    for (final entry in excel.tables.entries) {
+      if (!nonData.contains(entry.key.trim().toLowerCase())) return entry.value;
+    }
+    return excel.tables.values.first;
+  }
+
   void _processExcel(Uint8List bytes) {
     try {
       final excel = Excel.decodeBytes(bytes);
@@ -104,7 +131,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
         setState(() => _isFileLoading = false);
         return;
       }
-      final sheet = excel.tables.values.first;
+      final sheet = _dataSheet(excel);
       final rows = sheet.rows;
       if (rows.isEmpty) {
         if (mounted) {

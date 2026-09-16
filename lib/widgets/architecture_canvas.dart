@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 // ─── Data Models ────────────────────────────────────────────────────────────
 
@@ -291,9 +292,9 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
   }
 
   Future<void> _openNodeEditor(ArchitectureNode node) async {
-    final labelController = TextEditingController(text: node.label);
-    final descController = TextEditingController(text: node.description);
-    final techController = TextEditingController(text: node.technology);
+    final labelController = SpellCheckTextEditingController(text: node.label);
+    final descController = SpellCheckTextEditingController(text: node.description);
+    final techController = SpellCheckTextEditingController(text: node.technology);
     ArchitectureNodeType selectedType = node.nodeType;
     try {
       final result = await showDialog<bool>(
@@ -424,7 +425,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
   }
 
   Future<void> _openEdgeEditor(ArchitectureEdge edge) async {
-    final controller = TextEditingController(text: edge.label);
+    final controller = SpellCheckTextEditingController(text: edge.label);
     try {
       final result = await showDialog<bool>(
         context: context,

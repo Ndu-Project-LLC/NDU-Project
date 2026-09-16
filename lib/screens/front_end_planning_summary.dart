@@ -25,6 +25,7 @@ import 'package:ndu_project/widgets/charter_lock_banner.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 /// Front End Planning – Summary screen
 /// Mirrors the provided layout with shared workspace chrome,
 /// large notes area, summary text panel, and AI hint + Next controls.
@@ -1492,7 +1493,7 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
 
  Future<PlanningDashboardItem?> _showItemDialog(BuildContext context,
  {required String title, PlanningDashboardItem? existingItem}) {
- final titleController = TextEditingController(text: existingItem?.title);
+ final titleController = SpellCheckTextEditingController(text: existingItem?.title);
  final descController =
  RichTextEditingController(text: existingItem?.description ?? '');
 

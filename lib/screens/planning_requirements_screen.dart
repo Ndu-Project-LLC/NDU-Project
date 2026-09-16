@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -25,9 +24,11 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
-import 'package:ndu_project/utils/download_helper.dart' as dl;
+import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_check_dialogs.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class PlanningRequirementsScreen extends StatefulWidget {
  const PlanningRequirementsScreen({super.key});
 
@@ -38,11 +39,21 @@ class PlanningRequirementsScreen extends StatefulWidget {
 
 class _PlanningRequirementsScreenState
  extends State<PlanningRequirementsScreen> {
- final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  final TextEditingController _requirementsPlanController =
- TextEditingController();
- final ScrollController _requirementsHorizontalController = ScrollController();
- final ScrollController _requirementsVerticalController = ScrollController();
+ SpellCheckTextEditingController();  final ScrollController _requirementsHorizontalController = ScrollController();
+  final ScrollController _requirementsVerticalController = ScrollController();
+
+  /// Controllers for the table shown by the Expand button.
+  ///
+  /// Expand pushes a non-opaque route, so the inline table underneath stays
+  /// mounted and stays attached to the controllers above. A [Scrollbar] with
+  /// `thumbVisibility` asserts when its controller has more than one
+  /// [ScrollPosition] ("The provided ScrollController is attached to more than
+  /// one ScrollPosition"), which threw on every frame of the expanded table and
+  /// took the page down. The expanded copy therefore gets its own pair.
+  final ScrollController _fullScreenHorizontalController = ScrollController();
+  final ScrollController _fullScreenVerticalController = ScrollController();
 
  bool _isGeneratingRequirements = false;
  bool _isGeneratingRequirementsPlan = false;
@@ -54,6 +65,18 @@ class _PlanningRequirementsScreenState
  Timer? _autoSaveTimer;
  Timer? _planTimer;
  DateTime? _lastAutoSaveSnackAt;
+
+ /// The requirement descriptions the current plan was generated from.
+ ///
+ /// The plan's only input is the requirement descriptions
+ /// ([_requirementsPlanContext]), so an edit that does not touch a description
+ /// — a type / discipline / role / person / phase change, or the comments
+ /// field — cannot change the plan. Every edit still reached
+ /// [_schedulePlanRegenerate], and each run sets state (rebuilding every row),
+ /// assembles the whole project context, calls the model and writes to
+ /// Firestore. Comparing the current descriptions against this text keeps that
+ /// work for the edits that can actually change the plan.
+ String _planSourceText = '';
 
  List<_AssignableMember> _memberOptions = const <_AssignableMember>[];
  final List<_RequirementRow> _rows = [];
@@ -348,12 +371,23 @@ class _PlanningRequirementsScreenState
  _requirementsPlanController.text.trim().isNotEmpty) {
  return;
  }
+ // Nothing the plan is built from has changed, so another run would produce
+ // the same plan. This is what most table edits hit.
+ if (_currentPlanSourceText() == _planSourceText) return;
 
  _planTimer?.cancel();
- _planTimer = Timer(const Duration(milliseconds: 800), () {
+ // Long enough that the plan is regenerated after a working pause rather
+ // than after every sentence typed into a requirement.
+ _planTimer = Timer(const Duration(milliseconds: 2500), () {
  _generateRequirementsPlan();
  });
  }
+
+ /// The requirement descriptions the plan is generated from, in table order.
+ String _currentPlanSourceText() => _rows
+ .map((row) => row.descriptionController.text.trim())
+ .where((text) => text.isNotEmpty)
+ .join('\n');
 
  String _requirementsPlanContext() {
  final data = ProjectDataHelper.getData(context);
@@ -388,6 +422,10 @@ $requirementsList
  _rows.any((row) => row.descriptionController.text.trim().isNotEmpty);
  if (!hasAnyRequirement) return;
 
+ // Record what this run is generated from, so edits that cannot change the
+ // plan do not schedule another model call.
+ final sourceText = _currentPlanSourceText();
+
  setState(() => _isGeneratingRequirementsPlan = true);
 
  try {
@@ -409,6 +447,7 @@ $requirementsList
  _requirementsPlanController.text = text.trim();
  _settingPlanFromAi = false;
  _planEditedManually = false;
+ _planSourceText = sourceText;
  _commitAutoSave(showSnack: false);
  } catch (e) {
  debugPrint('AI requirements plan generation failed: $e');
@@ -1093,9 +1132,10 @@ $requirementsList
  @override
  void dispose() {
  _autoSaveTimer?.cancel();
- _planTimer?.cancel();
- _requirementsHorizontalController.dispose();
- _requirementsVerticalController.dispose();
+ _planTimer?.cancel();    _requirementsHorizontalController.dispose();
+    _requirementsVerticalController.dispose();
+    _fullScreenHorizontalController.dispose();
+    _fullScreenVerticalController.dispose();
  _notesController.removeListener(_handleNotesChanged);
  _requirementsPlanController.removeListener(_handlePlanChanged);
  _notesController.dispose();
@@ -1206,6 +1246,20 @@ $requirementsList
  ),
  tooltip:
  'Regenerate requirements plan',
+ ),
+ // The generated plan is long prose, so the corrector is offered on the
+ // section itself: the review lists every correction and can apply them
+ // across the whole text. Disabled while the section is locked, because a
+ // locked plan cannot accept an edit.
+ IconButton(
+ icon: const Icon(Icons.spellcheck, size: 20, color: Color(0xFF6B7280)),
+ tooltip: 'Review spelling and grammar',
+ onPressed: _isRequirementsLocked
+ ? null
+ : () => showSpellCheckDialog(
+ context,
+ controller: _requirementsPlanController,
+ ),
  ),
  ],
  ),
@@ -1685,8 +1739,17 @@ $requirementsList
           child: SingleChildScrollView(
             controller: _requirementsHorizontalController,
             scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: totalWidth),
+            // The table has a fixed content width (the sum of its column
+            // widths). This MUST be a bounded width: `minWidth` alone leaves
+            // maxWidth infinite, and inside a horizontal scroll view that
+            // propagates unbounded width to the vertical ReorderableListView
+            // ("Vertical viewport was given unbounded width") and to any Row
+            // with an Expanded child ("RenderFlex children have non-zero flex
+            // but incoming width constraints are unbounded"). The table only
+            // rendered while it was empty because the empty state has no
+            // viewport.
+            child: SizedBox(
+              width: totalWidth,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1727,6 +1790,12 @@ $requirementsList
                             controller: _requirementsVerticalController,
                             thumbVisibility: true,
                             child: ReorderableListView(
+                              // The Scrollbar above paints from this very
+                              // controller, so the list must adopt it —
+                              // otherwise the Scrollbar throws "The Scrollbar's
+                              // ScrollController has no ScrollPosition
+                              // attached" every frame.
+                              scrollController: _requirementsVerticalController,
                               buildDefaultDragHandles: false,
                               onReorder: _onReorder,
                               children: List.generate(_rows.length, (i) => buildDataRow(i)),
@@ -1740,6 +1809,7 @@ $requirementsList
         ),
       ),
     ),
+
     tableBuilder: (fsContext) => Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1749,13 +1819,22 @@ $requirementsList
       child: SizedBox(
         height: 460,
         child: Scrollbar(
-          controller: _requirementsHorizontalController,
+          controller: _fullScreenHorizontalController,
           thumbVisibility: true,
           child: SingleChildScrollView(
-            controller: _requirementsHorizontalController,
+            controller: _fullScreenHorizontalController,
             scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: totalWidth),
+            // The table has a fixed content width (the sum of its column
+            // widths). This MUST be a bounded width: `minWidth` alone leaves
+            // maxWidth infinite, and inside a horizontal scroll view that
+            // propagates unbounded width to the vertical ReorderableListView
+            // ("Vertical viewport was given unbounded width") and to any Row
+            // with an Expanded child ("RenderFlex children have non-zero flex
+            // but incoming width constraints are unbounded"). The table only
+            // rendered while it was empty because the empty state has no
+            // viewport.
+            child: SizedBox(
+              width: totalWidth,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1791,11 +1870,13 @@ $requirementsList
                               'No requirements yet. Add one or import from CSV.',
                               style: TextStyle(color: Color(0xFF9CA3AF)),
                             ),
-                          )
-                        : Scrollbar(
-                            controller: _requirementsVerticalController,
+                          )                        : Scrollbar(
+                            controller: _fullScreenVerticalController,
                             thumbVisibility: true,
                             child: ReorderableListView(
+                              // See the inline copy above: the Scrollbar and the
+                              // list must share one controller.
+                              scrollController: _fullScreenVerticalController,
                               buildDefaultDragHandles: false,
                               onReorder: _onReorder,
                               children: List.generate(_rows.length, (i) => buildDataRow(i)),
@@ -1809,6 +1890,8 @@ $requirementsList
         ),
       ),
     ),
+
+
     );
   }
 
@@ -1874,17 +1957,21 @@ $requirementsList
     const CsvColumnSpec(key: 'comments', label: 'Comments', sampleValue: 'High priority'),
   ];
 
+  /// Excel template with a numbered `Data` sheet plus a `Definitions` sheet.
+  /// Importing it back cannot fail on the instruction text, because the
+  /// importer only reads the Data sheet.
   void _downloadTemplate() {
-    final template = CsvImportHelper.generateTemplate(_csvColumns);
-    final filename = CsvImportHelper.templateFilename('Project Requirements');
-    final bytes = utf8.encode(template);
-    dl.downloadFile(bytes, filename, mimeType: 'text/csv');
+    TableImportHelper.downloadExcelTemplate(
+      tableTitle: 'Project Requirements',
+      columns: _csvColumns,
+    );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('CSV template downloaded!'),
+          content: Text(
+              'Excel template downloaded — fill the Data tab (row numbers included), the Definitions tab explains each column.'),
           backgroundColor: Color(0xFF10B981),
-          duration: Duration(seconds: 2),
+          duration: Duration(seconds: 4),
         ),
       );
     }
@@ -2113,11 +2200,11 @@ class _RequirementRow {
  ];
 
  _RequirementRow({required this.number, this.onChanged})
- : descriptionController = TextEditingController(),
- commentsController = TextEditingController(),
- roleController = TextEditingController(),
- personController = TextEditingController(),
- sourceController = TextEditingController();
+ : descriptionController = SpellCheckTextEditingController(),
+ commentsController = SpellCheckTextEditingController(),
+ roleController = SpellCheckTextEditingController(),
+ personController = SpellCheckTextEditingController(),
+ sourceController = SpellCheckTextEditingController();
 
  int number;
 
@@ -2473,7 +2560,7 @@ class _MemberPickerDialog extends StatefulWidget {
 
 class _MemberPickerDialogState extends State<_MemberPickerDialog> {
  late final TextEditingController _searchController =
- TextEditingController(text: widget.initialQuery);
+ SpellCheckTextEditingController(text: widget.initialQuery);
 
  @override
  void dispose() {

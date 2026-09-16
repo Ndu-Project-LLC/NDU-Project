@@ -33,6 +33,7 @@ import 'package:ndu_project/services/integrated_work_package_service.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kSurface = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -231,43 +232,43 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  final data = ProjectDataHelper.getData(context);
  _document = DesignPlanningDocument.fromProjectData(data);
  _overviewController =
- TextEditingController(text: _document.overviewSummary);
+ SpellCheckTextEditingController(text: _document.overviewSummary);
  _designWhoController =
- TextEditingController(text: _document.designWhoAndOwnership);
+ SpellCheckTextEditingController(text: _document.designWhoAndOwnership);
  _designHowController =
- TextEditingController(text: _document.designExecutionApproach);
+ SpellCheckTextEditingController(text: _document.designExecutionApproach);
  _designVendorsController =
- TextEditingController(text: _document.designVendorContractInputs);
+ SpellCheckTextEditingController(text: _document.designVendorContractInputs);
  _designInterfacesController =
- TextEditingController(text: _document.designInterfacesAndConstraints);
- _objectivesController = TextEditingController(text: _document.objectives);
+ SpellCheckTextEditingController(text: _document.designInterfacesAndConstraints);
+ _objectivesController = SpellCheckTextEditingController(text: _document.objectives);
  _successCriteriaController =
- TextEditingController(text: _document.successCriteria);
- _scopeController = TextEditingController(text: _document.scope);
- _outOfScopeController = TextEditingController(text: _document.outOfScope);
+ SpellCheckTextEditingController(text: _document.successCriteria);
+ _scopeController = SpellCheckTextEditingController(text: _document.scope);
+ _outOfScopeController = SpellCheckTextEditingController(text: _document.outOfScope);
  _architectureController =
- TextEditingController(text: _document.architectureSummary);
+ SpellCheckTextEditingController(text: _document.architectureSummary);
  _diagramReferenceController =
- TextEditingController(text: _document.diagramReference);
+ SpellCheckTextEditingController(text: _document.diagramReference);
  _dataFlowController =
- TextEditingController(text: _document.dataFlowSummary);
- _uiUxController = TextEditingController(text: _document.uiUxSummary);
+ SpellCheckTextEditingController(text: _document.dataFlowSummary);
+ _uiUxController = SpellCheckTextEditingController(text: _document.uiUxSummary);
  _designSystemController =
- TextEditingController(text: _document.designSystemNotes);
+ SpellCheckTextEditingController(text: _document.designSystemNotes);
  _technicalFrontendController =
- TextEditingController(text: _document.technicalFrontend);
+ SpellCheckTextEditingController(text: _document.technicalFrontend);
  _technicalBackendController =
- TextEditingController(text: _document.technicalBackend);
+ SpellCheckTextEditingController(text: _document.technicalBackend);
  _technicalDataController =
- TextEditingController(text: _document.technicalData);
+ SpellCheckTextEditingController(text: _document.technicalData);
  _constraintsController =
- TextEditingController(text: _document.constraints.join('\n'));
+ SpellCheckTextEditingController(text: _document.constraints.join('\n'));
  _assumptionsController =
- TextEditingController(text: _document.assumptions.join('\n'));
+ SpellCheckTextEditingController(text: _document.assumptions.join('\n'));
  _validationController =
- TextEditingController(text: _document.validationSummary);
+ SpellCheckTextEditingController(text: _document.validationSummary);
  _governanceController =
- TextEditingController(text: _document.governanceNotes);
+ SpellCheckTextEditingController(text: _document.governanceNotes);
  _ensureSpecificationRowKeys();
  _hydrateGuidedSectionState(data);
  }
@@ -734,7 +735,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
 
  Future<void> _showSpecificationsTableDialog() async {
  final rows = _specificationOptions();
- final searchController = TextEditingController();
+ final searchController = SpellCheckTextEditingController();
  var query = '';
  var disciplineFilter = 'All';
  var areaFilter = 'All';
@@ -4952,7 +4953,7 @@ class _FilterableCreatableDropdownFieldState
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.value.trim());
+    _controller = SpellCheckTextEditingController(text: widget.value.trim());
     _focusNode = FocusNode();
   }
 
@@ -5221,7 +5222,7 @@ class _RequirementMultiSelectFieldState
 
   Future<void> _openSelector() async {
     final selected = {..._localSelection};
-    final searchController = TextEditingController();
+    final searchController = SpellCheckTextEditingController();
     String query = '';
 
     await showModalBottomSheet<void>(

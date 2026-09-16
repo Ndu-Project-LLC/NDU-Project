@@ -46,6 +46,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class CostAnalysisScreen extends StatefulWidget {
   final String notes;
@@ -302,9 +303,9 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   static const List<double> _discountRateOptions = [0.08, 0.10, 0.12];
   final Set<int> _solutionLoading = <int>{};
   int _benefitTabIndex = 0;
-  final TextEditingController _savingsNotesController = TextEditingController();
+  final TextEditingController _savingsNotesController = SpellCheckTextEditingController();
   final TextEditingController _savingsTargetController =
-      TextEditingController(text: '10');
+      SpellCheckTextEditingController(text: '10');
   bool _isSavingsGenerating = false;
   String? _savingsError;
 
@@ -413,12 +414,12 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   void initState() {
     super.initState();
     _suppressDirtyTracking = true;
-    _notesController = TextEditingController(text: widget.notes);
+    _notesController = SpellCheckTextEditingController(text: widget.notes);
     _notesController.addListener(_markDirty);
-    _projectValueAmountController = TextEditingController();
+    _projectValueAmountController = SpellCheckTextEditingController();
     _projectValueBenefitControllers = {
       for (final field in _projectValueFields)
-        field.key: TextEditingController(),
+        field.key: SpellCheckTextEditingController(),
     };
     _benefitCategoryTabController =
         TabController(length: _projectValueFields.length, vsync: this);
@@ -3787,13 +3788,13 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     String? categoryKey,
   }) async {
     final titleController =
-        TextEditingController(text: entry?.titleController.text ?? '');
+        SpellCheckTextEditingController(text: entry?.titleController.text ?? '');
     final unitValueController =
-        TextEditingController(text: entry?.unitValueController.text ?? '');
+        SpellCheckTextEditingController(text: entry?.unitValueController.text ?? '');
     final unitsController =
-        TextEditingController(text: entry?.unitsController.text ?? '');
+        SpellCheckTextEditingController(text: entry?.unitsController.text ?? '');
     final notesController =
-        TextEditingController(text: entry?.notesController.text ?? '');
+        SpellCheckTextEditingController(text: entry?.notesController.text ?? '');
     String selectedCategory = _normalizeBenefitCategoryKey(
       entry?.categoryKey ?? categoryKey ?? _projectValueFields.first.key,
     );
@@ -6316,13 +6317,13 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     _CostRow? row,
   }) async {
     final itemController =
-        TextEditingController(text: row?.itemController.text ?? '');
+        SpellCheckTextEditingController(text: row?.itemController.text ?? '');
     final descriptionController =
-        TextEditingController(text: row?.descriptionController.text ?? '');
+        SpellCheckTextEditingController(text: row?.descriptionController.text ?? '');
     final costController =
-        TextEditingController(text: row?.costController.text ?? '');
+        SpellCheckTextEditingController(text: row?.costController.text ?? '');
     final assumptionsController =
-        TextEditingController(text: row?.assumptionsController.text ?? '');
+        SpellCheckTextEditingController(text: row?.assumptionsController.text ?? '');
     bool isSuggesting = false;
     final readOnly = mode == _EditorDialogMode.view;
     final result = await showDialog<_InitialCostRowDraft>(
@@ -9245,16 +9246,16 @@ class _BenefitLineItemEntry {
     double unitValue = 0,
     double units = 0,
     String notes = '',
-  })  : titleController = TextEditingController(text: title),
-        unitValueController = TextEditingController(
+  })  : titleController = SpellCheckTextEditingController(text: title),
+        unitValueController = SpellCheckTextEditingController(
           text: unitValue == 0
               ? ''
               : unitValue.toStringAsFixed(unitValue % 1 == 0 ? 0 : 2),
         ),
-        unitsController = TextEditingController(
+        unitsController = SpellCheckTextEditingController(
           text: units == 0 ? '' : units.toStringAsFixed(units % 1 == 0 ? 0 : 2),
         ),
-        notesController = TextEditingController(text: notes);
+        notesController = SpellCheckTextEditingController(text: notes);
 
   String get title => titleController.text.trim();
 
@@ -9318,12 +9319,12 @@ class _BenefitCategorySummary {
 }
 
 class _CostRow {
-  final TextEditingController itemController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController costController = TextEditingController();
-  final TextEditingController roiController = TextEditingController();
-  final TextEditingController npvController = TextEditingController();
-  final TextEditingController assumptionsController = TextEditingController();
+  final TextEditingController itemController = SpellCheckTextEditingController();
+  final TextEditingController descriptionController = SpellCheckTextEditingController();
+  final TextEditingController costController = SpellCheckTextEditingController();
+  final TextEditingController roiController = SpellCheckTextEditingController();
+  final TextEditingController npvController = SpellCheckTextEditingController();
+  final TextEditingController assumptionsController = SpellCheckTextEditingController();
   bool aiLoading = false;
 
   // Baseline values used for recomputation
@@ -9483,7 +9484,7 @@ class _SolutionCostContext {
   int resourceIndex = 0;
   int timelineIndex = 1;
   int complexityIndex = 0;
-  final TextEditingController justificationController = TextEditingController();
+  final TextEditingController justificationController = SpellCheckTextEditingController();
   bool autoGenerated = true;
   bool _updating = false;
 
@@ -9616,8 +9617,8 @@ class _BasisFrequencyToggle extends StatelessWidget {
 
 class _CategoryCostEntry {
   final String categoryKey;
-  final TextEditingController costController = TextEditingController();
-  final TextEditingController notesController = TextEditingController();
+  final TextEditingController costController = SpellCheckTextEditingController();
+  final TextEditingController notesController = SpellCheckTextEditingController();
   VoidCallback? _listener;
   bool aiLoading = false;
 

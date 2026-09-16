@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE RETROSPECTIVES — Continuous Improvement with Multiple Templates
@@ -840,7 +841,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
   }
 
   Future<void> _addCard(_RetroColumn col) async {
-    final ctrl = TextEditingController();
+    final ctrl = SpellCheckTextEditingController();
     try {
       await showDialog(
         context: context,

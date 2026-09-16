@@ -16,6 +16,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kMuted = Color(0xFF6B7280);
@@ -181,13 +182,13 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
   void initState() {
     super.initState();
     for (final f in _fields) {
-      _controllers[f.key] = TextEditingController();
+      _controllers[f.key] = SpellCheckTextEditingController();
     }
     for (final f in _metricsFields) {
-      _controllers[f.key] = TextEditingController();
+      _controllers[f.key] = SpellCheckTextEditingController();
     }
     for (final f in _releaseFields) {
-      _controllers[f.key] = TextEditingController();
+      _controllers[f.key] = SpellCheckTextEditingController();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }

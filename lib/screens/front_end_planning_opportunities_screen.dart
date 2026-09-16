@@ -27,6 +27,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Front End Planning – Project Opportunities page
 /// Built to match the provided screenshot exactly:
@@ -1448,13 +1449,13 @@ class _OpportunityDialog extends StatefulWidget {
 }
 
 class _OpportunityDialogState extends State<_OpportunityDialog> {
-  final _oppCtrl = TextEditingController();
-  final _costSavingsCtrl = TextEditingController();
-  final _scheduleImpactCtrl = TextEditingController();
-  final _implementationCtrl = TextEditingController();
-  final _disciplineCtrl = TextEditingController();
-  final _roleCtrl = TextEditingController();
-  final _ownerCtrl = TextEditingController();
+  final _oppCtrl = SpellCheckTextEditingController();
+  final _costSavingsCtrl = SpellCheckTextEditingController();
+  final _scheduleImpactCtrl = SpellCheckTextEditingController();
+  final _implementationCtrl = SpellCheckTextEditingController();
+  final _disciplineCtrl = SpellCheckTextEditingController();
+  final _roleCtrl = SpellCheckTextEditingController();
+  final _ownerCtrl = SpellCheckTextEditingController();
   String _selectedApplicablePhase = 'Planning';
   String _selectedStatus = 'Identified';
   List<String> _selectedAppliesTo = [];

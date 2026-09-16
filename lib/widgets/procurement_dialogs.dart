@@ -8,6 +8,7 @@ import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/vendor_service.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ProcurementAssignableMemberOption {
   const ProcurementAssignableMemberOption({
@@ -346,9 +347,9 @@ class _AddItemDialogState extends State<AddItemDialog> {
   void initState() {
     super.initState();
     final existing = widget.initialItem;
-    _nameCtrl = TextEditingController(text: existing?.name ?? '');
-    _descCtrl = TextEditingController(text: existing?.description ?? '');
-    _budgetCtrl = TextEditingController(
+    _nameCtrl = SpellCheckTextEditingController(text: existing?.name ?? '');
+    _descCtrl = SpellCheckTextEditingController(text: existing?.description ?? '');
+    _budgetCtrl = SpellCheckTextEditingController(
       text: existing != null ? existing.budget.toStringAsFixed(0) : '',
     );
     final categoryOptions = _categoryOptionsWithOther;
@@ -932,7 +933,7 @@ class _ResponsibleMemberPickerDialog extends StatefulWidget {
 class _ResponsibleMemberPickerDialogState
     extends State<_ResponsibleMemberPickerDialog> {
   late final TextEditingController _searchController =
-      TextEditingController(text: widget.initialQuery);
+      SpellCheckTextEditingController(text: widget.initialQuery);
 
   @override
   void dispose() {
@@ -1105,19 +1106,19 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
   @override
   void initState() {
     super.initState();
-    _nameCtrl = TextEditingController(text: widget.initialVendor?.name ?? '');
+    _nameCtrl = SpellCheckTextEditingController(text: widget.initialVendor?.name ?? '');
     final normalizedCategoryOptions = _categoryOptionsWithOther;
     final initialCategory = (widget.initialVendor?.category ?? '').trim();
     if (initialCategory.isNotEmpty &&
         !normalizedCategoryOptions.contains(initialCategory)) {
       _usingOtherCategory = true;
       _category = 'Other';
-      _otherCategoryCtrl = TextEditingController(text: initialCategory);
+      _otherCategoryCtrl = SpellCheckTextEditingController(text: initialCategory);
     } else {
       _category = initialCategory.isNotEmpty
           ? initialCategory
           : normalizedCategoryOptions.first;
-      _otherCategoryCtrl = TextEditingController();
+      _otherCategoryCtrl = SpellCheckTextEditingController();
     }
     _rating = _ratingFromLetter(widget.initialVendor?.rating ?? 'B');
     final status = widget.initialVendor?.status.toLowerCase() ?? 'active';
@@ -1693,13 +1694,13 @@ class _CreateRfqDialogState extends State<CreateRfqDialog> {
           : initialBudget.toStringAsFixed(2);
     }
 
-    _titleCtrl = TextEditingController(text: initial?.title ?? '');
-    _ownerCtrl = TextEditingController(text: initial?.owner ?? '');
-    _budgetCtrl = TextEditingController(text: budgetText);
-    _invitedCtrl = TextEditingController(
+    _titleCtrl = SpellCheckTextEditingController(text: initial?.title ?? '');
+    _ownerCtrl = SpellCheckTextEditingController(text: initial?.owner ?? '');
+    _budgetCtrl = SpellCheckTextEditingController(text: budgetText);
+    _invitedCtrl = SpellCheckTextEditingController(
       text: '${initial?.invitedCount ?? 0}',
     );
-    _responsesCtrl = TextEditingController(
+    _responsesCtrl = SpellCheckTextEditingController(
       text: '${initial?.responseCount ?? 0}',
     );
 
@@ -2091,10 +2092,10 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
   void initState() {
     super.initState();
     final initial = widget.initialPo;
-    _idCtrl = TextEditingController(text: initial?.poNumber ?? '');
-    _vendorCtrl = TextEditingController(text: initial?.vendorName ?? '');
-    _ownerCtrl = TextEditingController(text: initial?.owner ?? '');
-    _amountCtrl = TextEditingController(
+    _idCtrl = SpellCheckTextEditingController(text: initial?.poNumber ?? '');
+    _vendorCtrl = SpellCheckTextEditingController(text: initial?.vendorName ?? '');
+    _ownerCtrl = SpellCheckTextEditingController(text: initial?.owner ?? '');
+    _amountCtrl = SpellCheckTextEditingController(
       text: initial != null && initial.amount > 0
           ? initial.amount.round().toString()
           : '',
@@ -2514,16 +2515,16 @@ class _AddContractDialogState extends State<AddContractDialog> {
   void initState() {
     super.initState();
     final existing = widget.initialContract;
-    _titleCtrl = TextEditingController(text: existing?.title ?? '');
+    _titleCtrl = SpellCheckTextEditingController(text: existing?.title ?? '');
     _contractorCtrl =
-        TextEditingController(text: existing?.contractorName ?? '');
-    _descCtrl = TextEditingController(text: existing?.description ?? '');
-    _costCtrl = TextEditingController(
+        SpellCheckTextEditingController(text: existing?.contractorName ?? '');
+    _descCtrl = SpellCheckTextEditingController(text: existing?.description ?? '');
+    _costCtrl = SpellCheckTextEditingController(
       text: existing == null || existing.estimatedCost <= 0
           ? ''
           : existing.estimatedCost.toStringAsFixed(0),
     );
-    _ownerCtrl = TextEditingController(text: existing?.owner ?? '');
+    _ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
     _status = existing?.status ?? ContractStatus.draft;
     _startDate = existing?.startDate;
     _endDate = existing?.endDate;

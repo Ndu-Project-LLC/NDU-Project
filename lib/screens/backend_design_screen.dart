@@ -22,6 +22,7 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class BackendDesignScreen extends StatefulWidget {
  const BackendDesignScreen({super.key});
 
@@ -31,19 +32,19 @@ class BackendDesignScreen extends StatefulWidget {
 
 class _BackendDesignScreenState extends State<BackendDesignScreen> {
  final TextEditingController _architectureSummaryController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _databaseSummaryController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _quickComponentNameController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _quickComponentResponsibilityController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _quickEntityNameController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _quickEntityPrimaryKeyController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _quickEntityDescriptionController =
- TextEditingController();
+ SpellCheckTextEditingController();
 
  final List<_ArchitectureComponent> _components = [];
  final List<_ArchitectureDataFlow> _dataFlows = [];
@@ -1493,9 +1494,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── Dialog Methods ────────────────────────────────────────────────────────
 
  Future<void> _openComponentDialog({_ArchitectureComponent? existing}) async {
- final nameController = TextEditingController(text: existing?.name ?? '');
+ final nameController = SpellCheckTextEditingController(text: existing?.name ?? '');
  final responsibilityController =
- TextEditingController(text: existing?.responsibility ?? '');
+ SpellCheckTextEditingController(text: existing?.responsibility ?? '');
  final ownerOptions = _ownerOptions(currentValue: existing?.owner);
  String type = existing?.type ?? _componentTypes.first;
  String owner = existing?.owner.isNotEmpty == true
@@ -1632,10 +1633,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _openDataFlowDialog({_ArchitectureDataFlow? existing}) async {
  final sourceController =
- TextEditingController(text: existing?.source ?? '');
+ SpellCheckTextEditingController(text: existing?.source ?? '');
  final destinationController =
- TextEditingController(text: existing?.destination ?? '');
- final notesController = TextEditingController(text: existing?.notes ?? '');
+ SpellCheckTextEditingController(text: existing?.destination ?? '');
+ final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
  String protocol = existing?.protocol ?? _protocolOptions.first;
  final saved = await _showBackendDialog(
  title: existing == null ? 'Add data flow' : 'Edit data flow',
@@ -1750,11 +1751,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _openDesignDocumentDialog({_DesignDocument? existing}) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
  final descriptionController =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  final locationController =
- TextEditingController(text: existing?.location ?? '');
+ SpellCheckTextEditingController(text: existing?.location ?? '');
  final ownerOptions = _ownerOptions(currentValue: existing?.owner);
  String owner = existing?.owner.isNotEmpty == true
  ? existing!.owner
@@ -2007,11 +2008,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _openEntityDialog({_DbEntity? existing}) async {
- final nameController = TextEditingController(text: existing?.name ?? '');
+ final nameController = SpellCheckTextEditingController(text: existing?.name ?? '');
  final primaryKeyController =
- TextEditingController(text: existing?.primaryKey ?? '');
+ SpellCheckTextEditingController(text: existing?.primaryKey ?? '');
  final descriptionController =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  final ownerOptions = _ownerOptions(currentValue: existing?.owner);
  String owner = existing?.owner.isNotEmpty == true
  ? existing!.owner
@@ -2129,12 +2130,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _openFieldDialog({_DbField? existing}) async {
- final tableController = TextEditingController(text: existing?.table ?? '');
- final fieldController = TextEditingController(text: existing?.field ?? '');
- final typeController = TextEditingController(text: existing?.type ?? '');
+ final tableController = SpellCheckTextEditingController(text: existing?.table ?? '');
+ final fieldController = SpellCheckTextEditingController(text: existing?.field ?? '');
+ final typeController = SpellCheckTextEditingController(text: existing?.type ?? '');
  final constraintsController =
- TextEditingController(text: existing?.constraints ?? '');
- final notesController = TextEditingController(text: existing?.notes ?? '');
+ SpellCheckTextEditingController(text: existing?.constraints ?? '');
+ final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
  final saved = await _showBackendDialog(
  title: existing == null ? 'Add field' : 'Edit field',
  content: StatefulBuilder(

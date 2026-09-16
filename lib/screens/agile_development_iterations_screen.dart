@@ -27,6 +27,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/widgets/milestone_picker_dialog.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class AgileDevelopmentIterationsScreen extends StatefulWidget {
   const AgileDevelopmentIterationsScreen({super.key});
@@ -663,7 +664,7 @@ class _AgileDevelopmentIterationsScreenState
   }
 
   Future<void> _showAddTaskDialog(BuildContext context) async {
-    final userStoryController = TextEditingController();
+    final userStoryController = SpellCheckTextEditingController();
     final taskDescriptionController = RichTextEditingController();
     final acceptanceCriteriaController = RichAutoBulletTextController();
     final iterationNotesController = RichTextEditingController();

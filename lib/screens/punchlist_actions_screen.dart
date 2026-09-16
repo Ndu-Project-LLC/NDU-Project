@@ -18,6 +18,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class PunchlistActionsScreen extends StatefulWidget {
   const PunchlistActionsScreen({super.key});
 
@@ -741,15 +742,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  void _showDistributionDialog(BuildContext context, {int? editIndex}) {
  final isEdit = editIndex != null;
  final existing = isEdit ? _distributionRows[editIndex] : null;
- final categoryCtrl = TextEditingController(text: existing?.category ?? '');
- final openItemsCtrl = TextEditingController(text: existing != null ? '${existing.openItems}' : '0');
- final criticalCtrl = TextEditingController(text: existing != null ? '${existing.critical}' : '0');
- final highCtrl = TextEditingController(text: existing != null ? '${existing.high}' : '0');
- final mediumCtrl = TextEditingController(text: existing != null ? '${existing.medium}' : '0');
- final lowCtrl = TextEditingController(text: existing != null ? '${existing.low}' : '0');
- final closedCtrl = TextEditingController(text: existing != null ? '${existing.closed}' : '0');
- final ownerCtrl = TextEditingController(text: existing?.owner ?? '');
- final lastUpdatedCtrl = TextEditingController(text: existing?.lastUpdated ?? 'Just now');
+ final categoryCtrl = SpellCheckTextEditingController(text: existing?.category ?? '');
+ final openItemsCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.openItems}' : '0');
+ final criticalCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.critical}' : '0');
+ final highCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.high}' : '0');
+ final mediumCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.medium}' : '0');
+ final lowCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.low}' : '0');
+ final closedCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.closed}' : '0');
+ final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+ final lastUpdatedCtrl = SpellCheckTextEditingController(text: existing?.lastUpdated ?? 'Just now');
  const String otherCategoryOption = 'Other (specify)';
  final Set<String> categorySet = {
  'Systems', 'Field Ops', 'Compliance', 'Logistics',
@@ -870,11 +871,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  void _showVelocityDialog(BuildContext context, {int? editIndex}) {
  final isEdit = editIndex != null;
  final existing = isEdit ? _velocityRows[editIndex] : null;
- final workstreamCtrl = TextEditingController(text: existing?.workstream ?? '');
- final openItemsCtrl = TextEditingController(text: existing != null ? '${existing.openItems}' : '0');
- final closedThisSprintCtrl = TextEditingController(text: existing != null ? '${existing.closedThisSprint}' : '0');
- final velocityCtrl = TextEditingController(text: existing != null ? '${existing.velocity}' : '50');
- final throughputCtrl = TextEditingController(
+ final workstreamCtrl = SpellCheckTextEditingController(text: existing?.workstream ?? '');
+ final openItemsCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.openItems}' : '0');
+ final closedThisSprintCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.closedThisSprint}' : '0');
+ final velocityCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.velocity}' : '50');
+ final throughputCtrl = SpellCheckTextEditingController(
  text: existing != null
  ? NumericStepperField.formatValue(existing.throughput, isDouble: true)
  : '0');
@@ -883,13 +884,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  : (double.tryParse(
  existing.delta.replaceAll('%', '').replaceAll('+', '').trim()) ??
  0.0);
- final deltaCtrl = TextEditingController(
+ final deltaCtrl = SpellCheckTextEditingController(
  text: NumericStepperField.formatValue(existingDelta, isDouble: true));
- final avgCycleTimeCtrl = TextEditingController(
+ final avgCycleTimeCtrl = SpellCheckTextEditingController(
  text: existing != null
  ? NumericStepperField.formatValue(existing.avgCycleTime, isDouble: true)
  : '0');
- final periodCtrl = TextEditingController(text: existing?.period ?? '');
+ final periodCtrl = SpellCheckTextEditingController(text: existing?.period ?? '');
  const String otherPeriodOption = 'Other (specify)';
  final Set<String> periodSet = {
  'Current Sprint', 'Next Sprint', 'Sprint 41-42',
@@ -903,7 +904,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String selectedPeriod = usesCustomPeriod
  ? otherPeriodOption
  : (existingPeriod.isNotEmpty ? existingPeriod : 'Sprint 41-42');
- final ownerCtrl = TextEditingController(text: existing?.owner ?? '');
+ final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String status = existing?.status ?? 'On Track';
 
  showDialog(

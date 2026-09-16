@@ -11,6 +11,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/services/ai/kaz_ai_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class WBSAIScreen extends StatefulWidget {
   const WBSAIScreen({super.key});
@@ -26,9 +27,9 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
   String _disclaimer = '';
   bool _usedFallback = false;
 
-  final _industryCtrl = TextEditingController();
-  final _regionCtrl = TextEditingController();
-  final _siteContextCtrl = TextEditingController();
+  final _industryCtrl = SpellCheckTextEditingController();
+  final _regionCtrl = SpellCheckTextEditingController();
+  final _siteContextCtrl = SpellCheckTextEditingController();
 
   final _actions = [
     (

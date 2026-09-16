@@ -19,6 +19,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 
 class TechnicalDevelopmentScreen extends StatefulWidget {
@@ -31,8 +32,8 @@ class TechnicalDevelopmentScreen extends StatefulWidget {
 
 class _TechnicalDevelopmentScreenState
  extends State<TechnicalDevelopmentScreen> {
- final TextEditingController _notesController = TextEditingController();
- final TextEditingController _approachController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
+ final TextEditingController _approachController = SpellCheckTextEditingController();
  final _Debouncer _saveDebouncer = _Debouncer();
  bool _isLoading = false;
  bool _suspendSave = false;
@@ -1693,9 +1694,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showWorkstreamDialog({_WorkstreamItem? existing}) {
  final isEdit = existing != null;
- final titleCtl = TextEditingController(text: existing?.title ?? '');
- final subtitleCtl = TextEditingController(text: existing?.subtitle ?? '');
- final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+ final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final subtitleCtl = SpellCheckTextEditingController(text: existing?.subtitle ?? '');
+ final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String status = existing?.status ?? _workstreamStatusOptions.first;
  int progress = existing?.progress ?? 0;
 
@@ -1774,7 +1775,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  SizedBox(
  width: 100,
  child: VoiceTextField(
- controller: TextEditingController(
+ controller: SpellCheckTextEditingController(
  text: progress.toString()),
  keyboardType: TextInputType.number,
  decoration: const InputDecoration(
@@ -1883,8 +1884,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showBuildComponentDialog({_BuildComponentRow? existing}) {
  final isEdit = existing != null;
- final nameCtl = TextEditingController(text: existing?.name ?? '');
- final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+ final nameCtl = SpellCheckTextEditingController(text: existing?.name ?? '');
+ final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String status = existing?.status ?? _buildStatusOptions.first;
  String type = existing?.type ?? 'Software';
 
@@ -2059,9 +2060,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showIntegrationDialog({_IntegrationRow? existing}) {
  final isEdit = existing != null;
- final labelCtl = TextEditingController(text: existing?.label ?? '');
+ final labelCtl = SpellCheckTextEditingController(text: existing?.label ?? '');
  final descCtl =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  String status = existing?.status ?? _integrationStatusOptions.first;
 
  showDialog(
@@ -2209,8 +2210,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showIssueDialog({_IssueRow? existing}) {
  final isEdit = existing != null;
- final titleCtl = TextEditingController(text: existing?.title ?? '');
- final detailCtl = TextEditingController(text: existing?.detail ?? '');
+ final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final detailCtl = SpellCheckTextEditingController(text: existing?.detail ?? '');
  String severity = existing?.severity ?? _severityOptions[1]; // Default to High
 
  showDialog(
@@ -2357,12 +2358,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showRiskSignalDialog({_RiskSignalRow? existing}) {
  final isEdit = existing != null;
- final signalCtl = TextEditingController(text: existing?.signal ?? '');
+ final signalCtl = SpellCheckTextEditingController(text: existing?.signal ?? '');
  final descCtl =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  final categoryCtl =
- TextEditingController(text: existing?.category ?? '');
- final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+ SpellCheckTextEditingController(text: existing?.category ?? '');
+ final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String severity = existing?.severity ?? 'High';
 
  showDialog(
@@ -2513,7 +2514,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showReadinessDialog({_ReadinessItem? existing}) {
  final isEdit = existing != null;
- final titleCtl = TextEditingController(text: existing?.title ?? '');
+ final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
  String owner = existing?.owner ??
  _ownerOptions(currentValue: existing?.owner).first;
  String status = existing?.status ?? _readinessStatusOptions.first;

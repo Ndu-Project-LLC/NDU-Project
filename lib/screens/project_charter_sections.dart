@@ -13,6 +13,7 @@ import 'package:ndu_project/utils/charter_tech_proc_helper.dart';
 import 'package:ndu_project/widgets/expandable_text.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 // ─── Brand Color Tokens ───
 class BrandColors {
@@ -468,10 +469,10 @@ class CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  }
 
  Future<void> _showAssignSponsorDialog(ProjectDataModel data) async {
- final nameController = TextEditingController(
+ final nameController = SpellCheckTextEditingController(
  text: data.charterProjectSponsorName,
  );
- final emailController = TextEditingController(
+ final emailController = SpellCheckTextEditingController(
  text: data.charterEmail,
  );
  final formKey = GlobalKey<FormState>();
@@ -793,8 +794,8 @@ class CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  }
 
  Future<void> _showAssignManagerDialog(ProjectDataModel data) async {
-   final nameController = TextEditingController();
-   final emailController = TextEditingController();
+   final nameController = SpellCheckTextEditingController();
+   final emailController = SpellCheckTextEditingController();
    final formKey = GlobalKey<FormState>();
 
    // Load registered users BEFORE opening the dialog so the
@@ -2484,7 +2485,7 @@ class _CharterTechnicalProcurementBentoState
     required void Function(String)? onSave,
     required VoidCallback? onClear,
   }) async {
-    final controller = TextEditingController(text: currentText);
+    final controller = SpellCheckTextEditingController(text: currentText);
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) {

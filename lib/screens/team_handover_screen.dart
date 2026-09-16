@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// TEAM HANDOVER CHECKLIST
@@ -33,13 +34,13 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
 
   // Checklist items: category -> list of items (each item: {text, checked})
   final Map<String, List<_ChecklistItem>> _checklist = {};
-  final TextEditingController _summaryController = TextEditingController();
-  final TextEditingController _teamMemberController = TextEditingController();
+  final TextEditingController _summaryController = SpellCheckTextEditingController();
+  final TextEditingController _teamMemberController = SpellCheckTextEditingController();
   final TextEditingController _receivingMemberController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _projectManagerController =
-      TextEditingController();
-  final TextEditingController _dateController = TextEditingController();
+      SpellCheckTextEditingController();
+  final TextEditingController _dateController = SpellCheckTextEditingController();
 
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
 

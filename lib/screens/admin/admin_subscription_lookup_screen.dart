@@ -9,6 +9,7 @@ import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class AdminSubscriptionLookupScreen extends StatefulWidget {
   const AdminSubscriptionLookupScreen({super.key});
@@ -20,7 +21,7 @@ class AdminSubscriptionLookupScreen extends StatefulWidget {
 
 class _AdminSubscriptionLookupScreenState
     extends State<AdminSubscriptionLookupScreen> {
-  final _searchController = TextEditingController();
+  final _searchController = SpellCheckTextEditingController();
   UserModel? _selectedUser;
   List<Subscription> _subscriptions = [];
   List<Invoice> _invoices = [];

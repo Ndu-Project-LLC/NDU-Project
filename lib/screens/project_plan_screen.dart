@@ -22,6 +22,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ProjectPlanScreen extends StatefulWidget {
   const ProjectPlanScreen({super.key});
 
@@ -53,12 +54,12 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   ];
 
   final TextEditingController _overviewSummaryController =
-      TextEditingController();
-  final TextEditingController _budgetTotalController = TextEditingController();
+      SpellCheckTextEditingController();
+  final TextEditingController _budgetTotalController = SpellCheckTextEditingController();
   final TextEditingController _budgetContingencyController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _budgetApprovedByController =
-      TextEditingController();
+      SpellCheckTextEditingController();
 
   String _budgetCurrency = 'USD';
 
@@ -1670,10 +1671,10 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   /// Opens a pop-up modal to create a new milestone. The row is only added
   /// to the table once the user fills in the details and taps “Add”.
   Future<void> _addMilestone() async {
-    final nameCtrl = TextEditingController();
-    final dateCtrl = TextEditingController();
-    final ownerCtrl = TextEditingController();
-    final notesCtrl = TextEditingController();
+    final nameCtrl = SpellCheckTextEditingController();
+    final dateCtrl = SpellCheckTextEditingController();
+    final ownerCtrl = SpellCheckTextEditingController();
+    final notesCtrl = SpellCheckTextEditingController();
     var status = 'Planned';
     final formKey = GlobalKey<FormState>();
 

@@ -26,6 +26,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const double _technicalAlignmentActionColumnWidth = 112;
 const double _technicalAlignmentActionButtonSize = 32;
@@ -40,7 +41,7 @@ class TechnicalAlignmentScreen extends StatefulWidget {
 }
 
 class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   Timer? _saveDebounce;
   bool _isLoading = false;
   bool _suspendSave = false;
@@ -804,11 +805,11 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
   }
 
   void _showAddModelDialog() {
-    final modelController = TextEditingController();
-    final bestFitController = TextEditingController();
-    final evidenceController = TextEditingController();
-    final controlsController = TextEditingController();
-    final exitStandardController = TextEditingController();
+    final modelController = SpellCheckTextEditingController();
+    final bestFitController = SpellCheckTextEditingController();
+    final evidenceController = SpellCheckTextEditingController();
+    final controlsController = SpellCheckTextEditingController();
+    final exitStandardController = SpellCheckTextEditingController();
     final formKey = GlobalKey<FormState>();
 
     showDialog<void>(
@@ -1216,7 +1217,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
   }) async {
     final formKey = GlobalKey<FormState>();
     final controllers = [
-      for (final f in fields) TextEditingController(text: f.initialValue ?? ''),
+      for (final f in fields) SpellCheckTextEditingController(text: f.initialValue ?? ''),
     ];
 
     final result = await showDialog<Map<int, String>>(
@@ -1704,14 +1705,14 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
 
                                     // Collect controllers for the row fields
                                     final modelCtl =
-                                        TextEditingController(text: row.model);
-                                    final bestFitCtl = TextEditingController(
+                                        SpellCheckTextEditingController(text: row.model);
+                                    final bestFitCtl = SpellCheckTextEditingController(
                                         text: row.bestFit);
-                                    final evidenceCtl = TextEditingController(
+                                    final evidenceCtl = SpellCheckTextEditingController(
                                         text: row.evidence);
-                                    final controlsCtl = TextEditingController(
+                                    final controlsCtl = SpellCheckTextEditingController(
                                         text: row.controls);
-                                    final exitCtl = TextEditingController(
+                                    final exitCtl = SpellCheckTextEditingController(
                                         text: row.exitStandard);
 
                                     setState(() => _isGeneratingModelAi = true);
@@ -1945,11 +1946,11 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
 
   void _showMethodologyDialog({_MethodologyStandard? existing, int? index}) {
     final isEdit = existing != null;
-    final modelCtl = TextEditingController(text: existing?.model ?? '');
-    final bestFitCtl = TextEditingController(text: existing?.bestFit ?? '');
-    final evidenceCtl = TextEditingController(text: existing?.evidence ?? '');
-    final controlsCtl = TextEditingController(text: existing?.controls ?? '');
-    final exitCtl = TextEditingController(text: existing?.exitStandard ?? '');
+    final modelCtl = SpellCheckTextEditingController(text: existing?.model ?? '');
+    final bestFitCtl = SpellCheckTextEditingController(text: existing?.bestFit ?? '');
+    final evidenceCtl = SpellCheckTextEditingController(text: existing?.evidence ?? '');
+    final controlsCtl = SpellCheckTextEditingController(text: existing?.controls ?? '');
+    final exitCtl = SpellCheckTextEditingController(text: existing?.exitStandard ?? '');
 
     showDialog(
       context: context,
@@ -2304,10 +2305,10 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       _showPermissionSnackBar('edit readiness gate items');
       return;
     }
-    final domainCtl = TextEditingController(text: existing?.domain ?? '');
-    final standardCtl = TextEditingController(text: existing?.standard ?? '');
-    final evidenceCtl = TextEditingController(text: existing?.evidence ?? '');
-    final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+    final domainCtl = SpellCheckTextEditingController(text: existing?.domain ?? '');
+    final standardCtl = SpellCheckTextEditingController(text: existing?.standard ?? '');
+    final evidenceCtl = SpellCheckTextEditingController(text: existing?.evidence ?? '');
+    final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
     String decision = existing?.decision ?? 'Pending';
 
     showDialog(
@@ -2688,13 +2689,13 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       _showPermissionSnackBar('edit traceability items');
       return;
     }
-    final objectCtl = TextEditingController(text: existing?.object ?? '');
-    final questionCtl = TextEditingController(text: existing?.question ?? '');
+    final objectCtl = SpellCheckTextEditingController(text: existing?.object ?? '');
+    final questionCtl = SpellCheckTextEditingController(text: existing?.question ?? '');
     final verificationCtl =
-        TextEditingController(text: existing?.verification ?? '');
+        SpellCheckTextEditingController(text: existing?.verification ?? '');
     final waterfallCtl =
-        TextEditingController(text: existing?.waterfallEvidence ?? '');
-    final agileCtl = TextEditingController(text: existing?.agileEvidence ?? '');
+        SpellCheckTextEditingController(text: existing?.waterfallEvidence ?? '');
+    final agileCtl = SpellCheckTextEditingController(text: existing?.agileEvidence ?? '');
 
     showDialog(
       context: context,

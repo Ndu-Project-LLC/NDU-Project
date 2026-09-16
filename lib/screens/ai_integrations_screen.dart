@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class AiIntegrationsScreen extends StatefulWidget {
  const AiIntegrationsScreen({super.key});
  static void open(BuildContext context) => context.push('/ai-integrations');
@@ -110,7 +111,7 @@ class _AiIntegrationsScreenState extends State<AiIntegrationsScreen> {
  }
 
  void _openAdd() {
- final name = TextEditingController();
+ final name = SpellCheckTextEditingController();
  final messenger = ScaffoldMessenger.of(context);
  final nav = Navigator.of(context);
  showDialog(context: context, builder: (c) => AlertDialog(

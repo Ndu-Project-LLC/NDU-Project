@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// A world-class "Select Project" button styled with KAZ AI chat bubble theme.
 /// Features smooth animations, gradient backgrounds, and exceptional visual design.
@@ -214,7 +215,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
   @override
   void initState() {
     super.initState();
-    _projectNameController = TextEditingController();
+    _projectNameController = SpellCheckTextEditingController();
     _tabController =
         TabController(length: widget.solutions.length, vsync: this);
   }

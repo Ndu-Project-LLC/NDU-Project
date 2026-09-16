@@ -19,6 +19,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class FinalizeProjectScreen extends StatefulWidget {
   const FinalizeProjectScreen({super.key});
 
@@ -31,15 +32,15 @@ class FinalizeProjectScreen extends StatefulWidget {
 }
 
 class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
-  final TextEditingController _summaryTitleController = TextEditingController();
+  final TextEditingController _summaryTitleController = SpellCheckTextEditingController();
   final TextEditingController _summaryDescriptionController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _readinessPercentController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _closeoutWindowController =
-      TextEditingController();
-  final TextEditingController _finalNotesController = TextEditingController();
-  final TextEditingController _nextStepsController = TextEditingController();
+      SpellCheckTextEditingController();
+  final TextEditingController _finalNotesController = SpellCheckTextEditingController();
+  final TextEditingController _nextStepsController = SpellCheckTextEditingController();
 
   final List<_HeroStatItem> _heroStats = [];
   final List<_SnapshotMetric> _snapshotMetrics = [];
@@ -1802,8 +1803,8 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
   /// behaviour of appending blank inline rows into the checklist table —
   /// rows are now only ever appended fully populated from the modal.
   Future<void> _addChecklistItem() async {
-    final titleController = TextEditingController();
-    final ownerController = TextEditingController();
+    final titleController = SpellCheckTextEditingController();
+    final ownerController = SpellCheckTextEditingController();
     final formKey = GlobalKey<FormState>();
     var selectedStatus = _checklistStatuses.first;
     DateTime? selectedDueDate;
@@ -2693,7 +2694,7 @@ Future<Map<int, String>?> _showFinalizeRowEditDialog(
   required List<_FinalizeEditFieldSpec> fields,
 }) async {
   final controllers = [
-    for (final f in fields) TextEditingController(text: f.initialValue),
+    for (final f in fields) SpellCheckTextEditingController(text: f.initialValue),
   ];
   final result = await showDialog<Map<int, String>?>(
     context: context,

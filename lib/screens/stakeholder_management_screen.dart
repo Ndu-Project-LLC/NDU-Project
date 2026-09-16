@@ -22,6 +22,7 @@ import 'package:ndu_project/openai/openai_config.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class StakeholderManagementScreen extends StatefulWidget {
   const StakeholderManagementScreen({super.key});
 
@@ -3516,9 +3517,9 @@ class _MappingRowActions extends StatelessWidget {
   }
 
   void _openEditDialog(BuildContext context) {
-    final nameController = TextEditingController(text: entry.name);
-    final orgController = TextEditingController(text: entry.organization);
-    final roleController = TextEditingController(text: entry.role);
+    final nameController = SpellCheckTextEditingController(text: entry.name);
+    final orgController = SpellCheckTextEditingController(text: entry.organization);
+    final roleController = SpellCheckTextEditingController(text: entry.role);
     String influence = entry.influence;
     String interest = entry.interest;
 
@@ -4092,7 +4093,7 @@ class _QuarterPlanFieldState extends State<_QuarterPlanField> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.value);
+    _controller = SpellCheckTextEditingController(text: widget.value);
   }
 
   @override
@@ -4189,7 +4190,7 @@ class _DataLinksFieldState extends State<_DataLinksField> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.value);
+    _controller = SpellCheckTextEditingController(text: widget.value);
   }
 
   @override
@@ -4421,7 +4422,7 @@ class _TextCellState extends State<_TextCell> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.value);
+    _controller = SpellCheckTextEditingController(text: widget.value);
   }
 
   @override
@@ -4715,13 +4716,13 @@ class _RowActions extends StatelessWidget {
   void _openEditDialog(BuildContext context) {
     if (entry == null || onEdit == null) return;
     final e = entry!;
-    final nameController = TextEditingController(text: e.name);
-    final orgController = TextEditingController(text: e.organization);
-    final roleController = TextEditingController(text: e.role);
-    final contactController = TextEditingController(text: e.contactInfo);
-    final channelController = TextEditingController(text: e.channel);
-    final ownerController = TextEditingController(text: e.owner);
-    final notesController = TextEditingController(text: e.notes);
+    final nameController = SpellCheckTextEditingController(text: e.name);
+    final orgController = SpellCheckTextEditingController(text: e.organization);
+    final roleController = SpellCheckTextEditingController(text: e.role);
+    final contactController = SpellCheckTextEditingController(text: e.contactInfo);
+    final channelController = SpellCheckTextEditingController(text: e.channel);
+    final ownerController = SpellCheckTextEditingController(text: e.owner);
+    final notesController = SpellCheckTextEditingController(text: e.notes);
     String influence = e.influence;
     String interest = e.interest;
 
@@ -5143,7 +5144,7 @@ class _EmailCellState extends State<_EmailCell> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.value);
+    _controller = SpellCheckTextEditingController(text: widget.value);
   }
 
   @override
@@ -5328,8 +5329,8 @@ class _AnnouncementsTabState extends State<_AnnouncementsTab> {
   bool _isEditing = false;
   String _editingId = '';
 
-  final _titleController = TextEditingController();
-  final _bodyController = TextEditingController();
+  final _titleController = SpellCheckTextEditingController();
+  final _bodyController = SpellCheckTextEditingController();
   String _audienceLevel = 'Manage Closely';
   String _channel = 'Email';
   String _status = 'Draft';

@@ -20,6 +20,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class RiskAssessmentScreen extends StatefulWidget {
  const RiskAssessmentScreen({super.key});
@@ -42,7 +43,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  ];
 
  final List<_RiskEntry> _entries = [];
- final TextEditingController _searchController = TextEditingController();
+ final TextEditingController _searchController = SpellCheckTextEditingController();
  String? _statusFilter;
  bool _loadingEntries = false;
 
@@ -190,13 +191,13 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
 
  Future<void> _openEntryDialog(
  {_RiskEntry? entry, bool readOnly = false}) async {
- final idController = TextEditingController(text: entry?.id ?? '');
+ final idController = SpellCheckTextEditingController(text: entry?.id ?? '');
  final descriptionController =
- TextEditingController(text: entry?.description ?? '');
+ SpellCheckTextEditingController(text: entry?.description ?? '');
  final categoryController =
- TextEditingController(text: entry?.category ?? '');
- final scoreController = TextEditingController(text: entry?.score ?? '');
- final ownerController = TextEditingController(text: entry?.owner ?? '');
+ SpellCheckTextEditingController(text: entry?.category ?? '');
+ final scoreController = SpellCheckTextEditingController(text: entry?.score ?? '');
+ final ownerController = SpellCheckTextEditingController(text: entry?.owner ?? '');
  String selectedProbability =
  _riskLevelOptions.contains(entry?.probability ?? '')
  ? (entry?.probability ?? _riskLevelOptions[1])

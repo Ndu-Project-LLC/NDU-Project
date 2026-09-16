@@ -14,6 +14,7 @@ import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const double _defaultColumnWidth = 160;
 const double _tableHorizontalPadding = 20;
@@ -138,7 +139,7 @@ class LaunchDataTable extends StatefulWidget {
 }
 
 class _LaunchDataTableState extends State<LaunchDataTable> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
 
   @override
   void dispose() {
@@ -1016,7 +1017,7 @@ class _LaunchEditableCellState extends State<LaunchEditableCell> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.value);
+    _controller = SpellCheckTextEditingController(text: widget.value);
   }
 
   @override
@@ -1519,7 +1520,7 @@ class _AddItemDialogState extends State<_AddItemDialog>
       switch (col.fieldType) {
         case LaunchFieldType.text:
           _controllers[col.label] =
-              TextEditingController(text: widget.initialValues[col.label]);
+              SpellCheckTextEditingController(text: widget.initialValues[col.label]);
         case LaunchFieldType.date:
           _dateValues[col.label] = widget.initialValues[col.label] ?? '';
         case LaunchFieldType.dropdown:

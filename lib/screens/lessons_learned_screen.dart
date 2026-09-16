@@ -19,6 +19,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class LessonsLearnedScreen extends StatefulWidget {
  const LessonsLearnedScreen({super.key});
 
@@ -31,7 +32,7 @@ class LessonsLearnedScreen extends StatefulWidget {
 }
 
 class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
- final TextEditingController _searchController = TextEditingController();
+ final TextEditingController _searchController = SpellCheckTextEditingController();
  bool _autoPopulated = false;
  bool _isAutoPopulating = false;
  String? _carriedContext;
@@ -1129,12 +1130,12 @@ class _LessonDialog extends StatefulWidget {
 
 class _LessonDialogState extends State<_LessonDialog> {
  final _formKey = GlobalKey<FormState>();
- final TextEditingController _lessonController = TextEditingController();
- final TextEditingController _categoryController = TextEditingController();
- final TextEditingController _phaseController = TextEditingController();
- final TextEditingController _statusController = TextEditingController();
- final TextEditingController _submittedByController = TextEditingController();
- final TextEditingController _dateController = TextEditingController();
+ final TextEditingController _lessonController = SpellCheckTextEditingController();
+ final TextEditingController _categoryController = SpellCheckTextEditingController();
+ final TextEditingController _phaseController = SpellCheckTextEditingController();
+ final TextEditingController _statusController = SpellCheckTextEditingController();
+ final TextEditingController _submittedByController = SpellCheckTextEditingController();
+ final TextEditingController _dateController = SpellCheckTextEditingController();
 
  // Canonical option sets. Existing records may hold custom values, so any
  // current value not in the list is still surfaced as the first option.

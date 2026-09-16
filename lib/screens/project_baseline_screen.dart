@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ProjectBaselineScreen extends StatefulWidget {
  const ProjectBaselineScreen({super.key});
 
@@ -440,8 +441,8 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  }
 
  Future<void> _handleUpdateBaseline() async {
- final approvedByController = TextEditingController();
- final descriptionController = TextEditingController();
+ final approvedByController = SpellCheckTextEditingController();
+ final descriptionController = SpellCheckTextEditingController();
 
  try {
  final payload = await showDialog<Map<String, String>>(

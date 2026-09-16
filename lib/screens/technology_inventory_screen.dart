@@ -13,6 +13,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class TechnologyInventoryScreen extends StatefulWidget {
  const TechnologyInventoryScreen({super.key});
 
@@ -128,9 +129,9 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  }
 
  void _openAddDialog() {
- final name = TextEditingController();
- final category = TextEditingController();
- final notes = TextEditingController();
+ final name = SpellCheckTextEditingController();
+ final category = SpellCheckTextEditingController();
+ final notes = SpellCheckTextEditingController();
  showDialog(
  context: context,
  builder: (c) => AlertDialog(

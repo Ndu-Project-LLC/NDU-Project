@@ -67,6 +67,27 @@ class SidebarNavigationService {
     return basicPlanLockedLabels.contains(item.label);
   }
 
+  /// The Business Case → Executive Summary sub-items, in flow order.
+  ///
+  /// **Preferred Solution Analysis comes first.** You analyse the candidates
+  /// (side-by-side plus the per-solution detail views) and choose one there;
+  /// the Preferred Solution page that follows is the record of the solution
+  /// that was chosen and is what Front End Planning pulls from.
+  ///
+  /// Owner, Lusaka 24 review: "the preferred solution analysis comes before
+  /// the preferred solution selection" — the sidebar used to list the
+  /// selection page first, so the two steps read backwards.
+  static const List<SidebarItem> executiveSummaryItems = [
+    SidebarItem(
+      checkpoint: 'preferred_solution_analysis',
+      label: 'Preferred Solution Analysis',
+    ),
+    SidebarItem(
+      checkpoint: 'preferred_solution',
+      label: 'Preferred Solution',
+    ),
+  ];
+
   /// Checkpoints that are intentionally skipped in the linear project
   /// navigation flow (Next/Back buttons). Users can still open them
   /// directly from the sidebar, but the wizard-style navigation will

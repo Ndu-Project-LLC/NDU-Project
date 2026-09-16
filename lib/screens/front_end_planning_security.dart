@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 /// Front End Planning – Security screen
 /// Mirrors the provided layout with shared workspace chrome,
 /// large notes area, security text panel, and AI hint + Next controls.
@@ -416,9 +417,9 @@ Security Training:
  }
 
  Future<RoleItem?> _showRoleDialog({RoleItem? existing}) async {
- final nameController = TextEditingController(text: existing?.name ?? '');
+ final nameController = SpellCheckTextEditingController(text: existing?.name ?? '');
  final descController =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  final saved = await showDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
@@ -469,9 +470,9 @@ Security Training:
  Future<PermissionItem?> _showPermissionDialog(
  {PermissionItem? existing}) async {
  final resourceController =
- TextEditingController(text: existing?.resource ?? '');
+ SpellCheckTextEditingController(text: existing?.resource ?? '');
  final scopeController =
- TextEditingController(text: existing?.scope ?? '');
+ SpellCheckTextEditingController(text: existing?.scope ?? '');
  final saved = await showDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
@@ -521,8 +522,8 @@ Security Training:
 
  Future<SecuritySetting?> _showSettingDialog(
  {SecuritySetting? existing}) async {
- final keyController = TextEditingController(text: existing?.key ?? '');
- final valueController = TextEditingController(text: existing?.value ?? '');
+ final keyController = SpellCheckTextEditingController(text: existing?.key ?? '');
+ final valueController = SpellCheckTextEditingController(text: existing?.value ?? '');
  final saved = await showDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
@@ -571,10 +572,10 @@ Security Training:
 
  Future<AccessLogItem?> _showAccessLogDialog(
  {AccessLogItem? existing}) async {
- final userController = TextEditingController(text: existing?.user ?? '');
+ final userController = SpellCheckTextEditingController(text: existing?.user ?? '');
  final actionController =
- TextEditingController(text: existing?.action ?? '');
- final timestampController = TextEditingController(
+ SpellCheckTextEditingController(text: existing?.action ?? '');
+ final timestampController = SpellCheckTextEditingController(
  text: existing?.timestamp.isNotEmpty == true
  ? existing!.timestamp
  : DateTime.now().toIso8601String(),

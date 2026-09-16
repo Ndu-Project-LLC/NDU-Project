@@ -16,6 +16,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -140,7 +141,7 @@ class _AgileBacklogGovernanceScreenState
   void initState() {
     super.initState();
     for (final f in _fields) {
-      _controllers[f.key] = TextEditingController();
+      _controllers[f.key] = SpellCheckTextEditingController();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
@@ -708,7 +709,7 @@ class _AgileBacklogGovernanceScreenState
           ),
           Expanded(
             child: VoiceTextField(
-              controller: TextEditingController.fromValue(
+              controller: SpellCheckTextEditingController.fromValue(
                 TextEditingValue(
                   text: item.label,
                   selection: TextSelection.collapsed(offset: item.label.length),

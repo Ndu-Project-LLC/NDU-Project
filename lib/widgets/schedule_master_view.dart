@@ -3,6 +3,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/theme.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ScheduleMasterView extends StatefulWidget {
   const ScheduleMasterView({
@@ -23,7 +24,7 @@ class ScheduleMasterView extends StatefulWidget {
 }
 
 class _ScheduleMasterViewState extends State<ScheduleMasterView> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
 
   @override

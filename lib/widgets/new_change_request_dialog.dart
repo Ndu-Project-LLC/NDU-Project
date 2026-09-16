@@ -6,6 +6,7 @@ import 'package:ndu_project/utils/file_upload_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class NewChangeRequestDialog extends StatefulWidget {
   const NewChangeRequestDialog(
@@ -25,11 +26,11 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
   bool _uploading = false;
 
   // Controllers
-  final TextEditingController _titleCtrl = TextEditingController();
-  final TextEditingController _descriptionCtrl = TextEditingController();
-  final TextEditingController _justificationCtrl = TextEditingController();
-  final TextEditingController _dateCtrl = TextEditingController();
-  final TextEditingController _requesterCtrl = TextEditingController(
+  final TextEditingController _titleCtrl = SpellCheckTextEditingController();
+  final TextEditingController _descriptionCtrl = SpellCheckTextEditingController();
+  final TextEditingController _justificationCtrl = SpellCheckTextEditingController();
+  final TextEditingController _dateCtrl = SpellCheckTextEditingController();
+  final TextEditingController _requesterCtrl = SpellCheckTextEditingController(
       text: FirebaseAuthService.displayNameOrEmail(fallback: ''));
 
   // Dropdown states

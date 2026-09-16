@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ScopeCompletionScreen extends StatefulWidget {
   const ScopeCompletionScreen({super.key});
 
@@ -35,32 +36,32 @@ class ScopeCompletionScreen extends StatefulWidget {
 }
 
 class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
-  final TextEditingController _overviewController = TextEditingController();
+  final TextEditingController _overviewController = SpellCheckTextEditingController();
   final TextEditingController _statusSummaryController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _sponsorSummaryController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _changeSummaryController =
-      TextEditingController();
+      SpellCheckTextEditingController();
 
   final TextEditingController _deliveredPercentController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _deliveredStatusController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _deferredCountController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _deferredStatusController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _criticalGapCountController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _criticalGapStatusController =
-      TextEditingController();
+      SpellCheckTextEditingController();
 
   final TextEditingController _approvedChangesController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _unapprovedChangesController =
-      TextEditingController();
-  final TextEditingController _openRequestsController = TextEditingController();
+      SpellCheckTextEditingController();
+  final TextEditingController _openRequestsController = SpellCheckTextEditingController();
 
   final List<_WorkPackageItem> _workPackages = [];
   final List<_CheckpointItem> _acceptanceCheckpoints = [];
@@ -1213,12 +1214,12 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
 
   Future<void> _showWorkPackageDialog([_WorkPackageItem? existing]) async {
     final isEdit = existing != null;
-    final titleCtl = TextEditingController(text: existing?.title ?? '');
-    final ownerCtl = TextEditingController(text: existing?.owner ?? '');
-    final milestoneCtl = TextEditingController(text: existing?.milestone ?? '');
-    final wbsCtl = TextEditingController(text: existing?.wbsCode ?? '');
-    final notesCtl = TextEditingController(text: existing?.notes ?? '');
-    final pctCtl = TextEditingController(
+    final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
+    final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+    final milestoneCtl = SpellCheckTextEditingController(text: existing?.milestone ?? '');
+    final wbsCtl = SpellCheckTextEditingController(text: existing?.wbsCode ?? '');
+    final notesCtl = SpellCheckTextEditingController(text: existing?.notes ?? '');
+    final pctCtl = SpellCheckTextEditingController(
         text: (existing?.percentComplete ?? 0).toString());
     String status = existing?.status ?? _workStatuses.first;
     String impact = existing?.impact ?? _impactLevels[2]; // Medium
@@ -1745,11 +1746,11 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
 
   Future<void> _showCheckpointDialog([_CheckpointItem? existing]) async {
     final isEdit = existing != null;
-    final titleCtl = TextEditingController(text: existing?.title ?? '');
-    final ownerCtl = TextEditingController(text: existing?.owner ?? '');
-    final refCodeCtl = TextEditingController(text: existing?.refCode ?? '');
-    final evidenceCtl = TextEditingController(text: existing?.evidence ?? '');
-    final notesCtl = TextEditingController(text: existing?.notes ?? '');
+    final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
+    final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+    final refCodeCtl = SpellCheckTextEditingController(text: existing?.refCode ?? '');
+    final evidenceCtl = SpellCheckTextEditingController(text: existing?.evidence ?? '');
+    final notesCtl = SpellCheckTextEditingController(text: existing?.notes ?? '');
     String status = existing?.status ?? _checkpointStatuses.first;
     DateTime? dueDate = existing?.dueDate;
     DateTime? signOffDate = existing?.signOffDate;
@@ -2166,10 +2167,10 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
 
   Future<void> _showAcceptanceTagDialog([_AcceptanceTagItem? existing]) async {
     final isEdit = existing != null;
-    final labelCtl = TextEditingController(text: existing?.label ?? '');
+    final labelCtl = SpellCheckTextEditingController(text: existing?.label ?? '');
     final verifiedByCtl =
-        TextEditingController(text: existing?.verifiedBy ?? '');
-    final notesCtl = TextEditingController(text: existing?.notes ?? '');
+        SpellCheckTextEditingController(text: existing?.verifiedBy ?? '');
+    final notesCtl = SpellCheckTextEditingController(text: existing?.notes ?? '');
     String status = existing?.status ?? _checkpointStatuses.first;
     String category = existing?.category ?? _signalCategories.first;
     DateTime? dateVerified = existing?.dateVerified;
@@ -2650,11 +2651,11 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
 
   Future<void> _showScopeChangeDialog([_ScopeChangeItem? existing]) async {
     final isEdit = existing != null;
-    final detailCtl = TextEditingController(text: existing?.detail ?? '');
-    final crIdCtl = TextEditingController(text: existing?.crId ?? '');
+    final detailCtl = SpellCheckTextEditingController(text: existing?.detail ?? '');
+    final crIdCtl = SpellCheckTextEditingController(text: existing?.crId ?? '');
     final requestedByCtl =
-        TextEditingController(text: existing?.requestedBy ?? '');
-    final notesCtl = TextEditingController(text: existing?.notes ?? '');
+        SpellCheckTextEditingController(text: existing?.requestedBy ?? '');
+    final notesCtl = SpellCheckTextEditingController(text: existing?.notes ?? '');
     String changeType = existing?.changeType ?? _changeTypes.first;
     String impactLevel = existing?.impactLevel ?? _impactLevels[2]; // Medium
     String status = existing?.status ?? _changeStatuses.first;

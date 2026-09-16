@@ -12,6 +12,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -124,7 +125,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
   void initState() {
     super.initState();
     for (final f in _fields) {
-      _controllers[f.key] = TextEditingController();
+      _controllers[f.key] = SpellCheckTextEditingController();
     }
     for (final key in [
       'planning_duration',
@@ -137,7 +138,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
       _selectedValues[key] = _defaultFor(key);
     }
     for (final f in _doaFields) {
-      _doaControllers[f.key] = TextEditingController();
+      _doaControllers[f.key] = SpellCheckTextEditingController();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
@@ -219,8 +220,8 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
     _agreementCtrls.clear();
     _agreementCatCtrls.clear();
     for (final a in _agreements) {
-      _agreementCatCtrls[a.id] = TextEditingController(text: a.category);
-      _agreementCtrls[a.id] = TextEditingController(text: a.description);
+      _agreementCatCtrls[a.id] = SpellCheckTextEditingController(text: a.category);
+      _agreementCtrls[a.id] = SpellCheckTextEditingController(text: a.description);
     }
   }
 
@@ -500,7 +501,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
         const SizedBox(height: 6),
         VoiceTextField(
           controller:
-              _controllers.putIfAbsent(key, () => TextEditingController()),
+              _controllers.putIfAbsent(key, () => SpellCheckTextEditingController()),
           decoration: InputDecoration(
             hintText: hint,
             border: const OutlineInputBorder(),
@@ -647,7 +648,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: VoiceTextField(
-              controller: _agreementCtrls[a.id] ?? TextEditingController(),
+              controller: _agreementCtrls[a.id] ?? SpellCheckTextEditingController(),
               decoration: const InputDecoration(
                 hintText: 'Agreement description',
                 border: OutlineInputBorder(),

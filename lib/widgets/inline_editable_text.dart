@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/services/voice_input_service.dart';
 import 'package:ndu_project/services/docx_import_service.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Inline editable text widget - clicking text turns it into an input field
 /// with optional voice-to-text support.
@@ -115,7 +116,7 @@ class _InlineEditableTextState extends State<InlineEditableText> {
       _controller = AutoBulletTextController(
           text: widget.value.isEmpty ? '' : widget.value);
     } else {
-      _controller = TextEditingController(text: widget.value);
+      _controller = SpellCheckTextEditingController(text: widget.value);
     }
     _focusNode.addListener(_handleFocusChange);
     _initVoice();

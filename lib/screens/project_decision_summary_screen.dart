@@ -14,6 +14,34 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+/// Copy for the Preferred Solution page.
+///
+/// The page sits **after** the Preferred Solution Analysis, so once a solution
+/// has been chosen it is the record of that choice rather than a fresh
+/// selection task. It only presents itself as a selection screen while nothing
+/// has been chosen yet (e.g. reached straight from the sidebar).
+///
+/// Owner, Lusaka 24 review: "then they go to the preferred solution which is
+/// that one that they've selected … has his own page and has his own
+/// justification".
+class PreferredSolutionPageCopy {
+  const PreferredSolutionPageCopy._();
+
+  static const String selectionTitle = 'Preferred Solution Selection';
+  static const String selectionSubtitle =
+      'Review all potential solutions and select preferred option.';
+  static const String recordTitle = 'Preferred Solution';
+  static const String recordSubtitle =
+      'The solution selected in the Preferred Solution Analysis. This is the basis of the project — Front End Planning pulls from it.';
+
+  static String title({required bool hasSelection}) =>
+      hasSelection ? recordTitle : selectionTitle;
+
+  static String subtitle({required bool hasSelection}) =>
+      hasSelection ? recordSubtitle : selectionSubtitle;
+}
+
 class ProjectDecisionSummaryScreen extends StatefulWidget {
  final String projectName;
  final AiSolutionItem selectedSolution;
@@ -564,7 +592,7 @@ class _ProjectDecisionSummaryScreenState
  ? solution.title.trim()
  : 'Solution ${index + 1}';
  final nameController =
- TextEditingController(text: '$defaultTitle - New Project');
+ SpellCheckTextEditingController(text: '$defaultTitle - New Project');
  String? errorText;
 
  await showDialog<void>(
@@ -818,27 +846,33 @@ class _ProjectDecisionSummaryScreenState
  ),
  ),
  );
- }
+ }  Widget _buildMainContent() {
+    final solutions = _comparisonSolutions;
+    final selectedIndex =
+        (_selectedSolutionIndex ?? 0).clamp(0, solutions.length - 1);
+    // "A solution has been chosen" is read from the persisted analysis, not
+    // from this page's local index — the index always falls back to 0 while
+    // loading, so it cannot tell a real choice from a blank slate.
+    final persisted = ProjectDataHelper.getData(
+      context,
+    ).preferredSolutionAnalysis;
+    final hasSelection = _isSelectionFinalized ||
+        (persisted?.selectedSolutionTitle?.trim().isNotEmpty ?? false);
 
- Widget _buildMainContent() {
- final solutions = _comparisonSolutions;
- final selectedIndex =
- (_selectedSolutionIndex ?? 0).clamp(0, solutions.length - 1);
-
- return SingleChildScrollView(
- padding: EdgeInsets.all(AppBreakpoints.pagePadding(context)),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Preferred Solution Selection',
- style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
- ),
- const SizedBox(height: 8),
- const Text(
- 'Review all potential solutions and select preferred option.',
- style: TextStyle(fontSize: 14, color: Colors.black54),
- ),
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(AppBreakpoints.pagePadding(context)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            PreferredSolutionPageCopy.title(hasSelection: hasSelection),
+            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            PreferredSolutionPageCopy.subtitle(hasSelection: hasSelection),
+            style: const TextStyle(fontSize: 14, color: Colors.black54),
+          ),
  const SizedBox(height: 20),
  _buildAuthorizationBanner(),
  const SizedBox(height: 20),

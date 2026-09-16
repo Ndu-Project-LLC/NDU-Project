@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// ────────────────────────────────────────────────────────────────
 /// Design Specifications Screen
@@ -90,10 +91,10 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
   Future<_SecurityControl?> _showSecurityControlDialog([
     _SecurityControl? existing,
   ]) async {
-    final id = TextEditingController(text: existing?.id ?? '');
+    final id = SpellCheckTextEditingController(text: existing?.id ?? '');
     final requirement =
-        TextEditingController(text: existing?.requirement ?? '');
-    final standard = TextEditingController(text: existing?.standard ?? '');
+        SpellCheckTextEditingController(text: existing?.requirement ?? '');
+    final standard = SpellCheckTextEditingController(text: existing?.standard ?? '');
     var status = existing?.status ?? 'Pending';
     final result = await showDialog<_SecurityControl>(
       context: context,
@@ -716,9 +717,9 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
 
   Future<void> _showArchPatternEditor(
       {_ArchitecturePattern? entry, int? index}) async {
-    final nameController = TextEditingController(text: entry?.name ?? '');
+    final nameController = SpellCheckTextEditingController(text: entry?.name ?? '');
     final descController =
-        TextEditingController(text: entry?.description ?? '');
+        SpellCheckTextEditingController(text: entry?.description ?? '');
     var selectedStatus = _safeDropdownValue(entry?.status, _archStatusOptions);
     var selectedIconIndex = 0;
     if (entry != null) {
@@ -1100,10 +1101,10 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
   }
 
   Future<_NFRItem?> _showNfrDialog([_NFRItem? existing]) async {
-    final id = TextEditingController(text: existing?.id ?? '');
+    final id = SpellCheckTextEditingController(text: existing?.id ?? '');
     final requirement =
-        TextEditingController(text: existing?.requirement ?? '');
-    final target = TextEditingController(text: existing?.target ?? '');
+        SpellCheckTextEditingController(text: existing?.requirement ?? '');
+    final target = SpellCheckTextEditingController(text: existing?.target ?? '');
     var category = existing?.category ?? 'Performance';
     var status = existing?.status ?? 'Draft';
     final result = await showDialog<_NFRItem>(
@@ -1268,11 +1269,11 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
   }
 
   Future<_ADRecord?> _showAdrDialog([_ADRecord? existing]) async {
-    final id = TextEditingController(text: existing?.id ?? '');
-    final title = TextEditingController(text: existing?.title ?? '');
+    final id = SpellCheckTextEditingController(text: existing?.id ?? '');
+    final title = SpellCheckTextEditingController(text: existing?.title ?? '');
     final contextController =
-        TextEditingController(text: existing?.context ?? '');
-    final decision = TextEditingController(text: existing?.decision ?? '');
+        SpellCheckTextEditingController(text: existing?.context ?? '');
+    final decision = SpellCheckTextEditingController(text: existing?.decision ?? '');
     var status = existing?.status ?? 'Proposed';
     String? titleError;
     final result = await showDialog<_ADRecord>(
@@ -1489,18 +1490,18 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       return;
     }
 
-    final specIdController = TextEditingController(
+    final specIdController = SpellCheckTextEditingController(
       text: 'DS-${(_components.length + 1).toString().padLeft(3, '0')}',
     );
-    final componentNameController = TextEditingController();
+    final componentNameController = SpellCheckTextEditingController();
     var selectedType = 'Component';
     final specificationController = AutoBulletTextController(text: '');
     var selectedPriority = 'Should Have';
     var selectedPhase = _getDefaultPhase();
     var selectedOwner = 'Engineering';
-    final traceabilityController = TextEditingController();
+    final traceabilityController = SpellCheckTextEditingController();
     var selectedStatus = 'Draft';
-    final notesController = TextEditingController();
+    final notesController = SpellCheckTextEditingController();
 
     try {
       await showDialog(

@@ -19,6 +19,7 @@ import 'package:ndu_project/utils/web_utils_stub.dart'
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 enum _SsherCategory { safety, security, health, environment, regulatory }
 
 String _categoryKey(_SsherCategory category) => category.name;
@@ -110,7 +111,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  _SsherCategory _selectedCategory = _SsherCategory.safety;
  late TabController _tabController;
 
- final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
  final ScrollController _mainContentScrollController = ScrollController();
 

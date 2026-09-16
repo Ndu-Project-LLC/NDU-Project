@@ -10,6 +10,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// KAZ chat transport. In local AI mode this answers every completion in code
 /// (see [LocalAiClient]); in live mode it is a transparent HTTP client.
@@ -448,10 +449,10 @@ class _KazAiChatPopup extends StatefulWidget {
 class _KazAiChatPopupState extends State<_KazAiChatPopup>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final TextEditingController _aiInputController = TextEditingController();
+  final TextEditingController _aiInputController = SpellCheckTextEditingController();
   final ScrollController _aiScrollController = ScrollController();
   final ScrollController _supportScrollController = ScrollController();
-  final TextEditingController _supportInputController = TextEditingController();
+  final TextEditingController _supportInputController = SpellCheckTextEditingController();
 
   List<_ChatMessage> _aiMessages = [];
   List<_ChatMessage> _supportMessages = [];
@@ -461,8 +462,8 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
   int _activeTab = 0;
 
   // Support ticket state
-  final _ticketSubjectController = TextEditingController();
-  final _ticketDescController = TextEditingController();
+  final _ticketSubjectController = SpellCheckTextEditingController();
+  final _ticketDescController = SpellCheckTextEditingController();
   bool _showTicketForm = true;
   _SupportTicket? _activeTicket;
 

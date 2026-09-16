@@ -18,6 +18,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class SalvageDisposalTeamScreen extends StatefulWidget {
   const SalvageDisposalTeamScreen({super.key});
@@ -1620,13 +1621,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final projectId = _getProjectId();
  if (projectId == null) return;
 
- final assetIdController = TextEditingController(text: item.assetId);
- final nameController = TextEditingController(text: item.name);
- final categoryController = TextEditingController(text: item.category);
- final conditionController = TextEditingController(text: item.condition);
- final locationController = TextEditingController(text: item.location);
- final statusController = TextEditingController(text: item.status);
- final valueController = TextEditingController(text: item.estimatedValue);
+ final assetIdController = SpellCheckTextEditingController(text: item.assetId);
+ final nameController = SpellCheckTextEditingController(text: item.name);
+ final categoryController = SpellCheckTextEditingController(text: item.category);
+ final conditionController = SpellCheckTextEditingController(text: item.condition);
+ final locationController = SpellCheckTextEditingController(text: item.location);
+ final statusController = SpellCheckTextEditingController(text: item.status);
+ final valueController = SpellCheckTextEditingController(text: item.estimatedValue);
 
  showDialog(
  context: context,
@@ -1751,13 +1752,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return;
  }
 
- final assetIdController = TextEditingController();
- final nameController = TextEditingController();
- final categoryController = TextEditingController();
- final conditionController = TextEditingController();
- final locationController = TextEditingController();
- final statusController = TextEditingController(text: 'Pending');
- final valueController = TextEditingController();
+ final assetIdController = SpellCheckTextEditingController();
+ final nameController = SpellCheckTextEditingController();
+ final categoryController = SpellCheckTextEditingController();
+ final conditionController = SpellCheckTextEditingController();
+ final locationController = SpellCheckTextEditingController();
+ final statusController = SpellCheckTextEditingController(text: 'Pending');
+ final valueController = SpellCheckTextEditingController();
 
  showDialog(
  context: context,
@@ -1996,11 +1997,11 @@ Execution snapshot:
  }
 
  final isEdit = member != null;
- final nameController = TextEditingController(text: member?.name ?? '');
- final roleController = TextEditingController(text: member?.role ?? '');
- final emailController = TextEditingController(text: member?.email ?? '');
+ final nameController = SpellCheckTextEditingController(text: member?.name ?? '');
+ final roleController = SpellCheckTextEditingController(text: member?.role ?? '');
+ final emailController = SpellCheckTextEditingController(text: member?.email ?? '');
  final itemsHandledController =
- TextEditingController(text: (member?.itemsHandled ?? 0).toString());
+ SpellCheckTextEditingController(text: (member?.itemsHandled ?? 0).toString());
  var selectedStatus = member?.status ?? 'Active';
 
  showDialog<void>(
@@ -2206,22 +2207,22 @@ Execution snapshot:
  }
 
  final isEdit = item != null;
- final assetIdController = TextEditingController(text: item?.assetId ?? '');
- final nameController = TextEditingController(text: item?.name ?? '');
+ final assetIdController = SpellCheckTextEditingController(text: item?.assetId ?? '');
+ final nameController = SpellCheckTextEditingController(text: item?.name ?? '');
  final categoryController =
- TextEditingController(text: item?.category ?? '');
+ SpellCheckTextEditingController(text: item?.category ?? '');
  final conditionController =
- TextEditingController(text: item?.condition ?? '');
+ SpellCheckTextEditingController(text: item?.condition ?? '');
  final locationController =
- TextEditingController(text: item?.location ?? '');
+ SpellCheckTextEditingController(text: item?.location ?? '');
  final valueController =
- TextEditingController(text: item?.estimatedValue ?? '');
+ SpellCheckTextEditingController(text: item?.estimatedValue ?? '');
  final disposalCostController =
- TextEditingController(text: item?.disposalCost ?? '');
+ SpellCheckTextEditingController(text: item?.disposalCost ?? '');
  final assignedToController =
- TextEditingController(text: item?.assignedTo ?? '');
+ SpellCheckTextEditingController(text: item?.assignedTo ?? '');
  final targetDateController =
- TextEditingController(text: item?.targetDate ?? '');
+ SpellCheckTextEditingController(text: item?.targetDate ?? '');
  var selectedStatus = item?.status ?? 'Pending Review';
  var selectedPriority = item?.priority ?? 'Medium';
  var selectedDisposalMethod = item?.disposalMethod.isNotEmpty == true ? item!.disposalMethod : 'Auction';
@@ -4586,15 +4587,15 @@ Execution snapshot:
  void _showComplianceRegulationDialog(BuildContext context, {int? editIndex}) {
  final isEdit = editIndex != null;
  final existing = isEdit ? _complianceRows[editIndex] : null;
- final regulationCtrl = TextEditingController(text: existing?.regulation ?? '');
- final lastAuditCtrl = TextEditingController(text: existing?.lastAuditDate ?? '');
- final nextAuditCtrl = TextEditingController(text: existing?.nextAuditDue ?? '');
- final daysToExpiryCtrl = TextEditingController(text: existing != null ? '${existing.daysToExpiry}' : '90');
- final responsibleCtrl = TextEditingController(text: existing?.responsibleParty ?? '');
- final findingsCtrl = TextEditingController(text: existing != null ? '${existing.findings}' : '0');
- final correctiveCtrl = TextEditingController(text: existing != null ? '${existing.correctiveActions}' : '0');
- final scoreCtrl = TextEditingController(text: existing != null ? '${existing.complianceScore}' : '100');
- final lastUpdatedCtrl = TextEditingController(text: existing?.lastUpdated ?? 'Just now');
+ final regulationCtrl = SpellCheckTextEditingController(text: existing?.regulation ?? '');
+ final lastAuditCtrl = SpellCheckTextEditingController(text: existing?.lastAuditDate ?? '');
+ final nextAuditCtrl = SpellCheckTextEditingController(text: existing?.nextAuditDue ?? '');
+ final daysToExpiryCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.daysToExpiry}' : '90');
+ final responsibleCtrl = SpellCheckTextEditingController(text: existing?.responsibleParty ?? '');
+ final findingsCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.findings}' : '0');
+ final correctiveCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.correctiveActions}' : '0');
+ final scoreCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.complianceScore}' : '100');
+ final lastUpdatedCtrl = SpellCheckTextEditingController(text: existing?.lastUpdated ?? 'Just now');
  String category = existing?.category ?? 'Environmental';
  String complianceStatus = existing?.complianceStatus ?? 'Compliant';
  String riskLevel = existing?.riskLevel ?? 'Low';
@@ -5350,13 +5351,13 @@ Execution snapshot:
  }
 
  final isEdit = item != null;
- final milestoneController = TextEditingController(text: item?.milestone ?? '');
- final descriptionController = TextEditingController(text: item?.description ?? '');
- final ownerController = TextEditingController(text: item?.owner ?? '');
- final startDateController = TextEditingController(text: item?.startDate ?? '');
- final dueDateController = TextEditingController(text: item?.dueDate ?? '');
- final dependenciesController = TextEditingController(text: item?.dependencies ?? '');
- final notesController = TextEditingController(text: item?.notes ?? '');
+ final milestoneController = SpellCheckTextEditingController(text: item?.milestone ?? '');
+ final descriptionController = SpellCheckTextEditingController(text: item?.description ?? '');
+ final ownerController = SpellCheckTextEditingController(text: item?.owner ?? '');
+ final startDateController = SpellCheckTextEditingController(text: item?.startDate ?? '');
+ final dueDateController = SpellCheckTextEditingController(text: item?.dueDate ?? '');
+ final dependenciesController = SpellCheckTextEditingController(text: item?.dependencies ?? '');
+ final notesController = SpellCheckTextEditingController(text: item?.notes ?? '');
  var selectedPhase = item?.phase ?? 'Planning';
  var selectedStatus = item?.status ?? 'Not Started';
  var selectedPriority = item?.priority ?? 'Medium';

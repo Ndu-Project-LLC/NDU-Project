@@ -18,6 +18,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// AI transport for this screen: served in code when [AiMode.isLocal].
 final http.Client _aiClient = LocalAiClient.wrap(http.Client());
@@ -38,7 +39,7 @@ class _TeamRolesResponsibilitiesScreenState
  extends State<TeamRolesResponsibilitiesScreen> {
  final _notesDebouncer = _Debouncer(milliseconds: 1000);
  final _saveDebouncer = _Debouncer(milliseconds: 800);
- final TextEditingController _notesSectionController = TextEditingController();
+ final TextEditingController _notesSectionController = SpellCheckTextEditingController();
  bool _isLoading = false;
  bool _suspendSave = false;
 
@@ -1938,7 +1939,7 @@ class _Debouncer {
 class _WorkProgressDraft {
  _WorkProgressDraft(
  {String initialName = '', String initialStatus = 'Not started'})
- : nameController = TextEditingController(text: initialName),
+ : nameController = SpellCheckTextEditingController(text: initialName),
  status = initialStatus;
 
  final TextEditingController nameController;
@@ -2462,14 +2463,14 @@ class _TeamMemberDialogState extends State<_TeamMemberDialog> {
  );
  }
 
- final _nameController = TextEditingController();
- final _roleController = TextEditingController();
- final _emailController = TextEditingController();
- final _phoneController = TextEditingController();
- final _departmentController = TextEditingController();
- final _locationController = TextEditingController();
- final _responsibilitiesController = TextEditingController();
- final _notesController = TextEditingController();
+ final _nameController = SpellCheckTextEditingController();
+ final _roleController = SpellCheckTextEditingController();
+ final _emailController = SpellCheckTextEditingController();
+ final _phoneController = SpellCheckTextEditingController();
+ final _departmentController = SpellCheckTextEditingController();
+ final _locationController = SpellCheckTextEditingController();
+ final _responsibilitiesController = SpellCheckTextEditingController();
+ final _notesController = SpellCheckTextEditingController();
  final List<_WorkProgressDraft> _workProgressEntries = [];
 
  static const List<String> _statusOptions = [

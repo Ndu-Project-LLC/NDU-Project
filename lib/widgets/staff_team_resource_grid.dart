@@ -8,6 +8,7 @@ import 'package:ndu_project/utils/table_import_helper.dart';
 import 'dart:async';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class StaffTeamResourceGrid extends StatefulWidget {
   const StaffTeamResourceGrid({
@@ -28,7 +29,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
   List<String> _aiSuggestions = [];
   bool _loadingSuggestions = false;
   String? _suggestionError;
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
   bool _showCardView = false;
 
@@ -115,13 +116,13 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
 
   /// World-class modal dialog for adding a new staffing role.
   Future<void> _showAddRoleModal() async {
-    final roleController = TextEditingController();
-    final qtyController = TextEditingController(text: '1');
-    final startDateController = TextEditingController();
-    final durationController = TextEditingController();
-    final costController = TextEditingController();
-    final descController = TextEditingController();
-    final notesController = TextEditingController();
+    final roleController = SpellCheckTextEditingController();
+    final qtyController = SpellCheckTextEditingController(text: '1');
+    final startDateController = SpellCheckTextEditingController();
+    final durationController = SpellCheckTextEditingController();
+    final costController = SpellCheckTextEditingController();
+    final descController = SpellCheckTextEditingController();
+    final notesController = SpellCheckTextEditingController();
     bool isInternal = true;
     String status = 'Not Started';
     bool aiLoading = false;
@@ -1828,7 +1829,7 @@ class _PremiumEditableCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return VoiceTextField(
-      controller: TextEditingController(text: value)
+      controller: SpellCheckTextEditingController(text: value)
         ..selection = TextSelection.collapsed(offset: value.length),
       onChanged: onChanged,
       textAlign: align,

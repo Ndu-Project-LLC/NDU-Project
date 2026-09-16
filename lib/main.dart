@@ -10,6 +10,7 @@ import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
 import 'package:ndu_project/services/currency_service.dart';
+import 'package:ndu_project/services/spell_check/spell_check_service.dart';
 import 'package:ndu_project/services/security_services.dart';
 import 'package:ndu_project/services/ai/ai_mode.dart';
 import 'package:ndu_project/widgets/local_ai_banner.dart';
@@ -140,6 +141,10 @@ void main() async {
     UserPreferencesService.warmUp(),
     UserPreferencesService.loadCountryCurrency(),
     ProjectNavigationService.instance.warmUp(),
+    // The spell-check word list is a lazy asset (~2.4 MB) that every text field
+    // needs. Fetching it here means underlines are ready by the time the user
+    // reaches the first field instead of appearing a moment after they type.
+    SpellCheckService.instance.ensureLoaded(),
   ]));
 
   // #6: Start session manager (auto-logout after 30 minutes of inactivity)

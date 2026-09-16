@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Dialog for approving or rejecting a Purchase Order
 class PoApprovalDialog extends StatefulWidget {
@@ -21,7 +22,7 @@ class PoApprovalDialog extends StatefulWidget {
 }
 
 class _PoApprovalDialogState extends State<PoApprovalDialog> {
-  final _commentsController = TextEditingController();
+  final _commentsController = SpellCheckTextEditingController();
   String _selectedAction = 'approve'; // 'approve' or 'reject'
   bool _isSubmitting = false;
 

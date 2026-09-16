@@ -21,6 +21,7 @@ import 'package:ndu_project/wbs/utils/wbs_to_work_item_converter.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ExecutionWorkPackagesScreen extends StatefulWidget {
   const ExecutionWorkPackagesScreen({super.key});
 
@@ -556,11 +557,11 @@ class _ExecutionWorkPackagesScreenState
   // ─── Inline Contract Dialog ────────────────────────────────────────────
 
   Future<void> _addContractForPackage(WorkPackage wp) async {
-    final nameCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
-    final contractorCtrl = TextEditingController();
-    final ownerCtrl = TextEditingController();
-    final valueCtrl = TextEditingController();
+    final nameCtrl = SpellCheckTextEditingController();
+    final descCtrl = SpellCheckTextEditingController();
+    final contractorCtrl = SpellCheckTextEditingController();
+    final ownerCtrl = SpellCheckTextEditingController();
+    final valueCtrl = SpellCheckTextEditingController();
     String contractType = 'Fixed Price';
     String paymentType = 'Lump Sum';
 

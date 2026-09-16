@@ -4,6 +4,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/project_charter_sections.dart';
 import 'package:ndu_project/utils/charter_lock_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class CharterGovernanceSection extends StatelessWidget {
  final ProjectDataModel? data;
@@ -593,8 +594,8 @@ class _CharterApprovalsState extends State<CharterApprovals> {
  }
 
  Future<void> _showInviteSponsorDialog() async {
- final nameController = TextEditingController();
- final emailController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
+ final emailController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
 
  final result = await showDialog<bool>(

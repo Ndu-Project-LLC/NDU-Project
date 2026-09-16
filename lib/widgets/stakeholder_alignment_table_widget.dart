@@ -8,6 +8,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/inline_editable_text.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Custom Stakeholder Alignment Table with inline editing, CRUD actions, and AI capabilities
 class StakeholderAlignmentTableWidget extends StatelessWidget {
@@ -523,9 +524,9 @@ class _StakeholderAlignmentRowWidget extends StatefulWidget {
   }
 
   void _openEditDialog(BuildContext context) {
-    final nameController = TextEditingController(text: widget.item.stakeholderName);
-    final roleController = TextEditingController(text: widget.item.stakeholderRole);
-    final feedbackController = TextEditingController(text: widget.item.feedbackSummary);
+    final nameController = SpellCheckTextEditingController(text: widget.item.stakeholderName);
+    final roleController = SpellCheckTextEditingController(text: widget.item.stakeholderRole);
+    final feedbackController = SpellCheckTextEditingController(text: widget.item.feedbackSummary);
     String selectedStatus = widget.item.alignmentStatus;
     String? selectedKeyInterest = widget.item.keyInterest.isEmpty ? null : widget.item.keyInterest;
 

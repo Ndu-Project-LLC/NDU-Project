@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class MobileForgotPasswordScreen extends StatefulWidget {
   const MobileForgotPasswordScreen({super.key});
 
@@ -15,7 +16,7 @@ class MobileForgotPasswordScreen extends StatefulWidget {
 class _MobileForgotPasswordScreenState
     extends State<MobileForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _emailController = SpellCheckTextEditingController();
   bool _isLoading = false;
 
   Future<void> _resetPassword() async {

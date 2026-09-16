@@ -17,6 +17,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 // firebase_auth removed - unused
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1469,8 +1470,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showDeliverableDialog(
  DesignDeliverableRegisterItem? existing, int editIndex) {
- final nameCtl = TextEditingController(text: existing?.name ?? '');
- final dueCtl = TextEditingController(text: existing?.due ?? '');
+ final nameCtl = SpellCheckTextEditingController(text: existing?.name ?? '');
+ final dueCtl = SpellCheckTextEditingController(text: existing?.due ?? '');
  String owner = existing?.owner ?? 'Design Lead';
  String status = existing?.status ?? 'In progress';
  String risk = existing?.risk ?? 'Medium';
@@ -1620,15 +1621,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  void _showAcceptanceEvidenceEditor(
  {_AcceptanceEvidenceRow? entry, int? index}) {
  final areaCtl =
- TextEditingController(text: entry?.evidenceArea ?? '');
+ SpellCheckTextEditingController(text: entry?.evidenceArea ?? '');
  final whatCtl =
- TextEditingController(text: entry?.whatMustBeCaptured ?? '');
+ SpellCheckTextEditingController(text: entry?.whatMustBeCaptured ?? '');
  final verCtl =
- TextEditingController(text: entry?.verificationMethod ?? '');
+ SpellCheckTextEditingController(text: entry?.verificationMethod ?? '');
  final ownCtl =
- TextEditingController(text: entry?.approvalOwner ?? '');
+ SpellCheckTextEditingController(text: entry?.approvalOwner ?? '');
  final riskCtl =
- TextEditingController(text: entry?.riskIfMissing ?? '');
+ SpellCheckTextEditingController(text: entry?.riskIfMissing ?? '');
 
  showDialog(
  context: context,
@@ -1727,13 +1728,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showHandoffGovernanceEditor(
  {_HandoffGovernanceRow? entry, int? index}) {
- final ctrlCtl = TextEditingController(text: entry?.control ?? '');
+ final ctrlCtl = SpellCheckTextEditingController(text: entry?.control ?? '');
  final pracCtl =
- TextEditingController(text: entry?.industryStandardPractice ?? '');
+ SpellCheckTextEditingController(text: entry?.industryStandardPractice ?? '');
  final wfCtl =
- TextEditingController(text: entry?.waterfallEvidence ?? '');
+ SpellCheckTextEditingController(text: entry?.waterfallEvidence ?? '');
  final agileCtl =
- TextEditingController(text: entry?.agileHybridEvidence ?? '');
+ SpellCheckTextEditingController(text: entry?.agileHybridEvidence ?? '');
  String decision = entry?.decision ?? 'Required';
 
  showDialog(
@@ -1847,12 +1848,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showApprovalGateEditor(
  {_ApprovalGateRow? entry, int? index}) {
- final gateCtl = TextEditingController(text: entry?.gate ?? '');
- final descCtl = TextEditingController(text: entry?.description ?? '');
- final apprCtl = TextEditingController(text: entry?.approver ?? '');
+ final gateCtl = SpellCheckTextEditingController(text: entry?.gate ?? '');
+ final descCtl = SpellCheckTextEditingController(text: entry?.description ?? '');
+ final apprCtl = SpellCheckTextEditingController(text: entry?.approver ?? '');
  String priority = entry?.priority ?? 'High';
  String status = entry?.status ?? 'Pending';
- final dateCtl = TextEditingController(text: entry?.targetDate ?? 'TBD');
+ final dateCtl = SpellCheckTextEditingController(text: entry?.targetDate ?? 'TBD');
 
  showDialog(
  context: context,
@@ -1985,11 +1986,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _showPermissionSnackBar('edit dependencies');
  return;
  }
- final descCtl = TextEditingController(text: entry?.description ?? '');
- final ownerCtl = TextEditingController(text: entry?.owner ?? '');
+ final descCtl = SpellCheckTextEditingController(text: entry?.description ?? '');
+ final ownerCtl = SpellCheckTextEditingController(text: entry?.owner ?? '');
  String priority = entry?.priority ?? 'Medium';
  String status = entry?.status ?? 'Open';
- final dateCtl = TextEditingController(text: entry?.dueDate ?? 'TBD');
+ final dateCtl = SpellCheckTextEditingController(text: entry?.dueDate ?? 'TBD');
 
  showDialog(
  context: context,
@@ -2133,7 +2134,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _showPermissionSnackBar('add pipeline items');
  return;
  }
- final labelCtl = TextEditingController();
+ final labelCtl = SpellCheckTextEditingController();
  String status = 'In progress';
 
  showDialog(
@@ -2196,7 +2197,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showEditPipelineDialog(
  DesignDeliverablePipelineItem item, int index) {
- final labelCtl = TextEditingController(text: item.label);
+ final labelCtl = SpellCheckTextEditingController(text: item.label);
  String status = item.status;
 
  showDialog(

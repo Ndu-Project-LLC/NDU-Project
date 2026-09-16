@@ -23,6 +23,7 @@ import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class AddLineDialog extends StatefulWidget {
   final CostCategory defaultCategory;
@@ -636,7 +637,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
   /// cost line).
   Future<void> _openWbsSearchDialog(List<FlattenedWBSNode> flat) async {
     String query = '';
-    final searchCtrl = TextEditingController();
+    final searchCtrl = SpellCheckTextEditingController();
     final result = await showDialog<FlattenedWBSNode>(
       context: context,
       builder: (ctx) {

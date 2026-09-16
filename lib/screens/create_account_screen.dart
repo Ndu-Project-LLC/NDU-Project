@@ -12,6 +12,7 @@ import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/routing/app_router.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -21,12 +22,12 @@ class CreateAccountScreen extends StatefulWidget {
 }
 
 class _CreateAccountScreenState extends State<CreateAccountScreen> {
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
-  final _companyController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _firstNameController = SpellCheckTextEditingController();
+  final _lastNameController = SpellCheckTextEditingController();
+  final _companyController = SpellCheckTextEditingController();
+  final _emailController = SpellCheckTextEditingController();
+  final _passwordController = SpellCheckTextEditingController();
+  final _confirmPasswordController = SpellCheckTextEditingController();
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -301,8 +302,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
   // ignore: unused_element
   void _showSignInDialog(BuildContext context) {
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
+    final emailController = SpellCheckTextEditingController();
+    final passwordController = SpellCheckTextEditingController();
     bool isPasswordVisible = false;
     bool isLoading = false;
     final parentNav = Navigator.of(context);

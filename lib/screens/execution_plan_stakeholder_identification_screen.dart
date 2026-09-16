@@ -15,6 +15,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -183,17 +184,17 @@ class _StakeholderIdentificationSectionState
     final base = isEdit ? _rows[index] : _emptyRow();
 
     final stakeholderGroupController =
-        TextEditingController(text: base['stakeholderGroup'] ?? '');
+        SpellCheckTextEditingController(text: base['stakeholderGroup'] ?? '');
     final categoryController =
-        TextEditingController(text: base['category'] ?? '');
+        SpellCheckTextEditingController(text: base['category'] ?? '');
     final influenceController =
-        TextEditingController(text: base['influence'] ?? '');
+        SpellCheckTextEditingController(text: base['influence'] ?? '');
     final keyConcernsController =
-        TextEditingController(text: base['keyConcerns'] ?? '');
+        SpellCheckTextEditingController(text: base['keyConcerns'] ?? '');
     final engagementStrategyController =
-        TextEditingController(text: base['engagementStrategy'] ?? '');
+        SpellCheckTextEditingController(text: base['engagementStrategy'] ?? '');
     final commentsController =
-        TextEditingController(text: base['comments'] ?? '');
+        SpellCheckTextEditingController(text: base['comments'] ?? '');
 
     await showDialog<void>(
       context: context,

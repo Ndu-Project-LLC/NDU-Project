@@ -5,6 +5,7 @@ import 'package:ndu_project/utils/file_upload_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class DesignSpecificationsCard extends StatelessWidget {
   const DesignSpecificationsCard({super.key});
@@ -121,7 +122,7 @@ class DesignSpecificationsCard extends StatelessWidget {
 
   void _showAddSpecificationDialog(
       BuildContext context, ProjectDataProvider provider) {
-    final controller = TextEditingController();
+    final controller = SpellCheckTextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -418,7 +419,7 @@ class DesignDocumentsCard extends StatelessWidget {
 
   void _showAddDocumentDialog(
       BuildContext context, ProjectDataProvider provider) {
-    final titleController = TextEditingController();
+    final titleController = SpellCheckTextEditingController();
     String docType = 'Output';
     String? uploadedFileName;
     String? uploadedFileUrl;
@@ -853,8 +854,8 @@ class DesignToolsCard extends StatelessWidget {
   }
 
   void _showAddToolDialog(BuildContext context, ProjectDataProvider provider) {
-    final nameController = TextEditingController();
-    final urlController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
+    final urlController = SpellCheckTextEditingController();
     bool isInternal = false;
     String? uploadedFileName;
     String? uploadedFileUrl;

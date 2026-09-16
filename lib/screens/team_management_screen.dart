@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class TeamManagementScreen extends StatefulWidget {
  const TeamManagementScreen({super.key});
 
@@ -137,10 +138,10 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  }
 
  Future<void> _openAddMemberDialog(List<TeamMember> members) async {
- final nameController = TextEditingController();
- final roleController = TextEditingController();
- final emailController = TextEditingController();
- final responsibilitiesController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
+ final roleController = SpellCheckTextEditingController();
+ final emailController = SpellCheckTextEditingController();
+ final responsibilitiesController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
  const focusColor = Color(0xFFFFD700);
  const List<String> suggestedRoles = [
@@ -1100,9 +1101,9 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  // ── Dialogs ──────────────────────────────────────────────────────────
 
  Future<void> _addRoleRequirementDialog(List<TeamMember> members) async {
- final roleController = TextEditingController();
- final reqController = TextEditingController();
- final descController = TextEditingController();
+ final roleController = SpellCheckTextEditingController();
+ final reqController = SpellCheckTextEditingController();
+ final descController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
  final result = await showDialog<bool>(
  context: context,
@@ -1180,10 +1181,10 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  Future<void> _createHandoverDialog(List<TeamMember> members) async {
  if (members.isEmpty) return;
  final selectedMember = ValueNotifier<TeamMember?>(null);
- final incomingController = TextEditingController();
- final notesController = TextEditingController();
- final actionsController = TextEditingController();
- final assetsController = TextEditingController();
+ final incomingController = SpellCheckTextEditingController();
+ final notesController = SpellCheckTextEditingController();
+ final actionsController = SpellCheckTextEditingController();
+ final assetsController = SpellCheckTextEditingController();
  final result = await showDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
@@ -2014,7 +2015,7 @@ class _EditableTextBlockState extends State<_EditableTextBlock> {
  @override
  void initState() {
  super.initState();
- _controller = TextEditingController(text: widget.initialText);
+ _controller = SpellCheckTextEditingController(text: widget.initialText);
  }
 
  @override
@@ -2493,7 +2494,7 @@ class _ActivityComposer extends StatefulWidget {
 }
 
 class _ActivityComposerState extends State<_ActivityComposer> {
- final _controller = TextEditingController();
+ final _controller = SpellCheckTextEditingController();
 
  @override
  void dispose() {

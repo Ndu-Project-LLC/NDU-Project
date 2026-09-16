@@ -11,6 +11,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class FrontEndPlanningTechnologyPersonnelScreen extends StatefulWidget {
  const FrontEndPlanningTechnologyPersonnelScreen({super.key});
 
@@ -25,7 +26,7 @@ class FrontEndPlanningTechnologyPersonnelScreen extends StatefulWidget {
 
 class _FrontEndPlanningTechnologyPersonnelScreenState
  extends State<FrontEndPlanningTechnologyPersonnelScreen> {
- final TextEditingController _notes = TextEditingController();
+ final TextEditingController _notes = SpellCheckTextEditingController();
  List<TechnologyPersonnelItem> _rows = [];
  bool _isSyncReady = false;
 
@@ -84,12 +85,12 @@ class _FrontEndPlanningTechnologyPersonnelScreenState
 
  Future<void> _upsertRow({TechnologyPersonnelItem? existing}) async {
  final technologyController =
- TextEditingController(text: existing?.technologyArea ?? '');
+ SpellCheckTextEditingController(text: existing?.technologyArea ?? '');
  final ownerController =
- TextEditingController(text: existing?.primaryOwner ?? '');
+ SpellCheckTextEditingController(text: existing?.primaryOwner ?? '');
  final supportController =
- TextEditingController(text: existing?.backupSupport ?? '');
- final notesController = TextEditingController(text: existing?.notes ?? '');
+ SpellCheckTextEditingController(text: existing?.backupSupport ?? '');
+ final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
 
  try {
  final result = await showDialog<TechnologyPersonnelItem>(

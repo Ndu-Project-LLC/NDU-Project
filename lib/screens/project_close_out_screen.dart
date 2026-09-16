@@ -22,6 +22,7 @@ import 'package:printing/printing.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ProjectCloseOutScreen extends StatefulWidget {
   const ProjectCloseOutScreen({
@@ -50,7 +51,7 @@ class ProjectCloseOutScreen extends StatefulWidget {
 
 class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
   List<LaunchCloseOutCheckItem> _closeOutChecklist = [];
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   List<LaunchApproval> _approvals = [];
   List<LaunchArchiveItem> _archive = [];
   LaunchClosureNotes _lessonsLearned = LaunchClosureNotes();

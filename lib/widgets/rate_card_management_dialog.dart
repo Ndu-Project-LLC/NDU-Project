@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/models/rate_card.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Dialog for managing personnel rate cards with tiered rates and role-based access.
 class RateCardManagementDialog extends StatefulWidget {
@@ -40,12 +41,12 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
   bool _showAddForm = false;
 
   // New card form controllers
-  final _nameCtrl = TextEditingController();
+  final _nameCtrl = SpellCheckTextEditingController();
   String _selectedTier = 'National';
-  final _effectiveDateCtrl = TextEditingController();
-  final _expiryDateCtrl = TextEditingController();
+  final _effectiveDateCtrl = SpellCheckTextEditingController();
+  final _expiryDateCtrl = SpellCheckTextEditingController();
   String _accessLevel = 'Admin';
-  final _notesCtrl = TextEditingController();
+  final _notesCtrl = SpellCheckTextEditingController();
 
   @override
   void initState() {
@@ -611,12 +612,12 @@ class _AddRateTierDialog extends StatefulWidget {
 }
 
 class _AddRateTierDialogState extends State<_AddRateTierDialog> {
-  final _roleCtrl = TextEditingController();
-  final _disciplineCtrl = TextEditingController();
-  final _baseRateCtrl = TextEditingController();
-  final _burdenCtrl = TextEditingController(text: '1.35');
-  final _gradeCtrl = TextEditingController();
-  final _notesCtrl = TextEditingController();
+  final _roleCtrl = SpellCheckTextEditingController();
+  final _disciplineCtrl = SpellCheckTextEditingController();
+  final _baseRateCtrl = SpellCheckTextEditingController();
+  final _burdenCtrl = SpellCheckTextEditingController(text: '1.35');
+  final _gradeCtrl = SpellCheckTextEditingController();
+  final _notesCtrl = SpellCheckTextEditingController();
   String _currency = 'USD';
 
   @override

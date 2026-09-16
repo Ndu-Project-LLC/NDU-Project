@@ -45,6 +45,7 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SafeSection — Build-time error boundary that prevents a single failing child
@@ -253,7 +254,7 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
  @override
  void initState() {
  super.initState();
- _projectNameController = TextEditingController();
+ _projectNameController = SpellCheckTextEditingController();
 
  // Initialize API key manager
  ApiKeyManager.initializeApiKey();
@@ -279,7 +280,7 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
  SolutionRow(
  id: solution.id,
  number: solution.number,
- titleController: TextEditingController(text: solution.title),
+ titleController: SpellCheckTextEditingController(text: solution.title),
  descriptionController:
  _createDescriptionController(text: solution.description),
  isAiGenerated: true,
@@ -555,7 +556,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  SolutionRow(
  number: i + 1,
  titleController:
- TextEditingController(text: solutionsToUse[i].title),
+ SpellCheckTextEditingController(text: solutionsToUse[i].title),
  descriptionController: _createDescriptionController(
  text: solutionsToUse[i].description),
  isAiGenerated: true,
@@ -584,7 +585,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  SolutionRow(
  number: i + 1,
  titleController:
- TextEditingController(text: 'Proposed Solution ${i + 1}'),
+ SpellCheckTextEditingController(text: 'Proposed Solution ${i + 1}'),
  descriptionController: _createDescriptionController(
  text:
  'Describe how this option addresses the project\'s needs, assumptions, constraints, and expected benefits.',
@@ -2365,7 +2366,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  setState(() {
  created = SolutionRow(
  number: _solutions.length + 1,
- titleController: TextEditingController(),
+ titleController: SpellCheckTextEditingController(),
  descriptionController: _createDescriptionController(),
  isAiGenerated: false,
  );
@@ -2442,7 +2443,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
       if (title.trim().isEmpty && description.trim().isEmpty) continue;
       final created = SolutionRow(
         number: _solutions.length + 1,
-        titleController: TextEditingController(text: title),
+        titleController: SpellCheckTextEditingController(text: title),
         descriptionController: _createDescriptionController(text: description),
         isAiGenerated: false,
       );
@@ -2535,7 +2536,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  SolutionRow(
  number: i + 1,
  titleController:
- TextEditingController(text: solutionsToUse[i].title),
+ SpellCheckTextEditingController(text: solutionsToUse[i].title),
  descriptionController: _createDescriptionController(
  text: solutionsToUse[i].description,
  ),

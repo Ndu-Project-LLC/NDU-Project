@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 enum _ScopeTab { overview, registry, traceability, baseline }
 
@@ -1019,10 +1020,10 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  }
 
  void _showAddItemDialog() {
- final nameCtrl = TextEditingController();
- final typeCtrl = TextEditingController(text: 'predictive');
- final statusCtrl = TextEditingController(text: 'Not Started');
- final ownerCtrl = TextEditingController();
+ final nameCtrl = SpellCheckTextEditingController();
+ final typeCtrl = SpellCheckTextEditingController(text: 'predictive');
+ final statusCtrl = SpellCheckTextEditingController(text: 'Not Started');
+ final ownerCtrl = SpellCheckTextEditingController();
 
  showDialog(
  context: context,

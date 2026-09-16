@@ -44,6 +44,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/procurement/procurement_section_error_card.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class PlanningProcurementV2Screen extends StatefulWidget {
  const PlanningProcurementV2Screen({super.key});
 
@@ -692,7 +693,7 @@ class _PlanningProcurementV2ScreenState
  return showDialog<WorkItem>(
  context: context,
  builder: (dialogContext) {
- final queryController = TextEditingController();
+ final queryController = SpellCheckTextEditingController();
  return StatefulBuilder(
  builder: (context, setDialogState) {
  final query = queryController.text.trim().toLowerCase();
@@ -1320,8 +1321,8 @@ class _PlanningProcurementV2ScreenState
  }
 
  Future<void> _openInviteVendorDialog() async {
- final nameController = TextEditingController();
- final emailController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
+ final emailController = SpellCheckTextEditingController();
 
  final sent = await showDialog<bool>(
  context: context,
@@ -2208,8 +2209,8 @@ class _PlanningProcurementV2ScreenState
  Future<ProcurementWorkflowStep?> _showWorkflowStepDialog({
  ProcurementWorkflowStep? initialStep,
  }) async {
- final nameController = TextEditingController(text: initialStep?.name ?? '');
- final durationController = TextEditingController(
+ final nameController = SpellCheckTextEditingController(text: initialStep?.name ?? '');
+ final durationController = SpellCheckTextEditingController(
  text: (initialStep?.duration ?? 1).toString(),
  );
  var unit = initialStep?.unit == 'month' ? 'month' : 'week';

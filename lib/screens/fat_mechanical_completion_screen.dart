@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Section 3 — FAT, Mechanical Completion & Commission Solution
 ///
@@ -34,7 +35,7 @@ class FatMechanicalCompletionScreen extends StatefulWidget {
 
 class _FatMechanicalCompletionScreenState
     extends State<FatMechanicalCompletionScreen> {
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
 
   // Subsection 1 — Mechanical Completion
   final List<_CompletionItem> _mechanicalCompletionItems = [];

@@ -18,6 +18,7 @@ import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class BOEScreen extends StatefulWidget {
   const BOEScreen({super.key});
@@ -38,16 +39,16 @@ class _BOEScreenState extends State<BOEScreen> {
   void initState() {
     super.initState();
     final boe = context.read<CostEstimateProvider>().estimate!.boe;
-    _scopeBasisCtrl = TextEditingController(text: boe.scopeBasis);
-    _escalationCtrl = TextEditingController(text: boe.escalationAssumptions);
+    _scopeBasisCtrl = SpellCheckTextEditingController(text: boe.scopeBasis);
+    _escalationCtrl = SpellCheckTextEditingController(text: boe.escalationAssumptions);
     for (final a in boe.assumptions) {
-      _assumptionCtrls.add(TextEditingController(text: a));
+      _assumptionCtrls.add(SpellCheckTextEditingController(text: a));
     }
     for (final c in boe.constraints) {
-      _constraintCtrls.add(TextEditingController(text: c));
+      _constraintCtrls.add(SpellCheckTextEditingController(text: c));
     }
     for (final e in boe.exclusions) {
-      _exclusionCtrls.add(TextEditingController(text: e));
+      _exclusionCtrls.add(SpellCheckTextEditingController(text: e));
     }
     _methodology = List.from(boe.methodology);
   }
@@ -264,7 +265,7 @@ class _BOEScreenState extends State<BOEScreen> {
                   hint: 'State an assumption...',
                   onAdd: () => setState(() {
                         final defaultText = '${estimate.projectName} — Assumption: Based on ${estimate.className.label} accuracy range.';
-                        _assumptionCtrls.add(TextEditingController(text: defaultText));
+                        _assumptionCtrls.add(SpellCheckTextEditingController(text: defaultText));
                       }),
                 );
                 Widget constraints = _ListCard(
@@ -278,7 +279,7 @@ class _BOEScreenState extends State<BOEScreen> {
                   hint: 'State a constraint...',
                   onAdd: () => setState(() {
                         final defaultText = '${estimate.projectName} — Constraint: Funding, approvals, or access may limit delivery.';
-                        _constraintCtrls.add(TextEditingController(text: defaultText));
+                        _constraintCtrls.add(SpellCheckTextEditingController(text: defaultText));
                       }),
                 );
                 Widget exclusions = _ListCard(
@@ -292,7 +293,7 @@ class _BOEScreenState extends State<BOEScreen> {
                   hint: 'State an exclusion...',
                   onAdd: () => setState(() {
                         final defaultText = '${estimate.projectName} — Exclusion: Operations, maintenance, and third-party warranties.';
-                        _exclusionCtrls.add(TextEditingController(text: defaultText));
+                        _exclusionCtrls.add(SpellCheckTextEditingController(text: defaultText));
                       }),
                 );
                 if (wide) {

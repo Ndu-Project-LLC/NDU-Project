@@ -25,6 +25,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class TransitionToProdTeamScreen extends StatefulWidget {
   const TransitionToProdTeamScreen({super.key});
 
@@ -39,7 +40,7 @@ class TransitionToProdTeamScreen extends StatefulWidget {
 
 class _TransitionToProdTeamScreenState
     extends State<TransitionToProdTeamScreen> {
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   List<LaunchTeamMember> _teamRoster = [];
   List<LaunchHandoverItem> _handoverChecklist = [];
   List<LaunchKnowledgeTransfer> _knowledgeTransfers = [];

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ApiKeyInputDialog extends StatefulWidget {
   const ApiKeyInputDialog({super.key});
@@ -12,7 +13,7 @@ class ApiKeyInputDialog extends StatefulWidget {
 }
 
 class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
-  final TextEditingController _apiKeyController = TextEditingController();
+  final TextEditingController _apiKeyController = SpellCheckTextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _isObscured = true;
   bool _isLoading = false;

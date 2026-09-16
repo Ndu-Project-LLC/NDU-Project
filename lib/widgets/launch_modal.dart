@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Shared building blocks for world-class Launch Phase pop-up modals.
 ///
@@ -362,7 +363,7 @@ class _LaunchModalDateFieldState extends State<LaunchModalDateField> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(
+    _controller = SpellCheckTextEditingController(
       text: widget.initialText ??
           (widget.initialDate != null
               ? _formatDateShort(widget.initialDate!)

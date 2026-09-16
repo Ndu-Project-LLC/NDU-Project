@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ContractsTable extends StatefulWidget {
   const ContractsTable({
@@ -611,7 +612,7 @@ class _ResponsiblePickerDialog extends StatefulWidget {
 
 class _ResponsiblePickerDialogState extends State<_ResponsiblePickerDialog> {
   late final TextEditingController _searchController =
-      TextEditingController(text: widget.initialQuery);
+      SpellCheckTextEditingController(text: widget.initialQuery);
 
   @override
   void dispose() {

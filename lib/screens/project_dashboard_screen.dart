@@ -30,6 +30,7 @@ import 'project_dashboard_mobile_shell.dart';
 import 'project_activities_log_screen.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ProjectDashboardScreen extends StatefulWidget {
  const ProjectDashboardScreen({super.key, this.isBasicPlan = false});
 
@@ -119,7 +120,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  }
 
  Future<void> _handleAddProject() async {
- final nameController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
 
  final projectName = await showDialog<String>(
@@ -912,7 +913,7 @@ class _SingleProjectsCard extends StatefulWidget {
 
 class _SingleProjectsCardState extends State<_SingleProjectsCard> {
  bool _showAll = false;
- final TextEditingController _searchController = TextEditingController();
+ final TextEditingController _searchController = SpellCheckTextEditingController();
  String _searchQuery = '';
 
  @override
@@ -1367,7 +1368,7 @@ class _GroupProjectsCard extends StatefulWidget {
 
 class _GroupProjectsCardState extends State<_GroupProjectsCard> {
  bool _showAll = false;
- final TextEditingController _searchController = TextEditingController();
+ final TextEditingController _searchController = SpellCheckTextEditingController();
  String _searchQuery = '';
 
  @override
@@ -1401,7 +1402,7 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
  }
 
  Future<void> _handleCreateProgram() async {
- final nameController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
 
  final programName = await showDialog<String>(
@@ -2399,7 +2400,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  }
 
  Future<void> _renameProject(BuildContext context) async {
- final nameController = TextEditingController(text: project.name);
+ final nameController = SpellCheckTextEditingController(text: project.name);
  final formKey = GlobalKey<FormState>();
 
  final newName = await showDialog<String>(

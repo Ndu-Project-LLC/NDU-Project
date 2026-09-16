@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/services/voice_input_service.dart';
 import 'package:ndu_project/services/docx_import_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// A drop-in TextField that grows vertically as the user types,
 /// with optional voice-to-text input via a microphone button.
@@ -108,7 +109,7 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? TextEditingController();
+    _controller = widget.controller ?? SpellCheckTextEditingController();
     _checkAvailability();
   }
 
@@ -116,7 +117,7 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
   void didUpdateWidget(ExpandingTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
-      _controller = widget.controller ?? TextEditingController();
+      _controller = widget.controller ?? SpellCheckTextEditingController();
     }
   }
 
@@ -421,7 +422,7 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? TextEditingController();
+    _controller = widget.controller ?? SpellCheckTextEditingController();
     _checkAvailability();
   }
 
@@ -429,7 +430,7 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
   void didUpdateWidget(ExpandingTextFormField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
-      _controller = widget.controller ?? TextEditingController();
+      _controller = widget.controller ?? SpellCheckTextEditingController();
     }
   }
 

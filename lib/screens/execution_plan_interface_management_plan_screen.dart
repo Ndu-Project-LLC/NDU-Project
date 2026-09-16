@@ -13,6 +13,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> _exportInterfaceManagementPlanPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -111,9 +112,9 @@ class _InterfaceManagementPlanFormState
     );
   }
 
-  final _responsibilityMatrixController = TextEditingController();
-  final _escalationProceduresController = TextEditingController();
-  final _coordinationMeetingsController = TextEditingController();
+  final _responsibilityMatrixController = SpellCheckTextEditingController();
+  final _escalationProceduresController = SpellCheckTextEditingController();
+  final _coordinationMeetingsController = SpellCheckTextEditingController();
   Timer? _saveDebounce;
   bool _didInit = false;
   DateTime? _lastSavedAt;

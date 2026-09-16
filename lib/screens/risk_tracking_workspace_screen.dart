@@ -21,6 +21,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class RiskTrackingWorkspaceScreen extends StatefulWidget {
   const RiskTrackingWorkspaceScreen({super.key});
 
@@ -1966,20 +1967,20 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showRiskEditor({_RiskData? existing}) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
  final descriptionController =
- TextEditingController(text: existing?.description ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
  final categoryController =
- TextEditingController(text: existing?.category ?? '');
+ SpellCheckTextEditingController(text: existing?.category ?? '');
  final reviewController =
- TextEditingController(text: existing?.nextReview ?? '');
+ SpellCheckTextEditingController(text: existing?.nextReview ?? '');
  final triggerController =
- TextEditingController(text: existing?.triggerEvents ?? '');
+ SpellCheckTextEditingController(text: existing?.triggerEvents ?? '');
  final mitigationStrategyController =
- TextEditingController(text: existing?.mitigationStrategy ?? '');
+ SpellCheckTextEditingController(text: existing?.mitigationStrategy ?? '');
  final associatedMitigationController =
- TextEditingController(text: existing?.associatedMitigation ?? '');
+ SpellCheckTextEditingController(text: existing?.associatedMitigation ?? '');
  final formKey = GlobalKey<FormState>();
  int likelihoodScore = existing?.likelihoodScore ?? 3;
  int impactScore = existing?.impactScore ?? 3;
@@ -2562,15 +2563,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showSignalEditor({_SignalData? existing}) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
  final detailController =
- TextEditingController(text: existing?.detail ?? '');
+ SpellCheckTextEditingController(text: existing?.detail ?? '');
  final sourceController =
- TextEditingController(text: existing?.source ?? '');
- final dateDetectedController = TextEditingController(
+ SpellCheckTextEditingController(text: existing?.source ?? '');
+ final dateDetectedController = SpellCheckTextEditingController(
  text: existing?.dateDetected ?? _formatDate(DateTime.now()));
  final associatedRiskIdController =
- TextEditingController(text: existing?.associatedRiskId ?? '');
+ SpellCheckTextEditingController(text: existing?.associatedRiskId ?? '');
  final formKey = GlobalKey<FormState>();
  String severity = existing?.severity ?? 'Medium';
  String confidenceLevel = existing?.confidenceLevel ?? 'Medium';
@@ -2801,17 +2802,17 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showMitigationEditor({_MitigationData? existing}) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
  final descriptionController =
- TextEditingController(text: existing?.description ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
- final dueController = TextEditingController(text: existing?.dueDate ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
+ final dueController = SpellCheckTextEditingController(text: existing?.dueDate ?? '');
  final estimatedCostController =
- TextEditingController(text: existing?.estimatedCost ?? '');
+ SpellCheckTextEditingController(text: existing?.estimatedCost ?? '');
  final statusNotesController =
- TextEditingController(text: existing?.statusNotes ?? '');
+ SpellCheckTextEditingController(text: existing?.statusNotes ?? '');
  final associatedRiskIdController =
- TextEditingController(text: existing?.associatedRiskId ?? '');
+ SpellCheckTextEditingController(text: existing?.associatedRiskId ?? '');
  final formKey = GlobalKey<FormState>();
  String status = existing?.status ?? 'Planning';
  int progress = existing?.progress ?? 0;

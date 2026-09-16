@@ -23,6 +23,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class StartUpPlanningOperationsScreen extends StatelessWidget {
   const StartUpPlanningOperationsScreen({super.key});
@@ -2895,9 +2896,9 @@ class _ChecklistTableCard extends StatelessWidget {
     _ChecklistEntry? entry,
     int? index,
   }) async {
-    final titleController = TextEditingController(text: entry?.title ?? '');
-    final ownerController = TextEditingController(text: entry?.owner ?? '');
-    final notesController = TextEditingController(text: entry?.notes ?? '');
+    final titleController = SpellCheckTextEditingController(text: entry?.title ?? '');
+    final ownerController = SpellCheckTextEditingController(text: entry?.owner ?? '');
+    final notesController = SpellCheckTextEditingController(text: entry?.notes ?? '');
     final formKey = GlobalKey<FormState>();
     var isComplete = entry?.done ?? false;
     final registerName = title
@@ -4302,7 +4303,7 @@ Future<Map<int, String>?> _showRowEditDialog(
 }) async {
   final controllers = <TextEditingController?>[
     for (final f in fields)
-      f.options == null ? TextEditingController(text: f.initialValue) : null,
+      f.options == null ? SpellCheckTextEditingController(text: f.initialValue) : null,
   ];
   // Seed dropdown fields: empty values fall back to the first option so a
   // fresh row gets a sensible default; custom stored values are preserved.

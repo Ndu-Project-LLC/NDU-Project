@@ -18,6 +18,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class TechnicalDebtManagementScreen extends StatefulWidget {
   const TechnicalDebtManagementScreen({super.key});
 
@@ -1120,14 +1121,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  void _showDebtItemDialog({DebtItem? existing}) {
  final isEdit = existing != null;
  // ID is auto-generated and hidden from the UI per Task 7.
- final idController = TextEditingController(
+ final idController = SpellCheckTextEditingController(
  text: existing?.id ?? 'TD-${DateTime.now().millisecondsSinceEpoch}',
  );
- final titleController = TextEditingController(text: existing?.title ?? '');
- final areaController = TextEditingController(text: existing?.area ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final areaController = SpellCheckTextEditingController(text: existing?.area ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
  final targetController =
- TextEditingController(text: existing?.target ?? '');
+ SpellCheckTextEditingController(text: existing?.target ?? '');
  var selectedSeverity = (existing?.severity ?? 'Medium').trim();
  var selectedStatus = (existing?.status ?? 'Backlog').trim();
 
@@ -1275,15 +1276,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  int? displayIndex,
  _RemediationRunwayRow? seed,
  }) {
- final labelController = TextEditingController(text: seed?.primary ?? '');
+ final labelController = SpellCheckTextEditingController(text: seed?.primary ?? '');
  final secondaryController =
- TextEditingController(text: seed?.secondary ?? '');
+ SpellCheckTextEditingController(text: seed?.secondary ?? '');
  final exitCriteriaController =
- TextEditingController(text: seed?.exitCriteria ?? '');
+ SpellCheckTextEditingController(text: seed?.exitCriteria ?? '');
  final evidenceController =
- TextEditingController(text: seed?.evidence ?? '');
+ SpellCheckTextEditingController(text: seed?.evidence ?? '');
  final ownerCadenceController =
- TextEditingController(text: seed?.ownerCadence ?? '');
+ SpellCheckTextEditingController(text: seed?.ownerCadence ?? '');
  var progress = seed?.progress ?? 0.35;
  var selectedColorValue =
  (seed?.color ?? const Color(0xFFFFC812)).toARGB32();
@@ -1439,12 +1440,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  int? displayIndex,
  _RootCauseSignalRow? seed,
  }) {
- final titleController = TextEditingController(text: seed?.signal ?? '');
+ final titleController = SpellCheckTextEditingController(text: seed?.signal ?? '');
  final subtitleController =
- TextEditingController(text: seed?.indicator ?? '');
+ SpellCheckTextEditingController(text: seed?.indicator ?? '');
  final evidenceController =
- TextEditingController(text: seed?.evidence ?? '');
- final controlController = TextEditingController(text: seed?.control ?? '');
+ SpellCheckTextEditingController(text: seed?.evidence ?? '');
+ final controlController = SpellCheckTextEditingController(text: seed?.control ?? '');
  var selectedTier = seed?.tier ?? 'Medium';
  var selectedColorValue =
  (seed?.color ?? const Color(0xFFF97316)).toARGB32();
@@ -1595,16 +1596,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  int? displayIndex,
  _OwnershipCoverageRow? seed,
  }) {
- final ownerController = TextEditingController(text: seed?.owner ?? '');
+ final ownerController = SpellCheckTextEditingController(text: seed?.owner ?? '');
  final workstreamController =
- TextEditingController(text: seed?.workstream ?? '');
- final scopeController = TextEditingController(text: seed?.scope ?? '');
- final countController = TextEditingController(text: seed?.count ?? '1');
+ SpellCheckTextEditingController(text: seed?.workstream ?? '');
+ final scopeController = SpellCheckTextEditingController(text: seed?.scope ?? '');
+ final countController = SpellCheckTextEditingController(text: seed?.count ?? '1');
  final coverageController =
- TextEditingController(text: seed?.coverage ?? '');
- final reviewController = TextEditingController(text: seed?.review ?? '');
+ SpellCheckTextEditingController(text: seed?.coverage ?? '');
+ final reviewController = SpellCheckTextEditingController(text: seed?.review ?? '');
  final escalationController =
- TextEditingController(text: seed?.escalation ?? '');
+ SpellCheckTextEditingController(text: seed?.escalation ?? '');
  var selectedColorValue =
  (seed?.color ?? const Color(0xFFFFC812)).toARGB32();
 

@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// RECOGNITION & AWARDS
@@ -34,10 +35,10 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
   bool _hasLoaded = false;
   List<_Recognition> _recognitions = [];
   final TextEditingController _quickRecipientController =
-      TextEditingController();
-  final TextEditingController _quickTeamController = TextEditingController();
+      SpellCheckTextEditingController();
+  final TextEditingController _quickTeamController = SpellCheckTextEditingController();
   final TextEditingController _quickCommentsController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   String _quickCategory = _awardCategories.first;
   String _quickStatus = 'Nominated';
 
@@ -208,18 +209,18 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
 
   Future<void> _showRecognitionDialog(
       {int? editIndex, _Recognition? existing}) async {
-    final categoryCtrl = TextEditingController(
+    final categoryCtrl = SpellCheckTextEditingController(
         text: existing?.category ?? _awardCategories.first);
     final recipientCtrl =
-        TextEditingController(text: existing?.recipient ?? '');
-    final teamCtrl = TextEditingController(text: existing?.team ?? '');
+        SpellCheckTextEditingController(text: existing?.recipient ?? '');
+    final teamCtrl = SpellCheckTextEditingController(text: existing?.team ?? '');
     final nominatedByCtrl =
-        TextEditingController(text: existing?.nominatedBy ?? '');
-    final dateCtrl = TextEditingController(text: existing?.date ?? '');
-    final evidenceCtrl = TextEditingController(text: existing?.evidence ?? '');
-    final commentsCtrl = TextEditingController(text: existing?.comments ?? '');
+        SpellCheckTextEditingController(text: existing?.nominatedBy ?? '');
+    final dateCtrl = SpellCheckTextEditingController(text: existing?.date ?? '');
+    final evidenceCtrl = SpellCheckTextEditingController(text: existing?.evidence ?? '');
+    final commentsCtrl = SpellCheckTextEditingController(text: existing?.comments ?? '');
     final linkedMilestoneCtrl =
-        TextEditingController(text: existing?.linkedMilestone ?? '');
+        SpellCheckTextEditingController(text: existing?.linkedMilestone ?? '');
     String status = existing?.status ?? 'Nominated';
     String type = existing?.type ?? _recognitionTypes.first;
 

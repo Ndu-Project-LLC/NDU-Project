@@ -24,6 +24,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ContractsTrackingScreen extends StatefulWidget {
   const ContractsTrackingScreen({super.key});
 
@@ -1380,7 +1381,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
   Future<void> _showRenewalEntryEditor({_RenewalLaneData? entry}) async {
     final isEdit = entry != null;
     final nameController =
-        TextEditingController(text: entry?.contractName ?? '');
+        SpellCheckTextEditingController(text: entry?.contractName ?? '');
     var selectedType = _contractTypeOptions.contains(entry?.contractType)
         ? entry!.contractType
         : _contractTypeOptions.first;
@@ -1397,10 +1398,10 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     var selectedStatus = _renewalStatusOptions.contains(entry?.status)
         ? (entry?.status ?? 'Not Started')
         : 'Not Started';
-    final ownerController = TextEditingController(text: entry?.owner ?? '');
+    final ownerController = SpellCheckTextEditingController(text: entry?.owner ?? '');
     final valueController =
-        TextEditingController(text: entry?.committedValue ?? '');
-    final notesController = TextEditingController(text: entry?.notes ?? '');
+        SpellCheckTextEditingController(text: entry?.committedValue ?? '');
+    final notesController = SpellCheckTextEditingController(text: entry?.notes ?? '');
 
     final saved = await showDialog<_RenewalLaneData>(
       context: context,
@@ -1691,9 +1692,9 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
   Future<void> _showRiskSignalEditor({_RiskSignalData? signal}) async {
     final formKey = GlobalKey<FormState>();
-    final titleController = TextEditingController(text: signal?.title ?? '');
-    final detailController = TextEditingController(text: signal?.detail ?? '');
-    final ownerController = TextEditingController(text: signal?.owner ?? '');
+    final titleController = SpellCheckTextEditingController(text: signal?.title ?? '');
+    final detailController = SpellCheckTextEditingController(text: signal?.detail ?? '');
+    final ownerController = SpellCheckTextEditingController(text: signal?.owner ?? '');
     var selectedStatus = _riskStatusOptions.contains(signal?.status)
         ? signal!.status
         : _riskStatusOptions.first;
@@ -1884,11 +1885,11 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
   Future<void> _showApprovalCheckpointEditor(
       {_ApprovalCheckpointData? checkpoint}) async {
     final isEdit = checkpoint != null;
-    final gateController = TextEditingController(text: checkpoint?.gate ?? '');
+    final gateController = SpellCheckTextEditingController(text: checkpoint?.gate ?? '');
     final descController =
-        TextEditingController(text: checkpoint?.description ?? '');
+        SpellCheckTextEditingController(text: checkpoint?.description ?? '');
     final approverController =
-        TextEditingController(text: checkpoint?.approver ?? '');
+        SpellCheckTextEditingController(text: checkpoint?.approver ?? '');
     var selectedDepartment =
         _approvalDepartmentOptions.contains(checkpoint?.department)
             ? checkpoint!.department
@@ -1901,9 +1902,9 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
         ? checkpoint!.status
         : _gateStatusOptions.first;
     final targetDateController =
-        TextEditingController(text: checkpoint?.targetDate ?? '');
+        SpellCheckTextEditingController(text: checkpoint?.targetDate ?? '');
     final notesController =
-        TextEditingController(text: checkpoint?.notes ?? '');
+        SpellCheckTextEditingController(text: checkpoint?.notes ?? '');
 
     final saved = await showDialog<_ApprovalCheckpointData>(
       context: context,
@@ -2179,16 +2180,16 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
     if (!mounted) return;
 
-    final nameController = TextEditingController(text: contract?.name ?? '');
+    final nameController = SpellCheckTextEditingController(text: contract?.name ?? '');
     final descriptionController =
-        TextEditingController(text: contract?.description ?? '');
+        SpellCheckTextEditingController(text: contract?.description ?? '');
     final contractTypeController =
-        TextEditingController(text: contract?.contractType ?? '');
+        SpellCheckTextEditingController(text: contract?.contractType ?? '');
     final paymentTypeController =
-        TextEditingController(text: contract?.paymentType ?? '');
+        SpellCheckTextEditingController(text: contract?.paymentType ?? '');
     var selectedStatus = contract?.status ?? 'Draft';
     var selectedStartPhase = contract?.contractStartPhase ?? 'Not Sure';
-    final estimatedValueController = TextEditingController(
+    final estimatedValueController = SpellCheckTextEditingController(
         text: contract?.estimatedValue != null && contract!.estimatedValue > 0
             ? contract.estimatedValue.toStringAsFixed(0)
             : '');
@@ -2198,7 +2199,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
             ? AutoBulletTextController(text: contract.scope)
             : AutoBulletTextController();
     final disciplineController =
-        TextEditingController(text: contract?.discipline ?? '');
+        SpellCheckTextEditingController(text: contract?.discipline ?? '');
     // Contract Notes - regular TextEditingController (prose)
     final notesController =
         RichTextEditingController(text: contract?.notes ?? '');

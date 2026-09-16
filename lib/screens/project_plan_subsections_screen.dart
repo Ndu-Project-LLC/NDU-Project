@@ -25,6 +25,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ProjectPlanLevel1ScheduleScreen extends StatefulWidget {
  const ProjectPlanLevel1ScheduleScreen({super.key});
 
@@ -3662,7 +3663,7 @@ class ProjectPlanCondensedSummaryScreen extends StatefulWidget {
 }
 
 class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
- final TextEditingController _summaryController = TextEditingController();
+ final TextEditingController _summaryController = SpellCheckTextEditingController();
  bool _loading = true;
  bool _isGenerating = false;
  String? _undoBeforeAi;

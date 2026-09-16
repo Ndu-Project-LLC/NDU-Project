@@ -20,6 +20,7 @@ import 'initiation_phase_screen.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import '../widgets/dashboard_bottom_nav_bar.dart';
 import '../widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Design tokens extracted from the HTML source (Material You / Tailwind config)
@@ -70,8 +71,8 @@ class ProjectDashboardMobileShell extends StatefulWidget {
 
 class _ProjectDashboardMobileShellState
  extends State<ProjectDashboardMobileShell> {
- final TextEditingController _searchProjects = TextEditingController();
- final TextEditingController _searchGrouping = TextEditingController();
+ final TextEditingController _searchProjects = SpellCheckTextEditingController();
+ final TextEditingController _searchGrouping = SpellCheckTextEditingController();
  String _query = '';
  String _groupQuery = '';
  int _bottomNavIndex = 0;

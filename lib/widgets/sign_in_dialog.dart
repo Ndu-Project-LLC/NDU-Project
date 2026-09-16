@@ -5,6 +5,7 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// A popup dialog for signing in — shown on the landing page instead of
 /// navigating to the full `/sign-in` route. Keeps the user on the current
@@ -26,8 +27,8 @@ class SignInDialog extends StatefulWidget {
 }
 
 class _SignInDialogState extends State<SignInDialog> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailController = SpellCheckTextEditingController();
+  final _passwordController = SpellCheckTextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   bool _rememberMe = false;

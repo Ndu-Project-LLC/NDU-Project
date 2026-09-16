@@ -144,6 +144,15 @@ class WrappedCell extends StatelessWidget {
 /// same widget tree, but [tableBuilder] typically uses wider column
 /// widths and a larger heading row height.
 ///
+/// **Scroll controllers must not be shared between the two.** Expanding pushes a
+/// non-opaque route, so the inline [child] stays mounted and stays attached to
+/// whatever it was given. A [Scrollbar] with `thumbVisibility: true` asserts when
+/// its controller holds more than one [ScrollPosition] ("The provided
+/// ScrollController is attached to more than one ScrollPosition"), which throws on
+/// every frame of the expanded table and takes the page down. Give each copy its
+/// own controller — see `planning_requirements_screen.dart` and
+/// `front_end_planning_requirements_screen.dart`.
+///
 /// The optional [title] is shown in the full-screen app bar.
 /// The optional [onFullscreenClose] is invoked when the user closes the
 /// full-screen dialog (e.g. to persist any edits).

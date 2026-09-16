@@ -17,6 +17,7 @@ import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/widgets/compact_action_button.dart';
 import 'package:ndu_project/widgets/dashboard_metrics_cards.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 // The dashboard_metrics_cards import is retained intentionally so the
 // workspace keeps a stable import surface even though the executive
@@ -43,7 +44,7 @@ class _ProjectWorkspaceDashboardScreenState
   DashboardMetrics? _metrics;
   bool _loading = true;
   String? _error;
-  final TextEditingController _updateController = TextEditingController();
+  final TextEditingController _updateController = SpellCheckTextEditingController();
   final ScrollController _scrollController = ScrollController();
 
   // Design tokens — white canvas, near-black ink, gray secondary text,

@@ -17,6 +17,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 // ─── Tab definitions ────────────────────────────────────────────────────────
 
 enum _ImTab {
@@ -571,7 +572,7 @@ class _InterfaceRegisterSection extends StatefulWidget {
 }
 
 class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
   String _typeFilter = 'All';
   String _statusFilter = 'All';
@@ -1327,16 +1328,16 @@ class _InterfaceEntryDialogState extends State<_InterfaceEntryDialog> {
   void initState() {
     super.initState();
     final e = widget.initial;
-    _boundaryCtrl = TextEditingController(text: e?.boundary ?? '');
-    _ownerCtrl = TextEditingController(text: e?.owner ?? '');
-    _partyACtrl = TextEditingController(text: e?.partyA ?? '');
-    _partyBCtrl = TextEditingController(text: e?.partyB ?? '');
-    _notesCtrl = TextEditingController(text: e?.notes ?? '');
-    _dependenciesCtrl = TextEditingController(text: e?.dependencies ?? '');
-    _conflictResolutionCtrl = TextEditingController(text: e?.conflictResolution ?? '');
-    _escalationPathCtrl = TextEditingController(text: e?.escalationPath ?? '');
-    _assumptionsCtrl = TextEditingController(text: e?.assumptions ?? '');
-    _changeImpactsCtrl = TextEditingController(text: e?.changeImpacts ?? '');
+    _boundaryCtrl = SpellCheckTextEditingController(text: e?.boundary ?? '');
+    _ownerCtrl = SpellCheckTextEditingController(text: e?.owner ?? '');
+    _partyACtrl = SpellCheckTextEditingController(text: e?.partyA ?? '');
+    _partyBCtrl = SpellCheckTextEditingController(text: e?.partyB ?? '');
+    _notesCtrl = SpellCheckTextEditingController(text: e?.notes ?? '');
+    _dependenciesCtrl = SpellCheckTextEditingController(text: e?.dependencies ?? '');
+    _conflictResolutionCtrl = SpellCheckTextEditingController(text: e?.conflictResolution ?? '');
+    _escalationPathCtrl = SpellCheckTextEditingController(text: e?.escalationPath ?? '');
+    _assumptionsCtrl = SpellCheckTextEditingController(text: e?.assumptions ?? '');
+    _changeImpactsCtrl = SpellCheckTextEditingController(text: e?.changeImpacts ?? '');
     _interfaceType = e?.interfaceType ?? 'Technical';
     _priority = e?.priority ?? 'Medium';
     _criticality = e?.criticality ?? 'Major';

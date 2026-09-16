@@ -7,6 +7,7 @@ import 'package:ndu_project/services/firebase_auth_service.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 /// Mobile-optimized Create Account screen
 /// Matches the design from provided screenshots
 class MobileCreateAccountScreen extends StatefulWidget {
@@ -19,12 +20,12 @@ class MobileCreateAccountScreen extends StatefulWidget {
 
 class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
-  final _companyController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _firstNameController = SpellCheckTextEditingController();
+  final _lastNameController = SpellCheckTextEditingController();
+  final _companyController = SpellCheckTextEditingController();
+  final _emailController = SpellCheckTextEditingController();
+  final _passwordController = SpellCheckTextEditingController();
+  final _confirmPasswordController = SpellCheckTextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;

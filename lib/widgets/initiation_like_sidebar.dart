@@ -145,6 +145,7 @@ import 'package:ndu_project/screens/ai_recommendations_screen.dart';
 import 'package:ndu_project/screens/ai_integrations_screen.dart';
 import 'package:ndu_project/screens/agile_ai_coach_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Sidebar styled to match InitiationPhaseScreen's sidebar.
 class InitiationLikeSidebar extends StatefulWidget {
@@ -495,7 +496,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   late final ScrollController _scrollController =
       ScrollController(initialScrollOffset: _sharedScrollOffset);
 
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
 
   /// Strips a leading numeric index like "3. " or "12) " from a label so
@@ -1964,6 +1965,18 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     }
   }
 
+  /// Handler for an [SidebarNavigationService.executiveSummaryItems] entry.
+  VoidCallback? _executiveSummaryItemHandler(String label) {
+    switch (label) {
+      case 'Preferred Solution Analysis':
+        return _openPreferredSolutionAnalysis;
+      case 'Preferred Solution':
+        return _openPreferredSolutionsComparison;
+      default:
+        return null;
+    }
+  }
+
   void _openPreferredSolutionsComparison() {
     try {
       final provider = ProjectDataInherited.maybeOf(context);
@@ -2610,14 +2623,16 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             }),
             isActive: _activeIn(_executiveSummaryLabels),
           ),
+          // Ordered by SidebarNavigationService.executiveSummaryItems:
+          // analyse the candidates first, then the chosen one. Having the
+          // selection page in front of the analysis read backwards.
           if (_executiveSummaryExpanded) ...[
-            _buildSubSubMenuItem('Preferred Solution',
-                onTap: _openPreferredSolutionsComparison,
-                isActive: _isActiveLabel('Preferred Solution')),
-            _buildSubSubMenuItem('Preferred Solution Analysis',
-                onTap: _openPreferredSolutionAnalysis,
-                isActive:
-                    _isActiveLabel('Preferred Solution Analysis')),
+            for (final item in SidebarNavigationService.executiveSummaryItems)
+              _buildSubSubMenuItem(
+                item.label,
+                onTap: _executiveSummaryItemHandler(item.label),
+                isActive: _isActiveLabel(item.label),
+              ),
           ],
         ],
         _buildSubExpandableHeader(
@@ -3513,6 +3528,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap: _openExecutiveSummary,
           isActive: _isActiveLabel('Executive Summary')));
     }
+    // Search results follow the same flow order as the sidebar.
+    if ('preferred solution analysis'.contains(query) ||
+        'preferred'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.fact_check_outlined, 'Preferred Solution Analysis',
+          onTap: _openPreferredSolutionAnalysis,
+          isActive: _isActiveLabel('Preferred Solution Analysis')));
+    }
     if ('preferred solution'.contains(query) ||
         'preferred solutions'.contains(query) ||
         'preferred comparison'.contains(query)) {
@@ -3520,13 +3543,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           Icons.fact_check_outlined, 'Preferred Solution',
           onTap: _openPreferredSolutionsComparison,
           isActive: _isActiveLabel('Preferred Solution')));
-    }
-    if ('preferred solution analysis'.contains(query) ||
-        'preferred'.contains(query)) {
-      results.add(_buildMenuItem(
-          Icons.fact_check_outlined, 'Preferred Solution Analysis',
-          onTap: _openPreferredSolutionAnalysis,
-          isActive: _isActiveLabel('Preferred Solution Analysis')));
     }
     if ('work breakdown structure'.contains(query) ||
         'wbs'.contains(query) ||

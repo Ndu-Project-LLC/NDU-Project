@@ -19,6 +19,7 @@ import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class IdentifyStaffOpsTeamScreen extends StatefulWidget {
   const IdentifyStaffOpsTeamScreen({super.key});
 
@@ -785,15 +786,15 @@ class _IdentifyStaffOpsTeamScreenState
   Future<void> _showMemberDialog(
       BuildContext context, OpsMemberModel? member, String projectId) async {
     final isEdit = member != null;
-    final nameController = TextEditingController(text: member?.name ?? '');
-    final roleController = TextEditingController(text: member?.role ?? '');
+    final nameController = SpellCheckTextEditingController(text: member?.name ?? '');
+    final roleController = SpellCheckTextEditingController(text: member?.role ?? '');
     final responsibilityController =
-        TextEditingController(text: member?.responsibility ?? '');
+        SpellCheckTextEditingController(text: member?.responsibility ?? '');
     final statusController =
-        TextEditingController(text: member?.status ?? 'Active');
+        SpellCheckTextEditingController(text: member?.status ?? 'Active');
     final readinessController =
-        TextEditingController(text: member?.readinessScore.toString() ?? '0');
-    final notesController = TextEditingController(text: member?.notes ?? '');
+        SpellCheckTextEditingController(text: member?.readinessScore.toString() ?? '0');
+    final notesController = SpellCheckTextEditingController(text: member?.notes ?? '');
 
     try {
       await showDialog(

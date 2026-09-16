@@ -22,6 +22,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ScopeTrackingImplementationScreen extends StatefulWidget {
   const ScopeTrackingImplementationScreen({super.key});
@@ -812,9 +813,9 @@ class _ScopeTrackingImplementationScreenState
   }
 
   Future<void> _showAddItemDialog() async {
-    final scopeItemController = TextEditingController();
+    final scopeItemController = SpellCheckTextEditingController();
     final verificationStepsController = AutoBulletTextController();
-    final trackingNotesController = TextEditingController();
+    final trackingNotesController = SpellCheckTextEditingController();
 
     String? selectedScopeItem;
     String selectedStatus = 'Not Started';

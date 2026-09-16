@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class BulletPointEditor extends StatefulWidget {
   final String title;
@@ -31,9 +32,9 @@ class _BulletPointEditorState extends State<BulletPointEditor> {
   void initState() {
     super.initState();
     _controllers =
-        widget.items.map((e) => TextEditingController(text: e)).toList();
+        widget.items.map((e) => SpellCheckTextEditingController(text: e)).toList();
     if (_controllers.isEmpty) {
-      _controllers.add(TextEditingController());
+      _controllers.add(SpellCheckTextEditingController());
     }
   }
 
@@ -66,7 +67,7 @@ class _BulletPointEditorState extends State<BulletPointEditor> {
   void _addItem() {
     if (_controllers.length >= widget.maxItems) return;
     setState(() {
-      _controllers.add(TextEditingController());
+      _controllers.add(SpellCheckTextEditingController());
     });
   }
 

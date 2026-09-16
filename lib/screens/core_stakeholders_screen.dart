@@ -38,6 +38,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 enum _MissingStakeholderAction { manual, autoFill, skip }
 
@@ -142,7 +143,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  // We'll hydrate from provider in didChangeDependencies.
  _notesController = RichTextEditingController(text: widget.notes);
  // Notes = prose; no auto-bullet
- _organisationContextController = TextEditingController();
+ _organisationContextController = SpellCheckTextEditingController();
  // Auto-save when organisation context changes (debounced via post-frame)
  _organisationContextController.addListener(() {
    if (!_didInitFromProvider) return;

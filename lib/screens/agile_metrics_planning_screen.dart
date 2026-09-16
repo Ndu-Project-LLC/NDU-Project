@@ -14,6 +14,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -148,7 +149,7 @@ class _AgileMetricsPlanningScreenState
   bool _isSaving = false;
   bool _isGenerating = false;
   Timer? _autoSaveDebounce;
-  final TextEditingController _notesCtrl = TextEditingController();
+  final TextEditingController _notesCtrl = SpellCheckTextEditingController();
 
   String? get _projectId {
     try {

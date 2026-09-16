@@ -31,6 +31,7 @@ import 'package:ndu_project/widgets/cross_section_sync_card.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart' as sched;
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ProjectControlsScreen extends StatefulWidget {
   const ProjectControlsScreen({super.key});
@@ -5670,7 +5671,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
   // CREATE BASELINE DIALOG — world-class type picker + live preview.
   // ──────────────────────────────────────────────────────────────────────
   void _showCreateBaselineDialog(BuildContext context) {
-    final reasonCtrl = TextEditingController();
+    final reasonCtrl = SpellCheckTextEditingController();
     BaselineType selectedType = BaselineType.scope;
 
     showDialog(
@@ -6435,7 +6436,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
   String _filter = 'all'; // all | critical | delayed
   String _searchQuery = '';
   bool _showCardView = false;
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   final Map<String, TextEditingController> _reasonControllers = {};
 
   Timer? _delayReasonDebounce;
@@ -6452,7 +6453,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
 
   TextEditingController _reasonControllerFor(String wpId, String initial) {
     return _reasonControllers.putIfAbsent(
-        wpId, () => TextEditingController(text: initial));
+        wpId, () => SpellCheckTextEditingController(text: initial));
   }
 
   @override
@@ -7241,7 +7242,7 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
   String? _ownerFilter;
   String _searchQuery = '';
   bool _showCardView = true;
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   final Map<String, TextEditingController> _mitigationControllers = {};
 
   @override
@@ -7255,7 +7256,7 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
 
   TextEditingController _mitigationControllerFor(String id, String initial) {
     return _mitigationControllers.putIfAbsent(
-        id, () => TextEditingController(text: initial));
+        id, () => SpellCheckTextEditingController(text: initial));
   }
 
   @override

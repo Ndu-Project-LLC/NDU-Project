@@ -20,6 +20,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class UpdateOpsMaintenancePlansScreen extends StatefulWidget {
   const UpdateOpsMaintenancePlansScreen({super.key});
 
@@ -1222,8 +1223,8 @@ class _UpdateOpsMaintenancePlansScreenState
   }
 
   Future<void> _editCoverageItem(_CoverageItem item) async {
-    final labelController = TextEditingController(text: item.label);
-    final progressController = TextEditingController(
+    final labelController = SpellCheckTextEditingController(text: item.label);
+    final progressController = SpellCheckTextEditingController(
       text: (item.progress * 100).round().toString(),
     );
 
@@ -1283,8 +1284,8 @@ class _UpdateOpsMaintenancePlansScreenState
   }
 
   Future<void> _editSignalItem(_SignalItem signal) async {
-    final titleController = TextEditingController(text: signal.title);
-    final subtitleController = TextEditingController(text: signal.subtitle);
+    final titleController = SpellCheckTextEditingController(text: signal.title);
+    final subtitleController = SpellCheckTextEditingController(text: signal.subtitle);
 
     try {
       await showDialog<void>(
@@ -1391,10 +1392,10 @@ class _UpdateOpsMaintenancePlansScreenState
 
   Future<void> _openPlanDialog(String projectId, {OpsPlanItem? plan}) async {
     final isEdit = plan != null;
-    final titleController = TextEditingController(text: plan?.title ?? '');
-    final teamController = TextEditingController(text: plan?.team ?? '');
-    final ownerController = TextEditingController(text: plan?.owner ?? '');
-    final dueController = TextEditingController(text: plan?.due ?? '');
+    final titleController = SpellCheckTextEditingController(text: plan?.title ?? '');
+    final teamController = SpellCheckTextEditingController(text: plan?.team ?? '');
+    final ownerController = SpellCheckTextEditingController(text: plan?.owner ?? '');
+    final dueController = SpellCheckTextEditingController(text: plan?.due ?? '');
     String status = (plan != null && _planStatuses.contains(plan.status))
         ? plan.status
         : _planStatuses.first;

@@ -14,6 +14,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Open the world-class "Add Node" dialog.
 ///
@@ -116,8 +117,8 @@ class _WBSNodeDialogState extends State<_WBSNodeDialog>
   void initState() {
     super.initState();
     final existing = widget.existingNode;
-    _nameCtrl = TextEditingController(text: existing?.name ?? '');
-    _descCtrl = TextEditingController(text: existing?.description ?? '');
+    _nameCtrl = SpellCheckTextEditingController(text: existing?.name ?? '');
+    _descCtrl = SpellCheckTextEditingController(text: existing?.description ?? '');
     _nameFocus = FocusNode();
     _descFocus = FocusNode();
 

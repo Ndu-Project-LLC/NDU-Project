@@ -27,6 +27,7 @@ import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class UiUxDesignScreen extends StatefulWidget {
  const UiUxDesignScreen({super.key});
 
@@ -1981,10 +1982,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── CRUD Dialogs ─────────────────────────────────────────────────
 
  Future<void> _showJourneyDialog({_JourneyRow? existing}) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
- final descController = TextEditingController(text: existing?.description ?? '');
- final touchpointsController = TextEditingController(text: existing?.touchpoints ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final descController = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final touchpointsController = SpellCheckTextEditingController(text: existing?.touchpoints ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String priority = existing?.priority ?? 'Medium';
  String status = existing?.status ?? 'Planned';
 
@@ -2074,9 +2075,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showInterfaceDialog({_InterfaceRow? existing}) async {
- final areaController = TextEditingController(text: existing?.area ?? '');
- final purposeController = TextEditingController(text: existing?.purpose ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
+ final areaController = SpellCheckTextEditingController(text: existing?.area ?? '');
+ final purposeController = SpellCheckTextEditingController(text: existing?.purpose ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String fidelity = existing?.fidelity ?? 'Low';
  String status = existing?.status ?? 'To define';
 
@@ -2159,9 +2160,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showDesignTokenDialog({_DesignTokenRow? existing}) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
- final descController = TextEditingController(text: existing?.description ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final descController = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String category = existing?.category ?? 'Colors';
  String status = existing?.status ?? 'Draft';
 
@@ -2244,11 +2245,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showUsabilityDialog({_UsabilityRow? existing}) async {
- final criteriaController = TextEditingController(text: existing?.criteria ?? '');
- final descController = TextEditingController(text: existing?.description ?? '');
- final standardController = TextEditingController(text: existing?.standard ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
- final notesController = TextEditingController(text: existing?.notes ?? '');
+ final criteriaController = SpellCheckTextEditingController(text: existing?.criteria ?? '');
+ final descController = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final standardController = SpellCheckTextEditingController(text: existing?.standard ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
+ final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
  String status = existing?.status ?? 'Not tested';
 
  final saved = await showDialog<bool>(
@@ -2334,10 +2335,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showReviewGateDialog({_ReviewGateRow? existing}) async {
- final gateController = TextEditingController(text: existing?.gate ?? '');
- final descController = TextEditingController(text: existing?.description ?? '');
- final approverController = TextEditingController(text: existing?.approver ?? '');
- final deptController = TextEditingController(text: existing?.department ?? '');
+ final gateController = SpellCheckTextEditingController(text: existing?.gate ?? '');
+ final descController = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final approverController = SpellCheckTextEditingController(text: existing?.approver ?? '');
+ final deptController = SpellCheckTextEditingController(text: existing?.department ?? '');
  String priority = existing?.priority ?? 'High';
  String status = existing?.status ?? 'Pending';
 

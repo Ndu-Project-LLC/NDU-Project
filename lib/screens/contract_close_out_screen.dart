@@ -22,6 +22,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ContractCloseOutScreen extends StatefulWidget {
   const ContractCloseOutScreen({super.key});
@@ -36,7 +37,7 @@ class ContractCloseOutScreen extends StatefulWidget {
 
 class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
   List<LaunchContractItem> _contracts = [];
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   List<LaunchCloseOutStep> _closeOutSteps = [];
   List<LaunchApproval> _signOffs = [];
   List<LaunchFinancialMetric> _financialSummary = [];

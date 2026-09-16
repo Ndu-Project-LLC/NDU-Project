@@ -27,6 +27,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class TeamTrainingAndBuildingScreen extends StatefulWidget {
   const TeamTrainingAndBuildingScreen({super.key});
@@ -601,11 +602,11 @@ class _TeamTrainingAndBuildingScreenState
     bool isNew = false,
   }) async {
     final rootContext = context;
-    final titleController = TextEditingController(text: activity.title);
+    final titleController = SpellCheckTextEditingController(text: activity.title);
     final descriptionController =
-        TextEditingController(text: activity.description);
-    final dateController = TextEditingController(text: activity.date);
-    final durationController = TextEditingController(text: activity.duration);
+        SpellCheckTextEditingController(text: activity.description);
+    final dateController = SpellCheckTextEditingController(text: activity.date);
+    final durationController = SpellCheckTextEditingController(text: activity.duration);
 
     bool isMandatory = activity.isMandatory;
     bool isCompleted = activity.isCompleted;
@@ -615,7 +616,7 @@ class _TeamTrainingAndBuildingScreenState
     String? attachedFileStoragePath = activity.attachedFileStoragePath;
     String? selectedExistingDocUrl = attachedFileUrl;
     final manualUrlController =
-        TextEditingController(text: attachedFileUrl ?? '');
+        SpellCheckTextEditingController(text: attachedFileUrl ?? '');
     bool uploading = false;
     var latestAutoSaveToken = 0;
     Timer? autoSaveDebounce;
@@ -1002,11 +1003,11 @@ class _TeamTrainingAndBuildingScreenState
     final rootContext = context;
     final data = ProjectDataHelper.getData(rootContext);
     final initialTemplateText = _templateTextForButton(spec, data).trim();
-    final templateController = TextEditingController(text: initialTemplateText);
-    final titleController = TextEditingController(text: '${spec.label} Plan');
-    final dateController = TextEditingController();
+    final templateController = SpellCheckTextEditingController(text: initialTemplateText);
+    final titleController = SpellCheckTextEditingController(text: '${spec.label} Plan');
+    final dateController = SpellCheckTextEditingController();
     final durationController =
-        TextEditingController(text: spec.defaultDuration);
+        SpellCheckTextEditingController(text: spec.defaultDuration);
 
     String category = spec.category;
     bool confirmedRead = false;
@@ -1015,7 +1016,7 @@ class _TeamTrainingAndBuildingScreenState
     String? attachedFileUrl;
     String? attachedFileStoragePath;
     String? selectedExistingDocUrl;
-    final manualUrlController = TextEditingController();
+    final manualUrlController = SpellCheckTextEditingController();
     bool uploading = false;
 
     await showDialog(

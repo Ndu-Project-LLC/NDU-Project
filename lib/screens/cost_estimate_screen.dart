@@ -28,6 +28,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class CostEstimateScreen extends StatefulWidget {
   const CostEstimateScreen({super.key});
 
@@ -6209,7 +6210,7 @@ class _OverheadConfigCard extends StatelessWidget {
                 width: 80,
                 height: 36,
                 child: VoiceTextField(
-                  controller: TextEditingController(
+                  controller: SpellCheckTextEditingController(
                     text: ratePercent > 0 ? ratePercent.toStringAsFixed(1) : '',
                   )..selection = TextSelection.fromPosition(
                       TextPosition(
@@ -6393,24 +6394,24 @@ class _AddCostItemDialog extends StatefulWidget {
 }
 
 class _AddCostItemDialogState extends State<_AddCostItemDialog> {
-  final _titleController = TextEditingController();
-  final _amountController = TextEditingController();
-  final _notesController = TextEditingController();
-  final _estimatingBasisController = TextEditingController();
-  final _quantityController = TextEditingController();
-  final _unitRateController = TextEditingController();
-  final _unitOfMeasureController = TextEditingController();
-  final _contingencyPercentController = TextEditingController();
-  final _contingencyAmountController = TextEditingController();
-  final _quoteReferenceController = TextEditingController();
-  final _contractReferenceController = TextEditingController();
+  final _titleController = SpellCheckTextEditingController();
+  final _amountController = SpellCheckTextEditingController();
+  final _notesController = SpellCheckTextEditingController();
+  final _estimatingBasisController = SpellCheckTextEditingController();
+  final _quantityController = SpellCheckTextEditingController();
+  final _unitRateController = SpellCheckTextEditingController();
+  final _unitOfMeasureController = SpellCheckTextEditingController();
+  final _contingencyPercentController = SpellCheckTextEditingController();
+  final _contingencyAmountController = SpellCheckTextEditingController();
+  final _quoteReferenceController = SpellCheckTextEditingController();
+  final _contractReferenceController = SpellCheckTextEditingController();
   // Structured BOE (P1)
-  final _scopeIncludedController = TextEditingController();
-  final _scopeExcludedController = TextEditingController();
-  final _designMaturityNoteController = TextEditingController();
+  final _scopeIncludedController = SpellCheckTextEditingController();
+  final _scopeExcludedController = SpellCheckTextEditingController();
+  final _designMaturityNoteController = SpellCheckTextEditingController();
   // PERT risk ranges (P1)
-  final _rangeLowController = TextEditingController();
-  final _rangeHighController = TextEditingController();
+  final _rangeLowController = SpellCheckTextEditingController();
+  final _rangeHighController = SpellCheckTextEditingController();
   final _formKey = GlobalKey<FormState>();
   late _CostView _selectedView = widget.initialView;
   late String _selectedSource;

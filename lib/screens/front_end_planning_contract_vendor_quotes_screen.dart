@@ -29,6 +29,7 @@ import 'package:ndu_project/widgets/front_end_planning_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/responsive.dart'; // Added for AppBreakpoints
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Front End Planning – Contracting screen (formerly Contract & Vendor Quotes).
 /// Updated to use the standard FEP layout with DraggableSidebar and FrontEndPlanningHeader.
@@ -126,7 +127,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  ];
 
- final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
  bool _isNotesSyncReady = false;
  final OpenAiServiceSecure _openAi = OpenAiServiceSecure();
@@ -549,9 +550,9 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  }
 
  Future<void> _editWorkflowStep(_ContractingWorkflowStep step) async {
- final nameController = TextEditingController(text: step.name);
+ final nameController = SpellCheckTextEditingController(text: step.name);
  final durationController =
- TextEditingController(text: step.duration.toString());
+ SpellCheckTextEditingController(text: step.duration.toString());
  var selectedUnit = step.unit;
 
  final result = await showDialog<_ContractingWorkflowStep>(
@@ -2398,16 +2399,16 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Future<ProcurementItemModel?> _showContractScopeDialog({
  ProcurementItemModel? existing,
  }) async {
- final scopeController = TextEditingController(text: existing?.name ?? '');
+ final scopeController = SpellCheckTextEditingController(text: existing?.name ?? '');
  final descriptionController =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  final contractorsController =
- TextEditingController(text: existing?.notes ?? '');
- final valueController = TextEditingController(
+ SpellCheckTextEditingController(text: existing?.notes ?? '');
+ final valueController = SpellCheckTextEditingController(
  text: existing != null ? existing.budget.toStringAsFixed(0) : '',
  );
  final durationController =
- TextEditingController(text: existing?.comments ?? '');
+ SpellCheckTextEditingController(text: existing?.comments ?? '');
 
  var contractType = (existing?.category ?? '').trim();
  if (!_contractTypeOptions.contains(contractType)) {
@@ -2765,7 +2766,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ) ??
  Future.value(const <VendorModel>[]));
  final candidates = _collectApprovedContractors(const [], scopes, vendors);
- final controller = TextEditingController();
+ final controller = SpellCheckTextEditingController();
  if (!mounted) return;
  final picked = await showDialog<String>(
  context: context,
@@ -2953,7 +2954,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Future<void> _openTemplateEditor(ProcurementItemModel item) async {
  final data = ProjectDataHelper.getData(context);
  final key = _templateKeyForScope(item.id);
- final controller = TextEditingController(
+ final controller = SpellCheckTextEditingController(
  text: (data.planningNotes[key] ?? '').toString(),
  );
 
@@ -3780,10 +3781,10 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Future<void> _openReportDialog({
  _ContractingReportEntry? existing,
  }) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
  final summaryController =
- TextEditingController(text: existing?.summary ?? '');
+ SpellCheckTextEditingController(text: existing?.summary ?? '');
  var status = existing?.status ?? _reportStatusOptions.first;
 
  final saved = await showDialog<bool>(
@@ -6314,7 +6315,7 @@ class _ContractScopeDetailCardState extends State<_ContractScopeDetailCard> {
  }
 
  Future<void> _addContractorManually() async {
- final controller = TextEditingController();
+ final controller = SpellCheckTextEditingController();
  final result = await showDialog<String>(
  context: context,
  builder: (dialogContext) => AlertDialog(

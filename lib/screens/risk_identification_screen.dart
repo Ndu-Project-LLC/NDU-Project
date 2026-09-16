@@ -42,6 +42,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SafeSection — Build-time error boundary that prevents a single failing child
@@ -1414,25 +1415,19 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                   // screen is view-only (no AI generation, no edits).
                   BusinessCaseLockHelper.lockBanner(
                       ProjectDataHelper.getData(context)),
-                  const EditableContentText(
-                    contentKey: 'risk_identification_notes_heading',
-                    fallback: 'Notes',
-                    category: 'business_case',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
+                  // Notes stay collapsed until the user opens them.
+                  CollapsibleNotesSection(
+                    titleWidget: const EditableContentText(
+                      contentKey: 'risk_identification_notes_heading',
+                      fallback: 'Notes',
+                      category: 'business_case',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
-                    ),
+                    card: true,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1726,22 +1721,10 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
               style: TextStyle(fontSize: 13, color: Colors.grey),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Notes',
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
+            // Notes stay collapsed until the user opens them.
+            CollapsibleNotesSection(
+              title: 'Notes',
+              card: true,
               child: VoiceTextField(
                 readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
                 controller: _notesController,

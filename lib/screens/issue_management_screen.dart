@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:ndu_project/models/project_data_model.dart';
@@ -71,7 +72,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  final seed = seedIssueManagement(data);
  if (seed.isNotEmpty) {
  final newItems = seed.rows.map((r) => IssueLogItem(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: (r['title'] ?? '').toString(),
  description: (r['description'] ?? '').toString(),
  type: (r['type'] ?? '').toString(),
@@ -1070,12 +1071,10 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  String _formatDate(DateTime date) {
  String two(int value) => value.toString().padLeft(2, '0');
  return '${date.year}-${two(date.month)}-${two(date.day)}';
- }
-
- String _generateId() {
- final seed = DateTime.now().microsecondsSinceEpoch.toString();
- return 'ISS-${seed.substring(seed.length - 4)}';
- }
+ }  String _generateId() {
+    // Two issues logged in the same microsecond used to get the same code.
+    return shortId('ISS-');
+  }
 
  void _submit() {
  if (!(_formKey.currentState?.validate() ?? false)) return;

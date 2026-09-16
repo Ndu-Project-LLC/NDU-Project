@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -167,7 +168,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  List<_ArchitectureComponent> _defaultComponents() {
  return [
  _ArchitectureComponent(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'API Gateway',
  type: 'Service',
  responsibility:
@@ -176,7 +177,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  status: 'Planned',
  ),
  _ArchitectureComponent(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'Operational Data Store',
  type: 'Data store',
  responsibility:
@@ -185,7 +186,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  status: 'Planned',
  ),
  _ArchitectureComponent(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'Venue Power Grid',
  type: 'Integration',
  responsibility:
@@ -194,7 +195,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  status: 'In progress',
  ),
  _ArchitectureComponent(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'HVAC Monitoring',
  type: 'Analytics',
  responsibility:
@@ -208,14 +209,14 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  List<_ArchitectureDataFlow> _defaultDataFlows() {
  return [
  _ArchitectureDataFlow(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  source: 'Ticket Scanner',
  destination: 'API Gateway',
  protocol: 'HTTP',
  notes: 'Scan payload in, validation result out.',
  ),
  _ArchitectureDataFlow(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  source: 'Guest Registration Form',
  destination: 'Operational Data Store',
  protocol: 'Event',
@@ -223,7 +224,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  'Guest profile, dietary data, and access class persist for operations.',
  ),
  _ArchitectureDataFlow(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  source: 'Fire Alarm Panel',
  destination: 'Sprinkler and Ops Escalation',
  protocol: 'Batch',
@@ -235,7 +236,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  List<_DesignDocument> _defaultDocuments() {
  return [
  _DesignDocument(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: 'Service topology pack',
  description:
  'Cloud services, auth boundary, and vendor integration map.',
@@ -244,7 +245,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  location: 'AWS Cloud / Architecture repo',
  ),
  _DesignDocument(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: 'Back-of-house operations layout',
  description:
  'Power, comms, storage, and logistics zones behind the customer-facing experience.',
@@ -258,7 +259,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  List<_DbEntity> _defaultEntities() {
  return [
  _DbEntity(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'GuestList',
  primaryKey: 'guest_id',
  owner: 'Operations',
@@ -266,7 +267,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  'Guest identity, access class, dietary restrictions, and arrival status.',
  ),
  _DbEntity(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'MaterialStock',
  primaryKey: 'stock_id',
  owner: 'Procurement',
@@ -274,7 +275,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  'Materials, quantities, storage location, and issue history.',
  ),
  _DbEntity(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'AccessCredential',
  primaryKey: 'credential_id',
  owner: 'Security',
@@ -286,7 +287,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  List<_DbField> _defaultFields() {
  return [
  _DbField(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  table: 'GuestList',
  field: 'dietary_restriction',
  type: 'string',
@@ -294,7 +295,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  notes: 'Shared with catering 2 hours before service.',
  ),
  _DbField(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  table: 'MaterialStock',
  field: 'weight_kg',
  type: 'decimal',
@@ -302,7 +303,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  notes: 'Used for load-bearing and transport planning.',
  ),
  _DbField(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  table: 'AccessCredential',
  field: 'zone_access',
  type: 'array',
@@ -1393,7 +1394,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  _components.add(
  _ArchitectureComponent(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: name,
  type: _quickComponentType,
  responsibility: responsibility,
@@ -1474,7 +1475,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  _entities.add(
  _DbEntity(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: name,
  primaryKey: primaryKey,
  owner: owner,
@@ -1606,7 +1607,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (saved != true) return;
 
  final item = _ArchitectureComponent(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  name: nameController.text.trim(),
  type: type,
  responsibility: responsibilityController.text.trim(),
@@ -1729,7 +1730,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (saved != true) return;
 
  final item = _ArchitectureDataFlow(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  source: sourceController.text.trim(),
  destination: destinationController.text.trim(),
  protocol: protocol,
@@ -1979,7 +1980,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (saved != true) return;
 
  final item = _DesignDocument(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  title: titleController.text.trim(),
  description: descriptionController.text.trim(),
  owner: owner,
@@ -2108,7 +2109,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (saved != true) return;
 
  final item = _DbEntity(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  name: nameController.text.trim(),
  primaryKey: primaryKeyController.text.trim(),
  owner: owner,
@@ -2227,7 +2228,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (saved != true) return;
 
  final item = _DbField(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  table: tableController.text.trim(),
  field: fieldController.text.trim(),
  type: typeController.text.trim(),
@@ -3625,15 +3626,15 @@ class _ArchitectureComponent {
  'owner': owner,
  'status': status,
  };
- }
-
- static List<_ArchitectureComponent> fromList(dynamic raw) {
- if (raw is! List) return [];
- return raw.whereType<Map>().map((item) {
- final data = Map<String, dynamic>.from(item);
- return _ArchitectureComponent(
- id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ }  static List<_ArchitectureComponent> fromList(dynamic raw) {
+    if (raw is! List) return [];
+    // Rows saved with a missing or duplicated id are given a fresh one: two
+    // rows sharing an id can only ever be edited through the first of them.
+    final seen = <String>{};
+    return raw.whereType<Map>().map((item) {
+      final data = Map<String, dynamic>.from(item);
+      return _ArchitectureComponent(
+        id: persistedId(data['id'], seen),
  name: data['name']?.toString() ?? '',
  type: data['type']?.toString() ?? 'Service',
  responsibility: data['responsibility']?.toString() ?? '',
@@ -3682,15 +3683,13 @@ class _ArchitectureDataFlow {
  'protocol': protocol,
  'notes': notes,
  };
- }
-
- static List<_ArchitectureDataFlow> fromList(dynamic raw) {
- if (raw is! List) return [];
- return raw.whereType<Map>().map((item) {
- final data = Map<String, dynamic>.from(item);
- return _ArchitectureDataFlow(
- id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ }  static List<_ArchitectureDataFlow> fromList(dynamic raw) {
+    if (raw is! List) return [];
+    final seen = <String>{};
+    return raw.whereType<Map>().map((item) {
+      final data = Map<String, dynamic>.from(item);
+      return _ArchitectureDataFlow(
+        id: persistedId(data['id'], seen),
  source: data['source']?.toString() ?? '',
  destination: data['destination']?.toString() ?? '',
  protocol: data['protocol']?.toString() ?? 'HTTP',
@@ -3762,15 +3761,13 @@ class _DesignDocument {
  'uploadedFileUrl': uploadedFileUrl,
  'uploadedStoragePath': uploadedStoragePath,
  };
- }
-
- static List<_DesignDocument> fromList(dynamic raw) {
- if (raw is! List) return [];
- return raw.whereType<Map>().map((item) {
- final data = Map<String, dynamic>.from(item);
- return _DesignDocument(
- id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ }  static List<_DesignDocument> fromList(dynamic raw) {
+    if (raw is! List) return [];
+    final seen = <String>{};
+    return raw.whereType<Map>().map((item) {
+      final data = Map<String, dynamic>.from(item);
+      return _DesignDocument(
+        id: persistedId(data['id'], seen),
  title: data['title']?.toString() ?? '',
  description: data['description']?.toString() ?? '',
  owner: data['owner']?.toString() ?? '',
@@ -3822,15 +3819,13 @@ class _DbEntity {
  'owner': owner,
  'description': description,
  };
- }
-
- static List<_DbEntity> fromList(dynamic raw) {
- if (raw is! List) return [];
- return raw.whereType<Map>().map((item) {
- final data = Map<String, dynamic>.from(item);
- return _DbEntity(
- id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ }  static List<_DbEntity> fromList(dynamic raw) {
+    if (raw is! List) return [];
+    final seen = <String>{};
+    return raw.whereType<Map>().map((item) {
+      final data = Map<String, dynamic>.from(item);
+      return _DbEntity(
+        id: persistedId(data['id'], seen),
  name: data['name']?.toString() ?? '',
  primaryKey: data['primaryKey']?.toString() ?? '',
  owner: data['owner']?.toString() ?? '',
@@ -3883,15 +3878,13 @@ class _DbField {
  'constraints': constraints,
  'notes': notes,
  };
- }
-
- static List<_DbField> fromList(dynamic raw) {
- if (raw is! List) return [];
- return raw.whereType<Map>().map((item) {
- final data = Map<String, dynamic>.from(item);
- return _DbField(
- id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ }  static List<_DbField> fromList(dynamic raw) {
+    if (raw is! List) return [];
+    final seen = <String>{};
+    return raw.whereType<Map>().map((item) {
+      final data = Map<String, dynamic>.from(item);
+      return _DbField(
+        id: persistedId(data['id'], seen),
  table: data['table']?.toString() ?? '',
  field: data['field']?.toString() ?? '',
  type: data['type']?.toString() ?? '',

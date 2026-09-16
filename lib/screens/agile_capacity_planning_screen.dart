@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
@@ -32,7 +33,7 @@ class _LeaveEntry {
     this.person = '',
     DateTime? startDate,
     DateTime? endDate,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         startDate = startDate ?? DateTime.now(),
         endDate = endDate ?? DateTime.now().add(const Duration(days: 1));
 }
@@ -46,7 +47,7 @@ class _HolidayEntry {
     String? id,
     this.name = '',
     DateTime? date,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         date = date ?? DateTime.now();
 }
 

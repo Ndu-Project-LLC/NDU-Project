@@ -14,6 +14,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 class FrontEndPlanningPersonnelScreen extends StatefulWidget {
  const FrontEndPlanningPersonnelScreen({super.key});
 
@@ -177,7 +178,8 @@ class _FrontEndPlanningPersonnelScreenState
  const TextInputType.numberWithOptions(
  decimal: true,
  ),
- decoration: const InputDecoration(  labelText: 'Monthly Rate',
+ decoration: const InputDecoration(
+ labelText: 'Monthly Rate',
  border: OutlineInputBorder(),
  ),
  ),
@@ -392,10 +394,13 @@ class _FrontEndPlanningPersonnelScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _roundedField(
+ CollapsibleNotesSection(
+ title: 'Notes',
+ child: _roundedField(
  controller: _notes,
  hint: 'Input your notes here…',
  minLines: 3,
+ ),
  ),
  const SizedBox(height: 22),
  Row(

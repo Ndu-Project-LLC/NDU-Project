@@ -1,6 +1,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/pbs/models/pbs_models.dart';
@@ -386,7 +387,7 @@ class _PBSModuleScreenState extends State<PBSModuleScreen> {
                   provider.addNode(
                     parentId,
                     PBSNode(
-                      id: DateTime.now().microsecondsSinceEpoch.toString(),
+                      id: newId(),
                       parentId: parentId,
                       code: codeCtrl.text.trim().isNotEmpty
                           ? codeCtrl.text.trim()

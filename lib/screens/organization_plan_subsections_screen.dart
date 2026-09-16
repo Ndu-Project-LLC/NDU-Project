@@ -23,7 +23,19 @@ import 'package:ndu_project/widgets/raci_deliverable_matrix.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/services/currency_service.dart';
+import 'package:ndu_project/utils/role_catalogue.dart';
+import 'package:ndu_project/utils/role_description_bank.dart';
+import 'package:ndu_project/widgets/grouped_searchable_picker.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+
+/// Splits a picker's options under their discipline headings so a 600-entry
+/// list stays navigable. Anything not in the catalogue (for example the
+/// trailing 'Custom' option) lands in an "Other" section.
+List<PickerSection> _rolePickerSections(List<String> options) => [
+      for (final group in groupRolesByDiscipline(options))
+        PickerSection(label: group.label, options: group.titles),
+    ];
+
 Future<void> _exportPlanningSubsectionPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
   await PdfExportHelper.exportScreenPdf(
@@ -99,54 +111,10 @@ class _OrganizationStaffingPlanScreenState
     super.dispose();
   }
 
-  // Position title options reused from the Roles & Responsibilities bank
-  // (kept here locally so the dialog doesn't depend on the parent class).
-  static const List<String> _positionOptions = [
-    'Project Manager',
-    'Project Sponsor (Owner)',
-    'Program Manager',
-    'Product Owner',
-    'Scrum Master',
-    'Business Analyst',
-    'PMO Lead',
-    'PMO Manager',
-    'Delivery Manager',
-    'Operations Manager',
-    'Risk Manager',
-    'Quality Assurance Lead',
-    'Quality Lead',
-    'Change Manager',
-    'Stakeholder Manager',
-    'Planning Engineer',
-    'Project Coordinator',
-    'Portfolio Manager',
-    'SSHER Lead',
-    'Contracts Manager',
-    'Contracts Lead',
-    'Procurement Manager',
-    'Tech Lead',
-    'Lead Developer',
-    'Lead Designer',
-    'Engineering Manager',
-    'Technical Manager',
-    'Construction Manager',
-    'Startup Manager',
-    'Release Manager',
-    'Cost Lead',
-    'Cost Estimator',
-    'Schedule Lead',
-    'Scheduler',
-    'Test Lead',
-    'Technical Architect',
-    'Solutions Architect',
-    'Design Engineer',
-    'Data Specialist',
-    'Developer - Backend',
-    'Developer - Frontend',
-    'Business Manager',
-    'Project Engineer',
-    'Engineer',
-  ];
+  // Every role the app knows about, from the shared catalogue, so the
+  // position picker never forces a user into 'Custom'. See
+  // `lib/utils/role_catalogue.dart`.
+  static const List<String> _positionOptions = comprehensiveRoleTitles;
   static const String _customPositionOption = 'Custom';
 
   static const List<String> _employmentOptions = ['Full Time', 'Part Time'];
@@ -1665,23 +1633,14 @@ class _StaffingRequirementDialogState
             children: [
               // Position title
               const _DialogLabel('Position'),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedPosition,
-                items: [
+              GroupedSearchablePicker(
+                sections: _rolePickerSections([
                   ...widget.positionOptions,
                   widget.customPositionOption,
-                ]
-                    .map((t) =>
-                        DropdownMenuItem(value: t, child: Text(t)))
-                    .toList(),
-                onChanged: (v) {
-                  if (v == null) return;
-                  setState(() => _selectedPosition = v);
-                },
-                decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    hintText: 'Select a position'),
+                ]),
+                value: _selectedPosition,
+                hintText: 'Select a position',
+                onChanged: (v) => setState(() => _selectedPosition = v),
               ),
               if (_selectedPosition == widget.customPositionOption) ...[
                 const SizedBox(height: 8),
@@ -2187,104 +2146,13 @@ class _DialogLabel extends StatelessWidget {
 
 class _OrganizationRolesResponsibilitiesScreenState
     extends State<OrganizationRolesResponsibilitiesScreen> {
-  static const List<String> _roleTitleOptions = [
-    'Project Manager',
-    'Program Manager',
-    'Product Owner',
-    'Scrum Master',
-    'Business Analyst',
-    'PMO Lead',
-    'Delivery Manager',
-    'Operations Manager',
-    'Risk Manager',
-    'Quality Assurance Lead',
-    'Change Manager',
-    'Stakeholder Manager',
-    'Planning Engineer',
-    'Project Coordinator',
-    'Portfolio Manager',
-  ];
+  // Same comprehensive catalogue as the staffing position picker.
+  static const List<String> _roleTitleOptions = comprehensiveRoleTitles;
   static const String _customRoleOption = 'Custom';
 
-  /// Role bank: maps role title → (description, workstream).
-  /// When a user selects a title from the dropdown, the description is auto-filled.
-  static const Map<String, _RoleBankEntry> _roleBank = {
-    'Project Manager': _RoleBankEntry(
-      description:
-          'Overall project leadership, planning, and coordination across all phases.',
-      workstream: 'Management',
-    ),
-    'Program Manager': _RoleBankEntry(
-      description:
-          'Multi-project program coordination and strategic alignment.',
-      workstream: 'Management',
-    ),
-    'Product Owner': _RoleBankEntry(
-      description:
-          'Agile product owner — backlog prioritization and stakeholder representation.',
-      workstream: 'Management',
-    ),
-    'Scrum Master': _RoleBankEntry(
-      description:
-          'Facilitates Agile ceremonies, removes impediments, and coaches the team on Scrum practices.',
-      workstream: 'Management',
-    ),
-    'Business Analyst': _RoleBankEntry(
-      description:
-          'Elicits, documents, and manages requirements. Bridges business stakeholders and delivery teams.',
-      workstream: 'Management',
-    ),
-    'PMO Lead': _RoleBankEntry(
-      description:
-          'Project Management Office oversight, governance, and standards.',
-      workstream: 'Management',
-    ),
-    'Delivery Manager': _RoleBankEntry(
-      description:
-          'Coordinates delivery across teams, manages dependencies, and ensures timely execution.',
-      workstream: 'Management',
-    ),
-    'Operations Manager': _RoleBankEntry(
-      description:
-          'Manages day-to-day operations, resource allocation, and process optimization.',
-      workstream: 'Operations',
-    ),
-    'Risk Manager': _RoleBankEntry(
-      description:
-          'Identifies, assesses, and mitigates project risks. Maintains the risk register.',
-      workstream: 'Management',
-    ),
-    'Quality Assurance Lead': _RoleBankEntry(
-      description:
-          'Owns quality planning, QA/QC processes, and compliance with standards.',
-      workstream: 'Quality',
-    ),
-    'Change Manager': _RoleBankEntry(
-      description:
-          'Manages organizational change, stakeholder adoption, and transition planning.',
-      workstream: 'Management',
-    ),
-    'Stakeholder Manager': _RoleBankEntry(
-      description:
-          'Manages stakeholder engagement, communication, and alignment throughout the project.',
-      workstream: 'Management',
-    ),
-    'Planning Engineer': _RoleBankEntry(
-      description:
-          'Develops and maintains project schedules, WBS, and progress tracking.',
-      workstream: 'Engineering',
-    ),
-    'Project Coordinator': _RoleBankEntry(
-      description:
-          'Supports project administration, documentation, and meeting coordination.',
-      workstream: 'Management',
-    ),
-    'Portfolio Manager': _RoleBankEntry(
-      description:
-          'Oversees portfolio of projects, prioritizes investments, and aligns with strategic objectives.',
-      workstream: 'Management',
-    ),
-  };
+  // Description and discipline auto-fill comes from
+  // `lib/utils/role_description_bank.dart`, which covers every catalogued
+  // role rather than a hand-picked subset.
 
   @override
   Widget build(BuildContext context) {
@@ -2792,31 +2660,27 @@ class _OrganizationRolesResponsibilitiesScreenState
           },
           children: [
             PremiumEditDialog.fieldLabel('Title'),
-            DropdownButtonFormField<String>(
-              initialValue: selectedTitle,
-              items: [
+            GroupedSearchablePicker(
+              sections: _rolePickerSections([
                 ..._roleTitleOptions,
                 _customRoleOption,
-              ]
-                  .map((title) =>
-                      DropdownMenuItem(value: title, child: Text(title)))
-                  .toList(),
-              onChanged: (value) {
-                if (value == null) return;
-                setDialogState(() {
-                  selectedTitle = value;
-                  // Auto-fill description and workstream from role bank
-                  final entry = _roleBank[value];
-                  if (entry != null) {
-                    descController.text = entry.description;
-                    workstreamController.text = entry.workstream;
-                  }
-                });
-              },
-              decoration: const InputDecoration(
-                hintText: 'Select a role title',
-                border: OutlineInputBorder(),
-              ),
+              ]),
+              value: selectedTitle,
+              hintText: 'Select a role title',
+              onChanged: (value) => setDialogState(() {
+                selectedTitle = value;
+                // Every catalogued role auto-fills its description and
+                // discipline; 'Custom' leaves them for the user to write.
+                if (value == _customRoleOption) return;
+                final description = roleDescriptionFor(value);
+                if (description.trim().isNotEmpty) {
+                  descController.text = description;
+                }
+                final workstream = roleWorkstreamFor(value);
+                if (workstream.trim().isNotEmpty) {
+                  workstreamController.text = workstream;
+                }
+              }),
             ),
             if (selectedTitle == _customRoleOption) ...[
               const SizedBox(height: 12),
@@ -2889,31 +2753,27 @@ class _OrganizationRolesResponsibilitiesScreenState
           },
           children: [
             PremiumEditDialog.fieldLabel('Title'),
-            DropdownButtonFormField<String>(
-              initialValue: selectedTitle,
-              items: [
+            GroupedSearchablePicker(
+              sections: _rolePickerSections([
                 ..._roleTitleOptions,
                 _customRoleOption,
-              ]
-                  .map((title) =>
-                      DropdownMenuItem(value: title, child: Text(title)))
-                  .toList(),
-              onChanged: (value) {
-                if (value == null) return;
-                setDialogState(() {
-                  selectedTitle = value;
-                  // Auto-fill description and workstream from role bank
-                  final entry = _roleBank[value];
-                  if (entry != null) {
-                    descController.text = entry.description;
-                    workstreamController.text = entry.workstream;
-                  }
-                });
-              },
-              decoration: const InputDecoration(
-                hintText: 'Select a role title',
-                border: OutlineInputBorder(),
-              ),
+              ]),
+              value: selectedTitle,
+              hintText: 'Select a role title',
+              onChanged: (value) => setDialogState(() {
+                selectedTitle = value;
+                // Every catalogued role auto-fills its description and
+                // discipline; 'Custom' leaves them for the user to write.
+                if (value == _customRoleOption) return;
+                final description = roleDescriptionFor(value);
+                if (description.trim().isNotEmpty) {
+                  descController.text = description;
+                }
+                final workstream = roleWorkstreamFor(value);
+                if (workstream.trim().isNotEmpty) {
+                  workstreamController.text = workstream;
+                }
+              }),
             ),
             if (selectedTitle == _customRoleOption) ...[
               const SizedBox(height: 12),
@@ -6365,17 +6225,6 @@ class _SectionEmptyState extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Entry in the role bank — maps a role title to a description and workstream.
-class _RoleBankEntry {
-  final String description;
-  final String workstream;
-
-  const _RoleBankEntry({
-    required this.description,
-    required this.workstream,
-  });
 }
 
 /// A single row in the Standard Roles picker dialog.

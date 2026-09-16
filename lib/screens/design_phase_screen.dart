@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -2987,7 +2988,7 @@ Future<void> _loadProgress(String projectId) async {
  final provider = context.read<ProjectDataProvider>();
  final current = provider.projectData.teamMembers;
  final newMember = TeamMember(
- id: '${DateTime.now().microsecondsSinceEpoch}',
+ id: newId(),
  name: nameController.text.trim(),
  role: roleController.text.trim(),
  email: emailController.text.trim(),

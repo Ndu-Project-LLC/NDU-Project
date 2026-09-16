@@ -36,6 +36,7 @@ import 'package:ndu_project/widgets/charter_lock_banner.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 /// Front End Planning - Project Requirements page
 /// Implements the layout from the provided screenshot exactly:
 /// - Top notes field
@@ -700,10 +701,13 @@ class _FrontEndPlanningRequirementsScreenState
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          _roundedField(
+                                          CollapsibleNotesSection(
+                                      title: 'Notes',
+                                      child: _roundedField(
                                       controller: _notesController,
                                       hint: 'Input your notes here...',
                                       minLines: 3,
+                                    ),
                                     ),
                                     const SizedBox(height: 20),
                                     Row(

@@ -22,6 +22,7 @@ import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 /// Front End Planning – Project Risks page
 /// Matches the provided screenshot with:
 /// - Top bar (back/forward, centered title, user chip)
@@ -1360,11 +1361,14 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _roundedField(
+ CollapsibleNotesSection(
+ title: 'Notes',
+ child: _roundedField(
  controller: _notesController,
  hint: 'Input your notes here...',
  minLines: 2,
  maxLines: 4,
+ ),
  ),
  const SizedBox(height: 22),
  Row(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -302,7 +303,7 @@ class _TeamRolesResponsibilitiesScreenState
  ];
  }
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();
 
  @override
  Widget build(BuildContext context) {
@@ -1628,7 +1629,7 @@ class _StaffingMetric {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _StaffingMetric(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  label: map['label']?.toString() ?? '',
  value: map['value']?.toString() ?? '',
  );
@@ -1685,7 +1686,7 @@ class _CoverageRow {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _CoverageRow(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  area: map['area']?.toString() ?? '',
  owner: map['owner']?.toString() ?? '',
  backup: map['backup']?.toString() ?? '',
@@ -1745,7 +1746,7 @@ class _HiringRow {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _HiringRow(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  role: map['role']?.toString() ?? '',
  headcount: map['headcount']?.toString() ?? '',
  startDate: map['startDate']?.toString() ?? '',
@@ -1800,7 +1801,7 @@ class _DecisionRow {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _DecisionRow(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  decision: map['decision']?.toString() ?? '',
  owner: map['owner']?.toString() ?? '',
  approver: map['approver']?.toString() ?? '',

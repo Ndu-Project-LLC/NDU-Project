@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/screens/front_end_planning_procurement_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -487,7 +488,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  _workflowDraftSteps = <_ContractingWorkflowStep>[
  ..._workflowDraftSteps,
  _ContractingWorkflowStep(
- id: 'step_${DateTime.now().microsecondsSinceEpoch}',
+ id: newId('step_'),
  name: 'New Step',
  duration: 1,
  unit: 'week',
@@ -3852,7 +3853,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final data = ProjectDataHelper.getData(context);
  final reports = _loadContractingReports(data);
  final entry = _ContractingReportEntry(
- id: existing?.id ?? 'report_${DateTime.now().microsecondsSinceEpoch}',
+ id: existing?.id ?? newId('report_'),
  title: titleController.text.trim(),
  status: status,
  owner: ownerController.text.trim(),
@@ -6820,7 +6821,7 @@ class _ContractingWorkflowStep {
  : 'week';
 
  return _ContractingWorkflowStep(
- id: id.isEmpty ? 'step_${DateTime.now().microsecondsSinceEpoch}' : id,
+ id: id.isEmpty ? newId('step_') : id,
  name: name.isEmpty ? 'Untitled Step' : name,
  duration: duration,
  unit: unit,
@@ -6864,7 +6865,7 @@ class _ContractingReportEntry {
 
  return _ContractingReportEntry(
  id: (map['id'] ?? '').toString().trim().isEmpty
- ? 'report_${DateTime.now().microsecondsSinceEpoch}'
+ ? newId('report_')
  : (map['id'] ?? '').toString(),
  title: (map['title'] ?? '').toString(),
  status: (map['status'] ?? 'Draft').toString(),

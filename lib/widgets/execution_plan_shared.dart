@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/ai_suggesting_textfield.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 import 'package:ndu_project/widgets/ai_diagram_panel.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -421,14 +422,26 @@ class _ExecutionPlanFormState extends State<ExecutionPlanForm> {
       }
     }
 
+    final lastSavedAt = _lastSavedAt;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AiSuggestingTextField(
+        // Notes stay collapsed until the user opens them.
+        CollapsibleNotesSection(
+          title: widget.title,
+          card: true,
+          trailing: lastSavedAt == null
+              ? null
+              : Text(
+                  'Saved ${TimeOfDay.fromDateTime(lastSavedAt).format(context)}',
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                ),
+          child: AiSuggestingTextField(
           fieldLabel: widget.title,
           hintText: widget.hintText,
           sectionLabel: 'Execution Plan',
-          showLabel: true,
+          showLabel: false,
           initialText: noteKey == null
               ? null
               : () {
@@ -448,14 +461,7 @@ class _ExecutionPlanFormState extends State<ExecutionPlanForm> {
           autoGenerateSection: widget.title,
           onChanged: _handleChanged,
         ),
-        if (_lastSavedAt != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              'Saved ${TimeOfDay.fromDateTime(_lastSavedAt!).format(context)}',
-              style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-            ),
-          ),
+        ),
         if (widget.showDiagram)
           AiDiagramPanel(
             sectionLabel: widget.title,

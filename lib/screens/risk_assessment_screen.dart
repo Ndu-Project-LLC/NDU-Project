@@ -21,6 +21,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 class RiskAssessmentScreen extends StatefulWidget {
  const RiskAssessmentScreen({super.key});
@@ -836,80 +837,34 @@ class _RiskNotesCard extends StatelessWidget {
  final DateTime? savedAt;
  final ValueChanged<String> onChanged;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: const [
- BoxShadow(
- color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
- ],
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- // Header with border-bottom, bg-gray-50/50
- Container(
- padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
- decoration: const BoxDecoration(
- color: Color(0xFFFAFAFA),
- border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
- ),
- child: Row(
- children: [
- Container(
- width: 32,
- height: 32,
- decoration: BoxDecoration(
- color: const Color(0xFFF1F5F9),
- borderRadius: BorderRadius.circular(10),
- ),
- child: const Icon(Icons.description_outlined,
- color: Color(0xFF475569), size: 16),
- ),
- const SizedBox(width: 10),
- const Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Notes',
- style: TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w600,
- color: Color(0xFF111827)),
- ),
- SizedBox(height: 2),
- Text(
- 'Summarize key risks, probability/impact themes, and mitigation focus.',
- style: TextStyle(
- fontSize: 12,
- color: Color(0xFF6B7280),
- height: 1.3),
- ),
- ],
- ),
- ),
- if (saving)
- const _StatusChip(
- label: 'Saving...', color: Color(0xFF64748B))
- else if (savedAt != null)
- _StatusChip(
- label:
- 'Saved ${TimeOfDay.fromDateTime(savedAt!).format(context)}',
- color: const Color(0xFF16A34A),
- background: const Color(0xFFECFDF3),
- ),
- ],
- ),
- ),
- // Body: transparent textarea
- Padding(
- padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
- child: VoiceTextField(
+  @override
+  Widget build(BuildContext context) {
+    // Notes stay collapsed until the user opens them.
+    return CollapsibleNotesSection(
+      title: 'Notes',
+      icon: Icons.description_outlined,
+      iconColor: const Color(0xFF475569),
+      card: true,
+      trailing: saving
+          ? const _StatusChip(label: 'Saving...', color: Color(0xFF64748B))
+          : (savedAt != null
+              ? _StatusChip(
+                  label:
+                      'Saved ${TimeOfDay.fromDateTime(savedAt!).format(context)}',
+                  color: const Color(0xFF16A34A),
+                  background: const Color(0xFFECFDF3),
+                )
+              : null),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Summarize key risks, probability/impact themes, and mitigation focus.',
+            style: TextStyle(
+                fontSize: 12, color: Color(0xFF6B7280), height: 1.3),
+          ),
+          const SizedBox(height: 12),
+          VoiceTextField(
  controller: controller,
  onChanged: onChanged,
  maxLines: 6,
@@ -919,13 +874,12 @@ class _RiskNotesCard extends StatelessWidget {
  filled: false,
  contentPadding: EdgeInsets.zero,
  ),
- style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
- ),
- ),
- ],
- ),
- );
- }
+            style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _StatusChip extends StatelessWidget {

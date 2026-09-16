@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/design_phase_service.dart';
@@ -4447,7 +4448,7 @@ class _DesignSpecDocumentRow {
  this.status = 'Draft',
  this.fileName = '',
  this.storagePath = '',
- }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+ }) : id = id ?? newId();
 
  final String id;
  String name;

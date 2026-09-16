@@ -54,6 +54,13 @@ class _PlanningAiNotesCardState extends State<PlanningAiNotesCard> {
   String? _undoBeforeAi;
   bool _generating = false;
 
+  /// Notes stay closed until the user opens them. See [_toggleExpanded].
+  bool _isExpanded = false;
+
+  void _toggleExpanded() {
+    setState(() => _isExpanded = !_isExpanded);
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -203,107 +210,136 @@ class _PlanningAiNotesCardState extends State<PlanningAiNotesCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF4CC),
-                  borderRadius: BorderRadius.circular(12),
+          // The header stays visible; the editor below is only built once the
+          // user opens the section.
+          InkWell(
+            onTap: _toggleExpanded,
+            borderRadius: BorderRadius.circular(12),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF4CC),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.auto_awesome,
+                      color: Color(0xFFF59E0B), size: 18),
                 ),
-                child: const Icon(Icons.auto_awesome,
-                    color: Color(0xFFF59E0B), size: 18),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  widget.title,
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF111827)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827)),
+                  ),
                 ),
-              ),
-              IconButton(
-                tooltip: 'Regenerate (AI)',
-                onPressed: _generating ? null : _regenerate,
-                icon: _generating
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh,
-                        size: 18, color: Color(0xFFD97706)),
-              ),
-              IconButton(
-                tooltip: 'Undo last AI regenerate',
-                onPressed: _undoBeforeAi == null ? null : _undo,
-                icon:
-                    const Icon(Icons.undo, size: 18, color: Color(0xFF6B7280)),
-              ),
-              if (_saving)
-                const _StatusChip(label: 'Saving...', color: Color(0xFF64748B))
-              else if (savedAt != null)
-                _StatusChip(
-                  label:
-                      'Saved ${TimeOfDay.fromDateTime(savedAt).format(context)}',
-                  color: const Color(0xFF16A34A),
-                  background: const Color(0xFFECFDF3),
+                IconButton(
+                  tooltip: 'Regenerate (AI)',
+                  onPressed: _generating ? null : _regenerate,
+                  icon: _generating
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh,
+                          size: 18, color: Color(0xFFD97706)),
                 ),
-            ],
+                IconButton(
+                  tooltip: 'Undo last AI regenerate',
+                  onPressed: _undoBeforeAi == null ? null : _undo,
+                  icon: const Icon(Icons.undo,
+                      size: 18, color: Color(0xFF6B7280)),
+                ),
+                if (_saving)
+                  const _StatusChip(
+                      label: 'Saving...', color: Color(0xFF64748B))
+                else if (savedAt != null)
+                  _StatusChip(
+                    label:
+                        'Saved ${TimeOfDay.fromDateTime(savedAt).format(context)}',
+                    color: const Color(0xFF16A34A),
+                    background: const Color(0xFFECFDF3),
+                  ),
+                const SizedBox(width: 4),
+                AnimatedRotation(
+                  turns: _isExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 250),
+                  child: const Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 20,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+              ],
+            ),
           ),
-          if ((widget.description ?? '').trim().isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              widget.description!,
-              style: const TextStyle(
-                  fontSize: 13, color: Color(0xFF6B7280), height: 1.4),
-            ),
-          ],
-          const SizedBox(height: 16),
-          VoiceTextField(
-            controller: _controller,
-            onChanged: _handleChanged,
-            maxLines: 6,
-            decoration: InputDecoration(
-              hintText: widget.hintText,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: borderColor),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: borderColor),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(
-                  color: hasError
-                      ? const Color(0xFFEF4444)
-                      : const Color(0xFFFFD700),
-                  width: 1.6,
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if ((widget.description ?? '').trim().isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    widget.description!,
+                    style: const TextStyle(
+                        fontSize: 13, color: Color(0xFF6B7280), height: 1.4),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                VoiceTextField(
+                  controller: _controller,
+                  onChanged: _handleChanged,
+                  maxLines: 6,
+                  decoration: InputDecoration(
+                    hintText: widget.hintText,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: borderColor),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: borderColor),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: hasError
+                            ? const Color(0xFFEF4444)
+                            : const Color(0xFFFFD700),
+                        width: 1.6,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 20),
+                  ),
+                  style: const TextStyle(fontSize: 14),
                 ),
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                if (hasError) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.errorText!,
+                    style: const TextStyle(
+                      color: Color(0xFFDC2626),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
             ),
-            style: const TextStyle(fontSize: 14),
+            crossFadeState: _isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 250),
           ),
-          if (hasError) ...[
-            const SizedBox(height: 6),
-            Text(
-              widget.errorText!,
-              style: const TextStyle(
-                color: Color(0xFFDC2626),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
         ],
       ),
     );

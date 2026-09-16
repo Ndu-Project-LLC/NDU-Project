@@ -14,6 +14,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 /// Front End Planning – Summary screen
 /// Mirrors the provided layout with shared workspace chrome,
 /// large notes area, summary text panel, and AI hint + Next controls.
@@ -91,7 +92,10 @@ class _FrontEndPlanningSummaryEndScreenState extends State<FrontEndPlanningSumma
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _roundedField(controller: _notes, hint: 'Input your notes here...', minLines: 3),
+ CollapsibleNotesSection(
+ title: 'Notes',
+ child: _roundedField(controller: _notes, hint: 'Input your notes here...', minLines: 3),
+ ),
  const SizedBox(height: 24),
  const _SectionTitle(),
  const SizedBox(height: 18),

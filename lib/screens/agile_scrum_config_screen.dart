@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
@@ -58,7 +59,7 @@ class _WorkingAgreement {
     String? id,
     this.category = 'Communication',
     this.description = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 }
 
 class AgileScrumConfigScreen extends StatefulWidget {

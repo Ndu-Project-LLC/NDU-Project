@@ -9,6 +9,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 const String _currencySymbol = r'$';
 
 class ScheduleManagementBoardScreen extends StatefulWidget {
@@ -193,28 +194,23 @@ class _NotesArea extends StatelessWidget {
 
  final bool isMobile;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(24),
- boxShadow: [
- BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 24, offset: const Offset(0, 12)),
- ],
- ),
- child: VoiceTextField(
- minLines: isMobile ? 4 : 6,
- maxLines: isMobile ? 6 : 10,
- decoration: InputDecoration(
- hintText: 'Input your notes here...',
- border: InputBorder.none,
- hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[500]),
- ),
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    // Notes stay collapsed until the user opens them.
+    return CollapsibleNotesSection(
+      title: 'Notes',
+      card: true,
+      child: VoiceTextField(
+        minLines: isMobile ? 4 : 6,
+        maxLines: isMobile ? 6 : 10,
+        decoration: InputDecoration(
+          hintText: 'Input your notes here...',
+          border: InputBorder.none,
+          hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[500]),
+        ),
+      ),
+    );
+  }
 }
 
 class _ScheduleToolbar extends StatelessWidget {

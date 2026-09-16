@@ -1,5 +1,6 @@
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -203,7 +204,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  bool _autoGenerationTriggered = false;
  bool _isAutoGenerating = false;
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();
 
  /// Risk category options: the standard execution-risk taxonomy plus the
  /// category values already present in this screen's data (mitigation plans

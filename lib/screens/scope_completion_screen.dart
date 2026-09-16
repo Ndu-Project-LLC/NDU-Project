@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
@@ -3215,7 +3216,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       showDeleteSuccessSnackBar(context, itemLabel: 'Scope Change');
   }
 
-  String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+  String _newId() => newId();
 
   Widget _buildTipRow(BuildContext context) {
     return const Row(
@@ -3492,7 +3493,7 @@ class _WorkPackageItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _WorkPackageItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: map['title']?.toString() ?? '',
         owner: map['owner']?.toString() ?? '',
         milestone: map['milestone']?.toString() ?? '',
@@ -3582,7 +3583,7 @@ class _CheckpointItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _CheckpointItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: map['title']?.toString() ?? '',
         owner: map['owner']?.toString() ?? '',
         status: map['status']?.toString() ?? 'Pending',
@@ -3655,7 +3656,7 @@ class _AcceptanceTagItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _AcceptanceTagItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         label: map['label']?.toString() ?? '',
         status: map['status']?.toString() ?? 'Pending',
         category: map['category']?.toString() ?? 'Sponsor',
@@ -3741,7 +3742,7 @@ class _ScopeChangeItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _ScopeChangeItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         detail: map['detail']?.toString() ?? '',
         crId: map['crId']?.toString() ?? '',
         changeType: map['changeType']?.toString() ?? 'Scope',

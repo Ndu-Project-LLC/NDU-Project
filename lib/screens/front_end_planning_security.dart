@@ -22,6 +22,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 /// Front End Planning – Security screen
 /// Mirrors the provided layout with shared workspace chrome,
 /// large notes area, security text panel, and AI hint + Next controls.
@@ -1364,10 +1365,13 @@ Security Training:
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _roundedField(
+ CollapsibleNotesSection(
+ title: 'Notes',
+ child: _roundedField(
  controller: _notes,
  hint: 'Input your notes here...',
  minLines: 3),
+ ),
  const SizedBox(height: 24),
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,

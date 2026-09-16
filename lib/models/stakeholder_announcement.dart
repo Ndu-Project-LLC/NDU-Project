@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Stakeholder Announcement — model + template knowledge base
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -81,7 +83,7 @@ class StakeholderAnnouncement {
     this.scheduledFor,
     this.createdBy = '',
     this.templateId = '',
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {

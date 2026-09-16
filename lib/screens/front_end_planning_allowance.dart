@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/project_charter_screen.dart';
@@ -22,6 +23,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 /// Front End Planning – Allowance screen
 /// Refactored to support structured "Program-Aware Financial Inputs".
 ///
@@ -744,7 +746,7 @@ class _FrontEndPlanningAllowanceScreenState
  .toList();
 
  final newItem = AllowanceItem(
- id: item?.id ?? '${DateTime.now().microsecondsSinceEpoch}_${_allowanceItems.length}',
+ id: item?.id ?? '${newId()}_${_allowanceItems.length}',
  number: item?.number ?? (_allowanceItems.length + 1),
  name: name,
  description: description,
@@ -1252,10 +1254,13 @@ class _FrontEndPlanningAllowanceScreenState
  fontSize: 14, color: Color(0xFF6B7280)),
  ),
  const SizedBox(height: 16),
- _roundedField(
+ CollapsibleNotesSection(
+ title: 'Notes',
+ child: _roundedField(
  controller: _notes,
  hint: 'Input your notes here...',
  minLines: 3),
+ ),
  const SizedBox(height: 32),
 
  // Header Row

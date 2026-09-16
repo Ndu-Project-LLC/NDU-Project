@@ -9,7 +9,9 @@ import 'package:ndu_project/utils/table_import_helper.dart';
 import 'dart:async';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_check_dialogs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/spell_check/spell_fix_tap_area.dart';
 
 /// Specialized Resource Grid widget for Team Meetings page
 /// Features: Summary cards, meeting planner table with role integration, AI agenda generation
@@ -1555,10 +1557,19 @@ class _DialogTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    // Clicking an underlined word opens its fix card; the context menu covers
+    // the right-click / long-press route.
+    return SpellFixTapArea(
       controller: controller,
-      maxLines: maxLines,
-      decoration: _dialogInputDecoration().copyWith(hintText: hint),
+      enabled: controller is SpellCheckTextEditingController &&
+          (controller as SpellCheckTextEditingController).spellCheckEnabled,
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        decoration: _dialogInputDecoration().copyWith(hintText: hint),
+        contextMenuBuilder: (context, editableTextState) =>
+            buildSpellCheckContextMenu(context, editableTextState, controller),
+      ),
     );
   }
 }

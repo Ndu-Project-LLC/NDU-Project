@@ -43,6 +43,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/utils/navigation_route_resolver.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 class InitiationPhaseScreen extends StatefulWidget {
   final bool scrollToBusinessCase;
@@ -1756,22 +1757,17 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
         SkipBusinessCaseAffordance(
           onAfterSkip: _handleSkipBusinessCasePressed,
         ),
-        const Text(
-          'Notes',
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF111827),
+        // Notes stay collapsed until the user opens them.
+        CollapsibleNotesSection(
+          titleWidget: const Text(
+            'Notes',
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF111827),
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          card: true,
           child: VoiceTextField(
             controller: _notesController,
             focusNode: _notesFocusNode,
@@ -2158,28 +2154,19 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
               onAfterSkip: _handleSkipBusinessCasePressed,
             ),
             // Notes section
-            const EditableContentText(
-              contentKey: 'business_case_notes_heading',
-              fallback: 'Notes',
-              category: 'business_case',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
+            // Notes stay collapsed until the user opens them.
+            CollapsibleNotesSection(
+              titleWidget: const EditableContentText(
+                contentKey: 'business_case_notes_heading',
+                fallback: 'Notes',
+                category: 'business_case',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: _notesInvalid
-                        ? Colors.red
-                        : Colors.grey.withValues(alpha: 0.3)),
-              ),
+              card: true,
               child: VoiceTextField(
                 controller: _notesController,
                 focusNode: _notesFocusNode,

@@ -57,12 +57,14 @@ analyzer:
     - lib/widgets/interface_identification_dialog.dart
     - lib/widgets/landing_subpage_action_bar.dart
     - lib/widgets/delete_success_snackbar.dart
+    # NOTE: lib/utils/role_descriptions.dart used to be excluded here. It is
+    # now the description bank behind lib/utils/role_description_bank.dart, so
+    # it is analysed with the rest of the app.
     - lib/models/planning_contract.dart
     - lib/models/rate_card.dart
     - lib/services/contract_tracking_service.dart
     - lib/services/project_ssher_rollup_service.dart
     - lib/wbs/services/wbs_firestore_service.dart
-    - lib/utils/role_descriptions.dart
     - lib/routing/platform_router_web.dart
     - lib/routing/platform_router_web_stub.dart
     - android/**

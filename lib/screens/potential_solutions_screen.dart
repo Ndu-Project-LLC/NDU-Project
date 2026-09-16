@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/openai/openai_config.dart';
@@ -46,6 +47,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SafeSection — Build-time error boundary that prevents a single failing child
@@ -1561,21 +1563,14 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  ],
  ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Padding(
- padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
- child: Text(
- 'Notes',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w600,
- color: Colors.black,
- ),
- ),
- ),
- Padding(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CollapsibleNotesSection(
+                        title: 'Notes',
+                        headerPadding:
+                            const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                        child: Padding(
  padding: const EdgeInsets.symmetric(horizontal: 20),
  child: Container(
  decoration: BoxDecoration(
@@ -1627,17 +1622,18 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  minLines: 5,
  maxLines: null,
- onChanged: _recordNotesEdit,
- ),
- ),
- ),
- ],
- ),
- ),
- ),
- ],
- ),
- ),
+                          onChanged: _recordNotesEdit,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+                       ],
+        ),
+      ),
  SizedBox(height: sectionGap),
  Row(
  crossAxisAlignment: CrossAxisAlignment.end,
@@ -2842,7 +2838,7 @@ class SolutionRow {
  required this.titleController,
  required this.descriptionController,
  this.isAiGenerated = false,
- }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+ }) : id = id ?? newId();
 }
 
 class _SidebarItem {

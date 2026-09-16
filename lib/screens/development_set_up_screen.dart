@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
@@ -167,7 +168,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
 
  // ── Helpers ────────────────────────────────────────────────────────────
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();
 
  Color _statusColor(String status) {
  switch (status) {

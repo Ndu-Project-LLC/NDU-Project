@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/project_activity.dart';
 import 'package:ndu_project/models/staffing_row.dart';
@@ -1393,7 +1394,7 @@ class ProjectDataModel {
   void addPotentialSolution() {
     if (potentialSolutions.length < 3) {
       potentialSolutions.add(PotentialSolution.empty(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         number: potentialSolutions.length + 1,
       ));
     }
@@ -1487,7 +1488,7 @@ class PlanningGoal {
     this.priority = 'Medium Priority',
     List<String>? milestoneIds,
     List<PlanningMilestone>? milestones,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         milestoneIds = milestoneIds ?? [],
         milestones = milestones ?? [PlanningMilestone()];
 
@@ -1624,7 +1625,7 @@ class LaunchChecklistItem {
   }
 
   static String _generateId() =>
-      DateTime.now().microsecondsSinceEpoch.toString();
+      newId();
 
   @override
   bool operator ==(Object other) {
@@ -1667,7 +1668,7 @@ class Milestone {
     this.smeVerifiedBy,
     this.smeVerifiedAt,
   }) : id = (id == null || id.trim().isEmpty)
-            ? DateTime.now().microsecondsSinceEpoch.toString()
+            ? newId()
             : id;
 
   /// Returns true only when BOTH SME verification steps are complete.
@@ -1805,7 +1806,7 @@ class WorkItem {
     this.weight = 0,
     this.cbsId = '',
     this.obsId = '',
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         children = children ?? [],
         dependencies = dependencies ?? [];
 
@@ -1987,7 +1988,7 @@ class ScheduleActivity {
     this.percentComplete = 0,
     List<String>? resourceIds,
     this.estimatedCost = 0,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         predecessorIds = predecessorIds ?? [],
         dependencyIds = dependencyIds ?? [],
         resourceIds = resourceIds ?? [];
@@ -2730,7 +2731,7 @@ class InfrastructurePlanningItem {
     this.potentialCost = 0.0,
     this.owner = '',
     this.status = 'Planned',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   InfrastructurePlanningItem copyWith({
     int? number,
@@ -3509,7 +3510,7 @@ class RoleItem {
   String description;
 
   RoleItem({String? id, this.name = '', this.description = ''})
-      : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+      : id = id ?? newId();
 
   Map<String, dynamic> toJson() =>
       {'id': id, 'name': name, 'description': description};
@@ -3537,7 +3538,7 @@ class PermissionItem {
   String scope;
 
   PermissionItem({String? id, this.resource = '', this.scope = ''})
-      : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+      : id = id ?? newId();
 
   Map<String, dynamic> toJson() =>
       {'id': id, 'resource': resource, 'scope': scope};
@@ -3580,7 +3581,7 @@ class AccessLogItem {
 
   AccessLogItem(
       {String? id, this.user = '', this.action = '', this.timestamp = ''})
-      : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+      : id = id ?? newId();
 
   Map<String, dynamic> toJson() =>
       {'id': id, 'user': user, 'action': action, 'timestamp': timestamp};
@@ -3743,7 +3744,7 @@ class SsherEntry {
     this.concern = '',
     this.riskLevel = '',
     this.mitigation = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -3757,7 +3758,7 @@ class SsherEntry {
 
   factory SsherEntry.fromJson(Map<String, dynamic> json) {
     return SsherEntry(
-      id: json['id'] ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id'] ?? newId(),
       category: json['category'] ?? '',
       department: json['department'] ?? '',
       teamMember: json['teamMember'] ?? '',
@@ -3844,7 +3845,7 @@ class PotentialSolution {
   factory PotentialSolution.fromJson(Map<String, dynamic> json) {
     return PotentialSolution(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       number: (json['number'] is num) ? (json['number'] as num).toInt() : 1,
       title: json['title'] ?? '',
       description: json['description'] ?? '',
@@ -3919,7 +3920,7 @@ class LessonRecord {
     this.impact = 'Medium',
     this.highlight = false,
     this.dateSubmitted,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -4091,7 +4092,7 @@ class TeamMember {
   }
 
   static String _generateId() =>
-      DateTime.now().microsecondsSinceEpoch.toString();
+      newId();
 
   @override
   bool operator ==(Object other) {
@@ -4432,7 +4433,7 @@ class CostEstimateItem {
   }
 
   static String _generateId() =>
-      DateTime.now().microsecondsSinceEpoch.toString();
+      newId();
 
   @override
   bool operator ==(Object other) {
@@ -4565,7 +4566,7 @@ class WorkPackage {
     this.notes = '',
     this.controlAccountId = '',
     this.percentComplete = 0,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         childPackageIds = childPackageIds ?? [],
         linkedEngineeringPackageIds = linkedEngineeringPackageIds ?? [],
         linkedProcurementPackageIds = linkedProcurementPackageIds ?? [],
@@ -4907,7 +4908,7 @@ class PackageDeliverable {
     List<String>? feedsProcurementPackageIds,
     List<String>? linkedSpecificationIds,
     this.requiredForProcurement = false,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         feedsProcurementPackageIds = feedsProcurementPackageIds ?? [],
         linkedSpecificationIds = linkedSpecificationIds ?? [];
 
@@ -6498,7 +6499,7 @@ class RoleDefinition {
     this.workstream = '',
     this.isPredefined = false,
     this.headcount = 1,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   RoleDefinition copyWith({
     String? id,
@@ -6563,7 +6564,7 @@ class RaciMatrixRow {
     this.framework = '',
     this.discipline = '',
     Map<String, String>? assignments,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         assignments = assignments ?? <String, String>{};
 
   RaciMatrixRow copyWith({
@@ -6724,7 +6725,7 @@ class RaciDeliverableRow {
     this.label = '',
     this.phase = '',
     Map<String, String>? assignments,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         assignments = assignments ?? <String, String>{};
 
   RaciDeliverableRow copyWith({
@@ -6870,7 +6871,7 @@ class StaffingRequirement {
     this.employeeType = 'Employee',
     this.notes = '',
     this.nduProjectAccess = false,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   double get estimatedTotal => headcount * monthlyCost * plannedMonths;
 
@@ -6984,7 +6985,7 @@ class TrainingActivity {
     this.attachedFileUrl,
     this.attachedFileStoragePath,
     this.isCompleted = false,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -7414,7 +7415,7 @@ class QualityTarget {
 
   factory QualityTarget.empty() {
     return QualityTarget(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       name: '',
       metric: '',
       target: '',
@@ -7495,7 +7496,7 @@ class QaTechnique {
 
   factory QaTechnique.empty() {
     return QaTechnique(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       name: '',
       description: '',
       frequency: '',
@@ -7561,7 +7562,7 @@ class QcTechnique {
 
   factory QcTechnique.empty() {
     return QcTechnique(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       name: '',
       description: '',
       frequency: '',
@@ -7734,7 +7735,7 @@ class QualityStandard {
   });
 
   factory QualityStandard.empty() => QualityStandard(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         name: '',
         source: '',
         category: '',
@@ -7825,7 +7826,7 @@ class QualityObjective {
   });
 
   factory QualityObjective.empty() => QualityObjective(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         title: '',
         acceptanceCriteria: '',
         successMetric: '',
@@ -7925,7 +7926,7 @@ class QualityWorkflowControl {
 
   factory QualityWorkflowControl.empty(QualityWorkflowType type) =>
       QualityWorkflowControl(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         type: type,
         name: '',
         method: '',
@@ -8019,7 +8020,7 @@ class QualityAuditEntry {
   });
 
   factory QualityAuditEntry.empty() => QualityAuditEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         title: '',
         scope: '',
         plannedDate: '',
@@ -8117,7 +8118,7 @@ class QualityTaskEntry {
   });
 
   factory QualityTaskEntry.empty() => QualityTaskEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         task: '',
         percentComplete: 0.0,
         responsible: '',
@@ -8240,7 +8241,7 @@ class CorrectiveActionEntry {
   factory CorrectiveActionEntry.empty() {
     final now = DateTime.now().toIso8601String();
     return CorrectiveActionEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       auditEntryId: '',
       title: '',
       rootCause: '',
@@ -8341,7 +8342,7 @@ class QualityChangeEntry {
   });
 
   factory QualityChangeEntry.empty() => QualityChangeEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         description: '',
         reason: '',
         requestedBy: '',
@@ -9180,7 +9181,7 @@ class Contractor {
   factory Contractor.fromJson(Map<String, dynamic> json) {
     return Contractor(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       name: json['name']?.toString() ?? '',
       service: json['service']?.toString() ?? '',
       estimatedCost: (json['estimatedCost'] is num)
@@ -9233,7 +9234,7 @@ class Vendor {
   factory Vendor.fromJson(Map<String, dynamic> json) {
     return Vendor(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       name: json['name']?.toString() ?? '',
       equipmentOrService: json['equipmentOrService']?.toString() ?? '',
       estimatedPrice: (json['estimatedPrice'] is num)
@@ -9412,7 +9413,7 @@ class InterfaceEntry {
     this.escalationPath = '',
     this.assumptions = '',
     this.changeImpacts = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   InterfaceEntry copyWith({
     String? boundary,
@@ -9543,7 +9544,7 @@ class InterfaceChangeLogEntry {
     this.newValue = '',
     this.changedBy = '',
     this.changedAt = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   InterfaceChangeLogEntry copyWith({
     String? interfaceId,

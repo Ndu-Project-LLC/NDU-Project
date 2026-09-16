@@ -3,6 +3,8 @@
 /// This is separate from [ContractModel] in contract_service.dart which is
 /// the deeply-embedded execution-phase model. This model is for the
 /// Planning Phase contract tracking view.
+import 'package:ndu_project/utils/unique_id.dart';
+
 class PlanningContract {
   final String id;
   String title;
@@ -38,7 +40,7 @@ class PlanningContract {
     this.notes = '',
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         paymentMilestones = paymentMilestones ?? [],
         linkedWbsIds = linkedWbsIds ?? [],
         linkedRequirements = linkedRequirements ?? [],
@@ -169,7 +171,7 @@ class ContractPaymentMilestone {
     this.isCompleted = false,
     this.completedDate = '',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
         'id': id,

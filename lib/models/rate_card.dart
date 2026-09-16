@@ -2,6 +2,8 @@
 ///
 /// Rate cards are embedded in [ProjectDataModel] and provide the reference
 /// rates that staffing forms can link to for automatic cost calculation.
+import 'package:ndu_project/utils/unique_id.dart';
+
 class RateCard {
   final String id;
   String name;
@@ -27,7 +29,7 @@ class RateCard {
     this.notes = '',
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         rates = rates ?? [],
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
@@ -112,7 +114,7 @@ class RateTier {
     this.escalationPercent = 0,
     this.grade = '',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   /// Total loaded rate = baseRate * burdenMultiplier
   double get loadedRate => baseRate * burdenMultiplier;

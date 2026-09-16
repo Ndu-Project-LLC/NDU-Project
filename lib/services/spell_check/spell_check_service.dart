@@ -230,6 +230,17 @@ class SpellCheckService {
   /// callers can invalidate anything derived from [check].
   int get revision => _revision;
 
+  /// Fires on every [revision] change, so every field on screen can redraw its
+  /// underlines the moment a word is added to the dictionary or ignored — the
+  /// word stops being underlined everywhere, not just in the field it was
+  /// added from.
+  final ValueNotifier<int> revisionNotifier = ValueNotifier<int>(0);
+
+  void _bumpRevision() {
+    _revision++;
+    revisionNotifier.value = _revision;
+  }
+
   /// True once the bundled dictionary is loaded and checks can run.
   bool get isReady => _words.isNotEmpty;
 
@@ -260,7 +271,7 @@ class SpellCheckService {
       // dictionary we simply report nothing.
       debugPrint('[SpellCheck] dictionary unavailable: $error');
     }
-    _revision++;
+    _bumpRevision();
   }
 
   Future<void> _loadUserLists() async {
@@ -284,7 +295,7 @@ class SpellCheckService {
       ..clear()
       ..addAll(words.map((w) => w.trim().toLowerCase()).where((w) => w.isNotEmpty));
     if (!ready) _words.clear();
-    _revision++;
+    _bumpRevision();
   }
 
   /// Test seam: clears the persisted user lists from memory.
@@ -292,7 +303,7 @@ class SpellCheckService {
   void debugClearUserLists() {
     _userWords.clear();
     _ignoredWords.clear();
-    _revision++;
+    _bumpRevision();
   }
 
   /// Adds [word] to the user's dictionary — it is accepted from now on and
@@ -302,7 +313,7 @@ class SpellCheckService {
     if (normalized.isEmpty) return;
     _ignoredWords.remove(normalized);
     if (!_userWords.add(normalized)) return;
-    _revision++;
+    _bumpRevision();
     await _persistUserLists();
   }
 
@@ -311,7 +322,7 @@ class SpellCheckService {
     final normalized = word.trim().toLowerCase();
     if (normalized.isEmpty) return;
     if (!_ignoredWords.add(normalized)) return;
-    _revision++;
+    _bumpRevision();
     await _persistUserLists();
   }
 
@@ -321,7 +332,7 @@ class SpellCheckService {
     final removedUser = _userWords.remove(normalized);
     final removedIgnored = _ignoredWords.remove(normalized);
     if (!removedUser && !removedIgnored) return;
-    _revision++;
+    _bumpRevision();
     await _persistUserLists();
   }
 
@@ -343,7 +354,7 @@ class SpellCheckService {
       }
     }
     if (!changed) return;
-    _revision++;
+    _bumpRevision();
     await _persistUserLists();
   }
 
@@ -1132,9 +1143,13 @@ class SpellCheckService {
     // Repeated word: "the the".
     for (final match in _repeatedWordPattern.allMatches(text)) {
       final first = match.group(1)!;
+      // Swallow the space that follows the duplicate, so removing it leaves
+      // one space behind instead of two ("the the plan" → "the plan").
+      var end = match.end;
+      if (end < text.length && text[end] == ' ') end++;
       add(SpellIssue(
         start: match.end - first.length,
-        end: match.end,
+        end: end,
         word: text.substring(match.end - first.length, match.end),
         kind: SpellIssueKind.grammar,
         message: 'Repeated word',

@@ -8,6 +8,7 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/ac_confidence_score.dart';
+import 'package:ndu_project/widgets/acceptance_criteria_template_dialog.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -168,24 +169,27 @@ class _AgileAcceptanceCriteriaScreenState
     _scheduleAutoSave();
   }
 
-  void _addTemplate() {
-    final template = AcceptanceCriteriaTemplate(
-      name: 'New ${_selectedWorkItemType.label} Template',
-      workItemType: _selectedWorkItemType,
-      criteria: [
-        AcceptanceCriterion(
-          description: '',
-          category: CriterionCategory.functional,
-        ),
-        AcceptanceCriterion(
-          description: '',
-          category: CriterionCategory.nonFunctional,
-        ),
-      ],
+  /// "Add" opens the modal and only adds the template the user actually
+  /// described — it used to silently drop an unnamed `New <Type> Template`
+  /// into the list with two blank criteria, which every user then had to
+  /// rename, re-type and re-file by hand.
+  Future<void> _addTemplate() async {
+    final template = await AcceptanceCriteriaTemplateDialog.show(
+      context,
+      initialWorkItemType: _selectedWorkItemType,
+      initialFormat: _selectedFormat,
+      existingTemplates: _templates,
     );
+    if (template == null || !mounted) return;
     setState(() {
       _config.templates.add(template);
-      _selectedTemplate = template;
+      // Follow the new template, including across the work item type filter
+      // and format selector, so the editor below opens on it.
+      _selectedWorkItemType = template.workItemType;
+      _selectedFormat = template.format;
+      _selectedTemplateId = template.id;
+      _templateNameCtrl.text = template.name;
+      _templateDescCtrl.text = template.description;
     });
     _scheduleAutoSave();
   }
@@ -683,7 +687,11 @@ class _AgileAcceptanceCriteriaScreenState
             onChanged: (_) => _syncSelectedTemplate(),
           ),
           const SizedBox(height: 12),
-          Row(
+          // Wrap, not Row: "AI Generate Criteria" + "Add Criterion" are wider
+          // than a narrow window's editor pane and used to paint an overflow.
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               OutlinedButton.icon(
                 onPressed: _isGenerating ? null : _generateAcFromContext,
@@ -700,7 +708,6 @@ class _AgileAcceptanceCriteriaScreenState
                   side: const BorderSide(color: _kAccent),
                 ),
               ),
-              const SizedBox(width: 8),
               TextButton.icon(
                 onPressed: _addCriterion,
                 icon: const Icon(Icons.add, size: 16),
@@ -714,28 +721,29 @@ class _AgileAcceptanceCriteriaScreenState
   }
 
   Widget _buildFormatSelector() {
-    return Row(
+    // Wrap, not Row: the three format chips (one label is "Given / When / Then
+    // (BDD)") are wider than a narrow editor pane and overflowed it.
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         const Text('Format: ',
             style: TextStyle(
                 fontSize: 13, fontWeight: FontWeight.w600, color: _kHeadline)),
-        const SizedBox(width: 8),
         ...AcFormat.values.map((fmt) {
           final selected = fmt == _selectedFormat;
-          return Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: ChoiceChip(
-              label: Text(fmt.label,
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: selected ? Colors.white : _kHeadline)),
-              selected: selected,
-              selectedColor: _kAccent,
-              onSelected: (v) {
-                setState(() => _selectedFormat = fmt);
-                _syncSelectedTemplate();
-              },
-            ),
+          return ChoiceChip(
+            label: Text(fmt.label,
+                style: TextStyle(
+                    fontSize: 11,
+                    color: selected ? Colors.white : _kHeadline)),
+            selected: selected,
+            selectedColor: _kAccent,
+            onSelected: (v) {
+              setState(() => _selectedFormat = fmt);
+              _syncSelectedTemplate();
+            },
           );
         }),
       ],
@@ -802,9 +810,12 @@ class _AgileAcceptanceCriteriaScreenState
           children: [
             Row(
               children: [
-                SizedBox(
-                  width: 200,
+                // Expanded + isExpanded: the longest category label
+                // ("Non-Functional Requirement") does not fit the fixed 200px
+                // this used to be, and painted an overflow.
+                Expanded(
                   child: DropdownButtonFormField<CriterionCategory>(
+                    isExpanded: true,
                     initialValue: c.category,
                     decoration: const InputDecoration(
                       hintText: 'Category',
@@ -830,8 +841,9 @@ class _AgileAcceptanceCriteriaScreenState
                 ),
                 const SizedBox(width: 8),
                 SizedBox(
-                  width: 90,
+                  width: 74,
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Checkbox(
                         value: c.isRequired,

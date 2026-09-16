@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -1976,7 +1977,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
 
  void _addTask() {
  final newTask = _DetailedTask(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  wbsId: '',
  title: 'New Task',
  startDate: _projectStart ?? DateTime.now(),

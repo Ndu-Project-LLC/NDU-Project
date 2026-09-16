@@ -2,6 +2,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
@@ -337,7 +338,7 @@ class _UpdateOpsMaintenancePlansScreenState
     ];
   }
 
-  String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+  String _newId() => newId();
 
   @override
   Widget build(BuildContext context) {
@@ -2104,7 +2105,7 @@ class _CoverageItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _CoverageItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         label: map['label']?.toString() ?? '',
         progress: (map['progress'] is num)
             ? (map['progress'] as num).toDouble()
@@ -2146,7 +2147,7 @@ class _SignalItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _SignalItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: map['title']?.toString() ?? '',
         subtitle: map['subtitle']?.toString() ?? '',
       );
@@ -2198,7 +2199,7 @@ class _StatCardData {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _StatCardData(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         label: map['label']?.toString() ?? '',
         value: map['value']?.toString() ?? '',
         supporting: map['supporting']?.toString() ?? '',
@@ -2244,7 +2245,7 @@ class _MaintenanceWindowItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _MaintenanceWindowItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: map['title']?.toString() ?? '',
         time: map['time']?.toString() ?? '',
         status: map['status']?.toString() ?? '',

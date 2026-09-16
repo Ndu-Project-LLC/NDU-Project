@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/planning_contracting_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -155,7 +156,7 @@ class _FrontEndPlanningTechnologyPersonnelScreenState
  Navigator.of(dialogContext).pop(
  TechnologyPersonnelItem(
  id: existing?.id ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  number: existing?.number ?? (_rows.length + 1),
  technologyArea: technology,
  primaryOwner: ownerController.text.trim(),

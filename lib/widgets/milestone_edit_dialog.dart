@@ -4,7 +4,9 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_check_dialogs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/spell_check/spell_fix_tap_area.dart';
 
 const _kAccentColor = Color(0xFFFFC107);
 const _kPrimaryText = Color(0xFF1E293B);
@@ -287,24 +289,36 @@ class _MilestoneEditDialogState extends State<MilestoneEditDialog> {
                     const SizedBox(height: 16),
                     _buildField(
                       label: 'References',
-                      child: TextField(
+                      child: SpellFixTapArea(
                         controller: _refsCtrl,
-                        decoration: _inputDecoration(
-                            'Links, document IDs, or references'),
-                        style:
-                            const TextStyle(fontSize: 14, color: _kPrimaryText),
+                        child: TextField(
+                          controller: _refsCtrl,
+                          decoration: _inputDecoration(
+                              'Links, document IDs, or references'),
+                          style: const TextStyle(
+                              fontSize: 14, color: _kPrimaryText),
+                          contextMenuBuilder: (context, editableTextState) =>
+                              buildSpellCheckContextMenu(
+                                  context, editableTextState, _refsCtrl),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     _buildField(
                       label: 'Comments',
-                      child: TextField(
+                      child: SpellFixTapArea(
                         controller: _commentsCtrl,
-                        maxLines: 3,
-                        decoration:
-                            _inputDecoration('Additional notes or context'),
-                        style:
-                            const TextStyle(fontSize: 14, color: _kPrimaryText),
+                        child: TextField(
+                          controller: _commentsCtrl,
+                          maxLines: 3,
+                          decoration:
+                              _inputDecoration('Additional notes or context'),
+                          style: const TextStyle(
+                              fontSize: 14, color: _kPrimaryText),
+                          contextMenuBuilder: (context, editableTextState) =>
+                              buildSpellCheckContextMenu(
+                                  context, editableTextState, _commentsCtrl),
+                        ),
                       ),
                     ),
                   ],

@@ -25,6 +25,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/project_controls/models/change_management_models.dart';
 import 'package:ndu_project/project_controls/providers/change_management_provider.dart';
@@ -2072,7 +2073,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
         if (result == null) return;
         setDialogState(() {
           attachments.add(CMAttachment(
-            id: 'att_${DateTime.now().microsecondsSinceEpoch}',
+            id: newId('att_'),
             name: result.fileName,
             downloadUrl: result.downloadUrl,
             storagePath: result.storagePath,
@@ -3282,7 +3283,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
       if (result != null) {
         setState(() {
           _attachments.add(CMAttachment(
-            id: 'att_${DateTime.now().microsecondsSinceEpoch}',
+            id: newId('att_'),
             name: result.fileName,
             downloadUrl: result.downloadUrl,
             storagePath: result.storagePath,
@@ -3359,7 +3360,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
     final res = double.tryParse(_reserveCtrl.text.trim()) ?? 0;
     final deliverables = _deliverableRows
         .map((r) => CMImpactedDeliverable(
-              id: 'dlv_${DateTime.now().microsecondsSinceEpoch}_${r.hashCode}',
+              id: newId('dlv_'),
               name: r.nameCtrl.text.trim(),
               action: r.action,
               notes: r.notesCtrl.text.trim().isEmpty

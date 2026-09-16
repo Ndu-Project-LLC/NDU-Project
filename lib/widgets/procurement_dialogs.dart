@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
 import 'package:ndu_project/models/procurement/procurement_ui_extensions.dart';
@@ -1413,7 +1414,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
         final projectId =
             ProjectDataHelper.getData(context).projectId ?? 'project-1';
         final vendorId = widget.initialVendor?.id ??
-            'vendor_${DateTime.now().microsecondsSinceEpoch}';
+            newId('vendor_');
         final status = _approved ? 'Active' : 'Watch';
         final criticality = _preferred ? 'High' : 'Medium';
         final nextReview = widget.initialVendor?.nextReview ??

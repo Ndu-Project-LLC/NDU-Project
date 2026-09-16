@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -1641,7 +1642,7 @@ class _EquipmentCategory {
 
  factory _EquipmentCategory.empty() {
  return _EquipmentCategory(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: '',
  description: '',
  criticality: 'Medium',
@@ -1684,7 +1685,7 @@ class _EquipmentCategory {
  final data = Map<String, dynamic>.from(item);
  return _EquipmentCategory(
  id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  title: data['title']?.toString() ?? '',
  description: data['description']?.toString() ?? '',
  criticality: data['criticality']?.toString() ?? 'Medium',
@@ -1718,7 +1719,7 @@ class _EquipmentItem {
 
  factory _EquipmentItem.empty() {
  return _EquipmentItem(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: '',
  category: '',
  vendor: '',
@@ -1769,7 +1770,7 @@ class _EquipmentItem {
  final data = Map<String, dynamic>.from(item);
  return _EquipmentItem(
  id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  name: data['name']?.toString() ?? '',
  category: data['category']?.toString() ?? '',
  vendor: data['vendor']?.toString() ?? '',
@@ -1801,7 +1802,7 @@ class _ProcurementAction {
 
  factory _ProcurementAction.empty() {
  return _ProcurementAction(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: '',
  owner: '',
  dueDate: '',
@@ -1844,7 +1845,7 @@ class _ProcurementAction {
  final data = Map<String, dynamic>.from(item);
  return _ProcurementAction(
  id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  title: data['title']?.toString() ?? '',
  owner: data['owner']?.toString() ?? '',
  dueDate: data['dueDate']?.toString() ?? '',

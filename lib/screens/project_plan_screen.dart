@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -173,7 +174,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         for (final r in seed.rows) {
           if (r['kind'] == 'milestone') {
             newMilestones.add(_MilestoneEntry(
-              id: DateTime.now().microsecondsSinceEpoch.toString(),
+              id: newId(),
               title: (r['name'] ?? '').toString(),
               targetDate: (r['dueDate'] ?? '').toString(),
               owner: (r['discipline'] ?? '').toString(),
@@ -857,7 +858,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         final desc = goal.description.trim();
         if (desc.isNotEmpty) {
           entries.add(_ListEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             text: desc,
           ));
         }
@@ -866,7 +867,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         final desc = pg.description.trim();
         if (desc.isNotEmpty) {
           entries.add(_ListEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             text: desc,
           ));
         }
@@ -880,7 +881,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         final desc = item.description.trim();
         if (desc.isNotEmpty) {
           entries.add(_ListEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             text: desc,
           ));
         }
@@ -889,7 +890,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         final desc = item.description.trim();
         if (desc.isNotEmpty) {
           entries.add(_ListEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             text: 'Out of scope: $desc',
           ));
         }
@@ -903,7 +904,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         final desc = item.description.trim();
         if (desc.isNotEmpty) {
           entries.add(_ListEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             text: desc,
           ));
         }
@@ -912,7 +913,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         final desc = item.description.trim();
         if (desc.isNotEmpty) {
           entries.add(_ListEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             text: 'Constraint: $desc',
           ));
         }
@@ -925,7 +926,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       for (final m in data.keyMilestones) {
         if (m.name.trim().isEmpty) continue;
         entries.add(_MilestoneEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           title: m.name.trim(),
           targetDate: m.dueDate.trim(),
           owner: m.discipline.trim(),
@@ -937,7 +938,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         for (final pm in pg.milestones) {
           if (pm.title.trim().isEmpty) continue;
           entries.add(_MilestoneEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             title: pm.title.trim(),
             targetDate: pm.deadline.trim(),
             owner: '',
@@ -969,7 +970,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       for (final member in data.teamMembers) {
         if (member.name.trim().isEmpty) continue;
         entries.add(_ResourceEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           role: '${member.name.trim()} — ${member.role.trim()}',
           allocation: '',
           startDate: '',
@@ -986,7 +987,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       for (final c in data.contractors) {
         if (c.name.trim().isEmpty) continue;
         entries.add(_VendorEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           name: c.name.trim(),
           service: c.service.trim(),
           contact: '',
@@ -997,7 +998,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       for (final v in data.vendors) {
         if (v.name.trim().isEmpty) continue;
         entries.add(_VendorEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           name: v.name.trim(),
           service: v.equipmentOrService.trim(),
           contact: '',
@@ -1020,7 +1021,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                 (d['contractorName'] ?? d['name'] ?? '').toString().trim();
             if (name.isEmpty) continue;
             entries.add(_VendorEntry(
-              id: DateTime.now().microsecondsSinceEpoch.toString(),
+              id: newId(),
               name: name,
               service: (d['scope'] ?? d['description'] ?? '').toString().trim(),
               contact: (d['owner'] ?? '').toString().trim(),
@@ -1043,7 +1044,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
             final name = (d['name'] ?? '').toString().trim();
             if (name.isEmpty) continue;
             entries.add(_VendorEntry(
-              id: DateTime.now().microsecondsSinceEpoch.toString(),
+              id: newId(),
               name: name,
               service: (d['category'] ?? '').toString().trim(),
               contact: '',
@@ -1087,7 +1088,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       for (final item in items) {
         if (item.title.trim().isNotEmpty) {
           entries.add(_TaskEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             title: item.title.trim(),
             owner: '',
             startDate: '',
@@ -1153,7 +1154,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       )) {
         if (item.title.trim().isEmpty && item.amount <= 0) continue;
         entries.add(_BudgetEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           category: item.title.trim(),
           estimate: item.amount > 0 ? item.amount.toStringAsFixed(2) : '',
           actual: '',
@@ -1186,7 +1187,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final key = r.riskName.trim().toLowerCase();
       if (!seen.add(key)) continue;
       entries.add(_RiskEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         title: r.riskName.trim(),
         impact: _normalizeImpact(r.impactLevel),
         probability: _normalizeProbability(r.likelihood),
@@ -1202,7 +1203,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final key = e.concern.trim().toLowerCase();
       if (!seen.add(key)) continue;
       entries.add(_RiskEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         title: e.concern.trim(),
         impact: _normalizeImpact(e.riskLevel),
         probability: 'Medium',
@@ -1220,7 +1221,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final key = i.title.trim().toLowerCase();
       if (!seen.add(key)) continue;
       entries.add(_RiskEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         title: i.title.trim(),
         impact: _normalizeSeverity(i.severity),
         probability: 'Medium',
@@ -1831,7 +1832,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
 
     setState(() {
       _overviewMilestones.add(_MilestoneEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         title: newTitle,
         targetDate: dateCtrl.text.trim(),
         owner: ownerCtrl.text.trim(),
@@ -2035,7 +2036,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final status = row['status']?.trim() ?? '';
       imported.add(
         _MilestoneEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           title: title,
           targetDate: row['targetDate']?.trim() ?? '',
           owner: row['owner']?.trim() ?? '',
@@ -2064,7 +2065,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       if (role.isEmpty) continue;
       imported.add(
         _ResourceEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           role: role,
           allocation: row['allocation']?.trim() ?? '',
           startDate: row['startDate']?.trim() ?? '',
@@ -2096,7 +2097,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final status = row['status']?.trim() ?? '';
       imported.add(
         _VendorEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           name: name,
           service: row['service']?.trim() ?? '',
           contact: row['contact']?.trim() ?? '',
@@ -2126,7 +2127,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final status = row['status']?.trim() ?? '';
       imported.add(
         _ToolEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           name: name,
           purpose: row['purpose']?.trim() ?? '',
           owner: row['owner']?.trim() ?? '',
@@ -2156,7 +2157,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final status = row['status']?.trim() ?? '';
       imported.add(
         _TaskEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           title: title,
           owner: row['owner']?.trim() ?? '',
           startDate: row['startDate']?.trim() ?? '',
@@ -2186,7 +2187,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       if (category.isEmpty) continue;
       imported.add(
         _BudgetEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           category: category,
           estimate: row['estimate']?.trim() ?? '',
           actual: row['actual']?.trim() ?? '',
@@ -2217,7 +2218,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final status = row['status']?.trim() ?? '';
       imported.add(
         _RiskEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           title: title,
           impact: _normalizeSeverity(row['impact'] ?? ''),
           probability: _normalizeProbability(row['probability'] ?? ''),
@@ -5176,7 +5177,7 @@ class _ListEntry {
 
   factory _ListEntry.empty() {
     return _ListEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       text: '',
     );
   }
@@ -5198,7 +5199,7 @@ class _ListEntry {
       final data = Map<String, dynamic>.from(item);
       return _ListEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         text: data['text']?.toString() ?? '',
       );
     }).toList();
@@ -5224,7 +5225,7 @@ class _MilestoneEntry {
 
   factory _MilestoneEntry.empty() {
     return _MilestoneEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       title: '',
       targetDate: '',
       owner: '',
@@ -5267,7 +5268,7 @@ class _MilestoneEntry {
       final data = Map<String, dynamic>.from(item);
       return _MilestoneEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: data['title']?.toString() ?? '',
         targetDate: data['targetDate']?.toString() ?? '',
         owner: data['owner']?.toString() ?? '',
@@ -5299,7 +5300,7 @@ class _ResourceEntry {
 
   factory _ResourceEntry.empty() {
     return _ResourceEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       role: '',
       allocation: '',
       startDate: '',
@@ -5346,7 +5347,7 @@ class _ResourceEntry {
       final data = Map<String, dynamic>.from(item);
       return _ResourceEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         role: data['role']?.toString() ?? '',
         allocation: data['allocation']?.toString() ?? '',
         startDate: data['startDate']?.toString() ?? '',
@@ -5377,7 +5378,7 @@ class _VendorEntry {
 
   factory _VendorEntry.empty() {
     return _VendorEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       name: '',
       service: '',
       contact: '',
@@ -5420,7 +5421,7 @@ class _VendorEntry {
       final data = Map<String, dynamic>.from(item);
       return _VendorEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         name: data['name']?.toString() ?? '',
         service: data['service']?.toString() ?? '',
         contact: data['contact']?.toString() ?? '',
@@ -5450,7 +5451,7 @@ class _ToolEntry {
 
   factory _ToolEntry.empty() {
     return _ToolEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       name: '',
       purpose: '',
       owner: '',
@@ -5493,7 +5494,7 @@ class _ToolEntry {
       final data = Map<String, dynamic>.from(item);
       return _ToolEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         name: data['name']?.toString() ?? '',
         purpose: data['purpose']?.toString() ?? '',
         owner: data['owner']?.toString() ?? '',
@@ -5527,7 +5528,7 @@ class _TaskEntry {
 
   factory _TaskEntry.empty() {
     return _TaskEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       title: '',
       owner: '',
       startDate: '',
@@ -5578,7 +5579,7 @@ class _TaskEntry {
       final data = Map<String, dynamic>.from(item);
       return _TaskEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: data['title']?.toString() ?? '',
         owner: data['owner']?.toString() ?? '',
         startDate: data['startDate']?.toString() ?? '',
@@ -5610,7 +5611,7 @@ class _BudgetEntry {
 
   factory _BudgetEntry.empty() {
     return _BudgetEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       category: '',
       estimate: '',
       actual: '',
@@ -5653,7 +5654,7 @@ class _BudgetEntry {
       final data = Map<String, dynamic>.from(item);
       return _BudgetEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         category: data['category']?.toString() ?? '',
         estimate: data['estimate']?.toString() ?? '',
         actual: data['actual']?.toString() ?? '',
@@ -5687,7 +5688,7 @@ class _RiskEntry {
 
   factory _RiskEntry.empty() {
     return _RiskEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       title: '',
       impact: 'Medium',
       probability: 'Medium',
@@ -5738,7 +5739,7 @@ class _RiskEntry {
       final data = Map<String, dynamic>.from(item);
       return _RiskEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: data['title']?.toString() ?? '',
         impact: data['impact']?.toString() ?? 'Medium',
         probability: data['probability']?.toString() ?? 'Medium',

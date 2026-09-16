@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/screens/front_end_planning_contract_vendor_quotes_screen.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -28,6 +30,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 /// Front End Planning – Project Opportunities page
 /// Built to match the provided screenshot exactly:
@@ -150,7 +153,7 @@ class _FrontEndPlanningOpportunitiesScreenState
             final discipline = parts.length > 1 ? parts[1].trim() : '';
 
             return _normalizeOpportunityItem(OpportunityItem(
-              id: '${DateTime.now().microsecondsSinceEpoch}_${entry.key + 1}',
+              id: '${newId()}_${entry.key + 1}',
               opportunity: opportunity,
               discipline: discipline,
               stakeholder: '',
@@ -240,7 +243,7 @@ class _FrontEndPlanningOpportunitiesScreenState
           .asMap()
           .entries
           .map((entry) => _normalizeOpportunityItem(OpportunityItem(
-                id: '${DateTime.now().microsecondsSinceEpoch}_${entry.key + 1}',
+                id: '${newId()}_${entry.key + 1}',
                 opportunity: (entry.value['opportunity'] ?? '').toString(),
                 discipline: (entry.value['discipline'] ?? '').toString(),
                 stakeholder: (entry.value['responsibleRole'] ?? '').toString(),
@@ -269,7 +272,7 @@ class _FrontEndPlanningOpportunitiesScreenState
     final rawId = item.id.trim();
     // Use stable IDs - don't append index to avoid duplicate checkboxes
     final fallbackId =
-        '${DateTime.now().microsecondsSinceEpoch}_${index + 1}_${item.opportunity.hashCode.abs()}';
+        '${newId()}_${index + 1}_${item.opportunity.hashCode.abs()}';
     final id = rawId.isNotEmpty ? rawId : fallbackId;
     final role = item.responsibleRole.trim().isNotEmpty
         ? item.responsibleRole.trim()
@@ -591,11 +594,13 @@ Opportunity generation constraints:
                                 locked: charterLocked,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _roundedField(
-                                  controller: _notes,
-                                  hint: 'Input your notes here...',
-                                  minLines: 3),
+                                  children: [CollapsibleNotesSection(
+ title: 'Notes',
+ child: _roundedField(
+ controller: _notes,
+ hint: 'Input your notes here...',
+ minLines: 3),
+ ),
                               const SizedBox(height: 22),
                               LayoutBuilder(
                                 builder: (context, constraints) {
@@ -1726,10 +1731,7 @@ class _OpportunityDialogState extends State<_OpportunityDialog> {
                             tags.add('Training');
                           }
                           Navigator.of(context).pop(OpportunityItem(
-                            id: widget.item?.id ??
-                                DateTime.now()
-                                    .microsecondsSinceEpoch
-                                    .toString(),
+                            id: widget.item?.id ??newId(),
                             opportunity: opp,
                             potentialCostSavings: _costSavingsCtrl.text.trim(),
                             potentialScheduleSavings:

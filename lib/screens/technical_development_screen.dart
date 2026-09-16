@@ -3,6 +3,8 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/activity_log_service.dart';
@@ -452,7 +454,7 @@ class _TechnicalDevelopmentScreenState
  ];
  }
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();
 
  void _logActivity(String action, {Map<String, dynamic>? details}) {
  final projectId =
@@ -681,7 +683,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  for (final row in rows) {
  _workstreams.add(_WorkstreamItem(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: row['title'] ?? '',
  subtitle: row['subtitle'] ?? '',
  status: row['status'] ?? 'In planning',
@@ -841,7 +843,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  for (final row in rows) {
  _buildComponents.add(_BuildComponentRow(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: row['name'] ?? '',
  owner: row['owner'] ?? '',
  status: row['status'] ?? 'In Progress',
@@ -956,7 +958,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  for (final row in rows) {
  _integrations.add(_IntegrationRow(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  label: row['label'] ?? '',
  description: row['description'] ?? '',
  status: row['status'] ?? 'Pending',
@@ -1066,7 +1068,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  for (final row in rows) {
  _issues.add(_IssueRow(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: row['title'] ?? '',
  detail: row['detail'] ?? '',
  severity: row['severity'] ?? 'Medium',
@@ -1515,12 +1517,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: const TextStyle(fontSize: 13, color: Color(0xFF334155)),
  ),
  const SizedBox(height: 16),
- const Text('Notes',
- style:
- TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
- const SizedBox(height: 8),
- VoiceTextField(
- controller: _notesController,
+        // Notes stay collapsed until the user opens them.
+        CollapsibleNotesSection(
+          title: 'Notes',
+          card: true,
+          child: VoiceTextField(
+          controller: _notesController,
  minLines: 3,
  maxLines: null,
  decoration: InputDecoration(
@@ -1542,11 +1544,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  borderSide: const BorderSide(color: Color(0xFFFFC812)),
  ),
  ),
- style: const TextStyle(fontSize: 13, color: Color(0xFF334155)),
- ),
- ],
- ),
- );
+        style: const TextStyle(fontSize: 13, color: Color(0xFF334155)),
+      ),
+      ),
+    ],
+  ),
+);
  }
 
  // ─── Shared table helpers ─────────────────────────────────────────────
@@ -2728,7 +2731,7 @@ class _WorkstreamItem {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _WorkstreamItem(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  title: map['title']?.toString() ?? '',
  subtitle: map['subtitle']?.toString() ?? '',
  status: map['status']?.toString() ?? 'In planning',
@@ -2776,7 +2779,7 @@ class _ReadinessItem {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _ReadinessItem(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  title: map['title']?.toString() ?? '',
  owner: map['owner']?.toString() ?? '',
  status: map['status']?.toString() ?? 'Draft',
@@ -2805,7 +2808,7 @@ class _ChipItem {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _ChipItem(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  label: map['label']?.toString() ?? '',
  );
  }).toList();
@@ -2841,7 +2844,7 @@ class _BuildComponentRow {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _BuildComponentRow(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  name: map['name']?.toString() ?? '',
  owner: map['owner']?.toString() ?? '',
  status: map['status']?.toString() ?? 'In Progress',
@@ -2877,7 +2880,7 @@ class _IntegrationRow {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _IntegrationRow(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  label: map['label']?.toString() ?? '',
  description: map['description']?.toString() ?? '',
  status: map['status']?.toString() ?? 'Pending',
@@ -2912,7 +2915,7 @@ class _IssueRow {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _IssueRow(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  title: map['title']?.toString() ?? '',
  detail: map['detail']?.toString() ?? '',
  severity: map['severity']?.toString() ?? 'Medium',
@@ -2958,7 +2961,7 @@ class _RiskSignalRow {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _RiskSignalRow(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  signal: map['signal']?.toString() ?? '',
  description: map['description']?.toString() ?? '',
  severity: map['severity']?.toString() ?? 'High',

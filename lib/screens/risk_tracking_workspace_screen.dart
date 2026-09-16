@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:flutter/services.dart';
 
 import 'package:ndu_project/models/project_data_model.dart';
@@ -169,7 +170,7 @@ class _RiskTrackingWorkspaceScreenState
  if (_risks.isEmpty) {
  _risks.addAll([
  _RiskData(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: 'Scope creep risk',
  description:
  'Potential for project scope to expand beyond original boundaries without proper controls',
@@ -190,7 +191,7 @@ class _RiskTrackingWorkspaceScreenState
  lastModified: _formatDate(now),
  ),
  _RiskData(
- id: (DateTime.now().microsecondsSinceEpoch + 1).toString(),
+ id: newId(),
  title: 'Resource availability',
  description:
  'Key team members may be unavailable during critical project phases',
@@ -211,7 +212,7 @@ class _RiskTrackingWorkspaceScreenState
  lastModified: _formatDate(now),
  ),
  _RiskData(
- id: (DateTime.now().microsecondsSinceEpoch + 2).toString(),
+ id: newId(),
  title: 'Technical dependency',
  description:
  'Project depends on external API that may have stability issues',
@@ -237,7 +238,7 @@ class _RiskTrackingWorkspaceScreenState
  if (_signals.isEmpty) {
  _signals.addAll([
  _SignalData(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: 'Vendor delay warning',
  detail:
  'Key vendor indicating potential 2-week delay due to supply chain issues',
@@ -248,7 +249,7 @@ class _RiskTrackingWorkspaceScreenState
  associatedRiskId: _risks.isNotEmpty ? _risks[0].id : '',
  ),
  _SignalData(
- id: (DateTime.now().microsecondsSinceEpoch + 1).toString(),
+ id: newId(),
  title: 'Team capacity concerns',
  detail:
  'Engineering team running at 95% capacity, risk of burnout',
@@ -259,7 +260,7 @@ class _RiskTrackingWorkspaceScreenState
  associatedRiskId: _risks.length > 1 ? _risks[1].id : '',
  ),
  _SignalData(
- id: (DateTime.now().microsecondsSinceEpoch + 2).toString(),
+ id: newId(),
  title: 'API instability detected',
  detail:
  'Third-party API showing increased latency and occasional timeouts',
@@ -275,7 +276,7 @@ class _RiskTrackingWorkspaceScreenState
  if (_mitigations.isEmpty) {
  _mitigations.addAll([
  _MitigationData(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: 'Scope freeze implementation',
  description:
  'Implement formal change control process with stakeholder approval gates',
@@ -290,7 +291,7 @@ class _RiskTrackingWorkspaceScreenState
  createdAt: _formatDate(now),
  ),
  _MitigationData(
- id: (DateTime.now().microsecondsSinceEpoch + 1).toString(),
+ id: newId(),
  title: 'Contingency resource plan',
  description:
  'Identify and onboard backup resources for critical roles',
@@ -304,7 +305,7 @@ class _RiskTrackingWorkspaceScreenState
  createdAt: _formatDate(now),
  ),
  _MitigationData(
- id: (DateTime.now().microsecondsSinceEpoch + 2).toString(),
+ id: newId(),
  title: 'API fallback implementation',
  description:
  'Build resilient architecture with fallback mechanisms',
@@ -2526,7 +2527,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (result != true || !mounted) return;
 
  final newRisk = _RiskData(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  title: titleController.text.trim(),
  description: descriptionController.text.trim(),
  category: categoryController.text.trim().isEmpty
@@ -2778,7 +2779,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (result != true || !mounted) return;
 
  final newSignal = _SignalData(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  title: titleController.text.trim(),
  detail: detailController.text.trim(),
  severity: severity,
@@ -3060,7 +3061,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (result != true || !mounted) return;
 
  final newMitigation = _MitigationData(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  title: titleController.text.trim(),
  description: descriptionController.text.trim(),
  owner: ownerController.text.trim().isEmpty

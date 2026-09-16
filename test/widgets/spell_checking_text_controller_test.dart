@@ -302,6 +302,54 @@ void main() {
       controller.dispose();
     });
 
+    testWidgets('the menu offers the one-click fix', (tester) async {
+      final controller =
+          SpellCheckTextEditingController(text: 'we need to recieve it');
+      final state = await pumpField(tester, controller);
+
+      controller.selection = const TextSelection.collapsed(offset: 12);
+      await tester.pump();
+
+      final fix = menuItems(tester, state, controller)
+          .firstWhere((item) => item.label!.startsWith('Auto-correct to '));
+      // The service matches the capitalisation the user typed, so a lowercase
+      // word is corrected to a lowercase one.
+      expect(fix.label, 'Auto-correct to "receive"');
+
+      fix.onPressed!();
+      await tester.pumpAndSettle();
+      expect(controller.text, 'we need to receive it');
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      controller.dispose();
+    });
+
+    testWidgets('the menu can add the word to the dictionary', (tester) async {
+      SpellCheckService.instance.debugClearUserLists();
+      addTearDown(SpellCheckService.instance.debugClearUserLists);
+
+      final controller =
+          SpellCheckTextEditingController(text: 'we need to recieve it');
+      final state = await pumpField(tester, controller);
+
+      controller.selection = const TextSelection.collapsed(offset: 12);
+      await tester.pump();
+
+      final learn = menuItems(tester, state, controller)
+          .firstWhere((item) => item.label!.startsWith('Add "'));
+      expect(learn.label, 'Add "recieve" to dictionary');
+
+      learn.onPressed!();
+      await tester.pumpAndSettle();
+
+      expect(SpellCheckService.instance.userWords, contains('recieve'));
+      // Nothing was rewritten: the word is simply accepted from now on.
+      expect(controller.text, 'we need to recieve it');
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      controller.dispose();
+    });
+
     testWidgets('a read-only field offers no spelling entries', (tester) async {
       final controller =
           SpellCheckTextEditingController(text: 'we need to recieve it');

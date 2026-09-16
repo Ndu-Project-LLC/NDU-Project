@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 enum RoadmapDeliverableStatus {
   notStarted,
   inProgress,
@@ -50,7 +52,7 @@ class RoadmapDeliverable {
     this.createdById = '',
     this.createdByEmail = '',
     this.createdByName = '',
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         dependencies = dependencies ?? [];
 
   String get statusLabel {
@@ -186,7 +188,7 @@ class RoadmapDeliverable {
 
     return RoadmapDeliverable(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       sprintId: json['sprintId']?.toString() ?? '',

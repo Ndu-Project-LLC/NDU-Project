@@ -30,6 +30,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import 'package:ndu_project/services/spell_check/spell_check_service.dart';
 
@@ -40,7 +41,9 @@ const Color kGrammarErrorColor = Color(0xFF2563EB);
 /// A [TextEditingController] that underlines misspellings and grammar slips as
 /// the user types, and lets them fix them on demand.
 class SpellCheckTextEditingController extends TextEditingController {
-  SpellCheckTextEditingController({super.text, this.spellCheckEnabled = true});
+  SpellCheckTextEditingController({super.text, this.spellCheckEnabled = true}) {
+    _listenToDictionary();
+  }
 
   /// Mirrors [TextEditingController.fromValue] so call sites that build a value
   /// first keep working unchanged.
@@ -54,6 +57,7 @@ class SpellCheckTextEditingController extends TextEditingController {
     if (value != null) {
       this.value = value;
     }
+    _listenToDictionary();
   }
 
   /// Turned off for obfuscated fields (passwords) and anywhere underlines would
@@ -63,6 +67,29 @@ class SpellCheckTextEditingController extends TextEditingController {
   String? _cachedKey;
   TextSpan? _cachedSpan;
   bool _disposed = false;
+
+  /// Redraws when a word is added to the dictionary, ignored or learned, so
+  /// the underline disappears in every field at once.
+  void _listenToDictionary() {
+    SpellCheckService.instance.revisionNotifier.addListener(
+      _handleDictionaryChanged,
+    );
+  }
+
+  /// The service can be updated from inside a build (screens learn their own
+  /// vocabulary in `didChangeDependencies`), and a redraw mid-build would
+  /// assert, so the refresh is deferred to the end of that frame.
+  void _handleDictionaryChanged() {
+    if (_disposed) return;
+    final scheduler = SchedulerBinding.instance;
+    if (scheduler.schedulerPhase == SchedulerPhase.idle) {
+      refresh();
+      return;
+    }
+    scheduler.addPostFrameCallback((_) {
+      if (!_disposed) refresh();
+    });
+  }
 
   /// Redraws the underlines after the dictionary or the ignored words changed.
   void refresh() {
@@ -123,6 +150,8 @@ class SpellCheckTextEditingController extends TextEditingController {
   void dispose() {
     _disposed = true;
     _cachedSpan = null;
+    SpellCheckService.instance.revisionNotifier
+        .removeListener(_handleDictionaryChanged);
     super.dispose();
   }
 }
@@ -345,6 +374,20 @@ void refreshSpellSpans(TextEditingController controller) {
   if (controller is SpellCheckTextEditingController) {
     controller.refresh();
   }
+}
+
+/// Applies [suggestion] to [issue] in [controller], keeping the capitalisation
+/// the user typed — "Lusaka" is never corrected to "lusaka".
+///
+/// Returns the text that was written.
+String applySpellSuggestion(
+  TextEditingController controller,
+  SpellIssue issue,
+  String suggestion,
+) {
+  final applied = matchCase(issue.word.trim(), suggestion);
+  applySpellReplacement(controller, issue, applied);
+  return applied;
 }
 
 /// Keeps the capitalisation the user typed: "Recieve" becomes "Receive".

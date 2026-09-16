@@ -37,6 +37,7 @@ import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 enum _MissingInfrastructureAction { manual, autoFill, skip }
 
@@ -1128,22 +1129,19 @@ class _InfrastructureConsiderationsScreenState
  ),
  ]),
  const SizedBox(height: 16),
- const EditableContentText(
- contentKey: 'infrastructure_considerations_notes_heading',
- fallback: 'Notes',
- category: 'business_case',
- style: TextStyle(
- fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black),
- ),
- const SizedBox(height: 8),
- Container(
- width: double.infinity,
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(8),
- border: Border.all(color: Colors.grey.withValues(alpha: 0.3))),
- child: VoiceTextField(
+        // Notes stay collapsed until the user opens them.
+        CollapsibleNotesSection(
+          titleWidget: const EditableContentText(
+            contentKey: 'infrastructure_considerations_notes_heading',
+            fallback: 'Notes',
+            category: 'business_case',
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black),
+          ),
+          card: true,
+          child: VoiceTextField(
  readOnly: BusinessCaseLockHelper.isBusinessCaseLocked(ProjectDataHelper.getData(context)),
  controller: _notesController,
  style: TextStyle(fontSize: 14, color: Colors.grey[600]),

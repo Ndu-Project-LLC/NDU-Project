@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/services/voice_input_service.dart';
 import 'package:ndu_project/services/docx_import_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_check_dialogs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/spell_check/spell_fix_tap_area.dart';
 
 /// A drop-in TextField that grows vertically as the user types,
 /// with optional voice-to-text input via a microphone button.
@@ -205,20 +207,28 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
     final effectiveDecoration =
         _buildDecoration(baseDecoration, voiceEnabled, docxEnabled);
 
-    return TextField(
+    // Clicking an underlined word opens its fixes where the word is; the
+    // context menu covers the right-click / long-press route.
+    return SpellFixTapArea(
       controller: _controller,
-      focusNode: widget.focusNode,
-      readOnly: widget.readOnly,
-      onChanged: widget.onChanged,
-      keyboardType: widget.keyboardType,
-      textInputAction: widget.textInputAction,
-      minLines: widget.minLines,
-      maxLines: null, // allow vertical growth with content
-      decoration: effectiveDecoration,
-      style: widget.style,
-      enabled: widget.enabled,
-      onEditingComplete: widget.onEditingComplete,
-      onSubmitted: widget.onSubmitted,
+      enabled: !widget.readOnly && widget.enabled != false,
+      child: TextField(
+        controller: _controller,
+        focusNode: widget.focusNode,
+        readOnly: widget.readOnly,
+        onChanged: widget.onChanged,
+        keyboardType: widget.keyboardType,
+        textInputAction: widget.textInputAction,
+        minLines: widget.minLines,
+        maxLines: null, // allow vertical growth with content
+        decoration: effectiveDecoration,
+        style: widget.style,
+        enabled: widget.enabled,
+        contextMenuBuilder: (context, editableTextState) =>
+            buildSpellCheckContextMenu(context, editableTextState, _controller),
+        onEditingComplete: widget.onEditingComplete,
+        onSubmitted: widget.onSubmitted,
+      ),
     );
   }
 
@@ -518,23 +528,31 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
     final effectiveDecoration =
         _buildDecoration(baseDecoration, voiceEnabled, docxEnabled);
 
-    return TextFormField(
+    // Clicking an underlined word opens its fixes where the word is; the
+    // context menu covers the right-click / long-press route.
+    return SpellFixTapArea(
       controller: _controller,
-      focusNode: widget.focusNode,
-      readOnly: widget.readOnly,
-      onChanged: widget.onChanged,
-      keyboardType: widget.keyboardType,
-      textInputAction: widget.textInputAction,
-      minLines: widget.minLines,
-      maxLines: null,
-      decoration: effectiveDecoration,
-      style: widget.style,
-      enabled: widget.enabled,
-      validator: widget.validator,
-      onSaved: widget.onSaved,
-      onEditingComplete: widget.onEditingComplete,
-      onFieldSubmitted: widget.onFieldSubmitted,
-      autovalidateMode: widget.autovalidateMode,
+      enabled: !widget.readOnly && widget.enabled != false,
+      child: TextFormField(
+        controller: _controller,
+        focusNode: widget.focusNode,
+        readOnly: widget.readOnly,
+        onChanged: widget.onChanged,
+        keyboardType: widget.keyboardType,
+        textInputAction: widget.textInputAction,
+        minLines: widget.minLines,
+        maxLines: null,
+        decoration: effectiveDecoration,
+        style: widget.style,
+        enabled: widget.enabled,
+        contextMenuBuilder: (context, editableTextState) =>
+            buildSpellCheckContextMenu(context, editableTextState, _controller),
+        validator: widget.validator,
+        onSaved: widget.onSaved,
+        onEditingComplete: widget.onEditingComplete,
+        onFieldSubmitted: widget.onFieldSubmitted,
+        autovalidateMode: widget.autovalidateMode,
+      ),
     );
   }
 

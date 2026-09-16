@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -605,7 +606,7 @@ class _FrontEndPlanningProcurementScreenState
  Navigator.of(dialogContext).pop(
  _ProcurementWorkflowStep(
  id: initialStep?.id ??
- 'wf_${DateTime.now().microsecondsSinceEpoch}',
+ newId('wf_'),
  name: name,
  duration: duration,
  unit: unit,
@@ -12245,7 +12246,7 @@ class _ProcurementWorkflowStep {
  final parsedUnit = rawUnit == 'month' ? 'month' : 'week';
 
  return _ProcurementWorkflowStep(
- id: rawId.isEmpty ? 'wf_${DateTime.now().microsecondsSinceEpoch}' : rawId,
+ id: rawId.isEmpty ? newId('wf_') : rawId,
  name: rawName.isEmpty ? 'Untitled Step' : rawName,
  duration: parsedDuration,
  unit: parsedUnit,

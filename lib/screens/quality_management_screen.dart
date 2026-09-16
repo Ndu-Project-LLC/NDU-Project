@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 
@@ -86,7 +87,7 @@ String _planFieldFor(_QualityTab tab) {
   }
 }
 
-String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+String _newId() => newId();
 
 QualityManagementData _qualityData(BuildContext context,
     {bool listen = false}) {

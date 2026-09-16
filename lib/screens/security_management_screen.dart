@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 enum _SecurityTab { dashboard, roles, permissions, settings, accessLogs }
 
@@ -665,54 +666,25 @@ class _SecurityNotesCardState extends State<_SecurityNotesCard> {
   @override
   Widget build(BuildContext context) {
     final savedAt = _lastSavedAt;
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x0F000000), blurRadius: 18, offset: Offset(0, 12)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.note_outlined,
-                    color: Color(0xFF475569), size: 18),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Notes',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF111827)),
-                ),
-              ),
-              if (_saving)
-                const _StatusChip(label: 'Saving...', color: Color(0xFF64748B))
-              else if (savedAt != null)
-                _StatusChip(
+    // Notes stay collapsed until the user opens them.
+    return CollapsibleNotesSection(
+      title: 'Notes',
+      icon: Icons.note_outlined,
+      iconColor: const Color(0xFF475569),
+      card: true,
+      trailing: _saving
+          ? const _StatusChip(label: 'Saving...', color: Color(0xFF64748B))
+          : (savedAt != null
+              ? _StatusChip(
                   label:
                       'Saved ${TimeOfDay.fromDateTime(savedAt).format(context)}',
                   color: const Color(0xFF16A34A),
                   background: const Color(0xFFECFDF3),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
+                )
+              : null),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           const Text(
             'Summarize security priorities, access controls, and monitoring needs.',
             style:

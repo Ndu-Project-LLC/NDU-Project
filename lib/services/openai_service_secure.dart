@@ -1,4 +1,6 @@
 import 'dart:async';
+
+import 'package:ndu_project/utils/unique_id.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -868,7 +870,7 @@ ${_escape(trimmedText)}
     return _asMapList(raw)
         .map((entry) {
           return QualityStandard(
-            id: (entry['id'] ?? DateTime.now().microsecondsSinceEpoch)
+            id: (entry['id'] ?? newId())
                 .toString(),
             name: _stripAsterisks(
                 (entry['name'] ?? entry['standard'] ?? '').toString().trim()),
@@ -894,7 +896,7 @@ ${_escape(trimmedText)}
     return _asMapList(raw)
         .map((entry) {
           return QualityObjective(
-            id: (entry['id'] ?? DateTime.now().microsecondsSinceEpoch)
+            id: (entry['id'] ?? newId())
                 .toString(),
             title: _stripAsterisks(
                 (entry['title'] ?? entry['objective'] ?? '').toString().trim()),
@@ -929,7 +931,7 @@ ${_escape(trimmedText)}
     return _asMapList(raw)
         .map((entry) {
           return QualityWorkflowControl(
-            id: (entry['id'] ?? DateTime.now().microsecondsSinceEpoch)
+            id: (entry['id'] ?? newId())
                 .toString(),
             type: _parseWorkflowType(entry['type']),
             name: _stripAsterisks((entry['name'] ?? '').toString().trim()),
@@ -952,7 +954,7 @@ ${_escape(trimmedText)}
     return _asMapList(raw)
         .map((entry) {
           return QualityAuditEntry(
-            id: (entry['id'] ?? DateTime.now().microsecondsSinceEpoch)
+            id: (entry['id'] ?? newId())
                 .toString(),
             title: _stripAsterisks((entry['title'] ?? '').toString().trim()),
             scope: _stripAsterisks((entry['scope'] ?? '').toString().trim()),
@@ -1010,7 +1012,7 @@ ${_escape(trimmedText)}
     return QualitySeedBundle(
       standards: [
         QualityStandard(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           name: 'ISO 9001-aligned process controls',
           source: 'ISO 9001',
           category: 'Quality Management',
@@ -1033,7 +1035,7 @@ ${_escape(trimmedText)}
       ],
       objectives: [
         QualityObjective(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           title: 'Reduce defect leakage',
           acceptanceCriteria:
               'Defects identified in QA are resolved before release gates.',
@@ -1064,7 +1066,7 @@ ${_escape(trimmedText)}
       ],
       workflowControls: [
         QualityWorkflowControl(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           type: QualityWorkflowType.qa,
           name: 'Peer review and checklist verification',
           method: 'Review deliverables against agreed standards and templates',
@@ -1091,7 +1093,7 @@ ${_escape(trimmedText)}
       ],
       auditPlan: [
         QualityAuditEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           title: 'Requirements quality audit',
           scope: 'Requirements and acceptance criteria completeness',
           plannedDate: '',

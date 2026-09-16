@@ -2,6 +2,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
@@ -384,7 +385,7 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  // CRUD helpers
  // ---------------------------------------------------------------------------
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();
 
  void _logActivity(String action, {Map<String, dynamic>? details}) {
  final projectId = _projectId?.trim() ?? '';

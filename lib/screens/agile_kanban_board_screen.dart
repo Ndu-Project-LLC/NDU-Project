@@ -549,29 +549,34 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
                   ? null
                   : const BorderRadius.vertical(top: Radius.circular(14)),
             ),
-            child: Row(
-              children: [
-                Container(
+            // The column name is what the header is for, so it is given every
+            // pixel the badges do not need. It used to sit in a Flexible next
+            // to a Spacer, and those two share the free space equally — the
+            // name could only ever use half the room it had, which is what cut
+            // "In Progress" down to "In Pr…" while the header looked half
+            // empty. When a column really is too narrow for the name and both
+            // badges, the header stacks instead of shortening the name.
+            child: LayoutBuilder(
+              builder: (context, header) {
+                final name = Text(
+                  col.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                  style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _kHeadline),
+                );
+
+                final dot = Container(
                   width: 8,
                   height: 8,
                   decoration:
                       BoxDecoration(color: col.accent, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 8),
-                // Flexible + ellipsis: narrow embedded columns (5 across)
-                // must never push the count/WIP badges out of the header.
-                Flexible(
-                  child: Text(col.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: false,
-                      style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: _kHeadline)),
-                ),
-                const SizedBox(width: 6),
-                Container(
+                );
+
+                final countBadge = Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                   decoration: BoxDecoration(
@@ -583,29 +588,75 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: col.accent)),
-                ),
-                const Spacer(),
-                if (col.wipLimit < 999)
-                  Row(
+                );
+
+                final wipBadge = col.wipLimit < 999
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                              wipExceeded
+                                  ? Icons.warning_amber_rounded
+                                  : Icons.check,
+                              size: 12,
+                              color:
+                                  wipExceeded ? Colors.red : Colors.green),
+                          const SizedBox(width: 2),
+                          Text(
+                            'WIP ${col.wipLimit}',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: wipExceeded ? Colors.red : _kMuted),
+                          ),
+                        ],
+                      )
+                    : null;
+
+                // The widest column name ("In Progress") plus the dot, the
+                // count badge and the WIP badge need about this much room. Below
+                // it the name would be cut short, so the header stacks instead.
+                if (header.maxWidth < 200) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                          wipExceeded
-                              ? Icons.warning_amber_rounded
-                              : Icons.check,
-                          size: 12,
-                          color: wipExceeded ? Colors.red : Colors.green),
-                      const SizedBox(width: 2),
-                      Text(
-                        'WIP ${col.wipLimit}',
-                        style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: wipExceeded ? Colors.red : _kMuted),
+                      Row(
+                        children: [
+                          dot,
+                          const SizedBox(width: 8),
+                          countBadge,
+                          if (wipBadge != null) ...[
+                            const SizedBox(width: 8),
+                            wipBadge,
+                          ],
+                        ],
                       ),
+                      const SizedBox(height: 4),
+                      Tooltip(message: col.title, child: name),
                     ],
-                  ),
-              ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    dot,
+                    const SizedBox(width: 8),
+                    // Expanded, not a Flexible beside a Spacer: the name takes
+                    // all the leftover width, so it is only shortened when the
+                    // column genuinely has nothing left to give.
+                    Expanded(
+                      child: Tooltip(message: col.title, child: name),
+                    ),
+                    const SizedBox(width: 6),
+                    countBadge,
+                    if (wipBadge != null) ...[
+                      const SizedBox(width: 8),
+                      wipBadge,
+                    ],
+                  ],
+                );
+              },
             ),
           ),
           if (wipExceeded)

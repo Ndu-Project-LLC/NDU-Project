@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -548,7 +549,7 @@ class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
  );
  }
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();
 
  // ── Default data generators ──────────────────────────────────────────────
 

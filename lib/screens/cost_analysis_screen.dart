@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:ndu_project/utils/finance.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -689,7 +690,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         // Derive a simple, logical unit count based on the benefit title
         final units = _deriveUnitsFromTitle(candidateTitles[i]);
         final entry = _BenefitLineItemEntry(
-          id: 'benefit-seed-${DateTime.now().microsecondsSinceEpoch}-$i',
+          id: newId('benefit-seed-'),
           categoryKey: categories[i % categories.length],
           title: candidateTitles[i],
           unitValue: unitValue,
@@ -3690,7 +3691,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     String? notes,
   }) {
     final entry = _BenefitLineItemEntry(
-      id: 'benefit-${DateTime.now().microsecondsSinceEpoch}',
+      id: newId('benefit-'),
       categoryKey: _normalizeBenefitCategoryKey(
           categoryKey ?? _projectValueFields.first.key),
       title: title ?? '',

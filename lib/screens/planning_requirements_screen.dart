@@ -22,6 +22,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
@@ -1185,12 +1186,15 @@ $requirementsList
  children: [
  PlanningPhaseHeader(title: 'Requirements', onExportPdf: _exportPdf),
  const SizedBox(height: 16),
- _roundedField(
- controller: _notesController,
- hint: 'Input your notes here...',
- minLines: 3,
- readOnly: _isRequirementsLocked,
- ),
+ CollapsibleNotesSection(
+                    title: 'Notes',
+                    child: _roundedField(
+                      controller: _notesController,
+                      hint: 'Input your notes here...',
+                      minLines: 3,
+                      readOnly: _isRequirementsLocked,
+                    ),
+                  ),
  const SizedBox(height: 20),
  Row(
  crossAxisAlignment:
@@ -1982,7 +1986,8 @@ $requirementsList
   children: [
   SizedBox(
   height: 44,
-  child: OutlinedButton.icon(                  onPressed: _isRequirementsLocked
+  child: OutlinedButton.icon(
+                  onPressed: _isRequirementsLocked
                       ? null
                       : () async {
   final rows = await showCsvImportDialog(

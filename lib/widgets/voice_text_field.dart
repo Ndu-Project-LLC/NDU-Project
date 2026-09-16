@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/open_editor_button.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_check_dialogs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/spell_check/spell_fix_tap_area.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Returns true if the 'Open Editor' button should be hidden app-wide.
@@ -412,7 +413,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
             suffixIcon: null,
           );
 
-    final textField = TextField(
+    final field = TextField(
       controller: _controller,
       focusNode: widget.focusNode,
       // Right-click / long-press a flagged word for its corrections.
@@ -458,6 +459,15 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       scrollController: widget.scrollController,
       scrollPhysics: widget.scrollPhysics,
       autofillHints: widget.autofillHints,
+    );
+
+    // Clicking an underlined word opens its fix card where the word is, in
+    // addition to the right-click / long-press menu.
+    final textField = SpellFixTapArea(
+      controller: _controller,
+      enabled:
+          !widget.obscureText && !widget.readOnly && widget.enabled != false,
+      child: field,
     );
 
     if (!hasActions && !showToolbar) return textField;
@@ -1159,7 +1169,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     final anyLoading = _isListening || _isGeneratingAi || _isImportingDoc;
     final hasActions = !_openEditorDisabled && actions.any((a) => a.enabled);
 
-    final textField = TextFormField(
+    final field = TextFormField(
       controller: _controller,
       // Right-click / long-press a flagged word for its corrections.
       contextMenuBuilder: (context, editableTextState) =>
@@ -1211,6 +1221,15 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
       autovalidateMode: widget.autovalidateMode,
       scrollController: widget.scrollController,
       restorationId: widget.restorationId,
+    );
+
+    // Clicking an underlined word opens its fix card where the word is, in
+    // addition to the right-click / long-press menu.
+    final textField = SpellFixTapArea(
+      controller: _controller,
+      enabled:
+          !widget.obscureText && !widget.readOnly && widget.enabled != false,
+      child: field,
     );
 
     if (!hasActions && !showToolbar) return textField;

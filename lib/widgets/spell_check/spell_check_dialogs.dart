@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 
 import 'package:ndu_project/services/spell_check/spell_check_service.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/spell_check/spell_fix_popup.dart';
 
 /// Popup for one flagged word: pick a correction, ignore it, or add it to the
 /// dictionary.
@@ -66,6 +67,27 @@ Widget buildSpellCheckContextMenu(
     final issue = spellIssueAt(controller, selection.start) ??
         spellIssueAt(controller, selection.end);
     if (issue != null) {
+      // The fix itself, so a right-click is already a correction when the
+      // checker is confident about one — the same one click the fix card offers.
+      final autoCorrection = autoCorrectionFor(issue);
+      if (autoCorrection != null) {
+        buttons.insert(
+          insertAt++,
+          ContextMenuButtonItem(
+            label: autoCorrection.isEmpty
+                ? 'Auto-correct: remove "${issue.word.trim()}"'
+                : 'Auto-correct to "$autoCorrection"',
+            onPressed: () {
+              ContextMenuController.removeAny();
+              final before = controller.value;
+              applyAutoCorrection(controller, issue);
+              refreshSpellSpans(controller);
+              _offerUndo(context, controller, before, autoCorrection);
+            },
+          ),
+        );
+      }
+
       buttons.insert(
         insertAt++,
         ContextMenuButtonItem(
@@ -80,6 +102,28 @@ Widget buildSpellCheckContextMenu(
           },
         ),
       );
+
+      if (issue.kind == SpellIssueKind.spelling) {
+        buttons.insert(
+          insertAt++,
+          ContextMenuButtonItem(
+            label: 'Add "${issue.word.trim()}" to dictionary',
+            onPressed: () {
+              ContextMenuController.removeAny();
+              final word = issue.word.trim();
+              SpellCheckService.instance.addToUserDictionary(word);
+              refreshSpellSpans(controller);
+              ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                SnackBar(
+                  content: Text('"$word" added to your dictionary.'),
+                  duration: const Duration(seconds: 4),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+          ),
+        );
+      }
     }
 
     // The field-wide review (Word's Review ▸ Spelling & Grammar). Always
@@ -101,6 +145,31 @@ Widget buildSpellCheckContextMenu(
   return AdaptiveTextSelectionToolbar.buttonItems(
     anchors: editableTextState.contextMenuAnchors,
     buttonItems: buttons,
+  );
+}
+
+/// Puts the text back the way it was, so a one-click fix is one click to undo.
+void _offerUndo(
+  BuildContext context,
+  TextEditingController controller,
+  TextEditingValue before,
+  String applied,
+) {
+  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+    SnackBar(
+      content: Text(
+        applied.isEmpty ? 'Correction removed.' : 'Corrected to "$applied".',
+      ),
+      duration: const Duration(seconds: 5),
+      behavior: SnackBarBehavior.floating,
+      action: SnackBarAction(
+        label: 'Undo',
+        onPressed: () {
+          controller.value = before;
+          refreshSpellSpans(controller);
+        },
+      ),
+    ),
   );
 }
 
@@ -397,7 +466,8 @@ class _IssueActions extends StatelessWidget {
               _CorrectionChip(
                 label: suggestion,
                 onTap: () {
-                  applySpellReplacement(controller, issue, suggestion);
+                  // Case-matched, so "Lusaka" never becomes "lusaka".
+                  applySpellSuggestion(controller, issue, suggestion);
                   onApplied();
                 },
               ),

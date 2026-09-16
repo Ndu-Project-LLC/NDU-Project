@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -279,7 +280,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
     return options.first;
   }
 
-  String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+  String _newId() => newId();
 
   @override
   Widget build(BuildContext context) {
@@ -2307,7 +2308,7 @@ class _HeroStatItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _HeroStatItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         label: map['label']?.toString() ?? '',
         value: map['value']?.toString() ?? '',
       );
@@ -2372,7 +2373,7 @@ class _SnapshotMetric {
 
       return _SnapshotMetric(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: map['title']?.toString() ?? '',
         subtitle: map['subtitle']?.toString() ?? '',
         value: map['value']?.toString() ?? '',
@@ -2426,7 +2427,7 @@ class _ChecklistItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _ChecklistItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: map['title']?.toString() ?? '',
         owner: map['owner']?.toString() ?? '',
         dueDate: map['dueDate']?.toString() ?? '',
@@ -2480,7 +2481,7 @@ class _SignOffItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _SignOffItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         name: map['name']?.toString() ?? '',
         role: map['role']?.toString() ?? '',
         status: map['status']?.toString() ?? 'Pending',
@@ -2521,7 +2522,7 @@ class _InsightItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _InsightItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: map['title']?.toString() ?? '',
         detail: map['detail']?.toString() ?? '',
       );

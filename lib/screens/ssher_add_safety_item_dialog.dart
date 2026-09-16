@@ -1,7 +1,7 @@
 import 'package:ndu_project/widgets/expanding_text_field.dart';
 import 'package:flutter/material.dart';
 
-import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class SsherItemInput {
  final String department;
@@ -24,6 +24,10 @@ class AddSsherItemDialog extends StatefulWidget {
  final String riskLevelLabel;
  final String saveButtonLabel;
  final List<String> departmentOptions;
+
+ /// Options for the Team Member dropdown. When null the dialog builds them
+ /// from the project's own team (team members, staffing plan, project roles).
+ final List<String>? teamMemberOptions;
 
  final SsherItemInput? initialData;
 
@@ -52,6 +56,7 @@ class AddSsherItemDialog extends StatefulWidget {
  'Energy',
  'Data Governance',
  ],
+ this.teamMemberOptions,
  this.initialData,
  });
 
@@ -61,16 +66,18 @@ class AddSsherItemDialog extends StatefulWidget {
 
 class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  final _formKey = GlobalKey<FormState>();
- late TextEditingController _memberCtrl;
  late TextEditingController _concernCtrl;
  late TextEditingController _mitigationCtrl;
  late String _department;
  late String _riskLevel;
+ late String _teamMember;
+ List<String> _teamMemberOptions = const [];
+ bool _teamMemberOptionsResolved = false;
 
  @override
  void initState() {
  super.initState();
- _memberCtrl = SpellCheckTextEditingController(text: widget.initialData?.teamMember ?? '');
+ _teamMember = widget.initialData?.teamMember.trim() ?? '';
  _concernCtrl = SpellCheckTextEditingController(text: widget.initialData?.concern ?? '');
  _mitigationCtrl = SpellCheckTextEditingController(text: widget.initialData?.mitigation ?? '');
  _department = widget.initialData?.department ?? 'Operations';
@@ -82,8 +89,54 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  }
 
  @override
+ void didChangeDependencies() {
+ super.didChangeDependencies();
+ if (_teamMemberOptionsResolved) return;
+ _teamMemberOptionsResolved = true;
+ _teamMemberOptions = _resolveTeamMemberOptions();
+ }
+
+ /// Options shown in the Team Member dropdown.
+ ///
+ /// Team members come first, then people named on the staffing plan, then
+ /// project role titles — so the picker reflects who is actually on the
+ /// project. A value already saved on the row is always kept selectable, and
+ /// the list is never empty.
+ List<String> _resolveTeamMemberOptions() {
+ final provided = widget.teamMemberOptions;
+ final options = <String>{};
+
+ if (provided != null) {
+ options.addAll(provided.map((o) => o.trim()).where((o) => o.isNotEmpty));
+ } else {
+ final data = ProjectDataHelper.getData(context);
+ for (final member in data.teamMembers) {
+ final name = member.name.trim().isNotEmpty
+ ? member.name.trim()
+ : member.email.trim();
+ if (name.isNotEmpty) options.add(name);
+ }
+ for (final row in data.staffingRequirements) {
+ final name = row.personName.trim();
+ if (name.isNotEmpty) options.add(name);
+ final title = row.title.trim();
+ if (title.isNotEmpty) options.add(title);
+ }
+ for (final role in data.projectRoles) {
+ final title = role.title.trim();
+ if (title.isNotEmpty) options.add(title);
+ }
+ }
+
+ final current = _teamMember.trim();
+ if (current.isNotEmpty) options.add(current);
+ if (options.isEmpty) options.add('Unassigned');
+
+ return options.toList(growable: false);
+ }
+
+ @override
  void dispose() {
- _memberCtrl.dispose();
  _concernCtrl.dispose();
  _mitigationCtrl.dispose();
  super.dispose();
@@ -220,9 +273,10 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  Expanded(
  child: DropdownButtonFormField<String>(
  initialValue: _department,
+ isExpanded: true,
  items: [
  for (final option in widget.departmentOptions)
- DropdownMenuItem(value: option, child: Text(option)),
+ DropdownMenuItem(value: option, child: Text(option, overflow: TextOverflow.ellipsis)),
  ],
  onChanged: (v) => setState(() => _department = v ?? _department),
  decoration: _inputDecoration(widget.departmentLabel, theme, colorScheme),
@@ -232,9 +286,16 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  ),
  const SizedBox(width: 12),
  Expanded(
- child: VoiceTextFormField(
- controller: _memberCtrl,
+ child: DropdownButtonFormField<String>(
+ initialValue: _teamMember.isEmpty ? null : _teamMember,
+ isExpanded: true,
+ items: [
+ for (final option in _teamMemberOptions)
+ DropdownMenuItem(value: option, child: Text(option, overflow: TextOverflow.ellipsis)),
+ ],
+ onChanged: (v) => setState(() => _teamMember = v ?? _teamMember),
  decoration: _inputDecoration(widget.teamMemberLabel, theme, colorScheme),
+ dropdownColor: colorScheme.surface,
  style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
  validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
  ),
@@ -243,10 +304,11 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  Expanded(
  child: DropdownButtonFormField<String>(
  initialValue: _riskLevel,
+ isExpanded: true,
  items: const [
- DropdownMenuItem(value: 'Low', child: Text('Low')),
- DropdownMenuItem(value: 'Medium', child: Text('Medium')),
- DropdownMenuItem(value: 'High', child: Text('High')),
+ DropdownMenuItem(value: 'Low', child: Text('Low', overflow: TextOverflow.ellipsis)),
+ DropdownMenuItem(value: 'Medium', child: Text('Medium', overflow: TextOverflow.ellipsis)),
+ DropdownMenuItem(value: 'High', child: Text('High', overflow: TextOverflow.ellipsis)),
  ],
  onChanged: (v) => setState(() => _riskLevel = v ?? _riskLevel),
  decoration: _inputDecoration(widget.riskLevelLabel, theme, colorScheme),
@@ -263,7 +325,7 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  context,
  SsherItemInput(
  department: _department,
- teamMember: _memberCtrl.text.trim(),
+ teamMember: _teamMember.trim(),
  concern: _concernCtrl.text.trim(),
  riskLevel: _riskLevel,
  mitigation: _mitigationCtrl.text.trim(),

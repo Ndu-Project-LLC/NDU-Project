@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class BaselineVersion {
   final String id;
   final int versionNumber;
@@ -131,7 +133,7 @@ class BaselineVersion {
     List<Map<String, dynamic>>? scheduleActivitySnapshots,
     List<Map<String, dynamic>>? workPackageSnapshots,
     this.isCurrent = false,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         createdAt = createdAt ?? DateTime.now(),
         controlAccountSnapshots = controlAccountSnapshots ?? [],
         wbsSnapshots = wbsSnapshots ?? [],
@@ -281,7 +283,7 @@ class BaselineVersion {
 
     return BaselineVersion(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       versionNumber: toInt(json['versionNumber']),
       label: json['label']?.toString() ?? '',
       description: json['description']?.toString() ?? '',

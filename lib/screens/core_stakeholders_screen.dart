@@ -39,6 +39,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 enum _MissingStakeholderAction { manual, autoFill, skip }
 
@@ -943,37 +944,23 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  ),
  const SizedBox(height: 16),
 
- // Notes Section
- Container(
- width: double.infinity,
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: gray50,
- borderRadius: BorderRadius.circular(8),
- border: Border.all(color: gray200),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- // Notes heading + Format button
- const Row(
- children: [
- EditableContentText(
- contentKey: 'core_stakeholders_notes_heading',
- fallback: 'Notes',
- category: 'business_case',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w600,
- color: gray900,
- ),
- ),
- Spacer(),
- // Format button
- ],
- ),
- const SizedBox(height: 12),
- // Notes textarea
+                // Notes Section — collapsed until the user opens it.
+                CollapsibleNotesSection(
+                  titleWidget: const EditableContentText(
+                    contentKey: 'core_stakeholders_notes_heading',
+                    fallback: 'Notes',
+                    category: 'business_case',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: gray900,
+                    ),
+                  ),
+                  card: true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Notes textarea
  Container(
  width: double.infinity,
  constraints: const BoxConstraints(minHeight: 100),

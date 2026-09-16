@@ -24,6 +24,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 const String _contractingCollection = 'contracting';
 const String _contractPlanNoteKey = 'planning_contract_plan';
 const String _contractPlanMarketKey = 'planning_contract_market';
@@ -3149,23 +3150,15 @@ class _AdditionalNotesSection extends StatelessWidget {
  final TextEditingController controller;
  final ValueChanged<String> onChanged;
 
- @override
- Widget build(BuildContext context) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Additional Notes',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827)),
- ),
- const SizedBox(height: 10),
- _NotesField(controller: controller, onChanged: onChanged),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    // Notes stay collapsed until the user opens them.
+    return CollapsibleNotesSection(
+      title: 'Additional Notes',
+      card: true,
+      child: _NotesField(controller: controller, onChanged: onChanged),
+    );
+  }
 }
 
 class _NotesField extends StatelessWidget {

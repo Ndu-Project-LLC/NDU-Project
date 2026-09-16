@@ -26,6 +26,7 @@ import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 /// Front End Planning – Summary screen
 /// Mirrors the provided layout with shared workspace chrome,
 /// large notes area, summary text panel, and AI hint + Next controls.
@@ -240,11 +241,14 @@ class _FrontEndPlanningSummaryScreenState
  // on this screen is blocked (view-only).
  BusinessCaseLockHelper.lockBanner(
  ProjectDataHelper.getData(context)),
- _formattedNotesEditor(
+ CollapsibleNotesSection(
+ title: 'Notes',
+ child: _formattedNotesEditor(
  controller: _notes,
  hint: 'Input your notes here...',
  minLines: 3,
  maxLines: 5),
+ ),
  const SizedBox(height: 24),
  const _SectionTitle(),
  const SizedBox(height: 18),
@@ -362,12 +366,15 @@ class _FrontEndPlanningSummaryScreenState
  ),
  ),
  const SizedBox(height: 18),
- _formattedNotesEditor(
+ CollapsibleNotesSection(
+ title: 'Notes',
+ child: _formattedNotesEditor(
  controller: _notes,
  hint: 'Input your notes here...',
  minLines: 3,
  maxLines: 5,
  showLabel: true,
+ ),
  ),
  const SizedBox(height: 16),
  Container(

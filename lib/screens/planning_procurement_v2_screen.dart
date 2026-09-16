@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
@@ -2289,7 +2290,7 @@ class _PlanningProcurementV2ScreenState
  Navigator.of(dialogContext).pop(
  ProcurementWorkflowStep(
  id: initialStep?.id ??
- 'wf_${DateTime.now().microsecondsSinceEpoch}',
+ newId('wf_'),
  name: name,
  duration: duration,
  unit: unit,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ndu_project/screens/execution_plan_agile_delivery_plan_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -300,7 +301,7 @@ class _PlanningInfrastructureCostSectionState
               Navigator.of(dialogContext).pop(
                 InfrastructurePlanningItem(
                   id: existing?.id ??
-                      DateTime.now().microsecondsSinceEpoch.toString(),
+                      newId(),
                   number: existing?.number ?? 0,
                   name: name,
                   summary: summaryController.text.trim(),

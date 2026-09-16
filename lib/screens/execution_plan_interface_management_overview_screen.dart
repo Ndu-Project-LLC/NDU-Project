@@ -10,6 +10,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 class ExecutionPlanInterfaceManagementOverviewScreen extends StatelessWidget {
   const ExecutionPlanInterfaceManagementOverviewScreen({super.key});
@@ -419,7 +420,11 @@ class _OverviewAiEditorState extends State<_OverviewAiEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AiSuggestingTextField(
+        // Notes stay collapsed until the user opens them.
+        CollapsibleNotesSection(
+          title: 'Notes',
+          card: true,
+          child: AiSuggestingTextField(
           fieldLabel: 'Execution Plan Details',
           hintText: 'Input your notes here...',
           sectionLabel: 'Execution Interface Management Overview',
@@ -430,14 +435,7 @@ class _OverviewAiEditorState extends State<_OverviewAiEditor> {
           autoGenerateSection: 'Interface Management Overview',
           onChanged: _handleChanged,
         ),
-        if (_lastSavedAt != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              'Saved ${TimeOfDay.fromDateTime(_lastSavedAt!).format(context)}',
-              style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-            ),
-          ),
+        ),
         const SizedBox(height: 8),
         AiDiagramPanel(
           sectionLabel: 'Interface Management Overview',

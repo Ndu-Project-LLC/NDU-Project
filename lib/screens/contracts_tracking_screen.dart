@@ -2,6 +2,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -370,7 +371,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     ];
   }
 
-  String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+  String _newId() => newId();
 
   Stream<List<ContractModel>>? _contractStreamForProject() {
     final projectId = _projectId;
@@ -3478,7 +3479,7 @@ class _RenewalLaneData {
       final oldLabel = map['label']?.toString() ?? '';
       return _RenewalLaneData(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         contractName: map['contractName']?.toString() ??
             (oldLabel.isNotEmpty ? oldLabel : ''),
         contractType: map['contractType']?.toString() ?? 'SLA',
@@ -3536,7 +3537,7 @@ class _RiskSignalData {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _RiskSignalData(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: map['title']?.toString() ?? '',
         detail: map['detail']?.toString() ?? '',
         owner: map['owner']?.toString() ?? '',
@@ -3610,7 +3611,7 @@ class _ApprovalCheckpointData {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _ApprovalCheckpointData(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         gate: map['gate']?.toString() ?? map['title']?.toString() ?? '',
         description: map['description']?.toString() ?? '',
         approver: map['approver']?.toString() ?? map['owner']?.toString() ?? '',

@@ -1,4 +1,6 @@
 /// Model for a status report row in Progress Tracking
+import 'package:ndu_project/utils/unique_id.dart';
+
 class StatusReportRow {
   final String id;
   String
@@ -25,7 +27,7 @@ class StatusReportRow {
     this.followUps = '',
     this.notes = '',
     this.status = 'Draft',
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         reportDate = reportDate ?? DateTime.now();
 
   StatusReportRow copyWith({
@@ -81,7 +83,7 @@ class StatusReportRow {
 
     return StatusReportRow(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       reportType: json['reportType']?.toString() ?? '',
       stakeholder: json['stakeholder']?.toString() ?? '',
       reportDate: parseDate(json['reportDate']?.toString()),

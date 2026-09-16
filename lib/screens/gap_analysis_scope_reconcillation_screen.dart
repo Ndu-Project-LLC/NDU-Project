@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -318,7 +319,7 @@ class _GapAnalysisScopeReconcillationScreenState
           final owner = _extractField(details, 'Owner');
           final nextStep = _extractField(details, 'Next');
           return _GapEntry(
-            uid: DateTime.now().microsecondsSinceEpoch.toString(),
+            uid: newId(),
             id: entry.title.trim().isEmpty ? 'GAP' : entry.title.trim(),
             title: entry.title.trim(),
             stage: entry.status?.trim().isNotEmpty == true
@@ -340,7 +341,7 @@ class _GapAnalysisScopeReconcillationScreenState
     if (raw == null) return [];
     return raw
         .map((entry) => _RootCauseItem(
-              id: DateTime.now().microsecondsSinceEpoch.toString(),
+              id: newId(),
               text: entry.title.trim().isNotEmpty
                   ? entry.title.trim()
                   : entry.details.trim(),
@@ -357,7 +358,7 @@ class _GapAnalysisScopeReconcillationScreenState
           final owner = _extractField(details, 'Owner');
           final due = _extractField(details, 'Due');
           return _PlanEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             title: entry.title.trim(),
             due: due.isNotEmpty ? due : entry.status?.trim() ?? '',
             owner: owner,
@@ -1403,7 +1404,7 @@ class _GapRegisterCard extends StatelessWidget {
                 if (titleController.text.trim().isEmpty) return;
                 final entry = _GapEntry(
                   uid: existing?.uid ??
-                      DateTime.now().microsecondsSinceEpoch.toString(),
+                      newId(),
                   // Gap ids are generated internally (GAP-001, GAP-002, ...)
                   // so the register keeps stable identifiers without asking
                   // the user to type one.
@@ -1924,7 +1925,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                 if (textController.text.trim().isEmpty) return;
                 final item = _RootCauseItem(
                   id: existing?.id ??
-                      DateTime.now().microsecondsSinceEpoch.toString(),
+                      newId(),
                   text: textController.text.trim(),
                   category: selectedCategory,
                   methodology: selectedMethod,
@@ -3005,7 +3006,7 @@ class _ReconciliationPlanningCard extends StatelessWidget {
                 if (titleController.text.trim().isEmpty) return;
                 final plan = _PlanEntry(
                   id: existing?.id ??
-                      DateTime.now().microsecondsSinceEpoch.toString(),
+                      newId(),
                   title: titleController.text.trim(),
                   due: dueController.text.trim(),
                   owner: ownerController.text.trim(),
@@ -3432,7 +3433,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
                 if (areaController.text.trim().isEmpty) return;
                 final impact = _ImpactRow(
                   id: existing?.id ??
-                      DateTime.now().microsecondsSinceEpoch.toString(),
+                      newId(),
                   area: areaController.text.trim(),
                   rating: selectedRating,
                   trend: selectedTrend,
@@ -4308,7 +4309,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
 
   Future<void> _openEditDialog(BuildContext context,
       {ScenarioRecord? record, List<ScenarioRecord>? currentList}) async {
-    final id = record?.id ?? DateTime.now().microsecondsSinceEpoch.toString();
+    final id = record?.id ?? newId();
     final titleCtrl = SpellCheckTextEditingController(text: record?.title ?? '');
     final detailCtrl = SpellCheckTextEditingController(text: record?.detail ?? '');
     final ownerCtrl = SpellCheckTextEditingController(text: record?.owner ?? '');
@@ -6116,7 +6117,7 @@ class _GapEntry {
   factory _GapEntry.fromJson(Map<String, dynamic> json) {
     return _GapEntry(
       uid: json['uid']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       stage: json['stage']?.toString() ?? 'Moderate',
@@ -6252,7 +6253,7 @@ class _ImpactRow {
   factory _ImpactRow.fromJson(Map<String, dynamic> json) {
     return _ImpactRow(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       area: json['area']?.toString() ?? '',
       rating: json['rating']?.toString() ?? 'Medium',
       trend: json['trend']?.toString() ?? 'Stable',
@@ -6310,7 +6311,7 @@ class _ImpactRow {
       }
     }
     return _ImpactRow(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       area: title,
       rating: rating,
       trend: trend,
@@ -6375,7 +6376,7 @@ class _RootCauseItem {
   factory _RootCauseItem.fromJson(Map<String, dynamic> json) {
     return _RootCauseItem(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       text: json['text']?.toString() ?? '',
       category: json['category']?.toString() ?? 'Process',
       methodology: json['methodology']?.toString() ?? '5 Whys',

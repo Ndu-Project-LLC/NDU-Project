@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/pbs/models/pbs_models.dart';
 import 'package:ndu_project/utils/project_scoped_storage.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 
 /// Project-scoped storage key prefix — see [projectScopedPrefsKey].
 ///
@@ -172,7 +173,7 @@ class PBSProvider extends ChangeNotifier {
         ? unattributedProjectId
         : projectId.trim();
     _pbs = PBS(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       projectId: _activeProjectId,
       projectName: projectName,
       root: PBSNode(

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
@@ -254,7 +255,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final rows = data.scheduleActivities.map((activity) {
       var id = activity.wbsId.isNotEmpty ? activity.wbsId : activity.id;
       if (id.trim().isEmpty || usedIds.contains(id)) {
-        id = DateTime.now().microsecondsSinceEpoch.toString();
+        id = newId();
       }
       usedIds.add(id);
       // Track the ID change if the activity's original ID was remapped
@@ -524,7 +525,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     String ensureId(String raw) {
       var candidate = raw.trim().isNotEmpty
           ? raw.trim()
-          : DateTime.now().microsecondsSinceEpoch.toString();
+          : newId();
       if (!usedIds.contains(candidate)) {
         usedIds.add(candidate);
         return candidate;
@@ -714,7 +715,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     _handleActivityChanged();
   }
 
-  String _nextTaskId() => DateTime.now().microsecondsSinceEpoch.toString();
+  String _nextTaskId() => newId();
 
   String _generateWbsId({String? preferred}) {
     final preferredValue = (preferred ?? '').trim();

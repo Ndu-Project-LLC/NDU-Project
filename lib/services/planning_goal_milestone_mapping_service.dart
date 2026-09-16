@@ -1,4 +1,5 @@
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 
 class PlanningGoalMilestoneMappingResult {
   final List<PlanningGoal> planningGoals;
@@ -97,7 +98,7 @@ class PlanningGoalMilestoneMappingService {
   static PlanningGoal _ensureGoalId(PlanningGoal goal) {
     if (goal.id.trim().isNotEmpty) return goal;
     return PlanningGoal(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       goalNumber: goal.goalNumber,
       title: goal.title,
       description: goal.description,
@@ -111,7 +112,7 @@ class PlanningGoalMilestoneMappingService {
   static Milestone _ensureMilestoneId(Milestone milestone) {
     if (milestone.id.trim().isNotEmpty) return milestone;
     return Milestone(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       name: milestone.name,
       discipline: milestone.discipline,
       dueDate: milestone.dueDate,

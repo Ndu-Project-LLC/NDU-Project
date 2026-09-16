@@ -86,4 +86,119 @@ void main() {
     expect(decoded.first, 'a');
     expect(decoded[4], 'b');
   });
+
+  group('healRowIds', () {
+    test('re-mints duplicates and keeps the first occurrence', () {
+      final payload = <String, dynamic>{
+        'components': <dynamic>[
+          <String, dynamic>{'id': 'same', 'name': 'first'},
+          <String, dynamic>{'id': 'same', 'name': 'second'},
+          <String, dynamic>{'id': 'same', 'name': 'third'},
+        ],
+      };
+
+      healRowIds(payload);
+      final rows = payload['components'] as List;
+
+      // The first row keeps its id, so anything referencing 'same' still finds
+      // it rather than dangling.
+      expect((rows[0] as Map)['id'], 'same');
+      expect(rows.map((r) => (r as Map)['id']).toSet().length, 3);
+      // Only the identity is re-minted; the content is left alone.
+      expect(rows.map((r) => (r as Map)['name']).toList(),
+          ['first', 'second', 'third']);
+    });
+
+    test('reaches rows nested inside maps and lists', () {
+      // The real payload is nested like this — executionPhaseData -> sectionData
+      // -> <section> -> rows — which is where most of the broken tables live.
+      final payload = <String, dynamic>{
+        'executionPhaseData': <String, dynamic>{
+          'sectionData': <String, dynamic>{
+            'compliance': <String, dynamic>{
+              'rows': <dynamic>[
+                <String, dynamic>{'id': 'dup', 'standard': 'ISO 9001'},
+                <String, dynamic>{'id': 'dup', 'standard': 'ISO 27001'},
+              ],
+            },
+          },
+        },
+      };
+
+      healRowIds(payload);
+      final sectionData =
+          (payload['executionPhaseData'] as Map)['sectionData'] as Map;
+      final rows = (sectionData['compliance'] as Map)['rows'] as List;
+
+      expect((rows[0] as Map)['id'], 'dup');
+      expect((rows[1] as Map)['id'], isNot('dup'));
+    });
+
+    test('the same id in two different lists is left alone', () {
+      final payload = <String, dynamic>{
+        'epics': <dynamic>[
+          <String, dynamic>{'id': '12'},
+        ],
+        'tasks': <dynamic>[
+          <String, dynamic>{'id': '12'},
+        ],
+      };
+
+      healRowIds(payload);
+
+      // Ids only have to be unique within a list, so neither of these is a
+      // duplicate and neither is re-minted.
+      expect((payload['epics'] as List)[0]['id'], '12');
+      expect((payload['tasks'] as List)[0]['id'], '12');
+    });
+
+    test('a blank id is minted rather than shared', () {
+      final payload = <String, dynamic>{
+        'rows': <dynamic>[
+          <String, dynamic>{'id': ''},
+          <String, dynamic>{'id': ''},
+          <String, dynamic>{},
+        ],
+      };
+
+      healRowIds(payload);
+      final rows = payload['rows'] as List;
+      final minted = rows.map((r) => (r as Map)['id']).whereType<String>();
+
+      // An empty id matches every other empty id, so both rows need one.
+      expect(minted.length, 2);
+      expect(minted.toSet().length, 2);
+      // A row carrying no id at all is left for its decoder to mint.
+      expect((rows[2] as Map)['id'], isNull);
+    });
+
+    test('ids that are not strings are never rewritten', () {
+      final payload = <String, dynamic>{
+        'rows': <dynamic>[
+          <String, dynamic>{'id': 1},
+          <String, dynamic>{'id': 1},
+        ],
+      };
+
+      healRowIds(payload);
+
+      // Rewriting these would silently turn an int id into a string.
+      expect((payload['rows'] as List)[1]['id'], 1);
+    });
+
+    test('an already-unique payload is left untouched', () {
+      final payload = <String, dynamic>{
+        'rows': <dynamic>[
+          <String, dynamic>{'id': 'a'},
+          <String, dynamic>{'id': 'b'},
+        ],
+      };
+
+      healRowIds(payload);
+      healRowIds(payload);
+
+      expect((payload['rows'] as List)[0]['id'], 'a');
+      expect((payload['rows'] as List)[1]['id'], 'b');
+    });
+  });
 }

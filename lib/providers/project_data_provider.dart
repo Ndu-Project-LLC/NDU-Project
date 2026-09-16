@@ -8,6 +8,7 @@ import 'package:ndu_project/services/activity_log_service.dart';
 import 'package:ndu_project/services/activity_auto_logger.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/services/project_intelligence_service.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 
 /// Provider that manages project data state across the entire application
 class ProjectDataProvider extends ChangeNotifier {
@@ -509,6 +510,12 @@ class ProjectDataProvider extends ChangeNotifier {
 
   ProjectDataModel _decodeProjectData(
       Map<String, dynamic> source, String projectId) {
+    // Repair rows saved sharing an id, from before ids were minted with a
+    // counter (see lib/utils/unique_id.dart). Both the normal and the recovery
+    // load path come through here, and `source` is a deep copy this load owns
+    // (`_sanitizeTimestampsRecursive` rebuilds every map and list), so healing
+    // it in place cannot reach the caller's payload or Firestore.
+    healRowIds(source);
     final parsed = ProjectDataModel.fromJson(source);
     return ProjectIntelligenceService.rebuildActivityLog(
       parsed.copyWith(projectId: projectId),

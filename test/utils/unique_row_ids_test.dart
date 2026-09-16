@@ -16,7 +16,8 @@ import 'package:flutter_test/flutter_test.dart';
 ///
 /// Every id is now minted through [newId] (`lib/utils/unique_id.dart`), which
 /// is unique within the process, and data saved with a duplicated id is
-/// repaired on load with [persistedId].
+/// repaired on load — app-wide by [healRowIds] at the point a project payload
+/// is decoded, and per decoder by [persistedId].
 ///
 /// This test reads the source on purpose: it fails at the moment a new clock
 /// derived id is introduced, before it can merge two rows at runtime.
@@ -126,6 +127,26 @@ void main() {
       reason: 'Every decoded list on the screen must pass its stored id '
           'through persistedId(), or a project saved before the fix keeps its '
           'merged rows.',
+    );
+  });
+
+  test('every project load heals rows saved sharing an id', () {
+    // Repairing one screen's decoder only heals that screen. The payload is
+    // healed where it is decoded instead, which covers every table in the app
+    // at once — so this one call is what makes the fix app-wide, and losing it
+    // silently would put merged rows back for every project already on disk.
+    final provider = sources['lib/providers/project_data_provider.dart'];
+    expect(provider, isNotNull);
+
+    final decode = provider!.indexOf('ProjectDataModel _decodeProjectData');
+    expect(decode, greaterThanOrEqualTo(0),
+        reason: 'The load path is expected to decode through '
+            '_decodeProjectData; if it was renamed, update this guard.');
+    expect(
+      provider.substring(decode, (decode + 600).clamp(0, provider.length)),
+      contains('healRowIds('),
+      reason: 'The project load path must heal the payload before decoding it, '
+          'or a project saved before the fix keeps its merged rows.',
     );
   });
 }

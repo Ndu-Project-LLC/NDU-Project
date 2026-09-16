@@ -57,3 +57,47 @@ String persistedId(Object? raw, Set<String> seen) {
   if (stored == null || stored.isEmpty || !seen.add(stored)) return newId();
   return stored;
 }
+
+/// De-duplicates the row ids a persisted payload carries, in place.
+///
+/// Minting through [newId] stops *new* rows colliding, but it cannot repair a
+/// project that is already saved: those rows still share an id on disk, so
+/// every load rebuilds them colliding and an edit still lands on the first one.
+/// Walking the payload once, where it is decoded, heals every table in the app
+/// together instead of one screen's decoder at a time.
+///
+/// The first row to carry an id keeps it. That is what makes this safe for data
+/// that references rows by id: a task pointing at epic `'12'` still finds epic
+/// `'12'`, while the duplicate that was shadowing it is re-minted — it loses
+/// only an identity it never really had, and edits could never reach it anyway.
+///
+/// Only `String` ids are touched. A list whose rows use ids of another type is
+/// left exactly as it is, because rewriting those would change their type.
+void healRowIds(Object? node) {
+  if (node is Map) {
+    for (final value in node.values) {
+      healRowIds(value);
+    }
+    return;
+  }
+  if (node is! List) return;
+
+  // Uniqueness is only needed *within* one list: the same id in two different
+  // lists is normal (a task and an epic can both be '12'), so the ids that have
+  // been handed out so far are tracked per list rather than across the payload.
+  Set<String>? seen;
+  for (final item in node) {
+    if (item is Map) {
+      final raw = item['id'];
+      if (raw is String) {
+        seen ??= <String>{};
+        // A blank id matches every other blank id, so it collides just as
+        // surely as a repeated one.
+        if (raw.isEmpty || !seen.add(raw)) {
+          item['id'] = newId();
+        }
+      }
+    }
+    healRowIds(item);
+  }
+}

@@ -35,6 +35,7 @@ import 'package:ndu_project/services/planning_sync_service.dart';
 import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cross_section_sync_card.dart';
+import 'package:ndu_project/widgets/scrollable_section_header.dart';
 import 'package:go_router/go_router.dart';
 
 
@@ -56,6 +57,14 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
     vsync: this,
   );
   bool _syncedAll = false;
+
+  /// The module's sub-sections. Shared by the [SectionNavigator] tabs and by
+  /// the collapsed section-header bar's summary.
+  static const List<SectionTab> _sectionTabs = [
+    SectionTab(icon: Icons.build_outlined, label: 'Builder'),
+    SectionTab(icon: Icons.bar_chart, label: 'Gantt'),
+    SectionTab(icon: Icons.list_alt, label: 'List View'),
+  ];
 
   /// Guards the build-time project sync so a project change triggers exactly
   /// one load pass (the next build sees a mismatched scope until it finishes).
@@ -426,159 +435,175 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
-              // ── World-class Section Navigator ─────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: SectionNavigator(
-                  title: 'Schedule Navigation',
-                  subtitle: 'Navigate between schedule sections',
-                  icon: Icons.calendar_month_outlined,
-                  tabs: const [
-                    SectionTab(icon: Icons.build_outlined, label: 'Builder'),
-                    SectionTab(icon: Icons.bar_chart, label: 'Gantt'),
-                    SectionTab(icon: Icons.list_alt, label: 'List View'),
-                  ],
-                  controller: _tabController,
-                  onChanged: (index) => setState(() {}),
-                  isCollapsible: true,
-                  initiallyCollapsed: true,
-                ),
-              ),
-              // ── Context banner (drawn from WBS + Cost Estimate) ───────
-              ContextBanner(
-                storageKey: 'schedule_module_context_banner',
-                items: [
-                  ContextBannerItem(
-                    label: 'Project',
-                    value: projectName,
-                    icon: Icons.flag_outlined,
-                  ),
-                  if (wbs != null && wbsCounts != null)
-                    ContextBannerItem(
-                      label: 'WBS',
-                      value:
-                          '$wbsNodeCount nodes · ${wbsCounts.level1} ${wbs.framework.level1Label}',
-                      icon: Icons.account_tree_outlined,
-                    ),
-                  if (estimate != null)
-                    ContextBannerItem(
-                      label: 'Cost Estimate',
-                      value: formatCurrency(costTotal, currency),
-                      icon: Icons.attach_money,
-                    ),
-                  if (fepMilestoneCount > 0)
-                    ContextBannerItem(
-                      label: 'Planning Milestones',
-                      value: '$syncedMstones / $fepMilestoneCount synced',
-                      icon: Icons.flag_outlined,
-                    ),
-                  if (syncedPkgs > 0 || syncedStories > 0)
-                    ContextBannerItem(
-                      label: 'From Planning',
-                      value: '${syncedPkgs + syncedStories} items synced',
-                      icon: Icons.sync,
-                    ),
-                ],
-              ),
-              // ── Resync button ─────────────────────────────────────
-              if (fepMilestoneCount > 0 || syncedPkgs > 0 || syncedStories > 0)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                  child: Row(
-                    children: [
-                      const Spacer(),
-                      TextButton.icon(
-                        onPressed: () async {
-                          await PlanningSyncService.syncAll(
-                            context: context,
-                            provider: provider,
-                            replaceExisting: true,
-                          );
-                          if (mounted) setState(() {});
-                        },
-                        icon: const Icon(Icons.refresh, size: 16),
-                        label: const Text('Resync from Planning'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFFB8860B),
-                          textStyle: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ],
-                ),
-              ),
-              // ── Pull scheduled purchases into the Cost Estimate ─────────
-              if (purchaseCandidates.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: pendingPurchasePull.isEmpty
-                          ? const Color(0xFFF0FDF4)
-                          : const Color(0xFFFFFBEB),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: pendingPurchasePull.isEmpty
-                            ? const Color(0xFFBBF7D0)
-                            : const Color(0xFFFDE68A),
+              // Scrollable, self-collapsing section header: the tab content
+              // below always keeps its share of the page.
+              ScrollableSectionHeader(
+                label: 'Schedule',
+                icon: Icons.calendar_month_outlined,
+                summary: _sectionTabs[_tabController.index].label,
+                scrollKey: const ValueKey('scheduleHeaderScroll'),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── World-class Section Navigator ──────────────────────
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: SectionNavigator(
+                        title: 'Schedule Navigation',
+                        subtitle: 'Navigate between schedule sections',
+                        icon: Icons.calendar_month_outlined,
+                        tabs: _sectionTabs,
+                        controller: _tabController,
+                        onChanged: (index) => setState(() {}),
+                        isCollapsible: true,
+                        initiallyCollapsed: true,
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          pendingPurchasePull.isEmpty
-                              ? Icons.check_circle_outline
-                              : Icons.shopping_cart_checkout,
-                          size: 16,
-                          color: pendingPurchasePull.isEmpty
-                              ? const Color(0xFF16A34A)
-                              : const Color(0xFFB45309),
+                    // ── Context banner (drawn from WBS + Cost Estimate) ────
+                    ContextBanner(
+                      storageKey: 'schedule_module_context_banner',
+                      items: [
+                        ContextBannerItem(
+                          label: 'Project',
+                          value: projectName,
+                          icon: Icons.flag_outlined,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            pendingPurchasePull.isEmpty
-                                ? 'All ${purchaseCandidates.length} scheduled purchase${purchaseCandidates.length == 1 ? '' : 's'} are in the Cost Estimate.'
-                                : '${pendingPurchasePull.length} scheduled purchase${pendingPurchasePull.length == 1 ? '' : 's'} not yet in the Cost Estimate.',
-                            style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF374151)),
+                        if (wbs != null && wbsCounts != null)
+                          ContextBannerItem(
+                            label: 'WBS',
+                            value:
+                                '$wbsNodeCount nodes · ${wbsCounts.level1} ${wbs.framework.level1Label}',
+                            icon: Icons.account_tree_outlined,
                           ),
-                        ),
-                        if (pendingPurchasePull.isNotEmpty)
-                          TextButton.icon(
-                            onPressed: () => _pullScheduledPurchases(
-                                context, pendingPurchasePull),
-                            icon: const Icon(Icons.arrow_downward, size: 14),
-                            label: Text(
-                                'Pull ${pendingPurchasePull.length} into Cost Estimate',
-                                style: const TextStyle(fontSize: 11)),
-                            style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFFB45309),
-                              backgroundColor: const Color(0xFFFFF7ED),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
-                              minimumSize: Size.zero,
-                              tapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                            ),
+                        if (estimate != null)
+                          ContextBannerItem(
+                            label: 'Cost Estimate',
+                            value: formatCurrency(costTotal, currency),
+                            icon: Icons.attach_money,
+                          ),
+                        if (fepMilestoneCount > 0)
+                          ContextBannerItem(
+                            label: 'Planning Milestones',
+                            value:
+                                '$syncedMstones / $fepMilestoneCount synced',
+                            icon: Icons.flag_outlined,
+                          ),
+                        if (syncedPkgs > 0 || syncedStories > 0)
+                          ContextBannerItem(
+                            label: 'From Planning',
+                            value:
+                                '${syncedPkgs + syncedStories} items synced',
+                            icon: Icons.sync,
                           ),
                       ],
                     ),
-                  ),
+                    // ── Resync button ──────────────────────────────────────
+                    if (fepMilestoneCount > 0 ||
+                        syncedPkgs > 0 ||
+                        syncedStories > 0)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                        child: Row(
+                          children: [
+                            const Spacer(),
+                            TextButton.icon(
+                              onPressed: () async {
+                                await PlanningSyncService.syncAll(
+                                  context: context,
+                                  provider: provider,
+                                  replaceExisting: true,
+                                );
+                                if (mounted) setState(() {});
+                              },
+                              icon: const Icon(Icons.refresh, size: 16),
+                              label: const Text('Resync from Planning'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFFB8860B),
+                                textStyle: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    // ── Pull scheduled purchases into the Cost Estimate ────
+                    if (purchaseCandidates.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: pendingPurchasePull.isEmpty
+                                ? const Color(0xFFF0FDF4)
+                                : const Color(0xFFFFFBEB),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: pendingPurchasePull.isEmpty
+                                  ? const Color(0xFFBBF7D0)
+                                  : const Color(0xFFFDE68A),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                pendingPurchasePull.isEmpty
+                                    ? Icons.check_circle_outline
+                                    : Icons.shopping_cart_checkout,
+                                size: 16,
+                                color: pendingPurchasePull.isEmpty
+                                    ? const Color(0xFF16A34A)
+                                    : const Color(0xFFB45309),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  pendingPurchasePull.isEmpty
+                                      ? 'All ${purchaseCandidates.length} scheduled purchase${purchaseCandidates.length == 1 ? '' : 's'} are in the Cost Estimate.'
+                                      : '${pendingPurchasePull.length} scheduled purchase${pendingPurchasePull.length == 1 ? '' : 's'} not yet in the Cost Estimate.',
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF374151)),
+                                ),
+                              ),
+                              if (pendingPurchasePull.isNotEmpty)
+                                TextButton.icon(
+                                  onPressed: () => _pullScheduledPurchases(
+                                      context, pendingPurchasePull),
+                                  icon: const Icon(Icons.arrow_downward,
+                                      size: 14),
+                                  label: Text(
+                                      'Pull ${pendingPurchasePull.length} into Cost Estimate',
+                                      style: const TextStyle(fontSize: 11)),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFFB45309),
+                                    backgroundColor: const Color(0xFFFFF7ED),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 6),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    // ── WBS packages carried by this schedule ───────────────
+                    // The owner's ask (2026-09-10): the schedule must be able
+                    // to put out everything that is on the WBS, so every
+                    // package can find itself on the schedule, take its
+                    // start/finish from the WBS, and carry a cost item that
+                    // then shows up in the Cost Estimate and in the WBS cost
+                    // views.
+                    const ScheduleWbsPackagesCard(),
+                    // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ───────
+                    const CrossSectionSyncCard(
+                      currentSection: CrossSection.schedule,
+                    ),
+                  ],
                 ),
-              // ── WBS packages carried by this schedule ─────────────────
-              // The owner's ask (2026-09-10): the schedule must be able to put
-              // out everything that is on the WBS, so every package can find
-              // itself on the schedule, take its start/finish from the WBS,
-              // and carry a cost item that then shows up in the Cost Estimate
-              // and in the WBS cost views.
-              const ScheduleWbsPackagesCard(),
-              // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ──────────
-              const CrossSectionSyncCard(
-                currentSection: CrossSection.schedule,
               ),
               // Tab content
               Expanded(

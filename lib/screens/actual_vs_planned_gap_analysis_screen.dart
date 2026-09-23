@@ -107,6 +107,7 @@ class _ActualVsPlannedGapAnalysisScreenState
 
   Widget _buildScopeGapsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Scope Gap Analysis',
       subtitle: 'Compare planned deliverables vs actual outcomes.',
       columns: const [
@@ -232,6 +233,7 @@ class _ActualVsPlannedGapAnalysisScreenState
 
   Widget _buildMilestoneVariancePanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Milestone Variance',
       subtitle: 'Compare planned vs actual milestone dates.',
       columns: const [
@@ -369,6 +371,7 @@ class _ActualVsPlannedGapAnalysisScreenState
 
   Widget _buildBudgetVariancePanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Budget Variance',
       subtitle: 'Compare planned vs actual costs by category.',
       columns: const [
@@ -498,6 +501,7 @@ class _ActualVsPlannedGapAnalysisScreenState
 
   Widget _buildRootCausesPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Root Cause Analysis',
       subtitle:
           'For major gaps: identify root cause, impact, and corrective action.',
@@ -636,6 +640,7 @@ class _ActualVsPlannedGapAnalysisScreenState
 
   Widget _buildFollowUpPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Follow-Up Actions',
       subtitle: 'Items requiring post-project attention.',
       columns: const [

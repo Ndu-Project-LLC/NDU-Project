@@ -194,6 +194,7 @@ class _DeliverProjectClosureScreenState
 
   Widget _buildScopeAcceptancePanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Scope Acceptance',
       subtitle:
           'Track acceptance status for each deliverable. Items are editable inline.',
@@ -293,6 +294,7 @@ class _DeliverProjectClosureScreenState
 
   Widget _buildMilestonesPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Delivery Milestones',
       subtitle: 'Track planned vs actual completion for key milestones.',
       columns: const [
@@ -393,6 +395,7 @@ class _DeliverProjectClosureScreenState
   Widget _buildOutstandingPanel() {
     final ownerNames = _teamMemberNames();
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Outstanding Items',
       subtitle: 'Items still pending closure before or shortly after handover.',
       columns: [
@@ -494,6 +497,7 @@ class _DeliverProjectClosureScreenState
   Widget _buildRiskFollowUpsPanel() {
     final ownerNames = _teamMemberNames();
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Post-Delivery Risks',
       subtitle: 'Risks and gaps to monitor after project delivery.',
       columns: [

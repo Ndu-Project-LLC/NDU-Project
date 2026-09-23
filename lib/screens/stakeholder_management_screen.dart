@@ -12,6 +12,7 @@ import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/utils/stakeholder_review.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/stakeholder_announcement.dart';
 
@@ -22,6 +23,7 @@ import 'package:ndu_project/openai/openai_config.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/utils/stakeholder_provenance.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class StakeholderManagementScreen extends StatefulWidget {
   const StakeholderManagementScreen({super.key});
@@ -85,6 +87,91 @@ class _StakeholderManagementScreenState
       _maybeAutoPopulateStakeholders();
       _subscribeToAnnouncements();
     });
+  }
+
+  /// Review prompt before leaving the section.
+  ///
+  /// Lusaka 25 (copy) review: "we put a pop-up that says they need to ensure to
+  /// review it … ensure that it's stakeholder name, organization and title is
+  /// currently reflected — so let's put the work on them to actually do it."
+  ///
+  /// The same call raised the underlying data problem: "we need to have an
+  /// actual name of the person", and the recognition that rows arrive carrying
+  /// an organisation instead — "some people might put stakeholder on them and
+  /// actually put the name". So the prompt names the specific rows that are
+  /// still office-only, and it is a prompt rather than a hard block: the owner
+  /// wants the work pushed back to the user, not the section locked.
+  Future<bool> _confirmStakeholderDetails() async {
+    final entries = ProjectDataHelper.getData(context).stakeholderEntries;
+    if (entries.isEmpty) return true;
+
+    final gaps = stakeholderGaps(entries);
+    if (gaps.isEmpty) return true;
+
+    final missingName =
+        gaps.where((g) => g.hasNoPerson).toList(growable: false);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Review the stakeholder details'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(stakeholderReviewSummary(gaps.length, entries.length)),
+              if (missingName.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(
+                  '${missingName.length} carr'
+                  '${missingName.length == 1 ? 'ies' : 'y'} no person\'s name '
+                  'at all. A name is what makes the engagement actionable — '
+                  'without one there is nobody to contact.',
+                  style: const TextStyle(
+                      fontSize: 13, color: Color(0xFFB45309)),
+                ),
+              ],
+              const SizedBox(height: 12),
+              for (final gap in gaps.take(10))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    '• ${gap.describe} — missing '
+                    '${gap.missing.map((f) => f.label).join(', ')}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              if (gaps.length > 10) ...[
+                const SizedBox(height: 4),
+                Text('…and ${gaps.length - 10} more.',
+                    style: const TextStyle(fontSize: 12)),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Go back and fix'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Reviewed — continue'),
+          ),
+        ],
+      ),
+    );
+
+    return confirmed ?? false;
+  }
+
+  /// The shared handler for both Next affordances (the header arrow and the
+  /// footer button), so neither can bypass the review prompt.
+  Future<void> _goToNextWithReview() async {
+    final proceed = await _confirmStakeholderDetails();
+    if (!mounted || !proceed) return;
+    PlanningPhaseNavigation.goToNext(context, 'stakeholder_management');
   }
 
   @override
@@ -156,8 +243,7 @@ class _StakeholderManagementScreenState
         breadcrumbTitle: 'Stakeholder Management Plan',
         onBack: () => PlanningPhaseNavigation.goToPrevious(
             context, 'stakeholder_management'),
-        onForward: () =>
-            PlanningPhaseNavigation.goToNext(context, 'stakeholder_management'),
+        onForward: _goToNextWithReview,
         // Export PDF remains in the Engagement toolbar. On desktop this
         // header is constrained to the content column beside the sidebar.
         showExportPdf: false,
@@ -295,8 +381,7 @@ class _StakeholderManagementScreenState
                   PlanningPhaseNavigation.nextLabel('stakeholder_management'),
               onBack: () => PlanningPhaseNavigation.goToPrevious(
                   context, 'stakeholder_management'),
-              onNext: () => PlanningPhaseNavigation.goToNext(
-                  context, 'stakeholder_management'),
+              onNext: _goToNextWithReview,
             ),
             const SizedBox(height: 60),
           ],
@@ -687,13 +772,16 @@ class _StakeholderManagementScreenState
     // ── 1. Initiation Phase core stakeholders ──────────────────────────
     final coreStakeholders = projectData.coreStakeholdersData;
     if (coreStakeholders != null) {
-      final solutionData =
-          coreStakeholders.solutionStakeholderData.firstWhere(
-        (s) => s.solutionTitle == projectData.preferredSolution?.title,
-        orElse: () => coreStakeholders.solutionStakeholderData.isNotEmpty
-            ? coreStakeholders.solutionStakeholderData.first
-            : SolutionStakeholderData(),
+      // Provenance is recorded, not assumed: the carry reports whether the
+      // rows genuinely came from the preferred solution or from a candidate
+      // (Lusaka 25 (copy): the owner could not verify the PM / Program Manager
+      // rows were carried from the preferred solution).
+      final source = resolveCarriedStakeholderSource(
+        solutions: coreStakeholders.solutionStakeholderData,
+        preferredTitle: projectData.preferredSolution?.title,
       );
+      final solutionData = source.data ?? SolutionStakeholderData();
+      final provenanceNote = source.provenanceNote;
 
       void parseAndAdd(String text, String org) {
         for (var line in text.split('\n')) {
@@ -713,7 +801,7 @@ class _StakeholderManagementScreenState
             interest: 'Medium',
             channel: 'Email',
             owner: 'Project Manager',
-            notes: 'Auto-loaded from Initiation Phase',
+            notes: provenanceNote,
             createdAt: now,
             updatedAt: now,
           ));
@@ -838,12 +926,12 @@ class _StakeholderManagementScreenState
       return;
     }
 
-    final solutionData = coreStakeholders.solutionStakeholderData.firstWhere(
-      (s) => s.solutionTitle == projectData.preferredSolution?.title,
-      orElse: () => coreStakeholders.solutionStakeholderData.isNotEmpty
-          ? coreStakeholders.solutionStakeholderData.first
-          : SolutionStakeholderData(),
+    final source = resolveCarriedStakeholderSource(
+      solutions: coreStakeholders.solutionStakeholderData,
+      preferredTitle: projectData.preferredSolution?.title,
     );
+    final solutionData = source.data ?? SolutionStakeholderData();
+    final provenanceNote = source.provenanceNote;
 
     if (solutionData.solutionTitle.isEmpty &&
         coreStakeholders.solutionStakeholderData.isEmpty) {
@@ -870,7 +958,9 @@ class _StakeholderManagementScreenState
             interest: 'Medium',
             channel: 'Email',
             owner: 'Project Manager',
-            notes: 'Added from Initiation Phase',
+            // States which solution these rows came from, so a viewer can
+            // check the provenance rather than take it on trust.
+            notes: provenanceNote,
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
           ));

@@ -139,6 +139,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
 
   Widget _buildTeamRosterPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Team Ramp-Down Roster',
       subtitle: 'Track each team member\'s release status and dates.',
       columns: const [
@@ -259,6 +260,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
 
   Widget _buildKnowledgeTransferPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Knowledge Transfer',
       subtitle: 'Sessions and artifacts being handed off before team release.',
       columns: const [
@@ -394,6 +396,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
 
   Widget _buildVendorOffboardingPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Vendor Offboarding',
       subtitle:
           'Track vendor exits, access cleanup, and remaining obligations.',
@@ -516,6 +519,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
 
   Widget _buildCommunicationsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Communications & People Care',
       subtitle:
           'Planned communications to stakeholders, team, and affected people.',

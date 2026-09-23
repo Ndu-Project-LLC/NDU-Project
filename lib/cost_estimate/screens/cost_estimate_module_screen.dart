@@ -26,7 +26,10 @@ import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/widgets/context_banner.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
+import 'package:ndu_project/cost_estimate/utils/quality_cost_lines.dart';
 import 'package:ndu_project/cost_estimate/utils/risk_cost_lines.dart';
+import 'package:ndu_project/cost_estimate/utils/ssher_cost_lines.dart';
+import 'package:ndu_project/models/cost_of_quality.dart';
 import 'package:ndu_project/cost_estimate/screens/setup_wizard_screen.dart';
 import 'package:ndu_project/cost_estimate/screens/builder_screen.dart';
 import 'package:ndu_project/cost_estimate/screens/boe_screen.dart';
@@ -39,10 +42,12 @@ import 'package:ndu_project/cost_estimate/screens/variance_screen.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
+import 'package:ndu_project/widgets/scrollable_section_header.dart';
 import 'package:ndu_project/wbs/utils/wbs_cost_coverage.dart';
 import 'package:go_router/go_router.dart';
 
@@ -64,6 +69,25 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
     length: 10,
     vsync: this,
   );
+
+  /// The module's sub-sections, in the same order as the [TabBarView] below.
+  /// Shared by the [SectionNavigator] tabs and by the collapsed
+  /// section-header bar's summary.
+  static const List<SectionTab> _sectionTabs = [
+    SectionTab(icon: Icons.dashboard_outlined, label: 'Cost Dashboard'),
+    SectionTab(icon: Icons.build_outlined, label: 'Builder'),
+    // Cost by WBS sits directly beside the Builder: it is the read-back view
+    // of what the Builder writes, and the product owner asked for it to stop
+    // being the last tab (2026-09-10).
+    SectionTab(icon: Icons.account_tree_outlined, label: 'Cost by WBS'),
+    SectionTab(icon: Icons.description_outlined, label: 'BOE'),
+    SectionTab(icon: Icons.auto_awesome, label: 'AI'),
+    SectionTab(icon: Icons.people_outline, label: 'Stakeholders'),
+    SectionTab(icon: Icons.account_balance_outlined, label: 'Accounting'),
+    SectionTab(icon: Icons.check_circle_outline, label: 'Review'),
+    SectionTab(icon: Icons.lock_outline, label: 'Baseline'),
+    SectionTab(icon: Icons.trending_up, label: 'Variance'),
+  ];
 
   /// Guards the build-time project sync so a project change triggers exactly
   /// one load pass (the next build sees a mismatched scope until it finishes).
@@ -220,40 +244,32 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
-              // ── World-class Section Navigator (always visible, pinned) ─
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: SectionNavigator(
-                  title: 'Cost Estimate Navigation',
-                  subtitle: 'Navigate between cost estimate sections',
-                  icon: Icons.attach_money_outlined,
-                  tabs: const [
-                    SectionTab(
-                        icon: Icons.dashboard_outlined,
-                        label: 'Cost Dashboard'),
-                    SectionTab(icon: Icons.build_outlined, label: 'Builder'),
-                    // Cost by WBS sits directly beside the Builder: it is the
-                    // read-back view of what the Builder writes, and the product
-                    // owner asked for it to stop being the last tab (2026-09-10).
-                    SectionTab(
-                        icon: Icons.account_tree_outlined,
-                        label: 'Cost by WBS'),
-                    SectionTab(icon: Icons.description_outlined, label: 'BOE'),
-                    SectionTab(icon: Icons.auto_awesome, label: 'AI'),
-                    SectionTab(
-                        icon: Icons.people_outline, label: 'Stakeholders'),
-                    SectionTab(
-                        icon: Icons.account_balance_outlined,
-                        label: 'Accounting'),
-                    SectionTab(
-                        icon: Icons.check_circle_outline, label: 'Review'),
-                    SectionTab(icon: Icons.lock_outline, label: 'Baseline'),
-                    SectionTab(icon: Icons.trending_up, label: 'Variance'),
+              // Scrollable, self-collapsing section header: the tab content
+              // below always keeps its share of the page.
+              ScrollableSectionHeader(
+                label: 'Cost Estimate',
+                icon: Icons.attach_money_outlined,
+                summary: _sectionTabs[_tabController.index].label,
+                scrollKey: const ValueKey('costEstimateHeaderScroll'),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── World-class Section Navigator ─────────────────────
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: SectionNavigator(
+                        title: 'Cost Estimate Navigation',
+                        subtitle: 'Navigate between cost estimate sections',
+                        icon: Icons.attach_money_outlined,
+                        tabs: _sectionTabs,
+                        controller: _tabController,
+                        onChanged: (index) => setState(() {}),
+                        isCollapsible: true,
+                        initiallyCollapsed: true,
+                      ),
+                    ),
                   ],
-                  controller: _tabController,
-                  onChanged: (index) => setState(() {}),
-                  isCollapsible: true,
-                  initiallyCollapsed: true,
                 ),
               ),
               // Tab content
@@ -317,6 +333,20 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
 /// production — only a test sets it.
 @visibleForTesting
 List<Map<String, String>>? Function()? riskRegisterSourceOverride;
+
+/// Test seam for the dashboard's SSHER Costs card (see
+/// [_SsherCostCard.entriesSource]): when non-null, the card reads the SSHER
+/// items from this function instead of the live project data. Always null in
+/// production — only a test sets it.
+@visibleForTesting
+List<SsherEntry>? Function()? ssherEntriesSourceOverride;
+
+/// Test seam for the dashboard's Cost of Quality card (see
+/// [_QualityCostCard.dataSource]): when non-null, the card reads the Cost of
+/// Quality data from this function instead of the live project data. Always
+/// null in production — only a test sets it.
+@visibleForTesting
+CostOfQualityData? Function()? costOfQualitySourceOverride;
 
 class _CostDashboardTab extends StatelessWidget {
   final CostEstimateProvider provider;
@@ -499,6 +529,14 @@ class _CostDashboardTab extends StatelessWidget {
 
             // ── 2d. Risk register card (matrix → Risk Allowance pull) ─
             _buildRiskCard(context, lines, currencySymbol),
+            const SizedBox(height: 22),
+
+            // ── 2e. SSHER card (purchases → SSHER cost lines) ────────
+            _buildSsherCard(context, lines, currencySymbol),
+            const SizedBox(height: 22),
+
+            // ── 2f. Quality card (Cost of Quality → quality cost lines) ──
+            _buildQualityCard(context, lines, currencySymbol),
             const SizedBox(height: 22),
 
             // ── 3. Two-column bento: Cost Breakdown + Composition donut ──
@@ -762,6 +800,40 @@ class _CostDashboardTab extends StatelessWidget {
     );
   }
 
+  /// SSHER card — pulls the SSHER items that require a purchase into the
+  /// estimate as `ssher` cost lines. Selection and summing only, no AI
+  /// (Lusaka 25 (copy): "you can have them on the table and say cost items and
+  /// then estimated costs … that is how we can put our share costs into the
+  /// cost estimate").
+  Widget _buildSsherCard(
+    BuildContext context,
+    List<CostLine> lines,
+    String currencySymbol,
+  ) {
+    return _SsherCostCard(
+      lines: lines,
+      currencySymbol: currencySymbol,
+      entriesSource: ssherEntriesSourceOverride,
+    );
+  }
+
+  /// Cost of Quality card — moves the prevention / appraisal / internal and
+  /// external failure spend captured on the Quality tab into the estimate as
+  /// `quality` cost lines. Selection and summing only, no AI
+  /// (Lusaka 25 (copy): "quality is not done … the quality costs must reach the
+  /// cost estimate").
+  Widget _buildQualityCard(
+    BuildContext context,
+    List<CostLine> lines,
+    String currencySymbol,
+  ) {
+    return _QualityCostCard(
+      lines: lines,
+      currencySymbol: currencySymbol,
+      dataSource: costOfQualitySourceOverride,
+    );
+  }
+
   static String _fmt(double value) {
     if (value >= 1000000) {
       return '${(value / 1000000).toStringAsFixed(value % 1000000 == 0 ? 0 : 1)}M';
@@ -770,6 +842,468 @@ class _CostDashboardTab extends StatelessWidget {
       return '${(value / 1000).toStringAsFixed(value % 1000 == 0 ? 0 : 1)}K';
     }
     return value.toStringAsFixed(value == value.roundToDouble() ? 0 : 2);
+  }
+}
+
+/// Loads the project's SSHER items and lets the user pull the ones that must be
+/// bought into the Cost Estimate as `ssher` cost lines. Pure selection and
+/// summing — the assessor ticks "requires a purchase" and types the amount —
+/// no AI (Lusaka 25 (copy)).
+class _SsherCostCard extends StatefulWidget {
+  final List<CostLine> lines;
+  final String currencySymbol;
+
+  /// Test seam: when set, the card reads the SSHER items from here instead of
+  /// the live project data.
+  final List<SsherEntry>? Function()? entriesSource;
+
+  const _SsherCostCard({
+    required this.lines,
+    required this.currencySymbol,
+    this.entriesSource,
+  });
+
+  @override
+  State<_SsherCostCard> createState() => _SsherCostCardState();
+}
+
+class _SsherCostCardState extends State<_SsherCostCard> {
+  static const _ink = Color(0xFF0B1220);
+  static const _muted = Color(0xFF64748B);
+  static const _hairline = Color(0xFFE2E8F0);
+  static const _surface = Colors.white;
+  static const _surfaceAlt = Color(0xFFF8FAFC);
+
+  bool _pulling = false;
+
+  List<SsherEntry> get _allEntries {
+    final override = widget.entriesSource;
+    if (override != null) return override() ?? const <SsherEntry>[];
+    final projectData = context.read<ProjectDataProvider>().projectData;
+    return projectData.ssherData.entries;
+  }
+
+  /// Priced purchases — the items the owner asked to see as cost lines.
+  List<SsherCostLine> get _priced =>
+      collectSsherCostLines(entries: _allEntries);
+
+  /// Purchases still missing from the estimate (same description + total).
+  List<SsherCostLine> get _pending =>
+      _priced.where((item) => !widget.lines.any((l) =>
+              l.category == CostCategory.ssher &&
+              l.description == item.description &&
+              (l.total - item.total).abs() < 0.005)).toList();
+
+  double get _pendingTotal => _pending.fold(0.0, (s, i) => s + i.total);
+
+  /// Purchases ticked but not yet priced — surfaced so "needs a price" is not
+  /// silently dropped on the way to the estimate.
+  int get _unpricedCount => _allEntries
+      .where((e) =>
+          e.requiresPurchase && parseSsherAmount(e.estimatedCost) <= 0)
+      .length;
+
+  Future<void> _pull() async {
+    final pending = _pending;
+    if (pending.isEmpty || _pulling) return;
+    setState(() => _pulling = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<CostEstimateProvider>();
+    final result = provider.pullSsherCostLines(pending);
+    if (!mounted) return;
+    setState(() => _pulling = false);
+    messenger.showSnackBar(SnackBar(
+      content: Text(
+        result.pulled > 0
+            ? 'Added ${result.pulled} SSHER cost line${result.pulled == 1 ? '' : 's'} '
+                '(${widget.currencySymbol}${result.addedTotal.toStringAsFixed(0)} total) '
+                '— from the SSHER items, no AI.'
+            : 'SSHER costs are already reflected in the estimate.',
+        style: const TextStyle(fontSize: 12.5),
+      ),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: const Color(0xFF0B1220),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final priced = _priced;
+    final pending = _pending;
+    final pendingTotal = _pendingTotal;
+    final unpriced = _unpricedCount;
+    final allPulled = priced.isNotEmpty && pending.isEmpty;
+    final accent =
+        allPulled ? const Color(0xFF16A34A) : const Color(0xFFD97706);
+    final softAccent =
+        allPulled ? const Color(0xFFE7F8F0) : const Color(0xFFFFF3E0);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: softAccent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.health_and_safety_outlined,
+                    size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SSHER Costs (Safety, Security, Health, Environment, Regulatory)',
+                      style: TextStyle(
+                          color: _ink,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Items ticked as “requires a purchase” on the SSHER tabs, at the amount the assessor estimated — a code-level selection, no AI.',
+                      style: TextStyle(color: _muted, fontSize: 11.5),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: _surfaceAlt,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _hairline),
+            ),
+            child: Row(
+              children: [
+                _metric('Priced items', '${priced.length}'),
+                const SizedBox(width: 22),
+                _metric('Not yet in estimate', '${pending.length}'),
+                const SizedBox(width: 22),
+                _metric(
+                  'To add',
+                  '${widget.currencySymbol}${pendingTotal.toStringAsFixed(0)}',
+                ),
+                if (unpriced > 0) ...[
+                  const SizedBox(width: 22),
+                  _metric('Awaiting a price', '$unpriced'),
+                ],
+              ],
+            ),
+          ),
+          if (unpriced > 0) ...[
+            const SizedBox(height: 10),
+            Text(
+              '$unpriced purchase item${unpriced == 1 ? '' : 's'} still need an '
+              'estimated cost on the SSHER tab before they can be pulled.',
+              style: const TextStyle(
+                color: Color(0xFFB45309),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              ElevatedButton.icon(
+                onPressed:
+                    pending.isEmpty || _pulling ? null : _pull,
+                icon: _pulling
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.arrow_downward, size: 16),
+                label: Text(
+                  pending.isEmpty
+                      ? 'SSHER costs are in the estimate'
+                      : 'Pull ${pending.length} SSHER cost '
+                          'line${pending.length == 1 ? '' : 's'}',
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _ink,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  elevation: 0,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metric(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                color: _muted,
+                fontSize: 11,
+                fontWeight: FontWeight.w600)),
+        const SizedBox(height: 2),
+        Text(value,
+            style: const TextStyle(
+                color: _ink, fontSize: 15, fontWeight: FontWeight.w800)),
+      ],
+    );
+  }
+}
+
+/// Loads the project's Cost of Quality entries and lets the user pull the
+/// priced ones into the Cost Estimate as `quality` cost lines. Pure selection
+/// and summing — someone prices each entry on the Quality tab — no AI
+/// (Lusaka 25 (copy): "the quality costs must reach the cost estimate").
+class _QualityCostCard extends StatefulWidget {
+  final List<CostLine> lines;
+  final String currencySymbol;
+
+  /// Test seam: when set, the card reads the Cost of Quality data from here
+  /// instead of the live project data.
+  final CostOfQualityData? Function()? dataSource;
+
+  const _QualityCostCard({
+    required this.lines,
+    required this.currencySymbol,
+    this.dataSource,
+  });
+
+  @override
+  State<_QualityCostCard> createState() => _QualityCostCardState();
+}
+
+class _QualityCostCardState extends State<_QualityCostCard> {
+  static const _ink = Color(0xFF0B1220);
+  static const _muted = Color(0xFF64748B);
+  static const _hairline = Color(0xFFE2E8F0);
+  static const _surface = Colors.white;
+  static const _surfaceAlt = Color(0xFFF8FAFC);
+
+  bool _pulling = false;
+
+  CostOfQualityData? get _data {
+    final override = widget.dataSource;
+    if (override != null) return override();
+    return context.read<ProjectDataProvider>().projectData.costOfQualityData;
+  }
+
+  /// Priced Cost of Quality entries — what the owner asked to see as cost lines.
+  List<QualityCostLine> get _priced =>
+      collectQualityCostLines(data: _data);
+
+  /// Priced entries still missing from the estimate (description + total).
+  List<QualityCostLine> get _pending => _priced
+      .where((item) => !widget.lines.any((l) =>
+          l.category == CostCategory.quality &&
+          l.description == item.description &&
+          (l.total - item.total).abs() < 0.005))
+      .toList();
+
+  double get _pendingTotal => _pending.fold(0.0, (s, i) => s + i.total);
+
+  /// Entries captured but not yet priced — surfaced so "needs a price" is not
+  /// silently dropped on the way to the estimate.
+  int get _unpricedCount {
+    final data = _data;
+    if (data == null) return 0;
+    return collectQualityEntries(data: data)
+        .where((e) => qualityEntryAmount(e) <= 0)
+        .length;
+  }
+
+  Future<void> _pull() async {
+    final pending = _pending;
+    if (pending.isEmpty || _pulling) return;
+    setState(() => _pulling = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<CostEstimateProvider>();
+    final result = provider.pullQualityCostLines(pending);
+    if (!mounted) return;
+    setState(() => _pulling = false);
+    messenger.showSnackBar(SnackBar(
+      content: Text(
+        result.pulled > 0
+            ? 'Added ${result.pulled} quality cost line'
+                '${result.pulled == 1 ? '' : 's'} '
+                '(${widget.currencySymbol}${result.addedTotal.toStringAsFixed(0)} total) '
+                '— from the Cost of Quality entries, no AI.'
+            : 'Quality costs are already reflected in the estimate.',
+        style: const TextStyle(fontSize: 12.5),
+      ),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: const Color(0xFF0B1220),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final priced = _priced;
+    final pending = _pending;
+    final pendingTotal = _pendingTotal;
+    final unpriced = _unpricedCount;
+    final allPulled = priced.isNotEmpty && pending.isEmpty;
+    final accent =
+        allPulled ? const Color(0xFF16A34A) : const Color(0xFFD97706);
+    final softAccent =
+        allPulled ? const Color(0xFFE7F8F0) : const Color(0xFFFFF3E0);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: softAccent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child:
+                    Icon(Icons.verified_outlined, size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Cost of Quality (Prevention / Appraisal / Failure)',
+                      style: TextStyle(
+                          color: _ink,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Priced Cost of Quality entries from the Quality tab — prevention and appraisal are spent to avoid defects, internal and external failure are spent because they were not. A code-level selection, no AI.',
+                      style: TextStyle(color: _muted, fontSize: 11.5),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: _surfaceAlt,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _hairline),
+            ),
+            child: Row(
+              children: [
+                _metric('Priced entries', '${priced.length}'),
+                const SizedBox(width: 22),
+                _metric('Not yet in estimate', '${pending.length}'),
+                const SizedBox(width: 22),
+                _metric(
+                  'To add',
+                  '${widget.currencySymbol}${pendingTotal.toStringAsFixed(0)}',
+                ),
+                if (unpriced > 0) ...[
+                  const SizedBox(width: 22),
+                  _metric('Awaiting a price', '$unpriced'),
+                ],
+              ],
+            ),
+          ),
+          if (unpriced > 0) ...[
+            const SizedBox(height: 10),
+            Text(
+              '$unpriced Cost of Quality entr'
+              '${unpriced == 1 ? 'y still needs' : 'ies still need'} an '
+              'estimated cost on the Quality tab before they can be pulled.',
+              style: const TextStyle(
+                color: Color(0xFFB45309),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              ElevatedButton.icon(
+                onPressed: pending.isEmpty || _pulling ? null : _pull,
+                icon: _pulling
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.arrow_downward, size: 16),
+                label: Text(
+                  pending.isEmpty
+                      ? 'Quality costs are in the estimate'
+                      : 'Pull ${pending.length} quality cost '
+                          'line${pending.length == 1 ? '' : 's'}',
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _ink,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  elevation: 0,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metric(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                color: _muted,
+                fontSize: 11,
+                fontWeight: FontWeight.w600)),
+        const SizedBox(height: 2),
+        Text(value,
+            style: const TextStyle(
+                color: _ink, fontSize: 15, fontWeight: FontWeight.w800)),
+      ],
+    );
   }
 }
 

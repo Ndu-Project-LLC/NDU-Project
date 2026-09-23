@@ -9,8 +9,10 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/section_progress_bar.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/cost_estimate/utils/ssher_cost_lines.dart';
 import 'package:ndu_project/utils/ssher_export_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/services/user_service.dart';
@@ -22,7 +24,30 @@ import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 enum _SsherCategory { safety, security, health, environment, regulatory }
 
+/// How the SSHER items are laid out.
+///
+/// The **table is the default** (Lusaka 25 (copy) review: "we do need a table
+/// view so they can view everything … I think we should still remain within the
+/// card view, but we should just have the table view and the table view needs
+/// to be the default" — the reason given was "scrolling down is not always
+/// functional" once a category holds many items). The cards stay one tap away
+/// because they carry the mitigation narrative.
+enum _SsherViewMode { table, cards }
+
 String _categoryKey(_SsherCategory category) => category.name;
+
+/// Group thousands, so a purchase amount reads as `12,000` not `12000`.
+String _formatAmount(double value) {
+  final whole = value.toStringAsFixed(0);
+  final sign = whole.startsWith('-') ? '-' : '';
+  final digits = sign.isEmpty ? whole : whole.substring(1);
+  final buf = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) buf.write(',');
+    buf.write(digits[i]);
+  }
+  return '$sign$buf';
+}
 
 // ── Color Palette (matching HTML design tokens) ──
 class _Palette {
@@ -566,6 +591,10 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  return 'No AI summary has been generated yet. You currently have ${entries.length} SSHER items across $coverageText with $highRiskCount high-risk and $mediumRiskCount medium-risk entries.$concernText';
  }
 
+ /// Defaults to the table — the owner asked for it explicitly, and a table is
+ /// the only view that stays readable once a category has a dozen items.
+ _SsherViewMode _viewMode = _SsherViewMode.table;
+
  List<SsherEntry> _entriesForCategory(_SsherCategory category) {
  switch (category) {
  case _SsherCategory.safety:
@@ -704,6 +733,8 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  concern: entry.concern,
  riskLevel: entry.riskLevel,
  mitigation: entry.mitigation,
+ requiresPurchase: entry.requiresPurchase,
+ estimatedCost: entry.estimatedCost,
  ),
  ),
  );
@@ -716,6 +747,8 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  entry.concern = input.concern;
  entry.riskLevel = input.riskLevel;
  entry.mitigation = input.mitigation;
+ entry.requiresPurchase = input.requiresPurchase;
+ entry.estimatedCost = input.estimatedCost;
  });
  await _saveEntries();
  }
@@ -728,6 +761,8 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  concern: input.concern,
  riskLevel: input.riskLevel,
  mitigation: input.mitigation,
+ requiresPurchase: input.requiresPurchase,
+ estimatedCost: input.estimatedCost,
  );
  setState(() => _entriesForCategory(category).add(entry));
  await _saveEntries();
@@ -1316,6 +1351,16 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  Widget _buildPhaseTabs(bool isMobile) {
  const categories = _SsherCategory.values;
 
+ // Progress chip + Continue badge — the shared pattern from Design
+ // Planning: the chip says "N of 5 reviewed · Next: X" and jumps to X;
+ // the badge marks X in the strip. Next stays gated (_allTabsVisited).
+ final flowTabs = [
+ for (final cat in categories)
+ FlowTab(id: _categoryKey(cat), label: _labelForCategory(cat)),
+ ];
+ final visited = _visitedCategories.map(_categoryKey).toSet();
+ final nextId = nextUnvisitedTabId(flowTabs, visited);
+
  return Container(
  decoration: isMobile
  ? BoxDecoration(
@@ -1331,11 +1376,35 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  : null,
  padding: EdgeInsets.symmetric(
  horizontal: isMobile ? 16 : 0, vertical: isMobile ? 12 : 16),
- child: SingleChildScrollView(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Align(
+ alignment: Alignment.centerRight,
+ child: Padding(
+ padding: const EdgeInsets.only(bottom: 8),
+ child: SectionProgressBar(
+ tabs: flowTabs,
+ visitedIds: visited,
+ sectionTitle: 'SSHER',
+ onOpenTab: (id) {
+ final cat = categories
+     .where((c) => _categoryKey(c) == id)
+     .firstOrNull;
+ if (cat == null) return;
+ // Route through the tab controller so visit tracking and
+ // lazy plan generation fire exactly as a manual tap does.
+ _tabController.animateTo(cat.index);
+ },
+ ),
+ ),
+ ),
+ SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: Row(
  children: categories.map((cat) {
  final isSelected = cat == _selectedCategory;
+ final isNextUp = _categoryKey(cat) == nextId && !isSelected;
  final icon = _iconForCategory(cat);
  final label = _labelForCategory(cat);
 
@@ -1372,7 +1441,10 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  ]
  : null,
  ),
- child: Row(
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Row(
  mainAxisSize: MainAxisSize.min,
  children: [
  Icon(icon,
@@ -1394,12 +1466,21 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  ),
  ],
  ),
+ if (isNextUp)
+ const Padding(
+ padding: EdgeInsets.only(top: 3),
+ child: FlowTabContinueBadge(),
+ ),
+ ],
+ ),
  ),
  ),
  ),
  );
  }).toList(),
  ),
+ ),
+ ],
  ),
  );
  }
@@ -1431,12 +1512,181 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  _buildLoadingState()
  else if (entries.isEmpty)
  _buildEmptyState(accent, catLabel)
+ else if (_viewMode == _SsherViewMode.table)
+ _buildEntriesTable(entries, accent, isMobile)
  else
  ...entries.map((entry) => Padding(
  padding: const EdgeInsets.only(bottom: 12),
  child: _buildEntryCard(entry, accent, isMobile),
  )),
  ],
+ ),
+ );
+ }
+
+ // ── Entries Table (the default view) ──
+ Widget _buildEntriesTable(
+ List<SsherEntry> entries, Color accent, bool isMobile) {
+ const headerStyle = TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ letterSpacing: 0.04,
+ color: _Palette.onSurfaceVariant,
+ );
+
+ Widget cell(String text, {bool muted = false}) {
+ return Text(
+ text.isEmpty ? '—' : text,
+ style: TextStyle(
+ fontSize: 13,
+ color: muted ? _Palette.outline : _Palette.onSurface,
+ height: 1.35,
+ ),
+ );
+ }
+
+ return Container(
+ clipBehavior: Clip.hardEdge,
+ decoration: BoxDecoration(
+ color: _Palette.surfaceContainerLowest,
+ borderRadius: BorderRadius.circular(12),
+ border: Border.all(color: _Palette.surfaceVariant),
+ ),
+ child: Column(
+ children: [
+ Container(
+ color: accent.withValues(alpha: 0.08),
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+ child: const Row(
+ children: [
+ Expanded(flex: 3, child: Text('DEPARTMENT', style: headerStyle)),
+ Expanded(flex: 3, child: Text('TEAM MEMBER', style: headerStyle)),
+ Expanded(flex: 5, child: Text('ITEM', style: headerStyle)),
+ Expanded(flex: 2, child: Text('RISK', style: headerStyle)),                Expanded(flex: 3, child: Text('EST. COST', style: headerStyle)),
+                SizedBox(width: 40),
+ ],
+ ),
+ ),
+ for (final entry in entries)
+ Container(
+ decoration: const BoxDecoration(
+ border: Border(top: BorderSide(color: _Palette.surfaceVariant)),
+ ),
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+ child: Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Expanded(flex: 3, child: cell(entry.department)),
+ Expanded(flex: 3, child: cell(entry.teamMember, muted: true)),
+ Expanded(flex: 5, child: cell(entry.concern)),
+ Expanded(
+ flex: 2,
+ child: Align(
+ alignment: Alignment.centerLeft,
+ child: _riskChip(entry.riskLevel),
+ ),
+ ),
+ Expanded(flex: 3, child: _costCell(entry)),
+ SizedBox(
+ width: 40,
+ child: PopupMenuButton<String>(
+ icon: const Icon(Icons.more_vert,
+ color: _Palette.outline, size: 20),
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(),
+ onSelected: (value) {
+ if (value == 'edit') _editEntry(entry);
+ if (value == 'delete') _deleteEntry(entry);
+ },
+ itemBuilder: (ctx) => [
+ const PopupMenuItem(
+ value: 'edit',
+ child: Row(children: [
+ Icon(Icons.edit_outlined, size: 18),
+ SizedBox(width: 8),
+ Text('Edit'),
+ ])),
+ const PopupMenuItem(
+ value: 'delete',
+ child: Row(children: [
+ Icon(Icons.delete_outline,
+ size: 18, color: Colors.red),
+ SizedBox(width: 8),
+ Text('Delete', style: TextStyle(color: Colors.red)),
+ ])),
+ ],
+ ),
+ ),
+ ],
+ ),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _riskChip(String riskLevel) {
+ final level = riskLevel.trim().toLowerCase();
+ final Color bg;
+ final Color fg;
+ switch (level) {
+ case 'high':
+ bg = _Palette.errorContainer;
+ fg = _Palette.onErrorContainer;
+ break;
+ case 'medium':
+ bg = _Palette.tertiaryFixedDim;
+ fg = _Palette.tertiaryContainer;
+ break;
+ default:
+ bg = _Palette.surfaceContainerHigh;
+ fg = _Palette.onSurfaceVariant;
+ }
+ final label = riskLevel.trim().isEmpty ? 'Low' : riskLevel.trim();
+ return Container(
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+ decoration: BoxDecoration(
+ color: bg,
+ borderRadius: BorderRadius.circular(4),
+ ),
+ child: Text(
+ label.toUpperCase(),
+ style: TextStyle(
+ fontSize: 10,
+ fontWeight: FontWeight.w700,
+ letterSpacing: 0.06,
+ color: fg,
+ ),
+ ),
+ );
+ }
+
+ /// The cost aspect of one item. A purchase with no price yet says so rather
+ /// than showing `0` — an unpriced item is not a free item.
+ Widget _costCell(SsherEntry entry) {
+ if (!entry.requiresPurchase) {
+ return const Text(
+ 'No purchase',
+ style: TextStyle(fontSize: 12, color: _Palette.outline),
+ );
+ }
+ final amount = parseSsherAmount(entry.estimatedCost);
+ if (amount <= 0) {
+ return const Text(
+ 'Needs a price',
+ style: TextStyle(
+ fontSize: 12,
+ color: Color(0xFFB45309),
+ fontWeight: FontWeight.w600,
+ ),
+ );
+ }
+ return Text(
+ '\$${_formatAmount(amount)}',
+ style: const TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w700,
+ color: _Palette.onSurface,
  ),
  );
  }
@@ -1487,6 +1737,17 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  ),
  ],
  ),
+ Row(
+ children: [
+ // Table is the default; the card view is kept for the mitigation
+ // narrative. Toggling is per-session state, not persisted, so the
+ // default the owner asked for is what everyone sees on arrival.
+ _viewToggle(_SsherViewMode.table, Icons.table_rows_outlined,
+ 'Table view'),
+ const SizedBox(width: 4),
+ _viewToggle(_SsherViewMode.cards, Icons.view_agenda_outlined,
+ 'Card view'),
+ const SizedBox(width: 12),
  GestureDetector(
  onTap: () => _handleAddItem(),
  child: const Row(
@@ -1506,6 +1767,31 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  ),
  ),
  ],
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _viewToggle(_SsherViewMode mode, IconData icon, String tooltip) {
+ final selected = _viewMode == mode;
+ return Tooltip(
+ message: tooltip,
+ child: InkWell(
+ onTap: () => setState(() => _viewMode = mode),
+ borderRadius: BorderRadius.circular(8),
+ child: Container(
+ padding: const EdgeInsets.all(6),
+ decoration: BoxDecoration(
+ color: selected ? _Palette.surfaceContainerHigh : null,
+ borderRadius: BorderRadius.circular(8),
+ ),
+ child: Icon(
+ icon,
+ size: 18,
+ color: selected ? _Palette.onSurface : _Palette.outline,
+ ),
+ ),
  ),
  );
  }
@@ -1651,6 +1937,31 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  ),
  ),
  ],
+ ),
+ ),
+ // The cost aspect, on the card too: every SSHER item that means a purchase
+ // has to answer "what does this cost us?" (Lusaka 25 (copy)).
+ if (entry.requiresPurchase)
+ Container(
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+ decoration: BoxDecoration(
+ color: parseSsherAmount(entry.estimatedCost) > 0
+ ? _Palette.secondaryContainer
+ : _Palette.surfaceContainerHigh,
+ borderRadius: BorderRadius.circular(4),
+ ),
+ child: Text(
+ parseSsherAmount(entry.estimatedCost) > 0
+ ? '\$${_formatAmount(parseSsherAmount(entry.estimatedCost))}'
+ : 'NEEDS A PRICE',
+ style: TextStyle(
+ fontSize: 11,
+ fontWeight: FontWeight.w600,
+ letterSpacing: 0.08,
+ color: parseSsherAmount(entry.estimatedCost) > 0
+ ? _Palette.onSecondaryContainer
+ : _Palette.onSurfaceVariant,
+ ),
  ),
  ),
  ],

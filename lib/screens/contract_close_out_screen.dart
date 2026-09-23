@@ -117,6 +117,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
 
   Widget _buildFinancialSummaryPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Financial Summary',
       subtitle: 'Key financial metrics for contract close-out.',
       columns: const [
@@ -221,6 +222,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
 
   Widget _buildContractsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Contracts Status',
       subtitle:
           'All contracts requiring close-out. Import from execution or add manually.',
@@ -362,6 +364,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
 
   Widget _buildCloseOutStepsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Close-Out Steps',
       subtitle: 'Standardized steps to verify each contract is fully closed.',
       columns: const [
@@ -489,6 +492,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
 
   Widget _buildSignOffsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Financial & Compliance Sign-Off',
       subtitle: 'Track approvals from finance, legal, and compliance.',
       columns: const [

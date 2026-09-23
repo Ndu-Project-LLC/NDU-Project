@@ -401,6 +401,40 @@ class CsvImportHelper {
     return buffer.toString();
   }
 
+  /// Serialise the table's current rows into a CSV an import will accept.
+  ///
+  /// Writes the same header row the template carries (labels, prefixed by the
+  /// row-number column) so an exported file can be edited in a spreadsheet and
+  /// imported straight back — no hint/comment row, since that is guidance for a
+  /// human filling in a blank template, not data.
+  ///
+  /// The row number is regenerated from position rather than trusted from the
+  /// data, so the export stays consistent even if somebody edited the numbers.
+  static String exportRows(
+    List<CsvColumnSpec> specs,
+    List<Map<String, String>> rows, {
+    bool includeNumberColumn = true,
+  }) {
+    final buffer = StringBuffer();
+
+    final headers = <String>[
+      if (includeNumberColumn) numberColumnLabel,
+      ...specs.map((s) => s.label),
+    ];
+    buffer.writeln(headers.map(_escapeCsvField).join(','));
+
+    for (var i = 0; i < rows.length; i++) {
+      final row = rows[i];
+      final values = <String>[
+        if (includeNumberColumn) '${i + 1}',
+        ...specs.map((s) => row[s.key] ?? ''),
+      ];
+      buffer.writeln(values.map(_escapeCsvField).join(','));
+    }
+
+    return buffer.toString();
+  }
+
   /// Sample values for the template's first data row.
   static List<String> primarySampleValues(List<CsvColumnSpec> specs) {
     return specs.map((s) {

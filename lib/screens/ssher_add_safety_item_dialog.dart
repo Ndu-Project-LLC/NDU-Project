@@ -9,7 +9,25 @@ class SsherItemInput {
  final String concern;
  final String riskLevel; // 'Low' | 'Medium' | 'High'
  final String mitigation;
- SsherItemInput({required this.department, required this.teamMember, required this.concern, required this.riskLevel, required this.mitigation});
+
+ /// Whether meeting this item means buying something for the project. Only
+ /// these become cost lines (Lusaka 25 (copy): "if it says PPE required, just
+ /// have a question on the cost for that … if it's something that needs to be
+ /// bought for the project").
+ final bool requiresPurchase;
+
+ /// The assessor's rough amount for that purchase. Blank when unknown.
+ final String estimatedCost;
+
+ SsherItemInput({
+ required this.department,
+ required this.teamMember,
+ required this.concern,
+ required this.riskLevel,
+ required this.mitigation,
+ this.requiresPurchase = false,
+ this.estimatedCost = '',
+ });
 }
 
 class AddSsherItemDialog extends StatefulWidget {
@@ -68,9 +86,11 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  final _formKey = GlobalKey<FormState>();
  late TextEditingController _concernCtrl;
  late TextEditingController _mitigationCtrl;
+ late TextEditingController _costCtrl;
  late String _department;
  late String _riskLevel;
  late String _teamMember;
+ late bool _requiresPurchase;
  List<String> _teamMemberOptions = const [];
  bool _teamMemberOptionsResolved = false;
 
@@ -82,6 +102,9 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  _mitigationCtrl = SpellCheckTextEditingController(text: widget.initialData?.mitigation ?? '');
  _department = widget.initialData?.department ?? 'Operations';
  _riskLevel = widget.initialData?.riskLevel ?? 'High';
+ _requiresPurchase = widget.initialData?.requiresPurchase ?? false;
+ _costCtrl =
+ SpellCheckTextEditingController(text: widget.initialData?.estimatedCost ?? '');
 
  if (!widget.departmentOptions.contains(_department)) {
  _department = widget.departmentOptions.first;
@@ -139,6 +162,7 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  void dispose() {
  _concernCtrl.dispose();
  _mitigationCtrl.dispose();
+ _costCtrl.dispose();
  super.dispose();
  }
 
@@ -173,6 +197,9 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  constraints: const BoxConstraints(maxWidth: 720),
  child: Padding(
  padding: const EdgeInsets.all(20),
+ // The dialog gained the purchase/cost question, so on a short viewport it
+ // has to scroll rather than overflow.
+ child: SingleChildScrollView(
  child: Form(
  key: _formKey,
  child: Column(
@@ -229,6 +256,52 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
  validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
  ),
+ const SizedBox(height: 12),
+ // Every SSHER item must state whether it costs money, so the cost can be
+ // carried into the Cost Estimate instead of being guessed at later.
+ Row(
+ children: [
+ Checkbox(
+ value: _requiresPurchase,
+ visualDensity: VisualDensity.compact,
+ onChanged: (v) =>
+ setState(() => _requiresPurchase = v == true),
+ ),
+ Expanded(
+ child: Tooltip(
+ message: 'Tick this if meeting the item means buying something — then '
+ 'give an estimated cost so it reaches the Cost Estimate.',
+ child: Text(
+ 'Requires a purchase (adds a cost to the estimate)',
+ style: theme.textTheme.bodyMedium
+ ?.copyWith(color: colorScheme.onSurface),
+ ),
+ ),
+ ),
+ const SizedBox(width: 12),
+ SizedBox(
+ width: 190,
+ child: TextFormField(
+ controller: _costCtrl,
+ enabled: _requiresPurchase,
+ keyboardType: const TextInputType.numberWithOptions(decimal: true),
+ decoration:
+ _inputDecoration('Estimated cost', theme, colorScheme),
+ style: theme.textTheme.bodyMedium
+ ?.copyWith(color: colorScheme.onSurface),
+ validator: (v) {
+ if (!_requiresPurchase) return null;
+ final cleaned =
+ (v ?? '').replaceAll(RegExp(r'[^0-9.]'), '');
+ if (cleaned.isEmpty || (double.tryParse(cleaned) ?? 0) <= 0) {
+ return 'Enter an amount';
+ }
+ return null;
+ },
+ ),
+ ),
+ ],
+ ),
  ]);
  }),
 
@@ -259,6 +332,7 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  ),
  ]),
  ],
+ ),
  ),
  ),
  ),
@@ -329,6 +403,8 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  concern: _concernCtrl.text.trim(),
  riskLevel: _riskLevel,
  mitigation: _mitigationCtrl.text.trim(),
+ requiresPurchase: _requiresPurchase,
+ estimatedCost: _requiresPurchase ? _costCtrl.text.trim() : '',
  ),
  );
  }

@@ -21,6 +21,20 @@ const double _tableHorizontalPadding = 20;
 const double _columnGap = 12;
 const double _actionColumnWidth = 96;
 
+/// Estimated body-row height for a virtualized table body, used to size the
+/// viewport before the rows have been laid out.
+const double _defaultRowHeight = 56;
+
+/// The body-height cap every data-entry screen passes as
+/// [LaunchDataTable.virtualizedBodyHeight].
+///
+/// These tables sit inside a page that already scrolls, so without a cap every
+/// row a user has ever added is built on every frame. The cap is high enough
+/// for a working view of a long register and low enough that the page still
+/// reads as one document; the body grows with its content up to this height.
+/// Kept in one place so the module can be tuned as a whole.
+const double launchTableBodyCap = 520;
+
 class _TableLayoutInherited extends InheritedWidget {
   final double tableWidth;
   final List<LaunchColumn> columns;
@@ -108,6 +122,8 @@ class LaunchDataTable extends StatefulWidget {
     this.onCsvImport,
     this.onSearch,
     this.onFilter,
+    this.virtualizedBodyHeight,
+    this.virtualizedRowHeight = _defaultRowHeight,
   }) : _columns = columns
             .map((c) => c is LaunchColumn
                 ? c
@@ -127,6 +143,27 @@ class LaunchDataTable extends StatefulWidget {
   final String emptyMessage;
   final ValueChanged<String>? onSearch;
   final VoidCallback? onFilter;
+
+  /// When set, the table body renders only the rows visible inside a viewport
+  /// of this many logical pixels, instead of building every row eagerly.
+  ///
+  /// A page embeds this table inside its own vertical scroll view, so the body
+  /// has no bounded height of its own: every row — and every `cellBuilder` call
+  /// behind it — is built, laid out and painted even when it is off screen.
+  /// Passing a height gives the body its own viewport (a `ListView.builder`),
+  /// so only the visible rows are built and the header stays pinned above them.
+  /// Intended for tables whose [rowCount] is unbounded (registers, logs,
+  /// rosters); a table with a handful of rows should stay eager.
+  ///
+  /// The viewport grows with the content up to this cap
+  /// (`rowCount * [virtualizedRowHeight]`, capped here), so a table with three
+  /// rows stays three rows tall instead of opening a fixed empty panel.
+  final double? virtualizedBodyHeight;
+
+  /// Estimated height of one body row, used only to size the virtualized
+  /// viewport before the first layout. Rows are not clipped by it: the viewport
+  /// is a scrollable, so a taller-than-estimated row simply scrolls.
+  final double virtualizedRowHeight;
 
   /// CSV import column specifications — enables the "Import CSV" button.
   final List<CsvColumnSpec>? csvColumns;
@@ -542,14 +579,31 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
     );
   }
 
+  /// Height of the virtualized viewport for [rowCount] rows: the content's
+  /// estimated height, capped at the caller's [LaunchDataTable.virtualizedBodyHeight].
+  double _virtualViewportHeight(int rowCount) {
+    final cap = widget.virtualizedBodyHeight ?? 0;
+    final estimated = rowCount * widget.virtualizedRowHeight;
+    return estimated < cap ? estimated : cap;
+  }
+
   Widget _buildRows(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final virtualHeight = widget.virtualizedBodyHeight;
         // Build rows once for column measurement. Each row is then wrapped in
         // a RepaintBoundary so that typing/editing in one cell only repaints
         // that single row instead of the whole table.
-        final rows = List.generate(
-            widget.rowCount, (i) => widget.cellBuilder(context, i));
+        //
+        // A virtualized body probes a single row instead: the flexible column
+        // widths and the row-action flags come from the `cellBuilder` that every
+        // row shares, and probing is what leaves the rest of the body lazy.
+        final rows = virtualHeight == null
+            ? List.generate(
+                widget.rowCount, (i) => widget.cellBuilder(context, i))
+            : (widget.rowCount == 0
+                ? const <Widget>[]
+                : <Widget>[widget.cellBuilder(context, 0)]);
         final effectiveColumns = _resolveColumns(rows);
         final hasRowActions = rows.any(
           (row) =>
@@ -575,6 +629,36 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
               children: [
                 _buildColumnHeaders(
                     tableWidth, effectiveColumns, hasRowActions),
+                if (rows.isEmpty)
+                  _buildEmpty()
+                else if (virtualHeight != null)
+                  // Lazy body: the viewport owns the vertical scroll, so only
+                  // the visible rows run their `cellBuilder`. Requires a bounded
+                  // height, which is why the caller opts in with an explicit
+                  // [LaunchDataTable.virtualizedBodyHeight].
+                  SizedBox(
+                    width: tableWidth,
+                    height: _virtualViewportHeight(widget.rowCount),
+                    child: Scrollbar(
+                      child: ListView.builder(
+                        primary: false,
+                        itemCount: widget.rowCount * 2 - 1,
+                        itemBuilder: (context, idx) {
+                          if (idx.isOdd) {
+                            return const Divider(
+                                height: 1,
+                                thickness: 1,
+                                color: Color(0xFFF1F5F9));
+                          }
+                          final rowIdx = idx ~/ 2;
+                          return RepaintBoundary(
+                            key: ValueKey('launch_row_$rowIdx'),
+                            child: widget.cellBuilder(context, rowIdx),
+                          );
+                        },
+                      ),
+                    ),
+                  )
                 // Use a Column with explicit children (not ListView.builder)
                 // so the rows render correctly inside the parent
                 // SingleChildScrollView. Previously used
@@ -582,8 +666,6 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
                 // ListView.builder(physics: const NeverScrollableScrollPhysics(), physics: NeverScrollable)
                 // which silently reported 0 height in this nested context,
                 // making all body rows invisible even though rowCount > 0.
-                if (rows.isEmpty)
-                  _buildEmpty()
                 else
                   ...List.generate(rows.length * 2 - 1, (idx) {
                     if (idx.isOdd) {

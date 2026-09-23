@@ -688,6 +688,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
 
   Widget _buildChecklistPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Launch Checklist',
       subtitle: 'Critical action items with owners and due dates',
       columns: const [
@@ -851,6 +852,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
 
   Widget _buildApprovalsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Approvals & Sign-offs',
       subtitle: 'Required approvals before go-live',
       columns: const [
@@ -978,6 +980,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
 
   Widget _buildMilestonesPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Launch Milestones',
       subtitle: 'Key milestones leading to go-live',
       columns: const [
@@ -1104,6 +1107,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
 
   Widget _buildTimelinePanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Launch Timeline',
       subtitle: 'Timeline stages toward go-live',
       columns: const [

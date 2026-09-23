@@ -4,6 +4,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
 import 'package:ndu_project/services/auth_nav.dart';
+import 'package:ndu_project/utils/sidebar_label_match.dart';
 import 'package:ndu_project/screens/initiation_phase_screen.dart';
 import 'package:ndu_project/screens/potential_solutions_screen.dart';
 import 'package:ndu_project/screens/risk_identification_screen.dart';
@@ -499,25 +500,16 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
 
-  /// Strips a leading numeric index like "3. " or "12) " from a label so
-  /// that screens which prefix their `activeItemLabel` with a phase step
-  /// number (e.g. "3. FAT, Mechanical Completion & Commission Solution")
-  /// still match the bare title used internally by the sidebar
-  /// ("FAT, Mechanical Completion & Commission Solution"). Also tolerates
-  /// the reverse mismatch (sidebar uses numbered, screen passes bare).
-  static String _normalizeLabel(String label) {
-    return label.replaceFirst(RegExp(r'^\d{1,3}[.)]\s+'), '');
-  }
-
   bool _activeIn(Set<String> labels) {
     final resolved = _resolvedActiveLabel();
     if (resolved == null) return false;
-    if (labels.contains(resolved)) return true;
-    final normalized = _normalizeLabel(resolved);
-    // Compare against both the raw label set and a normalised version of
-    // it so screens that pass "3. FAT, ..." still expand the Launch Phase.
-    return labels.contains(normalized) ||
-        labels.any((label) => _normalizeLabel(label) == normalized);
+    // Matching lives in `utils/sidebar_label_match.dart` (pure + tested):
+    // exact, numeric-prefix tolerant, then a `"<section> - <sub-page>"` label
+    // resolving to its section — which is also what lets a Design Planning
+    // sub-page expand the group that contains it.
+    return labels.any(
+      (label) => sidebarLabelMatches(activeLabel: resolved, itemLabel: label),
+    );
   }
 
   String? _resolvedActiveLabel() {
@@ -536,12 +528,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   bool _isActiveLabel(String label) {
     final resolved = _resolvedActiveLabel();
     if (resolved == null) return false;
-    if (resolved == label) return true;
-    // Tolerate leading "N. " / "N) " numeric prefixes on either side so
-    // screens that pass "3. FAT, Mechanical Completion & Commission
-    // Solution" highlight the sidebar item titled "FAT, Mechanical
-    // Completion & Commission Solution" (and vice versa).
-    return _normalizeLabel(resolved) == _normalizeLabel(label);
+    // Exact match, numeric-prefix tolerance, then the section a
+    // "<section> - <sub-page>" label belongs to. That last step is what
+    // makes Design Planning's sub-pages highlight the section (Lusaka 25
+    // (copy): "the sidebar highlight does not follow me").
+    return sidebarLabelMatches(activeLabel: resolved, itemLabel: label);
   }
 
   bool _expandForActiveLabel() {

@@ -167,6 +167,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
 
   Widget _buildChecklistPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Close-Out Checklist',
       subtitle:
           'Verify all items are addressed before formally closing the project.',
@@ -303,6 +304,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
 
   Widget _buildApprovalsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Final Approvals',
       subtitle:
           'Stakeholders who must sign off before the project is formally closed.',
@@ -445,6 +447,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
 
   Widget _buildArchivePanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Archive & Access',
       subtitle:
           'Document repositories, code, and access changes required for closure.',

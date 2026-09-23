@@ -13,6 +13,7 @@ import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/download_helper.dart' as download_helper;
+import 'package:ndu_project/utils/architecture_module_labels.dart';
 import 'package:ndu_project/utils/design_planning_document.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -30,6 +31,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
+import 'package:ndu_project/utils/section_flow_gate.dart';
+import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
@@ -54,6 +57,15 @@ const Color _kBlue600 = Color(0xFFFFC812);
 const String _kSectionProgressNotesKey = 'planning_design_section_progress';
 
 enum _SectionProgressState { pending, complete, notApplicable }
+
+/// Presentation mode for the Design Specifications rows.
+enum _SpecViewMode {
+  /// Table first: every row visible together, which is what was asked for.
+  table,
+
+  /// The per-row cards, where a specification is written and edited.
+  cards,
+}
 
 class DesignPlanningScreen extends StatefulWidget {
   const DesignPlanningScreen({
@@ -194,8 +206,12 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  final ValueNotifier<_SaveIndicatorState> _saveIndicatorNotifier =
  ValueNotifier<_SaveIndicatorState>(const _SaveIndicatorState(
  saving: false, pending: false, lastSavedAt: null));
- final Map<String, bool> _aiGenerating = {};
- late Map<String, _SectionProgressState> _sectionProgress;
+ final Map<String, bool> _aiGenerating = {};  late Map<String, _SectionProgressState> _sectionProgress;
+
+  /// How the Design Specifications rows are presented. The table is the
+  /// default — the owner asked for the rows to be readable as a set, with the
+  /// cards still one tap away for editing (Lusaka 25 (copy), 2026-09-17).
+  _SpecViewMode _specViewMode = _SpecViewMode.table;
  late Map<String, bool> _sectionExpanded;
  late Map<String, int> _sectionTileVersion;
  String _activeSectionId = _sectionOrder.first.id;
@@ -345,10 +361,23 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  } catch (e) {
  // Keep defaults if progress payload is malformed.
  }
- }
+ }    // Agile delivery has no design work package: the design lives inside the
+    // iteration (epics → features → stories) instead of being handed to a
+    // separate work package — "for agile projects there wouldn't necessarily be
+    // a design work package … design is part of the iteration anyways"
+    // (Lusaka 25 (copy)).
+    //
+    // Only a *pending* section is defaulted, so an explicit Complete / Not
+    // applicable the user already saved is never overwritten.
+    final methodology =
+        ProjectDataHelper.resolvedProjectMethodology(data).name;
+    if (progress['work_packages'] == _SectionProgressState.pending &&
+        sectionStartsNotApplicable(methodology, 'work_packages')) {
+      progress['work_packages'] = _SectionProgressState.notApplicable;
+    }
 
- _sectionProgress = progress;
- // Resolve the initial active section.
+    _sectionProgress = progress;
+    // Resolve the initial active section.
  //
  // 1. If the caller passed an `initialSectionId` that maps to a known
  //    section, land on it directly (sidebar deep-link).
@@ -423,11 +452,28 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
 
  void _showLockedSectionFeedback(String sectionId) {
  final blocking = _firstBlockingSectionLabel(sectionId);
- _showToast(
- blocking == null
- ? 'Complete prior sections first.'
- : 'Complete or mark "$blocking" as not applicable before continuing.',
- );
+ final blockingId = _sectionOrder
+     .firstWhere(
+       (s) => s.label == blocking,
+       orElse: () => _sectionOrder.first,
+     )
+     .id;
+ if (!mounted) return;
+ ScaffoldMessenger.of(context)
+   ..clearSnackBars()
+   ..showSnackBar(
+     SnackBar(
+       behavior: SnackBarBehavior.floating,
+       duration: const Duration(seconds: 5),
+       content: Text(blocking == null
+           ? 'Complete prior sections first.'
+           : 'Finish "$blocking" first — it feeds this section.'),
+       action: SnackBarAction(
+         label: 'Go to ${blocking == null ? 'start' : blocking}',
+         onPressed: () => _activateSection(blockingId),
+       ),
+     ),
+   );
  }
 
  Future<void> _activateSection(String sectionId) async {
@@ -544,46 +590,110 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  decoration: const BoxDecoration(
  border: Border(bottom: BorderSide(color: _kBorder)),
  ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ _statusChip(
+ sectionId: sectionId,
+ state: state,
+ target: _SectionProgressState.complete,
+ label: 'Mark complete',
+ doneLabel: 'Complete',
+ icon: Icons.check_circle_outline,
+ activeColor: _kSuccess,
+ ),
+ const SizedBox(width: 8),
+ _statusChip(
+ sectionId: sectionId,
+ state: state,
+ target: _SectionProgressState.notApplicable,
+ label: 'Not applicable',
+ doneLabel: 'Not applicable',
+ icon: Icons.do_disturb_on_outlined,
+ activeColor: _kWarning,
+ ),
+ const Spacer(),
+ if (state != _SectionProgressState.pending)
+ TextButton.icon(
+ onPressed: () => _setSectionProgress(
+ sectionId: sectionId,
+ state: _SectionProgressState.pending,
+ ),
+ icon: const Icon(Icons.undo, size: 14),
+ label: const Text('Reopen', style: TextStyle(fontSize: 12)),
+ style: TextButton.styleFrom(
+ foregroundColor: _kGray700,
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+ minimumSize: Size.zero,
+ tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+ ),
+ ),
+ ],
+ ),
+ if (state == _SectionProgressState.pending) ...[
+ const SizedBox(height: 6),
+ const Text(
+ 'Working through it? Leave it open — reopen sections anytime.',
+ style: TextStyle(fontSize: 11.5, color: _kGray500),
+ ),
+ ],
+ ],
+ ),
+ );
+ }
+
+ /// One of the two section-status chips: a single tap does the thing its
+ /// label says ("Mark complete"), with no hidden checkbox semantics to
+ /// decode. An active chip renders filled, and tapping the active chip is
+ /// what reopens the section — the undo affordance sits beside it, too.
+ Widget _statusChip({
+ required String sectionId,
+ required _SectionProgressState state,
+ required _SectionProgressState target,
+ required String label,
+ required String doneLabel,
+ required IconData icon,
+ required Color activeColor,
+ }) {
+ final active = state == target;
+ return InkWell(
+ borderRadius: BorderRadius.circular(18),
+ onTap: () => _setSectionProgress(
+ sectionId: sectionId,
+ state: active ? _SectionProgressState.pending : target,
+ ),
+ child: Container(
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+ decoration: BoxDecoration(
+ color: active ? activeColor.withValues(alpha: 0.12) : Colors.transparent,
+ borderRadius: BorderRadius.circular(18),        border: Border.fromBorderSide(
+          BorderSide(
+            color: active ? activeColor : _kBorder,
+            width: active ? 1.4 : 1,
+          ),
+        ),
+ ),
  child: Row(
- children: [
- Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- Checkbox(
- value: state == _SectionProgressState.complete,
- onChanged: (checked) {
- _setSectionProgress(
- sectionId: sectionId,
- state: checked == true
- ? _SectionProgressState.complete
- : _SectionProgressState.pending,
- );
- },
+ Icon(
+ active ? Icons.check_circle : icon,
+ size: 15,
+ color: active ? activeColor : _kGray700,
  ),
- const Text('Complete',
- style: TextStyle(fontSize: 13, color: _kGray700)),
- ],
+ const SizedBox(width: 6),
+ Text(
+ active ? doneLabel : label,
+ style: TextStyle(
+ fontSize: 12.5,
+ fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+ color: active ? activeColor : _kGray700,
  ),
- const SizedBox(width: 16),
- Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Checkbox(
- value: state == _SectionProgressState.notApplicable,
- onChanged: (checked) {
- _setSectionProgress(
- sectionId: sectionId,
- state: checked == true
- ? _SectionProgressState.notApplicable
- : _SectionProgressState.pending,
- );
- },
- ),
- const Text('Not applicable',
- style: TextStyle(fontSize: 13, color: _kGray700)),
- ],
  ),
  ],
+ ),
  ),
  );
  }
@@ -2018,22 +2128,8 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  fontWeight: FontWeight.bold,
  color: _kGray900,
  ),
- ),
- const Spacer(),
- OutlinedButton.icon(
- onPressed: () {},
- icon: const Icon(Icons.schedule, size: 16),
- label: const Text('Activity'),
- style: OutlinedButton.styleFrom(
- backgroundColor: Theme.of(context).scaffoldBackgroundColor,
- foregroundColor: _kGray700,
- side: const BorderSide(color: _kBorder),
- padding:
- const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
- textStyle: const TextStyle(fontSize: 12),
- minimumSize: Size.zero,
- ),
- ),
+ ),            const Spacer(),
+            Flexible(child: _buildProgressSummary()),
  ],
  ),
  const SizedBox(height: 8),
@@ -2048,12 +2144,126 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  ],
  ),
  );
- }
+ }  /// Header progress summary: how many guided sections are resolved and a
+  /// one-tap jump into the next pending one.
+  ///
+  /// Replaces the old dead "Activity" button — a control that did nothing is
+  /// the opposite of intuitive — with the two things this page must say at a
+  /// glance: where the user is in the flow, and what comes next.
+  Widget _buildProgressSummary() {
+    final total = _sectionOrder.length;
+    final done = _sectionOrder.where((s) => _isSectionResolved(s.id)).length;
+    final allDone = done == total;
+    final next = _sectionOrder.firstWhere(
+      (s) => !_isSectionResolved(s.id),
+      orElse: () => _sectionOrder.first,
+    );
+    return Tooltip(
+      message: allDone
+          ? 'Every section is complete or marked not applicable.'
+          : 'Next up: ${next.label}',
+      child: FilledButton.icon(
+        onPressed: allDone ? null : _openFirstUnresolvedSection,
+        icon: Icon(
+          allDone ? Icons.verified_outlined : Icons.flag_outlined,
+          size: 15,
+        ),
+        label: Text(
+          allDone
+              ? 'All $total sections done'
+              : '$done of $total sections · Next: ${next.label}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        style: FilledButton.styleFrom(
+          backgroundColor: allDone ? _kSuccess : _kBrandYellow,
+          foregroundColor: allDone ? Colors.white : _kBrandDark,
+          disabledBackgroundColor: _kSuccess.withValues(alpha: 0.15),
+          disabledForegroundColor: _kSuccess,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          minimumSize: Size.zero,
+        ),
+      ),
+    );
+  }
 
- Widget _buildBottomBar() {
- final bottomPadding = MediaQuery.of(context).padding.bottom;
- final isMobile = AppBreakpoints.isMobile(context);
- return Container(
+  /// Jumps to the first still-pending section — the button inside
+  /// [_buildProgressSummary], and the mental model the whole page should
+  /// support: "always know, always one tap away from, what's next".
+  Future<void> _openFirstUnresolvedSection() async {
+    final next = _sectionOrder.firstWhere(
+      (s) => !_isSectionResolved(s.id),
+      orElse: () => _sectionOrder.first,
+    );
+    await _activateSection(next.id);
+  }
+
+  /// The inner sections that are still pending.
+  ///
+  /// Design Planning is one planning step spread over 15 guided sections, so
+  /// leaving it early skips work the user never saw — "if they go all the way
+  /// down … they might click next and they'll skip everything else here"
+  /// (Lusaka 25 (copy)). A section counts as done once it is Complete or marked
+  /// Not applicable; only *pending* blocks.
+  List<SectionTab> get _unfinishedSections => unvisitedTabs(
+        'design',
+        _sectionOrder
+            .map((section) => section.id)
+            .where(_isSectionResolved)
+            .toList(growable: false),
+      );
+
+  /// Next is only allowed once every inner section has been resolved. Returns
+  /// true when the caller may navigate; otherwise it says what is missing.
+  bool _confirmSectionsFinished() {
+    final missing = _unfinishedSections;
+    if (missing.isEmpty) return true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(sectionIncompleteMessage('design', missing)),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+    return false;
+  }
+
+  /// Names the sections still to resolve, so the gate teaches the flow instead
+  /// of just refusing to move.
+  Widget _buildFlowGateNotice(List<SectionTab> missing) {
+    final names = missing.map((section) => section.label).join(', ');
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF3C7),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFF59E0B)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, color: Color(0xFFB45309), size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Finish the flow within Design Planning before moving on. '
+              'Still to resolve: $names.',
+              style: const TextStyle(fontSize: 12.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar() {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final isMobile = AppBreakpoints.isMobile(context);
+    final unfinished = _unfinishedSections;
+    return Container(
  decoration: const BoxDecoration(
  color: Colors.white,
  border: Border(top: BorderSide(color: _kBorder)),
@@ -2064,14 +2274,18 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  offset: Offset(0, -2),
  ),
  ],
- ),
- padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPadding + 12),
- child: Row(
- children: [
- Expanded(
- child: OutlinedButton(
- onPressed: () =>
- PlanningPhaseNavigation.goToPrevious(context, 'design'),
+ ),    padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPadding + 12),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (unfinished.isNotEmpty) _buildFlowGateNotice(unfinished),
+        Row(
+          children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () =>
+                PlanningPhaseNavigation.goToPrevious(context, 'design'),
  style: OutlinedButton.styleFrom(
  padding: EdgeInsets.symmetric(
  vertical: 12,
@@ -2095,21 +2309,27 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  ],
  ),
  ),
- ),
- const SizedBox(width: 12),
- Expanded(
- flex: 2,
- child: FilledButton(
- onPressed: () =>
- PlanningPhaseNavigation.goToNext(context, 'design'),
- style: FilledButton.styleFrom(
- backgroundColor: _kBrandYellow,
- foregroundColor: _kBrandDark,
- padding: EdgeInsets.symmetric(
- vertical: 12,
- horizontal: isMobile ? 8 : 16,
- ),
- ),
+ ),        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: FilledButton(
+              // Grayed out rather than hidden: the destination stays
+              // discoverable, and pressing it explains what is missing instead
+              // of silently refusing.
+              onPressed: () {
+                if (!_confirmSectionsFinished()) return;
+                PlanningPhaseNavigation.goToNext(context, 'design');
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor:
+                    unfinished.isEmpty ? _kBrandYellow : const Color(0xFFE5E7EB),
+                foregroundColor:
+                    unfinished.isEmpty ? _kBrandDark : const Color(0xFF9CA3AF),
+                padding: EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: isMobile ? 8 : 16,
+                ),
+              ),
  child: Row(
  mainAxisAlignment: MainAxisAlignment.center,
  mainAxisSize: MainAxisSize.min,
@@ -2120,18 +2340,20 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  child: Text(PlanningPhaseNavigation.nextLabel('design')),
  ),
  ),
- const SizedBox(width: 6),
- const Icon(Icons.arrow_forward, size: 16),
- ],
- ),
- ),
- ),
- ],
- ),
- );
- }
+                const SizedBox(width: 6),
+                const Icon(Icons.arrow_forward, size: 16),
+              ],
+            ),
+          ),
+        ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
 
- Widget _buildMainColumn(ProjectDataModel data, List<String> owners) {
+Widget _buildMainColumn(ProjectDataModel data, List<String> owners) {
  return Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -2176,6 +2398,17 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  final isExpanded = _sectionExpanded[sectionId] == true;
  final progressState =
  _sectionProgress[sectionId] ?? _SectionProgressState.pending;
+ // The next pending section in flow order is the one the user should be
+ // in — give it the "Continue" affordance so the page answers "what do I
+ // do now?" without reading a single label.
+ final nextPendingId = _sectionOrder
+     .firstWhere(
+       (s) => !_isSectionResolved(s.id),
+       orElse: () => _sectionOrder.first,
+     )
+     .id;
+ final isNextUp = sectionId == nextPendingId &&
+     progressState == _SectionProgressState.pending;
  return Container(
  key: sectionKey,
  child: _SectionCard(
@@ -2187,6 +2420,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  expanded: isExpanded,
  enabled: true,
  progressState: progressState,
+ isNextUp: isNextUp,
  onExpansionChanged: (expanded) =>
  _onSectionExpansionChanged(sectionId, expanded),
  child: isExpanded
@@ -2275,11 +2509,17 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  final unlinkedRequirements = _unlinkedRequirements(requirementOptions);
  return _buildGuidedSectionCard(
  sectionId: 'requirements',
- sectionKey: _sectionKeys['requirements']!,
- title: 'Requirements to Design Mapping',
- subtitle:
- 'Link specification items from planning to concrete design details, owners, and evidence.',
- accent: const Color(0xFF0F9D58),
+ sectionKey: _sectionKeys['requirements']!,    title: 'Requirements to Design Mapping',
+      // Lusaka 25 (copy): "specifications and requirements mapping are not the
+      // same thing — split them." The two are separate sections, and this
+      // wording keeps them apart: specifications are written on the Design
+      // Specifications section, and this section records which planning
+      // requirement each one satisfies.
+      subtitle:
+          'Map each planning requirement to the specification that satisfies '
+          'it. Write the specifications themselves on the Design Specifications '
+          'section; this is the link between the two.',
+      accent: const Color(0xFF0F9D58),
  child: Column(
  children: [
  if (unlinkedRequirements.isNotEmpty) ...[
@@ -2404,29 +2644,33 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  title: 'System Architecture Basis',
  subtitle:
  'Define the architecture direction, modules, diagram references, and data flow that downstream design must honor.',
- accent: const Color(0xFFB8860B),
- child: Column(
- children: [
- _AssistActions(
- onAutofill: () =>
- _autofillArchitecture(ProjectDataHelper.getData(context)),
- generating: _isGenerating('architecture'),
- onGenerate: () => _runAiGenerate(
- key: 'architecture',
- section: 'System Architecture Basis',
- controller: _architectureController,
- ),
- ),
- const SizedBox(height: 12),
- _SubHeader(
- title: 'Modules',
- actionLabel: 'Add module',
- onAction: () {
- setState(() => _document.modules.add(DesignPlanningWorkItem()));
- _queueSave();
- _showToast('Architecture module row added.');
- },
- ),
+ accent: const Color(0xFFB8860B),      child: Column(
+        children: [
+          _AssistActions(
+            onAutofill: () =>
+                _autofillArchitecture(ProjectDataHelper.getData(context)),
+            generating: _isGenerating('architecture'),
+            onGenerate: () => _runAiGenerate(
+              key: 'architecture',
+              section: 'System Architecture Basis',
+              controller: _architectureController,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Lusaka 25 (copy): the owner could not tell what "Model 1, 2, 3"
+          // referred to. The rows are architecture *modules*, so the section
+          // now says what one is before showing numbered cards.
+          const _ArchitectureModuleExplainer(),
+          const SizedBox(height: 14),
+          _SubHeader(
+            title: 'Modules',
+            actionLabel: 'Add module',
+            onAction: () {
+              setState(() => _document.modules.add(DesignPlanningWorkItem()));
+              _queueSave();
+              _showToast('Architecture module row added.');
+            },
+          ),
  const SizedBox(height: 12),
  _TextAreaField(
  controller: _architectureController,
@@ -2453,24 +2697,152 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  minLines: 3,
  onChanged: (_) => _queueSave(),
  ),
- const SizedBox(height: 14),
- for (var i = 0; i < _document.modules.length; i++) ...[
- _WorkItemCard(
- title: 'Module ${i + 1}',
- data: _document.modules[i],
- owners: owners,
- onChanged: _queueSave,
- onRemove: () {
- setState(() => _document.modules.removeAt(i));
- _queueSave();
- },
- ),
- if (i != _document.modules.length - 1) const SizedBox(height: 12),
- ],
- ],
- ),
- );
- }
+ const SizedBox(height: 14),          // The table view of the same rows, for scanning and for pasting
+          // into a design pack — the owner asked for a pop-out table because
+          // the numbered cards could not be read as a whole
+          // (Lusaka 25 (copy)).
+          if (_document.modules.isNotEmpty) ...[
+            Row(
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => _showArchitectureModulesTable(),
+                  icon: const Icon(Icons.table_chart_outlined, size: 16),
+                  label: Text(
+                    'Open module table (${_document.modules.length})',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+          for (var i = 0; i < _document.modules.length; i++) ...[
+            _WorkItemCard(
+              // Names the module when it has one, so the card does not read as
+              // an arbitrary "Model 2". The number is kept as a position cue.
+              title: architectureModuleLabel(_document.modules[i], i),
+              data: _document.modules[i],
+              owners: owners,
+              onChanged: _queueSave,
+              onRemove: () {
+                setState(() => _document.modules.removeAt(i));
+                _queueSave();
+              },
+            ),
+            if (i != _document.modules.length - 1) const SizedBox(height: 12),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// The column set shared by the specifications import and export, so a file
+  /// that came out of the table can always go back in.
+  static const List<CsvColumnSpec> _specCsvColumns = [
+    CsvColumnSpec(
+        key: 'title',
+        label: 'Title',
+        required: true,
+        hint: 'Specification title'),
+    CsvColumnSpec(
+        key: 'specificationType',
+        label: 'Spec type',
+        allowedValues: [
+          'Code',
+          'Law',
+          'Standard',
+          'Criteria',
+          'Guideline',
+          'Contract',
+          'Other'
+        ],
+        defaultValue: 'Standard'),
+    CsvColumnSpec(
+        key: 'discipline',
+        label: 'Discipline',
+        hint: 'e.g. Architecture, Civil, Frontend'),
+    CsvColumnSpec(
+        key: 'area', label: 'Area', hint: 'e.g. Design, Security, Data'),
+    CsvColumnSpec(
+        key: 'wbsWorkPackageTitle',
+        label: 'WBS Work Package',
+        hint: 'WBS work package title'),
+    CsvColumnSpec(
+        key: 'sourceType',
+        label: 'Source type',
+        allowedValues: ['Contracts', 'Vendors', 'Regulatory', 'Standards'],
+        defaultValue: 'Standards'),
+    CsvColumnSpec(
+        key: 'owner', label: 'Owner', hint: 'Specification owner'),
+    CsvColumnSpec(
+        key: 'status',
+        label: 'Status',
+        allowedValues: ['Draft', 'Planned', 'In Review'],
+        defaultValue: 'Draft'),
+  ];
+
+  /// Export the specification rows as the same CSV the importer accepts, so the
+  /// round trip is: export → edit in a spreadsheet → import.
+  Future<void> _exportSpecificationRows() async {
+    final rows = _document.specifications
+        .map((row) => <String, String>{
+              'title': row.title,
+              'specificationType': row.specificationType,
+              'discipline': row.discipline,
+              'area': row.area,
+              'wbsWorkPackageTitle': row.wbsWorkPackageTitle,
+              'sourceType': row.sourceType,
+              'owner': row.owner,
+              'status': row.status,
+            })
+        .toList(growable: false);
+
+    final csv = CsvImportHelper.exportRows(_specCsvColumns, rows);
+    final filename = CsvImportHelper.templateFilename('Specifications')
+        .replaceFirst('template', 'export');
+
+    try {
+      download_helper.downloadFile(
+        Uint8List.fromList(utf8.encode(csv)),
+        filename,
+        mimeType: 'text/csv',
+      );
+      if (!mounted) return;
+      _showToast(
+        rows.isEmpty
+            ? 'Exported an empty specifications file: $filename'
+            : 'Exported ${rows.length} specification row'
+                '${rows.length == 1 ? '' : 's'}: $filename',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showToast('Could not export specifications: $e');
+    }
+  }
+
+  /// Pop the architecture modules out as a single table.
+  ///
+  /// Read-only: the cards remain the place to edit, because a table cell is a
+  /// poor place to write a module's purpose. This view exists to answer "what
+  /// have I actually got?" at a glance.
+  Future<void> _showArchitectureModulesTable() async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Architecture Modules'),
+        content: SizedBox(
+          width: 820,
+          child: _ArchitectureModulesTable(modules: _document.modules),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
 
  Widget _buildDesignSpecificationsWorkspaceSection() {
  final projectData = ProjectDataHelper.getData(context);
@@ -2588,22 +2960,21 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  fontWeight: FontWeight.w700,
  color: _kText,
  ),
- ),
- const Spacer(),
- CsvTableImportButton(
- compact: true,
- tableTitle: 'Specifications',
- columns: const [
- CsvColumnSpec(key: 'title', label: 'Title', required: true, hint: 'Specification title'),
- CsvColumnSpec(key: 'specificationType', label: 'Spec type', allowedValues: ['Code', 'Law', 'Standard', 'Criteria', 'Guideline', 'Contract', 'Other'], defaultValue: 'Standard'),
- CsvColumnSpec(key: 'discipline', label: 'Discipline', hint: 'e.g. Architecture, Civil, Frontend'),
- CsvColumnSpec(key: 'area', label: 'Area', hint: 'e.g. Design, Security, Data'),
- CsvColumnSpec(key: 'wbsWorkPackageTitle', label: 'WBS Work Package', hint: 'WBS work package title'),
- CsvColumnSpec(key: 'sourceType', label: 'Source type', allowedValues: ['Contracts', 'Vendors', 'Regulatory', 'Standards'], defaultValue: 'Standards'),
- CsvColumnSpec(key: 'owner', label: 'Owner', hint: 'Specification owner'),
- CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Draft', 'Planned', 'In Review'], defaultValue: 'Draft'),
- ],
- onImport: (rows) {
+ ),          const Spacer(),
+          // Export / re-import round trip. The same column set drives both, so
+          // an exported file is always accepted back
+          // (Lusaka 25 (copy): "import/export template").
+          TextButton.icon(
+            onPressed: _exportSpecificationRows,
+            icon: const Icon(Icons.file_download_outlined, size: 16),
+            label: const Text('Export rows'),
+          ),
+          const SizedBox(width: 4),
+          CsvTableImportButton(
+            compact: true,
+            tableTitle: 'Specifications',
+            columns: _specCsvColumns,
+            onImport: (rows) {
  setState(() {
  for (final row in rows) {
  final newRow = DesignSpecificationPlanRow(
@@ -2629,17 +3000,40 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  const SizedBox(width: 4),
  _InlineAddButton(label: 'Add row', onPressed: _addSpecificationRow),
  ],
- ),
- const SizedBox(height: 8),
- _ActionButton(
- label: 'View table',
- icon: Icons.table_chart_outlined,
- onPressed: _showSpecificationsTableDialog,
- ),
- const SizedBox(height: 12),
- for (var i = 0;
- i < _document.specifications.length;
- i++) ...[
+ ),          const SizedBox(height: 8),
+          // The table is the default view: the owner asked to read the rows as
+          // a whole, and the cards are still one tap away for editing
+          // (Lusaka 25 (copy): "specifications need a table view, and the table
+          // view should be the default … cards stay available").
+          Row(
+            children: [
+              _SpecViewToggle(
+                mode: _specViewMode,
+                onChanged: (mode) => setState(() => _specViewMode = mode),
+              ),
+              const Spacer(),
+              _ActionButton(
+                label: 'Open full table',
+                icon: Icons.open_in_full,
+                onPressed: _showSpecificationsTableDialog,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_specViewMode == _SpecViewMode.table &&
+              _document.specifications.isNotEmpty) ...[
+            _SpecificationsInlineTable(
+              rows: _specificationOptions(),
+              onOpenCards: () =>
+                  setState(() => _specViewMode = _SpecViewMode.cards),
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (_specViewMode == _SpecViewMode.cards ||
+              _document.specifications.isEmpty)
+            for (var i = 0;
+                i < _document.specifications.length;
+                i++) ...[
  Container(
  key: _specificationRowKeys[
  _document.specifications[i].id],
@@ -3168,7 +3562,27 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   }
 
   Widget _buildWorkPackagesSection() {
-    final wbsTree = ProjectDataHelper.getData(context).wbsTree;
+    final data = ProjectDataHelper.getData(context);
+    final wbsTree = data.wbsTree;
+
+    // An agile project is told this section does not apply to it rather than
+    // being asked to fill it in (Lusaka 25 (copy) ask 22).
+    if (ProjectDataHelper.resolvedProjectMethodology(data) ==
+        ProjectMethodology.agile) {
+      return _buildGuidedSectionCard(
+        sectionId: 'work_packages',
+        sectionKey: _sectionKeys['work_packages']!,
+        title: 'Design Work Packages',
+        subtitle: 'Not applicable to agile delivery.',
+        accent: const Color(0xFFD97706),
+        child: const _EmptyState(
+          message: 'Agile delivery has no design work package — the design '
+              'lives inside the iteration (epics → features → stories). This '
+              'section is marked Not applicable. Untick it below if this '
+              'project does need one.',
+        ),
+      );
+    }
 
     return _buildGuidedSectionCard(
       sectionId: 'work_packages',
@@ -3389,17 +3803,33 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
 
       if (!mounted) return;
 
+      var created = 0;
       await ProjectDataHelper.updateAndSave(
         context: context,
         checkpoint: 'design_planning_generate_work_packages',
         dataUpdater: (data) {
-          data.workPackages.addAll(packages);
+          // Identity dedupe: this action appends directly (unlike the other
+          // generation screens, which filter by id before saving), so a second
+          // run — or a run after the WBS was rebuilt with fresh node ids —
+          // would otherwise stack a second copy of every package and, through
+          // the planning sync, a second copy of every schedule row.
+          final fresh = IntegratedWorkPackageService.dedupePackagesAgainst(
+            packages,
+            data.workPackages,
+          );
+          created = fresh.length;
+          data.workPackages.addAll(fresh);
           return data;
         },
       );
 
       if (!mounted) return;
-      _showToast('${packages.length} design work package(s) created.');
+      _showToast(created == packages.length
+          ? '$created design work package(s) created.'
+          : created == 0
+              ? 'All generated packages already exist — nothing added.'
+              : '$created created, ${packages.length - created} '
+                  'duplicates skipped.');
     } catch (e) {
       if (mounted) {
         _showToast('Failed to generate work packages: $e');
@@ -3455,6 +3885,7 @@ class _SectionCard extends StatelessWidget {
     required this.expanded,
     required this.enabled,
     this.progressState = _SectionProgressState.pending,
+    this.isNextUp = false,
     required this.onExpansionChanged,
   });
 
@@ -3466,6 +3897,10 @@ class _SectionCard extends StatelessWidget {
   final bool expanded;
   final bool enabled;
   final _SectionProgressState progressState;
+
+  /// True on the one pending section the user should work through next —
+  /// renders a "Continue" affordance so the page always points forward.
+  final bool isNextUp;
   final ValueChanged<bool> onExpansionChanged;
 
   @override
@@ -3588,7 +4023,38 @@ class _SectionCard extends StatelessWidget {
                   padding: EdgeInsets.only(right: 4),
                   child: Icon(Icons.remove_circle, size: 16, color: _kWarning),
                 ),
-              const Icon(Icons.expand_more, size: 18, color: _kGray400),
+              if (isNextUp && !expanded)
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _kBrandYellow.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _kBrandYellow, width: 1.2),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.play_arrow_rounded,
+                          size: 14, color: _kBrandDark),
+                      SizedBox(width: 2),
+                      Text(
+                        'Continue',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: _kBrandDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Icon(
+                expanded ? Icons.expand_less : Icons.expand_more,
+                size: 18,
+                color: _kGray400,
+              ),
             ],
           ),
         ),
@@ -3896,6 +4362,239 @@ class _MappingCard extends StatelessWidget {
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Table / Cards switch for the Design Specifications rows.
+class _SpecViewToggle extends StatelessWidget {
+  const _SpecViewToggle({required this.mode, required this.onChanged});
+
+  final _SpecViewMode mode;
+  final ValueChanged<_SpecViewMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SegmentedButton<_SpecViewMode>(
+      segments: const [
+        ButtonSegment(
+          value: _SpecViewMode.table,
+          label: Text('Table'),
+          icon: Icon(Icons.table_chart_outlined, size: 16),
+        ),
+        ButtonSegment(
+          value: _SpecViewMode.cards,
+          label: Text('Cards'),
+          icon: Icon(Icons.view_agenda_outlined, size: 16),
+        ),
+      ],
+      selected: {mode},
+      onSelectionChanged: (selection) => onChanged(selection.first),
+      showSelectedIcon: false,
+      style: const ButtonStyle(
+        visualDensity: VisualDensity.compact,
+      ),
+    );
+  }
+}
+
+/// Read-only table of the Design Specifications rows, shown as the default view.
+///
+/// Reading only on purpose: a table cell is a poor place to write a
+/// specification's details, so editing stays on the cards — [onOpenCards] takes
+/// the user there.
+class _SpecificationsInlineTable extends StatelessWidget {
+  const _SpecificationsInlineTable({
+    required this.rows,
+    required this.onOpenCards,
+  });
+
+  final List<_SpecificationOption> rows;
+  final VoidCallback onOpenCards;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0FDFA),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFF99F6E4)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${rows.length} specification row'
+                  '${rows.length == 1 ? '' : 's'}. Edit a row on the Cards view, '
+                  'or export the rows, change them in a spreadsheet, and import '
+                  'them back.',
+                  style: const TextStyle(
+                      fontSize: 12, color: Color(0xFF115E59)),
+                ),
+              ),
+              TextButton(
+                onPressed: onOpenCards,
+                child: const Text('Edit as cards'),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            headingRowHeight: 38,
+            dataRowMinHeight: 40,
+            dataRowMaxHeight: 64,
+            columnSpacing: 20,
+            columns: const [
+              DataColumn(label: Text('#')),
+              DataColumn(label: Text('Title')),
+              DataColumn(label: Text('Spec type')),
+              DataColumn(label: Text('Discipline')),
+              DataColumn(label: Text('Area')),
+              DataColumn(label: Text('WBS Work Package')),
+              DataColumn(label: Text('Source type')),
+              DataColumn(label: Text('Owner')),
+              DataColumn(label: Text('Status')),
+            ],
+            rows: [
+              for (var i = 0; i < rows.length; i++)
+                DataRow(cells: [
+                  DataCell(Text('${i + 1}')),
+                  DataCell(SizedBox(
+                    width: 220,
+                    child: Text(
+                      rows[i].title.isEmpty ? 'Untitled' : rows[i].title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  )),
+                  DataCell(Text(rows[i].specificationType)),
+                  DataCell(Text(rows[i].discipline)),
+                  DataCell(Text(rows[i].area)),
+                  DataCell(SizedBox(
+                    width: 170,
+                    child: Text(
+                      rows[i].wbsWorkPackageTitle.isEmpty
+                          ? '—'
+                          : rows[i].wbsWorkPackageTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  )),
+                  DataCell(Text(rows[i].sourceType)),
+                  DataCell(Text(rows[i].owner)),
+                  DataCell(Text(rows[i].status)),
+                ]),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Plain-language note above the Architecture Basis module rows, so the
+/// numbered cards mean something before they are read (Lusaka 25 (copy):
+/// "model 1, 2, 3 … it is not intelligible").
+class _ArchitectureModuleExplainer extends StatelessWidget {
+  const _ArchitectureModuleExplainer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFDE68A)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Icon(Icons.info_outline, size: 16, color: Color(0xFFB45309)),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              architectureModuleExplainer,
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.45,
+                color: Color(0xFF7C2D12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Read-only table view of the architecture modules, shown in a pop-out so the
+/// rows can be scanned together.
+class _ArchitectureModulesTable extends StatelessWidget {
+  const _ArchitectureModulesTable({required this.modules});
+
+  final List<DesignPlanningWorkItem> modules;
+
+  @override
+  Widget build(BuildContext context) {
+    if (modules.isEmpty) {
+      return const Text(
+        'No modules yet. Add one from the Architecture Basis section.',
+        style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+      );
+    }
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        headingRowHeight: 38,
+        dataRowMinHeight: 40,
+        dataRowMaxHeight: 72,
+        columnSpacing: 22,
+        columns: const [
+          DataColumn(label: Text('#')),
+          DataColumn(label: Text('Module')),
+          DataColumn(label: Text('Purpose')),
+          DataColumn(label: Text('Owner')),
+          DataColumn(label: Text('Status')),
+        ],
+        rows: [
+          for (var i = 0; i < modules.length; i++)
+            DataRow(cells: [
+              DataCell(Text('${i + 1}')),
+              DataCell(Text(
+                modules[i].name.trim().isEmpty
+                    ? 'Unnamed'
+                    : modules[i].name.trim(),
+              )),
+              DataCell(SizedBox(
+                width: 300,
+                child: Text(
+                  modules[i].purpose.trim().isEmpty
+                      ? '—'
+                      : modules[i].purpose.trim(),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12.5),
+                ),
+              )),
+              DataCell(Text(
+                modules[i].owner.trim().isEmpty
+                    ? 'Unassigned'
+                    : modules[i].owner.trim(),
+              )),
+              DataCell(Text(modules[i].status)),
+            ]),
         ],
       ),
     );

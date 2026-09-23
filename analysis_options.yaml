@@ -38,9 +38,11 @@ analyzer:
     #
     # To re-enable analysis of any one of these, port the corresponding model
     # field from `origin/comments` and remove the file from this list.
-    - lib/models/cost_of_quality.dart
+    # `lib/models/cost_of_quality.dart` and
+    # `lib/services/cost_of_quality_service.dart` were ported here with the
+    # `ProjectDataModel.costOfQualityData` field they depend on, so they are
+    # analysed with the rest of the app (Lusaka 25 (copy), 2026-09-17).
     - lib/models/execution_quality_tracking_model.dart
-    - lib/services/cost_of_quality_service.dart
     - lib/services/execution_quality_tracking_service.dart
     - lib/services/quality_intelligence_service.dart
     - lib/services/quality_ai_integration.dart

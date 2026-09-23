@@ -4,6 +4,8 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/utils/section_flow_gate.dart';
+import 'package:ndu_project/utils/technology_cost_rollup.dart';
 import 'package:ndu_project/utils/text_sanitizer.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -11,6 +13,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/section_progress_bar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -52,11 +55,70 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  final List<Map<String, dynamic>> _aiIntegrations = [];
  final List<Map<String, dynamic>> _externalIntegrations = [];
  final List<Map<String, dynamic>> _definitions = [];
- final List<Map<String, dynamic>> _recommendations = [];
+ final List<Map<String, dynamic>> _recommendations = [];  _TechnologyTab _selectedTab = _TechnologyTab.inventory;
 
- _TechnologyTab _selectedTab = _TechnologyTab.inventory;
- bool _loading = true;
- bool _regenerating = false;
+  /// Months of project life that recurring technology spend is projected over.
+  /// Defaults until the project's milestone dates are read in [_load].
+  int _projectMonths = defaultProjectMonths;
+  bool _loading = true;
+  bool _regenerating = false;
+
+  /// Technology tabs shown this session. The five tabs are one planning step, so
+  /// Next holds until each has been seen — otherwise the user "might click next
+  /// and they'll skip everything else here" (Lusaka 25 (copy)). Session-scoped
+  /// because the question is which tabs were *shown* during this visit, and it
+  /// must never lock someone out of work they did before the gate existed.
+  final Set<_TechnologyTab> _visitedTabs = {_TechnologyTab.inventory};
+
+  List<SectionTab> get _unvisitedTabs => unvisitedTabs(
+        'technology',
+        // The enum's names are the gate's tab ids, so the two cannot drift.
+        _visitedTabs.map((t) => t.name).toList(growable: false),
+      );
+
+  /// Names the tabs still to review, so the gate teaches the flow instead of
+  /// just refusing to move.
+  Widget _buildFlowGateNotice() {
+    final missing = _unvisitedTabs;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF3C7),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFF59E0B)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline,
+              color: Color(0xFFB45309), size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Finish the flow within Technology Planning before moving on. '
+              'Still to review: ${missing.map((t) => t.label).join(', ')}.',
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Next is only allowed once every tab has been shown. Returns true when the
+  /// caller may navigate; otherwise it explains what is missing.
+  bool _confirmFlowFinished() {
+    final missing = _unvisitedTabs;
+    if (missing.isEmpty) return true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(sectionIncompleteMessage('technology', missing)),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+    return false;
+  }
 
  String _inventorySearch = '';
  String _inventoryCategory = 'All Categories';
@@ -73,10 +135,9 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  if (provider == null) {
  if (mounted) setState(() => _loading = false);
  return;
- }
-
- final data = provider.projectData;
- _inventory
+ }  final data = provider.projectData;
+  _loadProjectMonths(data);
+  _inventory
  ..clear()
  ..addAll(
  data.technologyInventory.map((e) => Map<String, dynamic>.from(e)));
@@ -804,46 +865,69 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  DateTime _parseDateOrNow(String raw) {
  final parsed = DateTime.tryParse(raw);
  return parsed ?? DateTime.now();
- }
+ }  // Amount parsing and period detection moved to
+  // `lib/utils/technology_cost_rollup.dart` (pure + tested) — the previous
+  // inline version took the first number in the string, which is why
+  // "3 licences @ $150/month" was summed as 3.
 
- double _parseAmount(String raw) {
- final cleaned = raw.replaceAll(',', '');
- final match = RegExp(r'(-?\d+(?:\.\d+)?)').firstMatch(cleaned);
- if (match == null) return 0;
- return double.tryParse(match.group(1) ?? '') ?? 0;
- }
+  /// Every priced technology row, tagged with the table it came from.
+  ///
+  /// The previous code summed the three tables into two anonymous buckets, so a
+  /// wrong figure could not be traced back to a row. Carrying the table name
+  /// through is what makes the "total per table" the owner asked for possible.
+  List<({String table, String name, String cost})> _pricedCostItems() {
+    final items = <({String table, String name, String cost})>[];
 
- (double oneTime, double annual) _computeBudget() {
- double oneTime = 0;
- double annual = 0;
+    // The three cost-bearing tables, each labelled explicitly rather than
+    // inheriting whichever tab happens to be open.
+    for (final item in _inventory) {
+      items.add((
+        table: 'Technology Inventory',
+        name: item['name']?.toString() ?? '',
+        cost: item['cost']?.toString() ?? '',
+      ));
+    }
+    for (final item in _aiIntegrations) {
+      items.add((
+        table: 'AI Integrations',
+        name: item['name']?.toString() ?? '',
+        cost: item['cost']?.toString() ?? '',
+      ));
+    }
+    for (final item in _externalIntegrations) {
+      items.add((
+        table: 'External Integrations',
+        name: item['name']?.toString() ?? '',
+        cost: item['implementationCost']?.toString() ?? '',
+      ));
+    }
 
- void absorb(Map<String, dynamic> item, String key) {
- final value = item[key]?.toString() ?? '';
- if (value.trim().isEmpty) return;
- final amount = _parseAmount(value);
- final normalized = value.toLowerCase();
- if (normalized.contains('/month') || normalized.contains('monthly')) {
- annual += amount * 12;
- } else if (normalized.contains('/year') ||
- normalized.contains('annual')) {
- annual += amount;
- } else {
- oneTime += amount;
- }
- }
+    return items;
+  }
 
- for (final item in _inventory) {
- absorb(item, 'cost');
- }
- for (final item in _aiIntegrations) {
- absorb(item, 'cost');
- }
- for (final item in _externalIntegrations) {
- absorb(item, 'implementationCost');
- }
+  /// The section's cost roll-up: a total per table, a section subtotal and a
+  /// grand total projected across the project's months.
+  ///
+  /// Lusaka 25 (copy): **"the totals at the top disagree with the rows. I see
+  /// 270, the table says 150 a month … I want a total per table, then a
+  /// subtotal for the section, then the grand total across the project
+  /// duration."**
+  TechnologyCostRollup get _costRollup => rollUpTechnologyCosts(
+        items: _pricedCostItems(),
+        months: _projectMonths,
+      );
 
- return (oneTime, annual);
- }
+  /// How long recurring spend is projected over.
+  ///
+  /// Taken from the project's milestone dates so the grand total reflects the
+  /// actual project, falling back to [defaultProjectMonths] and saying so on
+  /// screen when the dates are not set yet.
+  void _loadProjectMonths(ProjectDataModel data) {
+    final start = DateTime.tryParse(data.frontEndPlanning.milestoneStartDate);
+    final end = DateTime.tryParse(data.frontEndPlanning.milestoneEndDate);
+    final months = projectMonthsBetween(start, end);
+    _projectMonths = months > 0 ? months : defaultProjectMonths;
+  }
 
  int _countByCategory(String category) {
  return _inventory
@@ -941,11 +1025,13 @@ onBack: () =>
  context,
  'technology',
  ),
- onForward: () =>
- PlanningPhaseNavigation.goToNext(
- context,
- 'technology',
- ), onExportPdf: _exportPdf),
+// The header's forward arrow is gated too, so the section cannot be
+// skipped from the top of the page either.
+ onForward: () {
+ if (_confirmFlowFinished()) {
+ PlanningPhaseNavigation.goToNext(context, 'technology');
+ }
+ }, onExportPdf: _exportPdf),
  const SizedBox(height: 18),
  _buildTopMetrics(),
  const SizedBox(height: 14),
@@ -957,6 +1043,7 @@ onBack: () =>
  // underlying tab content switch (_buildCurrentTabContent) remains intact.
  _buildCurrentTabContent(),
  const SizedBox(height: 24),
+ if (_unvisitedTabs.isNotEmpty) _buildFlowGateNotice(),
  LaunchPhaseNavigation(
  backLabel: PlanningPhaseNavigation.backLabel(
  'technology'),
@@ -967,10 +1054,11 @@ onBack: () =>
  context,
  'technology',
  ),
- onNext: () => PlanningPhaseNavigation.goToNext(
- context,
- 'technology',
- ),
+ onNext: () {
+ if (_confirmFlowFinished()) {
+ PlanningPhaseNavigation.goToNext(context, 'technology');
+ }
+ },
  ),
  ],
  ),
@@ -988,10 +1076,8 @@ onBack: () =>
  ),
  ),
  );
- }
-
- Widget _buildTopMetrics() {
- final budget = _computeBudget();
+ }  Widget _buildTopMetrics() {
+    final rollup = _costRollup;
  return Row(
  children: [
  Expanded(
@@ -1012,18 +1098,38 @@ onBack: () =>
  ),
  ),
  const SizedBox(width: 12),
- Expanded(
- child: _MetricCard(
- title: 'Total Technology Budget',
- value: _formatCurrency(budget.$1),
- rows: [
- _MetricRow(
- label: 'One-time Costs', value: _formatCurrency(budget.$1)),
- _MetricRow(
- label: 'Annual Running Costs',
- value: '${_formatCurrency(budget.$2)}/year'),
- ],
- ),
+ Expanded(        child: _MetricCard(
+          title: 'Total Technology Budget',
+          // The genuine total — one-time spend plus recurring spend projected
+          // across the project. The old card showed the one-time sum here while
+          // recurring bills were summed separately, so the headline number was
+          // never the total it claimed to be (Lusaka 25 (copy): "the totals at
+          // the top disagree with the rows").
+          value: _formatCurrency(rollup.grandTotal),
+          rows: [
+            // A total per table, as asked, each projected over the same months.
+            ...rollup.totalsByTable().entries.map(
+                  (e) => _MetricRow(
+                    label: e.key,
+                    value: _formatCurrency(e.value),
+                  ),
+                ),
+            _MetricRow(
+              label: 'One-time Costs',
+              value: _formatCurrency(rollup.oneTime),
+            ),
+            _MetricRow(
+              label: 'Recurring',
+              value: '${_formatCurrency(rollup.recurringPerMonth)}/month',
+            ),
+            // Stated so "across the project duration" is checkable, not a
+            // number the reader has to trust.
+            _MetricRow(
+              label: 'Project Duration',
+              value: '$_projectMonths months',
+            ),
+          ],
+        ),
  ),
  const SizedBox(width: 12),
  Expanded(
@@ -1045,18 +1151,52 @@ onBack: () =>
  }
 
  Widget _buildTabsBar() {
+ // Progress chip + Continue badge: same pattern as Design Planning — the
+ // chip says "N of M reviewed · Next: X" and jumps to X; the badge marks X
+ // in the strip itself. Next stays gated (see _confirmFlowFinished).
+ final flowTabs = [
+ for (final tab in _TechnologyTab.values) FlowTab(id: tab.name, label: tab.label),
+ ];
+ final visited = _visitedTabs.map((t) => t.name).toSet();
+ final nextId = nextUnvisitedTabId(flowTabs, visited);
  return Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
  color: const Color(0xFFF4B422),
  borderRadius: BorderRadius.circular(8),
  ),
- child: Row(
+ child: Column(
+ children: [
+ Align(
+ alignment: Alignment.centerRight,
+ child: Padding(
+ padding: const EdgeInsets.only(bottom: 6),
+ child: SectionProgressBar(
+ tabs: flowTabs,
+ visitedIds: visited,
+ sectionTitle: 'Technology Planning',
+ onOpenTab: (id) => setState(() {
+ final tab = _TechnologyTab.values
+     .firstWhere((t) => t.name == id, orElse: () => _TechnologyTab.inventory);
+ _selectedTab = tab;
+ // Jumping to a tab is seeing it: count the visit, or the gate
+ // would hold Next on a tab the chip itself just opened.
+ _visitedTabs.add(tab);
+ }),
+ ),
+ ),
+ ),
+ Row(
  children: _TechnologyTab.values.map((tab) {
  final selected = tab == _selectedTab;
+ final isNextUp = tab.name == nextId && !selected;
  return Expanded(
  child: InkWell(
- onTap: () => setState(() => _selectedTab = tab),
+ onTap: () => setState(() {
+ _selectedTab = tab;
+ // Seeing a tab is what unlocks the section's Next.
+ _visitedTabs.add(tab);
+ }),
  borderRadius: BorderRadius.circular(8),
  child: AnimatedContainer(
  duration: const Duration(milliseconds: 160),
@@ -1065,7 +1205,10 @@ onBack: () =>
  color: selected ? Colors.white : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
- child: Text(
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Text(
  tab.label,
  textAlign: TextAlign.center,
  style: TextStyle(
@@ -1074,10 +1217,19 @@ onBack: () =>
  color: selected ? const Color(0xFF111827) : Colors.white,
  ),
  ),
+ if (isNextUp)
+ const Padding(
+ padding: EdgeInsets.only(top: 3),
+ child: FlowTabContinueBadge(),
+ ),
+ ],
+ ),
  ),
  ),
  );
  }).toList(),
+ ),
+ ],
  ),
  );
  }

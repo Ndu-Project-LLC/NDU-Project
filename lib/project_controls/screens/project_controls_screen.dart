@@ -28,6 +28,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/project_intelligence_service.dart';
 import 'package:ndu_project/widgets/shimmer_loading.dart';
 import 'package:ndu_project/widgets/cross_section_sync_card.dart';
+import 'package:ndu_project/widgets/scrollable_section_header.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart' as sched;
 import 'package:go_router/go_router.dart';
@@ -47,6 +48,22 @@ class ProjectControlsScreen extends StatefulWidget {
 class _ProjectControlsScreenState extends State<ProjectControlsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  /// The module's sub-sections, in the same order as the [TabBarView] below.
+  /// Shared by the [SectionNavigator] tabs and by the collapsed
+  /// section-header bar's summary.
+  static const List<SectionTab> _sectionTabs = [
+    SectionTab(icon: Icons.dashboard_outlined, label: 'Dashboard'),
+    SectionTab(icon: Icons.account_tree_outlined, label: 'Scope Tracking'),
+    SectionTab(icon: Icons.attach_money, label: 'Cost Control'),
+    SectionTab(icon: Icons.sync_alt, label: 'Change Management'),
+    SectionTab(icon: Icons.trending_up, label: 'Forecasting'),
+    SectionTab(icon: Icons.history, label: 'Baseline Management'),
+    SectionTab(icon: Icons.schedule, label: 'Schedule'),
+    SectionTab(icon: Icons.warning_amber_outlined, label: 'Risk & Issues'),
+    SectionTab(icon: Icons.people_outline, label: 'Resource'),
+    SectionTab(icon: Icons.assessment_outlined, label: 'Reporting'),
+  ];
 
   @override
   void initState() {
@@ -175,43 +192,40 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
-              // ── World-class Section Navigator ─────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: SectionNavigator(
-                  title: 'Project Controls Navigation',
-                  subtitle: 'Navigate between project control sections',
-                  icon: Icons.dashboard_outlined,
-                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                  isCollapsible: true,
-                  initiallyCollapsed: true,
-                  tabs: const [
-                    SectionTab(
-                        icon: Icons.dashboard_outlined, label: 'Dashboard'),
-                    SectionTab(
-                        icon: Icons.account_tree_outlined,
-                        label: 'Scope Tracking'),
-                    SectionTab(icon: Icons.attach_money, label: 'Cost Control'),
-                    SectionTab(
-                        icon: Icons.sync_alt, label: 'Change Management'),
-                    SectionTab(icon: Icons.trending_up, label: 'Forecasting'),
-                    SectionTab(
-                        icon: Icons.history, label: 'Baseline Management'),
-                    SectionTab(icon: Icons.schedule, label: 'Schedule'),
-                    SectionTab(
-                        icon: Icons.warning_amber_outlined,
-                        label: 'Risk & Issues'),
-                    SectionTab(icon: Icons.people_outline, label: 'Resource'),
-                    SectionTab(
-                        icon: Icons.assessment_outlined, label: 'Reporting'),
+              // Scrollable, self-collapsing section header: the tab content
+              // below always keeps its share of the page.
+              ScrollableSectionHeader(
+                label: 'Project Controls',
+                icon: Icons.dashboard_outlined,
+                summary: _sectionTabs[_tabController.index].label,
+                scrollKey: const ValueKey('projectControlsHeaderScroll'),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── World-class Section Navigator ─────────────────────
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: SectionNavigator(
+                        title: 'Project Controls Navigation',
+                        subtitle:
+                            'Navigate between project control sections',
+                        icon: Icons.dashboard_outlined,
+                        backgroundColor:
+                            Theme.of(context).scaffoldBackgroundColor,
+                        isCollapsible: true,
+                        initiallyCollapsed: true,
+                        tabs: _sectionTabs,
+                        controller: _tabController,
+                        onChanged: (index) => setState(() {}),
+                      ),
+                    ),
+                    // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ─────
+                    const CrossSectionSyncCard(
+                      currentSection: CrossSection.projectControls,
+                    ),
                   ],
-                  controller: _tabController,
-                  onChanged: (index) => setState(() {}),
                 ),
-              ),
-              // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ──────────
-              const CrossSectionSyncCard(
-                currentSection: CrossSection.projectControls,
               ),
               // Tab content
               Expanded(

@@ -346,6 +346,7 @@ class _SummarizeAccountRisksScreenState
 
   Widget _buildHighlightsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Highlights & Wins',
       subtitle: 'Key achievements and what went well.',
       columns: const [
@@ -432,6 +433,7 @@ class _SummarizeAccountRisksScreenState
 
   Widget _buildTopRisksPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Top Risks',
       subtitle: 'Key risks that need attention or monitoring post-launch.',
       columns: const [
@@ -556,6 +558,7 @@ class _SummarizeAccountRisksScreenState
 
   Widget _buildNext90DaysPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Next 90 Days Focus',
       subtitle:
           'Immediate priorities and follow-ups to keep the project on track post-launch.',

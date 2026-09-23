@@ -26,6 +26,7 @@ import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
 // `EstimationMethod` is declared in the WBS model library too, so that import
 // hides it and the Cost Estimate's copy stays unambiguous.
+import 'package:ndu_project/cost_estimate/utils/cost_descriptor_text.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
 import 'package:ndu_project/schedule/utils/schedule_work_packages.dart';
@@ -743,7 +744,12 @@ class _TreasuryLineRow extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        line.description,
+                        // Descriptors arrive from the SSHER, Schedule and Risk
+                        // pulls and are user-editable, so a doubled dash can
+                        // already be stored. Normalising on display removes
+                        // it without a data migration (Lusaka 25 (copy):
+                        // "remove the double dashes, the double hyphens").
+                        costDescriptorForDisplay(line.description),
                         style: const TextStyle(
                           color: TreasuryTokens.ink,
                           fontSize: 13.5,

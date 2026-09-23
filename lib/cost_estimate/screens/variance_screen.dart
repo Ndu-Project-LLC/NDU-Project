@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/cost_estimate/utils/cost_descriptor_text.dart';
 import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -743,7 +744,10 @@ class _VarianceLineRow extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(line.description,
+            child: Text(
+                // Same normalisation as the builder's line row, so a doubled
+                // dash cannot survive on the variance surface either.
+                costDescriptorForDisplay(line.description),
                 style: const TextStyle(
                     color: TreasuryTokens.ink,
                     fontSize: 12.5,

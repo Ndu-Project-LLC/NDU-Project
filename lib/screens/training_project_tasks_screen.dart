@@ -155,6 +155,7 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  ]),
  const SizedBox(height: 8),
  LaunchDataTable(
+ virtualizedBodyHeight: launchTableBodyCap,
  title: 'Project Lessons Learned',
  subtitle: 'Track lessons, insights, and outcomes across project phases',
  columns: const [

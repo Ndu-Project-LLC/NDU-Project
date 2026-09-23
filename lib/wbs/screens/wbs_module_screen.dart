@@ -36,6 +36,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cross_section_sync_card.dart';
+import 'package:ndu_project/widgets/scrollable_section_header.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:go_router/go_router.dart';
 
@@ -56,6 +57,16 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
     length: 5,
     vsync: this,
   );
+
+  /// The module's sub-sections. Shared by the [SectionNavigator] tabs and by
+  /// the collapsed section-header bar's summary.
+  static const List<SectionTab> _sectionTabs = [
+    SectionTab(icon: Icons.folder_open, label: 'Builder'),
+    SectionTab(icon: Icons.attach_money_outlined, label: 'Cost by WBS'),
+    SectionTab(icon: Icons.auto_awesome, label: 'AI Generator'),
+    SectionTab(icon: Icons.check_circle_outline, label: 'Validator'),
+    SectionTab(icon: Icons.trending_up, label: 'WBS Summary'),
+  ];
 
   @override
   void initState() {
@@ -194,46 +205,54 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
           floatingActionButton: const KazAiChatBubble(positioned: false),
           body: Column(
             children: [
-              // ── World-class Section Navigator ─────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: SectionNavigator(
-                  title: 'WBS Navigation',
-                  subtitle: 'Navigate between WBS sections',
-                  icon: Icons.account_tree_outlined,
-                  tabs: const [
-                    SectionTab(icon: Icons.folder_open, label: 'Builder'),
-                    SectionTab(icon: Icons.attach_money_outlined, label: 'Cost by WBS'),
-                    SectionTab(icon: Icons.auto_awesome, label: 'AI Generator'),
-                    SectionTab(icon: Icons.check_circle_outline, label: 'Validator'),
-                    SectionTab(icon: Icons.trending_up, label: 'WBS Summary'),
-                  ],
-                  controller: _tabController,
-                  onChanged: (index) => setState(() {}),
-                  isCollapsible: true,
-                  initiallyCollapsed: true,
-                ),
-              ),
-              // ── Node count indicator ─────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
+              // Scrollable, self-collapsing section header: the tab content
+              // below always keeps its share of the page.
+              ScrollableSectionHeader(
+                label: 'WBS',
+                icon: Icons.account_tree_outlined,
+                summary: _sectionTabs[_tabController.index].label,
+                scrollKey: const ValueKey('wbsHeaderScroll'),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Spacer(),
-                    Text(
-                      'L0–L${fm.maxDepth} · $totalNodes nodes',
-                      style: const TextStyle(
-                        color: Color(0xFF9CA3AF),
-                        fontSize: 11,
+                    // ── World-class Section Navigator ─────────────────────
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: SectionNavigator(
+                        title: 'WBS Navigation',
+                        subtitle: 'Navigate between WBS sections',
+                        icon: Icons.account_tree_outlined,
+                        tabs: _sectionTabs,
+                        controller: _tabController,
+                        onChanged: (index) => setState(() {}),
+                        isCollapsible: true,
+                        initiallyCollapsed: true,
                       ),
+                    ),
+                    // ── Node count indicator ──────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          const Spacer(),
+                          Text(
+                            'L0–L${fm.maxDepth} · $totalNodes nodes',
+                            style: const TextStyle(
+                              color: Color(0xFF9CA3AF),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ─────
+                    const CrossSectionSyncCard(
+                      currentSection: CrossSection.wbs,
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ──────────
-              const CrossSectionSyncCard(
-                currentSection: CrossSection.wbs,
               ),
               // Tab content
               Expanded(

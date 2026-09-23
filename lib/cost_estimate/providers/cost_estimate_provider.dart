@@ -18,6 +18,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/utils/risk_cost_lines.dart';
+import 'package:ndu_project/cost_estimate/utils/quality_cost_lines.dart';
+import 'package:ndu_project/cost_estimate/utils/ssher_cost_lines.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -954,6 +956,169 @@ class CostEstimateProvider extends ChangeNotifier {
     );
   }
 
+  /// Pull the Cost of Quality entries into the Cost Estimate as plain
+  /// `quality` cost lines — no AI involved.
+  ///
+  /// Lusaka 25 (copy) call: "quality is not done … the quality costs must reach
+  /// the cost estimate."
+  ///
+  /// Selection rules live in `quality_cost_lines.dart` (pure, tested): only
+  /// entries that have been priced, actual beating estimate once recorded.
+  ///
+  /// Idempotent: an entry already represented as a `quality` line with the same
+  /// description AND total is never duplicated.
+  QualityCostPullResult pullQualityCostLines(List<QualityCostLine> entries) {
+    final estimate = _estimate;
+    if (estimate == null || entries.isEmpty) {
+      return QualityCostPullResult.empty;
+    }
+
+    final newLines = [...estimate.lines];
+    var alreadyInEstimate = 0;
+    var addedTotal = 0.0;
+
+    for (final entry in entries) {
+      final description = entry.description.trim();
+      if (description.isEmpty) continue;
+      final total = entry.total;
+
+      final existing = estimate.lines.any((l) =>
+          l.category == CostCategory.quality &&
+          l.description == description &&
+          (l.total - total).abs() < 0.005);
+      if (existing) {
+        alreadyInEstimate++;
+        continue;
+      }
+
+      final category = entry.category.trim();
+      final scope = entry.scope.trim();
+      newLines.add(CostLine(
+        id: newId('line'),
+        category: CostCategory.quality,
+        subCategory: category.isEmpty ? 'Quality' : 'Quality — $category',
+        description: description,
+        quantity: null,
+        unit: 'quality',
+        rate: null,
+        total: total,
+        inSchedule: false,
+        basisSource: CostSourceType.expertJudgment,
+        basisReference: 'Cost of Quality entry'
+            '${entry.entryId.trim().isEmpty ? '' : ' ${entry.entryId.trim()}'}'
+            '${category.isEmpty ? '' : ' ($category)'}'
+            '${scope.isEmpty ? '' : ' [$scope]'}',
+        aiGenerated: false,
+      ));
+      addedTotal += total;
+    }
+
+    if (newLines.length == estimate.lines.length) {
+      return QualityCostPullResult(
+        pulled: 0,
+        alreadyInEstimate: alreadyInEstimate,
+        addedTotal: 0,
+      );
+    }
+
+    final totals = ComputeUtils.computeTotals(newLines);
+    _estimate = estimate.copyWith(
+      lines: newLines,
+      totals: totals,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return QualityCostPullResult(
+      pulled: newLines.length - estimate.lines.length,
+      alreadyInEstimate: alreadyInEstimate,
+      addedTotal: addedTotal,
+    );
+  }
+
+  /// Pull the SSHER items that require a purchase into the Cost Estimate as
+  /// plain `ssher` cost lines — no AI involved.
+  ///
+  /// Lusaka 25 (copy) call: "what is the cost aspect for these things? … in
+  /// that share costs … you can have them on the table and say cost items and
+  /// then estimated costs … that is how we can put our share costs into the
+  /// cost estimate."
+  ///
+  /// Selection rules live in `ssher_cost_lines.dart` (pure, tested): only items
+  /// ticked as requiring a purchase, and only when someone actually priced them.
+  ///
+  /// Idempotent: an item already represented as an `ssher` line with the same
+  /// description AND total is never duplicated (matches the risk and personnel
+  /// pulls).
+  SsherCostPullResult pullSsherCostLines(List<SsherCostLine> items) {
+    final estimate = _estimate;
+    if (estimate == null || items.isEmpty) {
+      return SsherCostPullResult.empty;
+    }
+
+    final newLines = [...estimate.lines];
+    var alreadyInEstimate = 0;
+    var addedTotal = 0.0;
+
+    for (final item in items) {
+      final description = item.description.trim();
+      if (description.isEmpty) continue;
+      final total = item.total;
+
+      // Already represented (same description + same total)? Skip.
+      final existing = estimate.lines.any((l) =>
+          l.category == CostCategory.ssher &&
+          l.description == description &&
+          (l.total - total).abs() < 0.005);
+      if (existing) {
+        alreadyInEstimate++;
+        continue;
+      }
+
+      final discipline = item.category.trim();
+      newLines.add(CostLine(
+        id: newId('line'),
+        category: CostCategory.ssher,
+        subCategory:
+            discipline.isEmpty ? 'SSHER' : 'SSHER — $discipline',
+        description: description,
+        quantity: null,
+        unit: 'purchase',
+        rate: null,
+        total: total,
+        inSchedule: false,
+        basisSource: CostSourceType.expertJudgment,
+        basisReference:
+            'SSHER item${item.entryId.trim().isEmpty ? '' : ' ${item.entryId.trim()}'}'
+            '${discipline.isEmpty ? '' : ' ($discipline)'}',
+        aiGenerated: false,
+      ));
+      addedTotal += total;
+    }
+
+    if (newLines.length == estimate.lines.length) {
+      return SsherCostPullResult(
+        pulled: 0,
+        alreadyInEstimate: alreadyInEstimate,
+        addedTotal: 0,
+      );
+    }
+
+    final totals = ComputeUtils.computeTotals(newLines);
+    _estimate = estimate.copyWith(
+      lines: newLines,
+      totals: totals,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return SsherCostPullResult(
+      pulled: newLines.length - estimate.lines.length,
+      alreadyInEstimate: alreadyInEstimate,
+      addedTotal: addedTotal,
+    );
+  }
+
   /// Pick the best project name: the explicit one if it's been customised,
   /// otherwise [ProjectDataHelper.lastKnownProjectName] (if captured), else
   /// the literal `'My Project'` default.
@@ -1611,6 +1776,53 @@ class PersonnelCostPullResult {
 }
 
 /// Result of [CostEstimateProvider.pullRiskCostLines].
+class SsherCostPullResult {
+  /// Number of new `ssher` cost lines created.
+  final int pulled;
+
+  /// Priced SSHER items that were already represented — nothing created.
+  final int alreadyInEstimate;
+
+  /// Combined value of the newly pulled SSHER lines.
+  final double addedTotal;
+
+  const SsherCostPullResult({
+    required this.pulled,
+    required this.alreadyInEstimate,
+    required this.addedTotal,
+  });
+
+  static const empty = SsherCostPullResult(
+    pulled: 0,
+    alreadyInEstimate: 0,
+    addedTotal: 0,
+  );
+}
+
+/// Result of [CostEstimateProvider.pullQualityCostLines].
+class QualityCostPullResult {
+  /// Number of new `quality` cost lines created.
+  final int pulled;
+
+  /// Priced CoQ entries that were already represented — nothing created.
+  final int alreadyInEstimate;
+
+  /// Combined value of the newly pulled quality lines.
+  final double addedTotal;
+
+  const QualityCostPullResult({
+    required this.pulled,
+    required this.alreadyInEstimate,
+    required this.addedTotal,
+  });
+
+  static const empty = QualityCostPullResult(
+    pulled: 0,
+    alreadyInEstimate: 0,
+    addedTotal: 0,
+  );
+}
+
 class RiskCostPullResult {
   /// Number of new risk-allowance cost lines created.
   final int pulled;

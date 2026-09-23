@@ -16,6 +16,8 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/utils/section_flow_gate.dart';
+import 'package:ndu_project/widgets/section_progress_bar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -24,9 +26,28 @@ import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/cost_estimate/utils/quality_cost_lines.dart';
+import 'package:ndu_project/models/cost_of_quality.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
-enum _QualityTab { plan, targets, qaTracking, qcTracking, metrics, register }
+enum _QualityTab {
+  plan,
+  targets,
+  qaTracking,
+  qcTracking,
+  metrics,
+  register,
+
+  /// Cost of Quality — what quality actually costs the project.
+  ///
+  /// Lusaka 25 (copy): **"quality is not done … the quality costs must reach
+  /// the cost estimate."** The Cost of Quality model already existed on this
+  /// branch but had nowhere to be captured, so the Costs pull in the Cost
+  /// Estimate had nothing to move. Prevention and appraisal are spend to avoid
+  /// defects; internal and external failure are spend because they were not —
+  /// all four belong to the project total.
+  costOfQuality,
+}
 
 const _dateHint = 'Select date';
 
@@ -46,6 +67,8 @@ String _qualityCategoryKey(_QualityTab tab) {
       return 'metrics';
     case _QualityTab.register:
       return 'register';
+    case _QualityTab.costOfQuality:
+      return 'cost_of_quality';
   }
 }
 
@@ -65,6 +88,8 @@ String _qualityTabLabel(_QualityTab tab) {
       return 'Quality Metrics Dashboard';
     case _QualityTab.register:
       return 'Quality Register';
+    case _QualityTab.costOfQuality:
+      return 'Cost of Quality';
   }
 }
 
@@ -84,6 +109,10 @@ String _planFieldFor(_QualityTab tab) {
       return 'qualityMetricsSummary';
     case _QualityTab.register:
       return 'qualityRegisterLog';
+    case _QualityTab.costOfQuality:
+      // The Cost of Quality tab is a structured capture, not AI prose, so it
+      // has no generated plan field.
+      return 'costOfQualitySummary';
   }
 }
 
@@ -374,9 +403,43 @@ class QualityManagementScreen extends StatefulWidget {
 class _QualityManagementScreenState extends State<QualityManagementScreen> {
   _QualityTab _selectedTab = _QualityTab.plan;
 
+  @override
+  void initState() {
+    super.initState();
+    // Mark the landing tab as seen: the gate is about which tabs have been
+    // *shown*, so the user does not have to re-tap the one they arrived on.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_markTabVisited(_selectedTab));
+    });
+  }
+
   void _handleTabSelected(_QualityTab tab) {
+    // Record the visit even when the tab is already selected: the gate below is
+    // about which tabs have been *shown*, so the tab the user lands on counts.
+    unawaited(_markTabVisited(tab));
     if (_selectedTab == tab) return;
     setState(() => _selectedTab = tab);
+  }
+
+  /// Remember that a Quality tab has been opened, so the section's Next can
+  /// unlock once every tab has been shown (Lusaka 25 (copy) — see
+  /// `lib/utils/section_flow_gate.dart`).
+  ///
+  /// The id is the enum's `name`, which is also what the gate declares. It used
+  /// to be the AI *category* key, and the gate looked for a different set of
+  /// strings entirely — so its Next could never unlock. Keeping one name for a
+  /// tab on both sides is the point.
+  Future<void> _markTabVisited(_QualityTab tab) async {
+    final id = tab.name;
+    final current = _qualityData(context);
+    if (current.visitedSections.contains(id)) return;
+    await _updateQualityData(
+      context,
+      checkpoint: 'quality_management',
+      updater: (data) => data.copyWith(
+        visitedSections: [...data.visitedSections, id],
+      ),
+    );
   }
 
   Widget _buildNavigationHint() {
@@ -447,6 +510,7 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
                     _TabStrip(
                       selectedTab: _selectedTab,
                       onSelected: _handleTabSelected,
+                      visited: _qualityData(context).visitedSections.toSet(),
                     ),
                     const SizedBox(height: 28),
                     _TabContent(selectedTab: _selectedTab),
@@ -514,6 +578,7 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
                         _TabStrip(
                           selectedTab: _selectedTab,
                           onSelected: _handleTabSelected,
+                          visited: _qualityData(context).visitedSections.toSet(),
                         ),
                         const SizedBox(height: 28),
                         _TabContent(selectedTab: _selectedTab),
@@ -609,21 +674,42 @@ class _NavigationRow extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onNext;
 
+  /// The Quality section is one planning step spread over six tabs, so "Next"
+  /// holds until all six have been shown — otherwise "they might click next and
+  /// they'll skip everything else here" (Lusaka 25 (copy)).
+  List<SectionTab> _missing(BuildContext context) {
+    final visited = ProjectDataHelper.getData(context)
+            .qualityManagementData
+            ?.visitedSections ??
+        const <String>[];
+    return unvisitedTabs('quality_management', visited);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobile = AppBreakpoints.isMobile(context);
-    return Row(
+    final missing = _missing(context);
+    final blocked = missing.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (blocked)
+          _QualityGateNotice(missing: missing),
+        Row(
+          children: [
         Expanded(
           child: OutlinedButton.icon(
             onPressed: onBack,
             icon: const Icon(Icons.arrow_back, size: 16),
-            label: Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                    PlanningPhaseNavigation.backLabel('quality_management')),
-              ),
+            // No Flexible here: `*.icon` buttons already wrap the label in one,
+            // and a second Flexible around the same RenderObject trips
+            // "Competing ParentDataWidgets". The FittedBox alone does the
+            // scaling, and it is a child of the button's own Flexible.
+            label: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                  PlanningPhaseNavigation.backLabel('quality_management')),
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF374151),
@@ -641,18 +727,33 @@ class _NavigationRow extends StatelessWidget {
         Expanded(
           flex: 2,
           child: FilledButton.icon(
-            onPressed: onNext,
+            // Grayed out, not hidden: the destination is still discoverable, and
+            // clicking it explains what is missing instead of silently refusing.
+            onPressed: blocked
+                ? () => ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          sectionIncompleteMessage(
+                              'quality_management', missing),
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    )
+                : onNext,
             icon: const Icon(Icons.arrow_forward, size: 16),
-            label: Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                    PlanningPhaseNavigation.nextLabel('quality_management')),
-              ),
+            // See the Back button above — the button supplies the Flexible.
+            label: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                  PlanningPhaseNavigation.nextLabel('quality_management')),
             ),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFFFC044),
-              foregroundColor: const Color(0xFF111827),
+              backgroundColor: blocked
+                  ? const Color(0xFFE5E7EB)
+                  : const Color(0xFFFFC044),
+              foregroundColor: blocked
+                  ? const Color(0xFF9CA3AF)
+                  : const Color(0xFF111827),
               padding: EdgeInsets.symmetric(
                 horizontal: isMobile ? 8 : 20,
                 vertical: 12,
@@ -662,16 +763,60 @@ class _NavigationRow extends StatelessWidget {
             ),
           ),
         ),
+        ],
+        ),
       ],
     );
   }
 }
 
+/// Spell out which Quality tabs are still unopened, so the gate teaches the flow
+/// instead of just refusing to move.
+class _QualityGateNotice extends StatelessWidget {
+  const _QualityGateNotice({required this.missing});
+
+  final List<SectionTab> missing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF3C7),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFF59E0B)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline,
+              color: Color(0xFFB45309), size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Finish this section before moving on. Still to review: '
+              '${missing.map((t) => t.label).join(', ')}.',
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TabStrip extends StatelessWidget {
-  const _TabStrip({required this.selectedTab, required this.onSelected});
+  const _TabStrip({
+    required this.selectedTab,
+    required this.onSelected,
+    required this.visited,
+  });
 
   final _QualityTab selectedTab;
   final ValueChanged<_QualityTab> onSelected;
+
+  /// Tab ids already shown this project — what the section's gate reads.
+  final Set<String> visited;
 
   @override
   Widget build(BuildContext context) {
@@ -706,7 +851,20 @@ class _TabStrip extends StatelessWidget {
         icon: Icons.assignment_late_outlined,
         tab: _QualityTab.register,
       ),
+      _TabData(
+        label: 'Cost of Quality',
+        icon: Icons.payments_outlined,
+        tab: _QualityTab.costOfQuality,
+      ),
     ];
+
+    // Progress chip + Continue badge — the shared pattern from
+    // Design Planning: say where the user is, point at what's next.
+    final flowTabs = [
+      for (final tab in tabs)
+        FlowTab(id: tab.tab.name, label: tab.label),
+    ];
+    final nextId = nextUnvisitedTabId(flowTabs, visited);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
@@ -722,20 +880,41 @@ class _TabStrip extends StatelessWidget {
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (int i = 0; i < tabs.length; i++) ...[
-              _TabChip(
-                data: tabs[i],
-                selected: tabs[i].tab == selectedTab,
-                onTap: () => onSelected(tabs[i].tab),
-              ),
-              if (i != tabs.length - 1) const SizedBox(width: 12),
-            ],
-          ],
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            child: SectionProgressBar(
+              tabs: flowTabs,
+              visitedIds: visited,
+              sectionTitle: 'Quality Management',
+              onOpenTab: (id) {
+                final tab = _QualityTab.values
+                    .where((t) => t.name == id)
+                    .firstOrNull;
+                if (tab != null) onSelected(tab);
+              },
+            ),
+          ),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (int i = 0; i < tabs.length; i++) ...[
+                  _TabChip(
+                    data: tabs[i],
+                    selected: tabs[i].tab == selectedTab,
+                    isNextUp: tabs[i].tab.name == nextId &&
+                        tabs[i].tab != selectedTab,
+                    onTap: () => onSelected(tabs[i].tab),
+                  ),
+                  if (i != tabs.length - 1) const SizedBox(width: 12),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -754,11 +933,16 @@ class _TabChip extends StatelessWidget {
     required this.data,
     required this.selected,
     required this.onTap,
+    this.isNextUp = false,
   });
 
   final _TabData data;
   final bool selected;
   final VoidCallback onTap;
+
+  /// True on the one unvisited tab the user should open next — renders the
+  /// shared "Continue" badge so the strip points forward on its own.
+  final bool isNextUp;
 
   @override
   Widget build(BuildContext context) {
@@ -778,18 +962,27 @@ class _TabChip extends StatelessWidget {
             color: background,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Row(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(data.icon, color: textColor, size: 18),
-              const SizedBox(width: 10),
-              Text(
-                data.label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(data.icon, color: textColor, size: 18),
+                  const SizedBox(width: 10),
+                  Text(
+                    data.label,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
+                ],
+              ),
+              if (isNextUp) const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: FlowTabContinueBadge(),
               ),
             ],
           ),
@@ -837,6 +1030,11 @@ class _TabContent extends StatelessWidget {
           tab: _QualityTab.register,
           child: _QualityRegisterView(),
         );
+      case _QualityTab.costOfQuality:
+        return const _QualityTabScaffold(
+          tab: _QualityTab.costOfQuality,
+          child: _CostOfQualityView(),
+        );
     }
   }
 }
@@ -858,8 +1056,86 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
   QualityAssistantInsights? _insights;
   bool _didInitForTab = false;
 
+  /// The narrative is editable, so this screen owns its controller and writes
+  /// it back to the store on a debounce.
+  final SpellCheckTextEditingController _planController =
+      SpellCheckTextEditingController();
+  final FocusNode _planFocus = FocusNode();
+  Timer? _planSaveDebounce;
+
   String get _category => _qualityCategoryKey(widget.tab);
   String get _tabLabel => _qualityTabLabel(widget.tab);
+
+  /// Reads the workspace AI switch (`ProjectData.aiEnabled`).
+  ///
+  /// Lusaka 25 (copy) review: "if AI is off, I don't want to see AI generated
+  /// anything" and "can you tie this function to AI being turned on and off?".
+  /// Every AI surface below is gated on this one switch.
+  bool get _aiEnabled => ProjectDataHelper.getData(context).aiEnabled;
+
+  /// True while the narrative on screen is still the one AI produced. Only then
+  /// may the heading call it "(AI-Generated)".
+  bool _planIsAiGenerated(QualityManagementData q) =>
+      q.aiGeneratedPlans[_category] == true;
+
+  @override
+  void dispose() {
+    _planSaveDebounce?.cancel();
+    _planController.dispose();
+    _planFocus.dispose();
+    super.dispose();
+  }
+
+  /// Keeps the editable field in step with the stored narrative — an AI
+  /// generation, a regenerate or a delete all land here — without stomping on
+  /// what the user is currently typing.
+  void _syncPlanField(String planText) {
+    if (_planFocus.hasFocus) return;
+    if (_planController.text == planText) return;
+    _planController.text = planText;
+  }
+
+  Future<void> _setAiEnabled(bool enabled) async {
+    await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'quality_management',
+      showSnackbar: true,
+      successMessage: enabled
+          ? 'AI turned on for this workspace'
+          : 'AI turned off — AI-generated content is now hidden',
+      dataUpdater: (data) => data.copyWith(aiEnabled: enabled),
+    );
+  }
+
+  /// Persist a hand edit. Typed text is no longer AI's, so the "(AI-Generated)"
+  /// marker is dropped with it.
+  void _onPlanEdited(String value) {
+    _planSaveDebounce?.cancel();
+    _planSaveDebounce = Timer(const Duration(milliseconds: 700), () {
+      if (!mounted) return;
+      _updateQualityData(
+        context,
+        checkpoint: 'quality_management',
+        updater: (current) =>
+            _setPlanFor(current, widget.tab, value, aiGenerated: false),
+      );
+    });
+  }
+
+  /// Reject / delete the narrative. Asked for explicitly: "if something pops up,
+  /// they should be able to edit it, reject it, delete it. We don't want them
+  /// to be forced with anything."
+  Future<void> _deletePlan() async {
+    _planSaveDebounce?.cancel();
+    _planController.text = '';
+    await _updateQualityData(
+      context,
+      checkpoint: 'quality_management',
+      successMessage: '$_tabLabel narrative deleted',
+      updater: (current) =>
+          _setPlanFor(current, widget.tab, '', aiGenerated: false),
+    );
+  }
 
   @override
   void didChangeDependencies() {
@@ -900,10 +1176,17 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
         return q.qualityMetricsSummary;
       case _QualityTab.register:
         return q.qualityRegisterLog;
+      case _QualityTab.costOfQuality:
+        // Structured capture — never AI prose.
+        return '';
     }
   }
 
   Future<void> _ensurePlanGenerated() async {
+    // With AI switched off nothing may be invented behind the user's back — the
+    // complaint was that the plan appeared "AI generated for you that you didn't
+    // ask it for".
+    if (!_aiEnabled) return;
     final q = _qualityData(context);
     if (_currentPlan(q).isNotEmpty) return;
     if (_isGeneratingPlan) return;
@@ -933,12 +1216,22 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
     await _updateQualityData(
       context,
       checkpoint: 'quality_management',
-      updater: (current) => _setPlanFor(current, widget.tab, trimmed),
+      updater: (current) =>
+          _setPlanFor(current, widget.tab, trimmed, aiGenerated: true),
     );
   }
 
   Future<void> _regeneratePlan() async {
     if (_isGeneratingPlan) return;
+    if (!_aiEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('AI is turned off. Turn it on to regenerate.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     final projectData = ProjectDataHelper.getData(context);
     final contextText = ProjectDataHelper.buildQualityContext(
       projectData,
@@ -982,11 +1275,13 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
       context,
       checkpoint: 'quality_management',
       successMessage: '$_tabLabel regenerated by AI',
-      updater: (current) => _setPlanFor(current, widget.tab, trimmed),
+      updater: (current) =>
+          _setPlanFor(current, widget.tab, trimmed, aiGenerated: true),
     );
   }
 
   Future<void> _ensureInsightsGenerated() async {
+    if (!_aiEnabled) return;
     final q = _qualityData(context);
     if ((q.aiInsights[_category] ?? '').isNotEmpty) return;
     if (_isGeneratingInsights) return;
@@ -1043,6 +1338,7 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
 
   Future<void> _regenerateInsights() async {
     if (_isGeneratingInsights) return;
+    if (!_aiEnabled) return;
     final projectData = ProjectDataHelper.getData(context);
     final contextText = ProjectDataHelper.buildQualityContext(
       projectData,
@@ -1081,24 +1377,40 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
     }
   }
 
+  /// Writes one tab's narrative and records where the text came from, so the
+  /// heading can only claim "(AI-Generated)" while that is still true.
   QualityManagementData _setPlanFor(
     QualityManagementData current,
     _QualityTab tab,
-    String value,
-  ) {
+    String value, {
+    bool aiGenerated = false,
+  }) {
+    final mark = <String, bool>{
+      ...current.aiGeneratedPlans,
+      _category: aiGenerated,
+    };
     switch (tab) {
       case _QualityTab.plan:
-        return current.copyWith(qualityManagementPlan: value);
+        return current.copyWith(
+            qualityManagementPlan: value, aiGeneratedPlans: mark);
       case _QualityTab.targets:
-        return current.copyWith(qualityObjectivesSummary: value);
+        return current.copyWith(
+            qualityObjectivesSummary: value, aiGeneratedPlans: mark);
       case _QualityTab.qaTracking:
-        return current.copyWith(inspectionTestPlan: value);
+        return current.copyWith(
+            inspectionTestPlan: value, aiGeneratedPlans: mark);
       case _QualityTab.qcTracking:
-        return current.copyWith(qualityAuditPlanSummary: value);
+        return current.copyWith(
+            qualityAuditPlanSummary: value, aiGeneratedPlans: mark);
       case _QualityTab.metrics:
-        return current.copyWith(qualityMetricsSummary: value);
+        return current.copyWith(
+            qualityMetricsSummary: value, aiGeneratedPlans: mark);
       case _QualityTab.register:
-        return current.copyWith(qualityRegisterLog: value);
+        return current.copyWith(
+            qualityRegisterLog: value, aiGeneratedPlans: mark);
+      case _QualityTab.costOfQuality:
+        // Not an AI-authored tab, so there is no plan text to store.
+        return current;
     }
   }
 
@@ -1134,6 +1446,7 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
   Widget build(BuildContext context) {
     final q = _qualityData(context, listen: true);
     final planText = _currentPlan(q);
+    _syncPlanField(planText);
     final skipped = _isSkipped(q);
     final applicable = _isApplicable(q);
     final insightsText = _insights?.insights ?? q.aiInsights[_category] ?? '';
@@ -1208,12 +1521,21 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.auto_awesome,
-                        color: Color(0xFFFFC812), size: 18),
+                    Icon(
+                      _aiEnabled ? Icons.auto_awesome : Icons.edit_note,
+                      color: _aiEnabled
+                          ? const Color(0xFFFFC812)
+                          : const Color(0xFF6B7280),
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '$_tabLabel (AI-Generated)',
+                        // The "(AI-Generated)" suffix is itself an AI surface, so
+                        // it needs AI on AND a narrative AI actually wrote.
+                        _aiEnabled && _planIsAiGenerated(q)
+                            ? '$_tabLabel (AI-Generated)'
+                            : _tabLabel,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -1228,34 +1550,85 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                     const SizedBox(width: 8),
-                    OutlinedButton.icon(
-                      onPressed: _isGeneratingPlan ? null : _regeneratePlan,
-                      icon: const Icon(Icons.refresh, size: 14),
-                      label: const Text('Regenerate'),
+                    // The AI switch sits on the block it controls: "they'll have
+                    // maybe one user on each page so they can turn it on and off
+                    // when they need to".
+                    const Text('AI', style: TextStyle(fontSize: 12)),
+                    Switch(
+                      value: _aiEnabled,
+                      onChanged: _setAiEnabled,
                     ),
+                    if (_aiEnabled)
+                      OutlinedButton.icon(
+                        onPressed: _isGeneratingPlan ? null : _regeneratePlan,
+                        icon: const Icon(Icons.refresh, size: 14),
+                        label: const Text('Regenerate'),
+                      ),
+                    if (planText.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: _isGeneratingPlan ? null : _deletePlan,
+                        icon: const Icon(Icons.delete_outline, size: 14),
+                        label: const Text('Delete'),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                if (planText.isEmpty && !_isGeneratingPlan)
-                  const Text(
-                    'Generating plan from project context…',
-                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
-                  )
-                else if (_isGeneratingPlan && planText.isEmpty)
+                if (!_aiEnabled)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFD1D5DB)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.visibility_off,
+                            size: 16, color: Color(0xFF4B5563)),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'AI is turned off, so nothing here is AI-generated. '
+                            'Write the narrative yourself, or turn AI on to '
+                            'generate and refresh it.',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (_isGeneratingPlan && planText.isEmpty)
                   const Text(
                     'Generating plan from project context…',
                     style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                   )
                 else
-                  SelectableText(
-                    planText,
-                    style: const TextStyle(fontSize: 14, height: 1.5),
+                  // Editable either way: AI output must never be a dead end —
+                  // "they should be able to edit it, reject it, delete it".
+                  VoiceTextField(
+                    controller: _planController,
+                    focusNode: _planFocus,
+                    minLines: 6,
+                    // VoiceTextField's maxLines defaults to 1, so a minLines
+                    // without a maxLines trips Flutter's own assertion
+                    // ("minLines can't be greater than maxLines"). Null lets a
+                    // long narrative grow instead of being clipped.
+                    maxLines: null,
+                    enableKazAi: _aiEnabled,
+                    kazAiLabel: _tabLabel,
+                    decoration: _inputDecoration(
+                      context,
+                      'Write the $_tabLabel narrative…',
+                    ),
+                    onChanged: _onPlanEdited,
                   ),
               ],
             ),
           ),
         const SizedBox(height: 16),
-        if (applicable)
+        // The assistant insights are AI output, so they go with the switch.
+        if (applicable && _aiEnabled)
           _QualitySectionCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -4538,6 +4911,59 @@ class _QualityStandardDialogState extends State<_QualityStandardDialog> {
   }
 }
 
+/// A short "consider these" list at the top of the Quality add/edit dialogs.
+///
+/// Kept as one widget so every quality pop-up suggests the same shape of thing,
+/// rather than each dialog growing its own examples (Lusaka 25 (copy) ask 9).
+class _QualityConsiderHint extends StatelessWidget {
+  const _QualityConsiderHint({required this.heading, required this.ideas});
+
+  final String heading;
+  final List<String> ideas;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFCD34D)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.lightbulb_outline,
+                  size: 16, color: Color(0xFFB45309)),
+              const SizedBox(width: 6),
+              Text(
+                heading,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFB45309),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          for (final idea in ideas)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(
+                '• $idea',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF78350F)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _QualityObjectiveDialog extends StatefulWidget {
   const _QualityObjectiveDialog({
     required this.ownerOptions,
@@ -4634,6 +5060,22 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Lusaka 25 (copy): "from a pop-up perspective, I think we want to
+              // give ideas of quality things to consider for quality … say
+              // consider quality items such as requirements, now KPIs, or
+              // whatever it is for quality." The prompt gives the ideas instead
+              // of leaving the user to invent a quality item from scratch.
+              const _QualityConsiderHint(
+                heading: 'Consider',
+                ideas: [
+                  'Acceptance criteria for the deliverable',
+                  'A measurable KPI (defect rate, escape rate, rework hours)',
+                  'Test coverage or inspection and test plan requirements',
+                  'A code, standard or regulatory requirement to satisfy',
+                  'Review and sign-off cadence for this item',
+                  'Customer satisfaction or on-time-delivery target',
+                ],
+              ),
               const _FieldLabel('Objective'),
               VoiceTextField(
                   controller: _title,
@@ -6742,6 +7184,614 @@ class _QualityRegisterView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Cost of Quality — the four categories of quality spend, and what they add up
+/// to.
+///
+/// Lusaka 25 (copy) voice note, 2026-09-17: **"quality is not done … the quality
+/// costs must reach the cost estimate."** and **"these are the costs that we are
+/// incurring because we are not doing quality right."**
+///
+/// Prevention and appraisal are spend *to avoid* defects; internal and external
+/// failure are spend *because they were not avoided*. Keeping the four apart is
+/// the point — a single "quality cost" number would hide which side of that line
+/// the project is on.
+class _CostOfQualityView extends StatefulWidget {
+  const _CostOfQualityView();
+
+  @override
+  State<_CostOfQualityView> createState() => _CostOfQualityViewState();
+}
+
+class _CostOfQualityViewState extends State<_CostOfQualityView> {
+  static const _categories = <_CoQCategory>[
+    _CoQCategory(
+      key: 'Prevention',
+      subtitle: 'Spent to stop defects happening — training, reviews, '
+          'planning, supplier development.',
+      color: Color(0xFF16A34A),
+    ),
+    _CoQCategory(
+      key: 'Appraisal',
+      subtitle: 'Spent to find defects before the customer does — '
+          'inspection, testing, audits.',
+      color: Color(0xFF2563EB),
+    ),
+    _CoQCategory(
+      key: 'Internal Failure',
+      subtitle: 'Spent because defects were caught late — rework, scrap, '
+          're-testing. It costs time and money, not reputation.',
+      color: Color(0xFFF59E0B),
+    ),
+    _CoQCategory(
+      key: 'External Failure',
+      subtitle: 'Spent because defects reached the customer — warranty, '
+          'returns, claims, penalties.',
+      color: Color(0xFFDC2626),
+    ),
+  ];
+
+  /// Read for display, with `listen: true` so the tab refreshes as soon as an
+  /// entry is saved — otherwise the totals keep showing the state from the
+  /// first build.
+  CostOfQualityData _coq() =>
+      ProjectDataHelper.getData(context, listen: true).costOfQualityData ??
+      CostOfQualityData.empty();
+
+  /// Read for a write, from an event handler.
+  ///
+  /// Not listening is required here — Provider refuses to let a handler
+  /// subscribe — and it is also correct: the handler already has the data it is
+  /// about to replace.
+  CostOfQualityData _coqForWrite() =>
+      ProjectDataHelper.getData(context).costOfQualityData ??
+      CostOfQualityData.empty();
+
+  List<CoQEntry> _listFor(CostOfQualityData data, String key) {
+    switch (key) {
+      case 'Prevention':
+        return List<CoQEntry>.from(data.preventionCosts);
+      case 'Appraisal':
+        return List<CoQEntry>.from(data.appraisalCosts);
+      case 'Internal Failure':
+        return List<CoQEntry>.from(data.internalFailureCosts);
+      case 'External Failure':
+        return List<CoQEntry>.from(data.externalFailureCosts);
+    }
+    return <CoQEntry>[];
+  }
+
+  CostOfQualityData _withList(
+    CostOfQualityData data,
+    String key,
+    List<CoQEntry> list,
+  ) {
+    switch (key) {
+      case 'Prevention':
+        return data.copyWith(preventionCosts: list);
+      case 'Appraisal':
+        return data.copyWith(appraisalCosts: list);
+      case 'Internal Failure':
+        return data.copyWith(internalFailureCosts: list);
+      case 'External Failure':
+        return data.copyWith(externalFailureCosts: list);
+    }
+    return data;
+  }
+
+  Future<void> _save(CostOfQualityData updated, String message) async {
+    await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'quality_management',
+      showSnackbar: true,
+      successMessage: message,
+      dataUpdater: (data) => data.copyWith(costOfQualityData: updated),
+    );
+  }
+
+  Future<void> _addEntry(String key) async {
+    final entry = await showDialog<CoQEntry>(
+      context: context,
+      builder: (_) => _CoQEntryDialog(category: key),
+    );
+    if (entry == null || !mounted) return;
+    final data = _coqForWrite();
+    final list = _listFor(data, key)..add(entry);
+    await _save(_withList(data, key, list), 'Added Cost of Quality entry.');
+  }
+
+  Future<void> _editEntry(String key, CoQEntry existing) async {
+    final entry = await showDialog<CoQEntry>(
+      context: context,
+      builder: (_) => _CoQEntryDialog(category: key, initialValue: existing),
+    );
+    if (entry == null || !mounted) return;
+    final data = _coqForWrite();
+    final list = _listFor(data, key);
+    final index = list.indexWhere((e) => e.id == existing.id);
+    if (index == -1) return;
+    list[index] = entry;
+    await _save(_withList(data, key, list), 'Updated Cost of Quality entry.');
+  }
+
+  Future<void> _removeEntry(String key, CoQEntry existing) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove entry?'),
+        content: Text(
+          '“${existing.description.isEmpty ? 'Untitled entry' : existing.description}” '
+          'will be removed from Cost of Quality. It can be added again if this '
+          'was a mistake.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final data = _coqForWrite();
+    final list = _listFor(data, key)
+      ..removeWhere((e) => e.id == existing.id);
+    await _save(_withList(data, key, list), 'Removed Cost of Quality entry.');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final data = _coq();
+    final collected = collectQualityEntries(data: data);
+    final priced = collectQualityCostLines(data: data);
+
+    // Estimated and actual are shown separately: an estimate is a plan, an
+    // actual is what happened, and the gap between them is the finding.
+    final estimatedTotal = data.totalEstimatedCoq;
+    final actualTotal = data.totalCoq;
+    final unpriced = collected.length - priced.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeader(
+          title: 'Cost of Quality',
+          subtitle: 'Price each quality activity. Priced entries flow into '
+              'the Cost Estimate as quality cost lines — no AI, the amounts '
+              'are yours.',
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _coqMetric(
+                'Entries', '${collected.length}', const Color(0xFF1F2937)),
+            _coqMetric(
+              'Priced',
+              '${priced.length}',
+              priced.isEmpty
+                  ? const Color(0xFFF59E0B)
+                  : const Color(0xFF16A34A),
+            ),
+            _coqMetric('Estimated total', _coqMoney(estimatedTotal),
+                const Color(0xFF2563EB)),
+            _coqMetric('Actual total', _coqMoney(actualTotal),
+                const Color(0xFF10B981)),
+          ],
+        ),
+        if (unpriced > 0) ...[
+          const SizedBox(height: 12),
+          Text(
+            '$unpriced entr${unpriced == 1 ? 'y has' : 'ies have'} no cost '
+            'yet, so ${unpriced == 1 ? 'it' : 'they'} will not reach the Cost '
+            'Estimate until priced.',
+            style: const TextStyle(
+              color: Color(0xFFB45309),
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+        const SizedBox(height: 24),
+        for (final category in _categories) ...[
+          _PrimaryCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.circle, size: 10, color: category.color),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        category.key,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _addEntry(category.key),
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Add entry'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  category.subtitle,
+                  style: const TextStyle(
+                      fontSize: 12.5, color: Color(0xFF6B7280)),
+                ),
+                const SizedBox(height: 14),
+                if (_listFor(data, category.key).isEmpty)
+                  _EmptyState(
+                    message:
+                        'No ${category.key.toLowerCase()} costs recorded yet. '
+                        'Add an entry and price it so it can reach the Cost '
+                        'Estimate.',
+                  )
+                else
+                  _CoQEntryTable(
+                    entries: _listFor(data, category.key),
+                    onEdit: (e) => _editEntry(category.key, e),
+                    onRemove: (e) => _removeEntry(category.key, e),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ],
+    );
+  }
+
+  String _coqMoney(double value) {
+    if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
+    if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}K';
+    return value.toStringAsFixed(0);
+  }
+
+  Widget _coqMetric(String label, String value, Color color) {
+    return Container(
+      width: 180,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CoQCategory {
+  const _CoQCategory({
+    required this.key,
+    required this.subtitle,
+    required this.color,
+  });
+
+  final String key;
+  final String subtitle;
+  final Color color;
+}
+
+class _CoQEntryTable extends StatelessWidget {
+  const _CoQEntryTable({
+    required this.entries,
+    required this.onEdit,
+    required this.onRemove,
+  });
+
+  final List<CoQEntry> entries;
+  final ValueChanged<CoQEntry> onEdit;
+  final ValueChanged<CoQEntry> onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        headingRowHeight: 36,
+        dataRowMinHeight: 40,
+        dataRowMaxHeight: 56,
+        columnSpacing: 20,
+        columns: const [
+          DataColumn(label: Text('Description')),
+          DataColumn(label: Text('Scope')),
+          DataColumn(label: Text('Estimated')),
+          DataColumn(label: Text('Actual')),
+          DataColumn(label: Text('Status')),
+          DataColumn(label: Text('')),
+        ],
+        rows: [
+          for (final e in entries)
+            DataRow(cells: [
+              DataCell(
+                  Text(e.description.isEmpty ? 'Untitled' : e.description)),
+              DataCell(Text(e.scope)),
+              DataCell(Text(e.estimatedCost.toStringAsFixed(0))),
+              DataCell(Text(
+                  e.actualCost > 0 ? e.actualCost.toStringAsFixed(0) : '—')),
+              DataCell(Text(e.status)),
+              DataCell(Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    tooltip: 'Edit entry',
+                    onPressed: () => onEdit(e),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    tooltip: 'Remove entry',
+                    onPressed: () => onRemove(e),
+                  ),
+                ],
+              )),
+            ]),
+        ],
+      ),
+    );
+  }
+}
+
+/// Add / edit one Cost of Quality entry.
+///
+/// The two amounts are separate questions on purpose: *what do we expect this to
+/// cost* and *what did it actually cost*. Leaving the actual blank is normal
+/// until the work is done — the Cost Estimate then carries the estimate.
+class _CoQEntryDialog extends StatefulWidget {
+  const _CoQEntryDialog({required this.category, this.initialValue});
+
+  final String category;
+  final CoQEntry? initialValue;
+
+  @override
+  State<_CoQEntryDialog> createState() => _CoQEntryDialogState();
+}
+
+class _CoQEntryDialogState extends State<_CoQEntryDialog> {
+  static const _scopes = ['Internal', '3rd Party', 'Regulatory'];
+  static const _frequencies = ['One-time', 'Monthly', 'Quarterly', 'Annual'];
+  static const _statuses = ['Planned', 'In Progress', 'Completed'];
+
+  late final TextEditingController _description;
+  late final TextEditingController _estimated;
+  late final TextEditingController _actual;
+  late final TextEditingController _wbs;
+  late String _scope;
+  late String _frequency;
+  late String _status;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialValue;
+    _description =
+        SpellCheckTextEditingController(text: initial?.description ?? '');
+    _estimated = TextEditingController(
+        text: initial == null || initial.estimatedCost == 0
+            ? ''
+            : initial.estimatedCost.toStringAsFixed(0));
+    _actual = TextEditingController(
+        text: initial == null || initial.actualCost == 0
+            ? ''
+            : initial.actualCost.toStringAsFixed(0));
+    _wbs = SpellCheckTextEditingController(text: initial?.wbsReference ?? '');
+    _scope = initial?.scope ?? 'Internal';
+    _frequency = initial?.frequency ?? 'One-time';
+    _status = initial?.status ?? 'Planned';
+  }
+
+  @override
+  void dispose() {
+    _description.dispose();
+    _estimated.dispose();
+    _actual.dispose();
+    _wbs.dispose();
+    super.dispose();
+  }
+
+  double _amount(TextEditingController c) {
+    final cleaned = c.text.replaceAll(RegExp(r'[^0-9.]'), '');
+    if (cleaned.isEmpty) return 0;
+    return double.tryParse(cleaned) ?? 0;
+  }
+
+  void _submit() {
+    final initial = widget.initialValue;
+    final entry = CoQEntry(
+      id: initial?.id,
+      description: _description.text.trim(),
+      scope: _scope,
+      performerRole: initial?.performerRole ?? '',
+      wbsReference: _wbs.text.trim(),
+      estimatedCost: _amount(_estimated),
+      actualCost: _amount(_actual),
+      frequency: _frequency,
+      status: _status,
+      notes: initial?.notes ?? '',
+      createdAt: initial?.createdAt,
+    );
+    Navigator.of(context).pop(entry);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final dialogWidth =
+        screenWidth >= 1000 ? 680.0 : (screenWidth - 32).clamp(0.0, 680.0);
+    final unpriced = _amount(_estimated) <= 0 && _amount(_actual) <= 0;
+    return AlertDialog(
+      title: Text(widget.initialValue == null
+          ? 'Add ${widget.category} Cost'
+          : 'Edit ${widget.category} Cost'),
+      content: SizedBox(
+        width: dialogWidth,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const _FieldLabel('Description'),
+              TextField(
+                controller: _description,
+                decoration: const InputDecoration(
+                  hintText: 'e.g. Code reviews on every merge',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _scope,
+                      decoration: const InputDecoration(
+                        labelText: 'Scope',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        for (final s in _scopes)
+                          DropdownMenuItem(value: s, child: Text(s)),
+                      ],
+                      onChanged: (v) => setState(() => _scope = v ?? _scope),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _frequency,
+                      decoration: const InputDecoration(
+                        labelText: 'Frequency',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        for (final f in _frequencies)
+                          DropdownMenuItem(value: f, child: Text(f)),
+                      ],
+                      onChanged: (v) =>
+                          setState(() => _frequency = v ?? _frequency),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _estimated,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Estimated cost',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _actual,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Actual cost (once known)',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _status,
+                      decoration: const InputDecoration(
+                        labelText: 'Status',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        for (final s in _statuses)
+                          DropdownMenuItem(value: s, child: Text(s)),
+                      ],
+                      onChanged: (v) => setState(() => _status = v ?? _status),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _wbs,
+                      decoration: const InputDecoration(
+                        labelText: 'WBS reference',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                unpriced
+                    ? 'Without an amount this entry stays on the Quality tab '
+                        'and will not reach the Cost Estimate.'
+                    : 'This entry will reach the Cost Estimate as a quality '
+                        'cost line.',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: unpriced
+                      ? const Color(0xFFB45309)
+                      : const Color(0xFF15803D),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: Text(widget.initialValue == null ? 'Add entry' : 'Save'),
+        ),
+      ],
     );
   }
 }

@@ -122,6 +122,7 @@ class _TransitionToProdTeamScreenState
 
   Widget _buildTeamRosterPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Production Team Roster',
       subtitle: 'Members receiving the handover from the project team.',
       columns: const [
@@ -254,6 +255,7 @@ class _TransitionToProdTeamScreenState
 
   Widget _buildHandoverChecklistPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Handover Checklist',
       subtitle:
           'Structured items to transfer to production: docs, access, monitoring, training, runbooks.',
@@ -391,6 +393,7 @@ class _TransitionToProdTeamScreenState
 
   Widget _buildKnowledgeTransferPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Knowledge Transfer',
       subtitle: 'Track sessions, artifacts, and owners for knowledge capture.',
       columns: const [
@@ -524,6 +527,7 @@ class _TransitionToProdTeamScreenState
 
   Widget _buildSignOffsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Ops & Client Sign-Offs',
       subtitle: 'Track who needs to approve the handover and their status.',
       columns: const [

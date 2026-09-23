@@ -168,6 +168,7 @@ class _VendorAccountCloseOutScreenState
 
   Widget _buildVendorsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Vendor Close-Out Table',
       subtitle: 'Track each vendor\'s account status and outstanding items.',
       columns: const [
@@ -311,6 +312,7 @@ class _VendorAccountCloseOutScreenState
 
   Widget _buildAccessPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Access Revocation',
       subtitle:
           'Track system/tool access that needs to be revoked for each vendor.',
@@ -455,6 +457,7 @@ class _VendorAccountCloseOutScreenState
 
   Widget _buildObligationsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Outstanding Obligations',
       subtitle:
           'Pending payments, deliverables, SLAs, or warranties requiring resolution.',
@@ -583,6 +586,7 @@ class _VendorAccountCloseOutScreenState
 
   Widget _buildClosureChecklistPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Account Closure Checklist',
       subtitle:
           'Standardized steps to verify each vendor account is fully closed.',

@@ -607,6 +607,7 @@ class _IdentifyStaffOpsTeamScreenState
           final items = snapshot.data ?? [];
 
           return LaunchDataTable(
+            virtualizedBodyHeight: launchTableBodyCap,
             title: 'Readiness Checklist',
             subtitle:
                 'Pre-handover verification — add, edit, or remove items inline',

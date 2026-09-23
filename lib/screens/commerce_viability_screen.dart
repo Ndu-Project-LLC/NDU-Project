@@ -148,6 +148,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
 
   Widget _buildFinancialMetricsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Financial Metrics',
       subtitle: 'ROI, payback period, total investment, and projected returns.',
       columns: const [
@@ -246,6 +247,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
 
   Widget _buildWarrantiesPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Warranty Tracker',
       subtitle:
           'Track warranty coverage for deliverables, equipment, and services.',
@@ -402,6 +404,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
 
   Widget _buildOpsCostsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Operations Cost Projection',
       subtitle: 'Monthly and annual ongoing costs post-launch.',
       columns: const [
@@ -556,6 +559,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
 
   Widget _buildRecommendationsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Recommendations',
       subtitle: 'Key actions for commercial sustainability.',
       columns: const [

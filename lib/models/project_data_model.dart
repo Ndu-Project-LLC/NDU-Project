@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:ndu_project/utils/unique_id.dart';
+import 'package:ndu_project/models/cost_of_quality.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/project_activity.dart';
 import 'package:ndu_project/models/staffing_row.dart';
@@ -192,6 +193,16 @@ class ProjectDataModel {
   // Quality Management Data
   QualityManagementData? qualityManagementData;
 
+  /// Planning Phase: Cost of Quality (prevention / appraisal / internal and
+  /// external failure).
+  ///
+  /// Ported from `origin/comments` so the Cost of Quality capture that already
+  /// exists is no longer inert — the model field had never been carried
+  /// across, which is why `cost_of_quality.dart` sat in `analysis_options.yaml`
+  /// excluded and nothing could store a CoQ figure
+  /// (Lusaka 25 (copy): "quality costs must reach the Cost Estimate").
+  CostOfQualityData? costOfQualityData;
+
   // Control Accounts
   List<ControlAccount> controlAccounts;
 
@@ -242,6 +253,19 @@ class ProjectDataModel {
   // Metadata
   bool isBasicPlanProject;
   Map<String, int> aiUsageCounts;
+
+  /// The workspace-wide AI on/off switch.
+  ///
+  /// Lusaka 25 (copy) review: "if AI is off, I don't want to see AI generated
+  /// anything" and "can you tie this function to AI being turned on and off?"
+  /// Until now AI was switched per call site (`enableKazAi:`, `enableAi:`), so
+  /// there was no one place to turn it off — and screens that render AI output
+  /// unconditionally (the Quality plan headings) kept claiming to be AI even
+  /// with AI off. This is the single source those surfaces read.
+  ///
+  /// Defaults to on so projects saved before the switch existed keep the AI
+  /// they already had.
+  bool aiEnabled;
 
   List<Map<String, dynamic>> aiIntegrations;
   List<Map<String, dynamic>> externalIntegrations;
@@ -356,6 +380,7 @@ class ProjectDataModel {
     List<TrainingActivity>? trainingActivities,
     DesignDeliverablesData? designDeliverablesData,
     this.isBasicPlanProject = false,
+    this.aiEnabled = true,
     Map<String, int>? aiUsageCounts,
     List<Map<String, dynamic>>? aiIntegrations,
     List<Map<String, dynamic>>? externalIntegrations,
@@ -363,6 +388,7 @@ class ProjectDataModel {
     List<StakeholderEntry>? stakeholderEntries,
     List<EngagementPlanEntry>? engagementPlanEntries,
     this.qualityManagementData,
+    this.costOfQualityData,
     this.executionPhaseData,
     this.projectId,
     this.createdAt,
@@ -553,6 +579,7 @@ class ProjectDataModel {
     MonitoringControlsData? monitoringControls,
     LaunchPhaseData? launchPhaseData,
     bool? isBasicPlanProject,
+    bool? aiEnabled,
     Map<String, int>? aiUsageCounts,
     List<Map<String, dynamic>>? aiIntegrations,
     List<Map<String, dynamic>>? externalIntegrations,
@@ -574,6 +601,7 @@ class ProjectDataModel {
     List<StakeholderEntry>? stakeholderEntries,
     List<EngagementPlanEntry>? engagementPlanEntries,
     QualityManagementData? qualityManagementData,
+    CostOfQualityData? costOfQualityData,
     List<ControlAccount>? controlAccounts,
     List<ObsElement>? obsElements,
     List<CbsElement>? cbsElements,
@@ -715,6 +743,7 @@ class ProjectDataModel {
       monitoringControls: monitoringControls ?? this.monitoringControls,
       launchPhaseData: launchPhaseData ?? this.launchPhaseData,
       isBasicPlanProject: isBasicPlanProject ?? this.isBasicPlanProject,
+      aiEnabled: aiEnabled ?? this.aiEnabled,
       aiUsageCounts: aiUsageCounts ?? this.aiUsageCounts,
       aiIntegrations: aiIntegrations ?? this.aiIntegrations,
       externalIntegrations: externalIntegrations ?? this.externalIntegrations,
@@ -738,6 +767,7 @@ class ProjectDataModel {
           engagementPlanEntries ?? this.engagementPlanEntries,
       qualityManagementData:
           qualityManagementData ?? this.qualityManagementData,
+      costOfQualityData: costOfQualityData ?? this.costOfQualityData,
       controlAccounts: controlAccounts ?? this.controlAccounts,
       obsElements: obsElements ?? this.obsElements,
       cbsElements: cbsElements ?? this.cbsElements,
@@ -893,6 +923,7 @@ class ProjectDataModel {
       'designDeliverables': designDeliverablesData.toJson(),
       'currentCheckpoint': currentCheckpoint,
       'isBasicPlanProject': isBasicPlanProject,
+      'aiEnabled': aiEnabled,
       'aiUsageCounts': aiUsageCounts,
 
       'aiIntegrations': aiIntegrations,
@@ -916,6 +947,8 @@ class ProjectDataModel {
       'engagementPlanEntries':
           engagementPlanEntries.map((e) => e.toJson()).toList(),
       'qualityManagementData': qualityManagementData?.toJson(),
+      if (costOfQualityData != null)
+        'costOfQualityData': costOfQualityData!.toJson(),
       'designManagementData': designManagementData?.toJson(),
       'executionPhaseData': executionPhaseData?.toJson(),
       'workPackages': workPackages.map((wp) => wp.toJson()).toList(),
@@ -1192,6 +1225,8 @@ class ProjectDataModel {
       designManagementData: safeParseSingle(
           'designManagementData', DesignManagementData.fromJson),
       isBasicPlanProject: json['isBasicPlanProject'] == true,
+      // Absent means the document predates the switch, so AI stays on.
+      aiEnabled: json['aiEnabled'] != false,
       aiUsageCounts: (json['aiUsageCounts'] is Map)
           ? Map<String, int>.from(
               (json['aiUsageCounts'] as Map).map((key, value) {
@@ -1261,6 +1296,10 @@ class ProjectDataModel {
               ?.map((e) => EngagementPlanEntry.fromJson(e))
               .toList() ??
           [],
+      costOfQualityData: safeParseSingle(
+        'costOfQualityData',
+        CostOfQualityData.fromJson,
+      ),
       qualityManagementData: json['qualityManagementData'] != null
           ? QualityManagementData.fromJson(json['qualityManagementData'])
           : null,
@@ -3736,6 +3775,20 @@ class SsherEntry {
   String riskLevel;
   String mitigation;
 
+  /// Whether meeting this item means buying something the project does not
+  /// already have (PPE, a permit, a monitoring service).
+  ///
+  /// Lusaka 25 (copy) review: "if it says PPE required, just have a question on
+  /// the cost for that … if it's something that needs to be bought for the
+  /// project". Only items that require a purchase become cost lines, so an
+  /// internal control with no spend does not clutter the estimate.
+  bool requiresPurchase;
+
+  /// The amount the assessor typed for that purchase. Blank or zero means no
+  /// cost line. Kept as typed text because the owner wants "a question on the
+  /// cost for that" — a rough number — not a validated accounting figure.
+  String estimatedCost;
+
   SsherEntry({
     String? id,
     this.category = '',
@@ -3744,6 +3797,8 @@ class SsherEntry {
     this.concern = '',
     this.riskLevel = '',
     this.mitigation = '',
+    this.requiresPurchase = false,
+    this.estimatedCost = '',
   }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
@@ -3754,6 +3809,8 @@ class SsherEntry {
         'concern': concern,
         'riskLevel': riskLevel,
         'mitigation': mitigation,
+        'requiresPurchase': requiresPurchase,
+        'estimatedCost': estimatedCost,
       };
 
   factory SsherEntry.fromJson(Map<String, dynamic> json) {
@@ -3765,6 +3822,10 @@ class SsherEntry {
       concern: json['concern'] ?? '',
       riskLevel: json['riskLevel'] ?? '',
       mitigation: json['mitigation'] ?? '',
+      // Absent means the entry predates the cost fields: treat it as no spend
+      // rather than inventing one.
+      requiresPurchase: json['requiresPurchase'] == true,
+      estimatedCost: json['estimatedCost']?.toString() ?? '',
     );
   }
 
@@ -8811,6 +8872,15 @@ class QualityManagementData {
   /// Keys: 'plan','objectives','inspection','metrics','audit','register'.
   final Map<String, String> aiInsights;
 
+  /// Categories whose narrative currently on screen was produced by AI, keyed
+  /// like [aiInsights].
+  ///
+  /// The heading may only say "(AI-Generated)" for a category that is true
+  /// here, so a narrative the user rewrote — or wrote themselves — stops
+  /// claiming to be AI. Lusaka 25 (copy) review: "it cannot be edited … they
+  /// should be able to edit it, reject it, delete it".
+  final Map<String, bool> aiGeneratedPlans;
+
   /// Sections the AI flagged as not applicable for this project type and the
   /// user accepted to skip. Keys: same as aiInsights. True = skipped.
   final Map<String, bool> skippedSections;
@@ -8818,6 +8888,14 @@ class QualityManagementData {
   /// Sections the user has explicitly marked applicable. Default all true.
   /// Keys: same as aiInsights. False = user-disabled.
   final Map<String, bool> sectionApplicability;
+
+  /// Quality tabs the user has actually opened, keyed like [aiInsights].
+  ///
+  /// The section is one planning step spread over six tabs, so its "Next" stays
+  /// gated until each of them has been shown (Lusaka 25 (copy): "please take this
+  /// action for every single section that has more than one tab … if you try to
+  /// click on it, you should tell them to finish the flow within that section").
+  final List<String> visitedSections;
 
   /// True once the user has pressed "Track in Execution" and the planning
   /// Quality data has been duplicated into the Execution Quality Tracking
@@ -8856,11 +8934,15 @@ class QualityManagementData {
     Map<String, String>? aiInsights,
     Map<String, bool>? skippedSections,
     Map<String, bool>? sectionApplicability,
+    Map<String, bool>? aiGeneratedPlans,
+    List<String>? visitedSections,
     this.trackedInExecution = false,
     this.lastTrackedInExecutionAt = '',
   })  : aiInsights = aiInsights ?? const {},
         skippedSections = skippedSections ?? const {},
-        sectionApplicability = sectionApplicability ?? const {};
+        sectionApplicability = sectionApplicability ?? const {},
+        aiGeneratedPlans = aiGeneratedPlans ?? const {},
+        visitedSections = visitedSections ?? const [];
 
   factory QualityManagementData.empty() {
     return QualityManagementData(
@@ -8891,6 +8973,8 @@ class QualityManagementData {
       aiInsights: {},
       skippedSections: {},
       sectionApplicability: {},
+      aiGeneratedPlans: {},
+      visitedSections: const [],
       trackedInExecution: false,
       lastTrackedInExecutionAt: '',
     );
@@ -8924,6 +9008,8 @@ class QualityManagementData {
         'aiInsights': aiInsights,
         'skippedSections': skippedSections,
         'sectionApplicability': sectionApplicability,
+        'aiGeneratedPlans': aiGeneratedPlans,
+        'visitedSections': visitedSections,
         'trackedInExecution': trackedInExecution,
         'lastTrackedInExecutionAt': lastTrackedInExecutionAt,
       };
@@ -9054,6 +9140,13 @@ class QualityManagementData {
       aiInsights: _parseStringMap(json['aiInsights']),
       skippedSections: _parseBoolMap(json['skippedSections']),
       sectionApplicability: _parseBoolMap(json['sectionApplicability']),
+      aiGeneratedPlans: _parseBoolMap(json['aiGeneratedPlans']),
+      visitedSections: json['visitedSections'] is List
+          ? (json['visitedSections'] as List)
+              .map((e) => e?.toString() ?? '')
+              .where((e) => e.isNotEmpty)
+              .toList(growable: false)
+          : const [],
       trackedInExecution: json['trackedInExecution'] is bool
           ? json['trackedInExecution'] as bool
           : (json['trackedInExecution']?.toString() == 'true'),
@@ -9090,6 +9183,8 @@ class QualityManagementData {
     Map<String, String>? aiInsights,
     Map<String, bool>? skippedSections,
     Map<String, bool>? sectionApplicability,
+    Map<String, bool>? aiGeneratedPlans,
+    List<String>? visitedSections,
     bool? trackedInExecution,
     String? lastTrackedInExecutionAt,
   }) {
@@ -9124,6 +9219,8 @@ class QualityManagementData {
       aiInsights: aiInsights ?? this.aiInsights,
       skippedSections: skippedSections ?? this.skippedSections,
       sectionApplicability: sectionApplicability ?? this.sectionApplicability,
+      aiGeneratedPlans: aiGeneratedPlans ?? this.aiGeneratedPlans,
+      visitedSections: visitedSections ?? this.visitedSections,
       trackedInExecution: trackedInExecution ?? this.trackedInExecution,
       lastTrackedInExecutionAt:
           lastTrackedInExecutionAt ?? this.lastTrackedInExecutionAt,

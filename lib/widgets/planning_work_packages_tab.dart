@@ -106,8 +106,13 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
     }
 
     final existingIds = data.workPackages.map((wp) => wp.id).toSet();
-    final newPackages =
-        generated.where((wp) => !existingIds.contains(wp.id)).toList();
+    // The id filter keeps saves honest; the identity pass beneath also drops
+    // packages that restate an existing one under a fresh id — which is what
+    // regenerating after a rebuilt WBS does (new node ids, same names).
+    final newPackages = IntegratedWorkPackageService.dedupePackagesAgainst(
+      generated.where((wp) => !existingIds.contains(wp.id)).toList(),
+      data.workPackages,
+    );
     if (newPackages.isEmpty) {
       _showInfo('Integrated package chains are already generated.');
       return;

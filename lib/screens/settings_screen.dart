@@ -19,6 +19,7 @@ import 'package:intl/intl.dart';
 import 'package:ndu_project/utils/web_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/providers/theme_provider.dart';
+import 'package:ndu_project/providers/display_preferences_provider.dart';
 import 'package:ndu_project/services/auth_nav.dart';
 import 'package:ndu_project/services/security_services.dart';
 
@@ -290,7 +291,9 @@ class _SettingsScreenState extends State<SettingsScreen>
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           color: Theme.of(context).cardTheme.color ?? Colors.white,
-          border: Border.all(color: Theme.of(context).dividerTheme.color ?? Colors.grey.withValues(alpha: 0.12)),
+          border: Border.all(
+              color: Theme.of(context).dividerTheme.color ??
+                  Colors.grey.withValues(alpha: 0.12)),
           boxShadow: const [
             BoxShadow(
                 blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -743,59 +746,75 @@ class _SettingsScreenState extends State<SettingsScreen>
                 title: 'Display & Accessibility',
                 icon: Icons.accessibility_new,
                 children: [
-                  const Text('Font size',
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Text('A',
-                          style: TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w600)),
-                      Expanded(
-                        child: Slider(
-                          value: _fontSize == 'small'
-                              ? 0
-                              : _fontSize == 'medium'
-                                  ? 0.5
-                                  : 1.0,
-                          divisions: 2,
-                          activeColor: accent,
-                          label: _fontSize == 'small'
-                              ? 'Small'
-                              : _fontSize == 'medium'
-                                  ? 'Medium'
-                                  : 'Large',
-                          onChanged: (v) {
-                            final size = v == 0
-                                ? 'small'
-                                : v == 0.5
-                                    ? 'medium'
-                                    : 'large';
-                            setState(() => _fontSize = size);
-                            _setPref(_prefFontSize, size);
-                          },
+                  Builder(builder: (context) {
+                    final displayPreferences =
+                        context.watch<DisplayPreferencesProvider>();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Font size',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            const Text('A',
+                                style: TextStyle(
+                                    fontSize: 12, fontWeight: FontWeight.w600)),
+                            Expanded(
+                              child: Slider(
+                                value: _fontSize == 'small'
+                                    ? 0
+                                    : _fontSize == 'medium'
+                                        ? 0.5
+                                        : 1.0,
+                                divisions: 2,
+                                activeColor: accent,
+                                label: _fontSize == 'small'
+                                    ? 'Small'
+                                    : _fontSize == 'medium'
+                                        ? 'Medium'
+                                        : 'Large',
+                                onChanged: (v) {
+                                  final size = v == 0
+                                      ? 'small'
+                                      : v == 0.5
+                                          ? 'medium'
+                                          : 'large';
+                                  setState(() => _fontSize = size);
+                                  displayPreferences.setFontSize(size);
+                                },
+                              ),
+                            ),
+                            const Text('A',
+                                style: TextStyle(
+                                    fontSize: 20, fontWeight: FontWeight.w600)),
+                          ],
                         ),
-                      ),
-                      const Text('A',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  toggleRow('Compact mode', _compactMode, (v) {
-                    setState(() => _compactMode = v);
-                    _setPref(_prefCompactMode, v);
-                  }, icon: Icons.view_compact),
-                  toggleRow('Reduce animations', _reduceAnimations, (v) {
-                    setState(() => _reduceAnimations = v);
-                    _setPref(_prefReduceAnimations, v);
-                  }, icon: Icons.animation),
-                  const SizedBox(height: 8),
-                  toggleRow('Disable Open Editor', _disableOpenEditor, (v) {
-                    setState(() => _disableOpenEditor = v);
-                    _setPref(_prefDisableOpenEditor, v);
-                  }, icon: Icons.edit_off_outlined),
+                        const SizedBox(height: 8),
+                        toggleRow('Compact mode', _compactMode, (v) {
+                          setState(() => _compactMode = v);
+                          displayPreferences.setCompactMode(v);
+                        }, icon: Icons.view_compact),
+                        toggleRow('Reduce animations', _reduceAnimations, (v) {
+                          setState(() => _reduceAnimations = v);
+                          displayPreferences.setReduceAnimations(v);
+                        }, icon: Icons.animation),
+                        toggleRow(
+                          'Speech to text',
+                          displayPreferences.speechToTextEnabled,
+                          displayPreferences.setSpeechToTextEnabled,
+                          icon: Icons.mic_none_outlined,
+                        ),
+                        const SizedBox(height: 8),
+                        toggleRow('Disable Open Editor', _disableOpenEditor,
+                            (v) {
+                          setState(() => _disableOpenEditor = v);
+                          _setPref(_prefDisableOpenEditor, v);
+                        }, icon: Icons.edit_off_outlined),
+                      ],
+                    );
+                  }),
                 ],
               ),
               const SizedBox(height: 20),
@@ -1267,8 +1286,8 @@ class _SettingsScreenState extends State<SettingsScreen>
         const SizedBox(height: 12),
         Text(
           'StackOne delivery is pacing ahead of target, with stakeholder sentiment at an all-time high.\nWe are on track for the Q4 milestone with strong compliance posture and predictable burn.',
-          style: theme.textTheme.bodyLarge
-              ?.copyWith(color: Colors.white.withValues(alpha: 0.78), height: 1.45),
+          style: theme.textTheme.bodyLarge?.copyWith(
+              color: Colors.white.withValues(alpha: 0.78), height: 1.45),
         ),
         const SizedBox(height: 18),
         Wrap(
@@ -1754,7 +1773,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                         color: accent.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(Icons.edit_note, color: accent, size: 28),
+                      child:
+                          const Icon(Icons.edit_note, color: accent, size: 28),
                     ),
                     const SizedBox(width: 16),
                     const Expanded(
@@ -1767,8 +1787,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                           SizedBox(height: 6),
                           Text(
                             'Edit text content directly on any page in your application.',
-                            style: TextStyle(
-                                color: Colors.black54, fontSize: 15),
+                            style:
+                                TextStyle(color: Colors.black54, fontSize: 15),
                           ),
                         ],
                       ),
@@ -1894,12 +1914,14 @@ class _SettingsScreenState extends State<SettingsScreen>
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFC812).withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFFFC812).withValues(alpha: 0.2)),
+                    border: Border.all(
+                        color: const Color(0xFFFFC812).withValues(alpha: 0.2)),
                   ),
                   child: const Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info_outline, color: Color(0xFFFFC812), size: 22),
+                      Icon(Icons.info_outline,
+                          color: Color(0xFFFFC812), size: 22),
                       SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -2057,10 +2079,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                                Icons.check_circle,
-                                size: 14,
-                                color: statusColor),
+                            Icon(Icons.check_circle,
+                                size: 14, color: statusColor),
                             SizedBox(width: 4),
                             Text(statusLabel,
                                 style: TextStyle(
@@ -2211,7 +2231,6 @@ class _SettingsScreenState extends State<SettingsScreen>
       }
     }
   }
-
 }
 
 // ── New Settings UI Widgets ──────────────────────────────────────────────
@@ -2446,7 +2465,8 @@ class _BillingPaymentCard extends StatelessWidget {
                           'Expires 12/25',
                           style: TextStyle(
                             fontSize: 12,
-                            color: const Color(0xFF414754).withValues(alpha: 0.7),
+                            color:
+                                const Color(0xFF414754).withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -3016,7 +3036,10 @@ class _VelocitySparklinePainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [accent.withValues(alpha: 0.28), accent.withValues(alpha: 0.04)],
+        colors: [
+          accent.withValues(alpha: 0.28),
+          accent.withValues(alpha: 0.04)
+        ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     canvas.drawPath(fillPath, fillPaint);
@@ -3612,7 +3635,8 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.grey.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+                    border:
+                        Border.all(color: Colors.grey.withValues(alpha: 0.12)),
                   ),
                   child: Column(
                     children: [
@@ -4002,8 +4026,8 @@ class _InvoicesCard extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF6B7280)),
-                    dataTextStyle: const TextStyle(
-                        fontSize: 13, color: Color(0xFF374151)),
+                    dataTextStyle:
+                        const TextStyle(fontSize: 13, color: Color(0xFF374151)),
                     horizontalMargin: 24,
                     columnSpacing: 48,
                     columns: const [
@@ -4040,14 +4064,14 @@ class _InvoicesCard extends StatelessWidget {
                                                 invoice.receiptUrl!);
                                           }
                                         : null,
-                                      icon: Icon(Icons.download_outlined,
-                                          color: invoice.receiptUrl != null
-                                              ? accent
-                                              : Colors.grey,
-                                          size: 20),
-                                      tooltip: 'Download',
-                                    ),
+                                    icon: Icon(Icons.download_outlined,
+                                        color: invoice.receiptUrl != null
+                                            ? accent
+                                            : Colors.grey,
+                                        size: 20),
+                                    tooltip: 'Download',
                                   ),
+                                ),
                               ],
                             ))
                         .toList(),
@@ -4201,7 +4225,10 @@ class _UpgradePlanCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
+          colors: [
+            accent.withValues(alpha: 0.15),
+            accent.withValues(alpha: 0.05)
+          ],
         ),
         border: Border.all(color: accent.withValues(alpha: 0.3)),
       ),
@@ -5247,7 +5274,9 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
                     : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: selected ? _accent : Colors.grey.withValues(alpha: 0.14)),
+                    color: selected
+                        ? _accent
+                        : Colors.grey.withValues(alpha: 0.14)),
               ),
               child: Row(
                 children: [
@@ -5440,9 +5469,8 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
                       ),
                     ),
                     ...SiteRole.values.map((role) {
-                      final allowed =
-                          Permission.getPermissionsForRole(role)
-                              .contains(permission);
+                      final allowed = Permission.getPermissionsForRole(role)
+                          .contains(permission);
                       return _PermissionTableCell(
                         child: Icon(
                           allowed
@@ -5621,7 +5649,8 @@ class _PolicyToggle extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFFC107).withValues(alpha: 0.28)),
+        border:
+            Border.all(color: const Color(0xFFFFC107).withValues(alpha: 0.28)),
       ),
       child: Row(
         children: [

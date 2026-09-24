@@ -25,6 +25,9 @@ import 'package:ndu_project/project_controls/providers/change_management_provide
 import 'package:provider/provider.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/providers/theme_provider.dart';
+import 'package:ndu_project/providers/display_preferences_provider.dart';
+import 'package:ndu_project/widgets/no_animation_page_transitions_builder.dart';
+import 'package:ndu_project/widgets/speech_to_text_overlay.dart';
 import 'package:ndu_project/platform/webview_platform_setup.dart';
 import 'package:ndu_project/utils/browser_route_normalizer.dart';
 
@@ -265,6 +268,11 @@ class _MyAppState extends State<MyApp> {
           return tp;
         }),
         ChangeNotifierProvider(create: (_) {
+          final preferences = DisplayPreferencesProvider();
+          preferences.load();
+          return preferences;
+        }),
+        ChangeNotifierProvider(create: (_) {
           final cs = CurrencyService.instance;
           cs.load();
           return cs;
@@ -294,31 +302,68 @@ class _MyAppState extends State<MyApp> {
                 themeAnimationCurve: Curves.linear,
                 // Performance optimizations
                 builder: (context, child) {
-                  final media =
-                      MediaQuery.of(context).copyWith(boldText: false);
+                  final displayPreferences =
+                      Provider.of<DisplayPreferencesProvider>(context);
+                  final systemMedia = MediaQuery.of(context);
+                  final media = systemMedia.copyWith(
+                    boldText: false,
+                    textScaler: TextScaler.linear(
+                      (systemMedia.textScaler.scale(1) *
+                              displayPreferences.textScaleFactor)
+                          .clamp(0.8, 2.0),
+                    ),
+                    disableAnimations: displayPreferences.reduceAnimations ||
+                        systemMedia.disableAnimations,
+                  );
                   return MediaQuery(
-                    // Disable unnecessary animations and transitions on slow devices
                     data: media,
                     // Provide a transparent Material ancestor so that all
                     // ListTile widgets in the app have a Material ancestor,
                     // preventing the "background color or ink splashes may
                     // be invisible" warning from DecoratedBox wrappers.
-                    child: Material(
-                      type: MaterialType.transparency,
-                      child: Column(
-                        children: [
-                          // Make it unmistakable that no AI provider is being
-                          // contacted — otherwise generated content looks like
-                          // live model output.
-                          if (AiMode.isLocal) const LocalAiBanner(),
-                          // Persistent warning when Firebase failed to start —
-                          // without it, broken sign-in looks like a bug to users.
-                          if (!_firebaseReady)
-                            _FirebaseOutageBanner(onRetry: _retryFirebaseInit),
-                          Expanded(
-                            child: child ?? const SizedBox.shrink(),
-                          ),
-                        ],
+                    child: AnimatedTheme(
+                      data: Theme.of(context).copyWith(
+                        visualDensity: displayPreferences.compactMode
+                            ? VisualDensity.compact
+                            : VisualDensity.standard,
+                        // Keep minimum touch targets padded even in compact mode;
+                        // density changes affect visual spacing rather than usability.
+                        materialTapTargetSize: MaterialTapTargetSize.padded,
+                        pageTransitionsTheme: displayPreferences
+                                .reduceAnimations
+                            ? PageTransitionsTheme(
+                                builders: <TargetPlatform,
+                                    PageTransitionsBuilder>{
+                                  for (final platform in TargetPlatform.values)
+                                    platform:
+                                        const NoAnimationPageTransitionsBuilder(),
+                                },
+                              )
+                            : Theme.of(context).pageTransitionsTheme,
+                      ),
+                      duration: displayPreferences.reduceAnimations
+                          ? Duration.zero
+                          : const Duration(milliseconds: 200),
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: Column(
+                          children: [
+                            // Make it unmistakable that no AI provider is being
+                            // contacted — otherwise generated content looks like
+                            // live model output.
+                            if (AiMode.isLocal) const LocalAiBanner(),
+                            // Persistent warning when Firebase failed to start —
+                            // without it, broken sign-in looks like a bug to users.
+                            if (!_firebaseReady)
+                              _FirebaseOutageBanner(
+                                  onRetry: _retryFirebaseInit),
+                            Expanded(
+                              child: SpeechToTextOverlay(
+                                child: child ?? const SizedBox.shrink(),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );

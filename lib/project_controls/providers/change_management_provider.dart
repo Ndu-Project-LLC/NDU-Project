@@ -15,7 +15,32 @@ import 'package:flutter/foundation.dart';
 import 'package:ndu_project/project_controls/models/change_management_models.dart';
 import 'package:ndu_project/utils/iterable_extensions.dart';
 
-const String _currentUser = 'you@ndu.project';
+String get _currentUserEmail {
+  try {
+    final email = FirebaseAuth.instance.currentUser?.email?.trim();
+    return email == null || email.isEmpty ? 'Unknown user' : email;
+  } catch (_) {
+    // Firebase may be unavailable in local tests or before initialization.
+    return 'Unknown user';
+  }
+}
+
+/// Resolves legacy placeholder or missing audit actors to the signed-in user's
+/// email while preserving named actors from historical activity.
+String resolveChangeManagementAuditActor(
+  String? storedUser,
+  String currentUserEmail,
+) {
+  final normalized = storedUser?.trim() ?? '';
+  if (normalized.isEmpty || normalized.toLowerCase() == 'you@ndu.project') {
+    final email = currentUserEmail.trim();
+    return email.isEmpty ? 'Unknown user' : email;
+  }
+  return normalized;
+}
+
+String _auditUser(String? storedUser) =>
+    resolveChangeManagementAuditActor(storedUser, _currentUserEmail);
 
 class ChangeManagementProvider extends ChangeNotifier {
   List<CMChangeRequest> _changeRequests = [];
@@ -178,7 +203,7 @@ class ChangeManagementProvider extends ChangeNotifier {
       changeType: changeType,
       priority: isEmergency ? CMPriority.emergency : priority,
       status: isEmergency ? CMStatus.emergency : CMStatus.submitted,
-      submittedBy: submittedBy ?? _currentUser,
+      submittedBy: submittedBy ?? _currentUserEmail,
       dateSubmitted: dateSubmitted ?? DateTime.now(),
       requestedCompletion: requestedCompletion,
       businessJustification: businessJustification,
@@ -254,7 +279,7 @@ class ChangeManagementProvider extends ChangeNotifier {
                     decision: ApprovalDecision.approved,
                     decidedAt: DateTime.now(),
                     comments: comments,
-                    assigneeName: _currentUser,
+                    assigneeName: _currentUserEmail,
                   )
                 : s))
         .values
@@ -322,7 +347,8 @@ class ChangeManagementProvider extends ChangeNotifier {
           approvedAt: allApproved ? DateTime.now() : cr.approvedAt,
           triggersRebaseline: allApproved && cr.impact.requiresRebaseline,
           drawdownReserve: allApproved ? source : cr.drawdownReserve,
-          drawdownAmount: allApproved && applied > 0 ? applied : cr.drawdownAmount,
+          drawdownAmount:
+              allApproved && applied > 0 ? applied : cr.drawdownAmount,
         ));
     notifyListeners();
   }
@@ -417,7 +443,7 @@ class ChangeManagementProvider extends ChangeNotifier {
     final revision = BaselineRevisionRecord(
       version: _baselineHistory.length + 1,
       revisionDate: DateTime.now(),
-      revisedBy: _currentUser,
+      revisedBy: _currentUserEmail,
       linkedCRId: cr.id,
       reason: '${cr.crNumber}: ${cr.title}',
       updatedBaselines: cr.affectedBaselines,
@@ -544,7 +570,7 @@ class ChangeManagementProvider extends ChangeNotifier {
               decision: decision,
               decidedAt: DateTime.now(),
               comments: comments,
-              assigneeName: s.assigneeName ?? _currentUser,
+              assigneeName: s.assigneeName ?? _currentUserEmail,
               escalationTarget: escalationTarget,
               escalationReason: escalationReason,
               delegatedFrom: delegatedFrom,
@@ -737,7 +763,7 @@ class ChangeManagementProvider extends ChangeNotifier {
     final revision = BaselineRevisionRecord(
       version: _baselineHistory.length + 1,
       revisionDate: DateTime.now(),
-      revisedBy: _currentUser,
+      revisedBy: _currentUserEmail,
       linkedCRId: cr.id,
       reason: '${cr.crNumber}: ${cr.title}',
       updatedBaselines: cr.affectedBaselines,
@@ -747,7 +773,7 @@ class ChangeManagementProvider extends ChangeNotifier {
       revisedFinish: revisedFinish,
       previousScopeHash: previousHash,
       revisedScopeHash: revisedHash,
-      approver: _currentUser,
+      approver: _currentUserEmail,
     );
     _baselineHistory = [..._baselineHistory, revision];
     unawaited(_persistBaseline(revision));
@@ -797,7 +823,7 @@ class ChangeManagementProvider extends ChangeNotifier {
     _auditCounter++;
     final entry = CMAuditEntry(
       id: 'audit_${timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch}_$_auditCounter',
-      user: _currentUser,
+      user: _currentUserEmail,
       timestamp: timestamp ?? DateTime.now(),
       action: action,
       details: details,
@@ -1331,21 +1357,21 @@ class ChangeManagementProvider extends ChangeNotifier {
           linkedCRId: 'cm_demo_2'),
       CMAuditEntry(
           id: 'a4',
-          user: 'you@ndu.project',
+          user: _currentUserEmail,
           timestamp: DateTime.now().subtract(const Duration(hours: 350)),
           action: 'Workflow Finalized',
           details: 'CR-2026-002 • APPROVED',
           linkedCRId: 'cm_demo_2'),
       CMAuditEntry(
           id: 'a5',
-          user: 'you@ndu.project',
+          user: _currentUserEmail,
           timestamp: DateTime.now().subtract(const Duration(hours: 320)),
           action: 'Baseline Applied',
           details: 'v1 • BAC \$12,500,000 → \$12,545,000 • CR-2026-002',
           linkedCRId: 'cm_demo_2'),
       CMAuditEntry(
           id: 'a6',
-          user: 'you@ndu.project',
+          user: _currentUserEmail,
           timestamp: DateTime.now().subtract(const Duration(hours: 300)),
           action: 'CR Implemented',
           details: 'CR-2026-002 implemented',
@@ -1473,7 +1499,7 @@ class ChangeManagementProvider extends ChangeNotifier {
           final data = doc.data();
           return CMAuditEntry(
             id: doc.id,
-            user: data['user'] as String? ?? 'Unknown',
+            user: _auditUser(data['user'] as String?),
             timestamp:
                 (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
             action: data['action'] as String? ?? '',

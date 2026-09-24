@@ -38,6 +38,7 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  bool _isLoading = false;
  bool _suspendSave = false;
  String? _loadError;
+ String? _connectingProvider;
 
  List<_IntegrationRow> _integrations = [];
  List<_KpiRow> _customKpiRows = [];
@@ -217,6 +218,25 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  return IntegrationProvider.miro;
  case 'whiteboard':
  return IntegrationProvider.whiteboard;
+ case 'slack':
+ return IntegrationProvider.slack;
+ case 'microsoft teams':
+ case 'teams':
+ return IntegrationProvider.microsoftTeams;
+ case 'microsoft 365':
+ case 'microsoft365':
+ case 'm365':
+ return IntegrationProvider.microsoft365;
+ case 'quickbooks':
+ case 'quick books':
+ return IntegrationProvider.quickBooks;
+ case 'xero':
+ return IntegrationProvider.xero;
+ case 'salesforce':
+ return IntegrationProvider.salesforce;
+ case 'hubspot':
+ case 'hub spot':
+ return IntegrationProvider.hubSpot;
  default:
  return null;
  }
@@ -228,6 +248,141 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
  if (diff.inHours < 24) return '${diff.inHours} hr ago';
  return '${diff.inDays} days ago';
+ }
+
+ // ---------------------------------------------------------------------------
+ // OAuth connect / disconnect
+ // ---------------------------------------------------------------------------
+
+ /// Runs the provider OAuth flow after the user supplies the client
+ /// credentials registered in that provider's developer console. A row is only
+ /// ever shown as connected once the provider returns a usable access token.
+ Future<void> _connectProvider(IntegrationProvider provider) async {
+ final label = _providerLabel(provider);
+ final clientIdController = TextEditingController();
+ final secretController = TextEditingController();
+ final existing = await IntegrationOAuthService.instance.loadClientConfig(provider);
+ clientIdController.text = existing.clientId ?? '';
+ secretController.text = existing.clientSecret ?? '';
+ if (!mounted) {
+ clientIdController.dispose();
+ secretController.dispose();
+ return;
+ }
+
+ final confirmed = await showDialog<bool>(
+ context: context,
+ builder: (dialogContext) => AlertDialog(
+ title: Text('Connect $label'),
+ content: SizedBox(
+ width: 460,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text('Register this redirect URI in your $label developer app:\n${IntegrationOAuthService.redirectUri}', style: const TextStyle(fontSize: 12)),
+ const SizedBox(height: 14),
+ TextField(controller: clientIdController, decoration: const InputDecoration(labelText: 'OAuth client ID', border: OutlineInputBorder())),
+ const SizedBox(height: 12),
+ TextField(controller: secretController, obscureText: true, decoration: const InputDecoration(labelText: 'OAuth client secret (if required)', border: OutlineInputBorder())),
+ const SizedBox(height: 12),
+ Text('Requested scopes: ${IntegrationOAuthService.instance.configFor(provider).scopes.join(', ')}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+ const SizedBox(height: 8),
+ const Text('Credentials are stored in secure platform storage. No integration is shown as connected until the provider completes OAuth.', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+ FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Continue to provider')),
+ ],
+ ),
+ );
+
+ final clientId = clientIdController.text.trim();
+ final clientSecret = secretController.text;
+ if (confirmed != true) {
+ clientIdController.dispose();
+ secretController.dispose();
+ return;
+ }
+ if (clientId.isEmpty) {
+ clientIdController.dispose();
+ secretController.dispose();
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter the OAuth client ID registered with the provider.')));
+ }
+ return;
+ }
+
+ setState(() => _connectingProvider = provider.name);
+ try {
+ await IntegrationOAuthService.instance.saveClientConfig(
+ provider: provider,
+ clientId: clientId,
+ clientSecret: clientSecret,
+ );
+ final state = await IntegrationOAuthService.instance.connect(
+ provider: provider,
+ clientId: clientId,
+ clientSecret: clientSecret,
+ );
+ if (!mounted) return;
+ final status = state.connected ? 'Connected' : 'Expired';
+ final lastSync = state.updatedAt == null ? 'Never' : _formatRelativeTime(state.updatedAt!);
+ final idx = _integrations.indexWhere((row) => row.provider.toLowerCase() == label.toLowerCase());
+ setState(() {
+ if (idx == -1) {
+ _integrations = [
+ ..._integrations,
+ _IntegrationRow(
+ id: provider.name, name: label, subtitle: _providerSubtitle(label),
+ provider: label, status: status, scopes: _providerScopes(label),
+ mapsTo: _providerMapping(label), lastSync: lastSync,
+ icon: _providerIcon(label), iconColor: _providerColor(label),
+ features: _providerFeatureHint(label), autoHandoff: null, syncMode: null, errorInfo: null,
+ ),
+ ];
+ } else {
+ _integrations[idx] = _integrations[idx].copyWith(
+ status: status, scopes: _providerScopes(label), lastSync: lastSync, errorInfo: null,
+ );
+ }
+ });
+ _scheduleSave();
+ _logActivity('Connected tool via OAuth', details: {'provider': provider.name, 'scopes': _providerScopes(label)});
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label connected.')));
+ }
+ } catch (error) {
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not connect $label: ${error.toString()}')));
+ }
+ } finally {
+ clientIdController.dispose();
+ secretController.dispose();
+ if (mounted) setState(() => _connectingProvider = null);
+ }
+ }
+
+ Future<void> _disconnectProvider(IntegrationProvider provider) async {
+ final label = _providerLabel(provider);
+ setState(() => _connectingProvider = provider.name);
+ try {
+ await IntegrationOAuthService.instance.disconnect(provider);
+ if (!mounted) return;
+ final idx = _integrations.indexWhere((row) => row.provider.toLowerCase() == label.toLowerCase());
+ if (idx != -1) {
+ setState(() => _integrations[idx] = _integrations[idx].copyWith(status: 'Not connected', lastSync: 'Never', errorInfo: null));
+ }
+ _scheduleSave();
+ _logActivity('Disconnected tool integration', details: {'provider': provider.name});
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label disconnected.')));
+ }
+ } finally {
+ if (mounted) setState(() => _connectingProvider = null);
+ }
  }
 
  // ---------------------------------------------------------------------------
@@ -278,8 +433,26 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  icon: Icons.code, iconColor: Color(0xFF24292F),
  features: 'PR-to-task linking and CI pipeline triggers.', autoHandoff: null, syncMode: null, errorInfo: null,
  ),
+ _catalogIntegration('slack', 'Slack', 'Channels & project communications'),
+ _catalogIntegration('teams', 'Microsoft Teams', 'Channels, chats & collaboration'),
+ _catalogIntegration('m365', 'Microsoft 365', 'Files, SharePoint & documents'),
+ _catalogIntegration('quickbooks', 'QuickBooks', 'Accounting & ledgers'),
+ _catalogIntegration('xero', 'Xero', 'Accounting & invoicing'),
+ _catalogIntegration('salesforce', 'Salesforce', 'CRM & opportunities'),
+ _catalogIntegration('hubspot', 'HubSpot', 'CRM & contacts'),
  ];
  }
+
+ /// Builds a catalogue row for a provider that is available to connect but
+ /// not connected on this project yet. Scope/mapping/icon text comes from the
+ /// shared provider helpers so the register and the OAuth config agree.
+ _IntegrationRow _catalogIntegration(String id, String name, String subtitle) => _IntegrationRow(
+ id: id, name: name, subtitle: subtitle,
+ provider: name, status: 'Not connected',
+ scopes: _providerScopes(name), mapsTo: _providerMapping(name), lastSync: 'Never',
+ icon: _providerIcon(name), iconColor: _providerColor(name),
+ features: _providerFeatureHint(name), autoHandoff: null, syncMode: null, errorInfo: null,
+ );
 
  List<_RiskSignalRow> _defaultRiskSignals() {
  return [
@@ -1011,7 +1184,7 @@ showNavigationButtons: false,
  Expanded(flex: 2, child: Text('SCOPES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFD1D5DB), letterSpacing: 0.5))),
  Expanded(flex: 2, child: Text('MAPS TO', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFD1D5DB), letterSpacing: 0.5))),
  Expanded(flex: 2, child: Text('LAST SYNC', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFD1D5DB), letterSpacing: 0.5))),
- SizedBox(width: 64, child: Text('ACTIONS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFD1D5DB), letterSpacing: 0.5), textAlign: TextAlign.center)),
+ SizedBox(width: 112, child: Text('ACTIONS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFD1D5DB), letterSpacing: 0.5), textAlign: TextAlign.center)),
  ],
  ),
  ),
@@ -1099,10 +1272,11 @@ showNavigationButtons: false,
  ),
  // ACTIONS
  SizedBox(
- width: 88,
+ width: 112,
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
+ _buildConnectAction(item),
  Tooltip(
  message: 'KAZ AI – Auto-fill this integration',
  child: InkWell(
@@ -1145,6 +1319,30 @@ showNavigationButtons: false,
  if (_selectedFilters.contains('Expired') && item.status == 'Expired') return true;
  return false;
  }).toList();
+ }
+
+ /// Connect / disconnect affordance for a register row. Providers without a
+ /// configured OAuth connection (catalogue-only entries such as Jira or
+ /// GitHub) render nothing so the action column stays honest.
+ Widget _buildConnectAction(_IntegrationRow item) {
+ final provider = _providerForName(item.provider);
+ if (provider == null || !_crudPolicy.canUpdate) return const SizedBox.shrink();
+ final isConnected = item.status == 'Connected' || item.status == 'Expired';
+ final busy = _connectingProvider == provider.name;
+ return Padding(
+ padding: const EdgeInsets.only(right: 4),
+ child: Tooltip(
+ message: isConnected ? 'Disconnect ${item.name}' : 'Connect ${item.name} via OAuth',
+ child: InkWell(
+ onTap: busy
+ ? null
+ : () => isConnected ? _disconnectProvider(provider) : _connectProvider(provider),
+ child: busy
+ ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFF2563EB)))
+ : Icon(isConnected ? Icons.link_off : Icons.link, size: 14, color: const Color(0xFF2563EB)),
+ ),
+ ),
+ );
  }
 
  Widget _buildStatusBadge(String status) {
@@ -2688,6 +2886,13 @@ showNavigationButtons: false,
  case IntegrationProvider.drawio: return 'Draw.io';
  case IntegrationProvider.miro: return 'Miro';
  case IntegrationProvider.whiteboard: return 'Whiteboard';
+ case IntegrationProvider.slack: return 'Slack';
+ case IntegrationProvider.microsoftTeams: return 'Microsoft Teams';
+ case IntegrationProvider.microsoft365: return 'Microsoft 365';
+ case IntegrationProvider.quickBooks: return 'QuickBooks';
+ case IntegrationProvider.xero: return 'Xero';
+ case IntegrationProvider.salesforce: return 'Salesforce';
+ case IntegrationProvider.hubSpot: return 'HubSpot';
  }
  }
 
@@ -2699,6 +2904,13 @@ showNavigationButtons: false,
  case 'Whiteboard': return 'Live sessions';
  case 'Jira': return 'Sprint & backlog tracking';
  case 'GitHub': return 'Source code & CI/CD';
+ case 'Slack': return 'Channels & project communications';
+ case 'Microsoft Teams': return 'Channels, chats & collaboration';
+ case 'Microsoft 365': return 'Files, SharePoint & documents';
+ case 'QuickBooks': return 'Accounting & ledgers';
+ case 'Xero': return 'Accounting & invoicing';
+ case 'Salesforce': return 'CRM & opportunities';
+ case 'HubSpot': return 'CRM & contacts';
  default: return 'Custom integration';
  }
  }
@@ -2711,6 +2923,13 @@ showNavigationButtons: false,
  case 'Whiteboard': return 'sessions:read';
  case 'Jira': return 'issues:read, issues:write';
  case 'GitHub': return 'repo:read, repo:write';
+ case 'Slack': return 'channels:read, chat:write';
+ case 'Microsoft Teams': return 'Channel.ReadBasic.All';
+ case 'Microsoft 365': return 'Files.ReadWrite';
+ case 'QuickBooks': return 'com.intuit.quickbooks.accounting';
+ case 'Xero': return 'accounting.transactions';
+ case 'Salesforce': return 'api';
+ case 'HubSpot': return 'crm.objects.contacts.read';
  default: return 'read';
  }
  }
@@ -2723,6 +2942,13 @@ showNavigationButtons: false,
  case 'Whiteboard': return 'Decisions, actions';
  case 'Jira': return 'Tasks, bugs';
  case 'GitHub': return 'Code, PRs';
+ case 'Slack': return 'Channels, messages';
+ case 'Microsoft Teams': return 'Channels, meetings';
+ case 'Microsoft 365': return 'Files, SharePoint';
+ case 'QuickBooks': return 'Invoices, expenses';
+ case 'Xero': return 'Invoices, bills';
+ case 'Salesforce': return 'Accounts, opportunities';
+ case 'HubSpot': return 'Contacts, deals';
  default: return 'Project data';
  }
  }
@@ -2735,6 +2961,13 @@ showNavigationButtons: false,
  case 'Whiteboard': return 'Outputs pushed to notes and actions.';
  case 'Jira': return 'Sprint sync with auto-epic linking.';
  case 'GitHub': return 'PR-to-task linking and CI pipeline triggers.';
+ case 'Slack': return 'Channel sync with project notifications.';
+ case 'Microsoft Teams': return 'Channel and chat sync with meeting capture.';
+ case 'Microsoft 365': return 'SharePoint and OneDrive document sync.';
+ case 'QuickBooks': return 'Invoice and expense sync.';
+ case 'Xero': return 'Invoice and bill sync.';
+ case 'Salesforce': return 'Account and opportunity sync.';
+ case 'HubSpot': return 'Contact and deal sync.';
  default: return 'Custom integration features.';
  }
  }
@@ -2747,6 +2980,13 @@ showNavigationButtons: false,
  case 'Whiteboard': return const Color(0xFF0078D4);
  case 'Jira': return const Color(0xFF0052CC);
  case 'GitHub': return const Color(0xFF24292F);
+ case 'Slack': return const Color(0xFF611F69);
+ case 'Microsoft Teams': return const Color(0xFF6264A7);
+ case 'Microsoft 365': return const Color(0xFFD83B01);
+ case 'QuickBooks': return const Color(0xFF2CA01C);
+ case 'Xero': return const Color(0xFF13B5EA);
+ case 'Salesforce': return const Color(0xFF00A1E0);
+ case 'HubSpot': return const Color(0xFFFF7A59);
  default: return const Color(0xFF64748B);
  }
  }
@@ -2759,6 +2999,13 @@ showNavigationButtons: false,
  case 'Whiteboard': return Icons.sticky_note_2;
  case 'Jira': return Icons.track_changes;
  case 'GitHub': return Icons.code;
+ case 'Slack': return Icons.forum_outlined;
+ case 'Microsoft Teams': return Icons.groups_outlined;
+ case 'Microsoft 365': return Icons.cloud_outlined;
+ case 'QuickBooks': return Icons.account_balance_wallet_outlined;
+ case 'Xero': return Icons.receipt_long_outlined;
+ case 'Salesforce': return Icons.hub_outlined;
+ case 'HubSpot': return Icons.contacts_outlined;
  default: return Icons.extension;
  }
  }

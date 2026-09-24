@@ -2394,6 +2394,9 @@ class FrontEndPlanningData {
   /// because the solution was already known. The project description
   /// carries the basis for FEP documentation instead.
   bool skippedBusinessCase;
+
+  /// The user elected to bypass FEP and provide charter-core inputs directly.
+  bool skippedFrontEndPlanning;
   List<RequirementItem> requirementItems;
   // Persisted scenario matrix items
   List<ScenarioRecord> scenarioMatrixItems;
@@ -2444,6 +2447,7 @@ class FrontEndPlanningData {
     this.charterApprovedAt,
     this.businessCaseLocked = false,
     this.skippedBusinessCase = false,
+    this.skippedFrontEndPlanning = false,
     this.detailsConfirmed = false,
     List<RequirementItem>? requirementItems,
     List<ScenarioRecord>? scenarioMatrixItems,
@@ -2503,6 +2507,7 @@ class FrontEndPlanningData {
     DateTime? charterApprovedAt,
     bool? businessCaseLocked,
     bool? skippedBusinessCase,
+    bool? skippedFrontEndPlanning,
     List<RequirementItem>? requirementItems,
     List<ScenarioRecord>? scenarioMatrixItems,
     List<RoleItem>? securityRoles,
@@ -2547,6 +2552,8 @@ class FrontEndPlanningData {
       charterApprovedAt: charterApprovedAt ?? this.charterApprovedAt,
       businessCaseLocked: businessCaseLocked ?? this.businessCaseLocked,
       skippedBusinessCase: skippedBusinessCase ?? this.skippedBusinessCase,
+      skippedFrontEndPlanning:
+          skippedFrontEndPlanning ?? this.skippedFrontEndPlanning,
       requirementItems: requirementItems ?? this.requirementItems,
       scenarioMatrixItems: scenarioMatrixItems ?? this.scenarioMatrixItems,
       securityRoles: securityRoles ?? this.securityRoles,
@@ -2593,6 +2600,7 @@ class FrontEndPlanningData {
         'charterApprovedAt': charterApprovedAt?.toIso8601String(),
         'businessCaseLocked': businessCaseLocked,
         'skippedBusinessCase': skippedBusinessCase,
+        'skippedFrontEndPlanning': skippedFrontEndPlanning,
         'allowanceItems': allowanceItems.map((e) => e.toJson()).toList(),
         'staffingRows': staffingRows.map((item) => item.toJson()).toList(),
         'technologyPersonnelItems':
@@ -2650,6 +2658,7 @@ class FrontEndPlanningData {
       charterApprovedAt: _parseFepDateTime(json['charterApprovedAt']),
       businessCaseLocked: json['businessCaseLocked'] == true,
       skippedBusinessCase: json['skippedBusinessCase'] == true,
+      skippedFrontEndPlanning: json['skippedFrontEndPlanning'] == true,
       allowanceItems: (json['allowanceItems'] as List?)
               ?.map((e) => AllowanceItem.fromJson(e as Map<String, dynamic>))
               .toList() ??

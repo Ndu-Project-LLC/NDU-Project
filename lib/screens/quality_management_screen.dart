@@ -512,9 +512,9 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
                       onSelected: _handleTabSelected,
                       visited: _qualityData(context).visitedSections.toSet(),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
                     _TabContent(selectedTab: _selectedTab),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 16),
                     _NavigationRow(
                       onBack: () => PlanningPhaseNavigation.goToPrevious(
                         context,
@@ -525,7 +525,7 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
                         'quality_management',
                       ),
                     ),
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -578,7 +578,8 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
                         _TabStrip(
                           selectedTab: _selectedTab,
                           onSelected: _handleTabSelected,
-                          visited: _qualityData(context).visitedSections.toSet(),
+                          visited:
+                              _qualityData(context).visitedSections.toSet(),
                         ),
                         const SizedBox(height: 28),
                         _TabContent(selectedTab: _selectedTab),
@@ -593,7 +594,7 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
                             'quality_management',
                           ),
                         ),
-                        const SizedBox(height: 48),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
@@ -614,8 +615,16 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
       screenTitle: 'Quality Management',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
-          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
+          {
+            'Project Name': projectData.projectName.isEmpty
+                ? 'N/A'
+                : projectData.projectName
+          },
+          {
+            'Solution Title': projectData.solutionTitle.isEmpty
+                ? 'N/A'
+                : projectData.solutionTitle
+          },
         ]),
         PdfSection.text(
             'Notes',
@@ -694,76 +703,89 @@ class _NavigationRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (blocked)
-          _QualityGateNotice(missing: missing),
+        if (blocked) _QualityGateNotice(missing: missing),
         Row(
           children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back, size: 16),
-            // No Flexible here: `*.icon` buttons already wrap the label in one,
-            // and a second Flexible around the same RenderObject trips
-            // "Competing ParentDataWidgets". The FittedBox alone does the
-            // scaling, and it is a child of the button's own Flexible.
-            label: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                  PlanningPhaseNavigation.backLabel('quality_management')),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF374151),
-              side: const BorderSide(color: Color(0xFFD1D5DB)),
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 8 : 20,
-                vertical: 12,
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: onBack,
+                icon: const Icon(Icons.arrow_back, size: 16),
+                // No Flexible here: `*.icon` buttons already wrap the label in one,
+                // and a second Flexible around the same RenderObject trips
+                // "Competing ParentDataWidgets". The FittedBox alone does the
+                // scaling, and it is a child of the button's own Flexible.
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                      PlanningPhaseNavigation.backLabel('quality_management')),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF374151),
+                  side: const BorderSide(color: Color(0xFFD1D5DB)),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 8 : 20,
+                    vertical: 8,
+                  ),
+                  minimumSize: const Size(0, 48),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
               ),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
             ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 2,
-          child: FilledButton.icon(
-            // Grayed out, not hidden: the destination is still discoverable, and
-            // clicking it explains what is missing instead of silently refusing.
-            onPressed: blocked
-                ? () => ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          sectionIncompleteMessage(
-                              'quality_management', missing),
-                        ),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    )
-                : onNext,
-            icon: const Icon(Icons.arrow_forward, size: 16),
-            // See the Back button above — the button supplies the Flexible.
-            label: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                  PlanningPhaseNavigation.nextLabel('quality_management')),
-            ),
-            style: FilledButton.styleFrom(
-              backgroundColor: blocked
-                  ? const Color(0xFFE5E7EB)
-                  : const Color(0xFFFFC044),
-              foregroundColor: blocked
-                  ? const Color(0xFF9CA3AF)
-                  : const Color(0xFF111827),
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 8 : 20,
-                vertical: 12,
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: FilledButton.icon(
+                // Grayed out, not hidden: the destination is still discoverable, and
+                // clicking it explains what is missing instead of silently refusing.
+                onPressed: blocked
+                    ? () => ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              sectionIncompleteMessage(
+                                  'quality_management', missing),
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        )
+                    : onNext,
+                icon: const Icon(Icons.arrow_forward, size: 16),
+                // See the Back button above — the button supplies the Flexible.
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                      PlanningPhaseNavigation.nextLabel('quality_management')),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: blocked
+                      ? const Color(0xFFE5E7EB)
+                      : const Color(0xFFFFC044),
+                  foregroundColor: blocked
+                      ? const Color(0xFF9CA3AF)
+                      : const Color(0xFF111827),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 8 : 20,
+                    vertical: 8,
+                  ),
+                  minimumSize: const Size(0, 48),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
               ),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
             ),
-          ),
-        ),
-        ],
+          ],
         ),
       ],
     );
@@ -789,8 +811,7 @@ class _QualityGateNotice extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline,
-              color: Color(0xFFB45309), size: 18),
+          const Icon(Icons.info_outline, color: Color(0xFFB45309), size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -861,8 +882,7 @@ class _TabStrip extends StatelessWidget {
     // Progress chip + Continue badge — the shared pattern from
     // Design Planning: say where the user is, point at what's next.
     final flowTabs = [
-      for (final tab in tabs)
-        FlowTab(id: tab.tab.name, label: tab.label),
+      for (final tab in tabs) FlowTab(id: tab.tab.name, label: tab.label),
     ];
     final nextId = nextUnvisitedTabId(flowTabs, visited);
 
@@ -890,9 +910,8 @@ class _TabStrip extends StatelessWidget {
               visitedIds: visited,
               sectionTitle: 'Quality Management',
               onOpenTab: (id) {
-                final tab = _QualityTab.values
-                    .where((t) => t.name == id)
-                    .firstOrNull;
+                final tab =
+                    _QualityTab.values.where((t) => t.name == id).firstOrNull;
                 if (tab != null) onSelected(tab);
               },
             ),
@@ -980,10 +999,11 @@ class _TabChip extends StatelessWidget {
                   ),
                 ],
               ),
-              if (isNextUp) const Padding(
-                padding: EdgeInsets.only(top: 4),
-                child: FlowTabContinueBadge(),
-              ),
+              if (isNextUp)
+                const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: FlowTabContinueBadge(),
+                ),
             ],
           ),
         ),
@@ -2083,7 +2103,8 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI regeneration failed: ${aiErrorMessage(e)}')),
+          SnackBar(
+              content: Text('AI regeneration failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -4764,14 +4785,16 @@ class _QualityStandardDialogState extends State<_QualityStandardDialog> {
   @override
   void initState() {
     super.initState();
-    _name = SpellCheckTextEditingController(text: widget.initialValue?.name ?? '');
-    _source = SpellCheckTextEditingController(text: widget.initialValue?.source ?? '');
-    _category =
-        SpellCheckTextEditingController(text: widget.initialValue?.category ?? '');
-    _description =
-        SpellCheckTextEditingController(text: widget.initialValue?.description ?? '');
-    _applicability =
-        SpellCheckTextEditingController(text: widget.initialValue?.applicability ?? '');
+    _name =
+        SpellCheckTextEditingController(text: widget.initialValue?.name ?? '');
+    _source = SpellCheckTextEditingController(
+        text: widget.initialValue?.source ?? '');
+    _category = SpellCheckTextEditingController(
+        text: widget.initialValue?.category ?? '');
+    _description = SpellCheckTextEditingController(
+        text: widget.initialValue?.description ?? '');
+    _applicability = SpellCheckTextEditingController(
+        text: widget.initialValue?.applicability ?? '');
     _effectiveDate = SpellCheckTextEditingController(
         text: _normalizedDateText(widget.initialValue?.effectiveDate ?? ''));
     _reviewDate = SpellCheckTextEditingController(
@@ -4994,13 +5017,17 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
     super.initState();
     final initial = widget.initialValue;
     _title = SpellCheckTextEditingController(text: initial?.title ?? '');
-    _acceptance =
-        SpellCheckTextEditingController(text: initial?.acceptanceCriteria ?? '');
-    _metric = SpellCheckTextEditingController(text: initial?.successMetric ?? '');
+    _acceptance = SpellCheckTextEditingController(
+        text: initial?.acceptanceCriteria ?? '');
+    _metric =
+        SpellCheckTextEditingController(text: initial?.successMetric ?? '');
     _target = SpellCheckTextEditingController(text: initial?.targetValue ?? '');
-    _current = SpellCheckTextEditingController(text: initial?.currentValue ?? '');
-    _linkedReq = SpellCheckTextEditingController(text: initial?.linkedRequirement ?? '');
-    _linkedWbs = SpellCheckTextEditingController(text: initial?.linkedWbs ?? '');
+    _current =
+        SpellCheckTextEditingController(text: initial?.currentValue ?? '');
+    _linkedReq =
+        SpellCheckTextEditingController(text: initial?.linkedRequirement ?? '');
+    _linkedWbs =
+        SpellCheckTextEditingController(text: initial?.linkedWbs ?? '');
     _status = SpellCheckTextEditingController(text: initial?.status ?? 'Draft');
     _owner = initial?.owner.isNotEmpty == true
         ? initial!.owner
@@ -5213,9 +5240,12 @@ class _WorkflowControlDialogState extends State<_WorkflowControlDialog> {
     _name = SpellCheckTextEditingController(text: initial?.name ?? '');
     _method = SpellCheckTextEditingController(text: initial?.method ?? '');
     _tools = SpellCheckTextEditingController(text: initial?.tools ?? '');
-    _checklist = SpellCheckTextEditingController(text: initial?.checklist ?? '');
-    _frequency = SpellCheckTextEditingController(text: initial?.frequency ?? '');
-    _standards = SpellCheckTextEditingController(text: initial?.standardsReference ?? '');
+    _checklist =
+        SpellCheckTextEditingController(text: initial?.checklist ?? '');
+    _frequency =
+        SpellCheckTextEditingController(text: initial?.frequency ?? '');
+    _standards = SpellCheckTextEditingController(
+        text: initial?.standardsReference ?? '');
     _owner = initial?.owner.isNotEmpty == true
         ? initial!.owner
         : widget.ownerOptions.first;
@@ -5914,7 +5944,8 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
     super.initState();
     final initial = widget.initialValue;
     _title = SpellCheckTextEditingController(text: initial?.title ?? '');
-    _rootCause = SpellCheckTextEditingController(text: initial?.rootCause ?? '');
+    _rootCause =
+        SpellCheckTextEditingController(text: initial?.rootCause ?? '');
     _action = SpellCheckTextEditingController(text: initial?.action ?? '');
     _dueDate = SpellCheckTextEditingController(
       text: _normalizedDateText(initial?.dueDate ?? ''),
@@ -6140,10 +6171,13 @@ class _QualityChangeDialogState extends State<_QualityChangeDialog> {
   void initState() {
     super.initState();
     final initial = widget.initialValue;
-    _description = SpellCheckTextEditingController(text: initial?.description ?? '');
+    _description =
+        SpellCheckTextEditingController(text: initial?.description ?? '');
     _reason = SpellCheckTextEditingController(text: initial?.reason ?? '');
-    _requestedBy = SpellCheckTextEditingController(text: initial?.requestedBy ?? '');
-    _approvedBy = SpellCheckTextEditingController(text: initial?.approvedBy ?? '');
+    _requestedBy =
+        SpellCheckTextEditingController(text: initial?.requestedBy ?? '');
+    _approvedBy =
+        SpellCheckTextEditingController(text: initial?.approvedBy ?? '');
     _date = SpellCheckTextEditingController(
       text: _normalizedDateText(
         initial?.date ?? '',
@@ -6563,17 +6597,20 @@ class _MetricsEditDialogState extends State<_MetricsEditDialog> {
     _ddChange = SpellCheckTextEditingController(text: m.defectDensity.change);
     _ddTrend = m.defectDensity.trendDirection;
 
-    _csValue = SpellCheckTextEditingController(text: m.customerSatisfaction.value);
-    _csChange = SpellCheckTextEditingController(text: m.customerSatisfaction.change);
+    _csValue =
+        SpellCheckTextEditingController(text: m.customerSatisfaction.value);
+    _csChange =
+        SpellCheckTextEditingController(text: m.customerSatisfaction.change);
     _csTrend = m.customerSatisfaction.trendDirection;
 
     _otdValue = SpellCheckTextEditingController(text: m.onTimeDelivery.value);
     _otdChange = SpellCheckTextEditingController(text: m.onTimeDelivery.change);
     _otdTrend = m.onTimeDelivery.trendDirection;
 
-    _defectTrend = SpellCheckTextEditingController(text: m.defectTrendData.join(', '));
-    _satisfactionTrend =
-        SpellCheckTextEditingController(text: m.satisfactionTrendData.join(', '));
+    _defectTrend =
+        SpellCheckTextEditingController(text: m.defectTrendData.join(', '));
+    _satisfactionTrend = SpellCheckTextEditingController(
+        text: m.satisfactionTrendData.join(', '));
   }
 
   @override
@@ -7341,8 +7378,7 @@ class _CostOfQualityViewState extends State<_CostOfQualityView> {
     );
     if (confirmed != true || !mounted) return;
     final data = _coqForWrite();
-    final list = _listFor(data, key)
-      ..removeWhere((e) => e.id == existing.id);
+    final list = _listFor(data, key)..removeWhere((e) => e.id == existing.id);
     await _save(_withList(data, key, list), 'Removed Cost of Quality entry.');
   }
 
@@ -7430,8 +7466,8 @@ class _CostOfQualityViewState extends State<_CostOfQualityView> {
                 const SizedBox(height: 4),
                 Text(
                   category.subtitle,
-                  style: const TextStyle(
-                      fontSize: 12.5, color: Color(0xFF6B7280)),
+                  style:
+                      const TextStyle(fontSize: 12.5, color: Color(0xFF6B7280)),
                 ),
                 const SizedBox(height: 14),
                 if (_listFor(data, category.key).isEmpty)

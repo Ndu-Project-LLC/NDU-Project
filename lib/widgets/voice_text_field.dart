@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:ndu_project/providers/display_preferences_provider.dart';
 import 'package:ndu_project/services/voice_input_service.dart';
 import 'package:ndu_project/services/docx_import_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -21,6 +22,25 @@ Future<bool> isOpenEditorDisabled() async {
   } catch (_) {
     return false;
   }
+}
+
+/// Marks an input that already provides its own voice action, so the global
+/// text-input overlay does not duplicate the microphone control.
+class SpeechInputFieldMarker extends InheritedWidget {
+  const SpeechInputFieldMarker({
+    super.key,
+    required super.child,
+    this.voiceAllowed = true,
+    this.hasVoiceControl = true,
+  });
+
+  final bool voiceAllowed;
+  final bool hasVoiceControl;
+
+  @override
+  bool updateShouldNotify(SpeechInputFieldMarker oldWidget) =>
+      voiceAllowed != oldWidget.voiceAllowed ||
+      hasVoiceControl != oldWidget.hasVoiceControl;
 }
 
 /// A drop-in replacement for [TextField] that adds a microphone button
@@ -172,7 +192,6 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
   StreamSubscription<VoiceResult>? _resultSubscription;
   StreamSubscription<VoiceStatus>? _statusSubscription;
   bool _isListening = false;
-  bool _voiceAvailable = true;
   bool _isImportingDoc = false;
   bool _isGeneratingAi = false;
   bool _openEditorDisabled = false;
@@ -253,7 +272,6 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     super.initState();
     _controller = widget.controller ?? SpellCheckTextEditingController();
     _syncSpellCheckOptions();
-    _checkAvailability();
     _loadOpenEditorDisabled();
   }
 
@@ -283,29 +301,17 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     _syncSpellCheckOptions();
   }
 
-  Future<void> _checkAvailability() async {
-    try {
-      final available = await _voiceService.initialize();
-      if (mounted && available != _voiceAvailable) {
-        setState(() => _voiceAvailable = available);
-      }
-    } catch (e) {
-      debugPrint('[VoiceTextField] Availability check failed: $e');
-      if (mounted) {
-        setState(() => _voiceAvailable = false);
-      }
-    }
-  }
-
   Future<void> _toggleVoiceInput() async {
+    if (!speechToTextEnabledFor(context, listen: false)) return;
     if (_isListening) {
       await _voiceService.stopListening();
       _cleanupSubscriptions();
       if (mounted) setState(() => _isListening = false);
     } else {
+      if (!speechToTextEnabledFor(context, listen: false)) return;
       // ── Microphone permission dialog ──
       // Show a world-class permission request dialog before accessing the mic.
-      final shouldProceed = await showMicrophonePermissionDialog(context);
+      final shouldProceed = await requestMicrophonePermission(context);
       if (!shouldProceed || !mounted) return;
 
       final started = await _voiceService.startListening(
@@ -386,7 +392,9 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
   Widget build(BuildContext context) {
     // Editor features are surfaced via the Open Editor button placed
     // OUTSIDE the text field — no more inline suffix icons.
-    final voiceEnabled = widget.enableVoice && !widget.obscureText;
+    final voiceEnabled = widget.enableVoice &&
+        !widget.obscureText &&
+        speechToTextEnabledFor(context);
     final docxEnabled = widget.enableDocxImport && !widget.obscureText;
     final kazAiEnabled =
         widget.enableKazAi && !widget.obscureText && !widget.readOnly;
@@ -463,11 +471,15 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
 
     // Clicking an underlined word opens its fix card where the word is, in
     // addition to the right-click / long-press menu.
-    final textField = SpellFixTapArea(
-      controller: _controller,
-      enabled:
-          !widget.obscureText && !widget.readOnly && widget.enabled != false,
-      child: field,
+    final textField = SpeechInputFieldMarker(
+      voiceAllowed: widget.enableVoice && !widget.obscureText,
+      hasVoiceControl: voiceEnabled && !_openEditorDisabled,
+      child: SpellFixTapArea(
+        controller: _controller,
+        enabled:
+            !widget.obscureText && !widget.readOnly && widget.enabled != false,
+        child: field,
+      ),
     );
 
     if (!hasActions && !showToolbar) return textField;
@@ -585,6 +597,15 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
 ///
 /// Used by both [VoiceTextField] and [VoiceTextFormField] before starting
 /// voice input.
+bool _microphonePermissionDisclosureAccepted = false;
+
+Future<bool> requestMicrophonePermission(BuildContext context) async {
+  if (_microphonePermissionDisclosureAccepted) return true;
+  final result = await showMicrophonePermissionDialog(context);
+  if (result == true) _microphonePermissionDisclosureAccepted = true;
+  return result ?? false;
+}
+
 Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
   final result = await showDialog<bool>(
     context: context,
@@ -666,7 +687,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                     _buildPermissionBullet(
                       icon: Icons.lock_outline,
                       text:
-                          'Audio is processed securely and never stored or shared',
+                          'Speech is handled by your device or browser recognition service; this app does not save audio recordings.',
                     ),
                     const SizedBox(height: 12),
                     _buildPermissionBullet(
@@ -691,7 +712,9 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Your browser will ask for mic permission after you tap "Allow".',
+                              kIsWeb
+                                  ? 'Your browser will ask for microphone access after you continue.'
+                                  : 'Your device will ask for microphone and speech-recognition access after you continue.',
                               style: TextStyle(
                                 fontSize: 11.5,
                                 color: Color(0xFF92400E),
@@ -934,7 +957,6 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
   StreamSubscription<VoiceResult>? _resultSubscription;
   StreamSubscription<VoiceStatus>? _statusSubscription;
   bool _isListening = false;
-  bool _voiceAvailable = true;
   bool _isImportingDoc = false;
   bool _isGeneratingAi = false;
   bool _openEditorDisabled = false;
@@ -1013,7 +1035,6 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     _controller = widget.controller ??
         SpellCheckTextEditingController(text: widget.initialValue);
     _syncSpellCheckOptions();
-    _checkAvailability();
     _loadOpenEditorDisabled();
   }
 
@@ -1048,29 +1069,17 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     _syncSpellCheckOptions();
   }
 
-  Future<void> _checkAvailability() async {
-    try {
-      final available = await _voiceService.initialize();
-      if (mounted && available != _voiceAvailable) {
-        setState(() => _voiceAvailable = available);
-      }
-    } catch (e) {
-      debugPrint('[VoiceTextField] Availability check failed: $e');
-      if (mounted) {
-        setState(() => _voiceAvailable = false);
-      }
-    }
-  }
-
   Future<void> _toggleVoiceInput() async {
+    if (!speechToTextEnabledFor(context, listen: false)) return;
     if (_isListening) {
       await _voiceService.stopListening();
       _cleanupSubscriptions();
       if (mounted) setState(() => _isListening = false);
     } else {
+      if (!speechToTextEnabledFor(context, listen: false)) return;
       // ── Microphone permission dialog ──
       // Show a world-class permission request dialog before accessing the mic.
-      final shouldProceed = await showMicrophonePermissionDialog(context);
+      final shouldProceed = await requestMicrophonePermission(context);
       if (!shouldProceed || !mounted) return;
 
       final started = await _voiceService.startListening(
@@ -1150,7 +1159,9 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
   Widget build(BuildContext context) {
     // Editor features are surfaced via the Open Editor button placed
     // OUTSIDE the text field — no more inline suffix icons.
-    final voiceEnabled = widget.enableVoice && !widget.obscureText;
+    final voiceEnabled = widget.enableVoice &&
+        !widget.obscureText &&
+        speechToTextEnabledFor(context);
     final docxEnabled = widget.enableDocxImport && !widget.obscureText;
     final kazAiEnabled =
         widget.enableKazAi && !widget.obscureText && !widget.readOnly;
@@ -1225,11 +1236,15 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
 
     // Clicking an underlined word opens its fix card where the word is, in
     // addition to the right-click / long-press menu.
-    final textField = SpellFixTapArea(
-      controller: _controller,
-      enabled:
-          !widget.obscureText && !widget.readOnly && widget.enabled != false,
-      child: field,
+    final textField = SpeechInputFieldMarker(
+      voiceAllowed: widget.enableVoice && !widget.obscureText,
+      hasVoiceControl: voiceEnabled && !_openEditorDisabled,
+      child: SpellFixTapArea(
+        controller: _controller,
+        enabled:
+            !widget.obscureText && !widget.readOnly && widget.enabled != false,
+        child: field,
+      ),
     );
 
     if (!hasActions && !showToolbar) return textField;

@@ -31,6 +31,10 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Allow Ndu Project to use your microphone when you choose speech-to-text dictation.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Allow Ndu Project to convert your speech into text in the field you are editing.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

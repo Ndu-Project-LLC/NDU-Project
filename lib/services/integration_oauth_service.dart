@@ -1,7 +1,19 @@
 import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-enum IntegrationProvider { figma, miro, drawio, whiteboard }
+enum IntegrationProvider {
+  figma,
+  miro,
+  drawio,
+  whiteboard,
+  slack,
+  microsoftTeams,
+  microsoft365,
+  quickBooks,
+  xero,
+  salesforce,
+  hubSpot,
+}
 
 class IntegrationAuthState {
   IntegrationAuthState({
@@ -75,6 +87,57 @@ class IntegrationOAuthService {
       scopes: ['offline_access', 'User.Read', 'Notes.Read'],
       redirectUri: redirectUri,
     ),
+    IntegrationProvider.slack: IntegrationOAuthConfig(
+      provider: IntegrationProvider.slack,
+      authorizationEndpoint: 'https://slack.com/oauth/v2/authorize',
+      tokenEndpoint: 'https://slack.com/api/oauth.v2.access',
+      scopes: ['channels:read', 'chat:write', 'users:read'],
+      redirectUri: redirectUri,
+    ),
+    IntegrationProvider.microsoftTeams: IntegrationOAuthConfig(
+      provider: IntegrationProvider.microsoftTeams,
+      authorizationEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+      tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+      scopes: ['offline_access', 'User.Read', 'Channel.ReadBasic.All', 'Chat.ReadWrite'],
+      redirectUri: redirectUri,
+    ),
+    IntegrationProvider.microsoft365: IntegrationOAuthConfig(
+      provider: IntegrationProvider.microsoft365,
+      authorizationEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+      tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+      scopes: ['offline_access', 'User.Read', 'Files.ReadWrite', 'Sites.Read.All'],
+      redirectUri: redirectUri,
+    ),
+    // ── Accounting ──────────────────────────────────────────────────────────
+    IntegrationProvider.quickBooks: IntegrationOAuthConfig(
+      provider: IntegrationProvider.quickBooks,
+      authorizationEndpoint: 'https://appcenter.intuit.com/connect/oauth2',
+      tokenEndpoint: 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer',
+      scopes: ['com.intuit.quickbooks.accounting'],
+      redirectUri: redirectUri,
+    ),
+    IntegrationProvider.xero: IntegrationOAuthConfig(
+      provider: IntegrationProvider.xero,
+      authorizationEndpoint: 'https://login.xero.com/identity/connect/authorize',
+      tokenEndpoint: 'https://identity.xero.com/connect/token',
+      scopes: ['openid', 'profile', 'email', 'accounting.transactions', 'offline_access'],
+      redirectUri: redirectUri,
+    ),
+    // ── CRM ─────────────────────────────────────────────────────────────────
+    IntegrationProvider.salesforce: IntegrationOAuthConfig(
+      provider: IntegrationProvider.salesforce,
+      authorizationEndpoint: 'https://login.salesforce.com/services/oauth2/authorize',
+      tokenEndpoint: 'https://login.salesforce.com/services/oauth2/token',
+      scopes: ['api', 'refresh_token'],
+      redirectUri: redirectUri,
+    ),
+    IntegrationProvider.hubSpot: IntegrationOAuthConfig(
+      provider: IntegrationProvider.hubSpot,
+      authorizationEndpoint: 'https://app.hubspot.com/oauth/authorize',
+      tokenEndpoint: 'https://api.hubapi.com/oauth/v1/token',
+      scopes: ['crm.objects.contacts.read', 'crm.objects.deals.read'],
+      redirectUri: redirectUri,
+    ),
   };
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -93,9 +156,9 @@ class IntegrationOAuthService {
     required String clientId,
     String? clientSecret,
   }) async {
-    await _storage.write(key: _key(provider, 'client_id'), value: clientId);
-    if (clientSecret != null) {
-      await _storage.write(key: _key(provider, 'client_secret'), value: clientSecret);
+    await _storage.write(key: _key(provider, 'client_id'), value: clientId.trim());
+    if (clientSecret != null && clientSecret.trim().isNotEmpty) {
+      await _storage.write(key: _key(provider, 'client_secret'), value: clientSecret.trim());
     }
   }
 
@@ -122,11 +185,11 @@ class IntegrationOAuthService {
     List<String>? scopesOverride,
   }) async {
     final config = _configs[provider]!;
-    final scopes = (scopesOverride == null || scopesOverride.isEmpty) ? config.scopes : scopesOverride;
+    final scopes = scopesOverride == null || scopesOverride.isEmpty ? config.scopes : scopesOverride;
     final secret = (clientSecret ?? '').trim();
     final result = await _appAuth.authorizeAndExchangeCode(
       AuthorizationTokenRequest(
-        clientId,
+        clientId.trim(),
         config.redirectUri,
         serviceConfiguration: AuthorizationServiceConfiguration(
           authorizationEndpoint: config.authorizationEndpoint,
@@ -137,12 +200,20 @@ class IntegrationOAuthService {
       ),
     );
 
-    await _storage.write(key: _key(provider, 'access_token'), value: result.accessToken);
-    await _storage.write(key: _key(provider, 'refresh_token'), value: result.refreshToken);
-    if (result.accessTokenExpirationDateTime != null) {
+    final accessToken = result.accessToken;
+    if (accessToken == null || accessToken.isEmpty) {
+      throw StateError('The provider did not return an access token.');
+    }
+    await _storage.write(key: _key(provider, 'access_token'), value: accessToken);
+    final refreshToken = result.refreshToken;
+    if (refreshToken != null) {
+      await _storage.write(key: _key(provider, 'refresh_token'), value: refreshToken);
+    }
+    final expiresAt = result.accessTokenExpirationDateTime;
+    if (expiresAt != null) {
       await _storage.write(
         key: _key(provider, 'expires_at'),
-        value: result.accessTokenExpirationDateTime!.toIso8601String(),
+        value: expiresAt.toIso8601String(),
       );
     }
     await _storage.write(key: _key(provider, 'updated_at'), value: DateTime.now().toIso8601String());

@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:ndu_project/openai/openai_config.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/services/voice_input_service.dart';
+import 'package:ndu_project/providers/display_preferences_provider.dart';
+import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/services/docx_import_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
@@ -100,7 +102,6 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
   bool _isReplaceMode = false;
   bool _showFormattingToolbar = false;
   bool _isListening = false;
-  bool _voiceAvailable = true;
   bool _isImportingDoc = false;
   bool _isRewriting = false;
   bool _openEditorDisabled = false;
@@ -201,7 +202,6 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
     }
     _controller.addListener(_onTextChanged);
     _focusNode.addListener(_handleFocusChanged);
-    _initVoice();
     _loadOpenEditorDisabled();
     if (_aiEnabled && _autoGenerateEnabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoGenerate());
@@ -211,13 +211,6 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
   Future<void> _loadOpenEditorDisabled() async {
     final disabled = await isOpenEditorDisabled();
     if (mounted) setState(() => _openEditorDisabled = disabled);
-  }
-
-  Future<void> _initVoice() async {
-    final available = await _voiceService.initialize();
-    if (mounted && available != _voiceAvailable) {
-      setState(() => _voiceAvailable = available);
-    }
   }
 
   /// Picks a .docx/.doc/.txt/.md/.csv/.rtf file and fills the field with its
@@ -262,11 +255,14 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
   }
 
   Future<void> _toggleVoiceInput() async {
+    if (!speechToTextEnabledFor(context, listen: false)) return;
     if (_isListening) {
       await _voiceService.stopListening();
       _cleanupVoiceSubs();
       if (mounted) setState(() => _isListening = false);
     } else {
+      final allowed = await requestMicrophonePermission(context);
+      if (!allowed || !mounted) return;
       final started = await _voiceService.startListening(
         existingText: _controller.text,
       );
@@ -722,41 +718,45 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
           ],
         ),
         const SizedBox(height: 8),
-        Stack(
-          children: [
-            TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              onTap: () {
-                if (!_showFormattingToolbar) {
-                  setState(() => _showFormattingToolbar = true);
-                }
-              },
-              maxLines: 12,
-              minLines: 8,
-              decoration: InputDecoration(
-                hintText: widget.hintText,
-                hintStyle:
-                    const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                filled: true,
-                fillColor: Colors.white,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        SpeechInputFieldMarker(
+          voiceAllowed: true,
+          hasVoiceControl: widget.enableAi && !_openEditorDisabled,
+          child: Stack(
+            children: [
+              TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                onTap: () {
+                  if (!_showFormattingToolbar) {
+                    setState(() => _showFormattingToolbar = true);
+                  }
+                },
+                maxLines: 12,
+                minLines: 8,
+                decoration: InputDecoration(
+                  hintText: widget.hintText,
+                  hintStyle:
+                      const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  filled: true,
+                  fillColor: Colors.white,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide:
+                        const BorderSide(color: Color(0xFFFFD700), width: 1.6),
+                  ),
+                  suffixIcon: null,
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide:
-                      const BorderSide(color: Color(0xFFFFD700), width: 1.6),
-                ),
-                suffixIcon: null,
+                style: const TextStyle(
+                    fontSize: 14, color: Color(0xFF111827), height: 1.5),
               ),
-              style: const TextStyle(
-                  fontSize: 14, color: Color(0xFF111827), height: 1.5),
-            ),
-          ],
+            ],
+          ),
         ),
         if (_aiEnabled && _autoGenerating && !_autoGenerated) ...[
           const SizedBox(height: 8),
@@ -877,7 +877,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
   List<EditorAction> _buildEditorActions() {
     final aiAvailable = _aiEnabled && !_aiLimitReached;
     final docxAvailable = widget.enableDocxImport;
-    final voiceAvailable = widget.enableAi;
+    final voiceAvailable = widget.enableAi && speechToTextEnabledFor(context);
 
     return <EditorAction>[
       if (aiAvailable)

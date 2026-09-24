@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/services/voice_input_service.dart';
+import 'package:ndu_project/providers/display_preferences_provider.dart';
+import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/services/docx_import_service.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -65,7 +67,6 @@ class _InlineEditableTextState extends State<InlineEditableText> {
   StreamSubscription<VoiceResult>? _voiceResultSub;
   StreamSubscription<VoiceStatus>? _voiceStatusSub;
   bool _isListening = false;
-  bool _voiceAvailable = true;
   bool _isImportingDoc = false;
 
   /// Picks a .docx/.doc/.txt/.md/.csv/.rtf file and fills the field with its
@@ -119,22 +120,17 @@ class _InlineEditableTextState extends State<InlineEditableText> {
       _controller = SpellCheckTextEditingController(text: widget.value);
     }
     _focusNode.addListener(_handleFocusChange);
-    _initVoice();
-  }
-
-  Future<void> _initVoice() async {
-    final available = await _voiceService.initialize();
-    if (mounted && available != _voiceAvailable) {
-      setState(() => _voiceAvailable = available);
-    }
   }
 
   Future<void> _toggleVoiceInput() async {
+    if (!speechToTextEnabledFor(context, listen: false)) return;
     if (_isListening) {
       await _voiceService.stopListening();
       _cleanupVoiceSubs();
       if (mounted) setState(() => _isListening = false);
     } else {
+      final allowed = await requestMicrophonePermission(context);
+      if (!allowed || !mounted) return;
       final started = await _voiceService.startListening(
         existingText: _controller.text,
       );
@@ -207,7 +203,7 @@ class _InlineEditableTextState extends State<InlineEditableText> {
     // Always show the mic button — even if the browser doesn't support
     // voice input. Tapping it on an unsupported browser shows a helpful
     // message instead of silently failing.
-    final voiceEnabled = widget.enableVoice;
+    final voiceEnabled = widget.enableVoice && speechToTextEnabledFor(context);
 
     if (_isEditing) {
       return Column(
@@ -273,35 +269,41 @@ class _InlineEditableTextState extends State<InlineEditableText> {
             ],
           ),
           // Text field
-          TextField(
-            controller: _controller,
-            focusNode: _focusNode,
-            maxLines: widget.isProseField ? null : widget.maxLines,
-            textAlign: widget.textAlign,
-            style: widget.style ??
-                const TextStyle(fontSize: 13, color: Color(0xFF111827)),
-            decoration: InputDecoration(
-              hintText: widget.hint,
-              hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
-                borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5),
+          SpeechInputFieldMarker(
+            voiceAllowed: widget.enableVoice,
+            hasVoiceControl: voiceEnabled,
+            child: TextField(
+              controller: _controller,
+              focusNode: _focusNode,
+              maxLines: widget.isProseField ? null : widget.maxLines,
+              textAlign: widget.textAlign,
+              style: widget.style ??
+                  const TextStyle(fontSize: 13, color: Color(0xFF111827)),
+              decoration: InputDecoration(
+                hintText: widget.hint,
+                hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide:
+                      const BorderSide(color: Color(0xFFFFD700), width: 1.5),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide:
+                      const BorderSide(color: Color(0xFFFFD700), width: 1.5),
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                isDense: true,
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
-                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
-                borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              isDense: true,
+              onSubmitted: (_) {
+                _focusNode.unfocus();
+              },
             ),
-            onSubmitted: (_) {
-              _focusNode.unfocus();
-            },
           ),
         ],
       );

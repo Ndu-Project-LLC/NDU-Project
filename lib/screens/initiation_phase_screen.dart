@@ -523,8 +523,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
     _fetchBusinessSuggestions(_businessCaseController.text.trim());
   }
 
-  /// Post-skip handler — called by [SkipBusinessCaseAffordance] after the
-  /// user confirms the skip in [SkipBusinessCaseDialog].
+  /// Post-skip handler — called after the user confirms the skip wizard.
   ///
   /// Responsibilities:
   ///   1. Refresh local controllers so the Scope Statement field shows
@@ -544,20 +543,19 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
     // and `notes`, which mirror the Scope Statement field).
     final provider = ProjectDataHelper.getProvider(context);
     final updatedData = provider.projectData;
-    if (updatedData.projectDescription.isNotEmpty &&
-        _businessCaseController.text.trim().isEmpty) {
+    if (updatedData.projectDescription.isNotEmpty) {
       _businessCaseController.text = updatedData.projectDescription;
     }
-    if (updatedData.notes.isNotEmpty && _notesController.text.trim().isEmpty) {
+    if (updatedData.notes.isNotEmpty) {
       _notesController.text = updatedData.notes;
     }
 
     setState(() {});
 
-    // Navigate to the FEP Summary screen — the first FEP documentation
-    // page. The user's project description is now the AI KAZ context
-    // for every FEP screen downstream.
-    if (mounted) {
+    if (!mounted) return;
+    if (updatedData.frontEndPlanning.skippedFrontEndPlanning) {
+      context.push('/project-charter');
+    } else {
       FrontEndPlanningSummaryScreen.open(context);
     }
   }
@@ -2305,8 +2303,8 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 24),
               onNext: _handleNextPressed,
               onSkip: _handleSkipPressed,
-              skipLabel: 'Skip',
-              isNextEnabled: _reviewConfirmed,
+            skipLabel: 'Skip',
+            isNextEnabled: _reviewConfirmed,
               showReviewGate: true,
               reviewConfirmed: _reviewConfirmed,
               onReviewChanged: (value) {

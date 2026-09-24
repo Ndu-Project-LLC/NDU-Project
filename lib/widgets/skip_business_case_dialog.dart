@@ -20,6 +20,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/services/docx_import_service.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -28,9 +29,12 @@ import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.d
 class SkipBusinessCaseDialog {
   SkipBusinessCaseDialog._();
 
-  /// Opens the Skip Business Case dialog. Returns true if the user
-  /// confirmed the skip (and the project description was saved).
-  static Future<bool> show(BuildContext context) async {
+  /// Opens the skip wizard. Skipping the Business Case captures a preferred
+  /// solution; skipping both Business Case and FEP captures charter essentials.
+  static Future<bool> show(
+    BuildContext context, {
+    bool skipFrontEndPlanning = false,
+  }) async {
     final provider = ProjectDataHelper.getProvider(context);
     final data = provider.projectData;
     final controller = SpellCheckTextEditingController(
@@ -44,38 +48,99 @@ class SkipBusinessCaseDialog {
       barrierDismissible: false,
       builder: (dialogContext) => _SkipBusinessCaseDialog(
         controller: controller,
-        projectName: data.projectName ?? 'Untitled Project',
-        onConfirm: () async {
-          final description = controller.text.trim();
-          if (description.isEmpty) {
+        projectName: data.projectName.isEmpty ? 'Untitled Project' : data.projectName,
+        skipFrontEndPlanning: skipFrontEndPlanning,
+        onConfirm: (draft) async {
+          final skipFrontEndPlanning = draft.skipFrontEndPlanning;
+          final solutionTitle = draft.solutionTitle.trim();
+          final solutionDescription = draft.solutionDescription.trim();
+          final objective = draft.objective.trim();
+          final scope = draft.scope.trim();
+          final deliverables = draft.deliverables.trim();
+          final stakeholders = draft.stakeholders.trim();
+          if (solutionTitle.isEmpty ||
+              solutionDescription.isEmpty ||
+              objective.isEmpty ||
+              scope.isEmpty ||
+              deliverables.isEmpty ||
+              (skipFrontEndPlanning && stakeholders.isEmpty)) {
             ScaffoldMessenger.of(dialogContext).showSnackBar(
-              const SnackBar(
-                content: Text(
-                    'Please enter a project description before skipping the Business Case. The description will be used as the basis for FEP documentation with AI KAZ.'),
-                backgroundColor: Color(0xFFD97706),
+              SnackBar(
+                content: Text(skipFrontEndPlanning
+                    ? 'Complete solution, objective, scope, deliverables, and key stakeholders before skipping both phases.'
+                    : 'Complete the preferred solution, objective, scope, and deliverables before skipping the Business Case.'),
+                backgroundColor: const Color(0xFFD97706),
                 behavior: SnackBarBehavior.floating,
               ),
             );
             return false;
           }
 
-          // Mark the Business Case as skipped + locked, and store the
-          // description as the project description (and notes) so the
-          // FEP screens can use it as AI KAZ context.
-          // NOTE: `projectDescription` is a getter/setter alias for
-          // `solutionDescription`, so we set solutionDescription
-          // directly via copyWith.
-          provider.updateField((d) => d.copyWith(
-                solutionDescription: description,
-                notes: description.isEmpty ? d.notes : description,
-                frontEndPlanning: d.frontEndPlanning.copyWith(
-                  skippedBusinessCase: true,
-                  businessCaseLocked: true,
-                ),
+          final combinedDescription = [
+            'Preferred solution: $solutionTitle',
+            solutionDescription,
+            'Project objective: $objective',
+            'In scope: $scope',
+            'Key deliverables: $deliverables',
+            if (stakeholders.isNotEmpty) 'Core stakeholders: $stakeholders',
+          ].join('\\n\\n');
+          final now = DateTime.now();
+          provider.updateField((project) {
+            final updatedSolutions = List<PotentialSolution>.from(project.potentialSolutions);
+            if (updatedSolutions.isEmpty) {
+              updatedSolutions.add(PotentialSolution(
+                id: 'preferred-solution-skip-${now.microsecondsSinceEpoch}',
+                number: 1,
+                title: solutionTitle,
+                description: solutionDescription,
               ));
+            } else {
+              updatedSolutions[0] = updatedSolutions[0].copyWith(
+                title: solutionTitle,
+                description: solutionDescription,
+              );
+            }
+            return project.copyWith(
+              solutionTitle: solutionTitle,
+              solutionDescription: combinedDescription,
+              potentialSolutions: updatedSolutions,
+              projectObjective: objective,
+              withinScope: scope.split('\\n').map((line) => line.trim()).where((line) => line.isNotEmpty).toList(),
+              projectGoals: [ProjectGoal(name: objective, description: deliverables)],
+              stakeholderEntries: skipFrontEndPlanning && stakeholders.isNotEmpty
+                  ? [
+                      StakeholderEntry(
+                        id: 'skip-charter-${now.microsecondsSinceEpoch}',
+                        name: stakeholders,
+                        organization: '',
+                        role: 'Core stakeholder',
+                        influence: 'High',
+                        interest: 'High',
+                        channel: '',
+                        contactInfo: '',
+                        owner: '',
+                        notes: '',
+                        createdAt: now,
+                        updatedAt: now,
+                      ),
+                    ]
+                  : project.stakeholderEntries,
+              frontEndPlanning: project.frontEndPlanning.copyWith(
+                skippedBusinessCase: true,
+                skippedFrontEndPlanning: skipFrontEndPlanning,
+                businessCaseLocked: true,
+                detailsConfirmed: true,
+                summary: objective,
+                requirements: scope,
+                requirementsPlan: deliverables,
+                requirementsNotes: combinedDescription,
+              ),
+              currentCheckpoint: skipFrontEndPlanning ? 'project_charter' : 'fep_summary',
+            );
+          });
           await provider.saveToFirebase(
-              checkpoint: 'skip_business_case');
-
+            checkpoint: skipFrontEndPlanning ? 'project_charter' : 'skip_business_case',
+          );
           return true;
         },
       ),
@@ -90,12 +155,14 @@ class _SkipBusinessCaseDialog extends StatefulWidget {
   const _SkipBusinessCaseDialog({
     required this.controller,
     required this.projectName,
+    required this.skipFrontEndPlanning,
     required this.onConfirm,
   });
 
   final TextEditingController controller;
   final String projectName;
-  final Future<bool> Function() onConfirm;
+  final bool skipFrontEndPlanning;
+  final Future<bool> Function(_SkipProjectDraft draft) onConfirm;
 
   @override
   State<_SkipBusinessCaseDialog> createState() =>
@@ -104,6 +171,92 @@ class _SkipBusinessCaseDialog extends StatefulWidget {
 
 class _SkipBusinessCaseDialogState extends State<_SkipBusinessCaseDialog> {
   bool _saving = false;
+  late bool _skipFrontEndPlanning;
+  late final TextEditingController _solutionTitleController;
+  late final TextEditingController _objectiveController;
+  late final TextEditingController _scopeController;
+  late final TextEditingController _deliverablesController;
+  late final TextEditingController _stakeholdersController;
+
+  @override
+  void initState() {
+    super.initState();
+    _skipFrontEndPlanning = widget.skipFrontEndPlanning;
+    _solutionTitleController = SpellCheckTextEditingController();
+    _objectiveController = SpellCheckTextEditingController();
+    _scopeController = SpellCheckTextEditingController();
+    _deliverablesController = SpellCheckTextEditingController();
+    _stakeholdersController = SpellCheckTextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _solutionTitleController.dispose();
+    _objectiveController.dispose();
+    _scopeController.dispose();
+    _deliverablesController.dispose();
+    _stakeholdersController.dispose();
+    super.dispose();
+  }
+
+  Future<String?> _importCharterBrief() async {
+    final outcome = await DocxImportService.pickAndExtract(context);
+    if (outcome is DocxImportSuccess) return outcome.result.text;
+    if (outcome is DocxImportError &&
+        outcome.reason != DocxImportFailure.cancelledByUser &&
+        mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(outcome.message ?? 'Unable to import this file.')),
+      );
+    }
+    return null;
+  }
+
+  void _applyImportedBrief(String text) {
+    _solutionTitleController.text = _extractBriefValue(text, 'Preferred solution');
+    _objectiveController.text = _extractBriefValue(text, 'Project objective');
+    _scopeController.text = _extractBriefValue(text, 'In scope');
+    _deliverablesController.text = _extractBriefValue(text, 'Key deliverables');
+    _stakeholdersController.text = _extractBriefValue(text, 'Core stakeholders');
+    if (_solutionTitleController.text.isEmpty) _solutionTitleController.text = widget.projectName;
+    widget.controller.text = text;
+  }
+
+  String _extractBriefValue(String text, String label) {
+    final lines = text.split(RegExp(r'\\r?\\n'));
+    final labelLower = label.toLowerCase();
+    final start = lines.indexWhere((line) =>
+        line.trimLeft().toLowerCase().startsWith('$labelLower:'));
+    if (start < 0) return '';
+
+    final firstLine = lines[start].trimLeft();
+    final value = <String>[firstLine.substring(firstLine.indexOf(':') + 1).trim()];
+    for (var i = start + 1; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty || RegExp(r'^[A-Z][^:]{1,45}:').hasMatch(line)) break;
+      value.add(line);
+    }
+    return value.where((line) => line.isNotEmpty).join('\\n').trim();
+  }
+
+  Widget _charterField(String label, TextEditingController controller, String hint, {int minLines = 2}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: VoiceTextField(
+        controller: controller,
+        minLines: minLines,
+        maxLines: minLines + 2,
+        enableDocxImport: false,
+        enableKazAi: false,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          alignLabelWithHint: true,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -148,53 +301,72 @@ class _SkipBusinessCaseDialogState extends State<_SkipBusinessCaseDialog> {
                   color: Color(0xFF6B7280)),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'If you already know the solution, you can skip the Business '
-              'Case workflow. Enter a robust project description below — '
-              'type, import (DOCX/PDF/TXT/MD), or speak it. This description '
-              'will serve as the basis for FEP documentation developments '
-              'with AI KAZ.',
-              style: TextStyle(fontSize: 13, height: 1.5),
+            Text(
+              _skipFrontEndPlanning
+                  ? 'You are skipping both initiation analysis and Front End Planning. Enter or import the minimum charter brief below. These structured details will populate the project objective, scope, deliverables, preferred solution, and core stakeholder sections.'
+                  : 'You are skipping the Business Case only. Capture the preferred solution, objective, scope, and deliverables so Front End Planning starts with a useful, structured baseline. You can type, speak, or import an existing brief.',
+              style: const TextStyle(fontSize: 13, height: 1.5),
+            ),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              value: _skipFrontEndPlanning,
+              onChanged: _saving
+                  ? null
+                  : (value) => setState(() => _skipFrontEndPlanning = value),
+              title: const Text('Also skip Front End Planning'),
+              subtitle: const Text('Go directly to the charter and capture its core details here.'),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Project Description *',
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1D1F)),
-            ),
-            const SizedBox(height: 8),
-            VoiceTextField(
-              controller: widget.controller,
-              maxLines: 8,
-              minLines: 6,
-              enableVoice: true,
-              enableDocxImport: true,
-              enableKazAi: false,
-              decoration: InputDecoration(
-                hintText: 'Describe the core project details: objectives, '
-                    'scope, known solution, deliverables, constraints, '
-                    'and any other context that should seed the FEP '
-                    'documentation. You can type, paste, tap the upload '
-                    'icon to import a DOCX/PDF/TXT/MD file, or tap the '
-                    'mic to speak.',
-                hintStyle: const TextStyle(
-                    fontSize: 12, color: Color(0xFF6B7280), height: 1.4),
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-                contentPadding: const EdgeInsets.all(14),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                      color: Color(0xFFFFC812), width: 1.5),
+            if (_skipFrontEndPlanning) ...[
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(
+                  onPressed: _saving
+                      ? null
+                      : () async {
+                          final text = await _importCharterBrief();
+                          if (text != null && mounted) setState(() => _applyImportedBrief(text));
+                        },
+                  icon: const Icon(Icons.upload_file_outlined, size: 18),
+                  label: const Text('Import charter brief'),
                 ),
               ),
-            ),
+              _charterField('Preferred solution *', _solutionTitleController, 'Name the selected solution'),
+              _charterField('Project objective *', _objectiveController, 'What outcome will this project achieve?'),
+              _charterField('Scope *', _scopeController, 'What is included? List key boundaries.'),
+              _charterField('Key deliverables *', _deliverablesController, 'What will be delivered and accepted?'),
+              _charterField('Core stakeholders *', _stakeholdersController, 'Name the sponsor, decision-maker, owner, and key users.'),
+              _charterField('Additional context', widget.controller, 'Constraints, assumptions, risks, and success measures.'),
+            ] else ...[
+              const Text(
+                'Preferred Solution & FEP Baseline *',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1A1D1F)),
+              ),
+              const SizedBox(height: 8),
+              _charterField('Preferred solution *', _solutionTitleController, 'Name the selected solution'),
+              _charterField('Solution description *', widget.controller, 'Describe the known solution, why it is preferred, major constraints, and intended outcomes.', minLines: 4),
+              _charterField('Project objective *', _objectiveController, 'What outcome will this project achieve?'),
+              _charterField('Initial scope *', _scopeController, 'What is included? Add boundaries or exclusions.'),
+              _charterField('Key deliverables *', _deliverablesController, 'List tangible outputs and acceptance expectations.'),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(
+                  onPressed: _saving
+                      ? null
+                      : () async {
+                          final text = await _importCharterBrief();
+                          if (text != null && mounted) {
+                            widget.controller.text = text;
+                            _objectiveController.text = _extractBriefValue(text, 'Project objective');
+                            _scopeController.text = _extractBriefValue(text, 'In scope');
+                            _deliverablesController.text = _extractBriefValue(text, 'Key deliverables');
+                          }
+                        },
+                  icon: const Icon(Icons.upload_file_outlined, size: 18),
+                  label: const Text('Import existing brief'),
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(10),
@@ -204,20 +376,18 @@ class _SkipBusinessCaseDialogState extends State<_SkipBusinessCaseDialog> {
                 border: Border.all(
                     color: const Color(0xFFFFC812).withValues(alpha: 0.2)),
               ),
-              child: const Row(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline,
+                  const Icon(Icons.info_outline,
                       size: 16, color: Color(0xFFFFC812)),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'After skipping, the Business Case screens (Potential '
-                      'Solutions, Risk Identification, Preferred Solution '
-                      'Analysis) will be locked. You can still edit IT '
-                      'Considerations and Infrastructure Considerations '
-                      'from their dedicated pages.',
-                      style: TextStyle(fontSize: 11, height: 1.4),
+                      _skipFrontEndPlanning
+                          ? 'This will mark both Business Case and FEP as bypassed. The captured brief is saved directly to the project charter core; the Charter is still editable until approved.'
+                          : 'The Business Case analysis screens will be bypassed. Your preferred solution, objective, scope, and deliverables will seed FEP; the FEP and Charter remain available for refinement.',
+                      style: const TextStyle(fontSize: 11, height: 1.4),
                     ),
                   ),
                 ],
@@ -238,19 +408,28 @@ class _SkipBusinessCaseDialogState extends State<_SkipBusinessCaseDialog> {
               ? null
               : () async {
                   setState(() => _saving = true);
-                  final ok = await widget.onConfirm();
+                  final ok = await widget.onConfirm(_SkipProjectDraft(
+                    skipFrontEndPlanning: _skipFrontEndPlanning,
+                    solutionTitle: _solutionTitleController.text,
+                    solutionDescription: widget.controller.text,
+                    objective: _objectiveController.text,
+                    scope: _scopeController.text,
+                    deliverables: _deliverablesController.text,
+                    stakeholders: _stakeholdersController.text,
+                  ));
                   if (!mounted) return;
                   setState(() => _saving = false);
                   if (ok) {
                     Navigator.of(context).pop(true);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
+                      SnackBar(
                         content: Text(
-                            'Business Case skipped. Your project description '
-                            'is now the basis for FEP documentation with AI KAZ.'),
-                        backgroundColor: Color(0xFFFFC812),
+                            _skipFrontEndPlanning
+                                ? 'Business Case and FEP skipped. Your charter brief has been saved.'
+                                : 'Business Case skipped. Your preferred solution and baseline have been saved for FEP.'),
+                        backgroundColor: const Color(0xFFFFC812),
                         behavior: SnackBarBehavior.floating,
-                        duration: Duration(seconds: 4),
+                        duration: const Duration(seconds: 4),
                       ),
                     );
                   }
@@ -263,7 +442,7 @@ class _SkipBusinessCaseDialogState extends State<_SkipBusinessCaseDialog> {
                       strokeWidth: 2, color: Colors.white),
                 )
               : const Icon(Icons.check_rounded, size: 18),
-          label: const Text('Confirm & Skip'),
+          label: Text(_skipFrontEndPlanning ? 'Save charter & skip both' : 'Save solution & skip Business Case'),
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFFD97706),
             foregroundColor: Colors.white,
@@ -272,6 +451,26 @@ class _SkipBusinessCaseDialogState extends State<_SkipBusinessCaseDialog> {
       ],
     );
   }
+}
+
+class _SkipProjectDraft {
+  const _SkipProjectDraft({
+    required this.skipFrontEndPlanning,
+    required this.solutionTitle,
+    required this.solutionDescription,
+    required this.objective,
+    required this.scope,
+    required this.deliverables,
+    required this.stakeholders,
+  });
+
+  final bool skipFrontEndPlanning;
+  final String solutionTitle;
+  final String solutionDescription;
+  final String objective;
+  final String scope;
+  final String deliverables;
+  final String stakeholders;
 }
 
 /// Returns true if the user has skipped the Business Case workflow

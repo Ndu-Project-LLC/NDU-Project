@@ -31,6 +31,10 @@ const Map<String, String> globalPreferenceStores = {
       'The display currency is a user preference, not project data.',
   'lib/providers/app_content_provider.dart':
       'Admin content overrides are app-wide copy, not project data.',
+  'lib/providers/display_preferences_provider.dart':
+      'Font size, compact mode, reduced animations, and the speech-to-text '
+      'toggle describe the person using the app, not the project they are '
+      'working on.',
 };
 
 /// `class X extends ChangeNotifier` / `with ChangeNotifier` / mixes both.

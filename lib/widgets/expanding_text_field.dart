@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/services/voice_input_service.dart';
+import 'package:ndu_project/providers/display_preferences_provider.dart';
+import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/services/docx_import_service.dart';
 import 'package:ndu_project/widgets/spell_check/spell_check_dialogs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -68,7 +70,6 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
   StreamSubscription<VoiceResult>? _resultSubscription;
   StreamSubscription<VoiceStatus>? _statusSubscription;
   bool _isListening = false;
-  bool _voiceAvailable = true;
   bool _isImportingDoc = false;
 
   Future<void> _importDocument() async {
@@ -112,7 +113,6 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
   void initState() {
     super.initState();
     _controller = widget.controller ?? SpellCheckTextEditingController();
-    _checkAvailability();
   }
 
   @override
@@ -123,19 +123,15 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
     }
   }
 
-  Future<void> _checkAvailability() async {
-    final available = await _voiceService.initialize();
-    if (mounted && available != _voiceAvailable) {
-      setState(() => _voiceAvailable = available);
-    }
-  }
-
   Future<void> _toggleVoiceInput() async {
+    if (!speechToTextEnabledFor(context, listen: false)) return;
     if (_isListening) {
       await _voiceService.stopListening();
       _cleanupSubscriptions();
       if (mounted) setState(() => _isListening = false);
     } else {
+      final allowed = await requestMicrophonePermission(context);
+      if (!allowed || !mounted) return;
       final started = await _voiceService.startListening(
         existingText: _controller.text,
       );
@@ -196,7 +192,7 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
 
   @override
   Widget build(BuildContext context) {
-    final voiceEnabled = widget.enableVoice && _voiceAvailable;
+    final voiceEnabled = widget.enableVoice && speechToTextEnabledFor(context);
     final docxEnabled = widget.enableDocxImport;
     final InputDecoration baseDecoration = widget.decoration ??
         const InputDecoration(
@@ -209,25 +205,30 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
 
     // Clicking an underlined word opens its fixes where the word is; the
     // context menu covers the right-click / long-press route.
-    return SpellFixTapArea(
-      controller: _controller,
-      enabled: !widget.readOnly && widget.enabled != false,
-      child: TextField(
+    return SpeechInputFieldMarker(
+      voiceAllowed: widget.enableVoice,
+      hasVoiceControl: voiceEnabled,
+      child: SpellFixTapArea(
         controller: _controller,
-        focusNode: widget.focusNode,
-        readOnly: widget.readOnly,
-        onChanged: widget.onChanged,
-        keyboardType: widget.keyboardType,
-        textInputAction: widget.textInputAction,
-        minLines: widget.minLines,
-        maxLines: null, // allow vertical growth with content
-        decoration: effectiveDecoration,
-        style: widget.style,
-        enabled: widget.enabled,
-        contextMenuBuilder: (context, editableTextState) =>
-            buildSpellCheckContextMenu(context, editableTextState, _controller),
-        onEditingComplete: widget.onEditingComplete,
-        onSubmitted: widget.onSubmitted,
+        enabled: !widget.readOnly && widget.enabled != false,
+        child: TextField(
+          controller: _controller,
+          focusNode: widget.focusNode,
+          readOnly: widget.readOnly,
+          onChanged: widget.onChanged,
+          keyboardType: widget.keyboardType,
+          textInputAction: widget.textInputAction,
+          minLines: widget.minLines,
+          maxLines: null, // allow vertical growth with content
+          decoration: effectiveDecoration,
+          style: widget.style,
+          enabled: widget.enabled,
+          contextMenuBuilder: (context, editableTextState) =>
+              buildSpellCheckContextMenu(
+                  context, editableTextState, _controller),
+          onEditingComplete: widget.onEditingComplete,
+          onSubmitted: widget.onSubmitted,
+        ),
       ),
     );
   }
@@ -279,8 +280,7 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
           child: SizedBox(
             width: 18,
             height: 18,
-            child: CircularProgressIndicator(
-                strokeWidth: 2, color: iconColor),
+            child: CircularProgressIndicator(strokeWidth: 2, color: iconColor),
           ),
         ),
       );
@@ -389,7 +389,6 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
   StreamSubscription<VoiceResult>? _resultSubscription;
   StreamSubscription<VoiceStatus>? _statusSubscription;
   bool _isListening = false;
-  bool _voiceAvailable = true;
   bool _isImportingDoc = false;
 
   Future<void> _importDocument() async {
@@ -433,7 +432,6 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
   void initState() {
     super.initState();
     _controller = widget.controller ?? SpellCheckTextEditingController();
-    _checkAvailability();
   }
 
   @override
@@ -444,19 +442,15 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
     }
   }
 
-  Future<void> _checkAvailability() async {
-    final available = await _voiceService.initialize();
-    if (mounted && available != _voiceAvailable) {
-      setState(() => _voiceAvailable = available);
-    }
-  }
-
   Future<void> _toggleVoiceInput() async {
+    if (!speechToTextEnabledFor(context, listen: false)) return;
     if (_isListening) {
       await _voiceService.stopListening();
       _cleanupSubscriptions();
       if (mounted) setState(() => _isListening = false);
     } else {
+      final allowed = await requestMicrophonePermission(context);
+      if (!allowed || !mounted) return;
       final started = await _voiceService.startListening(
         existingText: _controller.text,
       );
@@ -517,7 +511,7 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
 
   @override
   Widget build(BuildContext context) {
-    final voiceEnabled = widget.enableVoice && _voiceAvailable;
+    final voiceEnabled = widget.enableVoice && speechToTextEnabledFor(context);
     final docxEnabled = widget.enableDocxImport;
     final InputDecoration baseDecoration = widget.decoration ??
         const InputDecoration(
@@ -530,28 +524,33 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
 
     // Clicking an underlined word opens its fixes where the word is; the
     // context menu covers the right-click / long-press route.
-    return SpellFixTapArea(
-      controller: _controller,
-      enabled: !widget.readOnly && widget.enabled != false,
-      child: TextFormField(
+    return SpeechInputFieldMarker(
+      voiceAllowed: widget.enableVoice,
+      hasVoiceControl: voiceEnabled,
+      child: SpellFixTapArea(
         controller: _controller,
-        focusNode: widget.focusNode,
-        readOnly: widget.readOnly,
-        onChanged: widget.onChanged,
-        keyboardType: widget.keyboardType,
-        textInputAction: widget.textInputAction,
-        minLines: widget.minLines,
-        maxLines: null,
-        decoration: effectiveDecoration,
-        style: widget.style,
-        enabled: widget.enabled,
-        contextMenuBuilder: (context, editableTextState) =>
-            buildSpellCheckContextMenu(context, editableTextState, _controller),
-        validator: widget.validator,
-        onSaved: widget.onSaved,
-        onEditingComplete: widget.onEditingComplete,
-        onFieldSubmitted: widget.onFieldSubmitted,
-        autovalidateMode: widget.autovalidateMode,
+        enabled: !widget.readOnly && widget.enabled != false,
+        child: TextFormField(
+          controller: _controller,
+          focusNode: widget.focusNode,
+          readOnly: widget.readOnly,
+          onChanged: widget.onChanged,
+          keyboardType: widget.keyboardType,
+          textInputAction: widget.textInputAction,
+          minLines: widget.minLines,
+          maxLines: null,
+          decoration: effectiveDecoration,
+          style: widget.style,
+          enabled: widget.enabled,
+          contextMenuBuilder: (context, editableTextState) =>
+              buildSpellCheckContextMenu(
+                  context, editableTextState, _controller),
+          validator: widget.validator,
+          onSaved: widget.onSaved,
+          onEditingComplete: widget.onEditingComplete,
+          onFieldSubmitted: widget.onFieldSubmitted,
+          autovalidateMode: widget.autovalidateMode,
+        ),
       ),
     );
   }
@@ -603,8 +602,7 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
           child: SizedBox(
             width: 18,
             height: 18,
-            child: CircularProgressIndicator(
-                strokeWidth: 2, color: iconColor),
+            child: CircularProgressIndicator(strokeWidth: 2, color: iconColor),
           ),
         ),
       );

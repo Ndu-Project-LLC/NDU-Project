@@ -800,7 +800,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  children: [
  Expanded(flex: 6, child: Text('#', style: headerStyle)),
  Expanded(
- flex: 32, child: Text('Lesson', style: headerStyle)),
+ flex: 26, child: Text('Lesson', style: headerStyle)),
  Expanded(
  flex: 14, child: Text('Type', style: headerStyle)),
  Expanded(
@@ -818,7 +818,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  Expanded(
  flex: 14, child: Text('Date', style: headerStyle)),
  Expanded(
- flex: 10,
+ flex: 28,
  child: Text('Actions',
  style: headerStyle, textAlign: TextAlign.center)),
  ],
@@ -858,7 +858,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  flex: 6,
  child: WrappedText('${i + 1}', style: cellStyle)),
  Expanded(
- flex: 32,
+ flex: 26,
  child: WrappedText(
  entries[i].lesson,
  style: cellStyle.copyWith(
@@ -905,9 +905,11 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  child:
  WrappedText(entries[i].date, style: cellStyle)),
  Expanded(
- flex: 10,
+ flex: 28,
  child: Align(
  alignment: Alignment.centerRight,
+ child: FittedBox(
+ fit: BoxFit.scaleDown,
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
@@ -943,6 +945,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
    constraints: const BoxConstraints(minWidth: 28),
  ),
  ],
+ ),
  ),
  ),
  ),

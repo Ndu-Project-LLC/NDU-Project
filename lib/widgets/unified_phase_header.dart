@@ -7,6 +7,8 @@ import 'package:ndu_project/screens/settings_screen.dart';
 import 'package:ndu_project/services/auth_nav.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/user_service.dart';
+import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/widgets/project_activity_header_action.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/ai_assist_helper.dart';
@@ -144,19 +146,14 @@ class UnifiedPhaseHeader extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                // Right: Notification bell
-                IconButton(
-                  icon: const Icon(Icons.notifications_none_rounded,
-                      color: _Tokens.onSurface, size: 22),
-                  tooltip: 'Notifications',
-                  padding: const EdgeInsets.all(8),
-                  constraints:
-                      const BoxConstraints(minWidth: 40, minHeight: 40),
-                  onPressed: () {
-                    // Placeholder for notification action
-                  },
+                // Right: outstanding tasks (only when a project context exists).
+                _ProjectActivityHeaderActionSlot(
+                  onOpenActivityLog: onOpenActivityLog ??
+                      () => ProjectActivitiesLogScreen.open(context),
+                  compact: true,
                 ),
-                const SizedBox(width: 4),
+                if (ProjectDataInherited.maybeRead(context) != null)
+                  const SizedBox(width: 4),
                 // Right: Yellow chat "C" button
                 GestureDetector(
                   onTap: () => KazAiChatBubble.openChat(context),
@@ -252,7 +249,7 @@ class UnifiedPhaseHeader extends StatelessWidget {
     );
   }
 
-  // ─── Desktop: original layout (back/forward | title | activity log + profile) ─
+  // ─── Desktop: original layout (back/forward | title | project actions + profile) ─
   Widget _buildDesktopHeader(BuildContext context) {
     return Container(
       height: 72,
@@ -318,17 +315,35 @@ class UnifiedPhaseHeader extends StatelessWidget {
                   },
             ),
           if (showAiAssist) const SizedBox(width: 8),
-          if (showActivityLogAction)
-            _ActivityLogAction(
-              compact: false,
-              onTap: onOpenActivityLog ??
-                  () => ProjectActivitiesLogScreen.open(context),
-            ),
-          if (showActivityLogAction) const SizedBox(width: 12),
+          _ProjectActivityHeaderActionSlot(
+            onOpenActivityLog: onOpenActivityLog ??
+                () => ProjectActivitiesLogScreen.open(context),
+          ),
+          const SizedBox(width: 12),
           ...trailingActions,
           if (trailingActions.isNotEmpty) const SizedBox(width: 12),
         ],
       ),
+    );
+  }
+}
+
+class _ProjectActivityHeaderActionSlot extends StatelessWidget {
+  const _ProjectActivityHeaderActionSlot({
+    required this.onOpenActivityLog,
+    this.compact = false,
+  });
+
+  final VoidCallback onOpenActivityLog;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = ProjectDataInherited.maybeOf(context);      if (provider == null) return const SizedBox.shrink();
+    return ProjectActivityHeaderAction(
+      activities: provider.projectData.projectActivities,
+      compact: compact,
+      onOpenActivityLog: onOpenActivityLog,
     );
   }
 }
@@ -421,6 +436,7 @@ class UnifiedScaffoldAppBar extends StatelessWidget
     this.onMenuTap,
     this.showActivityLogAction = true,
     this.onOpenActivityLog,
+    this.additionalActions = const <Widget>[],
   });
 
   final Color? backgroundColor;
@@ -428,6 +444,7 @@ class UnifiedScaffoldAppBar extends StatelessWidget
   final VoidCallback? onMenuTap;
   final bool showActivityLogAction;
   final VoidCallback? onOpenActivityLog;
+  final List<Widget> additionalActions;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -466,6 +483,12 @@ class UnifiedScaffoldAppBar extends StatelessWidget
             ),
       centerTitle: true,
       actions: [
+        _ProjectActivityHeaderActionSlot(
+          onOpenActivityLog: onOpenActivityLog ??
+              () => ProjectActivitiesLogScreen.open(context),
+          compact: true,
+        ),
+        ...additionalActions,
         if (showActivityLogAction)
           Padding(
             padding: EdgeInsets.only(right: isMobile ? 8 : 10),
@@ -475,6 +498,7 @@ class UnifiedScaffoldAppBar extends StatelessWidget
                   () => ProjectActivitiesLogScreen.open(context),
             ),
           ),
+        ...additionalActions,
         Padding(
           padding: EdgeInsets.only(right: isMobile ? 8 : 12),
           child: const UnifiedProfileMenu(compact: true),

@@ -324,6 +324,13 @@ class ProjectIntelligenceService {
       upsert: upsert,
     );
 
+    _upsertQualityActivities(
+      data: data,
+      now: now,
+      existingById: existingById,
+      upsert: upsert,
+    );
+
     _upsertExecutionActivities(
       data: data,
       now: now,
@@ -820,6 +827,213 @@ class ProjectIntelligenceService {
           ),
         );
       }
+    }
+  }
+
+  /// Publish live Quality Management work into the shared project activity
+  /// stream. IDs are source-stable so user-set lifecycle state survives every
+  /// rebuild, while dates and owners remain sourced from the quality register.
+  static void _upsertQualityActivities({
+    required ProjectDataModel data,
+    required DateTime now,
+    required Map<String, ProjectActivity> existingById,
+    required void Function(ProjectActivity draft) upsert,
+  }) {
+    final quality = data.qualityManagementData;
+    if (quality == null) return;
+
+    void addQualityActivity({
+      required String id,
+      required String title,
+      required String description,
+      required String role,
+      required String owner,
+      String dueDate = '',
+    }) {
+      final cleanTitle = title.trim();
+      if (cleanTitle.isEmpty) return;
+      upsert(
+        ProjectActivity(
+          id: id,
+          title: cleanTitle,
+          description: description.trim().isEmpty
+              ? 'Quality work tracked in Quality Management.'
+              : description.trim(),
+          sourceSection: 'quality_management',
+          phase: 'Planning Phase',
+          discipline: 'Quality',
+          role: role,
+          assignedTo: _nullable(owner),
+          applicableSections: const <String>[
+            'quality_management',
+            'project_activities_log',
+            'schedule',
+          ],
+          dueDate: dueDate.trim(),
+          status: ProjectActivityStatus.pending,
+          approvalStatus: ProjectApprovalStatus.draft,
+          createdAt: existingById[id]?.createdAt ?? now,
+          updatedAt: now,
+        ),
+      );
+    }
+
+    bool isCompletedLabel(String raw) {
+      final status = raw.trim().toLowerCase();
+      return status == 'complete' ||
+          status == 'completed' ||
+          status == 'closed' ||
+          status == 'verified' ||
+          status == 'done';
+    }
+
+    for (final objective in quality.objectives) {
+      if (isCompletedLabel(objective.status)) continue;
+      final details = <String>[
+        if (objective.acceptanceCriteria.trim().isNotEmpty)
+          'Acceptance criteria: ${objective.acceptanceCriteria.trim()}',
+        if (objective.successMetric.trim().isNotEmpty)
+          'Measure: ${objective.successMetric.trim()}',
+        if (objective.targetValue.trim().isNotEmpty)
+          'Target: ${objective.targetValue.trim()}',
+        if (objective.linkedRequirement.trim().isNotEmpty)
+          'Requirement: ${objective.linkedRequirement.trim()}',
+      ];
+      if (objective.title.trim().isEmpty || objective.owner.trim().isEmpty) {
+        continue;
+      }
+      addQualityActivity(
+        id: 'activity_quality_objective_${_slugToken(objective.id)}',
+        title: objective.title,
+        description: details.join(' | '),
+        role: 'Quality Owner',
+        owner: objective.owner,
+      );
+    }
+
+    for (var i = 0; i < quality.workflowControls.length; i++) {
+      final control = quality.workflowControls[i];
+      final owner = _nullable(control.owner);
+      if (control.name.trim().isEmpty || owner == null) continue;
+      final idToken = _slugToken(control.id).isEmpty
+          ? '$i'
+          : _slugToken(control.id);
+      final kind = control.type == QualityWorkflowType.qa ? 'QA' : 'QC';
+      addQualityActivity(
+        id: 'activity_quality_control_$idToken',
+        title: '$kind Control: ${control.name}',
+        description: [
+          if (control.method.trim().isNotEmpty)
+            'Method: ${control.method.trim()}',
+          if (control.frequency.trim().isNotEmpty)
+            'Review cadence: ${control.frequency.trim()}',
+          if (control.checklist.trim().isNotEmpty)
+            'Checklist: ${control.checklist.trim()}',
+          if (control.standardsReference.trim().isNotEmpty)
+            'Standard: ${control.standardsReference.trim()}',
+        ].join(' | '),
+        role: control.type == QualityWorkflowType.qa ? 'QA Owner' : 'QC Owner',
+        owner: owner,
+      );
+    }
+
+    for (var i = 0; i < quality.qaTaskLog.length; i++) {
+      final task = quality.qaTaskLog[i];
+      if (task.status == QualityTaskStatus.complete ||
+          task.task.trim().isEmpty ||
+          task.responsible.trim().isEmpty) {
+        continue;
+      }
+      final idToken = _slugToken(task.id).isEmpty ? '$i' : _slugToken(task.id);
+      addQualityActivity(
+        id: 'activity_quality_qa_$idToken',
+        title: task.task,
+        description: [
+          'QA task',
+          'Status: ${task.status.name}',
+          if (task.percentComplete > 0)
+            'Complete: ${task.percentComplete.toStringAsFixed(0)}%',
+          if (task.comments.trim().isNotEmpty) task.comments.trim(),
+        ].join(' | '),
+        role: 'QA Owner',
+        owner: task.responsible,
+        dueDate: task.endDate,
+      );
+    }
+
+    for (var i = 0; i < quality.qcTaskLog.length; i++) {
+      final task = quality.qcTaskLog[i];
+      if (task.status == QualityTaskStatus.complete ||
+          task.task.trim().isEmpty ||
+          task.responsible.trim().isEmpty) {
+        continue;
+      }
+      final idToken = _slugToken(task.id).isEmpty ? '$i' : _slugToken(task.id);
+      addQualityActivity(
+        id: 'activity_quality_qc_$idToken',
+        title: task.task,
+        description: [
+          'QC task',
+          'Status: ${task.status.name}',
+          if (task.percentComplete > 0)
+            'Complete: ${task.percentComplete.toStringAsFixed(0)}%',
+          if (task.comments.trim().isNotEmpty) task.comments.trim(),
+        ].join(' | '),
+        role: 'QC Owner',
+        owner: task.responsible,
+        dueDate: task.endDate,
+      );
+    }
+
+    for (var i = 0; i < quality.auditPlan.length; i++) {
+      final audit = quality.auditPlan[i];
+      if (audit.result == AuditResultStatus.pass ||
+          audit.title.trim().isEmpty ||
+          audit.owner.trim().isEmpty) {
+        continue;
+      }
+      final idToken = _slugToken(audit.id).isEmpty ? '$i' : _slugToken(audit.id);
+      addQualityActivity(
+        id: 'activity_quality_audit_$idToken',
+        title: audit.title,
+        description: [
+          'Quality audit: ${audit.result.name}',
+          if (audit.scope.trim().isNotEmpty) 'Scope: ${audit.scope.trim()}',
+          if (audit.findings.trim().isNotEmpty)
+            'Findings: ${audit.findings.trim()}',
+          if (audit.notes.trim().isNotEmpty) audit.notes.trim(),
+        ].join(' | '),
+        role: 'Quality Auditor',
+        owner: audit.owner,
+        dueDate: audit.plannedDate,
+      );
+    }
+
+    for (var i = 0; i < quality.correctiveActions.length; i++) {
+      final action = quality.correctiveActions[i];
+      if (action.status == CorrectiveActionStatus.verified ||
+          action.status == CorrectiveActionStatus.closed ||
+          action.title.trim().isEmpty ||
+          action.owner.trim().isEmpty) {
+        continue;
+      }
+      final idToken = _slugToken(action.id).isEmpty ? '$i' : _slugToken(action.id);
+      addQualityActivity(
+        id: 'activity_quality_corrective_$idToken',
+        title: action.title,
+        description: [
+          'Corrective action: ${action.status.name}',
+          if (action.rootCause.trim().isNotEmpty)
+            'Root cause: ${action.rootCause.trim()}',
+          if (action.action.trim().isNotEmpty)
+            'Action: ${action.action.trim()}',
+          if (action.verificationNotes.trim().isNotEmpty)
+            'Verification: ${action.verificationNotes.trim()}',
+        ].join(' | '),
+        role: 'Corrective Action Owner',
+        owner: action.owner,
+        dueDate: action.dueDate,
+      );
     }
   }
 

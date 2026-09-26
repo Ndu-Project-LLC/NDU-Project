@@ -270,6 +270,16 @@ jobs:
             cp ../../staticwebapp.config.json ./staticwebapp.config.json
             echo "✓ staticwebapp.config.json copied"
           fi
+          # GitHub Pages serves 404.html for any unknown path. This repo's
+          # 404.html redirects deep links to /?/<path> which index.html turns
+          # back into a real path before Flutter boots — without it, deep
+          # links (e.g. /projects-dashboard) return Pages' stock 404.
+          if [ -f ../../404.html ]; then
+            cp ../../404.html ./404.html
+            echo "✓ 404.html copied (SPA deep-link fallback)"
+          else
+            echo "::warning::404.html missing — deep links will hit Pages' stock 404"
+          fi
           echo "✓ CNAME = $(cat CNAME)"
           echo "✓ .nojekyll created"
 

@@ -374,7 +374,11 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
     // applicable the user already saved is never overwritten.
     final methodology = ProjectDataHelper.resolvedProjectMethodology(data).name;
     if (progress['work_packages'] == _SectionProgressState.pending &&
-        sectionStartsNotApplicable(methodology, 'work_packages')) {
+        workPackagesSectionStartsNotApplicable(
+          methodology: methodology,
+          hasWorkPackageContent: data.wbsTree.isNotEmpty ||
+              data.workPackages.isNotEmpty,
+        )) {
       progress['work_packages'] = _SectionProgressState.notApplicable;
     }
 
@@ -3705,11 +3709,18 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   Widget _buildWorkPackagesSection() {
     final data = ProjectDataHelper.getData(context);
     final wbsTree = data.wbsTree;
+    final methodology = ProjectDataHelper.resolvedProjectMethodology(data);
 
     // An agile project is told this section does not apply to it rather than
-    // being asked to fill it in (Lusaka 25 (copy) ask 22).
-    if (ProjectDataHelper.resolvedProjectMethodology(data) ==
-        ProjectMethodology.agile) {
+    // being asked to fill it in (Lusaka 25 (copy) ask 22) — but only while it
+    // has no work packages of its own. Blanking a section whose content the
+    // project already holds was reported as the error in the walkthrough
+    // ("last time it was pulling the work packages … it's saying agile
+    // delivery has no design packages"), so content always wins.
+    if (workPackagesSectionStartsNotApplicable(
+      methodology: methodology.name,
+      hasWorkPackageContent: wbsTree.isNotEmpty || data.workPackages.isNotEmpty,
+    )) {
       return _buildGuidedSectionCard(
         sectionId: 'work_packages',
         sectionKey: _sectionKeys['work_packages']!,
@@ -3735,6 +3746,18 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (methodology == ProjectMethodology.agile) ...[
+            const Text(
+              'Agile delivery normally keeps design inside the iteration '
+              '(epics → features → stories), so this section is optional '
+              'here — your work packages are still shown below. Mark the '
+              'section Not applicable above if your project does not need '
+              'one.',
+              style:
+                  TextStyle(fontSize: 12, height: 1.4, color: _kMuted),
+            ),
+            const SizedBox(height: 12),
+          ],
           const Text(
             'Work Breakdown Structure',
             style: TextStyle(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
 
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -2355,64 +2356,6 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
     );
   }
 
-  Future<void> _addChangeLog() async {
-    final result = await showDialog<QualityChangeEntry>(
-      context: context,
-      builder: (_) => const _QualityChangeDialog(),
-    );
-    if (!mounted) return;
-    if (result == null) return;
-
-    await _updateQualityData(
-      context,
-      checkpoint: 'quality_management',
-      successMessage: 'Change log entry added',
-      updater: (current) {
-        final updated = List<QualityChangeEntry>.from(current.qualityChangeLog)
-          ..add(result);
-        return current.copyWith(qualityChangeLog: updated);
-      },
-    );
-  }
-
-  Future<void> _editChangeLog(int index) async {
-    final entries = _qualityData(context).qualityChangeLog;
-    if (index < 0 || index >= entries.length) return;
-
-    final result = await showDialog<QualityChangeEntry>(
-      context: context,
-      builder: (_) => _QualityChangeDialog(initialValue: entries[index]),
-    );
-    if (!mounted) return;
-    if (result == null) return;
-
-    await _updateQualityData(
-      context,
-      checkpoint: 'quality_management',
-      successMessage: 'Change log entry updated',
-      updater: (current) {
-        final updated = List<QualityChangeEntry>.from(current.qualityChangeLog);
-        updated[index] = result;
-        return current.copyWith(qualityChangeLog: updated);
-      },
-    );
-  }
-
-  Future<void> _removeChangeLog(int index) async {
-    await _updateQualityData(
-      context,
-      checkpoint: 'quality_management',
-      successMessage: 'Change log entry removed',
-      updater: (current) {
-        final updated = List<QualityChangeEntry>.from(current.qualityChangeLog);
-        if (index >= 0 && index < updated.length) {
-          updated.removeAt(index);
-        }
-        return current.copyWith(qualityChangeLog: updated);
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final quality = _qualityData(context, listen: true);
@@ -2566,22 +2509,7 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
             onRemove: _removeStandard,
           ),
           const SizedBox(height: 24),
-          _SectionHeader(
-            title: 'Quality Change Log',
-            subtitle:
-                'Track post-approval quality plan updates and decision trail.',
-            trailing: ElevatedButton.icon(
-              onPressed: _addChangeLog,
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('Add Change'),
-            ),
-          ),
-          const SizedBox(height: 12),
-          _QualityChangeLogTable(
-            entries: quality.qualityChangeLog,
-            onEdit: _editChangeLog,
-            onRemove: _removeChangeLog,
-          ),
+          _ProjectChangeManagementLink(legacyEntryCount: quality.qualityChangeLog.length),
         ],
       ),
     );
@@ -4399,93 +4327,57 @@ class _CorrectiveActionsTable extends StatelessWidget {
   }
 }
 
-class _QualityChangeLogTable extends StatelessWidget {
-  const _QualityChangeLogTable({
-    required this.entries,
-    required this.onEdit,
-    required this.onRemove,
-  });
+class _ProjectChangeManagementLink extends StatelessWidget {
+  const _ProjectChangeManagementLink({required this.legacyEntryCount});
 
-  final List<QualityChangeEntry> entries;
-  final ValueChanged<int> onEdit;
-  final ValueChanged<int> onRemove;
+  final int legacyEntryCount;
 
   @override
   Widget build(BuildContext context) {
-    if (entries.isEmpty) {
-      return const _EmptyState(
-        message:
-            'No change log entries. Record quality plan updates and approvals after baseline.',
-      );
-    }
-
-    return _DataTableShell(
-      title: 'Quality Change Log',
-      table: DataTable(
-        headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
-        headingRowHeight: 52,
-        dataRowMinHeight: 56,
-        dataRowMaxHeight: 56,
-        columnSpacing: 24,
-        horizontalMargin: 16,
-        columns: const [
-          DataColumn(
-              label: Text('Description',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
-              label: Text('Reason',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
-              label: Text('Requested By',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
-              label: Text('Approved By',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
-              label: Text('Date',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
-              label: Text('Status',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
-              label: Text('Actions',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-        ],
-        rows: [
-          for (int i = 0; i < entries.length; i++)
-            DataRow(cells: [
-              DataCell(SizedBox(
-                  width: 220,
-                  child: Text(entries[i].description,
-                      style: const TextStyle(fontSize: 13)))),
-              DataCell(SizedBox(
-                  width: 160,
-                  child: Text(entries[i].reason,
-                      style: const TextStyle(fontSize: 13)))),
-              DataCell(Text(entries[i].requestedBy,
-                  style: const TextStyle(fontSize: 13))),
-              DataCell(Text(entries[i].approvedBy,
-                  style: const TextStyle(fontSize: 13))),
-              DataCell(
-                  Text(entries[i].date, style: const TextStyle(fontSize: 13))),
-              DataCell(_StatusChipText(label: entries[i].status)),
-              DataCell(Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    onPressed: () => onEdit(i),
-                    tooltip: 'Edit',
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 18),
-                    color: const Color(0xFFDC2626),
-                    onPressed: () => onRemove(i),
-                    tooltip: 'Delete',
-                  ),
-                ],
-              )),
-            ]),
+    return _PrimaryCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.history, color: Color(0xFF111827), size: 18),
+              SizedBox(width: 8),
+              Text(
+                'Project Change Management',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Use the project Change Management register for every change; '
+            'quality is recorded there as a discipline, not in a separate log.',
+            style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+          ),
+          if (legacyEntryCount > 0) ...[
+            const SizedBox(height: 8),
+            Text(
+              '$legacyEntryCount legacy quality change '
+              '${legacyEntryCount == 1 ? 'entry remains' : 'entries remain'} '
+              'saved in this project. They are preserved and have not been '
+              'copied into Change Management because older entries have no '
+              'project-linked change-request record.',
+              style: const TextStyle(fontSize: 12, color: Color(0xFF92400E)),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FilledButton.icon(
+              onPressed: () => ChangeManagementModuleScreen.open(context),
+              icon: const Icon(Icons.open_in_new, size: 16),
+              label: const Text('Open Project Change Management'),
+            ),
+          ),
         ],
       ),
     );
@@ -6150,175 +6042,6 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
   }
 }
 
-class _QualityChangeDialog extends StatefulWidget {
-  const _QualityChangeDialog({this.initialValue});
-
-  final QualityChangeEntry? initialValue;
-
-  @override
-  State<_QualityChangeDialog> createState() => _QualityChangeDialogState();
-}
-
-class _QualityChangeDialogState extends State<_QualityChangeDialog> {
-  late final TextEditingController _description;
-  late final TextEditingController _reason;
-  late final TextEditingController _requestedBy;
-  late final TextEditingController _approvedBy;
-  late final TextEditingController _date;
-  late final TextEditingController _status;
-
-  @override
-  void initState() {
-    super.initState();
-    final initial = widget.initialValue;
-    _description =
-        SpellCheckTextEditingController(text: initial?.description ?? '');
-    _reason = SpellCheckTextEditingController(text: initial?.reason ?? '');
-    _requestedBy =
-        SpellCheckTextEditingController(text: initial?.requestedBy ?? '');
-    _approvedBy =
-        SpellCheckTextEditingController(text: initial?.approvedBy ?? '');
-    _date = SpellCheckTextEditingController(
-      text: _normalizedDateText(
-        initial?.date ?? '',
-        fallbackToToday: true,
-      ),
-    );
-    _status = SpellCheckTextEditingController(text: initial?.status ?? 'Draft');
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await _showQualityDatePicker(
-      context,
-      currentValue: _date.text.trim(),
-    );
-    if (!mounted || picked == null) return;
-    setState(() => _date.text = _formatDate(picked));
-  }
-
-  @override
-  void dispose() {
-    _description.dispose();
-    _reason.dispose();
-    _requestedBy.dispose();
-    _approvedBy.dispose();
-    _date.dispose();
-    _status.dispose();
-    super.dispose();
-  }
-
-  void _save() {
-    if (_description.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Change description is required')),
-      );
-      return;
-    }
-
-    Navigator.of(context).pop(
-      QualityChangeEntry(
-        id: widget.initialValue?.id ?? _newId(),
-        description: _description.text.trim(),
-        reason: _reason.text.trim(),
-        requestedBy: _requestedBy.text.trim(),
-        approvedBy: _approvedBy.text.trim(),
-        date: _date.text.trim(),
-        status: _status.text.trim().isEmpty ? 'Draft' : _status.text.trim(),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.initialValue == null ? 'Add Change' : 'Edit Change'),
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const _FieldLabel('Description'),
-            VoiceTextField(
-              controller: _description,
-              minLines: 2,
-              maxLines: 4,
-              decoration: _inputDecoration(context, ''),
-            ),
-            const SizedBox(height: 10),
-            const _FieldLabel('Reason'),
-            VoiceTextField(
-                controller: _reason, decoration: _inputDecoration(context, '')),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _FieldLabel('Requested By'),
-                      VoiceTextField(
-                          controller: _requestedBy,
-                          decoration: _inputDecoration(context, '')),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _FieldLabel('Approved By'),
-                      VoiceTextField(
-                          controller: _approvedBy,
-                          decoration: _inputDecoration(context, '')),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _FieldLabel('Date'),
-                      _datePickerField(
-                        context,
-                        controller: _date,
-                        onTap: _pickDate,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _FieldLabel('Status'),
-                      VoiceTextField(
-                          controller: _status,
-                          decoration:
-                              _inputDecoration(context, 'Draft/Approved')),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel')),
-        ElevatedButton(onPressed: _save, child: const Text('Save')),
-      ],
-    );
-  }
-}
 
 class _TrainingShortcutDialog extends StatefulWidget {
   const _TrainingShortcutDialog({required this.defaultTitle});
@@ -7153,38 +6876,8 @@ class _QualityRegisterView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        // Quality change log
-        _PrimaryCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.history, color: Color(0xFF111827), size: 18),
-                  SizedBox(width: 8),
-                  Text(
-                    'Quality Change Log',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF111827),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (qData.qualityChangeLog.isEmpty)
-                const _EmptyState(
-                  message: 'No quality changes logged yet.',
-                )
-              else
-                _QualityChangeLogTable(
-                  entries: qData.qualityChangeLog,
-                  onEdit: (_) {},
-                  onRemove: (_) {},
-                ),
-            ],
-          ),
+        _ProjectChangeManagementLink(
+          legacyEntryCount: qData.qualityChangeLog.length,
         ),
       ],
     );

@@ -173,6 +173,23 @@ bool sectionStartsNotApplicable(String methodology, String sectionId) {
   return notApplicable != null && notApplicable.contains(sectionId);
 }
 
+/// True when the Design Planning work-packages section should ship already
+/// marked **Not applicable** under [methodology].
+///
+/// Agile delivery has no design work package (ask 22) — but only while the
+/// project has none of its own to show. A project that already keeps a WBS or
+/// generated work packages must never have that content hidden behind the
+/// delivery model: the walkthrough reported the blank section as the error
+/// ("last time it was pulling the work packages … it's saying agile delivery
+/// has no design packages"). Content wins; the methodology rule only decides
+/// what an *empty* section starts out as.
+bool workPackagesSectionStartsNotApplicable({
+  required String methodology,
+  required bool hasWorkPackageContent,
+}) =>
+    !hasWorkPackageContent &&
+    sectionStartsNotApplicable(methodology, 'work_packages');
+
 /// The message to show when a gated Next is pressed.
 ///
 /// Names the tabs still to review rather than only saying "finish the section",

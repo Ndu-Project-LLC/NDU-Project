@@ -51,6 +51,22 @@
     });
   </script>
   <!-- Runtime config must be available before Flutter starts. -->
+  <script>
+    (function() {
+      // Restore real paths for deep links that arrived via the GitHub Pages
+      // 404.html SPA fallback, which redirects /route to /?/route. Runs before
+      // env-config.js / Flutter bootstrap so the app boots on the right route.
+      // Mirrors the ~and~ encoding that 404.html applies to '&' characters.
+      var l = window.location;
+      if (l.search.indexOf('?/') !== 0) return;
+      var restored = l.search.slice(2).replace(/~and~/g, '&');
+      if (!restored) return;
+      var queryIndex = restored.indexOf('&');
+      var path = queryIndex === -1 ? restored : restored.slice(0, queryIndex);
+      var query = queryIndex === -1 ? '' : '?' + restored.slice(queryIndex + 1);
+      history.replaceState(null, '', l.pathname + path + query + l.hash);
+    })();
+  </script>
   <script src="env-config.js?v=NDU_BUILD_STAMP"></script>
   <script>
     (function() {

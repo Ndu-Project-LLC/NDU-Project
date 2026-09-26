@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart' as fp;
 import 'package:excel/excel.dart' hide Border;
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -366,20 +367,39 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.description_outlined,
+              const Icon(Icons.description_outlined,
                   size: 18, color: Color(0xFFFFC812)),
-              SizedBox(width: 8),
-              Text(
-                'Required CSV Format',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF0C4A6E),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Required CSV Format',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF0C4A6E),
+                  ),
                 ),
               ),
-              Spacer(),
+              TextButton.icon(
+                key: const ValueKey('import-template-download'),
+                onPressed: () {
+                  TableImportHelper.downloadExcelTemplate(
+                    tableTitle: widget.tableTitle,
+                    columns: widget.columns,
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Template downloaded. Fill the Data tab and upload it here; Definitions explains each column.',
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.download_outlined, size: 16),
+                label: const Text('Download template'),
+              ),
             ],
           ),
           const SizedBox(height: 12),

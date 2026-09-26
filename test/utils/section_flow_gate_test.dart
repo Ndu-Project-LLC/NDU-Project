@@ -209,4 +209,63 @@ void main() {
       );
     });
   });
+
+  group('work packages are only skipped while the project has none', () {
+    test('an empty agile project still ships Not applicable', () {
+      expect(
+        workPackagesSectionStartsNotApplicable(
+          methodology: 'agile',
+          hasWorkPackageContent: false,
+        ),
+        isTrue,
+      );
+    });
+
+    test('existing work packages beat the delivery model', () {
+      // "last time it was pulling the work packages … it's saying agile
+      // delivery has no design packages" — content the project already keeps
+      // must never be hidden behind the methodology rule.
+      expect(
+        workPackagesSectionStartsNotApplicable(
+          methodology: 'agile',
+          hasWorkPackageContent: true,
+        ),
+        isFalse,
+      );
+    });
+
+    test('waterfall and hybrid are untouched either way', () {
+      for (final content in [false, true]) {
+        expect(
+          workPackagesSectionStartsNotApplicable(
+            methodology: 'waterfall',
+            hasWorkPackageContent: content,
+          ),
+          isFalse,
+        );
+        expect(
+          workPackagesSectionStartsNotApplicable(
+            methodology: 'hybrid',
+            hasWorkPackageContent: content,
+          ),
+          isFalse,
+        );
+      }
+    });
+
+    test('an unknown methodology never skips the section', () {
+      for (final methodology in ['', 'kanban-ish', ' Agile ']) {
+        // Only a positively agile empty section is skipped; the case- and
+        // space-insensitive match stays with the rule it wraps.
+        final expected = methodology.trim().toLowerCase() == 'agile';
+        expect(
+          workPackagesSectionStartsNotApplicable(
+            methodology: methodology,
+            hasWorkPackageContent: false,
+          ),
+          expected,
+        );
+      }
+    });
+  });
 }

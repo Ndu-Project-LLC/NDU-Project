@@ -1791,10 +1791,6 @@ class _RequirementsImplementationScreenState
  _buildWebRequirementsRegister(ownerOptions),
  const SizedBox(height: 20),
 
- // 7. Gap & Exception Analysis Panel
- _buildWebGapAnalysisPanel(),
- const SizedBox(height: 20),
-
  // 8. Approval Readiness Panel
  _buildWebApprovalReadinessPanel(),
  const SizedBox(height: 20),
@@ -2392,24 +2388,19 @@ class _RequirementsImplementationScreenState
  padding:
  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
  decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
- child: const Row(
- children: [
- Expanded(
- flex: 1,
- child: Text('REQ ID',
- style: TextStyle(
- fontSize: 10,
- fontWeight: FontWeight.w800,
- color: Color(0xFF6B7280),
- letterSpacing: 0.8))),
- Expanded(
- flex: 3,
- child: Text('TITLE',
- style: TextStyle(
- fontSize: 10,
- fontWeight: FontWeight.w800,
- color: Color(0xFF6B7280),
- letterSpacing: 0.8))),
+ child: const Row(      children: [
+        Expanded(
+          flex: 4,
+          child: Text(
+            'TITLE',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF6B7280),
+              letterSpacing: 0.8,
+            ),
+          ),
+        ),
  Expanded(
  flex: 1,
  child: Text('OWNER',
@@ -2443,11 +2434,10 @@ class _RequirementsImplementationScreenState
  fontSize: 10,
  fontWeight: FontWeight.w800,
  color: Color(0xFF6B7280),
- letterSpacing: 0.8),
- textAlign: TextAlign.center)),
- SizedBox(
- width: 80,
- child: Text('ACTIONS',
+ letterSpacing: 0.8),                          textAlign: TextAlign.center)),
+                SizedBox(
+                  width: 144,
+                  child: Text('ACTIONS',
  style: TextStyle(
  fontSize: 10,
  fontWeight: FontWeight.w800,
@@ -2499,38 +2489,23 @@ class _RequirementsImplementationScreenState
  Padding(
  padding:
  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
- child: Row(
- crossAxisAlignment: CrossAxisAlignment.center,
- children: [
- // REQ ID
- Expanded(
- flex: 1,
- child: Text(
- row.requirementId.trim().isEmpty
- ? '—'
- : row.requirementId,
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w700,
- color: Color(0xFF475569),
- ),
- ),
- ),
- // TITLE
- Expanded(
- flex: 3,
- child: Text(
- row.title.trim().isEmpty ? 'Untitled' : row.title,
- overflow: TextOverflow.ellipsis,
- style: TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- color: row.title.trim().isEmpty
- ? const Color(0xFF9CA3AF)
- : const Color(0xFF111827),
- ),
- ),
- ),
+ child: Row(              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // TITLE
+                Expanded(
+                  flex: 4,
+                  child: Text(
+                    row.title.trim().isEmpty ? 'Untitled' : row.title,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: row.title.trim().isEmpty
+                          ? const Color(0xFF9CA3AF)
+                          : const Color(0xFF111827),
+                    ),
+                  ),
+                ),
  // OWNER
  Expanded(
  flex: 1,
@@ -2580,32 +2555,31 @@ class _RequirementsImplementationScreenState
  ),
  // GAP STATUS (badge)
  Expanded(
- flex: 1,
- child: Center(
- child: Container(
- padding: const EdgeInsets.symmetric(
- horizontal: 8, vertical: 4),
- decoration: BoxDecoration(
- color: _gapStatusColor(row.gapStatus).withValues(alpha: 0.1),
- borderRadius: BorderRadius.circular(12),
- ),
- child: Text(
- row.gapStatus,
- style: TextStyle(
- fontSize: 10,
- fontWeight: FontWeight.w600,
- color: _gapStatusColor(row.gapStatus),
- ),
- ),
- ),
- ),
+   flex: 1,
+   child: Center(
+     child: Container(
+       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+       decoration: BoxDecoration(
+         color: _gapStatusColor(row.gapStatus).withValues(alpha: 0.1),
+         borderRadius: BorderRadius.circular(12),
+       ),
+       child: Text(
+         row.gapStatus,
+         style: TextStyle(
+           fontSize: 10,
+           fontWeight: FontWeight.w600,
+           color: _gapStatusColor(row.gapStatus),
+         ),
+       ),
+     ),
+   ),
  ),
  // ACTIONS
  SizedBox(
- width: 80,
- child: Row(
- mainAxisSize: MainAxisSize.min,
- mainAxisAlignment: MainAxisAlignment.center,
+   width: 144,
+   child: Row(
+     mainAxisSize: MainAxisSize.min,
+     mainAxisAlignment: MainAxisAlignment.center,
  children: [
  IconButton(
  icon: const Icon(Icons.edit_outlined,
@@ -2614,8 +2588,8 @@ class _RequirementsImplementationScreenState
  _showRequirementEditDialog(actualIndex),
  tooltip: 'Edit',
  padding: EdgeInsets.zero,
- constraints:
- const BoxConstraints(minWidth: 28, minHeight: 28),
+ constraints: const BoxConstraints.tightFor(
+     width: 48, height: 48),
  ),
  IconButton(
  icon: const Icon(Icons.visibility_outlined,
@@ -2623,8 +2597,8 @@ class _RequirementsImplementationScreenState
  onPressed: () => _showVerificationPopup(actualIndex),
  tooltip: 'View detail',
  padding: EdgeInsets.zero,
- constraints:
- const BoxConstraints(minWidth: 28, minHeight: 28),
+ constraints: const BoxConstraints.tightFor(
+     width: 48, height: 48),
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline,
@@ -2632,8 +2606,8 @@ class _RequirementsImplementationScreenState
  onPressed: () => _deleteRequirement(actualIndex),
  tooltip: 'Delete',
  padding: EdgeInsets.zero,
- constraints:
- const BoxConstraints(minWidth: 28, minHeight: 28),
+ constraints: const BoxConstraints.tightFor(
+     width: 48, height: 48),
  ),
  ],
  ),
@@ -2734,9 +2708,9 @@ class _RequirementsImplementationScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text(
- 'Acceptance criteria & verification — ${selected.requirementId}',
- style: const TextStyle(
+        const Text(
+          'Acceptance criteria & verification',
+          style: TextStyle(
  fontSize: 16,
  fontWeight: FontWeight.w800,
  color: Color(0xFF111827),
@@ -2779,22 +2753,12 @@ class _RequirementsImplementationScreenState
  Padding(
  padding: const EdgeInsets.all(20),
  child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- // Row 1: ID, Owner, Type
- Row(
- children: [
- Expanded(
- child: _buildWebInlineField(
- label: 'Requirement ID',
- value: selected.requirementId,
- onChanged: (v) => _updateSelectedRequirement(
- (r) => r.copyWith(requirementId: v)),
- ),
- ),
- const SizedBox(width: 12),
- Expanded(
- child: _buildWebOwnerDropdown(
+ crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // Row 1: Owner and Type
+            Row(
+              children: [
+                Expanded(
+                  child: _buildWebOwnerDropdown(
  label: 'Owner',
  value: selected.owner,
  options: ownerOptions,
@@ -2803,9 +2767,9 @@ class _RequirementsImplementationScreenState
  ),
  ),
  const SizedBox(width: 12),
- Expanded(
- child: _buildWebDropdownField(
- label: 'Requirement Type',
+                Expanded(
+                  child: _buildWebDropdownField(
+                    label: 'Requirement Type',
  value: selected.requirementType,
  options: const [
  'Functional',
@@ -2995,154 +2959,6 @@ class _RequirementsImplementationScreenState
  ],
  ),
  ),
- ],
- ),
- );
- }
-
- // -------------------------------------------------------------------------
- // 7. Gap & Exception Analysis Panel
- // -------------------------------------------------------------------------
- Widget _buildWebGapAnalysisPanel() {
- final gapItems = _requirementRows
- .where((r) => r.gapStatus.trim().toLowerCase() != 'closed')
- .toList();
-
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: [
- BoxShadow(
- color: Colors.black.withValues(alpha: 0.04),
- blurRadius: 12,
- offset: const Offset(0, 6),
- ),
- ],
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Gap & exception analysis',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w800,
- color: Color(0xFF111827),
- ),
- ),
- const SizedBox(height: 6),
- const Text(
- 'Requirements with unresolved gaps or pending approval status. '
- 'Resolve all gaps before proceeding to Technical Alignment.',
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w500,
- color: Color(0xFF6B7280),
- height: 1.45,
- ),
- ),
- const SizedBox(height: 16),
- if (gapItems.isEmpty)
- Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFF0FDF4),
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFBBF7D0)),
- ),
- child: const Row(
- children: [
- Icon(Icons.check_circle_outline,
- color: Color(0xFF10B981), size: 20),
- SizedBox(width: 10),
- Expanded(
- child: Text(
- 'All requirements have closed gap status. No outstanding exceptions.',
- style: TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w500,
- color: Color(0xFF166534),
- ),
- ),
- ),
- ],
- ),
- )
- else
- ...gapItems.map((row) => Container(
- margin: const EdgeInsets.only(bottom: 12),
- padding: const EdgeInsets.all(14),
- decoration: BoxDecoration(
- color: const Color(0xFFFFFBEB),
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFFDE68A)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- const Icon(Icons.warning_amber_outlined,
- color: Color(0xFFF59E0B), size: 18),
- const SizedBox(width: 8),
- Expanded(
- child: Text(
- '${row.requirementId} · ${row.title}',
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: Color(0xFF92400E),
- ),
- ),
- ),
- Container(
- padding: const EdgeInsets.symmetric(
- horizontal: 8, vertical: 4),
- decoration: BoxDecoration(
- color: _gapStatusColor(row.gapStatus)
- .withValues(alpha: 0.1),
- borderRadius: BorderRadius.circular(12),
- ),
- child: Text(
- row.gapStatus,
- style: TextStyle(
- fontSize: 10,
- fontWeight: FontWeight.w600,
- color: _gapStatusColor(row.gapStatus),
- ),
- ),
- ),
- ],
- ),
- if (row.conflictNote.trim().isNotEmpty) ...[
- const SizedBox(height: 8),
- Text(
- 'Conflict: ${row.conflictNote}',
- style: const TextStyle(
- fontSize: 12,
- color: Color(0xFF92400E),
- height: 1.4,
- ),
- ),
- ],
- if (row.conflictImpact.trim().isNotEmpty &&
- row.conflictImpact.toLowerCase() != 'low') ...[
- const SizedBox(height: 4),
- Text(
- 'Impact: ${row.conflictImpact}',
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- color: Color(0xFFDC2626),
- ),
- ),
- ],
- ],
- ),
- )),
  ],
  ),
  );
@@ -3576,7 +3392,6 @@ class _RequirementsImplementationScreenState
  required bool isNew,
  int? editIndex,
  }) {
- final reqIdController = SpellCheckTextEditingController(text: row.requirementId);
  final titleController = SpellCheckTextEditingController(text: row.title);
  final ownerController = SpellCheckTextEditingController(text: row.owner);
  final definitionController = SpellCheckTextEditingController(text: row.definition);
@@ -3607,8 +3422,8 @@ class _RequirementsImplementationScreenState
  child: Text(
  isNew
  ? 'Add Requirement'
- : 'Edit Requirement — ${row.requirementId}',
- style: const TextStyle(fontSize: 18),
+                : 'Edit Requirement',
+                style: const TextStyle(fontSize: 18),
  ),
  ),
  IconButton(
@@ -3625,21 +3440,8 @@ class _RequirementsImplementationScreenState
  mainAxisSize: MainAxisSize.min,
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- // Row 1: ID, Type
- Row(
- children: [
- Expanded(
- child: VoiceTextField(
- controller: reqIdController,
- decoration: const InputDecoration(
- labelText: 'Requirement ID *',
- isDense: true,
- ),
- ),
- ),
- const SizedBox(width: 12),
- Expanded(
- child: DropdownButtonFormField<String>(
+ // Requirement type
+              DropdownButtonFormField<String>(
  initialValue: selectedReqType,
  decoration: const InputDecoration(
  labelText: 'Requirement Type *',
@@ -3661,11 +3463,9 @@ class _RequirementsImplementationScreenState
  }
  },
  ),
- ),
- ],
- ),
  const SizedBox(height: 12),
- // Title
+              // Title
+
  VoiceTextField(
  controller: titleController,
  decoration: const InputDecoration(
@@ -3927,7 +3727,6 @@ class _RequirementsImplementationScreenState
  FilledButton(
  onPressed: () {
  final committed = row.copyWith(
- requirementId: reqIdController.text.trim(),
  title: titleController.text.trim(),
  owner: ownerController.text.trim(),
  definition: definitionController.text.trim(),
@@ -4542,7 +4341,6 @@ class _VerificationPopupDialog extends StatefulWidget {
 
 class _VerificationPopupDialogState extends State<_VerificationPopupDialog> {
  late RequirementRow _current;
- late TextEditingController _reqIdController;
  late TextEditingController _titleController;
  late TextEditingController _definitionController;
  late TextEditingController _artifactLabelController;
@@ -4555,7 +4353,6 @@ class _VerificationPopupDialogState extends State<_VerificationPopupDialog> {
  void initState() {
  super.initState();
  _current = widget.requirement;
- _reqIdController = SpellCheckTextEditingController(text: _current.requirementId);
  _titleController = SpellCheckTextEditingController(text: _current.title);
  _definitionController = SpellCheckTextEditingController(text: _current.definition);
  _artifactLabelController =
@@ -4571,7 +4368,6 @@ class _VerificationPopupDialogState extends State<_VerificationPopupDialog> {
 
  @override
  void dispose() {
- _reqIdController.dispose();
  _titleController.dispose();
  _definitionController.dispose();
  _artifactLabelController.dispose();
@@ -4620,7 +4416,7 @@ class _VerificationPopupDialogState extends State<_VerificationPopupDialog> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Text(
- 'Acceptance criteria & verification — ${_current.requirementId}',
+ 'Acceptance criteria & verification',
  style: const TextStyle(
  fontSize: 16,
  fontWeight: FontWeight.w800,
@@ -4675,17 +4471,11 @@ class _VerificationPopupDialogState extends State<_VerificationPopupDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- // Row 1: ID, Owner, Type
- _buildPopupRow(
- children: [
- _buildPopupField(
- label: 'Requirement ID',
- controller: _reqIdController,
- onChanged: (v) =>
- _update(_current.copyWith(requirementId: v)),
- ),
- _buildPopupDropdown(
- label: 'Owner',
+ // Row 1: Owner and Requirement Type
+                    _buildPopupRow(
+                      children: [
+                        _buildPopupDropdown(
+                          label: 'Owner',
  value: _current.owner,
  options: widget.ownerOptions,
  onChanged: (v) =>

@@ -24,6 +24,17 @@ on:
     # Daily at 06:23 UTC.
     - cron: '23 6 * * *'
   workflow_dispatch:
+  # `schedule` and `workflow_dispatch` only fire from the default branch, so
+  # until this file lands on `main` (protected — needs review) the push trigger
+  # below is what actually exercises the job. It is also useful long-term:
+  # touching firestore.rules means live and repo now differ until the rules are
+  # deployed, and this run flags exactly that.
+  push:
+    branches: [staging]
+    paths:
+      - firestore.rules
+      - scripts/check_firestore_rules_drift.js
+      - .github/workflows/check-firestore-rules-drift.yml
 
 permissions:
   contents: read

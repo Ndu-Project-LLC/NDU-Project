@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class ProcurementWorkflowStep {
   const ProcurementWorkflowStep({
     required this.id,
@@ -47,7 +49,7 @@ class ProcurementWorkflowStep {
     final parsedUnit = rawUnit == 'month' ? 'month' : 'week';
 
     return ProcurementWorkflowStep(
-      id: rawId.isEmpty ? 'wf_${DateTime.now().microsecondsSinceEpoch}' : rawId,
+      id: rawId.isEmpty ? newId('wf_') : rawId,
       name: rawName.isEmpty ? 'Untitled Step' : rawName,
       duration: parsedDuration,
       unit: parsedUnit,

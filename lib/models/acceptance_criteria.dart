@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 enum WorkItemType {
   epic,
   feature,
@@ -131,7 +133,7 @@ class AcceptanceCriterion {
     this.category = CriterionCategory.functional,
     this.isRequired = true,
     this.isMet = false,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   AcceptanceCriterion copyWith({
     String? description,
@@ -159,7 +161,7 @@ class AcceptanceCriterion {
   factory AcceptanceCriterion.fromJson(Map<String, dynamic> json) {
     return AcceptanceCriterion(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       description: json['description']?.toString() ?? '',
       category:
           CriterionCategory.fromString(json['category']?.toString() ?? ''),
@@ -184,7 +186,7 @@ class AcceptanceCriteriaTemplate {
     this.workItemType = WorkItemType.userStory,
     List<AcceptanceCriterion>? criteria,
     this.format = AcFormat.checklist,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         criteria = criteria ?? [];
 
   double get confidenceScore {
@@ -255,7 +257,7 @@ class AcceptanceCriteriaTemplate {
   factory AcceptanceCriteriaTemplate.fromJson(Map<String, dynamic> json) {
     return AcceptanceCriteriaTemplate(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       name: json['name']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       workItemType:

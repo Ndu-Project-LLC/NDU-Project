@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ContractsTable extends StatefulWidget {
   const ContractsTable({
@@ -560,7 +561,7 @@ class _ResponsiblePickerCell extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Color(0xFFE2E8F0)),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
         child: Row(
           children: [
@@ -611,7 +612,7 @@ class _ResponsiblePickerDialog extends StatefulWidget {
 
 class _ResponsiblePickerDialogState extends State<_ResponsiblePickerDialog> {
   late final TextEditingController _searchController =
-      TextEditingController(text: widget.initialQuery);
+      SpellCheckTextEditingController(text: widget.initialQuery);
 
   @override
   void dispose() {
@@ -724,7 +725,7 @@ class _ExpandableCell extends StatelessWidget {
         text: text,
         maxLines: 1,
         style: const TextStyle(fontSize: 13),
-        expandButtonColor: Colors.blue,
+        expandButtonColor: const Color(0xFFFFC812),
       ),
     );
   }
@@ -770,11 +771,11 @@ class _OwnerBadge extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 10,
-          backgroundColor: Colors.blue[100],
+          backgroundColor: const Color(0xFFFEF3C7),
           child: Text(name[0].toUpperCase(),
-              style: TextStyle(
+              style: const TextStyle(
                   fontSize: 10,
-                  color: Colors.blue[800],
+                  color: Color(0xFFB8860B),
                   fontWeight: FontWeight.bold)),
         ),
         const SizedBox(width: 8),
@@ -800,12 +801,12 @@ class _ContractStatusBadge extends StatelessWidget {
         bg = Colors.grey[100]!;
         break;
       case ContractStatus.under_review:
-        color = Colors.blue[700]!;
-        bg = Colors.blue[50]!;
+        color = const Color(0xFFB8860B);
+        bg = const Color(0xFFFFF8E1);
         break;
       case ContractStatus.approved:
-        color = Colors.purple[700]!;
-        bg = Colors.purple[50]!;
+        color = const Color(0xFFB8860B);
+        bg = const Color(0xFFFFF8E1);
         break;
       case ContractStatus.executed:
         color = Colors.green[700]!;
@@ -843,10 +844,10 @@ class _StatusCell extends StatelessWidget {
     // ... existing logic ...
     final s = status.toLowerCase();
     Color color = Colors.grey;
-    if (s.contains('planning') || s.contains('draft')) color = Colors.blue;
+    if (s.contains('planning') || s.contains('draft')) color = const Color(0xFFFFC812);
     if (s.contains('active') || s.contains('issued')) color = Colors.green;
     if (s.contains('ordered') || s.contains('transit')) color = Colors.orange;
-    if (s.contains('delivered') || s.contains('received')) color = Colors.teal;
+    if (s.contains('delivered') || s.contains('received')) color = const Color(0xFFD97706);
     if (s.contains('cancelled')) color = Colors.red;
 
     return Container(

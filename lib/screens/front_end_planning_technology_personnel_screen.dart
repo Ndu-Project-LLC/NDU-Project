@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/planning_contracting_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -11,6 +12,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class FrontEndPlanningTechnologyPersonnelScreen extends StatefulWidget {
  const FrontEndPlanningTechnologyPersonnelScreen({super.key});
 
@@ -25,7 +27,7 @@ class FrontEndPlanningTechnologyPersonnelScreen extends StatefulWidget {
 
 class _FrontEndPlanningTechnologyPersonnelScreenState
  extends State<FrontEndPlanningTechnologyPersonnelScreen> {
- final TextEditingController _notes = TextEditingController();
+ final TextEditingController _notes = SpellCheckTextEditingController();
  List<TechnologyPersonnelItem> _rows = [];
  bool _isSyncReady = false;
 
@@ -54,7 +56,7 @@ class _FrontEndPlanningTechnologyPersonnelScreenState
  screenTitle: 'Technology Personnel',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
  ],
@@ -84,12 +86,12 @@ class _FrontEndPlanningTechnologyPersonnelScreenState
 
  Future<void> _upsertRow({TechnologyPersonnelItem? existing}) async {
  final technologyController =
- TextEditingController(text: existing?.technologyArea ?? '');
+ SpellCheckTextEditingController(text: existing?.technologyArea ?? '');
  final ownerController =
- TextEditingController(text: existing?.primaryOwner ?? '');
+ SpellCheckTextEditingController(text: existing?.primaryOwner ?? '');
  final supportController =
- TextEditingController(text: existing?.backupSupport ?? '');
- final notesController = TextEditingController(text: existing?.notes ?? '');
+ SpellCheckTextEditingController(text: existing?.backupSupport ?? '');
+ final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
 
  try {
  final result = await showDialog<TechnologyPersonnelItem>(
@@ -154,7 +156,7 @@ class _FrontEndPlanningTechnologyPersonnelScreenState
  Navigator.of(dialogContext).pop(
  TechnologyPersonnelItem(
  id: existing?.id ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  number: existing?.number ?? (_rows.length + 1),
  technologyArea: technology,
  primaryOwner: ownerController.text.trim(),
@@ -376,7 +378,7 @@ class _BottomOverlay extends StatelessWidget {
  height: 44,
  child: ElevatedButton(
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  ),
  onPressed: onSubmit,

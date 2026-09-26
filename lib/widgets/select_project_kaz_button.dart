@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// A world-class "Select Project" button styled with KAZ AI chat bubble theme.
 /// Features smooth animations, gradient backgrounds, and exceptional visual design.
@@ -137,7 +138,7 @@ class _SelectProjectKazButtonState extends State<SelectProjectKazButton>
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
                         child: const Icon(
-                          Icons.psychology_rounded,
+                          Icons.chat_bubble_rounded,
                           color: Colors.white,
                           size: 14,
                         ),
@@ -214,7 +215,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
   @override
   void initState() {
     super.initState();
-    _projectNameController = TextEditingController();
+    _projectNameController = SpellCheckTextEditingController();
     _tabController =
         TabController(length: widget.solutions.length, vsync: this);
   }
@@ -317,7 +318,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
                         child: const Icon(
-                          Icons.psychology_rounded,
+                          Icons.chat_bubble_rounded,
                           color: Colors.white,
                           size: 22,
                         ),
@@ -427,7 +428,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
                         errorText: _projectNameError,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey, width: 1),
+                          borderSide: const BorderSide(color: Colors.grey, width: 1),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -438,7 +439,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide:
-                              BorderSide(color: Color(0xFFFFC812), width: 2),
+                              const BorderSide(color: Color(0xFFFFC812), width: 2),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),

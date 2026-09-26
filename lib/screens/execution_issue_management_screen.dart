@@ -18,6 +18,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -26,7 +27,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Issue Management',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -50,7 +51,7 @@ class ExecutionIssueManagementScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Issue Management',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -251,7 +252,7 @@ class _IssuesManagementSectionState extends State<_IssuesManagementSection> {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Issues',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'issueTopic',
                       label: 'Issue Topic',
@@ -340,7 +341,7 @@ class _IssuesManagementSectionState extends State<_IssuesManagementSection> {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileIssueManagementActions()
+          const _MobileIssueManagementActions()
         else
           const _DesktopIssueManagementActions(),
       ],
@@ -447,19 +448,19 @@ class _IssuesManagementTable extends StatelessWidget {
       BuildContext context, ExecutionIssueModel? issue, String projectId) {
     final isEdit = issue != null;
     final topicController =
-        TextEditingController(text: issue?.issueTopic ?? '');
+        SpellCheckTextEditingController(text: issue?.issueTopic ?? '');
     final descriptionController =
-        TextEditingController(text: issue?.description ?? '');
+        SpellCheckTextEditingController(text: issue?.description ?? '');
     final disciplineController =
-        TextEditingController(text: issue?.discipline ?? '');
+        SpellCheckTextEditingController(text: issue?.discipline ?? '');
     final raisedByController =
-        TextEditingController(text: issue?.raisedBy ?? '');
+        SpellCheckTextEditingController(text: issue?.raisedBy ?? '');
     final scheduleImpactController =
-        TextEditingController(text: issue?.scheduleImpact ?? '');
+        SpellCheckTextEditingController(text: issue?.scheduleImpact ?? '');
     final costImpactController =
-        TextEditingController(text: issue?.costImpact ?? '');
+        SpellCheckTextEditingController(text: issue?.costImpact ?? '');
     final commentsController =
-        TextEditingController(text: issue?.comments ?? '');
+        SpellCheckTextEditingController(text: issue?.comments ?? '');
     bool approved = issue?.approved ?? false;
 
     showDialog(

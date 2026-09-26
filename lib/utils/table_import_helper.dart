@@ -1,11 +1,14 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart' as loader;
 import 'package:ndu_project/utils/csv_import_helper.dart';
 
+import 'package:excel/excel.dart' hide Border;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Reusable helper for table-level CSV/Excel import + template download.
 ///
@@ -107,6 +110,15 @@ class TableImportHelper {
         '[TableImportHelper] Spec template downloaded: $filename (${columns.length} columns)');
   }
 
+  /// Convenience wrapper: downloads the two-sheet Excel template for a named
+  /// table, deriving the filename from [tableTitle].
+  static void downloadExcelTemplateForTable({
+    required String tableTitle,
+    required List<CsvColumnSpec> columns,
+  }) {
+    downloadExcelTemplate(tableTitle: tableTitle, columns: columns);
+  }
+
   /// Convenience wrapper that derives the filename from [tableTitle] and
   /// downloads the template using [CsvColumnSpec] columns.
   static void downloadTemplateForTable({
@@ -117,6 +129,93 @@ class TableImportHelper {
       filename: templateFilenameFromTitle(tableTitle),
       columns: columns,
     );
+  }
+
+  // ─── Excel (two-sheet) template ─────────────────────────────────────────
+  //
+  // The owner asked for a definitions tab on the downloaded template so the
+  // import cannot trip over its own instructions:
+  //
+  //   "you add the second tab for definitions?" … "under when they import the
+  //    Excel, it does not give them error" (Lusaka 25)
+  //
+  // Sheet 1 `Data` holds the numbered rows the importer reads. Sheet 2
+  // `Definitions` documents each column. Importers must only read the Data
+  // sheet — `CsvImportHelper.dataSheetName` / `definitionsSheetName` name the
+  // two so a reader can find them whatever order the workbook came in.
+
+  /// Builds a `.xlsx` template with a numbered `Data` sheet and a
+  /// `Definitions` sheet documenting every column.
+  static Uint8List buildExcelTemplate({
+    required String tableTitle,
+    required List<CsvColumnSpec> columns,
+  }) {
+    final excel = Excel.createExcel();
+
+    // The default sheet is created as 'Sheet1' — rename it to the data sheet.
+    final dataSheet = excel[CsvImportHelper.dataSheetName];
+    excel.delete(excel.getDefaultSheet()!);
+
+    final headerStyle = CellStyle(bold: true);
+    final headers = <String>[
+      CsvImportHelper.numberColumnLabel,
+      ...columns.map((c) => c.label),
+    ];
+    for (var c = 0; c < headers.length; c++) {
+      final cell = dataSheet.cell(
+        CellIndex.indexByColumnRow(columnIndex: c, rowIndex: 0),
+      );
+      cell.value = TextCellValue(headers[c]);
+      cell.cellStyle = headerStyle;
+    }
+
+    // Two numbered sample rows, matching the hints column-generation used by
+    // the CSV template so users have something concrete to overwrite. The
+    // second row is only written when it adds information, and it repeats the
+    // required columns so the example rows validate on import.
+    final samples = <List<String>>[
+      ['1', ...CsvImportHelper.primarySampleValues(columns)],
+      if (CsvImportHelper.hasAlternateSampleRow(columns))
+        ['2', ...CsvImportHelper.alternateSampleValues(columns)],
+    ];
+    for (var r = 0; r < samples.length; r++) {
+      for (var c = 0; c < samples[r].length; c++) {
+        dataSheet
+            .cell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: r + 1))
+            .value = TextCellValue(samples[r][c]);
+      }
+    }
+
+    final definitionsSheet = excel[CsvImportHelper.definitionsSheetName];
+    final definitionRows = CsvImportHelper.generateDefinitionRows(columns);
+    for (var r = 0; r < definitionRows.length; r++) {
+      for (var c = 0; c < definitionRows[r].length; c++) {
+        final cell = definitionsSheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: c, rowIndex: r),
+        );
+        cell.value = TextCellValue(definitionRows[r][c]);
+        if (r == 0) cell.cellStyle = headerStyle;
+      }
+    }
+
+    debugPrint(
+        '[TableImportHelper] Excel template built for "$tableTitle" (${columns.length} columns)');
+    return Uint8List.fromList(excel.encode() ?? const []);
+  }
+
+  /// Downloads the two-sheet Excel template ([buildExcelTemplate]).
+  static void downloadExcelTemplate({
+    required String tableTitle,
+    required List<CsvColumnSpec> columns,
+  }) {
+    final filename = CsvImportHelper.excelTemplateFilename(tableTitle);
+    loader.downloadFile(
+      buildExcelTemplate(tableTitle: tableTitle, columns: columns),
+      filename,
+      mimeType:
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    debugPrint('[TableImportHelper] Excel template downloaded: $filename');
   }
 
   /// Opens a file picker for .csv/.xlsx/.txt files, reads the content,
@@ -193,7 +292,7 @@ class TableImportHelper {
     required List<String> headers,
     required List<List<String>> sampleRows,
   }) async {
-    final controller = TextEditingController();
+    final controller = SpellCheckTextEditingController();
     final filename = '${tableTitle.toLowerCase().replaceAll(' ', '_')}_template.csv';
 
     return showDialog<List<List<String>>>(
@@ -217,13 +316,13 @@ class TableImportHelper {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0F9FF),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFBAE6FD)),
+                    border: Border.all(color: const Color(0xFFFEF3C7)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, size: 16, color: Color(0xFF0284C7)),
+                      const Icon(Icons.info_outline, size: 16, color: Color(0xFFFFC812)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -266,9 +365,9 @@ class TableImportHelper {
                         label: const Text('Download Template',
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF059669),
-                          side: const BorderSide(color: Color(0xFFD1FAE5)),
-                          backgroundColor: const Color(0xFFF0FDF4),
+                          foregroundColor: const Color(0xFFB45309),
+                          side: const BorderSide(color: Color(0xFFFFC812)),
+                          backgroundColor: const Color(0xFFFFF8E1),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
@@ -301,8 +400,8 @@ class TableImportHelper {
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF4338CA),
-                          side: const BorderSide(color: Color(0xFFDDD6FE)),
-                          backgroundColor: const Color(0xFFF5F3FF),
+                          side: const BorderSide(color: Color(0xFFFEF3C7)),
+                          backgroundColor: const Color(0xFFFFF8E1),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),

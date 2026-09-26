@@ -1,13 +1,13 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/screens/gap_analysis_scope_reconcillation_screen.dart';
-import 'package:ndu_project/screens/risk_tracking_workspace_screen.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -24,6 +24,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ScopeCompletionScreen extends StatefulWidget {
   const ScopeCompletionScreen({super.key});
 
@@ -36,32 +37,32 @@ class ScopeCompletionScreen extends StatefulWidget {
 }
 
 class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
-  final TextEditingController _overviewController = TextEditingController();
+  final TextEditingController _overviewController = SpellCheckTextEditingController();
   final TextEditingController _statusSummaryController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _sponsorSummaryController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _changeSummaryController =
-      TextEditingController();
+      SpellCheckTextEditingController();
 
   final TextEditingController _deliveredPercentController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _deliveredStatusController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _deferredCountController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _deferredStatusController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _criticalGapCountController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _criticalGapStatusController =
-      TextEditingController();
+      SpellCheckTextEditingController();
 
   final TextEditingController _approvedChangesController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _unapprovedChangesController =
-      TextEditingController();
-  final TextEditingController _openRequestsController = TextEditingController();
+      SpellCheckTextEditingController();
+  final TextEditingController _openRequestsController = SpellCheckTextEditingController();
 
   final List<_WorkPackageItem> _workPackages = [];
   final List<_CheckpointItem> _acceptanceCheckpoints = [];
@@ -508,13 +509,13 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                   .where((s) => s.toLowerCase() == statusStr.toLowerCase())
                   .isNotEmpty
               ? _changeStatuses
-                  .firstWhere((s) => s.toLowerCase() == statusStr.toLowerCase())
+                  .where((s) => s.toLowerCase() == statusStr.toLowerCase()).firstOrNull!
               : 'Open';
           final matchedType = _changeTypes
                   .where((t) => t.toLowerCase() == changeType.toLowerCase())
                   .isNotEmpty
-              ? _changeTypes.firstWhere(
-                  (t) => t.toLowerCase() == changeType.toLowerCase())
+              ? _changeTypes.where(
+                  (t) => t.toLowerCase() == changeType.toLowerCase()).firstOrNull!
               : 'Scope';
           return _ScopeChangeItem(
             id: _newId(),
@@ -524,8 +525,8 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             impactLevel: _impactLevels
                     .where((i) => i.toLowerCase() == impactLevel.toLowerCase())
                     .isNotEmpty
-                ? _impactLevels.firstWhere(
-                    (i) => i.toLowerCase() == impactLevel.toLowerCase())
+                ? _impactLevels.where(
+                    (i) => i.toLowerCase() == impactLevel.toLowerCase()).firstOrNull!
                 : 'Medium',
             requestedBy: requestedBy,
             status: matchedStatus,
@@ -553,7 +554,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
         style:
             textTheme.bodyMedium ?? const TextStyle(fontFamily: appFontFamily),
         child: Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: SafeArea(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,11 +584,9 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                             _buildTipRow(context),
                             const SizedBox(height: 24),
                             LaunchPhaseNavigation(
-                              backLabel: 'Back: Risk Tracking',
-                              nextLabel:
-                                  'Next: Gap Analysis & Scope Reconciliation',
-                              onBack: () =>
-                                  RiskTrackingWorkspaceScreen.open(context),
+                              backLabel: PlanningPhaseNavigation.backLabel('scope_completion'),
+                              nextLabel: PlanningPhaseNavigation.nextLabel('scope_completion'),
+                              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'scope_completion'),
                               onNext: () =>
                                   GapAnalysisScopeReconcillationScreen.open(
                                       context),
@@ -596,8 +595,8 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                           ],
                         ),
                       ),
-                      MobileSidebarHamburger(
-                        sidebar: const InitiationLikeSidebar(
+                      const MobileSidebarHamburger(
+                        sidebar: InitiationLikeSidebar(
                           activeItemLabel: 'Scope Completion',
                         ),
                       ),
@@ -743,9 +742,9 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -798,7 +797,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
@@ -818,7 +817,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           ),
           const SizedBox(height: 6),
           if (_workPackages.isEmpty)
-            _InlineEmptyState(
+            const _InlineEmptyState(
               title: 'No work packages yet',
               message:
                   'Add work packages to track delivered scope against baseline.',
@@ -897,7 +896,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -1151,11 +1150,11 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   Color _signalCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'sponsor':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'operations':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'technical':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       case 'regulatory':
         return const Color(0xFFEA580C);
       default:
@@ -1166,13 +1165,13 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   Color _changeTypeColor(String type) {
     switch (type.toLowerCase()) {
       case 'scope':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'budget':
         return const Color(0xFFD97706);
       case 'schedule':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'quality':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       default:
         return const Color(0xFF6B7280);
     }
@@ -1187,7 +1186,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       case 'deferred':
         return const Color(0xFFD97706);
       case 'open':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       default:
         return const Color(0xFF6B7280);
     }
@@ -1216,12 +1215,12 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
 
   Future<void> _showWorkPackageDialog([_WorkPackageItem? existing]) async {
     final isEdit = existing != null;
-    final titleCtl = TextEditingController(text: existing?.title ?? '');
-    final ownerCtl = TextEditingController(text: existing?.owner ?? '');
-    final milestoneCtl = TextEditingController(text: existing?.milestone ?? '');
-    final wbsCtl = TextEditingController(text: existing?.wbsCode ?? '');
-    final notesCtl = TextEditingController(text: existing?.notes ?? '');
-    final pctCtl = TextEditingController(
+    final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
+    final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+    final milestoneCtl = SpellCheckTextEditingController(text: existing?.milestone ?? '');
+    final wbsCtl = SpellCheckTextEditingController(text: existing?.wbsCode ?? '');
+    final notesCtl = SpellCheckTextEditingController(text: existing?.notes ?? '');
+    final pctCtl = SpellCheckTextEditingController(
         text: (existing?.percentComplete ?? 0).toString());
     String status = existing?.status ?? _workStatuses.first;
     String impact = existing?.impact ?? _impactLevels[2]; // Medium
@@ -1512,7 +1511,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
@@ -1531,7 +1530,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           ),
           const SizedBox(height: 6),
           if (_acceptanceCheckpoints.isEmpty)
-            _InlineEmptyState(
+            const _InlineEmptyState(
               title: 'No checkpoints yet',
               message: 'List the acceptance checkpoints for sponsor sign-off.',
               icon: Icons.checklist_outlined,
@@ -1603,7 +1602,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -1748,11 +1747,11 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
 
   Future<void> _showCheckpointDialog([_CheckpointItem? existing]) async {
     final isEdit = existing != null;
-    final titleCtl = TextEditingController(text: existing?.title ?? '');
-    final ownerCtl = TextEditingController(text: existing?.owner ?? '');
-    final refCodeCtl = TextEditingController(text: existing?.refCode ?? '');
-    final evidenceCtl = TextEditingController(text: existing?.evidence ?? '');
-    final notesCtl = TextEditingController(text: existing?.notes ?? '');
+    final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
+    final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+    final refCodeCtl = SpellCheckTextEditingController(text: existing?.refCode ?? '');
+    final evidenceCtl = SpellCheckTextEditingController(text: existing?.evidence ?? '');
+    final notesCtl = SpellCheckTextEditingController(text: existing?.notes ?? '');
     String status = existing?.status ?? _checkpointStatuses.first;
     DateTime? dueDate = existing?.dueDate;
     DateTime? signOffDate = existing?.signOffDate;
@@ -1972,7 +1971,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
@@ -1989,7 +1988,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           ),
           const SizedBox(height: 6),
           if (_acceptanceTags.isEmpty)
-            _InlineEmptyState(
+            const _InlineEmptyState(
               title: 'No acceptance signals yet',
               message: 'Add sponsor and operations acceptance signals.',
               icon: Icons.verified_outlined,
@@ -2046,7 +2045,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -2169,10 +2168,10 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
 
   Future<void> _showAcceptanceTagDialog([_AcceptanceTagItem? existing]) async {
     final isEdit = existing != null;
-    final labelCtl = TextEditingController(text: existing?.label ?? '');
+    final labelCtl = SpellCheckTextEditingController(text: existing?.label ?? '');
     final verifiedByCtl =
-        TextEditingController(text: existing?.verifiedBy ?? '');
-    final notesCtl = TextEditingController(text: existing?.notes ?? '');
+        SpellCheckTextEditingController(text: existing?.verifiedBy ?? '');
+    final notesCtl = SpellCheckTextEditingController(text: existing?.notes ?? '');
     String status = existing?.status ?? _checkpointStatuses.first;
     String category = existing?.category ?? _signalCategories.first;
     DateTime? dateVerified = existing?.dateVerified;
@@ -2406,7 +2405,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(
@@ -2428,7 +2427,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           ),
           const SizedBox(height: 6),
           if (_scopeChanges.isEmpty)
-            _InlineEmptyState(
+            const _InlineEmptyState(
               title: 'No scope changes yet',
               message: 'Add the most impactful scope changes.',
               icon: Icons.swap_horiz_outlined,
@@ -2498,7 +2497,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -2653,11 +2652,11 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
 
   Future<void> _showScopeChangeDialog([_ScopeChangeItem? existing]) async {
     final isEdit = existing != null;
-    final detailCtl = TextEditingController(text: existing?.detail ?? '');
-    final crIdCtl = TextEditingController(text: existing?.crId ?? '');
+    final detailCtl = SpellCheckTextEditingController(text: existing?.detail ?? '');
+    final crIdCtl = SpellCheckTextEditingController(text: existing?.crId ?? '');
     final requestedByCtl =
-        TextEditingController(text: existing?.requestedBy ?? '');
-    final notesCtl = TextEditingController(text: existing?.notes ?? '');
+        SpellCheckTextEditingController(text: existing?.requestedBy ?? '');
+    final notesCtl = SpellCheckTextEditingController(text: existing?.notes ?? '');
     String changeType = existing?.changeType ?? _changeTypes.first;
     String impactLevel = existing?.impactLevel ?? _impactLevels[2]; // Medium
     String status = existing?.status ?? _changeStatuses.first;
@@ -2902,15 +2901,15 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFF93C5FD)),
+        borderSide: const BorderSide(color: Color(0xFFFFC812)),
       ),
     );
   }
@@ -2922,7 +2921,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Color(0xFFF3F4F6),
+        color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -3000,9 +2999,9 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(0xFFF9FAFB),
+                color: const Color(0xFFF9FAFB),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Color(0xFFE5E7EB)),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: Text(
                 badge,
@@ -3217,17 +3216,17 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       showDeleteSuccessSnackBar(context, itemLabel: 'Scope Change');
   }
 
-  String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+  String _newId() => newId();
 
   Widget _buildTipRow(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
-        Icon(Icons.lightbulb_outline, size: 18, color: const Color(0xFFFFC812)),
-        const SizedBox(width: 8),
+        Icon(Icons.lightbulb_outline, size: 18, color: Color(0xFFFFC812)),
+        SizedBox(width: 8),
         Expanded(
           child: Text(
             'If someone reads only this page, can they quickly see what was delivered, what moved, and that the right people have agreed?',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 13,
                 color: Color(0xFF9CA3AF),
                 fontStyle: FontStyle.italic),
@@ -3244,8 +3243,8 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       screenTitle: 'Scope Completion',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',
@@ -3271,7 +3270,7 @@ class _ContentCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: child,
     );
@@ -3384,9 +3383,9 @@ class _InlineEmptyState extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
@@ -3494,7 +3493,7 @@ class _WorkPackageItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _WorkPackageItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: map['title']?.toString() ?? '',
         owner: map['owner']?.toString() ?? '',
         milestone: map['milestone']?.toString() ?? '',
@@ -3584,7 +3583,7 @@ class _CheckpointItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _CheckpointItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: map['title']?.toString() ?? '',
         owner: map['owner']?.toString() ?? '',
         status: map['status']?.toString() ?? 'Pending',
@@ -3657,7 +3656,7 @@ class _AcceptanceTagItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _AcceptanceTagItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         label: map['label']?.toString() ?? '',
         status: map['status']?.toString() ?? 'Pending',
         category: map['category']?.toString() ?? 'Sponsor',
@@ -3743,7 +3742,7 @@ class _ScopeChangeItem {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _ScopeChangeItem(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         detail: map['detail']?.toString() ?? '',
         crId: map['crId']?.toString() ?? '',
         changeType: map['changeType']?.toString() ?? 'Scope',

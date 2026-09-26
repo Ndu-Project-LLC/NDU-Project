@@ -1,0 +1,39 @@
+How did you rank in your high school, in your final year in maths and hard sciences? Which was your strongest?
+
+We were about 40 students in mathematics and the sciences, and I finished in the top five. Biology was my strongest subject by some distance. Nature and ecosystems interested me in a way the rest of the syllabus didn't, which probably explains it.
+
+How did you rank in your high school, in your final year in languages and the arts? Which was your strongest?
+
+English, and I was in the top two. It didn't come naturally at first. We had a teacher that year who pushed hard, and I spent the month before the exams learning at least 20 idioms a day, because that was where I kept losing marks.
+
+Please state your high school graduation results or university entrance results, along with the system used, and how to understand those. For example, in the US, you might give your SAT or ACT scores. In Germany, you might rate your scores from 1 to 5.
+
+Zambia uses a 1 to 9 scale, managed by the Examinations Council of Zambia, for high school and School Certificate results: - 1-2 (Distinction): 70% to 100%, high excellence. - 3-4 (Merit): 60% to 69%, good mastery. - 5-6 (Credit): 50% to 59%, meets the standard requirement. - 7-8 (Satisfactory): 40% to 49%, a basic pass. - 9 (Unsatisfactory): below 40%, a fail in the subject. Distinctions in the sciences — Physics, Chemistry and Biology — and 9 points across my top five subjects: - Mathematics: 3 - English: 1 - Physical Science (Physics & Chemistry): 1 - History: 3 - Biology: 1
+
+What sort of high school student were you? Outside of class, what were your interests and hobbies?
+
+Technically curious, and involved in everything. Engineering, computing and science were what I actually cared about, and mostly I wanted to know how things worked. I was Vice President of the Junior Engineers and Technicians (JETS) club, which was my first proper experience of working with other people on technical projects and of leading anything at all. School Prefect and an appointed Librarian as well, so I wasn't short of things to do outside class. JETS mattered because it moved me from learning concepts to applying them. Experimenting, breaking things, arguing about ideas with other students who cared about the same problems. Computers were already the main interest by then. I wanted to understand how software worked rather than just use it, which is what eventually sent me into programming and then into Computer Science at university. Looking back, the pattern is fairly consistent: technical problems, practical experimentation, leadership. Not much has changed.
+
+Which university and degree did you choose? What other universities did you consider, and why did you select that one?
+
+The University of Zambia, Computer Science. That wasn't straightforward. I was seriously considering a traditional engineering path at the same time, because both appealed to the same instinct — I want to understand how things are built. The combination settled it. UNZA let me study Computer Science in a solid academic environment while staying close to Zambia's technology community. The programme covered programming, algorithms, databases, software engineering, systems and computer architecture. That was broad enough to explore before committing to anything. There were practical constraints as well. Where I could study, which programmes existed locally, whether I could build a career from Zambia while staying exposed to international work. I didn't read those as limitations so much as the starting point I had. The curriculum was the floor, not the ceiling. I looked at other universities and other degree paths, mostly engineering-oriented ones, before deciding. Computer Science won because it was closer to the problems I wanted to work on. Software can build systems, automate processes, and solve problems at a scale physical infrastructure on its own can't. It's one of the decisions I'd point to as consequential. It gave me the base to move between software engineering, product work, support, entrepreneurship and building technology for real-world problems. It also taught me the thing I still believe most: the useful part of an education isn't the material, it's being able to keep learning when the problem changes.
+
+At university, did you do particularly well in any area of your degree?
+
+Software engineering, programming and practical problem-solving. I was less interested in the assessments than in how systems worked underneath, and I enjoyed the coursework that let me turn a concept into something that ran. I gravitated towards projects that forced me to combine subjects instead of treating them separately, which is where my interest in software architecture, backend systems and databases comes from. The part of university that mattered most wasn't the curriculum, though. I spent a lot of time building things outside class, and that led to co-founding DawaMom and to the leadership work in the University of Zambia Computer Society.
+
+At high school or university, can you outline some of your achievements which were considered exceptional by your peers and staff members?
+
+Leadership and initiative, mostly. I was Vice President of the University of Zambia Computer Society and later Acting President. In practice that meant bringing students together around technology, supporting initiatives within the computing community, and learning to run something when there is no playbook to follow. The other one was DawaMom, which I co-founded while still studying. It had more effect on me than anything else I did at university. We were exploring how technology, data and screening tools could support maternal healthcare in communities short of both. Building something with a real purpose as a student is difficult, and it forced me to think past the assignment: who the users are, what environment they work in, what happens when the technology gets it wrong. People seemed to notice that I didn't wait to be told what to do. I was more interested in building something or fixing something than in being handed a task.
+
+Overall, what was your degree result and how did that reflect on your ability?
+
+I haven't finished the degree. I intend to. So there's no classification to give you. What I'd point to instead is everything that happened alongside it: practical software engineering well beyond the curriculum, technology entrepreneurship, leadership, and products built around real problems. Co-founding DawaMom. Serving as Vice President and then Acting President of the University of Zambia Computer Society. Then professional experience across backend development, mobile and web, cloud platforms, technical support and product work. That's what I'd want to be measured on, although I'm aware it's a convenient answer.
+
+In high school and university, what did you achieve that you think was exceptional?
+
+Around 2019, while I was at university, I co-founded DawaMom: a data intelligence platform for maternal care, giving last-mile clinics across Sub-Saharan Africa an integrable imaging and screening platform to streamline diagnosis and clinical decision-making.
+
+What leadership roles did you take on during your education?
+
+At the University of Zambia I held two roles in the University of Zambia Computer Society: Vice President, then Acting President. I coordinated student-led technology initiatives, helped organise technical events and activities, represented students in the computing community, and worked with other students to promote collaboration, innovation and practical technology skills. Acting President meant taking organisational responsibility and keeping things moving through a transition, which was the more instructive of the two.

@@ -26,12 +26,12 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/responsive.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -63,10 +63,10 @@ class _AgileProjectBaselineScreenState
  'Other',
  ];
 
- final TextEditingController _releaseLabelController = TextEditingController();
- final TextEditingController _capacityController = TextEditingController();
+ final TextEditingController _releaseLabelController = SpellCheckTextEditingController();
+ final TextEditingController _capacityController = SpellCheckTextEditingController();
  final TextEditingController _approverSearchController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final FocusNode _approverFocusNode = FocusNode();
  final TextEditingController _approvalNotesController =
  RichTextEditingController();
@@ -514,7 +514,7 @@ class _AgileProjectBaselineScreenState
  add(
  'No formal risk register entries',
  'The risk register is empty, so only inferred risk is available.',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  );
  }
  return items;
@@ -1060,7 +1060,7 @@ onBack: () =>
  children: [
  _MiniPill(
  label: '$_formalRiskCount formal risks',
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFFFC812),
  ),
  _MiniPill(
  label: '$_highRiskCount high formal risks',
@@ -1070,7 +1070,7 @@ onBack: () =>
  ),
  _MiniPill(
  label: '$_dependencyCount dependencies',
- color: const Color(0xFF8B5CF6),
+ color: const Color(0xFFB8860B),
  ),
  _MiniPill(
  label: '$_blockedDependencyCount unresolved deps',
@@ -1122,8 +1122,8 @@ onBack: () =>
  screenTitle: 'Agile Project Baseline',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_agile_project_baseline_notes'] ?? 'No data recorded.'),
  ],
@@ -1150,7 +1150,7 @@ class _TopHeader extends StatelessWidget {
  Widget build(BuildContext context) {
  final statusColor = switch (status) {
  'Approved' => const Color(0xFF10B981),
- 'Ready' => const Color(0xFF2563EB),
+ 'Ready' => const Color(0xFFFFC812),
  _ => const Color(0xFFF59E0B),
  };
 
@@ -1340,7 +1340,7 @@ class _MetricsRow extends StatelessWidget {
  label: 'Capacity Threshold',
  value:
  capacityThreshold == null ? 'Not set' : '$capacityThreshold pts',
- accent: const Color(0xFF2563EB),
+ accent: const Color(0xFFFFC812),
  ),
  _MetricCard(
  label: 'Total Planned Points',
@@ -1350,12 +1350,12 @@ class _MetricsRow extends StatelessWidget {
  _MetricCard(
  label: 'Epic Story Points',
  value: epicTotalPoints.toStringAsFixed(0),
- accent: const Color(0xFF8B5CF6),
+ accent: const Color(0xFFB8860B),
  ),
  _MetricCard(
  label: 'Sprint Count',
  value: '$sprintCount',
- accent: const Color(0xFFEC4899),
+ accent: const Color(0xFFD97706),
  ),
  _MetricCard(
  label: 'Highest Sprint Load',
@@ -1853,6 +1853,7 @@ class _ApproverAutocomplete extends StatelessWidget {
  child: ListView.separated(
  padding: const EdgeInsets.symmetric(vertical: 6),
  shrinkWrap: true,
+ physics: const NeverScrollableScrollPhysics(),
  itemCount: list.length,
  separatorBuilder: (_, __) =>
  const Divider(height: 1, color: _kBorder),
@@ -1871,7 +1872,7 @@ class _ApproverAutocomplete extends StatelessWidget {
  Icon(
  isCreate ? Icons.add_circle : Icons.person,
  size: 18,
- color: isCreate ? Colors.blue : _kMuted,
+ color: isCreate ? const Color(0xFFFFC812) : _kMuted,
  ),
  const SizedBox(width: 8),
  Expanded(
@@ -1881,7 +1882,7 @@ class _ApproverAutocomplete extends StatelessWidget {
  : option,
  style: TextStyle(
  fontSize: 14,
- color: isCreate ? Colors.blue : _kHeadline,
+ color: isCreate ? const Color(0xFFFFC812) : _kHeadline,
  ),
  ),
  ),
@@ -1933,7 +1934,7 @@ class _AssumptionRowState {
  required this.impact,
  required String text,
  required VoidCallback onChanged,
- }) : textController = TextEditingController(text: text) {
+ }) : textController = SpellCheckTextEditingController(text: text) {
  textController.addListener(onChanged);
  _listener = onChanged;
  }

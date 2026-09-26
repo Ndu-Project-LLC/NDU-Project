@@ -67,21 +67,21 @@ extension CMChangeTypeMeta on CMChangeType {
       };
 
   Color get color => switch (this) {
-        CMChangeType.scope => const Color(0xFF6366F1),
-        CMChangeType.schedule => const Color(0xFF8B5CF6),
+        CMChangeType.scope => const Color(0xFFB8860B),
+        CMChangeType.schedule => const Color(0xFFB8860B),
         CMChangeType.cost => const Color(0xFFD97706),
-        CMChangeType.resource => const Color(0xFF06B6D4),
+        CMChangeType.resource => const Color(0xFFD97706),
         CMChangeType.procurement => const Color(0xFF10B981),
-        CMChangeType.contract => const Color(0xFF3B82F6),
+        CMChangeType.contract => const Color(0xFFFFC812),
         CMChangeType.risk => const Color(0xFFEF4444),
-        CMChangeType.quality => const Color(0xFF14B8A6),
+        CMChangeType.quality => const Color(0xFFD97706),
         CMChangeType.regulatory => const Color(0xFF6B7280),
         CMChangeType.product => const Color(0xFFF59E0B),
-        CMChangeType.requirements => const Color(0xFFEC4899),
-        CMChangeType.technical => const Color(0xFF6366F1),
+        CMChangeType.requirements => const Color(0xFFD97706),
+        CMChangeType.technical => const Color(0xFFB8860B),
         CMChangeType.defect => const Color(0xFFEF4444),
         CMChangeType.compliance => const Color(0xFF6B7280),
-        CMChangeType.operational => const Color(0xFF06B6D4),
+        CMChangeType.operational => const Color(0xFFD97706),
       };
 }
 
@@ -116,13 +116,13 @@ extension CMStatusMeta on CMStatus {
 
   Color get color => switch (this) {
         CMStatus.draft => const Color(0xFF6B7280),
-        CMStatus.submitted => const Color(0xFF3B82F6),
+        CMStatus.submitted => const Color(0xFFFFC812),
         CMStatus.underReview => const Color(0xFFF59E0B),
-        CMStatus.pendingApproval => const Color(0xFF8B5CF6),
+        CMStatus.pendingApproval => const Color(0xFFB8860B),
         CMStatus.approved => const Color(0xFF10B981),
         CMStatus.rejected => const Color(0xFFEF4444),
-        CMStatus.returned => const Color(0xFFEC4899),
-        CMStatus.implemented => const Color(0xFF06B6D4),
+        CMStatus.returned => const Color(0xFFD97706),
+        CMStatus.implemented => const Color(0xFFD97706),
         CMStatus.closed => const Color(0xFF6B7280),
         CMStatus.emergency => const Color(0xFFDC2626),
       };
@@ -145,7 +145,7 @@ extension CMPriorityMeta on CMPriority {
 
   Color get color => switch (this) {
         CMPriority.low => const Color(0xFF10B981),
-        CMPriority.medium => const Color(0xFF3B82F6),
+        CMPriority.medium => const Color(0xFFFFC812),
         CMPriority.high => const Color(0xFFF59E0B),
         CMPriority.critical => const Color(0xFFEF4444),
         CMPriority.emergency => const Color(0xFFDC2626),
@@ -189,9 +189,9 @@ extension ApprovalDecisionMeta on ApprovalDecision {
         ApprovalDecision.pending => const Color(0xFFF59E0B),
         ApprovalDecision.approved => const Color(0xFF10B981),
         ApprovalDecision.rejected => const Color(0xFFEF4444),
-        ApprovalDecision.requestInfo => const Color(0xFF3B82F6),
-        ApprovalDecision.returnRevision => const Color(0xFFEC4899),
-        ApprovalDecision.delegated => const Color(0xFF8B5CF6),
+        ApprovalDecision.requestInfo => const Color(0xFFFFC812),
+        ApprovalDecision.returnRevision => const Color(0xFFD97706),
+        ApprovalDecision.delegated => const Color(0xFFB8860B),
         ApprovalDecision.escalated => const Color(0xFFDC2626),
       };
 }
@@ -509,6 +509,83 @@ class CMApprovalStep {
   int get hashCode => id.hashCode;
 }
 
+// ─── Deliverable Impact ────────────────────────────────────────────────────
+// Per the Lusaka 22 requirements call: a change request must list the
+// actual deliverables it creates / modifies / removes (not just counts),
+// so approvers and close-out can see exactly what is impacted.
+
+enum DeliverableAction { add, modify, remove }
+
+extension DeliverableActionMeta on DeliverableAction {
+  String get label => switch (this) {
+        DeliverableAction.add => 'Add',
+        DeliverableAction.modify => 'Modify',
+        DeliverableAction.remove => 'Remove',
+      };
+
+  IconData get icon => switch (this) {
+        DeliverableAction.add => Icons.add_circle_outline,
+        DeliverableAction.modify => Icons.edit_outlined,
+        DeliverableAction.remove => Icons.remove_circle_outline,
+      };
+
+  Color get color => switch (this) {
+        DeliverableAction.add => const Color(0xFF10B981),
+        DeliverableAction.modify => const Color(0xFFF59E0B),
+        DeliverableAction.remove => const Color(0xFFEF4444),
+      };
+}
+
+/// A single deliverable impacted by a change request, with the action taken
+/// and optional notes (e.g. vendor quote references, document links).
+class CMImpactedDeliverable {
+  final String id;
+  final String name;
+  final DeliverableAction action;
+  final String? notes;
+
+  const CMImpactedDeliverable({
+    required this.id,
+    required this.name,
+    required this.action,
+    this.notes,
+  });
+
+  CMImpactedDeliverable copyWith({
+    String? name,
+    DeliverableAction? action,
+    String? notes,
+  }) {
+    return CMImpactedDeliverable(
+      id: id,
+      name: name ?? this.name,
+      action: action ?? this.action,
+      notes: notes ?? this.notes,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is CMImpactedDeliverable && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+// ─── Reserve Drawdown Source ───────────────────────────────────────────────
+// Per the Lusaka 22 requirements call: when a CR is approved, the approving
+// person decides whether the drawdown comes out of the contingency OR the
+// management reserve — never both at the same time.
+
+enum CMReserveSource { contingency, managementReserve }
+
+extension CMReserveSourceMeta on CMReserveSource {
+  String get label => switch (this) {
+        CMReserveSource.contingency => 'Contingency',
+        CMReserveSource.managementReserve => 'Management Reserve',
+      };
+}
+
 // ─── Implementation Status ────────────────────────────────────────────────
 
 enum ImplementationStatus { todo, inProgress, done }
@@ -585,6 +662,56 @@ class ImplementationTask {
 
 // ─── Full Change Request ─────────────────────────────────────────────────
 
+/// A supporting document attached to a change request (drawing, cost
+/// estimate, vendor quote, RFI…). Uploaded to Firebase Storage; [downloadUrl]
+/// is what the reviewer opens and [storagePath] is what we delete on remove.
+class CMAttachment {
+  final String id;
+  final String name;
+  final String downloadUrl;
+  final String storagePath;
+  final int sizeBytes;
+  final DateTime uploadedAt;
+
+  const CMAttachment({
+    required this.id,
+    required this.name,
+    required this.downloadUrl,
+    required this.storagePath,
+    this.sizeBytes = 0,
+    required this.uploadedAt,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'downloadUrl': downloadUrl,
+        'storagePath': storagePath,
+        'sizeBytes': sizeBytes,
+        'uploadedAt': uploadedAt.toIso8601String(),
+      };
+
+  factory CMAttachment.fromJson(Map<String, dynamic> json) {
+    return CMAttachment(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      downloadUrl: json['downloadUrl']?.toString() ?? '',
+      storagePath: json['storagePath']?.toString() ?? '',
+      sizeBytes: (json['sizeBytes'] as num?)?.toInt() ?? 0,
+      uploadedAt:
+          DateTime.tryParse(json['uploadedAt']?.toString() ?? '') ??
+              DateTime.now(),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is CMAttachment && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
 class CMChangeRequest {
   final String id;
   final String crNumber;
@@ -624,6 +751,14 @@ class CMChangeRequest {
   final double? contingencyDrawdownRequested;
   final double? reserveDrawdownRequested;
   final List<ImplementationTask> implementationTasks;
+  // Lusaka 22 additions: named deliverables, approver-chosen drawdown
+  // source, and the actual cost recorded at close-out (actual vs estimate).
+  final List<CMImpactedDeliverable> deliverables;
+  final CMReserveSource? drawdownReserve;
+  final double? drawdownAmount;
+  final double? actualCost;
+  // Supporting documents uploaded in Section E of the Create CR form.
+  final List<CMAttachment> attachments;
 
   const CMChangeRequest({
     required this.id,
@@ -663,6 +798,11 @@ class CMChangeRequest {
     this.contingencyDrawdownRequested,
     this.reserveDrawdownRequested,
     this.implementationTasks = const [],
+    this.deliverables = const [],
+    this.drawdownReserve,
+    this.drawdownAmount,
+    this.actualCost,
+    this.attachments = const [],
   });
 
   CMChangeRequest copyWith({
@@ -703,6 +843,11 @@ class CMChangeRequest {
     double? contingencyDrawdownRequested,
     double? reserveDrawdownRequested,
     List<ImplementationTask>? implementationTasks,
+    List<CMImpactedDeliverable>? deliverables,
+    CMReserveSource? drawdownReserve,
+    double? drawdownAmount,
+    double? actualCost,
+    List<CMAttachment>? attachments,
   }) {
     return CMChangeRequest(
       id: id ?? this.id,
@@ -747,6 +892,11 @@ class CMChangeRequest {
       reserveDrawdownRequested:
           reserveDrawdownRequested ?? this.reserveDrawdownRequested,
       implementationTasks: implementationTasks ?? this.implementationTasks,
+      deliverables: deliverables ?? this.deliverables,
+      drawdownReserve: drawdownReserve ?? this.drawdownReserve,
+      drawdownAmount: drawdownAmount ?? this.drawdownAmount,
+      actualCost: actualCost ?? this.actualCost,
+      attachments: attachments ?? this.attachments,
     );
   }
 

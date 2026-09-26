@@ -22,6 +22,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -243,7 +244,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: _kBorder),
+        side: const BorderSide(color: _kBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -329,9 +330,9 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Color(0xFFFFF7ED),
+                  color: const Color(0xFFFFF7ED),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Color(0xFFF59E0B)),
+                  border: Border.all(color: const Color(0xFFF59E0B)),
                 ),
                 child: Text(
                   '${_releaseUnassignedSprintCount(plan)} story(ies) in this release do not yet have a target sprint. Assign sprint targets before schedule import for better forecast quality.',
@@ -498,11 +499,11 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: 0.08),
+        color: const Color(0xFFFFC812).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(4),
       ),
       child:
-          Text(text, style: TextStyle(fontSize: 11, color: Colors.blue[700])),
+          Text(text, style: const TextStyle(fontSize: 11, color: Color(0xFFB8860B))),
     );
   }
 
@@ -511,7 +512,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
       case 'Approved':
         return Colors.green.withValues(alpha: 0.1);
       case 'Ready':
-        return Colors.blue.withValues(alpha: 0.1);
+        return const Color(0xFFFFC812).withValues(alpha: 0.1);
       default:
         return Colors.grey.withValues(alpha: 0.1);
     }
@@ -522,7 +523,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
       case 'Approved':
         return Colors.green[700]!;
       case 'Ready':
-        return Colors.blue[700]!;
+        return const Color(0xFFB8860B);
       default:
         return Colors.grey[700]!;
     }
@@ -617,38 +618,38 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
   void initState() {
     super.initState();
     final p = widget.plan;
-    _labelCtrl = TextEditingController(text: p.releaseLabel);
-    _goalCtrl = TextEditingController(text: p.releaseGoal);
-    _scopeCtrl = TextEditingController(text: p.scope);
-    _versionCtrl = TextEditingController(text: p.version);
-    _piCtrl = TextEditingController(text: p.piNumber?.toString() ?? '');
-    _trainCtrl = TextEditingController(text: p.trainName);
+    _labelCtrl = SpellCheckTextEditingController(text: p.releaseLabel);
+    _goalCtrl = SpellCheckTextEditingController(text: p.releaseGoal);
+    _scopeCtrl = SpellCheckTextEditingController(text: p.scope);
+    _versionCtrl = SpellCheckTextEditingController(text: p.version);
+    _piCtrl = SpellCheckTextEditingController(text: p.piNumber?.toString() ?? '');
+    _trainCtrl = SpellCheckTextEditingController(text: p.trainName);
     _releaseDate = p.releaseDate;
     _status = p.status;
     _selectedEpicIds = Set.from(p.epicIds);
     _selectedFeatureIds = Set.from(p.featureIds);
     _selectedStoryIds = Set.from(p.storyIds);
     _cadenceType = p.cadenceType;
-    _sprintLengthCtrl = TextEditingController(text: p.sprintLengthDays?.toString() ?? '');
-    _numSprintsCtrl = TextEditingController(text: p.numberOfSprintsInRelease?.toString() ?? '');
-    _releaseFreqCtrl = TextEditingController(text: p.releaseFrequency);
-    _dodCtrl = TextEditingController(text: p.definitionOfDone);
-    _qualityGatesCtrl = TextEditingController(text: p.qualityGates);
-    _testingReqCtrl = TextEditingController(text: p.testingRequirements);
-    _approvalReqCtrl = TextEditingController(text: p.approvalRequirements);
+    _sprintLengthCtrl = SpellCheckTextEditingController(text: p.sprintLengthDays?.toString() ?? '');
+    _numSprintsCtrl = SpellCheckTextEditingController(text: p.numberOfSprintsInRelease?.toString() ?? '');
+    _releaseFreqCtrl = SpellCheckTextEditingController(text: p.releaseFrequency);
+    _dodCtrl = SpellCheckTextEditingController(text: p.definitionOfDone);
+    _qualityGatesCtrl = SpellCheckTextEditingController(text: p.qualityGates);
+    _testingReqCtrl = SpellCheckTextEditingController(text: p.testingRequirements);
+    _approvalReqCtrl = SpellCheckTextEditingController(text: p.approvalRequirements);
     _deploymentStrategy = p.deploymentStrategy;
-    _depEnvironmentsCtrl = TextEditingController(text: p.deploymentEnvironments);
-    _featureFlagCtrl = TextEditingController(text: p.featureFlagPlan);
-    _dependenciesCtrl = TextEditingController(text: p.keyDependencies);
-    _assumptionsCtrl = TextEditingController(text: p.assumptions);
-    _risksCtrl = TextEditingController(text: p.releaseRisks);
-    _rollbackCtrl = TextEditingController(text: p.rollbackPlan);
-    _recoveryCtrl = TextEditingController(text: p.recoveryProcedures);
-    _communicationCtrl = TextEditingController(text: p.communicationPlan);
-    _trainingCtrl = TextEditingController(text: p.trainingPlan);
-    _monitoringCtrl = TextEditingController(text: p.monitoringPlan);
-    _feedbackCtrl = TextEditingController(text: p.feedbackCollection);
-    _improvementCtrl = TextEditingController(text: p.continuousImprovement);
+    _depEnvironmentsCtrl = SpellCheckTextEditingController(text: p.deploymentEnvironments);
+    _featureFlagCtrl = SpellCheckTextEditingController(text: p.featureFlagPlan);
+    _dependenciesCtrl = SpellCheckTextEditingController(text: p.keyDependencies);
+    _assumptionsCtrl = SpellCheckTextEditingController(text: p.assumptions);
+    _risksCtrl = SpellCheckTextEditingController(text: p.releaseRisks);
+    _rollbackCtrl = SpellCheckTextEditingController(text: p.rollbackPlan);
+    _recoveryCtrl = SpellCheckTextEditingController(text: p.recoveryProcedures);
+    _communicationCtrl = SpellCheckTextEditingController(text: p.communicationPlan);
+    _trainingCtrl = SpellCheckTextEditingController(text: p.trainingPlan);
+    _monitoringCtrl = SpellCheckTextEditingController(text: p.monitoringPlan);
+    _feedbackCtrl = SpellCheckTextEditingController(text: p.feedbackCollection);
+    _improvementCtrl = SpellCheckTextEditingController(text: p.continuousImprovement);
     _loadEpics();
   }
 
@@ -738,7 +739,7 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: DropdownButtonFormField<String>(
-        value: value.isEmpty ? null : value,
+        initialValue: value.isEmpty ? null : value,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
@@ -830,144 +831,38 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
               maxLines: 2,
             ),
             const SizedBox(height: 10),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Color(0xFFE5E7EB)),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Linked Scope',
-                      style:
-                          TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  if (_epics.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('No epics defined yet.',
-                          style: TextStyle(
-                              fontSize: 13, color: Color(0xFF9CA3AF))),
-                    )
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _epics.length,
-                      itemBuilder: (context, epicIdx) {
-                        final epic = _epics[epicIdx];
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CheckboxListTile(
-                              dense: true,
-                              contentPadding: EdgeInsets.zero,
-                              visualDensity: VisualDensity.compact,
-                              title: Text(epic.title,
-                                  style: const TextStyle(fontSize: 13)),
-                              subtitle: epic.theme.isNotEmpty
-                                  ? Text(epic.theme,
-                                      style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Color(0xFF6B7280)))
-                                  : null,
-                              value: _selectedEpicIds.contains(epic.id),
-                              onChanged: (checked) {
-                                setState(() {
-                                  if (checked == true) {
-                                    _selectedEpicIds.add(epic.id);
-                                  } else {
-                                    _selectedEpicIds.remove(epic.id);
-                                  }
-                                });
-                              },
-                            ),
-                            ...(_featuresByEpic[epic.id] ?? []).map(
-                              (feature) => Padding(
-                                padding: const EdgeInsets.only(left: 24),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    CheckboxListTile(
-                                      dense: true,
-                                      contentPadding: EdgeInsets.zero,
-                                      visualDensity: VisualDensity.compact,
-                                      title: Text(
-                                        feature.title.isNotEmpty
-                                            ? feature.title
-                                            : 'Untitled Feature',
-                                        style: const TextStyle(fontSize: 13),
-                                      ),
-                                      value: _selectedFeatureIds
-                                          .contains(feature.id),
-                                      onChanged: (checked) {
-                                        setState(() {
-                                          if (checked == true) {
-                                            _selectedFeatureIds.add(feature.id);
-                                            _selectedEpicIds.add(epic.id);
-                                          } else {
-                                            _selectedFeatureIds
-                                                .remove(feature.id);
-                                          }
-                                        });
-                                      },
-                                    ),
-                                    ..._stories
-                                        .where((story) =>
-                                            story.featureId == feature.id)
-                                        .map(
-                                          (story) => Padding(
-                                            padding:
-                                                const EdgeInsets.only(left: 24),
-                                            child: CheckboxListTile(
-                                              dense: true,
-                                              contentPadding: EdgeInsets.zero,
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              title: Text(
-                                                story.userStory.isNotEmpty
-                                                    ? story.userStory
-                                                    : 'Untitled Story',
-                                                style: const TextStyle(
-                                                    fontSize: 12),
-                                              ),
-                                              subtitle: Text(
-                                                '${story.storyPoints} pts · ${story.readinessStatus}',
-                                                style: const TextStyle(
-                                                    fontSize: 11,
-                                                    color: Color(0xFF6B7280)),
-                                              ),
-                                              value: _selectedStoryIds
-                                                  .contains(story.id),
-                                              onChanged: (checked) {
-                                                setState(() {
-                                                  if (checked == true) {
-                                                    _selectedStoryIds
-                                                        .add(story.id);
-                                                    _selectedFeatureIds
-                                                        .add(feature.id);
-                                                    _selectedEpicIds
-                                                        .add(epic.id);
-                                                  } else {
-                                                    _selectedStoryIds
-                                                        .remove(story.id);
-                                                  }
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                ],
-              ),
+            ReleaseScopePicker(
+              epics: _epics,
+              featuresByEpic: _featuresByEpic,
+              stories: _stories,
+              selectedEpicIds: _selectedEpicIds,
+              selectedFeatureIds: _selectedFeatureIds,
+              selectedStoryIds: _selectedStoryIds,
+              onEpicChanged: (epicId, selected) => setState(() {
+                if (selected) {
+                  _selectedEpicIds.add(epicId);
+                } else {
+                  _selectedEpicIds.remove(epicId);
+                }
+              }),
+              onFeatureChanged: (epicId, featureId, selected) => setState(() {
+                if (selected) {
+                  _selectedFeatureIds.add(featureId);
+                  _selectedEpicIds.add(epicId);
+                } else {
+                  _selectedFeatureIds.remove(featureId);
+                }
+              }),
+              onStoryChanged: (epicId, featureId, storyId, selected) =>
+                  setState(() {
+                if (selected) {
+                  _selectedStoryIds.add(storyId);
+                  _selectedFeatureIds.add(featureId);
+                  _selectedEpicIds.add(epicId);
+                } else {
+                  _selectedStoryIds.remove(storyId);
+                }
+              }),
             ),
             _buildSectionHeader('Release Cadence'),
             _buildDropdown(
@@ -1102,5 +997,136 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
         ),
       ],
     );
+  }
+}
+
+/// The epic → feature → story checklist shown inside the release-plan dialog.
+///
+/// Public rather than inlined into [_ReleasePlanEditDialog] so a widget test
+/// can pump it under the nesting production actually uses, which is the whole
+/// point: `AlertDialog` measures its content with `IntrinsicWidth`, and a
+/// viewport refuses to report intrinsic dimensions, so a `ListView` in here
+/// throws "RenderShrinkWrappingViewport does not support returning intrinsic
+/// dimensions" during layout — which aborts the frame and takes the screen
+/// down with it. A plain [Column] cannot do that, and costs nothing: the
+/// dialog already scrolls as one piece, so a lazy, non-scrolling list was
+/// never buying anything.
+class ReleaseScopePicker extends StatelessWidget {
+  const ReleaseScopePicker({
+    super.key,
+    required this.epics,
+    required this.featuresByEpic,
+    required this.stories,
+    required this.selectedEpicIds,
+    required this.selectedFeatureIds,
+    required this.selectedStoryIds,
+    required this.onEpicChanged,
+    required this.onFeatureChanged,
+    required this.onStoryChanged,
+  });
+
+  final List<Epic> epics;
+  final Map<String, List<Feature>> featuresByEpic;
+  final List<AgileTask> stories;
+  final Set<String> selectedEpicIds;
+  final Set<String> selectedFeatureIds;
+  final Set<String> selectedStoryIds;
+  final void Function(String epicId, bool selected) onEpicChanged;
+  final void Function(String epicId, String featureId, bool selected)
+      onFeatureChanged;
+  final void Function(
+      String epicId, String featureId, String storyId, bool selected)
+      onStoryChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Linked Scope',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          if (epics.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text('No epics defined yet.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF))),
+            )
+          else
+            for (final epic in epics) ..._epicRows(epic),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _epicRows(Epic epic) {
+    return <Widget>[
+      CheckboxListTile(
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+        visualDensity: VisualDensity.compact,
+        title: Text(epic.title, style: const TextStyle(fontSize: 13)),
+        subtitle: epic.theme.isNotEmpty
+            ? Text(epic.theme,
+                style: const TextStyle(
+                    fontSize: 11, color: Color(0xFF6B7280)))
+            : null,
+        value: selectedEpicIds.contains(epic.id),
+        onChanged: (checked) => onEpicChanged(epic.id, checked == true),
+      ),
+      for (final feature in featuresByEpic[epic.id] ?? const <Feature>[])
+        Padding(
+          padding: const EdgeInsets.only(left: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CheckboxListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+                title: Text(
+                  feature.title.isNotEmpty
+                      ? feature.title
+                      : 'Untitled Feature',
+                  style: const TextStyle(fontSize: 13),
+                ),
+                value: selectedFeatureIds.contains(feature.id),
+                onChanged: (checked) =>
+                    onFeatureChanged(epic.id, feature.id, checked == true),
+              ),
+              for (final story in stories)
+                if (story.featureId == feature.id)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 24),
+                    child: CheckboxListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                      title: Text(
+                        story.userStory.isNotEmpty
+                            ? story.userStory
+                            : 'Untitled Story',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      subtitle: Text(
+                        '${story.storyPoints} pts · ${story.readinessStatus}',
+                        style: const TextStyle(
+                            fontSize: 11, color: Color(0xFF6B7280)),
+                      ),
+                      value: selectedStoryIds.contains(story.id),
+                      onChanged: (checked) => onStoryChanged(
+                          epic.id, feature.id, story.id, checked == true),
+                    ),
+                  ),
+            ],
+          ),
+        ),
+    ];
   }
 }

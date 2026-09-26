@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -46,7 +47,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
   Timer? _saveDebounce;
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
   String? _selectedEpicId;
 
@@ -435,17 +436,17 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
   }
 
   Widget _buildStoryCard(AgileTask story, Feature feature) {
-    final titleCtrl = TextEditingController(text: story.userStory);
-    final descCtrl = TextEditingController(text: story.taskDescription);
-    final acCtrl = TextEditingController(text: story.acceptanceCriteria);
+    final titleCtrl = SpellCheckTextEditingController(text: story.userStory);
+    final descCtrl = SpellCheckTextEditingController(text: story.taskDescription);
+    final acCtrl = SpellCheckTextEditingController(text: story.acceptanceCriteria);
     final depCtrl =
-        TextEditingController(text: story.dependencyTaskIds.join(', '));
+        SpellCheckTextEditingController(text: story.dependencyTaskIds.join(', '));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -465,11 +466,11 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.08),
+                    color: const Color(0xFFFFC812).withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text('WBS linked',
-                      style: TextStyle(fontSize: 11, color: Colors.blue[700])),
+                  child: const Text('WBS linked',
+                      style: TextStyle(fontSize: 11, color: Color(0xFFB8860B))),
                 ),
               IconButton(
                 icon: const Icon(Icons.delete_outline,
@@ -599,7 +600,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
               SizedBox(
                 width: 120,
                 child: VoiceTextField(
-                  controller: TextEditingController(
+                  controller: SpellCheckTextEditingController(
                       text: story.backlogOrder.toString()),
                   decoration: const InputDecoration(labelText: 'Backlog order'),
                   keyboardType: TextInputType.number,

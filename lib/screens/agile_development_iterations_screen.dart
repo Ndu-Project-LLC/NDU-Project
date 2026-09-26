@@ -1,7 +1,6 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:ndu_project/screens/detailed_design_screen.dart';
-import 'package:ndu_project/screens/scope_tracking_implementation_screen.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -19,7 +18,6 @@ import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/agile_iteration_table_widget.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -29,6 +27,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/widgets/milestone_picker_dialog.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class AgileDevelopmentIterationsScreen extends StatefulWidget {
   const AgileDevelopmentIterationsScreen({super.key});
@@ -184,7 +183,7 @@ class _AgileDevelopmentIterationsScreenState
     final double horizontalPadding = isMobile ? 18 : 32;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,8 +221,8 @@ class _AgileDevelopmentIterationsScreenState
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Development Iterations',
                     ),
                   ),
@@ -245,7 +244,7 @@ class _AgileDevelopmentIterationsScreenState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Color(0xFFFFC812),
+            color: const Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(4),
           ),
           child: const Text(
@@ -438,9 +437,9 @@ class _AgileDevelopmentIterationsScreenState
 
     final stats = [
       _StatCardData('Iteration Progress', '$iterationProgress%',
-          '$completedTasks/$totalTasks tasks', const Color(0xFF0EA5E9)),
+          '$completedTasks/$totalTasks tasks', const Color(0xFFFFC812)),
       _StatCardData('Sprint Velocity', '$sprintVelocity', 'Total story points',
-          const Color(0xFF6366F1)),
+          const Color(0xFFB8860B)),
       _StatCardData('Active Blockers', '$activeBlockers',
           'Critical tasks pending', const Color(0xFFEF4444)),
     ];
@@ -471,7 +470,7 @@ class _AgileDevelopmentIterationsScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -533,7 +532,7 @@ class _AgileDevelopmentIterationsScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -570,13 +569,13 @@ class _AgileDevelopmentIterationsScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Color(0xFFF3F4F6),
+                        color: const Color(0xFFF3F4F6),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.speed,
-                              size: 16, color: const Color(0xFF7C3AED)),
+                          const Icon(Icons.speed,
+                              size: 16, color: Color(0xFFB8860B)),
                           const SizedBox(width: 8),
                           Text(
                             epicEntry.key,
@@ -609,8 +608,8 @@ class _AgileDevelopmentIterationsScreenState
                                   const EdgeInsets.only(left: 12, bottom: 4),
                               child: Row(
                                 children: [
-                                  Icon(Icons.flag,
-                                      size: 14, color: const Color(0xFFF59E0B)),
+                                  const Icon(Icons.flag,
+                                      size: 14, color: Color(0xFFF59E0B)),
                                   const SizedBox(width: 6),
                                   Text(
                                     featureEntry.key,
@@ -665,7 +664,7 @@ class _AgileDevelopmentIterationsScreenState
   }
 
   Future<void> _showAddTaskDialog(BuildContext context) async {
-    final userStoryController = TextEditingController();
+    final userStoryController = SpellCheckTextEditingController();
     final taskDescriptionController = RichTextEditingController();
     final acceptanceCriteriaController = RichAutoBulletTextController();
     final iterationNotesController = RichTextEditingController();
@@ -728,7 +727,7 @@ class _AgileDevelopmentIterationsScreenState
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       key: assignedRoleFieldKey,
-                      value: _availableRoles.isEmpty
+                      initialValue: _availableRoles.isEmpty
                           ? null
                           : (_availableRoles.contains(selectedRole)
                               ? selectedRole
@@ -762,7 +761,7 @@ class _AgileDevelopmentIterationsScreenState
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
-                      value: selectedStoryPoints,
+                      initialValue: selectedStoryPoints,
                       decoration:
                           const InputDecoration(labelText: 'Story Points *'),
                       items: const [1, 2, 3, 5, 8].map((points) {
@@ -773,7 +772,7 @@ class _AgileDevelopmentIterationsScreenState
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: selectedPriority,
+                      initialValue: selectedPriority,
                       decoration:
                           const InputDecoration(labelText: 'Priority *'),
                       items:
@@ -786,7 +785,7 @@ class _AgileDevelopmentIterationsScreenState
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: selectedStatus,
+                      initialValue: selectedStatus,
                       decoration: const InputDecoration(labelText: 'Status *'),
                       items: const ['To-Do', 'In-Progress', 'Testing', 'Done']
                           .map((s) {
@@ -798,7 +797,7 @@ class _AgileDevelopmentIterationsScreenState
                     const SizedBox(height: 12),
                     if (_epics.isNotEmpty)
                       DropdownButtonFormField<String>(
-                        value: selectedEpicId,
+                        initialValue: selectedEpicId,
                         decoration: const InputDecoration(labelText: 'Epic *'),
                         items: _epics
                             .map((e) => DropdownMenuItem<String>(
@@ -821,7 +820,7 @@ class _AgileDevelopmentIterationsScreenState
                       Padding(
                         padding: const EdgeInsets.only(top: 12),
                         child: DropdownButtonFormField<String>(
-                          value: selectedFeatureId.isNotEmpty
+                          initialValue: selectedFeatureId.isNotEmpty
                               ? selectedFeatureId
                               : null,
                           decoration:
@@ -969,10 +968,10 @@ class _AgileDevelopmentIterationsScreenState
 
   Widget _buildFooterNavigation(BuildContext context) {
     return LaunchPhaseNavigation(
-      backLabel: 'Back: Detailed Design',
-      nextLabel: 'Next: Scope Tracking Implementation',
-      onBack: () => DetailedDesignScreen.open(context),
-      onNext: () => ScopeTrackingImplementationScreen.open(context),
+      backLabel: PlanningPhaseNavigation.backLabel('agile_development_iterations'),
+      nextLabel: PlanningPhaseNavigation.nextLabel('agile_development_iterations'),
+      onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'agile_development_iterations'),
+      onNext: () => PlanningPhaseNavigation.goToNext(context, 'agile_development_iterations'),
     );
   }
 
@@ -983,8 +982,8 @@ class _AgileDevelopmentIterationsScreenState
       screenTitle: 'Agile Development Iterations',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',
@@ -1041,9 +1040,9 @@ class _MilestoneLinkButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Color(0xFFFFF8E1),
+          color: const Color(0xFFFFF8E1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Color(0xFFFFE082)),
+          border: Border.all(color: const Color(0xFFFFE082)),
         ),
         child: Row(
           children: [

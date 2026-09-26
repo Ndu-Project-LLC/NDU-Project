@@ -15,6 +15,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -23,7 +24,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Lessons Learned',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -47,7 +48,7 @@ class ExecutionPlanLessonsLearnedScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Lessons Learned',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -110,7 +111,7 @@ class _LessonsLearnedSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Lessons Learned',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'issueTopic',
                       label: 'Topic',
@@ -206,7 +207,7 @@ class _LessonsLearnedSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileLessonsLearnedActions()
+          const _MobileLessonsLearnedActions()
         else
           const _DesktopLessonsLearnedActions(),
       ],
@@ -316,21 +317,21 @@ class LessonsLearnedTable extends StatelessWidget {
       ExecutionIssueModel? request, String projectId, String llOrBp) {
     final isEdit = request != null;
     final topicController =
-        TextEditingController(text: request?.issueTopic ?? '');
+        SpellCheckTextEditingController(text: request?.issueTopic ?? '');
     final descriptionController =
-        TextEditingController(text: request?.description ?? '');
+        SpellCheckTextEditingController(text: request?.description ?? '');
     final disciplineController =
-        TextEditingController(text: request?.discipline ?? '');
+        SpellCheckTextEditingController(text: request?.discipline ?? '');
     final raisedByController =
-        TextEditingController(text: request?.raisedBy ?? '');
+        SpellCheckTextEditingController(text: request?.raisedBy ?? '');
     final scheduleImpactController =
-        TextEditingController(text: request?.scheduleImpact ?? '');
+        SpellCheckTextEditingController(text: request?.scheduleImpact ?? '');
     final costImpactController =
-        TextEditingController(text: request?.costImpact ?? '');
+        SpellCheckTextEditingController(text: request?.costImpact ?? '');
     final commentsController =
-        TextEditingController(text: request?.comments ?? '');
+        SpellCheckTextEditingController(text: request?.comments ?? '');
     final impactedController =
-        TextEditingController(text: request?.impacted ?? '');
+        SpellCheckTextEditingController(text: request?.impacted ?? '');
     bool approved = request?.approved ?? false;
 
     showDialog(

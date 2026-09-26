@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'dart:convert';
@@ -9,13 +10,12 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'package:ndu_project/models/launch_phase_models.dart';
-import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
@@ -24,6 +24,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class DeliverProjectClosureScreen extends StatefulWidget {
   const DeliverProjectClosureScreen({super.key});
@@ -49,7 +50,7 @@ class _DeliverProjectClosureScreenState
     super.dispose();
   }
 
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   List<LaunchScopeItem> _scopeItems = [];
   List<LaunchMilestone> _milestones = [];
   List<LaunchFollowUpItem> _outstandingItems = [];
@@ -77,7 +78,7 @@ class _DeliverProjectClosureScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: '1. Launch Readiness Assessment',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -110,10 +111,10 @@ class _DeliverProjectClosureScreenState
             _buildRiskFollowUpsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Salvage and/or Disposal Plan',
-              nextLabel: 'Next: Deployment Transfer, Certification & Release',
+              backLabel: PlanningPhaseNavigation.backLabel('deliver_project_closure'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('deliver_project_closure'),
               onBack: () => Navigator.of(context).maybePop(),
-              onNext: () => TransitionToProdTeamScreen.open(context),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'deliver_project_closure'),
             ),
             const SizedBox(height: 48),
           ],
@@ -168,7 +169,7 @@ class _DeliverProjectClosureScreenState
           label: 'Milestones',
           value: '${projectData.keyMilestones.length}',
           icon: Icons.flag_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta:
               '${projectData.keyMilestones.where((m) => m.dueDate.isNotEmpty).length} dated',
         ),
@@ -193,6 +194,7 @@ class _DeliverProjectClosureScreenState
 
   Widget _buildScopeAcceptancePanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Scope Acceptance',
       subtitle:
           'Track acceptance status for each deliverable. Items are editable inline.',
@@ -292,6 +294,7 @@ class _DeliverProjectClosureScreenState
 
   Widget _buildMilestonesPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Delivery Milestones',
       subtitle: 'Track planned vs actual completion for key milestones.',
       columns: const [
@@ -392,6 +395,7 @@ class _DeliverProjectClosureScreenState
   Widget _buildOutstandingPanel() {
     final ownerNames = _teamMemberNames();
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Outstanding Items',
       subtitle: 'Items still pending closure before or shortly after handover.',
       columns: [
@@ -493,6 +497,7 @@ class _DeliverProjectClosureScreenState
   Widget _buildRiskFollowUpsPanel() {
     final ownerNames = _teamMemberNames();
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Post-Delivery Risks',
       subtitle: 'Risks and gaps to monitor after project delivery.',
       columns: [
@@ -1114,7 +1119,7 @@ class _DeliverProjectClosureScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI regeneration failed: $e')),
+          SnackBar(content: Text('KAZ AI regeneration failed: ${aiErrorMessage(e)}')),
         );
       }
     } finally {
@@ -1165,7 +1170,7 @@ class _DeliverProjectClosureScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI regeneration failed: $e')),
+          SnackBar(content: Text('KAZ AI regeneration failed: ${aiErrorMessage(e)}')),
         );
       }
     } finally {
@@ -1222,7 +1227,7 @@ class _DeliverProjectClosureScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI regeneration failed: $e')),
+          SnackBar(content: Text('KAZ AI regeneration failed: ${aiErrorMessage(e)}')),
         );
       }
     } finally {
@@ -1279,7 +1284,7 @@ class _DeliverProjectClosureScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI regeneration failed: $e')),
+          SnackBar(content: Text('KAZ AI regeneration failed: ${aiErrorMessage(e)}')),
         );
       }
     } finally {
@@ -1314,14 +1319,14 @@ class _DeliverProjectClosureScreenState
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Scope Acceptance'),
             pw.SizedBox(height: 6),
             if (_scopeItems.isEmpty)
               pw.Text('No scope items recorded.',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey500))
             else
               pw.Table(
@@ -1348,7 +1353,7 @@ class _DeliverProjectClosureScreenState
             pw.SizedBox(height: 6),
             if (_milestones.isEmpty)
               pw.Text('No milestones recorded.',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey500))
             else
               pw.Table(
@@ -1373,7 +1378,7 @@ class _DeliverProjectClosureScreenState
             pw.SizedBox(height: 6),
             if (_outstandingItems.isEmpty)
               pw.Text('No outstanding items.',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey500))
             else
               pw.Table(
@@ -1400,7 +1405,7 @@ class _DeliverProjectClosureScreenState
             pw.SizedBox(height: 6),
             if (_riskFollowUps.isEmpty)
               pw.Text('No post-delivery risks recorded.',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey500))
             else
               pw.Table(
@@ -1458,7 +1463,7 @@ class _DeliverProjectClosureScreenState
   pw.Widget _pdfCell(String text) {
     return pw.Padding(
       padding: const pw.EdgeInsets.all(6),
-      child: pw.Text(text, style: pw.TextStyle(fontSize: 9)),
+      child: pw.Text(text, style: const pw.TextStyle(fontSize: 9)),
     );
   }
 
@@ -1538,9 +1543,9 @@ class _ScopeEditDialogState extends State<_ScopeEditDialog> {
   @override
   void initState() {
     super.initState();
-    _deliverableCtrl = TextEditingController(text: widget.deliverable);
-    _criteriaCtrl = TextEditingController(text: widget.criteria);
-    _dateCtrl = TextEditingController(text: widget.date);
+    _deliverableCtrl = SpellCheckTextEditingController(text: widget.deliverable);
+    _criteriaCtrl = SpellCheckTextEditingController(text: widget.criteria);
+    _dateCtrl = SpellCheckTextEditingController(text: widget.date);
     _status = widget.status;
   }
 
@@ -1572,7 +1577,7 @@ class _ScopeEditDialogState extends State<_ScopeEditDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI failed: $e')),
+          SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -1657,7 +1662,7 @@ class _ScopeEditDialogState extends State<_ScopeEditDialog> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Color(0xFFFEF3C7),
+                        color: const Color(0xFFFEF3C7),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.edit_note_rounded,

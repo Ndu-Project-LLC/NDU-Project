@@ -13,6 +13,7 @@ import 'package:ndu_project/screens/planning_procurement_screen.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/contract_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/ai_suggesting_textfield.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
@@ -21,6 +22,9 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 const String _contractingCollection = 'contracting';
 const String _contractPlanNoteKey = 'planning_contract_plan';
 const String _contractPlanMarketKey = 'planning_contract_market';
@@ -106,7 +110,7 @@ class FrontEndPlanningContractsScreen extends StatefulWidget {
 
 class _FrontEndPlanningContractsScreenState
  extends State<FrontEndPlanningContractsScreen> {
- final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  int _selectedTabIndex = 0;
  bool _isSeedingContracts = false;
 
@@ -140,7 +144,7 @@ class _FrontEndPlanningContractsScreenState
  screenTitle: 'Contracting',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
  ],
@@ -243,8 +247,14 @@ class _FrontEndPlanningContractsScreenState
  (projectData.planningNotes['contract_dashboard_payload'] ?? '')
  .trim()
  .isNotEmpty;
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,6 +276,12 @@ class _FrontEndPlanningContractsScreenState
  crossAxisAlignment: CrossAxisAlignment.stretch,
  children: [
  FrontEndPlanningHeader(title: 'Contracting', onExportPdf: _exportPdf),
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
  const SizedBox(height: 16),
  // Export PDF & AI Assist action buttons
  Wrap(
@@ -276,7 +292,7 @@ class _FrontEndPlanningContractsScreenState
  OutlinedButton.icon(
  onPressed: _exportPdf,
  style: OutlinedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: Colors.black87,
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
  side: const BorderSide(color: Color(0xFFE5E7EB)),
@@ -616,6 +632,9 @@ class _FrontEndPlanningContractsScreenState
  ],
  ),
  ),
+ ],
+ ),
+ ),
  ),
  ],
  ),
@@ -647,15 +666,15 @@ class CreateContractScreen extends StatefulWidget {
 
 class _CreateContractScreenState extends State<CreateContractScreen> {
  final _formKey = GlobalKey<FormState>();
- final TextEditingController _contractNameController = TextEditingController();
- final TextEditingController _descriptionController = TextEditingController();
+ final TextEditingController _contractNameController = SpellCheckTextEditingController();
+ final TextEditingController _descriptionController = SpellCheckTextEditingController();
  final TextEditingController _estimatedValueController =
- TextEditingController();
- final TextEditingController _scopeController = TextEditingController();
- final TextEditingController _disciplineController = TextEditingController();
- final TextEditingController _notesController = TextEditingController();
+ SpellCheckTextEditingController();
+ final TextEditingController _scopeController = SpellCheckTextEditingController();
+ final TextEditingController _disciplineController = SpellCheckTextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  final TextEditingController _contractorNameController =
- TextEditingController();
+ SpellCheckTextEditingController();
 
  String _contractType = 'Not Sure';
  String _paymentType = 'Not Sure';
@@ -843,7 +862,7 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  final double horizontalPadding = AppBreakpoints.isMobile(context) ? 20 : 48;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1473,7 +1492,7 @@ class _ContractingStrategyScreenState extends State<ContractingStrategyScreen> {
  final double horizontalPadding = isMobile ? 24 : 48;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -2443,10 +2462,7 @@ class _ContractDateField extends StatelessWidget {
 
 class _ContractHeader extends StatelessWidget {  const _ContractHeader({
     required this.title,
-    this.onBack,
-    this.onForward,
-    this.onCreateContract,
-  });
+  }) : onBack = null, onForward = null, onCreateContract = null;
 
  final String title;
  final VoidCallback? onBack;
@@ -2551,7 +2567,7 @@ class _PlanningSummaryRow extends StatelessWidget {
  _SummaryStatData('Approval Readiness', '—', 'Define checkpoints',
  Color(0xFFF59E0B)),
  _SummaryStatData('Target Award Window', '—', 'Set timeline targets',
- Color(0xFF7C3AED)),
+ Color(0xFFB8860B)),
  ],
  );
  }
@@ -2583,7 +2599,7 @@ class _PlanningSummaryRow extends StatelessWidget {
  'Target Award Window',
  timelineDefined ? 'Defined' : 'Not set',
  timelineDefined ? 'Review milestones' : 'Add timeline targets',
- const Color(0xFF7C3AED)),
+ const Color(0xFFB8860B)),
  ];
  return _PlanningSummaryCards(stats: stats);
  },
@@ -2837,10 +2853,7 @@ class _CollapsibleAiTextCard extends StatefulWidget {  const _CollapsibleAiTextC
     required this.sectionLabel,
     required this.hintText,
     this.subtitle,
-    this.minLines = 3,
-    this.maxLines = 8,
-    this.initiallyExpanded = false,
-  });
+  }) : minLines = 3, maxLines = 8, initiallyExpanded = false;
 
  final String title;
  final String? subtitle;
@@ -2867,7 +2880,7 @@ class _CollapsibleAiTextCardState extends State<_CollapsibleAiTextCard> {
  if (_didInit) return;
  final data = ProjectDataHelper.getData(context);
  final saved = data.planningNotes[widget.noteKey] ?? '';
- _controller = TextEditingController(text: saved);
+ _controller = SpellCheckTextEditingController(text: saved);
  _didInit = true;
  }
 
@@ -2939,7 +2952,7 @@ class _CollapsibleAiTextCardState extends State<_CollapsibleAiTextCard> {
  } catch (e) {
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Failed to regenerate: $e')),
+ SnackBar(content: Text('Failed to regenerate: ${aiErrorMessage(e)}')),
  );
  } finally {
  if (mounted) setState(() => _isRegenerating = false);
@@ -3137,23 +3150,15 @@ class _AdditionalNotesSection extends StatelessWidget {
  final TextEditingController controller;
  final ValueChanged<String> onChanged;
 
- @override
- Widget build(BuildContext context) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Additional Notes',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827)),
- ),
- const SizedBox(height: 10),
- _NotesField(controller: controller, onChanged: onChanged),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    // Notes stay collapsed until the user opens them.
+    return CollapsibleNotesSection(
+      title: 'Additional Notes',
+      card: true,
+      child: _NotesField(controller: controller, onChanged: onChanged),
+    );
+  }
 }
 
 class _NotesField extends StatelessWidget {
@@ -3321,8 +3326,8 @@ class _TimelineSectionState extends State<_TimelineSection> {
 
  Future<void> _editEstimate(BuildContext context, int number) async {
  final minController =
- TextEditingController(text: (_minDays[number] ?? 0).toString());
- final maxController = TextEditingController(
+ SpellCheckTextEditingController(text: (_minDays[number] ?? 0).toString());
+ final maxController = SpellCheckTextEditingController(
  text: (_maxDays[number] ?? (_minDays[number] ?? 0)).toString());
 
  await showDialog(
@@ -3996,7 +4001,7 @@ class ContractDetailsScreen extends StatefulWidget {
 
 class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
  final TextEditingController _additionalInfoController =
- TextEditingController();
+ SpellCheckTextEditingController();
  int _selectedTabIndex = 0;
  bool _detailsLoaded = false;
  bool _isGeneratingDetails = false;
@@ -4348,7 +4353,7 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
  final double horizontalPadding = isMobile ? 24 : 48;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -4434,7 +4439,7 @@ class ContractingStatusScreen extends StatefulWidget {
 
 class _ContractingStatusScreenState extends State<ContractingStatusScreen> {
  final TextEditingController _additionalInfoController =
- TextEditingController();
+ SpellCheckTextEditingController();
  String _selectedView = 'Overview';
  String _selectedContract = 'Select contract';
  String _selectedContractorStatus = 'All Status';
@@ -4855,7 +4860,7 @@ class _ContractingStatusScreenState extends State<ContractingStatusScreen> {
  final double horizontalPadding = isMobile ? 24 : 48;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -5308,7 +5313,7 @@ class _ContractingSummaryScreenState extends State<ContractingSummaryScreen> {
  final double horizontalPadding = isMobile ? 24 : 48;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -6321,7 +6326,7 @@ class _ContractStatusOverview extends StatelessWidget {
  width: timelineWidth,
  child: _ContractStatusTimelineCard(
  months: months, rows: rows, progress: progress)),
- SizedBox(width: spacing),
+ const SizedBox(width: spacing),
  SizedBox(
  width: rightColumnWidth,
  child: Column(
@@ -6959,21 +6964,32 @@ class _ContractorsTable extends StatelessWidget {
  child: _buildInlineView(),
  tableBuilder: (fsContext) => _buildTableContent(),
  );
- }
-
- Widget _buildInlineView() {
- final Widget table = _buildTableContent();
- if (isMobile) {
- return SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: ConstrainedBox(
- constraints: const BoxConstraints(minWidth: 960),
- child: table,
- ),
- );
- }
- return table;
- }
+ }  Widget _buildInlineView() {
+    final Widget table = _buildTableContent();
+    if (isMobile) {
+      // Bounded width, not `minWidth` alone: inside a horizontal scroll view
+      // `minWidth` leaves maxWidth unbounded, which makes every Row with an
+      // Expanded child in `table` throw "RenderFlex children have non-zero flex
+      // but incoming width constraints are unbounded". LayoutBuilder sits
+      // outside the scroll view, so it still sees the bounded viewport width —
+      // keeping the original intent (never narrower than 960) while pinning the
+      // width so the flex children have something to divide up.
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final double width =
+              constraints.maxWidth > 960 ? constraints.maxWidth : 960;
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: width,
+              child: table,
+            ),
+          );
+        },
+      );
+    }
+    return table;
+  }
 
  Widget _buildTableContent() {
  return Column(
@@ -7667,7 +7683,7 @@ class _MilestoneEntry {
  return _MilestoneEntry(
  label: (json['label'] ?? '').toString(),
  date: (json['date'] ?? '').toString(),
- statusColor: Color((json['statusColor'] ?? 0xFF2563EB) as int),
+ statusColor: Color((json['statusColor'] ?? 0xFFFFC812) as int),
  );
  }
 
@@ -7974,7 +7990,7 @@ class _ContractMilestoneData {
  return _ContractMilestoneData(
  title: (json['title'] ?? '').toString(),
  value: (json['value'] ?? '').toString(),
- accentColor: Color((json['accentColor'] ?? 0xFF2563EB) as int),
+ accentColor: Color((json['accentColor'] ?? 0xFFFFC812) as int),
  emphasize: json['emphasize'] == true,
  );
  }
@@ -8313,7 +8329,7 @@ class _ContractDocumentsTabContent extends StatelessWidget {
  ElevatedButton(
  onPressed: () {},
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF6366F1),
+ backgroundColor: const Color(0xFFB8860B),
  foregroundColor: Colors.white,
  elevation: 0,
  padding:
@@ -8429,7 +8445,7 @@ class _ActionsSidebarCard extends StatelessWidget {
  onPressed: () {},
  style: OutlinedButton.styleFrom(
  foregroundColor: const Color(0xFF4B5563),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  padding: const EdgeInsets.symmetric(vertical: 16),
  side: const BorderSide(color: Color(0xFFE5E7EB)),
  shape: RoundedRectangleBorder(
@@ -8752,7 +8768,7 @@ class _ContractDocumentData {
  return _ContractDocumentData(
  title: (json['title'] ?? '').toString(),
  details: (json['details'] ?? '').toString(),
- accentColor: Color((json['accentColor'] ?? 0xFF2563EB) as int),
+ accentColor: Color((json['accentColor'] ?? 0xFFFFC812) as int),
  icon: _iconLookup[codePoint] ?? Icons.description_outlined,
  );
  }
@@ -8773,7 +8789,7 @@ class _ContractDocumentData {
  } else if (status.contains('doc') ||
  details.toLowerCase().contains('doc')) {
  icon = Icons.description_outlined;
- color = const Color(0xFF6366F1);
+ color = const Color(0xFFB8860B);
  }
  return _ContractDocumentData(
  title: title,

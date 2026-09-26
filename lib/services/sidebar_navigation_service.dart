@@ -67,6 +67,27 @@ class SidebarNavigationService {
     return basicPlanLockedLabels.contains(item.label);
   }
 
+  /// The Business Case → Executive Summary sub-items, in flow order.
+  ///
+  /// **Preferred Solution Analysis comes first.** You analyse the candidates
+  /// (side-by-side plus the per-solution detail views) and choose one there;
+  /// the Preferred Solution page that follows is the record of the solution
+  /// that was chosen and is what Front End Planning pulls from.
+  ///
+  /// Owner, Lusaka 24 review: "the preferred solution analysis comes before
+  /// the preferred solution selection" — the sidebar used to list the
+  /// selection page first, so the two steps read backwards.
+  static const List<SidebarItem> executiveSummaryItems = [
+    SidebarItem(
+      checkpoint: 'preferred_solution_analysis',
+      label: 'Preferred Solution Analysis',
+    ),
+    SidebarItem(
+      checkpoint: 'preferred_solution',
+      label: 'Preferred Solution',
+    ),
+  ];
+
   /// Checkpoints that are intentionally skipped in the linear project
   /// navigation flow (Next/Back buttons). Users can still open them
   /// directly from the sidebar, but the wizard-style navigation will
@@ -133,10 +154,10 @@ class SidebarNavigationService {
         checkpoint: 'infrastructure_considerations',
         label: 'Infrastructure Considerations'),
     SidebarItem(checkpoint: 'core_stakeholders', label: 'Core Stakeholders'),
+    SidebarItem(checkpoint: 'cost_analysis', label: 'Initial Cost Estimate'),
     SidebarItem(
         checkpoint: 'preferred_solution_analysis',
         label: 'Preferred Solution Analysis'),
-    SidebarItem(checkpoint: 'cost_analysis', label: 'Initial Cost Estimate'),
 
     // Front End Planning
     SidebarItem(checkpoint: 'fep_summary', label: 'Summary'),
@@ -268,6 +289,9 @@ class SidebarNavigationService {
     // Schedule & Cost
     SidebarItem(checkpoint: 'schedule', label: 'Schedule'),
     SidebarItem(checkpoint: 'cost_estimate', label: 'Cost Estimate Overview'),
+    // PMB Integration — the unified Scope ↔ WBS ↔ Schedule ↔ Controls view
+    SidebarItem(
+        checkpoint: 'integration_dashboard', label: 'Integration Dashboard'),
     // Scope & Change Management
     SidebarItem(
         checkpoint: 'scope_tracking_plan', label: 'Scope Tracking Plan'),

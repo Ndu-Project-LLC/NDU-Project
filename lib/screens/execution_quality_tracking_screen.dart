@@ -212,7 +212,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
@@ -333,19 +333,19 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [const Color(0xFFEEF2FF), const Color(0xFFE0E7FF)],
+          colors: [const Color(0xFFFFF8E1), const Color(0xFFFFF8E1)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFB8860B).withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withOpacity(0.15),
+              color: const Color(0xFFB8860B).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.download_done_rounded, size: 20, color: Color(0xFF4F46E5)),
@@ -434,9 +434,9 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
           // Summary Cards Row
           Row(
             children: [
-              Expanded(child: _buildSummaryCard('Objectives', snapshot.totalObjectives, snapshot.objectivesComplete, Icons.flag, const Color(0xFF3B82F6))),
+              Expanded(child: _buildSummaryCard('Objectives', snapshot.totalObjectives, snapshot.objectivesComplete, Icons.flag, const Color(0xFFFFC812))),
               const SizedBox(width: 12),
-              Expanded(child: _buildSummaryCard('Audits', snapshot.totalAudits, snapshot.auditsPassed, Icons.fact_check, const Color(0xFF8B5CF6))),
+              Expanded(child: _buildSummaryCard('Audits', snapshot.totalAudits, snapshot.auditsPassed, Icons.fact_check, const Color(0xFFB8860B))),
               const SizedBox(width: 12),
               Expanded(child: _buildSummaryCard('Inspections', snapshot.totalInspections, snapshot.inspectionsPassed, Icons.verified, const Color(0xFF10B981))),
             ],
@@ -476,7 +476,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     if (score >= 90) {
       scoreColor = const Color(0xFF10B981); grade = 'A';
     } else if (score >= 75) {
-      scoreColor = const Color(0xFF3B82F6); grade = 'B';
+      scoreColor = const Color(0xFFFFC812); grade = 'B';
     } else if (score >= 60) {
       scoreColor = const Color(0xFFF59E0B); grade = 'C';
     } else {
@@ -486,16 +486,16 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [scoreColor.withOpacity(0.1), scoreColor.withOpacity(0.05)]),
+        gradient: LinearGradient(colors: [scoreColor.withValues(alpha: 0.1), scoreColor.withValues(alpha: 0.05)]),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scoreColor.withOpacity(0.3)),
+        border: Border.all(color: scoreColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
           const Text('Overall Quality Score', style: TextStyle(fontSize: 14, color: Color(0xFF6B7280))),
           const SizedBox(height: 8),
           Text(score.toStringAsFixed(0), style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: scoreColor)),
-          Text(grade, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: scoreColor.withOpacity(0.7))),
+          Text(grade, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: scoreColor.withValues(alpha: 0.7))),
           const SizedBox(height: 4),
           Text(_getScoreInterpretation(score), style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
         ],
@@ -547,7 +547,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
         children: [
           const Row(children: [Icon(Icons.build_circle_outlined, size: 18, color: Color(0xFFEF4444)), SizedBox(width: 6), Text('Corrective Actions', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500))]),
           const SizedBox(height: 12),
-          _buildStatRow('Open', open.toString(), Colors.blue),
+          _buildStatRow('Open', open.toString(), Color(0xFFFFC812)),
           _buildStatRow('Overdue', overdue.toString(), Colors.red),
           _buildStatRow('Critical', critical.toString(), const Color(0xFFDC2626)),
         ],
@@ -602,9 +602,9 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
       crossAxisSpacing: 12,
       childAspectRatio: 2.5,
       children: [
-        _buildQuickStat('In Progress Obj.', snapshot.objectivesInProgress.toString(), Colors.blue),
+        _buildQuickStat('In Progress Obj.', snapshot.objectivesInProgress.toString(), Color(0xFFFFC812)),
         _buildQuickStat('Overdue Obj.', snapshot.objectivesOverdue.toString(), Colors.orange),
-        _buildQuickStat('Audits w/ Findings', snapshot.auditsWithFindings.toString(), Colors.purple),
+        _buildQuickStat('Audits w/ Findings', snapshot.auditsWithFindings.toString(), Color(0xFFB8860B)),
         _buildQuickStat('Overdue Audits', snapshot.auditsOverdue.toString(), Colors.red),
         _buildQuickStat('Hold Point Insp.', _trackingData?.inspections.where((i) => i.isHoldPoint).length.toString() ?? '0', Colors.amber),
         _buildQuickStat('Verified CAs', (_trackingData?.correctiveActions.where((c) => c.verified).length ?? 0).toString(), Colors.green),
@@ -616,7 +616,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -768,10 +768,10 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: inspection.type == 'QA' ? const Color(0xFFDBEAFE) : const Color(0xFFD1FAE5),
+                    color: inspection.type == 'QA' ? const Color(0xFFFEF3C7) : const Color(0xFFD1FAE5),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(inspection.type, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: inspection.type == 'QA' ? const Color(0xFF2563EB) : const Color(0xFF059669))),
+                  child: Text(inspection.type, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: inspection.type == 'QA' ? const Color(0xFFFFC812) : const Color(0xFF059669))),
                 ),
                 const SizedBox(width: 8),
                 Expanded(child: Text(inspection.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15))),
@@ -888,7 +888,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: _getAuditTypeColor(audit.auditType).withOpacity(0.15),
+                    color: _getAuditTypeColor(audit.auditType).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(audit.auditType, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _getAuditTypeColor(audit.auditType))),
@@ -971,9 +971,9 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
 
   Color _getAuditTypeColor(String type) {
     switch (type.toLowerCase()) {
-      case 'external': return const Color(0xFF8B5CF6);
+      case 'external': return const Color(0xFFB8860B);
       case 'regulatory': return const Color(0xFFEF4444);
-      default: return const Color(0xFF3B82F6);
+      default: return const Color(0xFFFFC812);
     }
   }
 
@@ -1100,7 +1100,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: ca.priority.color.withOpacity(0.5)),
+        side: BorderSide(color: ca.priority.color.withValues(alpha: 0.5)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1265,7 +1265,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
             children: [
               Expanded(child: _buildCoqCategoryCard('Prevention', coq.preventionCostActual, const Color(0xFF10B981))),
               const SizedBox(width: 12),
-              Expanded(child: _buildCoqCategoryCard('Appraisal', coq.appraisalCostActual, const Color(0xFF3B82F6))),
+              Expanded(child: _buildCoqCategoryCard('Appraisal', coq.appraisalCostActual, const Color(0xFFFFC812))),
             ],
           ),
           const SizedBox(height: 12),
@@ -1282,9 +1282,9 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [const Color(0xFFEEF2FF), const Color(0xFFE0E7FF)]),
+              gradient: LinearGradient(colors: [const Color(0xFFFFF8E1), const Color(0xFFFFF8E1)]),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.3)),
+              border: Border.all(color: const Color(0xFFB8860B).withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1317,9 +1317,9 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -1337,7 +1337,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
       child: ListTile(
         dense: true,
         leading: CircleAvatar(
-          backgroundColor: _getCoqCategoryColor(entry.category).withOpacity(0.15),
+          backgroundColor: _getCoqCategoryColor(entry.category).withValues(alpha: 0.15),
           child: Text(entry.category[0], style: TextStyle(color: _getCoqCategoryColor(entry.category), fontWeight: FontWeight.bold)),
         ),
         title: Text(entry.description, style: const TextStyle(fontSize: 14)),
@@ -1350,7 +1350,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
   Color _getCoqCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'prevention': return const Color(0xFF10B981);
-      case 'appraisal': return const Color(0xFF3B82F6);
+      case 'appraisal': return const Color(0xFFFFC812);
       case 'internal failure': return const Color(0xFFEF4444);
       case 'external failure': return const Color(0xFFDC2626);
       default: return Colors.grey;
@@ -1365,7 +1365,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: status.color.withOpacity(0.12),
+        color: status.color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -1383,7 +1383,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     Color color;
     switch (result) {
       case AuditResultStatus.passed: color = const Color(0xFF10B981); break;
-      case AuditResultStatus.passedWithObservations: color = const Color(0xFF3B82F6); break;
+      case AuditResultStatus.passedWithObservations: color = const Color(0xFFFFC812); break;
       case AuditResultStatus.failed: color = const Color(0xFFEF4444); break;
       case AuditResultStatus.deferred: color = const Color(0xFFF59E0B); break;
       default: color = Colors.grey;
@@ -1391,7 +1391,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
       child: Text(result.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: color)),
     );
   }
@@ -1399,7 +1399,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
   Widget _buildPriorityChip(CaPriority priority) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: priority.color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: priority.color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
       child: Text(priority.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: priority.color)),
     );
   }

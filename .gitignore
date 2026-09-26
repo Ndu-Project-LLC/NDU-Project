@@ -35,6 +35,9 @@ Thumbs.db
 # Logs
 *.log
 
+# Local web preview server artifacts (scripts/serve_flutter_web_fast.py)
+server.pid
+
 # Stray analysis / temp outputs
 analysis_output*.txt
 analyze_output*.txt

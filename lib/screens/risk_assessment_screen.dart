@@ -4,23 +4,24 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
-import 'package:ndu_project/widgets/unified_phase_header.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:math' as math;
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 class RiskAssessmentScreen extends StatefulWidget {
  const RiskAssessmentScreen({super.key});
@@ -43,7 +44,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  ];
 
  final List<_RiskEntry> _entries = [];
- final TextEditingController _searchController = TextEditingController();
+ final TextEditingController _searchController = SpellCheckTextEditingController();
  String? _statusFilter;
  bool _loadingEntries = false;
 
@@ -191,13 +192,13 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
 
  Future<void> _openEntryDialog(
  {_RiskEntry? entry, bool readOnly = false}) async {
- final idController = TextEditingController(text: entry?.id ?? '');
+ final idController = SpellCheckTextEditingController(text: entry?.id ?? '');
  final descriptionController =
- TextEditingController(text: entry?.description ?? '');
+ SpellCheckTextEditingController(text: entry?.description ?? '');
  final categoryController =
- TextEditingController(text: entry?.category ?? '');
- final scoreController = TextEditingController(text: entry?.score ?? '');
- final ownerController = TextEditingController(text: entry?.owner ?? '');
+ SpellCheckTextEditingController(text: entry?.category ?? '');
+ final scoreController = SpellCheckTextEditingController(text: entry?.score ?? '');
+ final ownerController = SpellCheckTextEditingController(text: entry?.owner ?? '');
  String selectedProbability =
  _riskLevelOptions.contains(entry?.probability ?? '')
  ? (entry?.probability ?? _riskLevelOptions[1])
@@ -754,7 +755,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
- content: Text('Failed to regenerate mitigation plan: $e'),
+ content: Text('Failed to regenerate mitigation plan: ${aiErrorMessage(e)}'),
  backgroundColor: Colors.red,
  ),
  );
@@ -812,8 +813,8 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  screenTitle: 'Risk Assessment',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_risk_assessment_notes'] ?? 'No data recorded.'),
  ],
@@ -836,84 +837,34 @@ class _RiskNotesCard extends StatelessWidget {
  final DateTime? savedAt;
  final ValueChanged<String> onChanged;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: const [
- BoxShadow(
- color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
- ],
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- // Header with border-bottom, bg-gray-50/50
- Container(
- padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
- decoration: const BoxDecoration(
- color: Color(0xFFFAFAFA),
- borderRadius: BorderRadius.only(
- topLeft: Radius.circular(16),
- topRight: Radius.circular(16),
- ),
- border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
- ),
- child: Row(
- children: [
- Container(
- width: 32,
- height: 32,
- decoration: BoxDecoration(
- color: const Color(0xFFF1F5F9),
- borderRadius: BorderRadius.circular(10),
- ),
- child: const Icon(Icons.description_outlined,
- color: Color(0xFF475569), size: 16),
- ),
- const SizedBox(width: 10),
- const Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Notes',
- style: TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w600,
- color: Color(0xFF111827)),
- ),
- SizedBox(height: 2),
- Text(
- 'Summarize key risks, probability/impact themes, and mitigation focus.',
- style: TextStyle(
- fontSize: 12,
- color: Color(0xFF6B7280),
- height: 1.3),
- ),
- ],
- ),
- ),
- if (saving)
- const _StatusChip(
- label: 'Saving...', color: Color(0xFF64748B))
- else if (savedAt != null)
- _StatusChip(
- label:
- 'Saved ${TimeOfDay.fromDateTime(savedAt!).format(context)}',
- color: const Color(0xFF16A34A),
- background: const Color(0xFFECFDF3),
- ),
- ],
- ),
- ),
- // Body: transparent textarea
- Padding(
- padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
- child: VoiceTextField(
+  @override
+  Widget build(BuildContext context) {
+    // Notes stay collapsed until the user opens them.
+    return CollapsibleNotesSection(
+      title: 'Notes',
+      icon: Icons.description_outlined,
+      iconColor: const Color(0xFF475569),
+      card: true,
+      trailing: saving
+          ? const _StatusChip(label: 'Saving...', color: Color(0xFF64748B))
+          : (savedAt != null
+              ? _StatusChip(
+                  label:
+                      'Saved ${TimeOfDay.fromDateTime(savedAt!).format(context)}',
+                  color: const Color(0xFF16A34A),
+                  background: const Color(0xFFECFDF3),
+                )
+              : null),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Summarize key risks, probability/impact themes, and mitigation focus.',
+            style: TextStyle(
+                fontSize: 12, color: Color(0xFF6B7280), height: 1.3),
+          ),
+          const SizedBox(height: 12),
+          VoiceTextField(
  controller: controller,
  onChanged: onChanged,
  maxLines: 6,
@@ -923,13 +874,12 @@ class _RiskNotesCard extends StatelessWidget {
  filled: false,
  contentPadding: EdgeInsets.zero,
  ),
- style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
- ),
- ),
- ],
- ),
- );
- }
+            style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _StatusChip extends StatelessWidget {
@@ -968,7 +918,7 @@ class _OutlinedButton extends StatelessWidget {
  return OutlinedButton(
  onPressed: onPressed,
  style: OutlinedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  side: const BorderSide(color: Color(0xFFE5E7EB)),
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

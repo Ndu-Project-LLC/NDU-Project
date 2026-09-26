@@ -1,4 +1,5 @@
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 // ignore_for_file: unused_element
 
 import 'dart:async';
@@ -8,15 +9,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/design_phase_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/design_phase_screen.dart';
-import 'package:ndu_project/screens/development_set_up_screen.dart';
-import 'package:ndu_project/screens/technical_alignment_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
-import 'package:ndu_project/screens/ui_ux_design_screen.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/design_phase_stable_shell.dart';
@@ -30,6 +28,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class RequirementsImplementationScreen extends StatefulWidget {
  const RequirementsImplementationScreen({super.key});
 
@@ -40,7 +39,7 @@ class RequirementsImplementationScreen extends StatefulWidget {
 
 class _RequirementsImplementationScreenState
  extends State<RequirementsImplementationScreen> {
- final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  Timer? _saveDebounce;
  bool _isLoading = false;
  bool _suspendSave = false;
@@ -50,12 +49,13 @@ class _RequirementsImplementationScreenState
  final Set<String> _selectedFilters = {'All requirements'};
  String _sectionApprovalStatus = 'Draft';
  final TextEditingController _sectionApprovedByController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _sectionApprovalDateController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _sectionApprovalNotesController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final List<_DesignSpecDocumentRow> _documents = [];
+ final List<_ApprovalGateData> _customApprovalGates = [];
 
  final List<RequirementRow> _requirementRows = [
  RequirementRow(
@@ -393,9 +393,7 @@ class _RequirementsImplementationScreenState
  void _addRequirement(ProjectDataModel projectData) {
  final ownerOptions = _ownerOptions(projectData);
  final requirementIndex = _requirementRows.length + 1;
- setState(() {
- _requirementRows.add(
- RequirementRow(
+ final newRow = RequirementRow(
  requirementId: _buildRequirementId(requirementIndex),
  title: 'New requirement',
  owner: ownerOptions.first,
@@ -412,12 +410,11 @@ class _RequirementsImplementationScreenState
  sourceDocument: 'Planning requirement register',
  gapStatus: 'Pending Approval',
  conflictImpact: 'Low',
- ),
  );
- _selectedRequirementIndex = _requirementRows.length - 1;
- _showAllRows = true;
- });
- _scheduleSave();
+ // Open the same modal dialog used by Edit so the user can fill in the
+ // form before the row is committed to the register. The row is only
+ // added to _requirementRows when the user clicks Save inside the dialog.
+ _showRequirementFormDialog(row: newRow, isNew: true);
  }
 
  Future<void> _deleteRequirement(int index) async {
@@ -659,9 +656,677 @@ class _RequirementsImplementationScreenState
  );
  }
 
- void _addDocumentRow() {
- setState(() => _documents.add(_DesignSpecDocumentRow()));
+ void _addDocumentRow(List<String> ownerOptions) {
+ _showAddDocumentDialog(ownerOptions: ownerOptions);
+ }
+
+ // -------------------------------------------------------------------------
+ // Add Document modal — collects all document metadata up-front in a
+ // focused dialog (instead of dropping an empty inline row). Mirrors the
+ // existing "Add Requirement" modal pattern for consistency.
+ // -------------------------------------------------------------------------
+ Future<void> _showAddDocumentDialog({
+ required List<String> ownerOptions,
+ }) async {
+ final formKey = GlobalKey<FormState>();
+ final nameController = SpellCheckTextEditingController();
+ final nameFocus = FocusNode();
+ final categoryController = SpellCheckTextEditingController();
+ final versionController = SpellCheckTextEditingController();
+ final linkedSpecIdController = SpellCheckTextEditingController();
+ final linkController = SpellCheckTextEditingController();
+ String selectedOwner = ownerOptions.isEmpty ? '' : ownerOptions.first;
+ String selectedStatus = 'Draft';
+ String selectedCategory = '';
+ String? uploadedFileName;
+ String? uploadedStoragePath;
+ bool isUploading = false;
+
+ // Curated, domain-appropriate option lists — saves the user from typing
+ // common values and keeps the register consistent across rows.
+ const categoryOptions = <String>[
+ 'Specification',
+ 'Design',
+ 'Architecture',
+ 'Test Plan',
+ 'Test Report',
+ 'User Guide',
+ 'Reference',
+ 'Contract',
+ 'Compliance',
+ 'Meeting Notes',
+ 'Risk Assessment',
+ 'Other',
+ ];
+
+ const statusOptions = <String>[
+ 'Draft',
+ 'In Review',
+ 'Approved',
+ 'Published',
+ 'Superseded',
+ 'Archived',
+ ];
+
+ // Merge curated categories with any custom ones already used in the
+ // register, so the dropdown reflects real project usage.
+ final mergedCategories = <String>{
+ ...categoryOptions,
+ ..._documents
+ .map((d) => d.category.trim())
+ .where((c) => c.isNotEmpty),
+ }.toList()
+ ..sort();
+
+ final result = await showDialog<_DesignSpecDocumentRow?>(
+ context: context,
+ barrierDismissible: true,
+ builder: (dialogContext) {
+ return StatefulBuilder(
+ builder: (innerContext, setDialogState) {
+ // Helper to build a labeled field with the NDU focused-border
+ // accent (matches the existing inline field styling).
+ InputDecoration nduDecoration({
+ required String label,
+ bool required = false,
+ String? hint,
+ IconData? prefixIcon,
+ }) {
+ return InputDecoration(
+ labelText: required ? '$label *' : label,
+ hintText: hint,
+ isDense: true,
+ filled: true,
+ fillColor: const Color(0xFFF8FAFC),
+ contentPadding:
+ const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+ prefixIcon: prefixIcon != null
+ ? Icon(prefixIcon, size: 18, color: const Color(0xFFB8860B))
+ : null,
+ border: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(10),
+ borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
+ ),
+ enabledBorder: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(10),
+ borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
+ ),
+ focusedBorder: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(10),
+ borderSide:
+ const BorderSide(color: Color(0xFFFFC812), width: 2),
+ ),
+ errorBorder: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(10),
+ borderSide: const BorderSide(color: Color(0xFFB91C1C)),
+ ),
+ focusedErrorBorder: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(10),
+ borderSide:
+ const BorderSide(color: Color(0xFFB91C1C), width: 2),
+ ),
+ );
+ }
+
+ Widget fieldLabel(String text, {bool required = false}) {
+ return Padding(
+ padding: const EdgeInsets.only(bottom: 6, top: 4),
+ child: RichText(
+ text: TextSpan(
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF374151),
+ ),
+ children: [
+ TextSpan(text: text),
+ if (required)
+ const TextSpan(
+ text: ' *',
+ style: TextStyle(color: Color(0xFFB91C1C)),
+ ),
+ ],
+ ),
+ ),
+ );
+ }
+
+ return AnimatedPadding(
+ padding: MediaQuery.of(innerContext).viewInsets,
+ duration: const Duration(milliseconds: 120),
+ curve: Curves.easeOutCubic,
+ child: Dialog(
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+ insetPadding: const EdgeInsets.symmetric(
+ horizontal: 24, vertical: 24),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(18)),
+ child: ConstrainedBox(
+ constraints: BoxConstraints(
+ maxWidth: 680,
+ maxHeight: MediaQuery.of(innerContext).size.height * 0.9,
+ ),
+ child: Form(
+ key: formKey,
+ child: SingleChildScrollView(
+ padding: const EdgeInsets.all(24),
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ crossAxisAlignment: CrossAxisAlignment.stretch,
+ children: [
+ // ── Header ────────────────────────────────────
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Container(
+ width: 44,
+ height: 44,
+ decoration: BoxDecoration(
+ gradient: const LinearGradient(
+ begin: Alignment.topLeft,
+ end: Alignment.bottomRight,
+ colors: [
+ Color(0xFFFFC812),
+ Color(0xFFB8860B),
+ ],
+ ),
+ borderRadius: BorderRadius.circular(12),
+ ),
+ child: const Icon(
+ Icons.description_outlined,
+ color: Colors.white,
+ size: 22,
+ ),
+ ),
+ const SizedBox(width: 14),
+ const Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(
+ 'Add Document',
+ style: TextStyle(
+ fontSize: 19,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ letterSpacing: -0.2,
+ ),
+ ),
+ SizedBox(height: 4),
+ Text(
+ 'Register a new document or link in the Documents & Links Register.',
+ style: TextStyle(
+ fontSize: 13,
+ color: Color(0xFF6B7280),
+ height: 1.4,
+ ),
+ ),
+ ],
+ ),
+ ),
+ IconButton(
+ tooltip: 'Close',
+ onPressed: () =>
+ Navigator.of(dialogContext).pop(null),
+ icon: const Icon(Icons.close, size: 20),
+ splashRadius: 20,
+ ),
+ ],
+ ),
+ const Divider(height: 28, thickness: 1,
+ color: Color(0xFFF1F5F9)),
+
+ // ── Form fields ──────────────────────────────
+ // Row 1: Document Name (full width — primary field)
+ fieldLabel('Document Name', required: true),
+ VoiceTextFormField(
+ controller: nameController,
+ focusNode: nameFocus,
+ autofocus: true,
+ textCapitalization: TextCapitalization.sentences,
+ textInputAction: TextInputAction.next,
+ decoration: nduDecoration(
+ label: 'Document Name',
+ hint: 'e.g. API Specification v1.2',
+ prefixIcon: Icons.article_outlined,
+ ),
+ validator: (value) {
+ final v = value?.trim() ?? '';
+ if (v.isEmpty) {
+ return 'Document name is required';
+ }
+ if (v.length < 2) {
+ return 'Name must be at least 2 characters';
+ }
+ return null;
+ },
+ ),
+
+ const SizedBox(height: 16),
+
+ // Row 2: Category + Version
+ LayoutBuilder(
+ builder: (context, constraints) {
+ final isWide = constraints.maxWidth >= 480;
+ final children = <Widget>[
+ // Category dropdown
+ Flexible(
+ flex: isWide ? 3 : 1,
+ child: Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: [
+ fieldLabel('Category'),
+ DropdownButtonFormField<String>(
+ initialValue: selectedCategory.isEmpty
+ ? null
+ : selectedCategory,
+ isExpanded: true,
+ decoration: nduDecoration(
+ label: 'Category',
+ prefixIcon: Icons.category_outlined,
+ ).copyWith(
+ labelText: null,
+ hintText: 'Select category',
+ ),
+ items: mergedCategories
+ .map((c) => DropdownMenuItem(
+ value: c,
+ child: Text(c,
+ overflow: TextOverflow
+ .ellipsis),
+ ))
+ .toList(),
+ onChanged: (v) {
+ if (v == null) return;
+ setDialogState(() {
+ selectedCategory = v;
+ if (v == 'Other') {
+ categoryController.clear();
+ } else {
+ categoryController.text = v;
+ }
+ });
+ },
+ ),
+ if (selectedCategory == 'Other') ...[
+ const SizedBox(height: 8),
+ VoiceTextField(
+ controller: categoryController,
+ textCapitalization:
+ TextCapitalization.sentences,
+ decoration: nduDecoration(
+ label: 'Custom Category',
+ hint: 'Type custom category',
+ ),
+ ),
+ ],
+ ],
+ ),
+ ),
+ SizedBox(width: isWide ? 12 : 0),
+ // Version
+ Flexible(
+ flex: isWide ? 2 : 1,
+ child: Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: [
+ fieldLabel('Version'),
+ VoiceTextField(
+ controller: versionController,
+ textInputAction: TextInputAction.next,
+ decoration: nduDecoration(
+ label: 'Version',
+ hint: 'e.g. 1.0.0',
+ prefixIcon:
+ Icons.history_outlined,
+ ),
+ ),
+ ],
+ ),
+ ),
+ ];
+ return isWide
+ ? Row(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: children,
+ )
+ : Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.stretch,
+ children: children,
+ );
+ },
+ ),
+
+ const SizedBox(height: 16),
+
+ // Row 3: Owner + Status
+ LayoutBuilder(
+ builder: (context, constraints) {
+ final isWide = constraints.maxWidth >= 480;
+ final children = <Widget>[
+ Flexible(
+ flex: isWide ? 3 : 1,
+ child: Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: [
+ fieldLabel('Owner'),
+ DropdownButtonFormField<String>(
+ initialValue: selectedOwner.isEmpty
+ ? null
+ : selectedOwner,
+ isExpanded: true,
+ decoration: nduDecoration(
+ label: 'Owner',
+ prefixIcon: Icons.person_outline,
+ ).copyWith(
+ labelText: null,
+ hintText: 'Select owner',
+ ),
+ items: ownerOptions
+ .map((o) => DropdownMenuItem(
+ value: o,
+ child: Text(o,
+ overflow: TextOverflow
+ .ellipsis),
+ ))
+ .toList(),
+ onChanged: (v) {
+ if (v == null) return;
+ setDialogState(() =>
+ selectedOwner = v);
+ },
+ ),
+ ],
+ ),
+ ),
+ SizedBox(width: isWide ? 12 : 0),
+ Flexible(
+ flex: isWide ? 2 : 1,
+ child: Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: [
+ fieldLabel('Status'),
+ DropdownButtonFormField<String>(
+ initialValue: selectedStatus,
+ isExpanded: true,
+ decoration: nduDecoration(
+ label: 'Status',
+ prefixIcon: Icons.flag_outlined,
+ ).copyWith(
+ labelText: null,
+ ),
+ items: statusOptions
+ .map((s) => DropdownMenuItem(
+ value: s, child: Text(s)))
+ .toList(),
+ onChanged: (v) {
+ if (v == null) return;
+ setDialogState(() =>
+ selectedStatus = v);
+ },
+ ),
+ ],
+ ),
+ ),
+ ];
+ return isWide
+ ? Row(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: children,
+ )
+ : Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.stretch,
+ children: children,
+ );
+ },
+ ),
+
+ const SizedBox(height: 16),
+
+ // Row 4: Linked Spec ID (full width)
+ fieldLabel('Linked Spec ID'),
+ VoiceTextField(
+ controller: linkedSpecIdController,
+ textInputAction: TextInputAction.next,
+ decoration: nduDecoration(
+ label: 'Linked Spec ID',
+ hint: 'e.g. REQ-001',
+ prefixIcon: Icons.link,
+ ),
+ ),
+
+ const SizedBox(height: 16),
+
+ // Row 5: Link / Uploaded URL + Upload button
+ fieldLabel('Link / Uploaded URL'),
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Expanded(
+ child: VoiceTextField(
+ controller: linkController,
+ keyboardType: TextInputType.url,
+ textInputAction: TextInputAction.done,
+ decoration: nduDecoration(
+ label: 'Link / Uploaded URL',
+ hint:
+ 'https://… or click Upload to attach',
+ prefixIcon: Icons.attach_file,
+ ),
+ ),
+ ),
+ const SizedBox(width: 8),
+ SizedBox(
+ height: 48,
+ child: OutlinedButton.icon(
+ onPressed: isUploading
+ ? null
+ : () async {
+ setDialogState(() =>
+ isUploading = true);
+ try {
+ final uploaded = await _pickAndUploadAttachment(
+ folder: 'design-spec-docs');
+ if (uploaded != null) {
+ linkController.text =
+ uploaded.url;
+ setDialogState(() {
+ uploadedFileName =
+ uploaded.name;
+ uploadedStoragePath =
+ uploaded.storagePath;
+ });
+ if (dialogContext.mounted) {
+ ScaffoldMessenger.of(dialogContext)
+ .showSnackBar(
+ SnackBar(
+ content: Text(
+ 'Uploaded: ${uploaded.name}'),
+ backgroundColor:
+ const Color(0xFF16A34A),
+ ),
+ );
+ }
+ }
+ } finally {
+ if (dialogContext.mounted) {
+ setDialogState(() =>
+ isUploading = false);
+ }
+ }
+ },
+ style: OutlinedButton.styleFrom(
+ foregroundColor: const Color(0xFFB8860B),
+ side: const BorderSide(
+ color: Color(0xFFFFC812)),
+ shape: RoundedRectangleBorder(
+ borderRadius:
+ BorderRadius.circular(10)),
+ ),
+ icon: isUploading
+ ? const SizedBox(
+ width: 16,
+ height: 16,
+ child: CircularProgressIndicator(
+ strokeWidth: 2),
+ )
+ : const Icon(Icons.upload_file, size: 18),
+ label: Text(isUploading
+ ? 'Uploading…'
+ : 'Upload'),
+ ),
+ ),
+ ],
+ ),
+
+ if (uploadedFileName != null) ...[
+ const SizedBox(height: 8),
+ Container(
+ padding: const EdgeInsets.symmetric(
+ horizontal: 10, vertical: 8),
+ decoration: BoxDecoration(
+ color: const Color(0xFFFFF8E1),
+ borderRadius: BorderRadius.circular(8),
+ border: Border.all(
+ color: const Color(0xFFFDE68A)),
+ ),
+ child: Row(
+ children: [
+ const Icon(Icons.check_circle,
+ size: 16, color: Color(0xFF16A34A)),
+ const SizedBox(width: 8),
+ Expanded(
+ child: Text(
+ 'Attached: $uploadedFileName',
+ style: const TextStyle(
+ fontSize: 12,
+ color: Color(0xFF6B7280)),
+ overflow: TextOverflow.ellipsis,
+ ),
+ ),
+ ],
+ ),
+ ),
+ ],
+
+ const SizedBox(height: 24),
+ const Divider(height: 1, color: Color(0xFFF1F5F9)),
+ const SizedBox(height: 16),
+
+ // ── Action bar ───────────────────────────────
+ Row(
+ mainAxisAlignment: MainAxisAlignment.spaceBetween,
+ children: [
+ const Text(
+ '* required',
+ style: TextStyle(
+ fontSize: 11,
+ color: Color(0xFF9CA3AF),
+ fontStyle: FontStyle.italic,
+ ),
+ ),
+ const Spacer(),
+ TextButton(
+ onPressed: () =>
+ Navigator.of(dialogContext).pop(null),
+ style: TextButton.styleFrom(
+ foregroundColor: const Color(0xFF6B7280),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 16, vertical: 12),
+ ),
+ child: const Text('Cancel'),
+ ),
+ const SizedBox(width: 8),
+ FilledButton.icon(
+ onPressed: () {
+ if (!(formKey.currentState?.validate() ??
+ false)) {
+ return;
+ }
+ final categoryValue = selectedCategory ==
+ 'Other'
+ ? categoryController.text.trim()
+ : (selectedCategory.isEmpty
+ ? categoryController.text.trim()
+ : selectedCategory);
+
+ final row = _DesignSpecDocumentRow(
+ name: nameController.text.trim(),
+ category: categoryValue,
+ version: versionController.text.trim(),
+ owner: selectedOwner,
+ linkedSpecId:
+ linkedSpecIdController.text.trim(),
+ link: linkController.text.trim(),
+ status: selectedStatus,
+ fileName: uploadedFileName ?? '',
+ storagePath: uploadedStoragePath ?? '',
+ );
+ Navigator.of(dialogContext).pop(row);
+ },
+ style: FilledButton.styleFrom(
+ backgroundColor: const Color(0xFFFFC812),
+ foregroundColor: const Color(0xFF111827),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 20, vertical: 14),
+ shape: RoundedRectangleBorder(
+ borderRadius:
+ BorderRadius.circular(10)),
+ elevation: 0,
+ ),
+ icon: const Icon(Icons.add, size: 18),
+ label: const Text(
+ 'Add to Register',
+ style: TextStyle(
+ fontWeight: FontWeight.w700,
+ fontSize: 14,
+ ),
+ ),
+ ),
+ ],
+ ),
+ ],
+ ),
+ ),
+ ),
+ ),
+ ),
+ );
+ },
+ );
+ },
+ );
+
+ // Dispose controllers after dialog closes
+ nameController.dispose();
+ nameFocus.dispose();
+ categoryController.dispose();
+ versionController.dispose();
+ linkedSpecIdController.dispose();
+ linkController.dispose();
+
+ // Commit the new row to the register only if user clicked "Add to Register"
+ if (result == null) return;
+ setState(() => _documents.add(result));
  _scheduleSave();
+ if (!mounted) return;
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text(
+ 'Document "${result.name}" added to the register.'),
+ backgroundColor: const Color(0xFF16A34A),
+ behavior: SnackBarBehavior.floating,
+ duration: const Duration(seconds: 3),
+ ),
+ );
  }
 
  void _updateDocumentRow(int index,
@@ -718,7 +1383,7 @@ class _RequirementsImplementationScreenState
  const LinearProgressIndicator(
  minHeight: 2,
  backgroundColor: Color(0xFFE5E7EB),
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  Expanded(
  child: SingleChildScrollView(
@@ -761,10 +1426,10 @@ class _RequirementsImplementationScreenState
  ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Design Management',
- nextLabel: 'Next: Technical Alignment',
- onBack: _navigateToDesignOverview,
- onNext: _tryNavigateToTechnicalAlignment,
+ backLabel: PlanningPhaseNavigation.backLabel('requirements_implementation'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('requirements_implementation'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'requirements_implementation'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'requirements_implementation'),
  ),
  ],
  ),
@@ -904,17 +1569,39 @@ class _RequirementsImplementationScreenState
  ),
  ),
  TextButton.icon(
- onPressed: _addDocumentRow,
- icon: const Icon(Icons.add),
- label: const Text('Add document'),
+ onPressed: () => _addDocumentRow(ownerOptions),
+ style: TextButton.styleFrom(
+ foregroundColor: const Color(0xFFB8860B),
+ backgroundColor: const Color(0xFFFFF8E1),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 14, vertical: 8),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(8)),
+ ),
+ icon: const Icon(Icons.add_circle_outline, size: 18),
+ label: const Text(
+ 'Add document',
+ style: TextStyle(fontWeight: FontWeight.w600),
+ ),
  ),
  ],
  ),
  const SizedBox(height: 8),
  if (_documents.isEmpty)
- const Text(
- 'No documents added yet.',
- style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+ const Padding(
+ padding: EdgeInsets.symmetric(vertical: 8),
+ child: Row(
+ children: [
+ Icon(Icons.info_outline,
+ size: 14, color: Color(0xFF9CA3AF)),
+ SizedBox(width: 6),
+ Text(
+ 'No documents added yet. Click "Add document" to register one.',
+ style: TextStyle(
+ fontSize: 12, color: Color(0xFF6B7280)),
+ ),
+ ],
+ ),
  ),
  for (var i = 0; i < _documents.length; i++) ...[
  const SizedBox(height: 10),
@@ -1104,10 +1791,6 @@ class _RequirementsImplementationScreenState
  _buildWebRequirementsRegister(ownerOptions),
  const SizedBox(height: 20),
 
- // 7. Gap & Exception Analysis Panel
- _buildWebGapAnalysisPanel(),
- const SizedBox(height: 20),
-
  // 8. Approval Readiness Panel
  _buildWebApprovalReadinessPanel(),
  const SizedBox(height: 20),
@@ -1126,10 +1809,10 @@ class _RequirementsImplementationScreenState
 
  // Navigation
  LaunchPhaseNavigation(
- backLabel: 'Back: Design Management',
- nextLabel: 'Next: Technical Alignment',
- onBack: _navigateToDesignOverview,
- onNext: _tryNavigateToTechnicalAlignment,
+ backLabel: PlanningPhaseNavigation.backLabel('requirements_implementation'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('requirements_implementation'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'requirements_implementation'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'requirements_implementation'),
  ),
  ],
  ),
@@ -1165,7 +1848,7 @@ class _RequirementsImplementationScreenState
  final compact = constraints.maxWidth < 1040;
  const titleBlock = Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Design Specifications',
  style: TextStyle(
@@ -1273,7 +1956,7 @@ class _RequirementsImplementationScreenState
  ),
  selected: selected,
  selectedColor: const Color(0xFF111827),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  shape: const StadiumBorder(
  side: BorderSide(color: Color(0xFFE5E7EB)),
  ),
@@ -1350,7 +2033,7 @@ class _RequirementsImplementationScreenState
  'Total Requirements',
  '$totalReq',
  totalReq == 1 ? '1 item registered' : '$totalReq items registered',
- const Color(0xFF0EA5E9),
+ const Color(0xFFFFC812),
  ),
  _StatCardData(
  'Mapped to Design',
@@ -1368,7 +2051,7 @@ class _RequirementsImplementationScreenState
  'Gap Items',
  '$gapCount',
  gapCount > 0 ? 'Open gaps' : 'No gaps',
- const Color(0xFF8B5CF6),
+ const Color(0xFFB8860B),
  ),
  ];
 
@@ -1503,7 +2186,7 @@ class _RequirementsImplementationScreenState
  'to design artifacts, test cases, and source documents. Every mapped '
  'requirement should have an unbroken chain from origin through '
  'implementation to verification.',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  ),
  const SizedBox(height: 12),
  _buildWebGuideCard(
@@ -1705,24 +2388,19 @@ class _RequirementsImplementationScreenState
  padding:
  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
  decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
- child: const Row(
- children: [
- Expanded(
- flex: 1,
- child: Text('REQ ID',
- style: TextStyle(
- fontSize: 10,
- fontWeight: FontWeight.w800,
- color: Color(0xFF6B7280),
- letterSpacing: 0.8))),
- Expanded(
- flex: 3,
- child: Text('TITLE',
- style: TextStyle(
- fontSize: 10,
- fontWeight: FontWeight.w800,
- color: Color(0xFF6B7280),
- letterSpacing: 0.8))),
+ child: const Row(      children: [
+        Expanded(
+          flex: 4,
+          child: Text(
+            'TITLE',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF6B7280),
+              letterSpacing: 0.8,
+            ),
+          ),
+        ),
  Expanded(
  flex: 1,
  child: Text('OWNER',
@@ -1756,11 +2434,10 @@ class _RequirementsImplementationScreenState
  fontSize: 10,
  fontWeight: FontWeight.w800,
  color: Color(0xFF6B7280),
- letterSpacing: 0.8),
- textAlign: TextAlign.center)),
- SizedBox(
- width: 80,
- child: Text('ACTIONS',
+ letterSpacing: 0.8),                          textAlign: TextAlign.center)),
+                SizedBox(
+                  width: 144,
+                  child: Text('ACTIONS',
  style: TextStyle(
  fontSize: 10,
  fontWeight: FontWeight.w800,
@@ -1803,7 +2480,7 @@ class _RequirementsImplementationScreenState
  onTap: () => _showVerificationPopup(actualIndex),
  child: Container(
  color: isSelected
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF8E1)
  : isStriped
  ? const Color(0xFFF9FAFB)
  : Colors.white,
@@ -1812,38 +2489,23 @@ class _RequirementsImplementationScreenState
  Padding(
  padding:
  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
- child: Row(
- crossAxisAlignment: CrossAxisAlignment.center,
- children: [
- // REQ ID
- Expanded(
- flex: 1,
- child: Text(
- row.requirementId.trim().isEmpty
- ? '—'
- : row.requirementId,
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w700,
- color: Color(0xFF475569),
- ),
- ),
- ),
- // TITLE
- Expanded(
- flex: 3,
- child: Text(
- row.title.trim().isEmpty ? 'Untitled' : row.title,
- overflow: TextOverflow.ellipsis,
- style: TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- color: row.title.trim().isEmpty
- ? const Color(0xFF9CA3AF)
- : const Color(0xFF111827),
- ),
- ),
- ),
+ child: Row(              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // TITLE
+                Expanded(
+                  flex: 4,
+                  child: Text(
+                    row.title.trim().isEmpty ? 'Untitled' : row.title,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: row.title.trim().isEmpty
+                          ? const Color(0xFF9CA3AF)
+                          : const Color(0xFF111827),
+                    ),
+                  ),
+                ),
  // OWNER
  Expanded(
  flex: 1,
@@ -1893,32 +2555,31 @@ class _RequirementsImplementationScreenState
  ),
  // GAP STATUS (badge)
  Expanded(
- flex: 1,
- child: Center(
- child: Container(
- padding: const EdgeInsets.symmetric(
- horizontal: 8, vertical: 4),
- decoration: BoxDecoration(
- color: _gapStatusColor(row.gapStatus).withValues(alpha: 0.1),
- borderRadius: BorderRadius.circular(12),
- ),
- child: Text(
- row.gapStatus,
- style: TextStyle(
- fontSize: 10,
- fontWeight: FontWeight.w600,
- color: _gapStatusColor(row.gapStatus),
- ),
- ),
- ),
- ),
+   flex: 1,
+   child: Center(
+     child: Container(
+       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+       decoration: BoxDecoration(
+         color: _gapStatusColor(row.gapStatus).withValues(alpha: 0.1),
+         borderRadius: BorderRadius.circular(12),
+       ),
+       child: Text(
+         row.gapStatus,
+         style: TextStyle(
+           fontSize: 10,
+           fontWeight: FontWeight.w600,
+           color: _gapStatusColor(row.gapStatus),
+         ),
+       ),
+     ),
+   ),
  ),
  // ACTIONS
  SizedBox(
- width: 80,
- child: Row(
- mainAxisSize: MainAxisSize.min,
- mainAxisAlignment: MainAxisAlignment.center,
+   width: 144,
+   child: Row(
+     mainAxisSize: MainAxisSize.min,
+     mainAxisAlignment: MainAxisAlignment.center,
  children: [
  IconButton(
  icon: const Icon(Icons.edit_outlined,
@@ -1927,8 +2588,8 @@ class _RequirementsImplementationScreenState
  _showRequirementEditDialog(actualIndex),
  tooltip: 'Edit',
  padding: EdgeInsets.zero,
- constraints:
- const BoxConstraints(minWidth: 28, minHeight: 28),
+ constraints: const BoxConstraints.tightFor(
+     width: 48, height: 48),
  ),
  IconButton(
  icon: const Icon(Icons.visibility_outlined,
@@ -1936,8 +2597,8 @@ class _RequirementsImplementationScreenState
  onPressed: () => _showVerificationPopup(actualIndex),
  tooltip: 'View detail',
  padding: EdgeInsets.zero,
- constraints:
- const BoxConstraints(minWidth: 28, minHeight: 28),
+ constraints: const BoxConstraints.tightFor(
+     width: 48, height: 48),
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline,
@@ -1945,8 +2606,8 @@ class _RequirementsImplementationScreenState
  onPressed: () => _deleteRequirement(actualIndex),
  tooltip: 'Delete',
  padding: EdgeInsets.zero,
- constraints:
- const BoxConstraints(minWidth: 28, minHeight: 28),
+ constraints: const BoxConstraints.tightFor(
+     width: 48, height: 48),
  ),
  ],
  ),
@@ -2047,9 +2708,9 @@ class _RequirementsImplementationScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text(
- 'Acceptance criteria & verification — ${selected.requirementId}',
- style: const TextStyle(
+        const Text(
+          'Acceptance criteria & verification',
+          style: TextStyle(
  fontSize: 16,
  fontWeight: FontWeight.w800,
  color: Color(0xFF111827),
@@ -2092,22 +2753,12 @@ class _RequirementsImplementationScreenState
  Padding(
  padding: const EdgeInsets.all(20),
  child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- // Row 1: ID, Owner, Type
- Row(
- children: [
- Expanded(
- child: _buildWebInlineField(
- label: 'Requirement ID',
- value: selected.requirementId,
- onChanged: (v) => _updateSelectedRequirement(
- (r) => r.copyWith(requirementId: v)),
- ),
- ),
- const SizedBox(width: 12),
- Expanded(
- child: _buildWebOwnerDropdown(
+ crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // Row 1: Owner and Type
+            Row(
+              children: [
+                Expanded(
+                  child: _buildWebOwnerDropdown(
  label: 'Owner',
  value: selected.owner,
  options: ownerOptions,
@@ -2116,9 +2767,9 @@ class _RequirementsImplementationScreenState
  ),
  ),
  const SizedBox(width: 12),
- Expanded(
- child: _buildWebDropdownField(
- label: 'Requirement Type',
+                Expanded(
+                  child: _buildWebDropdownField(
+                    label: 'Requirement Type',
  value: selected.requirementType,
  options: const [
  'Functional',
@@ -2314,154 +2965,6 @@ class _RequirementsImplementationScreenState
  }
 
  // -------------------------------------------------------------------------
- // 7. Gap & Exception Analysis Panel
- // -------------------------------------------------------------------------
- Widget _buildWebGapAnalysisPanel() {
- final gapItems = _requirementRows
- .where((r) => r.gapStatus.trim().toLowerCase() != 'closed')
- .toList();
-
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: [
- BoxShadow(
- color: Colors.black.withValues(alpha: 0.04),
- blurRadius: 12,
- offset: const Offset(0, 6),
- ),
- ],
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Gap & exception analysis',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w800,
- color: Color(0xFF111827),
- ),
- ),
- const SizedBox(height: 6),
- const Text(
- 'Requirements with unresolved gaps or pending approval status. '
- 'Resolve all gaps before proceeding to Technical Alignment.',
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w500,
- color: Color(0xFF6B7280),
- height: 1.45,
- ),
- ),
- const SizedBox(height: 16),
- if (gapItems.isEmpty)
- Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFF0FDF4),
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFBBF7D0)),
- ),
- child: const Row(
- children: [
- Icon(Icons.check_circle_outline,
- color: Color(0xFF10B981), size: 20),
- SizedBox(width: 10),
- Expanded(
- child: Text(
- 'All requirements have closed gap status. No outstanding exceptions.',
- style: TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w500,
- color: Color(0xFF166534),
- ),
- ),
- ),
- ],
- ),
- )
- else
- ...gapItems.map((row) => Container(
- margin: const EdgeInsets.only(bottom: 12),
- padding: const EdgeInsets.all(14),
- decoration: BoxDecoration(
- color: const Color(0xFFFFFBEB),
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFFDE68A)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- const Icon(Icons.warning_amber_outlined,
- color: Color(0xFFF59E0B), size: 18),
- const SizedBox(width: 8),
- Expanded(
- child: Text(
- '${row.requirementId} · ${row.title}',
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: Color(0xFF92400E),
- ),
- ),
- ),
- Container(
- padding: const EdgeInsets.symmetric(
- horizontal: 8, vertical: 4),
- decoration: BoxDecoration(
- color: _gapStatusColor(row.gapStatus)
- .withValues(alpha: 0.1),
- borderRadius: BorderRadius.circular(12),
- ),
- child: Text(
- row.gapStatus,
- style: TextStyle(
- fontSize: 10,
- fontWeight: FontWeight.w600,
- color: _gapStatusColor(row.gapStatus),
- ),
- ),
- ),
- ],
- ),
- if (row.conflictNote.trim().isNotEmpty) ...[
- const SizedBox(height: 8),
- Text(
- 'Conflict: ${row.conflictNote}',
- style: const TextStyle(
- fontSize: 12,
- color: Color(0xFF92400E),
- height: 1.4,
- ),
- ),
- ],
- if (row.conflictImpact.trim().isNotEmpty &&
- row.conflictImpact.toLowerCase() != 'low') ...[
- const SizedBox(height: 4),
- Text(
- 'Impact: ${row.conflictImpact}',
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- color: Color(0xFFDC2626),
- ),
- ),
- ],
- ],
- ),
- )),
- ],
- ),
- );
- }
-
- // -------------------------------------------------------------------------
  // 8. Approval Readiness Panel
  // -------------------------------------------------------------------------
  Widget _buildWebApprovalReadinessPanel() {
@@ -2488,7 +2991,7 @@ class _RequirementsImplementationScreenState
  _sectionApprovalStatus == 'In Review' ||
  _sectionApprovalStatus == 'Approved';
 
- final gates = [
+ final autoGates = [
  _ApprovalGateData(
  gate: 'Requirements Complete',
  description:
@@ -2542,6 +3045,7 @@ class _RequirementsImplementationScreenState
  status: sectionApproved ? 'Complete' : 'Not Started',
  ),
  ];
+ final gates = [...autoGates, ..._customApprovalGates];
 
  return Container(
  decoration: BoxDecoration(
@@ -2560,8 +3064,12 @@ class _RequirementsImplementationScreenState
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  // Panel header
- const Padding(
- padding: EdgeInsets.all(20),
+ Padding(
+ padding: const EdgeInsets.all(20),
+ child: Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -2582,6 +3090,25 @@ class _RequirementsImplementationScreenState
  fontWeight: FontWeight.w500,
  color: Color(0xFF6B7280),
  height: 1.45,
+ ),
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(width: 12),
+ OutlinedButton.icon(
+ onPressed: _showAddApprovalGateDialog,
+ icon: const Icon(Icons.add, size: 16),
+ label: const Text('Add gate',
+ style: TextStyle(
+ fontSize: 12, fontWeight: FontWeight.w600)),
+ style: OutlinedButton.styleFrom(
+ foregroundColor: const Color(0xFF475569),
+ side: const BorderSide(color: Color(0xFFE2E8F0)),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 14, vertical: 10),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(12)),
  ),
  ),
  ],
@@ -2654,9 +3181,14 @@ class _RequirementsImplementationScreenState
  ...List.generate(gates.length, (index) {
  final gate = gates[index];
  final isLast = index == gates.length - 1;
+ final isCustom = index >= autoGates.length;
  return _buildWebApprovalGateRow(
  gate: gate,
  showDivider: !isLast,
+ isCustom: isCustom,
+ onDelete: isCustom
+ ? () => _removeCustomApprovalGate(index - autoGates.length)
+ : null,
  );
  }),
  ],
@@ -2668,9 +3200,11 @@ class _RequirementsImplementationScreenState
  Widget _buildWebApprovalGateRow({
  required _ApprovalGateData gate,
  required bool showDivider,
+ bool isCustom = false,
+ VoidCallback? onDelete,
  }) {
  return Container(
- color: Colors.white,
+ color: isCustom ? const Color(0xFFFFFDF5) : Colors.white,
  child: Column(
  children: [
  Padding(
@@ -2681,6 +3215,15 @@ class _RequirementsImplementationScreenState
  // GATE
  Expanded(
  flex: 4,
+ child: Row(
+ children: [
+ if (isCustom)
+ const Padding(
+ padding: EdgeInsets.only(right: 6),
+ child: Icon(Icons.add_circle_outline,
+ size: 12, color: Color(0xFFD97706)),
+ ),
+ Expanded(
  child: Text(
  gate.gate,
  style: const TextStyle(
@@ -2688,6 +3231,9 @@ class _RequirementsImplementationScreenState
  fontWeight: FontWeight.w700,
  color: Color(0xFF111827),
  ),
+ ),
+ ),
+ ],
  ),
  ),
  // DESCRIPTION
@@ -2759,6 +3305,20 @@ class _RequirementsImplementationScreenState
  ),
  ),
  ),
+ // DELETE (custom gates only)
+ if (isCustom && onDelete != null)
+ Padding(
+ padding: const EdgeInsets.only(left: 8),
+ child: InkWell(
+ onTap: onDelete,
+ borderRadius: BorderRadius.circular(6),
+ child: const Padding(
+ padding: EdgeInsets.all(4),
+ child: Icon(Icons.delete_outline,
+ size: 16, color: Color(0xFFEF4444)),
+ ),
+ ),
+ ),
  ],
  ),
  ),
@@ -2812,36 +3372,66 @@ class _RequirementsImplementationScreenState
  // -------------------------------------------------------------------------
  void _showRequirementEditDialog(int index) {
  if (index < 0 || index >= _requirementRows.length) return;
- final row = _requirementRows[index];
+ _showRequirementFormDialog(
+ row: _requirementRows[index],
+ isNew: false,
+ editIndex: index,
+ );
+ }
 
- final reqIdController = TextEditingController(text: row.requirementId);
- final titleController = TextEditingController(text: row.title);
- final ownerController = TextEditingController(text: row.owner);
- final definitionController = TextEditingController(text: row.definition);
+ // -------------------------------------------------------------------------
+ // 7. Requirement Add/Edit — Shared Modal Form Dialog
+ // -------------------------------------------------------------------------
+ // Shared by both the "Add requirement" button (isNew=true) and the row
+ // "Edit" action (isNew=false, editIndex provided). Opening this dialog is
+ // the ONLY way new rows enter the register — there is no longer a silent
+ // inline-add path, which is what caused "Add" to not trigger the modal
+ // while "Edit" did.
+ void _showRequirementFormDialog({
+ required RequirementRow row,
+ required bool isNew,
+ int? editIndex,
+ }) {
+ final titleController = SpellCheckTextEditingController(text: row.title);
+ final ownerController = SpellCheckTextEditingController(text: row.owner);
+ final definitionController = SpellCheckTextEditingController(text: row.definition);
  var selectedReqType = row.requirementType;
  var selectedRuleType = row.ruleType;
  var selectedSourceType = row.sourceType;
  final artifactLabelController =
- TextEditingController(text: row.designArtifactLabel);
+ SpellCheckTextEditingController(text: row.designArtifactLabel);
  var selectedArtifactType = row.designArtifactType;
  var selectedValidationStatus = row.validationStatus;
  final criteriaController =
- TextEditingController(text: row.acceptanceCriteria);
- final testMethodController = TextEditingController(text: row.testMethod);
- final sourceDocController = TextEditingController(text: row.sourceDocument);
+ SpellCheckTextEditingController(text: row.acceptanceCriteria);
+ final testMethodController = SpellCheckTextEditingController(text: row.testMethod);
+ final sourceDocController = SpellCheckTextEditingController(text: row.sourceDocument);
  final artifactUrlController =
- TextEditingController(text: row.designArtifactUrl);
+ SpellCheckTextEditingController(text: row.designArtifactUrl);
  var selectedGapStatus = row.gapStatus;
- final conflictNoteController = TextEditingController(text: row.conflictNote);
+ final conflictNoteController = SpellCheckTextEditingController(text: row.conflictNote);
  var selectedConflictImpact = row.conflictImpact;
 
  showDialog<void>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
- title: Text(
- 'Edit Requirement — ${row.requirementId}',
- style: const TextStyle(fontSize: 18),
+ title: Row(
+ children: [
+ Expanded(
+ child: Text(
+ isNew
+ ? 'Add Requirement'
+                : 'Edit Requirement',
+                style: const TextStyle(fontSize: 18),
+ ),
+ ),
+ IconButton(
+ icon: const Icon(Icons.close, size: 20),
+ tooltip: 'Close',
+ onPressed: () => Navigator.of(dialogContext).pop(),
+ ),
+ ],
  ),
  content: SizedBox(
  width: 600,
@@ -2850,21 +3440,8 @@ class _RequirementsImplementationScreenState
  mainAxisSize: MainAxisSize.min,
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- // Row 1: ID, Type
- Row(
- children: [
- Expanded(
- child: VoiceTextField(
- controller: reqIdController,
- decoration: const InputDecoration(
- labelText: 'Requirement ID *',
- isDense: true,
- ),
- ),
- ),
- const SizedBox(width: 12),
- Expanded(
- child: DropdownButtonFormField<String>(
+ // Requirement type
+              DropdownButtonFormField<String>(
  initialValue: selectedReqType,
  decoration: const InputDecoration(
  labelText: 'Requirement Type *',
@@ -2886,11 +3463,9 @@ class _RequirementsImplementationScreenState
  }
  },
  ),
- ),
- ],
- ),
  const SizedBox(height: 12),
- // Title
+              // Title
+
  VoiceTextField(
  controller: titleController,
  decoration: const InputDecoration(
@@ -3151,8 +3726,7 @@ class _RequirementsImplementationScreenState
  ),
  FilledButton(
  onPressed: () {
- final updated = row.copyWith(
- requirementId: reqIdController.text.trim(),
+ final committed = row.copyWith(
  title: titleController.text.trim(),
  owner: ownerController.text.trim(),
  definition: definitionController.text.trim(),
@@ -3170,15 +3744,32 @@ class _RequirementsImplementationScreenState
  conflictNote: conflictNoteController.text.trim(),
  conflictImpact: selectedConflictImpact,
  );
- _updateRequirement(index, (_) => updated);
- Navigator.of(dialogContext).pop();
+ if (isNew) {
+ // Commit the new row to the register only on Save.
+ setState(() {
+ _requirementRows.add(committed);
+ _selectedRequirementIndex = _requirementRows.length - 1;
+ _showAllRows = true;
+ });
+ _scheduleSave();
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
  content: Text(
- 'Requirement ${updated.requirementId} updated.'),
+ 'Requirement ${committed.requirementId} added.'),
  backgroundColor: const Color(0xFF16A34A),
  ),
  );
+ } else {
+ _updateRequirement(editIndex!, (_) => committed);
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text(
+ 'Requirement ${committed.requirementId} updated.'),
+ backgroundColor: const Color(0xFF16A34A),
+ ),
+ );
+ }
+ Navigator.of(dialogContext).pop();
  },
  child: const Text('Save'),
  ),
@@ -3198,7 +3789,7 @@ class _RequirementsImplementationScreenState
  required ValueChanged<String> onChanged,
  }) {
  return VoiceTextField(
- controller: TextEditingController(text: value),
+ controller: SpellCheckTextEditingController(text: value),
  onChanged: onChanged,
  maxLines: maxLines,
  style: const TextStyle(fontSize: 13, color: Color(0xFF1F2937)),
@@ -3219,7 +3810,7 @@ class _RequirementsImplementationScreenState
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFFFC812), width: 2),
  ),
  ),
  );
@@ -3251,7 +3842,7 @@ class _RequirementsImplementationScreenState
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFFFC812), width: 2),
  ),
  ),
  items: safeOptions
@@ -3294,7 +3885,7 @@ class _RequirementsImplementationScreenState
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFFFC812), width: 2),
  ),
  ),
  items: safeOptions
@@ -3317,7 +3908,7 @@ class _RequirementsImplementationScreenState
  case 'unmapped':
  return const Color(0xFFF59E0B);
  case 'in review':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  default:
  return const Color(0xFF9CA3AF);
  }
@@ -3332,10 +3923,170 @@ class _RequirementsImplementationScreenState
  case 'open':
  return const Color(0xFFEF4444);
  case 'deferred':
- return const Color(0xFF8B5CF6);
+ return const Color(0xFFB8860B);
  default:
  return const Color(0xFF9CA3AF);
  }
+ }
+
+ // --- Add / Delete custom approval gates ---
+
+ Future<void> _showAddApprovalGateDialog() async {
+ final gateController = SpellCheckTextEditingController();
+ final descController = SpellCheckTextEditingController();
+ final approverController = SpellCheckTextEditingController();
+ var selectedPriority = 'High';
+ var selectedStatus = 'Not Started';
+
+ final saved = await showDialog<_ApprovalGateData>(
+ context: context,
+ builder: (dialogContext) {
+ return StatefulBuilder(
+ builder: (context, setDialogState) {
+ return AlertDialog(
+ title: const Text('Add approval gate'),
+ content: SizedBox(
+ width: 520,
+ child: SingleChildScrollView(
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ TextField(
+ controller: gateController,
+ decoration: const InputDecoration(
+ labelText: 'Gate name *',
+ hintText: 'e.g. Legal Review & Compliance',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: descController,
+ decoration: const InputDecoration(
+ labelText: 'Description',
+ hintText:
+ 'What this gate covers and why it matters',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ minLines: 2,
+ maxLines: 4,
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: approverController,
+ decoration: const InputDecoration(
+ labelText: 'Approver *',
+ hintText: 'e.g. General Counsel',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ Row(
+ children: [
+ Expanded(
+ child: DropdownButtonFormField<String>(
+ initialValue: selectedPriority,
+ decoration: const InputDecoration(
+ labelText: 'Priority',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ items: ['Critical', 'High', 'Medium', 'Low']
+ .map((p) => DropdownMenuItem(
+ value: p,
+ child: Text(p,
+ style:
+ const TextStyle(fontSize: 13)),
+ ))
+ .toList(),
+ onChanged: (value) {
+ if (value == null) return;
+ setDialogState(
+ () => selectedPriority = value);
+ },
+ ),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: DropdownButtonFormField<String>(
+ initialValue: selectedStatus,
+ decoration: const InputDecoration(
+ labelText: 'Status',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ items: [
+ 'Not Started',
+ 'Pending',
+ 'In Review',
+ 'Complete',
+ ]
+ .map((s) => DropdownMenuItem(
+ value: s,
+ child: Text(s,
+ style:
+ const TextStyle(fontSize: 13)),
+ ))
+ .toList(),
+ onChanged: (value) {
+ if (value == null) return;
+ setDialogState(
+ () => selectedStatus = value);
+ },
+ ),
+ ),
+ ],
+ ),
+ ],
+ ),
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.pop(dialogContext),
+ child: const Text('Cancel'),
+ ),
+ ElevatedButton(
+ onPressed: () {
+ if (gateController.text.trim().isEmpty ||
+ approverController.text.trim().isEmpty) {
+   return;
+ }
+ Navigator.pop(
+ dialogContext,
+ _ApprovalGateData(
+ gate: gateController.text.trim(),
+ description: descController.text.trim(),
+ approver: approverController.text.trim(),
+ priority: selectedPriority,
+ status: selectedStatus,
+ ),
+ );
+ },
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFFD97706),
+ foregroundColor: Colors.white,
+ ),
+ child: const Text('Add gate'),
+ ),
+ ],
+ );
+ },
+ );
+ },
+ );
+
+ if (saved != null && mounted) {
+ setState(() => _customApprovalGates.add(saved));
+ }
+ }
+
+ void _removeCustomApprovalGate(int index) {
+ setState(() => _customApprovalGates.removeAt(index));
  }
 
  Color _approvalStatusColor(String status) {
@@ -3343,7 +4094,7 @@ class _RequirementsImplementationScreenState
  case 'complete':
  return const Color(0xFF10B981);
  case 'in review':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case 'pending':
  return const Color(0xFFF59E0B);
  case 'not started':
@@ -3425,8 +4176,8 @@ class _RequirementsImplementationScreenState
  screenTitle: 'Requirements Implementation',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_requirements_implementation_notes'] ?? 'No data recorded.'),
  ],
@@ -3461,9 +4212,7 @@ class _ApprovalGateData {
 
 class _TableColumn {  const _TableColumn({
     required this.label,
-    this.flex = 1,
-    this.alignment = Alignment.centerLeft,
-  });
+  }) : flex = 1, alignment = Alignment.centerLeft;
 
  final String label;
  final int flex;
@@ -3498,7 +4247,7 @@ class _DesignSpecDocumentRow {
  this.status = 'Draft',
  this.fileName = '',
  this.storagePath = '',
- }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+ }) : id = id ?? newId();
 
  final String id;
  String name;
@@ -3592,7 +4341,6 @@ class _VerificationPopupDialog extends StatefulWidget {
 
 class _VerificationPopupDialogState extends State<_VerificationPopupDialog> {
  late RequirementRow _current;
- late TextEditingController _reqIdController;
  late TextEditingController _titleController;
  late TextEditingController _definitionController;
  late TextEditingController _artifactLabelController;
@@ -3605,23 +4353,21 @@ class _VerificationPopupDialogState extends State<_VerificationPopupDialog> {
  void initState() {
  super.initState();
  _current = widget.requirement;
- _reqIdController = TextEditingController(text: _current.requirementId);
- _titleController = TextEditingController(text: _current.title);
- _definitionController = TextEditingController(text: _current.definition);
+ _titleController = SpellCheckTextEditingController(text: _current.title);
+ _definitionController = SpellCheckTextEditingController(text: _current.definition);
  _artifactLabelController =
- TextEditingController(text: _current.designArtifactLabel);
+ SpellCheckTextEditingController(text: _current.designArtifactLabel);
  _criteriaController =
- TextEditingController(text: _current.acceptanceCriteria);
- _testMethodController = TextEditingController(text: _current.testMethod);
+ SpellCheckTextEditingController(text: _current.acceptanceCriteria);
+ _testMethodController = SpellCheckTextEditingController(text: _current.testMethod);
  _sourceDocController =
- TextEditingController(text: _current.sourceDocument);
+ SpellCheckTextEditingController(text: _current.sourceDocument);
  _artifactUrlController =
- TextEditingController(text: _current.designArtifactUrl);
+ SpellCheckTextEditingController(text: _current.designArtifactUrl);
  }
 
  @override
  void dispose() {
- _reqIdController.dispose();
  _titleController.dispose();
  _definitionController.dispose();
  _artifactLabelController.dispose();
@@ -3670,7 +4416,7 @@ class _VerificationPopupDialogState extends State<_VerificationPopupDialog> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Text(
- 'Acceptance criteria & verification — ${_current.requirementId}',
+ 'Acceptance criteria & verification',
  style: const TextStyle(
  fontSize: 16,
  fontWeight: FontWeight.w800,
@@ -3725,17 +4471,11 @@ class _VerificationPopupDialogState extends State<_VerificationPopupDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- // Row 1: ID, Owner, Type
- _buildPopupRow(
- children: [
- _buildPopupField(
- label: 'Requirement ID',
- controller: _reqIdController,
- onChanged: (v) =>
- _update(_current.copyWith(requirementId: v)),
- ),
- _buildPopupDropdown(
- label: 'Owner',
+ // Row 1: Owner and Requirement Type
+                    _buildPopupRow(
+                      children: [
+                        _buildPopupDropdown(
+                          label: 'Owner',
  value: _current.owner,
  options: widget.ownerOptions,
  onChanged: (v) =>

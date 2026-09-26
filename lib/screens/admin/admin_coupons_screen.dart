@@ -7,6 +7,7 @@ import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class AdminCouponsScreen extends StatefulWidget {
   const AdminCouponsScreen({super.key});
@@ -23,9 +24,9 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
     NavigationContextService.instance
         .setLastAdminDashboard(AppRoutes.adminHome);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
@@ -372,7 +373,7 @@ class _CouponCard extends StatelessWidget {
                 IconButton(
                   onPressed: onEdit,
                   icon: const Icon(Icons.edit_outlined),
-                  color: Colors.blue,
+                  color: const Color(0xFFFFC812),
                   tooltip: 'Edit',
                 ),
                 IconButton(
@@ -468,10 +469,10 @@ class _CouponFormDialog extends StatefulWidget {
 
 class _CouponFormDialogState extends State<_CouponFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _codeController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _discountController = TextEditingController();
-  final _maxUsesController = TextEditingController();
+  final _codeController = SpellCheckTextEditingController();
+  final _descriptionController = SpellCheckTextEditingController();
+  final _discountController = SpellCheckTextEditingController();
+  final _maxUsesController = SpellCheckTextEditingController();
 
   DateTime _validFrom = DateTime.now();
   DateTime _validUntil = DateTime.now().add(const Duration(days: 30));

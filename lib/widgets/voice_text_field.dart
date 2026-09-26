@@ -2,11 +2,46 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:ndu_project/providers/display_preferences_provider.dart';
 import 'package:ndu_project/services/voice_input_service.dart';
 import 'package:ndu_project/services/docx_import_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/open_editor_button.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_check_dialogs.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/spell_check/spell_fix_tap_area.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Returns true if the 'Open Editor' button should be hidden app-wide.
+Future<bool> isOpenEditorDisabled() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('pref_disable_open_editor') ?? false;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Marks an input that already provides its own voice action, so the global
+/// text-input overlay does not duplicate the microphone control.
+class SpeechInputFieldMarker extends InheritedWidget {
+  const SpeechInputFieldMarker({
+    super.key,
+    required super.child,
+    this.voiceAllowed = true,
+    this.hasVoiceControl = true,
+  });
+
+  final bool voiceAllowed;
+  final bool hasVoiceControl;
+
+  @override
+  bool updateShouldNotify(SpeechInputFieldMarker oldWidget) =>
+      voiceAllowed != oldWidget.voiceAllowed ||
+      hasVoiceControl != oldWidget.hasVoiceControl;
+}
 
 /// A drop-in replacement for [TextField] that adds a microphone button
 /// for voice-to-text input.
@@ -69,6 +104,7 @@ class VoiceTextField extends StatefulWidget {
     this.enableKazAi = true,
     this.kazAiLabel,
     this.enableTextFormatting = true,
+    this.allowInlineSuffix = false,
   });
 
   final TextEditingController? controller;
@@ -141,6 +177,11 @@ class VoiceTextField extends StatefulWidget {
   /// Whether to show the text formatting toolbar for multi-line fields.
   final bool enableTextFormatting;
 
+  /// Whether to allow inline suffix icons (KAZ AI sparkle, clear content)
+  /// inside the text field. Defaults to false — these actions are surfaced
+  /// via the Open Editor button instead.
+  final bool allowInlineSuffix;
+
   @override
   State<VoiceTextField> createState() => _VoiceTextFieldState();
 }
@@ -151,9 +192,9 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
   StreamSubscription<VoiceResult>? _resultSubscription;
   StreamSubscription<VoiceStatus>? _statusSubscription;
   bool _isListening = false;
-  bool _voiceAvailable = true;
   bool _isImportingDoc = false;
   bool _isGeneratingAi = false;
+  bool _openEditorDisabled = false;
 
   /// Generates AI content for this field using OpenAiServiceSecure.
   Future<void> _generateWithKazAi() async {
@@ -179,7 +220,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       debugPrint('[VoiceTextField] KAZ AI failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI failed: $e')),
+          SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -229,41 +270,48 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? TextEditingController();
-    _checkAvailability();
+    _controller = widget.controller ?? SpellCheckTextEditingController();
+    _syncSpellCheckOptions();
+    _loadOpenEditorDisabled();
+  }
+
+  /// Obfuscated fields (passwords) never get underlined.
+  void _syncSpellCheckOptions() {
+    final controller = _controller;
+    if (controller is SpellCheckTextEditingController) {
+      controller.spellCheckEnabled = !widget.obscureText;
+    }
+  }
+
+  void _openSpellCheck() {
+    showSpellCheckDialog(context, controller: _controller);
+  }
+
+  Future<void> _loadOpenEditorDisabled() async {
+    final disabled = await isOpenEditorDisabled();
+    if (mounted) setState(() => _openEditorDisabled = disabled);
   }
 
   @override
   void didUpdateWidget(VoiceTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
-      _controller = widget.controller ?? TextEditingController();
+      _controller = widget.controller ?? SpellCheckTextEditingController();
     }
-  }
-
-  Future<void> _checkAvailability() async {
-    try {
-      final available = await _voiceService.initialize();
-      if (mounted && available != _voiceAvailable) {
-        setState(() => _voiceAvailable = available);
-      }
-    } catch (e) {
-      debugPrint('[VoiceTextField] Availability check failed: $e');
-      if (mounted) {
-        setState(() => _voiceAvailable = false);
-      }
-    }
+    _syncSpellCheckOptions();
   }
 
   Future<void> _toggleVoiceInput() async {
+    if (!speechToTextEnabledFor(context, listen: false)) return;
     if (_isListening) {
       await _voiceService.stopListening();
       _cleanupSubscriptions();
       if (mounted) setState(() => _isListening = false);
     } else {
+      if (!speechToTextEnabledFor(context, listen: false)) return;
       // ── Microphone permission dialog ──
       // Show a world-class permission request dialog before accessing the mic.
-      final shouldProceed = await showMicrophonePermissionDialog(context);
+      final shouldProceed = await requestMicrophonePermission(context);
       if (!shouldProceed || !mounted) return;
 
       final started = await _voiceService.startListening(
@@ -344,7 +392,9 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
   Widget build(BuildContext context) {
     // Editor features are surfaced via the Open Editor button placed
     // OUTSIDE the text field — no more inline suffix icons.
-    final voiceEnabled = widget.enableVoice && !widget.obscureText;
+    final voiceEnabled = widget.enableVoice &&
+        !widget.obscureText &&
+        speechToTextEnabledFor(context);
     final docxEnabled = widget.enableDocxImport && !widget.obscureText;
     final kazAiEnabled =
         widget.enableKazAi && !widget.obscureText && !widget.readOnly;
@@ -361,12 +411,23 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       kazAiEnabled: kazAiEnabled,
     );
     final anyLoading = _isListening || _isGeneratingAi || _isImportingDoc;
-    final hasActions = actions.any((a) => a.enabled);
+    final hasActions = !_openEditorDisabled && actions.any((a) => a.enabled);
 
-    final textField = TextField(
+    // Strip inline suffix icons (KAZ AI sparkle, clear content) unless
+    // explicitly allowed — these actions are surfaced via Open Editor instead.
+    final effectiveDecoration = widget.allowInlineSuffix
+        ? (widget.decoration ?? const InputDecoration())
+        : (widget.decoration ?? const InputDecoration()).copyWith(
+            suffixIcon: null,
+          );
+
+    final field = TextField(
       controller: _controller,
       focusNode: widget.focusNode,
-      decoration: widget.decoration ?? const InputDecoration(),
+      // Right-click / long-press a flagged word for its corrections.
+      contextMenuBuilder: (context, editableTextState) =>
+          buildSpellCheckContextMenu(context, editableTextState, _controller),
+      decoration: effectiveDecoration,
       keyboardType: widget.keyboardType,
       textInputAction: widget.textInputAction,
       textCapitalization: widget.textCapitalization,
@@ -408,6 +469,19 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       autofillHints: widget.autofillHints,
     );
 
+    // Clicking an underlined word opens its fix card where the word is, in
+    // addition to the right-click / long-press menu.
+    final textField = SpeechInputFieldMarker(
+      voiceAllowed: widget.enableVoice && !widget.obscureText,
+      hasVoiceControl: voiceEnabled && !_openEditorDisabled,
+      child: SpellFixTapArea(
+        controller: _controller,
+        enabled:
+            !widget.obscureText && !widget.readOnly && widget.enabled != false,
+        child: field,
+      ),
+    );
+
     if (!hasActions && !showToolbar) return textField;
 
     return Column(
@@ -423,7 +497,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
             runSpacing: 8,
             children: [
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: OpenEditorButton(
                   actions: actions,
                   isLoading: anyLoading,
@@ -450,7 +524,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     required bool docxEnabled,
     required bool kazAiEnabled,
   }) {
-    return <EditorAction>[
+    final actions = <EditorAction>[
       if (kazAiEnabled)
         EditorAction(
           id: 'ai',
@@ -475,7 +549,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
           icon: Icons.upload_file,
           label: 'Import from .docx / .doc',
           tooltip: widget.docxImportTooltip,
-          accent: const Color(0xFF0EA5E9),
+          accent: const Color(0xFFFFC812),
           onTap: _importDocument,
         ),
       if (kazAiEnabled && _controller.text.isNotEmpty)
@@ -493,6 +567,27 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
           },
         ),
     ];
+
+    // Offer the review from the Open Editor popup, but only where that popup
+    // already exists. Adding it to a field that has no other actions would
+    // summon the Open Editor button and change that field's layout.
+    if (!widget.obscureText &&
+        !widget.readOnly &&
+        actions.any((a) => a.enabled)) {
+      actions.insert(
+        0,
+        EditorAction(
+          id: 'spell_check',
+          icon: Icons.spellcheck,
+          label: 'Spelling & grammar',
+          tooltip: 'Review spelling and grammar in this field',
+          accent: const Color(0xFF2563EB),
+          onTap: _openSpellCheck,
+        ),
+      );
+    }
+
+    return actions;
   }
 }
 
@@ -502,6 +597,15 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
 ///
 /// Used by both [VoiceTextField] and [VoiceTextFormField] before starting
 /// voice input.
+bool _microphonePermissionDisclosureAccepted = false;
+
+Future<bool> requestMicrophonePermission(BuildContext context) async {
+  if (_microphonePermissionDisclosureAccepted) return true;
+  final result = await showMicrophonePermissionDialog(context);
+  if (result == true) _microphonePermissionDisclosureAccepted = true;
+  return result ?? false;
+}
+
 Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
   final result = await showDialog<bool>(
     context: context,
@@ -583,7 +687,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                     _buildPermissionBullet(
                       icon: Icons.lock_outline,
                       text:
-                          'Audio is processed securely and never stored or shared',
+                          'Speech is handled by your device or browser recognition service; this app does not save audio recordings.',
                     ),
                     const SizedBox(height: 12),
                     _buildPermissionBullet(
@@ -608,7 +712,9 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Your browser will ask for mic permission after you tap "Allow".',
+                              kIsWeb
+                                  ? 'Your browser will ask for microphone access after you continue.'
+                                  : 'Your device will ask for microphone and speech-recognition access after you continue.',
                               style: TextStyle(
                                 fontSize: 11.5,
                                 color: Color(0xFF92400E),
@@ -851,9 +957,9 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
   StreamSubscription<VoiceResult>? _resultSubscription;
   StreamSubscription<VoiceStatus>? _statusSubscription;
   bool _isListening = false;
-  bool _voiceAvailable = true;
   bool _isImportingDoc = false;
   bool _isGeneratingAi = false;
+  bool _openEditorDisabled = false;
 
   Future<void> _generateWithKazAi() async {
     if (_isGeneratingAi) return;
@@ -876,7 +982,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI failed: $e')),
+          SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -926,47 +1032,54 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
   @override
   void initState() {
     super.initState();
-    _controller =
-        widget.controller ?? TextEditingController(text: widget.initialValue);
-    _checkAvailability();
+    _controller = widget.controller ??
+        SpellCheckTextEditingController(text: widget.initialValue);
+    _syncSpellCheckOptions();
+    _loadOpenEditorDisabled();
+  }
+
+  /// Obfuscated fields (passwords) never get underlined.
+  void _syncSpellCheckOptions() {
+    final controller = _controller;
+    if (controller is SpellCheckTextEditingController) {
+      controller.spellCheckEnabled = !widget.obscureText;
+    }
+  }
+
+  void _openSpellCheck() {
+    showSpellCheckDialog(context, controller: _controller);
+  }
+
+  Future<void> _loadOpenEditorDisabled() async {
+    final disabled = await isOpenEditorDisabled();
+    if (mounted) setState(() => _openEditorDisabled = disabled);
   }
 
   @override
   void didUpdateWidget(VoiceTextFormField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
-      _controller =
-          widget.controller ?? TextEditingController(text: widget.initialValue);
+      _controller = widget.controller ??
+          SpellCheckTextEditingController(text: widget.initialValue);
     } else if (widget.controller == null &&
         widget.initialValue != oldWidget.initialValue &&
         widget.initialValue != _controller.text) {
       _controller.text = widget.initialValue ?? '';
     }
-  }
-
-  Future<void> _checkAvailability() async {
-    try {
-      final available = await _voiceService.initialize();
-      if (mounted && available != _voiceAvailable) {
-        setState(() => _voiceAvailable = available);
-      }
-    } catch (e) {
-      debugPrint('[VoiceTextField] Availability check failed: $e');
-      if (mounted) {
-        setState(() => _voiceAvailable = false);
-      }
-    }
+    _syncSpellCheckOptions();
   }
 
   Future<void> _toggleVoiceInput() async {
+    if (!speechToTextEnabledFor(context, listen: false)) return;
     if (_isListening) {
       await _voiceService.stopListening();
       _cleanupSubscriptions();
       if (mounted) setState(() => _isListening = false);
     } else {
+      if (!speechToTextEnabledFor(context, listen: false)) return;
       // ── Microphone permission dialog ──
       // Show a world-class permission request dialog before accessing the mic.
-      final shouldProceed = await showMicrophonePermissionDialog(context);
+      final shouldProceed = await requestMicrophonePermission(context);
       if (!shouldProceed || !mounted) return;
 
       final started = await _voiceService.startListening(
@@ -1046,7 +1159,9 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
   Widget build(BuildContext context) {
     // Editor features are surfaced via the Open Editor button placed
     // OUTSIDE the text field — no more inline suffix icons.
-    final voiceEnabled = widget.enableVoice && !widget.obscureText;
+    final voiceEnabled = widget.enableVoice &&
+        !widget.obscureText &&
+        speechToTextEnabledFor(context);
     final docxEnabled = widget.enableDocxImport && !widget.obscureText;
     final kazAiEnabled =
         widget.enableKazAi && !widget.obscureText && !widget.readOnly;
@@ -1063,10 +1178,13 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
       kazAiEnabled: kazAiEnabled,
     );
     final anyLoading = _isListening || _isGeneratingAi || _isImportingDoc;
-    final hasActions = actions.any((a) => a.enabled);
+    final hasActions = !_openEditorDisabled && actions.any((a) => a.enabled);
 
-    final textField = TextFormField(
+    final field = TextFormField(
       controller: _controller,
+      // Right-click / long-press a flagged word for its corrections.
+      contextMenuBuilder: (context, editableTextState) =>
+          buildSpellCheckContextMenu(context, editableTextState, _controller),
       focusNode: widget.focusNode,
       decoration: widget.decoration ?? const InputDecoration(),
       keyboardType: widget.keyboardType,
@@ -1116,6 +1234,19 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
       restorationId: widget.restorationId,
     );
 
+    // Clicking an underlined word opens its fix card where the word is, in
+    // addition to the right-click / long-press menu.
+    final textField = SpeechInputFieldMarker(
+      voiceAllowed: widget.enableVoice && !widget.obscureText,
+      hasVoiceControl: voiceEnabled && !_openEditorDisabled,
+      child: SpellFixTapArea(
+        controller: _controller,
+        enabled:
+            !widget.obscureText && !widget.readOnly && widget.enabled != false,
+        child: field,
+      ),
+    );
+
     if (!hasActions && !showToolbar) return textField;
 
     return Column(
@@ -1131,7 +1262,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
             runSpacing: 8,
             children: [
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: OpenEditorButton(
                   actions: actions,
                   isLoading: anyLoading,
@@ -1158,7 +1289,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     required bool docxEnabled,
     required bool kazAiEnabled,
   }) {
-    return <EditorAction>[
+    final actions = <EditorAction>[
       if (kazAiEnabled)
         EditorAction(
           id: 'ai',
@@ -1183,7 +1314,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
           icon: Icons.upload_file,
           label: 'Import from .docx / .doc',
           tooltip: widget.docxImportTooltip,
-          accent: const Color(0xFF0EA5E9),
+          accent: const Color(0xFFFFC812),
           onTap: _importDocument,
         ),
       if (kazAiEnabled && _controller.text.isNotEmpty)
@@ -1200,5 +1331,26 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
           },
         ),
     ];
+
+    // Offer the review from the Open Editor popup, but only where that popup
+    // already exists. Adding it to a field that has no other actions would
+    // summon the Open Editor button and change that field's layout.
+    if (!widget.obscureText &&
+        !widget.readOnly &&
+        actions.any((a) => a.enabled)) {
+      actions.insert(
+        0,
+        EditorAction(
+          id: 'spell_check',
+          icon: Icons.spellcheck,
+          label: 'Spelling & grammar',
+          tooltip: 'Review spelling and grammar in this field',
+          accent: const Color(0xFF2563EB),
+          onTap: _openSpellCheck,
+        ),
+      );
+    }
+
+    return actions;
   }
 }

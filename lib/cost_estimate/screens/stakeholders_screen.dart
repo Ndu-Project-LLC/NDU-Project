@@ -11,6 +11,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class StakeholdersScreen extends StatelessWidget {
   const StakeholdersScreen({super.key});
@@ -422,15 +423,22 @@ class StakeholdersScreen extends StatelessWidget {
 
   void _showAddStakeholderDialog(
       BuildContext context, CostEstimateProvider provider) {
-    final nameCtrl = TextEditingController();
-    final emailCtrl = TextEditingController();
-    final roleCtrl = TextEditingController();
+    final nameCtrl = SpellCheckTextEditingController();
+    final emailCtrl = SpellCheckTextEditingController();
+    final roleCtrl = SpellCheckTextEditingController();
     bool sme = false;
+    try {
+      final estimate = provider.estimate;
+      if (estimate != null) {
+        // Prefill a helpful role hint based on estimate class
+        roleCtrl.text = '${estimate.className.label} SME';
+      }
+    } catch (_) {}
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           title: const Text('Add stakeholder',
               style: TextStyle(color: Color(0xFF1A1D1F))),
           content: Column(
@@ -499,13 +507,13 @@ class StakeholdersScreen extends StatelessWidget {
 
   void _showGrantAccessDialog(
       BuildContext context, CostEstimateProvider provider) {
-    final emailCtrl = TextEditingController();
+    final emailCtrl = SpellCheckTextEditingController();
     RBACRole role = RBACRole.viewer;
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           title: const Text('Grant access',
               style: TextStyle(color: Color(0xFF1A1D1F))),
           content: Column(

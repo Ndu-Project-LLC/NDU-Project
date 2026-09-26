@@ -10,6 +10,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 class ExecutionPlanInterfaceManagementOverviewScreen extends StatelessWidget {
   const ExecutionPlanInterfaceManagementOverviewScreen({super.key});
@@ -25,7 +26,7 @@ class ExecutionPlanInterfaceManagementOverviewScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Interface Management Overview',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -68,7 +69,7 @@ class _ExecutionPlanDetailsSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,7 +144,7 @@ class _InterfaceManagementSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,15 +353,15 @@ class _InterfaceManagementSection extends StatelessWidget {
   Color _typeColor(String type) {
     switch (type) {
       case 'Technical':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Contractual':
         return const Color(0xFFD97706);
       case 'Organizational':
         return const Color(0xFF10B981);
       case 'Physical':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Procedural':
-        return const Color(0xFFEC4899);
+        return const Color(0xFFD97706);
       default:
         return const Color(0xFF6B7280);
     }
@@ -419,7 +420,11 @@ class _OverviewAiEditorState extends State<_OverviewAiEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AiSuggestingTextField(
+        // Notes stay collapsed until the user opens them.
+        CollapsibleNotesSection(
+          title: 'Notes',
+          card: true,
+          child: AiSuggestingTextField(
           fieldLabel: 'Execution Plan Details',
           hintText: 'Input your notes here...',
           sectionLabel: 'Execution Interface Management Overview',
@@ -430,14 +435,7 @@ class _OverviewAiEditorState extends State<_OverviewAiEditor> {
           autoGenerateSection: 'Interface Management Overview',
           onChanged: _handleChanged,
         ),
-        if (_lastSavedAt != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              'Saved ${TimeOfDay.fromDateTime(_lastSavedAt!).format(context)}',
-              style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-            ),
-          ),
+        ),
         const SizedBox(height: 8),
         AiDiagramPanel(
           sectionLabel: 'Interface Management Overview',

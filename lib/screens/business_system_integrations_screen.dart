@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/services/business_system_integration_service.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Screen for connecting CRM / ERP / Accounting integrations to a program.
 ///
@@ -129,6 +131,7 @@ class _BusinessSystemIntegrationsScreenState
  @override
  Widget build(BuildContext context) {
  return Scaffold(
+ floatingActionButton: const KazAiChatBubble(positioned: false),
  appBar: AppBar(
  title: Text(widget.programName != null
  ? 'Integrations · ${widget.programName}'
@@ -277,7 +280,7 @@ class _BusinessSystemIntegrationsScreenState
  ),
  child: Center(
  child: Text(
- p.label.substring(0, 1),
+ p.label.isNotEmpty ? p.label.substring(0, 1) : '?',
  style: const TextStyle(
  color: Colors.white,
  fontWeight: FontWeight.w800,
@@ -338,7 +341,7 @@ class _BusinessSystemIntegrationsScreenState
  fontSize: 11.5,
  color: p.supportsOAuth
  ? const Color(0xFF16A34A)
- : const Color(0xFF0EA5E9),
+ : const Color(0xFFFFC812),
  fontWeight: FontWeight.w600,
  ),
  ),
@@ -422,10 +425,10 @@ class _ProviderConfigDialogState extends State<_ProviderConfigDialog> {
  void initState() {
  super.initState();
  _apiKeyController =
- TextEditingController(text: widget.existing?.apiKey ?? '');
+ SpellCheckTextEditingController(text: widget.existing?.apiKey ?? '');
  _baseUrlController =
- TextEditingController(text: widget.existing?.baseUrlOverride ?? '');
- _oauthRedirectController = TextEditingController();
+ SpellCheckTextEditingController(text: widget.existing?.baseUrlOverride ?? '');
+ _oauthRedirectController = SpellCheckTextEditingController();
  _autoSync = widget.existing?.autoSync ?? true;
  }
 
@@ -514,7 +517,7 @@ class _ProviderConfigDialogState extends State<_ProviderConfigDialog> {
  borderRadius: BorderRadius.circular(6),
  ),
  child: Center(
- child: Text(p.label.substring(0, 1),
+ child: Text(p.label.isNotEmpty ? p.label.substring(0, 1) : '?',
  style: const TextStyle(
  color: Colors.white, fontWeight: FontWeight.w800)),
  ),
@@ -545,10 +548,10 @@ class _ProviderConfigDialogState extends State<_ProviderConfigDialog> {
  Container(
  padding: const EdgeInsets.all(12),
  decoration: BoxDecoration(
- color: const Color(0xFF0EA5E9).withValues(alpha: 0.08),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(8),
  border: Border.all(
- color: const Color(0xFF0EA5E9).withValues(alpha: 0.3)),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.3)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,

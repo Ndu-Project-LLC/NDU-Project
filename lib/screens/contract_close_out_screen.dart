@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'dart:convert';
@@ -5,17 +6,13 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/models/launch_phase_models.dart';
-import 'package:ndu_project/screens/actual_vs_planned_gap_analysis_screen.dart';
-import 'package:ndu_project/screens/fat_mechanical_completion_screen.dart';
-import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
-import 'package:ndu_project/screens/vendor_account_close_out_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/download_helper.dart' as download_helper;
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
@@ -25,6 +22,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ContractCloseOutScreen extends StatefulWidget {
   const ContractCloseOutScreen({super.key});
@@ -39,7 +37,7 @@ class ContractCloseOutScreen extends StatefulWidget {
 
 class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
   List<LaunchContractItem> _contracts = [];
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   List<LaunchCloseOutStep> _closeOutSteps = [];
   List<LaunchApproval> _signOffs = [];
   List<LaunchFinancialMetric> _financialSummary = [];
@@ -72,7 +70,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: '4. Vendor & Contract Closeout',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -105,11 +103,10 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             _buildSignOffsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel:
-                  'Back: FAT, Mechanical Completion & Commission Solution',
-              nextLabel: 'Next: Scope & Deliverable Reconciliation',
-              onBack: () => FatMechanicalCompletionScreen.open(context),
-              onNext: () => ActualVsPlannedGapAnalysisScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('contract_close_out'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('contract_close_out'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'contract_close_out'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'contract_close_out'),
             ),
             const SizedBox(height: 48),
           ],
@@ -120,6 +117,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
 
   Widget _buildFinancialSummaryPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Financial Summary',
       subtitle: 'Key financial metrics for contract close-out.',
       columns: const [
@@ -224,6 +222,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
 
   Widget _buildContractsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Contracts Status',
       subtitle:
           'All contracts requiring close-out. Import from execution or add manually.',
@@ -365,6 +364,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
 
   Widget _buildCloseOutStepsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Close-Out Steps',
       subtitle: 'Standardized steps to verify each contract is fully closed.',
       columns: const [
@@ -492,6 +492,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
 
   Widget _buildSignOffsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Financial & Compliance Sign-Off',
       subtitle: 'Track approvals from finance, legal, and compliance.',
       columns: const [
@@ -883,7 +884,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -929,7 +930,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -975,7 +976,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1017,7 +1018,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1083,7 +1084,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Financial Summary'),
@@ -1091,14 +1092,14 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             if (_financialSummary.isEmpty)
               pw.Text('No financial metrics.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1118,14 +1119,14 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             if (_contracts.isEmpty)
               pw.Text('No contracts.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1147,14 +1148,14 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             if (_closeOutSteps.isEmpty)
               pw.Text('No close-out steps.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1175,14 +1176,14 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             if (_signOffs.isEmpty)
               pw.Text('No sign-off records.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1264,7 +1265,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
       sectionSubtitle:
           'Final invoices, deliverables, sign-offs, and retention releases',
       sectionIcon: Icons.handshake_outlined,
-      sectionColor: const Color(0xFF7C3AED),
+      sectionColor: const Color(0xFFB8860B),
       completionPercent: completionPct,
       completionLabel: 'CLOSED',
       completionCaption:
@@ -1274,7 +1275,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
           label: 'Contractors',
           value: '${projectData.contractors.length}',
           icon: Icons.construction_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'to close out',
         ),
         LaunchKpiTile(

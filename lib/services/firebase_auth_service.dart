@@ -7,17 +7,30 @@ import 'google_sign_in_adapter.dart' as gadapter;
 class FirebaseAuthService {
   static FirebaseAuth get _auth => FirebaseAuth.instance;
   static const String _rememberMeKey = 'remember_me_enabled';
+  static const String _lastEmailKey = 'remembered_email';
 
-  /// Get Remember Me preference
+  /// Get Remember Me preference. Defaults to true so returning users keep
+  /// their session between launches ("keep me signed in" by default).
   static Future<bool> getRememberMe() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_rememberMeKey) ?? false;
+    return prefs.getBool(_rememberMeKey) ?? true;
   }
 
   /// Set Remember Me preference
   static Future<void> setRememberMe(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_rememberMeKey, value);
+  }
+
+  /// Last email used to sign in on this device (prefills the form).
+  static Future<String> getLastEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_lastEmailKey) ?? '';
+  }
+
+  static Future<void> setLastEmail(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastEmailKey, email.trim());
   }
 
   /// Email/password sign in with optional persistence

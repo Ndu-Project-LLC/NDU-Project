@@ -142,10 +142,10 @@ class _AggregatedBusinessSystemsCardState
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: Color(0xFFE2E8F0), style: BorderStyle.solid, width: 1),
+            color: const Color(0xFFE2E8F0), style: BorderStyle.solid, width: 1),
       ),
       child: Column(
         children: [
@@ -241,13 +241,13 @@ class _AggregatedBusinessSystemsCardState
       childAspectRatio: 2.6,
       children: [
         _statTile('Customers', '$totalCustomers', Icons.people_outline,
-            const Color(0xFF3B82F6)),
+            const Color(0xFFFFC812)),
         _statTile('Open pipeline', _money(totalPipeline), Icons.trending_up,
             const Color(0xFF10B981)),
         _statTile('Outstanding', _money(totalOutstanding), Icons.receipt_long,
             const Color(0xFFF59E0B)),
         _statTile('Open orders', '$totalOrders · ${_money(totalOrderValue)}',
-            Icons.shopping_cart_outlined, const Color(0xFF8B5CF6)),
+            Icons.shopping_cart_outlined, const Color(0xFFB8860B)),
       ],
     );
   }
@@ -314,7 +314,9 @@ class _AggregatedBusinessSystemsCardState
             ),
             child: Center(
               child: Text(
-                i.provider.label.substring(0, 1),
+                i.provider.label.isNotEmpty
+                    ? i.provider.label.substring(0, 1)
+                    : '?',
                 style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,

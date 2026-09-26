@@ -6,6 +6,8 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/app_logo.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 /// Mobile-optimized Create Account screen
 /// Matches the design from provided screenshots
 class MobileCreateAccountScreen extends StatefulWidget {
@@ -18,12 +20,12 @@ class MobileCreateAccountScreen extends StatefulWidget {
 
 class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
-  final _companyController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _firstNameController = SpellCheckTextEditingController();
+  final _lastNameController = SpellCheckTextEditingController();
+  final _companyController = SpellCheckTextEditingController();
+  final _emailController = SpellCheckTextEditingController();
+  final _passwordController = SpellCheckTextEditingController();
+  final _confirmPasswordController = SpellCheckTextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -194,7 +196,7 @@ class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -205,26 +207,12 @@ class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
               children: [
                 const SizedBox(height: 20),
 
-                // Logo
-                Center(
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'NDU',
-                        style: TextStyle(
-                          color: Color(0xFFFFD700),
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ),
+                // Logo — canonical NDU squircle brand asset
+                const Center(
+                  child: AppLogo(
+                    height: 72,
+                    enableTapToDashboard: false,
+                    semanticLabel: 'NDU Project',
                   ),
                 ),
 
@@ -389,9 +377,7 @@ class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
                 const SizedBox(height: 16),
 
                 // Password
-                VoiceTextFormField(
-        enableKazAi: false,
-        enableTextFormatting: false,
+                TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
@@ -427,9 +413,7 @@ class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
                 const SizedBox(height: 16),
 
                 // Confirm Password
-                VoiceTextFormField(
-        enableKazAi: false,
-        enableTextFormatting: false,
+                TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
                   decoration: InputDecoration(

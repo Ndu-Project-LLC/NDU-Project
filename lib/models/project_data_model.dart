@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:ndu_project/utils/unique_id.dart';
+import 'package:ndu_project/models/cost_of_quality.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/project_activity.dart';
 import 'package:ndu_project/models/staffing_row.dart';
@@ -191,6 +193,16 @@ class ProjectDataModel {
   // Quality Management Data
   QualityManagementData? qualityManagementData;
 
+  /// Planning Phase: Cost of Quality (prevention / appraisal / internal and
+  /// external failure).
+  ///
+  /// Ported from `origin/comments` so the Cost of Quality capture that already
+  /// exists is no longer inert — the model field had never been carried
+  /// across, which is why `cost_of_quality.dart` sat in `analysis_options.yaml`
+  /// excluded and nothing could store a CoQ figure
+  /// (Lusaka 25 (copy): "quality costs must reach the Cost Estimate").
+  CostOfQualityData? costOfQualityData;
+
   // Control Accounts
   List<ControlAccount> controlAccounts;
 
@@ -241,6 +253,19 @@ class ProjectDataModel {
   // Metadata
   bool isBasicPlanProject;
   Map<String, int> aiUsageCounts;
+
+  /// The workspace-wide AI on/off switch.
+  ///
+  /// Lusaka 25 (copy) review: "if AI is off, I don't want to see AI generated
+  /// anything" and "can you tie this function to AI being turned on and off?"
+  /// Until now AI was switched per call site (`enableKazAi:`, `enableAi:`), so
+  /// there was no one place to turn it off — and screens that render AI output
+  /// unconditionally (the Quality plan headings) kept claiming to be AI even
+  /// with AI off. This is the single source those surfaces read.
+  ///
+  /// Defaults to on so projects saved before the switch existed keep the AI
+  /// they already had.
+  bool aiEnabled;
 
   List<Map<String, dynamic>> aiIntegrations;
   List<Map<String, dynamic>> externalIntegrations;
@@ -355,6 +380,7 @@ class ProjectDataModel {
     List<TrainingActivity>? trainingActivities,
     DesignDeliverablesData? designDeliverablesData,
     this.isBasicPlanProject = false,
+    this.aiEnabled = true,
     Map<String, int>? aiUsageCounts,
     List<Map<String, dynamic>>? aiIntegrations,
     List<Map<String, dynamic>>? externalIntegrations,
@@ -362,6 +388,7 @@ class ProjectDataModel {
     List<StakeholderEntry>? stakeholderEntries,
     List<EngagementPlanEntry>? engagementPlanEntries,
     this.qualityManagementData,
+    this.costOfQualityData,
     this.executionPhaseData,
     this.projectId,
     this.createdAt,
@@ -552,6 +579,7 @@ class ProjectDataModel {
     MonitoringControlsData? monitoringControls,
     LaunchPhaseData? launchPhaseData,
     bool? isBasicPlanProject,
+    bool? aiEnabled,
     Map<String, int>? aiUsageCounts,
     List<Map<String, dynamic>>? aiIntegrations,
     List<Map<String, dynamic>>? externalIntegrations,
@@ -573,6 +601,7 @@ class ProjectDataModel {
     List<StakeholderEntry>? stakeholderEntries,
     List<EngagementPlanEntry>? engagementPlanEntries,
     QualityManagementData? qualityManagementData,
+    CostOfQualityData? costOfQualityData,
     List<ControlAccount>? controlAccounts,
     List<ObsElement>? obsElements,
     List<CbsElement>? cbsElements,
@@ -714,6 +743,7 @@ class ProjectDataModel {
       monitoringControls: monitoringControls ?? this.monitoringControls,
       launchPhaseData: launchPhaseData ?? this.launchPhaseData,
       isBasicPlanProject: isBasicPlanProject ?? this.isBasicPlanProject,
+      aiEnabled: aiEnabled ?? this.aiEnabled,
       aiUsageCounts: aiUsageCounts ?? this.aiUsageCounts,
       aiIntegrations: aiIntegrations ?? this.aiIntegrations,
       externalIntegrations: externalIntegrations ?? this.externalIntegrations,
@@ -737,6 +767,7 @@ class ProjectDataModel {
           engagementPlanEntries ?? this.engagementPlanEntries,
       qualityManagementData:
           qualityManagementData ?? this.qualityManagementData,
+      costOfQualityData: costOfQualityData ?? this.costOfQualityData,
       controlAccounts: controlAccounts ?? this.controlAccounts,
       obsElements: obsElements ?? this.obsElements,
       cbsElements: cbsElements ?? this.cbsElements,
@@ -892,6 +923,7 @@ class ProjectDataModel {
       'designDeliverables': designDeliverablesData.toJson(),
       'currentCheckpoint': currentCheckpoint,
       'isBasicPlanProject': isBasicPlanProject,
+      'aiEnabled': aiEnabled,
       'aiUsageCounts': aiUsageCounts,
 
       'aiIntegrations': aiIntegrations,
@@ -915,6 +947,8 @@ class ProjectDataModel {
       'engagementPlanEntries':
           engagementPlanEntries.map((e) => e.toJson()).toList(),
       'qualityManagementData': qualityManagementData?.toJson(),
+      if (costOfQualityData != null)
+        'costOfQualityData': costOfQualityData!.toJson(),
       'designManagementData': designManagementData?.toJson(),
       'executionPhaseData': executionPhaseData?.toJson(),
       'workPackages': workPackages.map((wp) => wp.toJson()).toList(),
@@ -1191,6 +1225,8 @@ class ProjectDataModel {
       designManagementData: safeParseSingle(
           'designManagementData', DesignManagementData.fromJson),
       isBasicPlanProject: json['isBasicPlanProject'] == true,
+      // Absent means the document predates the switch, so AI stays on.
+      aiEnabled: json['aiEnabled'] != false,
       aiUsageCounts: (json['aiUsageCounts'] is Map)
           ? Map<String, int>.from(
               (json['aiUsageCounts'] as Map).map((key, value) {
@@ -1260,6 +1296,10 @@ class ProjectDataModel {
               ?.map((e) => EngagementPlanEntry.fromJson(e))
               .toList() ??
           [],
+      costOfQualityData: safeParseSingle(
+        'costOfQualityData',
+        CostOfQualityData.fromJson,
+      ),
       qualityManagementData: json['qualityManagementData'] != null
           ? QualityManagementData.fromJson(json['qualityManagementData'])
           : null,
@@ -1393,7 +1433,7 @@ class ProjectDataModel {
   void addPotentialSolution() {
     if (potentialSolutions.length < 3) {
       potentialSolutions.add(PotentialSolution.empty(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         number: potentialSolutions.length + 1,
       ));
     }
@@ -1421,9 +1461,9 @@ class ProjectDataModel {
   PotentialSolution? get preferredSolution {
     if (preferredSolutionId == null) return null;
     try {
-      return potentialSolutions.firstWhere(
+      return potentialSolutions.where(
         (s) => s.id == preferredSolutionId,
-      );
+      ).firstOrNull;
     } catch (e) {
       return null;
     }
@@ -1487,7 +1527,7 @@ class PlanningGoal {
     this.priority = 'Medium Priority',
     List<String>? milestoneIds,
     List<PlanningMilestone>? milestones,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         milestoneIds = milestoneIds ?? [],
         milestones = milestones ?? [PlanningMilestone()];
 
@@ -1624,7 +1664,7 @@ class LaunchChecklistItem {
   }
 
   static String _generateId() =>
-      DateTime.now().microsecondsSinceEpoch.toString();
+      newId();
 
   @override
   bool operator ==(Object other) {
@@ -1667,7 +1707,7 @@ class Milestone {
     this.smeVerifiedBy,
     this.smeVerifiedAt,
   }) : id = (id == null || id.trim().isEmpty)
-            ? DateTime.now().microsecondsSinceEpoch.toString()
+            ? newId()
             : id;
 
   /// Returns true only when BOTH SME verification steps are complete.
@@ -1805,7 +1845,7 @@ class WorkItem {
     this.weight = 0,
     this.cbsId = '',
     this.obsId = '',
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         children = children ?? [],
         dependencies = dependencies ?? [];
 
@@ -1987,7 +2027,7 @@ class ScheduleActivity {
     this.percentComplete = 0,
     List<String>? resourceIds,
     this.estimatedCost = 0,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         predecessorIds = predecessorIds ?? [],
         dependencyIds = dependencyIds ?? [],
         resourceIds = resourceIds ?? [];
@@ -2354,6 +2394,9 @@ class FrontEndPlanningData {
   /// because the solution was already known. The project description
   /// carries the basis for FEP documentation instead.
   bool skippedBusinessCase;
+
+  /// The user elected to bypass FEP and provide charter-core inputs directly.
+  bool skippedFrontEndPlanning;
   List<RequirementItem> requirementItems;
   // Persisted scenario matrix items
   List<ScenarioRecord> scenarioMatrixItems;
@@ -2404,6 +2447,7 @@ class FrontEndPlanningData {
     this.charterApprovedAt,
     this.businessCaseLocked = false,
     this.skippedBusinessCase = false,
+    this.skippedFrontEndPlanning = false,
     this.detailsConfirmed = false,
     List<RequirementItem>? requirementItems,
     List<ScenarioRecord>? scenarioMatrixItems,
@@ -2463,6 +2507,7 @@ class FrontEndPlanningData {
     DateTime? charterApprovedAt,
     bool? businessCaseLocked,
     bool? skippedBusinessCase,
+    bool? skippedFrontEndPlanning,
     List<RequirementItem>? requirementItems,
     List<ScenarioRecord>? scenarioMatrixItems,
     List<RoleItem>? securityRoles,
@@ -2507,6 +2552,8 @@ class FrontEndPlanningData {
       charterApprovedAt: charterApprovedAt ?? this.charterApprovedAt,
       businessCaseLocked: businessCaseLocked ?? this.businessCaseLocked,
       skippedBusinessCase: skippedBusinessCase ?? this.skippedBusinessCase,
+      skippedFrontEndPlanning:
+          skippedFrontEndPlanning ?? this.skippedFrontEndPlanning,
       requirementItems: requirementItems ?? this.requirementItems,
       scenarioMatrixItems: scenarioMatrixItems ?? this.scenarioMatrixItems,
       securityRoles: securityRoles ?? this.securityRoles,
@@ -2553,6 +2600,7 @@ class FrontEndPlanningData {
         'charterApprovedAt': charterApprovedAt?.toIso8601String(),
         'businessCaseLocked': businessCaseLocked,
         'skippedBusinessCase': skippedBusinessCase,
+        'skippedFrontEndPlanning': skippedFrontEndPlanning,
         'allowanceItems': allowanceItems.map((e) => e.toJson()).toList(),
         'staffingRows': staffingRows.map((item) => item.toJson()).toList(),
         'technologyPersonnelItems':
@@ -2610,6 +2658,7 @@ class FrontEndPlanningData {
       charterApprovedAt: _parseFepDateTime(json['charterApprovedAt']),
       businessCaseLocked: json['businessCaseLocked'] == true,
       skippedBusinessCase: json['skippedBusinessCase'] == true,
+      skippedFrontEndPlanning: json['skippedFrontEndPlanning'] == true,
       allowanceItems: (json['allowanceItems'] as List?)
               ?.map((e) => AllowanceItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -2730,7 +2779,7 @@ class InfrastructurePlanningItem {
     this.potentialCost = 0.0,
     this.owner = '',
     this.status = 'Planned',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   InfrastructurePlanningItem copyWith({
     int? number,
@@ -3509,7 +3558,7 @@ class RoleItem {
   String description;
 
   RoleItem({String? id, this.name = '', this.description = ''})
-      : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+      : id = id ?? newId();
 
   Map<String, dynamic> toJson() =>
       {'id': id, 'name': name, 'description': description};
@@ -3537,7 +3586,7 @@ class PermissionItem {
   String scope;
 
   PermissionItem({String? id, this.resource = '', this.scope = ''})
-      : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+      : id = id ?? newId();
 
   Map<String, dynamic> toJson() =>
       {'id': id, 'resource': resource, 'scope': scope};
@@ -3580,7 +3629,7 @@ class AccessLogItem {
 
   AccessLogItem(
       {String? id, this.user = '', this.action = '', this.timestamp = ''})
-      : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+      : id = id ?? newId();
 
   Map<String, dynamic> toJson() =>
       {'id': id, 'user': user, 'action': action, 'timestamp': timestamp};
@@ -3735,6 +3784,20 @@ class SsherEntry {
   String riskLevel;
   String mitigation;
 
+  /// Whether meeting this item means buying something the project does not
+  /// already have (PPE, a permit, a monitoring service).
+  ///
+  /// Lusaka 25 (copy) review: "if it says PPE required, just have a question on
+  /// the cost for that … if it's something that needs to be bought for the
+  /// project". Only items that require a purchase become cost lines, so an
+  /// internal control with no spend does not clutter the estimate.
+  bool requiresPurchase;
+
+  /// The amount the assessor typed for that purchase. Blank or zero means no
+  /// cost line. Kept as typed text because the owner wants "a question on the
+  /// cost for that" — a rough number — not a validated accounting figure.
+  String estimatedCost;
+
   SsherEntry({
     String? id,
     this.category = '',
@@ -3743,7 +3806,9 @@ class SsherEntry {
     this.concern = '',
     this.riskLevel = '',
     this.mitigation = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+    this.requiresPurchase = false,
+    this.estimatedCost = '',
+  }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -3753,17 +3818,23 @@ class SsherEntry {
         'concern': concern,
         'riskLevel': riskLevel,
         'mitigation': mitigation,
+        'requiresPurchase': requiresPurchase,
+        'estimatedCost': estimatedCost,
       };
 
   factory SsherEntry.fromJson(Map<String, dynamic> json) {
     return SsherEntry(
-      id: json['id'] ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id'] ?? newId(),
       category: json['category'] ?? '',
       department: json['department'] ?? '',
       teamMember: json['teamMember'] ?? '',
       concern: json['concern'] ?? '',
       riskLevel: json['riskLevel'] ?? '',
       mitigation: json['mitigation'] ?? '',
+      // Absent means the entry predates the cost fields: treat it as no spend
+      // rather than inventing one.
+      requiresPurchase: json['requiresPurchase'] == true,
+      estimatedCost: json['estimatedCost']?.toString() ?? '',
     );
   }
 
@@ -3844,7 +3915,7 @@ class PotentialSolution {
   factory PotentialSolution.fromJson(Map<String, dynamic> json) {
     return PotentialSolution(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       number: (json['number'] is num) ? (json['number'] as num).toInt() : 1,
       title: json['title'] ?? '',
       description: json['description'] ?? '',
@@ -3919,7 +3990,7 @@ class LessonRecord {
     this.impact = 'Medium',
     this.highlight = false,
     this.dateSubmitted,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -4020,6 +4091,15 @@ class TeamMember {
   /// since most PT members are internal users provisioned in the app.
   bool hasSiteAccess;
 
+  /// Foreign key to [StaffingRow.id] when this member was derived from
+  /// the Front-End Planning > Personnel staffing plan via the "Sync from
+  /// Staffing Plan" action on the Team Management > Members tab.
+  ///
+  /// Null when the member was added manually. Used for idempotent
+  /// re-syncing: if a staffing row with this id already has N linked
+  /// members and its quantity is N, re-syncing will not create duplicates.
+  String? staffingPlanId;
+
   TeamMember({
     String? id,
     this.name = '',
@@ -4029,6 +4109,7 @@ class TeamMember {
     this.phone = '',
     this.location = '',
     this.hasSiteAccess = true,
+    this.staffingPlanId,
   }) : id = id ?? _generateId();
 
   Map<String, dynamic> toJson() => {
@@ -4040,6 +4121,7 @@ class TeamMember {
         'phone': phone,
         'location': location,
         'hasSiteAccess': hasSiteAccess,
+        if (staffingPlanId != null) 'staffingPlanId': staffingPlanId,
       };
 
   factory TeamMember.fromJson(Map<String, dynamic> json) {
@@ -4052,6 +4134,7 @@ class TeamMember {
       phone: json['phone']?.toString() ?? '',
       location: json['location']?.toString() ?? '',
       hasSiteAccess: json['hasSiteAccess'] != false,
+      staffingPlanId: json['staffingPlanId']?.toString(),
     );
   }
 
@@ -4063,6 +4146,7 @@ class TeamMember {
     String? phone,
     String? location,
     bool? hasSiteAccess,
+    String? staffingPlanId,
   }) {
     return TeamMember(
       id: id,
@@ -4073,11 +4157,12 @@ class TeamMember {
       phone: phone ?? this.phone,
       location: location ?? this.location,
       hasSiteAccess: hasSiteAccess ?? this.hasSiteAccess,
+      staffingPlanId: staffingPlanId ?? this.staffingPlanId,
     );
   }
 
   static String _generateId() =>
-      DateTime.now().microsecondsSinceEpoch.toString();
+      newId();
 
   @override
   bool operator ==(Object other) {
@@ -4418,7 +4503,7 @@ class CostEstimateItem {
   }
 
   static String _generateId() =>
-      DateTime.now().microsecondsSinceEpoch.toString();
+      newId();
 
   @override
   bool operator ==(Object other) {
@@ -4551,7 +4636,7 @@ class WorkPackage {
     this.notes = '',
     this.controlAccountId = '',
     this.percentComplete = 0,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         childPackageIds = childPackageIds ?? [],
         linkedEngineeringPackageIds = linkedEngineeringPackageIds ?? [],
         linkedProcurementPackageIds = linkedProcurementPackageIds ?? [],
@@ -4893,7 +4978,7 @@ class PackageDeliverable {
     List<String>? feedsProcurementPackageIds,
     List<String>? linkedSpecificationIds,
     this.requiredForProcurement = false,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         feedsProcurementPackageIds = feedsProcurementPackageIds ?? [],
         linkedSpecificationIds = linkedSpecificationIds ?? [];
 
@@ -5869,7 +5954,7 @@ class DebtInsight {
     this.evidence = '',
     this.control = '',
     this.tier = 'Medium',
-    this.colorValue = 0xFF6366F1,
+    this.colorValue = 0xFFB8860B,
   });
 
   Map<String, dynamic> toJson() => {
@@ -5887,7 +5972,7 @@ class DebtInsight {
         evidence: json['evidence'] ?? '',
         control: json['control'] ?? '',
         tier: json['tier'] ?? 'Medium',
-        colorValue: json['colorValue'] ?? 0xFF6366F1,
+        colorValue: json['colorValue'] ?? 0xFFB8860B,
       );
 
   DebtInsight copyWith({
@@ -5924,7 +6009,7 @@ class RemediationTrack {
     this.evidence = '',
     this.ownerCadence = '',
     this.progress = 0.0,
-    this.colorValue = 0xFF6366F1,
+    this.colorValue = 0xFFB8860B,
   });
 
   Map<String, dynamic> toJson() => {
@@ -5947,7 +6032,7 @@ class RemediationTrack {
         progress: (json['progress'] is num)
             ? (json['progress'] as num).toDouble()
             : 0.0,
-        colorValue: json['colorValue'] ?? 0xFF6366F1,
+        colorValue: json['colorValue'] ?? 0xFFB8860B,
       );
 
   RemediationTrack copyWith({
@@ -6484,7 +6569,7 @@ class RoleDefinition {
     this.workstream = '',
     this.isPredefined = false,
     this.headcount = 1,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   RoleDefinition copyWith({
     String? id,
@@ -6549,7 +6634,7 @@ class RaciMatrixRow {
     this.framework = '',
     this.discipline = '',
     Map<String, String>? assignments,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         assignments = assignments ?? <String, String>{};
 
   RaciMatrixRow copyWith({
@@ -6668,7 +6753,7 @@ class RaciDesignation {
   static ({int bg, int fg}) color(String code) {
     switch (code.toUpperCase()) {
       case 'R':
-        return (bg: 0xFFDBEAFE, fg: 0xFF1D4ED8);
+        return (bg: 0xFFFEF3C7, fg: 0xFFFFC812);
       case 'A':
         return (bg: 0xFFFEE2E2, fg: 0xFFB91C1C);
       case 'C':
@@ -6676,9 +6761,9 @@ class RaciDesignation {
       case 'RV':
         return (bg: 0xFFFFEDD5, fg: 0xFFC2410C);
       case 'I':
-        return (bg: 0xFFF3E8FF, fg: 0xFF7E22CE);
+        return (bg: 0xFFFFF8E1, fg: 0xFFB8860B);
       case 'V':
-        return (bg: 0xFFE0E7FF, fg: 0xFF4338CA);
+        return (bg: 0xFFFFF8E1, fg: 0xFF4338CA);
       default:
         return (bg: 0xFFF3F4F6, fg: 0xFF6B7280);
     }
@@ -6710,7 +6795,7 @@ class RaciDeliverableRow {
     this.label = '',
     this.phase = '',
     Map<String, String>? assignments,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         assignments = assignments ?? <String, String>{};
 
   RaciDeliverableRow copyWith({
@@ -6856,7 +6941,7 @@ class StaffingRequirement {
     this.employeeType = 'Employee',
     this.notes = '',
     this.nduProjectAccess = false,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   double get estimatedTotal => headcount * monthlyCost * plannedMonths;
 
@@ -6970,7 +7055,7 @@ class TrainingActivity {
     this.attachedFileUrl,
     this.attachedFileStoragePath,
     this.isCompleted = false,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -7400,7 +7485,7 @@ class QualityTarget {
 
   factory QualityTarget.empty() {
     return QualityTarget(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       name: '',
       metric: '',
       target: '',
@@ -7481,7 +7566,7 @@ class QaTechnique {
 
   factory QaTechnique.empty() {
     return QaTechnique(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       name: '',
       description: '',
       frequency: '',
@@ -7547,7 +7632,7 @@ class QcTechnique {
 
   factory QcTechnique.empty() {
     return QcTechnique(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       name: '',
       description: '',
       frequency: '',
@@ -7705,6 +7790,8 @@ class QualityStandard {
   final String category;
   final String description;
   final String applicability;
+  final String effectiveDate;
+  final String reviewDate;
 
   QualityStandard({
     required this.id,
@@ -7713,15 +7800,19 @@ class QualityStandard {
     required this.category,
     required this.description,
     required this.applicability,
+    this.effectiveDate = '',
+    this.reviewDate = '',
   });
 
   factory QualityStandard.empty() => QualityStandard(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         name: '',
         source: '',
         category: '',
         description: '',
         applicability: '',
+        effectiveDate: '',
+        reviewDate: '',
       );
 
   Map<String, dynamic> toJson() => {
@@ -7731,6 +7822,8 @@ class QualityStandard {
         'category': category,
         'description': description,
         'applicability': applicability,
+        'effectiveDate': effectiveDate,
+        'reviewDate': reviewDate,
       };
 
   factory QualityStandard.fromJson(Map<String, dynamic> json) {
@@ -7741,6 +7834,8 @@ class QualityStandard {
       category: json['category']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       applicability: json['applicability']?.toString() ?? '',
+      effectiveDate: json['effectiveDate']?.toString() ?? '',
+      reviewDate: json['reviewDate']?.toString() ?? '',
     );
   }
 
@@ -7750,6 +7845,8 @@ class QualityStandard {
     String? category,
     String? description,
     String? applicability,
+    String? effectiveDate,
+    String? reviewDate,
   }) {
     return QualityStandard(
       id: id,
@@ -7758,6 +7855,8 @@ class QualityStandard {
       category: category ?? this.category,
       description: description ?? this.description,
       applicability: applicability ?? this.applicability,
+      effectiveDate: effectiveDate ?? this.effectiveDate,
+      reviewDate: reviewDate ?? this.reviewDate,
     );
   }
 
@@ -7797,7 +7896,7 @@ class QualityObjective {
   });
 
   factory QualityObjective.empty() => QualityObjective(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         title: '',
         acceptanceCriteria: '',
         successMetric: '',
@@ -7897,7 +7996,7 @@ class QualityWorkflowControl {
 
   factory QualityWorkflowControl.empty(QualityWorkflowType type) =>
       QualityWorkflowControl(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         type: type,
         name: '',
         method: '',
@@ -7991,7 +8090,7 @@ class QualityAuditEntry {
   });
 
   factory QualityAuditEntry.empty() => QualityAuditEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         title: '',
         scope: '',
         plannedDate: '',
@@ -8089,7 +8188,7 @@ class QualityTaskEntry {
   });
 
   factory QualityTaskEntry.empty() => QualityTaskEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         task: '',
         percentComplete: 0.0,
         responsible: '',
@@ -8212,7 +8311,7 @@ class CorrectiveActionEntry {
   factory CorrectiveActionEntry.empty() {
     final now = DateTime.now().toIso8601String();
     return CorrectiveActionEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       auditEntryId: '',
       title: '',
       rootCause: '',
@@ -8313,7 +8412,7 @@ class QualityChangeEntry {
   });
 
   factory QualityChangeEntry.empty() => QualityChangeEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         description: '',
         reason: '',
         requestedBy: '',
@@ -8782,6 +8881,15 @@ class QualityManagementData {
   /// Keys: 'plan','objectives','inspection','metrics','audit','register'.
   final Map<String, String> aiInsights;
 
+  /// Categories whose narrative currently on screen was produced by AI, keyed
+  /// like [aiInsights].
+  ///
+  /// The heading may only say "(AI-Generated)" for a category that is true
+  /// here, so a narrative the user rewrote — or wrote themselves — stops
+  /// claiming to be AI. Lusaka 25 (copy) review: "it cannot be edited … they
+  /// should be able to edit it, reject it, delete it".
+  final Map<String, bool> aiGeneratedPlans;
+
   /// Sections the AI flagged as not applicable for this project type and the
   /// user accepted to skip. Keys: same as aiInsights. True = skipped.
   final Map<String, bool> skippedSections;
@@ -8789,6 +8897,14 @@ class QualityManagementData {
   /// Sections the user has explicitly marked applicable. Default all true.
   /// Keys: same as aiInsights. False = user-disabled.
   final Map<String, bool> sectionApplicability;
+
+  /// Quality tabs the user has actually opened, keyed like [aiInsights].
+  ///
+  /// The section is one planning step spread over six tabs, so its "Next" stays
+  /// gated until each of them has been shown (Lusaka 25 (copy): "please take this
+  /// action for every single section that has more than one tab … if you try to
+  /// click on it, you should tell them to finish the flow within that section").
+  final List<String> visitedSections;
 
   /// True once the user has pressed "Track in Execution" and the planning
   /// Quality data has been duplicated into the Execution Quality Tracking
@@ -8827,11 +8943,15 @@ class QualityManagementData {
     Map<String, String>? aiInsights,
     Map<String, bool>? skippedSections,
     Map<String, bool>? sectionApplicability,
+    Map<String, bool>? aiGeneratedPlans,
+    List<String>? visitedSections,
     this.trackedInExecution = false,
     this.lastTrackedInExecutionAt = '',
   })  : aiInsights = aiInsights ?? const {},
         skippedSections = skippedSections ?? const {},
-        sectionApplicability = sectionApplicability ?? const {};
+        sectionApplicability = sectionApplicability ?? const {},
+        aiGeneratedPlans = aiGeneratedPlans ?? const {},
+        visitedSections = visitedSections ?? const [];
 
   factory QualityManagementData.empty() {
     return QualityManagementData(
@@ -8862,6 +8982,8 @@ class QualityManagementData {
       aiInsights: {},
       skippedSections: {},
       sectionApplicability: {},
+      aiGeneratedPlans: {},
+      visitedSections: const [],
       trackedInExecution: false,
       lastTrackedInExecutionAt: '',
     );
@@ -8895,6 +9017,8 @@ class QualityManagementData {
         'aiInsights': aiInsights,
         'skippedSections': skippedSections,
         'sectionApplicability': sectionApplicability,
+        'aiGeneratedPlans': aiGeneratedPlans,
+        'visitedSections': visitedSections,
         'trackedInExecution': trackedInExecution,
         'lastTrackedInExecutionAt': lastTrackedInExecutionAt,
       };
@@ -9025,6 +9149,13 @@ class QualityManagementData {
       aiInsights: _parseStringMap(json['aiInsights']),
       skippedSections: _parseBoolMap(json['skippedSections']),
       sectionApplicability: _parseBoolMap(json['sectionApplicability']),
+      aiGeneratedPlans: _parseBoolMap(json['aiGeneratedPlans']),
+      visitedSections: json['visitedSections'] is List
+          ? (json['visitedSections'] as List)
+              .map((e) => e?.toString() ?? '')
+              .where((e) => e.isNotEmpty)
+              .toList(growable: false)
+          : const [],
       trackedInExecution: json['trackedInExecution'] is bool
           ? json['trackedInExecution'] as bool
           : (json['trackedInExecution']?.toString() == 'true'),
@@ -9061,6 +9192,8 @@ class QualityManagementData {
     Map<String, String>? aiInsights,
     Map<String, bool>? skippedSections,
     Map<String, bool>? sectionApplicability,
+    Map<String, bool>? aiGeneratedPlans,
+    List<String>? visitedSections,
     bool? trackedInExecution,
     String? lastTrackedInExecutionAt,
   }) {
@@ -9095,6 +9228,8 @@ class QualityManagementData {
       aiInsights: aiInsights ?? this.aiInsights,
       skippedSections: skippedSections ?? this.skippedSections,
       sectionApplicability: sectionApplicability ?? this.sectionApplicability,
+      aiGeneratedPlans: aiGeneratedPlans ?? this.aiGeneratedPlans,
+      visitedSections: visitedSections ?? this.visitedSections,
       trackedInExecution: trackedInExecution ?? this.trackedInExecution,
       lastTrackedInExecutionAt:
           lastTrackedInExecutionAt ?? this.lastTrackedInExecutionAt,
@@ -9152,7 +9287,7 @@ class Contractor {
   factory Contractor.fromJson(Map<String, dynamic> json) {
     return Contractor(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       name: json['name']?.toString() ?? '',
       service: json['service']?.toString() ?? '',
       estimatedCost: (json['estimatedCost'] is num)
@@ -9205,7 +9340,7 @@ class Vendor {
   factory Vendor.fromJson(Map<String, dynamic> json) {
     return Vendor(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       name: json['name']?.toString() ?? '',
       equipmentOrService: json['equipmentOrService']?.toString() ?? '',
       estimatedPrice: (json['estimatedPrice'] is num)
@@ -9354,6 +9489,14 @@ class InterfaceEntry {
   final String dataFlow; // Bidirectional, A→B, B→A
   final String protocol; // API, File Transfer, Manual, Email, Shared DB
 
+  // Interface Management Plan fields (from document)
+  final String interfaceClassification; // Internal, External
+  final String dependencies; // Deliverable, Schedule, Resource, Procurement, Technical
+  final String conflictResolution; // Conflict resolution process description
+  final String escalationPath; // Escalation procedures
+  final String assumptions; // Assumptions affecting interfaces
+  final String changeImpacts; // Change impacts description
+
   InterfaceEntry({
     String? id,
     this.boundary = '',
@@ -9370,7 +9513,13 @@ class InterfaceEntry {
     this.criticality = '',
     this.dataFlow = '',
     this.protocol = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+    this.interfaceClassification = '',
+    this.dependencies = '',
+    this.conflictResolution = '',
+    this.escalationPath = '',
+    this.assumptions = '',
+    this.changeImpacts = '',
+  }) : id = id ?? newId();
 
   InterfaceEntry copyWith({
     String? boundary,
@@ -9387,6 +9536,12 @@ class InterfaceEntry {
     String? criticality,
     String? dataFlow,
     String? protocol,
+    String? interfaceClassification,
+    String? dependencies,
+    String? conflictResolution,
+    String? escalationPath,
+    String? assumptions,
+    String? changeImpacts,
   }) {
     return InterfaceEntry(
       id: id,
@@ -9404,6 +9559,12 @@ class InterfaceEntry {
       criticality: criticality ?? this.criticality,
       dataFlow: dataFlow ?? this.dataFlow,
       protocol: protocol ?? this.protocol,
+      interfaceClassification: interfaceClassification ?? this.interfaceClassification,
+      dependencies: dependencies ?? this.dependencies,
+      conflictResolution: conflictResolution ?? this.conflictResolution,
+      escalationPath: escalationPath ?? this.escalationPath,
+      assumptions: assumptions ?? this.assumptions,
+      changeImpacts: changeImpacts ?? this.changeImpacts,
     );
   }
 
@@ -9423,6 +9584,12 @@ class InterfaceEntry {
         'criticality': criticality,
         'dataFlow': dataFlow,
         'protocol': protocol,
+        'interfaceClassification': interfaceClassification,
+        'dependencies': dependencies,
+        'conflictResolution': conflictResolution,
+        'escalationPath': escalationPath,
+        'assumptions': assumptions,
+        'changeImpacts': changeImpacts,
       };
 
   factory InterfaceEntry.fromJson(Map<String, dynamic> json) {
@@ -9442,6 +9609,12 @@ class InterfaceEntry {
       criticality: json['criticality']?.toString() ?? '',
       dataFlow: json['dataFlow']?.toString() ?? '',
       protocol: json['protocol']?.toString() ?? '',
+      interfaceClassification: json['interfaceClassification']?.toString() ?? '',
+      dependencies: json['dependencies']?.toString() ?? '',
+      conflictResolution: json['conflictResolution']?.toString() ?? '',
+      escalationPath: json['escalationPath']?.toString() ?? '',
+      assumptions: json['assumptions']?.toString() ?? '',
+      changeImpacts: json['changeImpacts']?.toString() ?? '',
     );
   }
 
@@ -9477,7 +9650,7 @@ class InterfaceChangeLogEntry {
     this.newValue = '',
     this.changedBy = '',
     this.changedAt = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   InterfaceChangeLogEntry copyWith({
     String? interfaceId,

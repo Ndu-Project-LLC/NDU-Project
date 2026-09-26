@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
@@ -13,6 +14,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -31,7 +33,7 @@ class _LeaveEntry {
     this.person = '',
     DateTime? startDate,
     DateTime? endDate,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         startDate = startDate ?? DateTime.now(),
         endDate = endDate ?? DateTime.now().add(const Duration(days: 1));
 }
@@ -45,7 +47,7 @@ class _HolidayEntry {
     String? id,
     this.name = '',
     DateTime? date,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         date = date ?? DateTime.now();
 }
 
@@ -65,7 +67,7 @@ class _AgileCapacityPlanningScreenState
   double _buffer = 15;
   String _velocitySource = 'Estimated';
   double _historicalVelocity = 30;
-  final TextEditingController _velocityNotesCtrl = TextEditingController();
+  final TextEditingController _velocityNotesCtrl = SpellCheckTextEditingController();
   List<_LeaveEntry> _leaveEntries = [];
   List<_HolidayEntry> _holidays = [];
   bool _isLoading = true;
@@ -180,10 +182,10 @@ class _AgileCapacityPlanningScreenState
     _leavePersonCtrls.clear();
     _holidayNameCtrls.clear();
     for (final l in _leaveEntries) {
-      _leavePersonCtrls[l.id] = TextEditingController(text: l.person);
+      _leavePersonCtrls[l.id] = SpellCheckTextEditingController(text: l.person);
     }
     for (final h in _holidays) {
-      _holidayNameCtrls[h.id] = TextEditingController(text: h.name);
+      _holidayNameCtrls[h.id] = SpellCheckTextEditingController(text: h.name);
     }
   }
 
@@ -559,7 +561,7 @@ class _AgileCapacityPlanningScreenState
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: _kBorder),
       ),
@@ -569,7 +571,7 @@ class _AgileCapacityPlanningScreenState
             width: 150,
             child: VoiceTextField(
               controller:
-                  _leavePersonCtrls[entry.id] ?? TextEditingController(),
+                  _leavePersonCtrls[entry.id] ?? SpellCheckTextEditingController(),
               decoration: const InputDecoration(
                 hintText: 'Team member',
                 border: OutlineInputBorder(),
@@ -677,7 +679,7 @@ class _AgileCapacityPlanningScreenState
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: _kBorder),
       ),
@@ -687,7 +689,7 @@ class _AgileCapacityPlanningScreenState
             width: 180,
             child: VoiceTextField(
               controller:
-                  _holidayNameCtrls[entry.id] ?? TextEditingController(),
+                  _holidayNameCtrls[entry.id] ?? SpellCheckTextEditingController(),
               decoration: const InputDecoration(
                 hintText: 'Holiday name',
                 border: OutlineInputBorder(),
@@ -761,13 +763,31 @@ class _AgileCapacityPlanningScreenState
                   visualDensity: VisualDensity.compact,
                   textStyle: WidgetStateProperty.all(const TextStyle(
                       fontSize: 12, fontWeight: FontWeight.w600)),
+                  backgroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Color(0xFFFFC812); // Yellow theme
+                    }
+                    return Colors.white;
+                  }),
+                  foregroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Color(0xFF111827);
+                    }
+                    return const Color(0xFF374151);
+                  }),
+                  side: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const BorderSide(color: Color(0xFFFFC812));
+                    }
+                    return const BorderSide(color: Color(0xFFD1D5DB));
+                  }),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           VoiceTextField(
-            controller: TextEditingController.fromValue(
+            controller: SpellCheckTextEditingController.fromValue(
               TextEditingValue(
                 text: _historicalVelocity.round().toString(),
                 selection: const TextSelection.collapsed(offset: 999),

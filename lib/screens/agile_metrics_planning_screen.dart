@@ -14,6 +14,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -148,7 +149,7 @@ class _AgileMetricsPlanningScreenState
   bool _isSaving = false;
   bool _isGenerating = false;
   Timer? _autoSaveDebounce;
-  final TextEditingController _notesCtrl = TextEditingController();
+  final TextEditingController _notesCtrl = SpellCheckTextEditingController();
 
   String? get _projectId {
     try {
@@ -369,6 +370,24 @@ class _AgileMetricsPlanningScreenState
                             ],
                           ),
                           const SizedBox(height: 16),
+                          const Text('Additional Notes',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: _kHeadline)),
+                          const SizedBox(height: 8),
+                          VoiceTextField(
+                            controller: _notesCtrl,
+                            decoration: const InputDecoration(
+                              hintText:
+                                  'Target values, measurement approach, reporting cadence...',
+                              border: OutlineInputBorder(),
+                            ),
+                            minLines: 3,
+                            maxLines: 6,
+                            onChanged: (_) => _scheduleAutoSave(),
+                          ),
+                          const SizedBox(height: 16),
                           if (_isSaving)
                             const Padding(
                               padding: EdgeInsets.only(bottom: 8),
@@ -409,24 +428,6 @@ class _AgileMetricsPlanningScreenState
                           ),
                           const SizedBox(height: 12),
                           ..._groups.map((g) => _buildMetricGroup(g)),
-                          const SizedBox(height: 24),
-                          const Text('Additional Notes',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: _kHeadline)),
-                          const SizedBox(height: 8),
-                          VoiceTextField(
-                            controller: _notesCtrl,
-                            decoration: const InputDecoration(
-                              hintText:
-                                  'Target values, measurement approach, reporting cadence...',
-                              border: OutlineInputBorder(),
-                            ),
-                            minLines: 3,
-                            maxLines: 6,
-                            onChanged: (_) => _scheduleAutoSave(),
-                          ),
                         ],
                         const SizedBox(height: 24),
                         LaunchPhaseNavigation(
@@ -538,8 +539,8 @@ class _AgileMetricsPlanningScreenState
       screenTitle: 'Agile Metrics Planning',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',

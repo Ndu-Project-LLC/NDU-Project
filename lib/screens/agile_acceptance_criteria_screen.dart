@@ -8,6 +8,7 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/ac_confidence_score.dart';
+import 'package:ndu_project/widgets/acceptance_criteria_template_dialog.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -18,6 +19,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -42,8 +44,8 @@ class _AgileAcceptanceCriteriaScreenState
   Timer? _autoSaveDebounce;
 
   // Per-template detail fields for the selected template
-  final TextEditingController _templateNameCtrl = TextEditingController();
-  final TextEditingController _templateDescCtrl = TextEditingController();
+  final TextEditingController _templateNameCtrl = SpellCheckTextEditingController();
+  final TextEditingController _templateDescCtrl = SpellCheckTextEditingController();
   WorkItemType _selectedWorkItemType = WorkItemType.userStory;
   AcFormat _selectedFormat = AcFormat.checklist;
 
@@ -69,7 +71,7 @@ class _AgileAcceptanceCriteriaScreenState
   AcceptanceCriteriaTemplate? get _selectedTemplate {
     if (_selectedTemplateId == null) return null;
     try {
-      return _templates.firstWhere((t) => t.id == _selectedTemplateId);
+      return _templates.where((t) => t.id == _selectedTemplateId).firstOrNull;
     } catch (_) {
       return null;
     }
@@ -167,24 +169,27 @@ class _AgileAcceptanceCriteriaScreenState
     _scheduleAutoSave();
   }
 
-  void _addTemplate() {
-    final template = AcceptanceCriteriaTemplate(
-      name: 'New ${_selectedWorkItemType.label} Template',
-      workItemType: _selectedWorkItemType,
-      criteria: [
-        AcceptanceCriterion(
-          description: '',
-          category: CriterionCategory.functional,
-        ),
-        AcceptanceCriterion(
-          description: '',
-          category: CriterionCategory.nonFunctional,
-        ),
-      ],
+  /// "Add" opens the modal and only adds the template the user actually
+  /// described — it used to silently drop an unnamed `New <Type> Template`
+  /// into the list with two blank criteria, which every user then had to
+  /// rename, re-type and re-file by hand.
+  Future<void> _addTemplate() async {
+    final template = await AcceptanceCriteriaTemplateDialog.show(
+      context,
+      initialWorkItemType: _selectedWorkItemType,
+      initialFormat: _selectedFormat,
+      existingTemplates: _templates,
     );
+    if (template == null || !mounted) return;
     setState(() {
       _config.templates.add(template);
-      _selectedTemplate = template;
+      // Follow the new template, including across the work item type filter
+      // and format selector, so the editor below opens on it.
+      _selectedWorkItemType = template.workItemType;
+      _selectedFormat = template.format;
+      _selectedTemplateId = template.id;
+      _templateNameCtrl.text = template.name;
+      _templateDescCtrl.text = template.description;
     });
     _scheduleAutoSave();
   }
@@ -232,7 +237,7 @@ class _AgileAcceptanceCriteriaScreenState
 
   TextEditingController _ctrlForCriterion(AcceptanceCriterion c) {
     if (!_criterionCtrls.containsKey(c.id)) {
-      _criterionCtrls[c.id] = TextEditingController(text: c.description);
+      _criterionCtrls[c.id] = SpellCheckTextEditingController(text: c.description);
       _criterionCtrls[c.id]!.addListener(() {
         c.description = _criterionCtrls[c.id]!.text;
       });
@@ -682,7 +687,11 @@ class _AgileAcceptanceCriteriaScreenState
             onChanged: (_) => _syncSelectedTemplate(),
           ),
           const SizedBox(height: 12),
-          Row(
+          // Wrap, not Row: "AI Generate Criteria" + "Add Criterion" are wider
+          // than a narrow window's editor pane and used to paint an overflow.
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               OutlinedButton.icon(
                 onPressed: _isGenerating ? null : _generateAcFromContext,
@@ -699,7 +708,6 @@ class _AgileAcceptanceCriteriaScreenState
                   side: const BorderSide(color: _kAccent),
                 ),
               ),
-              const SizedBox(width: 8),
               TextButton.icon(
                 onPressed: _addCriterion,
                 icon: const Icon(Icons.add, size: 16),
@@ -713,28 +721,29 @@ class _AgileAcceptanceCriteriaScreenState
   }
 
   Widget _buildFormatSelector() {
-    return Row(
+    // Wrap, not Row: the three format chips (one label is "Given / When / Then
+    // (BDD)") are wider than a narrow editor pane and overflowed it.
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         const Text('Format: ',
             style: TextStyle(
                 fontSize: 13, fontWeight: FontWeight.w600, color: _kHeadline)),
-        const SizedBox(width: 8),
         ...AcFormat.values.map((fmt) {
           final selected = fmt == _selectedFormat;
-          return Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: ChoiceChip(
-              label: Text(fmt.label,
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: selected ? Colors.white : _kHeadline)),
-              selected: selected,
-              selectedColor: _kAccent,
-              onSelected: (v) {
-                setState(() => _selectedFormat = fmt);
-                _syncSelectedTemplate();
-              },
-            ),
+          return ChoiceChip(
+            label: Text(fmt.label,
+                style: TextStyle(
+                    fontSize: 11,
+                    color: selected ? Colors.white : _kHeadline)),
+            selected: selected,
+            selectedColor: _kAccent,
+            onSelected: (v) {
+              setState(() => _selectedFormat = fmt);
+              _syncSelectedTemplate();
+            },
           );
         }),
       ],
@@ -792,7 +801,7 @@ class _AgileAcceptanceCriteriaScreenState
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Color(0xFFF9FAFB),
+          color: const Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: _kBorder),
         ),
@@ -801,9 +810,12 @@ class _AgileAcceptanceCriteriaScreenState
           children: [
             Row(
               children: [
-                SizedBox(
-                  width: 200,
+                // Expanded + isExpanded: the longest category label
+                // ("Non-Functional Requirement") does not fit the fixed 200px
+                // this used to be, and painted an overflow.
+                Expanded(
                   child: DropdownButtonFormField<CriterionCategory>(
+                    isExpanded: true,
                     initialValue: c.category,
                     decoration: const InputDecoration(
                       hintText: 'Category',
@@ -829,8 +841,9 @@ class _AgileAcceptanceCriteriaScreenState
                 ),
                 const SizedBox(width: 8),
                 SizedBox(
-                  width: 90,
+                  width: 74,
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Checkbox(
                         value: c.isRequired,
@@ -903,8 +916,8 @@ class _AgileAcceptanceCriteriaScreenState
       screenTitle: 'Acceptance Criteria Planning',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',

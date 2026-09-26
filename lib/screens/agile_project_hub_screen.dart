@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
-import 'package:ndu_project/screens/agile_release_plan_screen.dart';
-import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
-import 'package:ndu_project/screens/agile_team_structure_screen.dart';
 import 'package:ndu_project/screens/agile_roadmap_screen.dart';
 import 'package:ndu_project/screens/agile_dashboard_screen.dart';
 import 'package:ndu_project/screens/agile_kanban_board_screen.dart';
@@ -20,7 +16,6 @@ import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
-import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
@@ -434,7 +429,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                 ),
                 borderRadius: BorderRadius.circular(8),
@@ -463,7 +458,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Color(0xFFF3F4F6),
+                color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -501,7 +496,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
     final double horizontalPadding = isMobile ? 18 : 32;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -618,7 +613,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             'and continuous improvement — integrated with the Project Delivery Operating System (PDOS).',
             style: TextStyle(
               fontSize: 15,
-              color: Color(0xFFC7D2FE),
+              color: Color(0xFFFEF3C7),
               height: 1.6,
             ),
           ),
@@ -649,7 +644,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: const Color(0xFFA5B4FC)),
+          Icon(icon, size: 16, color: const Color(0xFFFDE68A)),
           const SizedBox(width: 8),
           Text(
             label,
@@ -735,14 +730,14 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF111827),
+                color: Color(0xFFFFC107),
               ),
             ),
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Color(0xFFEEF2FF),
+                color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -784,7 +779,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -917,11 +912,11 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [Color(0xFFF0FDF4), Color(0xFFECFDF5)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFBBF7D0)),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

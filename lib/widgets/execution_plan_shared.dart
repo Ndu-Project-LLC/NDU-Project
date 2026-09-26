@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/ai_suggesting_textfield.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 import 'package:ndu_project/widgets/ai_diagram_panel.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -144,7 +145,7 @@ class _WhiteButton extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         foregroundColor: Colors.black87,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         side: const BorderSide(color: Color(0xFFE5E7EB)),
@@ -206,7 +207,7 @@ class CircleIconButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Icon(
           icon,
@@ -224,9 +225,10 @@ class CurrentUserProfileChip extends StatelessWidget {
   String _initials(String text) {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return 'U';
-    final parts = trimmed.split(RegExp(r"\s+"));
+    final parts = trimmed.split(RegExp(r"\s+")).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return trimmed[0].toUpperCase();
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return trimmed.substring(0, 1).toUpperCase();
+    return parts[0][0].toUpperCase();
   }
 
   @override
@@ -249,7 +251,7 @@ class CurrentUserProfileChip extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: Color(0xFFE5E7EB)),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -420,14 +422,26 @@ class _ExecutionPlanFormState extends State<ExecutionPlanForm> {
       }
     }
 
+    final lastSavedAt = _lastSavedAt;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AiSuggestingTextField(
+        // Notes stay collapsed until the user opens them.
+        CollapsibleNotesSection(
+          title: widget.title,
+          card: true,
+          trailing: lastSavedAt == null
+              ? null
+              : Text(
+                  'Saved ${TimeOfDay.fromDateTime(lastSavedAt).format(context)}',
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                ),
+          child: AiSuggestingTextField(
           fieldLabel: widget.title,
           hintText: widget.hintText,
           sectionLabel: 'Execution Plan',
-          showLabel: true,
+          showLabel: false,
           initialText: noteKey == null
               ? null
               : () {
@@ -447,14 +461,7 @@ class _ExecutionPlanFormState extends State<ExecutionPlanForm> {
           autoGenerateSection: widget.title,
           onChanged: _handleChanged,
         ),
-        if (_lastSavedAt != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              'Saved ${TimeOfDay.fromDateTime(_lastSavedAt!).format(context)}',
-              style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-            ),
-          ),
+        ),
         if (widget.showDiagram)
           AiDiagramPanel(
             sectionLabel: widget.title,
@@ -478,7 +485,7 @@ class InfoBadge extends StatelessWidget {
         color: Color(0xFFDAE9FF),
         shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.info_outline_rounded, color: Color(0xFF2563EB)),
+      child: const Icon(Icons.info_outline_rounded, color: Color(0xFFFFC812)),
     );
   }
 }
@@ -493,7 +500,7 @@ class AiTipCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Color(0xFFE1EEFF),
+        color: const Color(0xFFE1EEFF),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -568,7 +575,7 @@ class AddRowButton extends StatelessWidget {
       ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         side: const BorderSide(color: Color(0xFFE5E7EB)),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16)),
@@ -597,7 +604,7 @@ class AddSolutionButton extends StatelessWidget {
       ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         side: const BorderSide(color: Color(0xFFE5E7EB)),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16)),
@@ -618,9 +625,9 @@ class CrossReferenceNote extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Color(0xFFF0FDF4),
+        color: const Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFBBF7D0)),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
       ),
       child: Row(
         children: [

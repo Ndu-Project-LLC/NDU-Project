@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/models/rate_card.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Dialog for managing personnel rate cards with tiered rates and role-based access.
 class RateCardManagementDialog extends StatefulWidget {
@@ -40,12 +41,12 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
   bool _showAddForm = false;
 
   // New card form controllers
-  final _nameCtrl = TextEditingController();
+  final _nameCtrl = SpellCheckTextEditingController();
   String _selectedTier = 'National';
-  final _effectiveDateCtrl = TextEditingController();
-  final _expiryDateCtrl = TextEditingController();
+  final _effectiveDateCtrl = SpellCheckTextEditingController();
+  final _expiryDateCtrl = SpellCheckTextEditingController();
   String _accessLevel = 'Admin';
-  final _notesCtrl = TextEditingController();
+  final _notesCtrl = SpellCheckTextEditingController();
 
   @override
   void initState() {
@@ -121,7 +122,7 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 16, 16),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colorScheme.outline.withOpacity(0.1))),
+        border: Border(bottom: BorderSide(color: colorScheme.outline.withValues(alpha: 0.1))),
       ),
       child: Row(
         children: [
@@ -185,12 +186,12 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
     return Container(
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
-          Icon(Icons.table_chart_outlined, size: 48, color: colorScheme.onSurfaceVariant.withOpacity(0.4)),
+          Icon(Icons.table_chart_outlined, size: 48, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
           const SizedBox(height: 16),
           Text('No Rate Cards Configured', style: TextStyle(
             fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.onSurface,
@@ -219,9 +220,9 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isExpanded ? const Color(0xFFD97706) : colorScheme.outline.withOpacity(0.2)),
+        border: Border.all(color: isExpanded ? const Color(0xFFD97706) : colorScheme.outline.withValues(alpha: 0.2)),
         boxShadow: isExpanded ? [BoxShadow(
-          color: const Color(0xFFD97706).withOpacity(0.08),
+          color: const Color(0xFFD97706).withValues(alpha: 0.08),
           blurRadius: 8,
           offset: const Offset(0, 2),
         )] : null,
@@ -235,7 +236,7 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: _getTierColor(card.tier).withOpacity(0.1),
+                color: _getTierColor(card.tier).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(child: Icon(_getTierIcon(card.tier), 
@@ -249,7 +250,7 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
                 Chip(
                   label: Text(card.tier, style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
-                  backgroundColor: _getTierColor(card.tier).withOpacity(0.15),
+                  backgroundColor: _getTierColor(card.tier).withValues(alpha: 0.15),
                   side: BorderSide.none,
                 ),
                 const SizedBox(width: 6),
@@ -296,7 +297,7 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            Icon(Icons.money_off, size: 32, color: colorScheme.onSurfaceVariant.withOpacity(0.4)),
+            Icon(Icons.money_off, size: 32, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
             const SizedBox(height: 8),
             Text('No role rates defined yet', style: TextStyle(
               fontSize: 13, color: colorScheme.onSurfaceVariant,
@@ -315,7 +316,7 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Table(
-        border: TableBorder.all(color: colorScheme.outline.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+        border: TableBorder.all(color: colorScheme.outline.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
         columnWidths: const {
           0: FlexColumnWidth(1.5),
           1: FlexColumnWidth(1.2),
@@ -325,7 +326,7 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
         },
         children: [
           TableRow(
-            decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest.withOpacity(0.5)),
+            decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)),
             children: ['Role Title', 'Discipline', 'Base Rate', 'Loaded Rate', '']
               .map((h) => Padding(
                 padding: const EdgeInsets.all(10),
@@ -366,7 +367,7 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF7E6),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFBFDBFE)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,7 +448,7 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: colorScheme.outline.withOpacity(0.1))),
+        border: Border(top: BorderSide(color: colorScheme.outline.withValues(alpha: 0.1))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -483,7 +484,7 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
 
   Color _getTierColor(String tier) {
     switch (tier) {
-      case 'Global': return const Color(0xFF7C3AED);
+      case 'Global': return const Color(0xFFB8860B);
       case 'Regional': return const Color(0xFFD97706);
       case 'National': return const Color(0xFF059669);
       case 'Local': return const Color(0xFFD97706);
@@ -611,12 +612,12 @@ class _AddRateTierDialog extends StatefulWidget {
 }
 
 class _AddRateTierDialogState extends State<_AddRateTierDialog> {
-  final _roleCtrl = TextEditingController();
-  final _disciplineCtrl = TextEditingController();
-  final _baseRateCtrl = TextEditingController();
-  final _burdenCtrl = TextEditingController(text: '1.35');
-  final _gradeCtrl = TextEditingController();
-  final _notesCtrl = TextEditingController();
+  final _roleCtrl = SpellCheckTextEditingController();
+  final _disciplineCtrl = SpellCheckTextEditingController();
+  final _baseRateCtrl = SpellCheckTextEditingController();
+  final _burdenCtrl = SpellCheckTextEditingController(text: '1.35');
+  final _gradeCtrl = SpellCheckTextEditingController();
+  final _notesCtrl = SpellCheckTextEditingController();
   String _currency = 'USD';
 
   @override

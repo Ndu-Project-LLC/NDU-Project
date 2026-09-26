@@ -534,7 +534,7 @@ class _UnsavedChangesGuardState extends State<UnsavedChangesGuard> {
             onPressed: () =>
                 Navigator.of(dialogContext).pop(_SaveDialogAction.save),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
+              backgroundColor: const Color(0xFFFFC812),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),

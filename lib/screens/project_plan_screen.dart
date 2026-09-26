@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -13,7 +14,6 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ProjectPlanScreen extends StatefulWidget {
   const ProjectPlanScreen({super.key});
 
@@ -54,12 +55,12 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   ];
 
   final TextEditingController _overviewSummaryController =
-      TextEditingController();
-  final TextEditingController _budgetTotalController = TextEditingController();
+      SpellCheckTextEditingController();
+  final TextEditingController _budgetTotalController = SpellCheckTextEditingController();
   final TextEditingController _budgetContingencyController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _budgetApprovedByController =
-      TextEditingController();
+      SpellCheckTextEditingController();
 
   String _budgetCurrency = 'USD';
 
@@ -90,6 +91,11 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
 
   bool _suspendOverviewSave = false;
   bool _suspendBudgetSave = false;
+
+  // Milestones start in read-only "view" mode. Nothing in the table can be
+  // edited — text fields, status dropdown, delete, add, or import — until the
+  // user taps the prominent Edit toggle in the card header.
+  bool _milestonesEditing = false;
 
   bool _autoPopulated = false;
   bool _isAutoPopulating = false;
@@ -168,7 +174,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         for (final r in seed.rows) {
           if (r['kind'] == 'milestone') {
             newMilestones.add(_MilestoneEntry(
-              id: DateTime.now().microsecondsSinceEpoch.toString(),
+              id: newId(),
               title: (r['name'] ?? '').toString(),
               targetDate: (r['dueDate'] ?? '').toString(),
               owner: (r['discipline'] ?? '').toString(),
@@ -278,7 +284,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
     final double horizontalPadding = isMobile ? 16 : 36;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,17 +311,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                                 context, 'project_plan'),
                             onExportPdf: _exportPdf),
                         const SizedBox(height: 16),
-                        if (_isAutoPopulating)
-                          const AutoPopulatingIndicator(),
-                        if (_carriedContext != null &&
-                            _carriedContext!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: CarriedContextBanner(
-                              checkpoint: 'project_plan',
-                              contextText: _carriedContext!,
-                            ),
-                          ),
+                       
                         _buildHeader(isMobile),
                         const SizedBox(height: 24),
                         const PlanningAiNotesCard(
@@ -512,12 +508,12 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       child: TabBar(
         controller: _tabController,
         isScrollable: true,
-        labelColor: const Color(0xFF2563EB),
+        labelColor: const Color(0xFFFFC812),
         unselectedLabelColor: const Color(0xFF6B7280),
         labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         unselectedLabelStyle:
             const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        indicatorColor: const Color(0xFF2563EB),
+        indicatorColor: const Color(0xFFFFC812),
         indicatorWeight: 2,
         tabAlignment: TabAlignment.start,
         tabs: const [
@@ -634,6 +630,9 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
             title: 'Milestones',
             subtitle: 'Track key dates, owners, and progress indicators.',
             onAdd: _addMilestone,
+            editMode: _milestonesEditing,
+            onToggleEdit: () =>
+                setState(() => _milestonesEditing = !_milestonesEditing),
             child: _buildMilestonesTable(),
           ),
         ],
@@ -859,7 +858,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         final desc = goal.description.trim();
         if (desc.isNotEmpty) {
           entries.add(_ListEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             text: desc,
           ));
         }
@@ -868,7 +867,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         final desc = pg.description.trim();
         if (desc.isNotEmpty) {
           entries.add(_ListEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             text: desc,
           ));
         }
@@ -882,7 +881,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         final desc = item.description.trim();
         if (desc.isNotEmpty) {
           entries.add(_ListEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             text: desc,
           ));
         }
@@ -891,7 +890,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         final desc = item.description.trim();
         if (desc.isNotEmpty) {
           entries.add(_ListEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             text: 'Out of scope: $desc',
           ));
         }
@@ -905,7 +904,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         final desc = item.description.trim();
         if (desc.isNotEmpty) {
           entries.add(_ListEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             text: desc,
           ));
         }
@@ -914,7 +913,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         final desc = item.description.trim();
         if (desc.isNotEmpty) {
           entries.add(_ListEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             text: 'Constraint: $desc',
           ));
         }
@@ -927,7 +926,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       for (final m in data.keyMilestones) {
         if (m.name.trim().isEmpty) continue;
         entries.add(_MilestoneEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           title: m.name.trim(),
           targetDate: m.dueDate.trim(),
           owner: m.discipline.trim(),
@@ -939,7 +938,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         for (final pm in pg.milestones) {
           if (pm.title.trim().isEmpty) continue;
           entries.add(_MilestoneEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             title: pm.title.trim(),
             targetDate: pm.deadline.trim(),
             owner: '',
@@ -971,7 +970,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       for (final member in data.teamMembers) {
         if (member.name.trim().isEmpty) continue;
         entries.add(_ResourceEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           role: '${member.name.trim()} — ${member.role.trim()}',
           allocation: '',
           startDate: '',
@@ -988,7 +987,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       for (final c in data.contractors) {
         if (c.name.trim().isEmpty) continue;
         entries.add(_VendorEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           name: c.name.trim(),
           service: c.service.trim(),
           contact: '',
@@ -999,7 +998,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       for (final v in data.vendors) {
         if (v.name.trim().isEmpty) continue;
         entries.add(_VendorEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           name: v.name.trim(),
           service: v.equipmentOrService.trim(),
           contact: '',
@@ -1022,7 +1021,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                 (d['contractorName'] ?? d['name'] ?? '').toString().trim();
             if (name.isEmpty) continue;
             entries.add(_VendorEntry(
-              id: DateTime.now().microsecondsSinceEpoch.toString(),
+              id: newId(),
               name: name,
               service: (d['scope'] ?? d['description'] ?? '').toString().trim(),
               contact: (d['owner'] ?? '').toString().trim(),
@@ -1045,7 +1044,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
             final name = (d['name'] ?? '').toString().trim();
             if (name.isEmpty) continue;
             entries.add(_VendorEntry(
-              id: DateTime.now().microsecondsSinceEpoch.toString(),
+              id: newId(),
               name: name,
               service: (d['category'] ?? '').toString().trim(),
               contact: '',
@@ -1089,7 +1088,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       for (final item in items) {
         if (item.title.trim().isNotEmpty) {
           entries.add(_TaskEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             title: item.title.trim(),
             owner: '',
             startDate: '',
@@ -1155,7 +1154,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       )) {
         if (item.title.trim().isEmpty && item.amount <= 0) continue;
         entries.add(_BudgetEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           category: item.title.trim(),
           estimate: item.amount > 0 ? item.amount.toStringAsFixed(2) : '',
           actual: '',
@@ -1188,7 +1187,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final key = r.riskName.trim().toLowerCase();
       if (!seen.add(key)) continue;
       entries.add(_RiskEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         title: r.riskName.trim(),
         impact: _normalizeImpact(r.impactLevel),
         probability: _normalizeProbability(r.likelihood),
@@ -1204,7 +1203,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final key = e.concern.trim().toLowerCase();
       if (!seen.add(key)) continue;
       entries.add(_RiskEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         title: e.concern.trim(),
         impact: _normalizeImpact(e.riskLevel),
         probability: 'Medium',
@@ -1222,7 +1221,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final key = i.title.trim().toLowerCase();
       if (!seen.add(key)) continue;
       entries.add(_RiskEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         title: i.title.trim(),
         impact: _normalizeSeverity(i.severity),
         probability: 'Medium',
@@ -1670,9 +1669,222 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       showDeleteSuccessSnackBar(context, itemLabel: 'Overview Assumption');
   }
 
-  void _addMilestone() {
-    setState(() => _overviewMilestones.add(_MilestoneEntry.empty()));
+  /// Opens a pop-up modal to create a new milestone. The row is only added
+  /// to the table once the user fills in the details and taps “Add”.
+  Future<void> _addMilestone() async {
+    final nameCtrl = SpellCheckTextEditingController();
+    final dateCtrl = SpellCheckTextEditingController();
+    final ownerCtrl = SpellCheckTextEditingController();
+    final notesCtrl = SpellCheckTextEditingController();
+    var status = 'Planned';
+    final formKey = GlobalKey<FormState>();
+
+    final created = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              title: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.flag_rounded,
+                        color: Color(0xFFF59E0B), size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text('Add Milestone',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF111827))),
+                ],
+              ),
+              content: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        _milestoneDialogField(
+                          controller: nameCtrl,
+                          label: 'Milestone Name',
+                          hint: 'e.g. Design sign-off',
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Name is required'
+                              : null,
+                        ),
+                        const SizedBox(height: 14),
+                        _milestoneDialogField(
+                          controller: dateCtrl,
+                          label: 'Target Date',
+                          hint: 'YYYY-MM-DD',
+                        ),
+                        const SizedBox(height: 14),
+                        _milestoneDialogField(
+                          controller: ownerCtrl,
+                          label: 'Owner',
+                          hint: 'e.g. Project Manager',
+                        ),
+                        const SizedBox(height: 14),
+                        const Text('Status',
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF374151))),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<String>(
+                          initialValue: status,
+                          items: const [
+                            'Planned',
+                            'In progress',
+                            'At risk',
+                            'Complete',
+                          ]
+                              .map((option) => DropdownMenuItem(
+                                  value: option, child: Text(option)))
+                              .toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setDialogState(() => status = value);
+                            }
+                          },
+                          decoration: InputDecoration(
+                            isDense: true,
+                            filled: true,
+                            fillColor: const Color(0xFFF9FAFB),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 12),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFE5E7EB)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFF59E0B), width: 1.5),
+                            ),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 13, color: Color(0xFF111827)),
+                        ),
+                        const SizedBox(height: 14),
+                        _milestoneDialogField(
+                          controller: notesCtrl,
+                          label: 'Notes',
+                          hint: 'Acceptance criteria, dependencies, references…',
+                          maxLines: 3,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text('Cancel',
+                      style: TextStyle(color: Color(0xFF6B7280))),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (!formKey.currentState!.validate()) return;
+                    Navigator.of(ctx).pop(true);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF59E0B),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('Add Milestone'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (created != true) return;
+
+    final newTitle = nameCtrl.text.trim();
+    if (newTitle.isEmpty) return;
+
+    setState(() {
+      _overviewMilestones.add(_MilestoneEntry(
+        id: newId(),
+        title: newTitle,
+        targetDate: dateCtrl.text.trim(),
+        owner: ownerCtrl.text.trim(),
+        status: status,
+        notes: notesCtrl.text.trim(),
+      ));
+    });
     _scheduleOverviewSave();
+  }
+
+  /// Shared form-field styling used inside the Add Milestone modal.
+  Widget _milestoneDialogField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151))),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          maxLines: maxLines,
+          validator: validator,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle:
+                const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+            filled: true,
+            fillColor: const Color(0xFFF9FAFB),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  const BorderSide(color: Color(0xFFF59E0B), width: 1.5),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   void _updateMilestone(_MilestoneEntry updated) {
@@ -1801,6 +2013,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
     required String tableTitle,
     required List<CsvColumnSpec> columns,
     required FutureOr<void> Function(List<Map<String, String>>) onImport,
+    bool enabled = true,
   }) {
     return Align(
       alignment: Alignment.centerRight,
@@ -1808,6 +2021,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         tableTitle: tableTitle,
         columns: columns,
         onImport: onImport,
+        enabled: enabled,
       ),
     );
   }
@@ -1822,7 +2036,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final status = row['status']?.trim() ?? '';
       imported.add(
         _MilestoneEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           title: title,
           targetDate: row['targetDate']?.trim() ?? '',
           owner: row['owner']?.trim() ?? '',
@@ -1851,7 +2065,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       if (role.isEmpty) continue;
       imported.add(
         _ResourceEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           role: role,
           allocation: row['allocation']?.trim() ?? '',
           startDate: row['startDate']?.trim() ?? '',
@@ -1883,7 +2097,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final status = row['status']?.trim() ?? '';
       imported.add(
         _VendorEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           name: name,
           service: row['service']?.trim() ?? '',
           contact: row['contact']?.trim() ?? '',
@@ -1913,7 +2127,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final status = row['status']?.trim() ?? '';
       imported.add(
         _ToolEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           name: name,
           purpose: row['purpose']?.trim() ?? '',
           owner: row['owner']?.trim() ?? '',
@@ -1943,7 +2157,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final status = row['status']?.trim() ?? '';
       imported.add(
         _TaskEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           title: title,
           owner: row['owner']?.trim() ?? '',
           startDate: row['startDate']?.trim() ?? '',
@@ -1973,7 +2187,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       if (category.isEmpty) continue;
       imported.add(
         _BudgetEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           category: category,
           estimate: row['estimate']?.trim() ?? '',
           actual: row['actual']?.trim() ?? '',
@@ -2004,7 +2218,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       final status = row['status']?.trim() ?? '';
       imported.add(
         _RiskEntry(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: newId(),
           title: title,
           impact: _normalizeSeverity(row['impact'] ?? ''),
           probability: _normalizeProbability(row['probability'] ?? ''),
@@ -2025,6 +2239,45 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
     );
   }
 
+  /// A slim amber "read-only" notice shown above the milestones table while
+  /// the section is locked. Disappears the moment the user taps Edit.
+  Widget _buildMilestonesLockBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF59E0B), width: 1.2),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.lock_outline, size: 16, color: Color(0xFFD97706)),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'Read-only view — tap “Edit” to make changes. Changes save automatically.',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF92400E),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            tooltip: 'Edit milestones',
+            icon: const Icon(Icons.edit_outlined,
+                size: 16, color: Color(0xFFD97706)),
+            onPressed: () =>
+                setState(() => _milestonesEditing = true),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMilestonesTable() {
     final columns = [
       const _TableColumnDef('Milestone', 220),
@@ -2037,6 +2290,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
 
     final toolbar = _buildCsvImportToolbar(
       tableTitle: 'Project Plan Milestones',
+      enabled: _milestonesEditing,
       columns: const [
         CsvColumnSpec(
           key: 'title',
@@ -2076,6 +2330,10 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
         children: [
           toolbar,
           const SizedBox(height: 12),
+          if (!_milestonesEditing) ...[
+            _buildMilestonesLockBanner(),
+            const SizedBox(height: 12),
+          ],
           const _InlineEmptyState(
             title: 'No milestones yet',
             message: 'Add milestones to track delivery checkpoints.',
@@ -2089,6 +2347,10 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       children: [
         toolbar,
         const SizedBox(height: 12),
+        if (!_milestonesEditing) ...[
+          _buildMilestonesLockBanner(),
+          const SizedBox(height: 12),
+        ],
         FullScreenTableWrapper(
         title: 'Milestones',
         child: _EditableTable(
@@ -2103,6 +2365,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                     value: entry.title,
                     fieldKey: '${entry.id}_title',
                     hintText: 'Milestone name',
+                    readOnly: !_milestonesEditing,
                     onChanged: (value) =>
                         _updateMilestone(entry.copyWith(title: value)),
                   ),
@@ -2110,6 +2373,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                     value: entry.targetDate,
                     fieldKey: '${entry.id}_target',
                     hintText: 'YYYY-MM-DD',
+                    readOnly: !_milestonesEditing,
                     onChanged: (value) =>
                         _updateMilestone(entry.copyWith(targetDate: value)),
                   ),
@@ -2117,6 +2381,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                     value: entry.owner,
                     fieldKey: '${entry.id}_owner',
                     hintText: 'Owner',
+                    readOnly: !_milestonesEditing,
                     onChanged: (value) =>
                         _updateMilestone(entry.copyWith(owner: value)),
                   ),
@@ -2129,6 +2394,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                       'At risk',
                       'Complete'
                     ],
+                    enabled: _milestonesEditing,
                     onChanged: (value) =>
                         _updateMilestone(entry.copyWith(status: value)),
                   ),
@@ -2136,11 +2402,13 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                     value: entry.notes,
                     fieldKey: '${entry.id}_notes',
                     hintText: 'Notes',
+                    readOnly: !_milestonesEditing,
                     onChanged: (value) =>
                         _updateMilestone(entry.copyWith(notes: value)),
                   ),
                   _DeleteCell(
                     onPressed: () => _deleteMilestone(entry.id),
+                    enabled: _milestonesEditing,
                     itemName:
                         'milestone "${entry.title.isEmpty ? 'Untitled' : entry.title}"',
                   ),
@@ -2160,6 +2428,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                     value: entry.title,
                     fieldKey: '${entry.id}_title',
                     hintText: 'Milestone name',
+                    readOnly: !_milestonesEditing,
                     onChanged: (value) =>
                         _updateMilestone(entry.copyWith(title: value)),
                   ),
@@ -2167,6 +2436,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                     value: entry.targetDate,
                     fieldKey: '${entry.id}_target',
                     hintText: 'YYYY-MM-DD',
+                    readOnly: !_milestonesEditing,
                     onChanged: (value) =>
                         _updateMilestone(entry.copyWith(targetDate: value)),
                   ),
@@ -2174,6 +2444,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                     value: entry.owner,
                     fieldKey: '${entry.id}_owner',
                     hintText: 'Owner',
+                    readOnly: !_milestonesEditing,
                     onChanged: (value) =>
                         _updateMilestone(entry.copyWith(owner: value)),
                   ),
@@ -2186,6 +2457,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                       'At risk',
                       'Complete'
                     ],
+                    enabled: _milestonesEditing,
                     onChanged: (value) =>
                         _updateMilestone(entry.copyWith(status: value)),
                   ),
@@ -2193,11 +2465,13 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                     value: entry.notes,
                     fieldKey: '${entry.id}_notes',
                     hintText: 'Notes',
+                    readOnly: !_milestonesEditing,
                     onChanged: (value) =>
                         _updateMilestone(entry.copyWith(notes: value)),
                   ),
                   _DeleteCell(
                     onPressed: () => _deleteMilestone(entry.id),
+                    enabled: _milestonesEditing,
                     itemName:
                         'milestone "${entry.title.isEmpty ? 'Untitled' : entry.title}"',
                   ),
@@ -4168,7 +4442,7 @@ class _TabSectionCard extends StatelessWidget {
                   icon: const Icon(Icons.download_outlined, size: 18),
                   label: const Text('Import from prior sections'),
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF2563EB),
+                    foregroundColor: const Color(0xFFFFC812),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     shape: RoundedRectangleBorder(
@@ -4193,12 +4467,14 @@ class _SectionCard extends StatelessWidget {
     required this.subtitle,
     required this.child,
     this.trailing,
+    this.borderColor = const Color(0xFFE5E7EB),
   });
 
   final String title;
   final String subtitle;
   final Widget child;
   final Widget? trailing;
+  final Color borderColor;
 
   @override
   Widget build(BuildContext context) {
@@ -4207,7 +4483,7 @@ class _SectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4248,6 +4524,8 @@ class _SectionTableCard extends StatelessWidget {
     required this.subtitle,
     required this.onAdd,
     required this.child,
+    this.editMode,
+    this.onToggleEdit,
   });
 
   final String title;
@@ -4255,24 +4533,130 @@ class _SectionTableCard extends StatelessWidget {
   final VoidCallback onAdd;
   final Widget child;
 
+  /// When non-null the card shows an Edit/Done toggle and every editing
+  /// control (Add button, cells, import) is locked while `editMode` is false.
+  final bool? editMode;
+  final VoidCallback? onToggleEdit;
+
   @override
   Widget build(BuildContext context) {
+    final locked = editMode == false;
     return _SectionCard(
       title: title,
       subtitle: subtitle,
-      trailing: TextButton.icon(
-        onPressed: onAdd,
-        icon: const Icon(Icons.add, size: 18),
-        label: const Text('Add'),
-        style: TextButton.styleFrom(
-          foregroundColor: const Color(0xFF1F2937),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          backgroundColor: const Color(0xFFFFF3C4),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+      // Glow the card border gold while the section is being edited so the
+      // active state is unmistakable at a glance.
+      borderColor: editMode == null
+          ? const Color(0xFFE5E7EB)
+          : (locked ? const Color(0xFFE5E7EB) : const Color(0xFFF59E0B)),
+      trailing: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          if (editMode != null && onToggleEdit != null)
+            _EditToggleButton(
+              editing: editMode!,
+              onTap: onToggleEdit!,
+            ),
+          TextButton.icon(
+            onPressed: (editMode ?? true) ? onAdd : null,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Add'),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF1F2937),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              backgroundColor: const Color(0xFFFFF3C4),
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ],
       ),
       child: child,
+    );
+  }
+}
+
+/// The star of the read-only experience: a big, unmistakable toggle that
+/// reads “Edit” (gold, with a lock) while the section is locked and flips to
+/// “Done” (green, with a check) once editing is active.
+class _EditToggleButton extends StatelessWidget {
+  const _EditToggleButton({required this.editing, required this.onTap});
+
+  final bool editing;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: editing
+          ? 'Lock milestones — back to read-only view'
+          : 'Unlock milestones for editing',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: editing
+                    ? const [Color(0xFF10B981), Color(0xFF059669)]
+                    : const [Color(0xFFFFB800), Color(0xFFF59E0B)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (editing
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFFF59E0B))
+                      .withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  transitionBuilder: (child, animation) =>
+                      ScaleTransition(scale: animation, child: child),
+                  child: Icon(
+                    editing ? Icons.check_rounded : Icons.edit_rounded,
+                    key: ValueKey('toggle_icon_$editing'),
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  editing ? 'Done' : 'Edit',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  editing ? Icons.lock_open_outlined : Icons.lock_outline,
+                  size: 13,
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -4331,6 +4715,8 @@ class _ListEditor extends StatelessWidget {
                       child: VoiceTextFormField(
                         key: ValueKey(item.id),
                         initialValue: item.text,
+                        maxLines: null,
+                        minLines: 1,
                         decoration: InputDecoration(
                           hintText: hintText,
                           isDense: true,
@@ -4644,6 +5030,7 @@ class _TextCell extends StatelessWidget {
     required this.fieldKey,
     required this.onChanged,
     this.hintText,
+    this.readOnly = false,
   });
 
   final String value;
@@ -4651,17 +5038,26 @@ class _TextCell extends StatelessWidget {
   final String? hintText;
   final ValueChanged<String> onChanged;
 
+  /// When true the field is view-only: no typing, no voice / AI / docx
+  /// actions, and a muted grey fill that signals the lock.
+  final bool readOnly;
+
   @override
   Widget build(BuildContext context) {
     return VoiceTextFormField(
       key: ValueKey(fieldKey),
       initialValue: value,
+      readOnly: readOnly,
+      // Hide every editor affordance (Open Editor button) while locked.
+      enableVoice: !readOnly,
+      enableDocxImport: !readOnly,
+      enableKazAi: !readOnly,
       decoration: InputDecoration(
         hintText: hintText,
         isDense: true,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: readOnly ? const Color(0xFFF3F4F6) : Colors.white,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       ),
@@ -4677,12 +5073,16 @@ class _DropdownCell extends StatelessWidget {
     required this.fieldKey,
     required this.options,
     required this.onChanged,
+    this.enabled = true,
   });
 
   final String value;
   final String fieldKey;
   final List<String> options;
   final ValueChanged<String> onChanged;
+
+  /// When false the dropdown is disabled (read-only view).
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -4693,14 +5093,16 @@ class _DropdownCell extends StatelessWidget {
       items: options
           .map((option) => DropdownMenuItem(value: option, child: Text(option)))
           .toList(),
-      onChanged: (value) {
-        if (value != null) onChanged(value);
-      },
+      onChanged: enabled
+          ? (value) {
+              if (value != null) onChanged(value);
+            }
+          : null,
       decoration: InputDecoration(
         isDense: true,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: enabled ? Colors.white : const Color(0xFFF3F4F6),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       ),
@@ -4710,18 +5112,30 @@ class _DropdownCell extends StatelessWidget {
 }
 
 class _DeleteCell extends StatelessWidget {
-  const _DeleteCell({required this.onPressed, this.itemName = 'this item'});
+  const _DeleteCell({
+    required this.onPressed,
+    this.itemName = 'this item',
+    this.enabled = true,
+  });
 
   final VoidCallback onPressed;
   final String itemName;
+
+  /// When false the delete action is disabled (read-only view).
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.center,
       child: IconButton(
-        icon: const Icon(Icons.delete_outline, color: Color(0xFF6B7280)),
-        onPressed: () => _showDeleteConfirmation(context, onPressed),
+        icon: Icon(
+          Icons.delete_outline,
+          color: enabled ? const Color(0xFF6B7280) : const Color(0xFFE5E7EB),
+        ),
+        tooltip: enabled ? 'Delete' : 'Locked — tap Edit to delete',
+        onPressed:
+            enabled ? () => _showDeleteConfirmation(context, onPressed) : null,
       ),
     );
   }
@@ -4763,7 +5177,7 @@ class _ListEntry {
 
   factory _ListEntry.empty() {
     return _ListEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       text: '',
     );
   }
@@ -4785,7 +5199,7 @@ class _ListEntry {
       final data = Map<String, dynamic>.from(item);
       return _ListEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         text: data['text']?.toString() ?? '',
       );
     }).toList();
@@ -4811,7 +5225,7 @@ class _MilestoneEntry {
 
   factory _MilestoneEntry.empty() {
     return _MilestoneEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       title: '',
       targetDate: '',
       owner: '',
@@ -4854,7 +5268,7 @@ class _MilestoneEntry {
       final data = Map<String, dynamic>.from(item);
       return _MilestoneEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: data['title']?.toString() ?? '',
         targetDate: data['targetDate']?.toString() ?? '',
         owner: data['owner']?.toString() ?? '',
@@ -4886,7 +5300,7 @@ class _ResourceEntry {
 
   factory _ResourceEntry.empty() {
     return _ResourceEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       role: '',
       allocation: '',
       startDate: '',
@@ -4933,7 +5347,7 @@ class _ResourceEntry {
       final data = Map<String, dynamic>.from(item);
       return _ResourceEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         role: data['role']?.toString() ?? '',
         allocation: data['allocation']?.toString() ?? '',
         startDate: data['startDate']?.toString() ?? '',
@@ -4964,7 +5378,7 @@ class _VendorEntry {
 
   factory _VendorEntry.empty() {
     return _VendorEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       name: '',
       service: '',
       contact: '',
@@ -5007,7 +5421,7 @@ class _VendorEntry {
       final data = Map<String, dynamic>.from(item);
       return _VendorEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         name: data['name']?.toString() ?? '',
         service: data['service']?.toString() ?? '',
         contact: data['contact']?.toString() ?? '',
@@ -5037,7 +5451,7 @@ class _ToolEntry {
 
   factory _ToolEntry.empty() {
     return _ToolEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       name: '',
       purpose: '',
       owner: '',
@@ -5080,7 +5494,7 @@ class _ToolEntry {
       final data = Map<String, dynamic>.from(item);
       return _ToolEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         name: data['name']?.toString() ?? '',
         purpose: data['purpose']?.toString() ?? '',
         owner: data['owner']?.toString() ?? '',
@@ -5114,7 +5528,7 @@ class _TaskEntry {
 
   factory _TaskEntry.empty() {
     return _TaskEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       title: '',
       owner: '',
       startDate: '',
@@ -5165,7 +5579,7 @@ class _TaskEntry {
       final data = Map<String, dynamic>.from(item);
       return _TaskEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: data['title']?.toString() ?? '',
         owner: data['owner']?.toString() ?? '',
         startDate: data['startDate']?.toString() ?? '',
@@ -5197,7 +5611,7 @@ class _BudgetEntry {
 
   factory _BudgetEntry.empty() {
     return _BudgetEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       category: '',
       estimate: '',
       actual: '',
@@ -5240,7 +5654,7 @@ class _BudgetEntry {
       final data = Map<String, dynamic>.from(item);
       return _BudgetEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         category: data['category']?.toString() ?? '',
         estimate: data['estimate']?.toString() ?? '',
         actual: data['actual']?.toString() ?? '',
@@ -5274,7 +5688,7 @@ class _RiskEntry {
 
   factory _RiskEntry.empty() {
     return _RiskEntry(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       title: '',
       impact: 'Medium',
       probability: 'Medium',
@@ -5325,7 +5739,7 @@ class _RiskEntry {
       final data = Map<String, dynamic>.from(item);
       return _RiskEntry(
         id: data['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: data['title']?.toString() ?? '',
         impact: data['impact']?.toString() ?? 'Medium',
         probability: data['probability']?.toString() ?? 'Medium',

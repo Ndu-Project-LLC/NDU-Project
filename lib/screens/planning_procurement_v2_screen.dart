@@ -1,12 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
+import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/models/planning_contracting_models.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
 import 'package:ndu_project/models/procurement/procurement_ui_extensions.dart';
 import 'package:ndu_project/models/procurement/procurement_workflow_step.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/procurement/utils/procurement_cost_line.dart';
 import 'package:ndu_project/screens/planning_contracting_screen.dart';
 import 'package:ndu_project/services/contract_service.dart'
  as planning_contracts;
@@ -15,6 +20,7 @@ import 'package:ndu_project/services/planning_contracting_service.dart';
 import 'package:ndu_project/services/procurement_seeding_service.dart';
 import 'package:ndu_project/services/procurement_service.dart';
 import 'package:ndu_project/services/procurement_workflow_service.dart';
+import 'package:ndu_project/services/integrated_work_package_service.dart';
 import 'package:ndu_project/services/schedule_linkage_service.dart';
 import 'package:ndu_project/services/vendor_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -37,6 +43,9 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/procurement/procurement_section_error_card.dart';
+import 'package:ndu_project/wbs/providers/wbs_provider.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class PlanningProcurementV2Screen extends StatefulWidget {
  const PlanningProcurementV2Screen({super.key});
 
@@ -87,14 +96,18 @@ class _PlanningProcurementV2ScreenState
  'Budget Tracking',
  'Workflows',
  'Reports',
- ];
+ ];  final List<StreamSubscription<dynamic>> _subscriptions = [];
 
- final List<StreamSubscription<dynamic>> _subscriptions = [];
+  /// The tab strip sits above the content in one long scroll view, so tapping
+  /// a pill and staying parked where the previous (much longer) tab left the
+  /// page reads as "the tab did nothing". Selecting a tab now scrolls its
+  /// content into view — see [_selectTab].
+  final GlobalKey _tabContentKey = GlobalKey();
 
- int _selectedTab = 0;
- String _projectId = '';
- bool _didInitialize = false;
- bool _seedCheckRunning = false;
+  int _selectedTab = 0;
+  String _projectId = '';  /// Project whose streams are currently bound (see [_syncActiveProject]).
+  String? _boundProjectId;
+  bool _seedCheckRunning = false;
  bool _workflowLoading = false;
  bool _workflowSaving = false;
  bool _customizeWorkflowByScope = false;
@@ -113,11 +126,15 @@ class _PlanningProcurementV2ScreenState
  Map<String, List<ProcurementWorkflowStep>> _scopeWorkflowOverrides = const {};
 
  List<VendorModel> _vendors = const [];
- final Set<String> _selectedVendorIds = {};
- bool _approvedOnly = false;
- bool _preferredOnly = false;
- bool _listView = true;
- String _categoryFilter = 'All Categories';
+ final Set<String> _selectedVendorIds = {};  bool _approvedOnly = false;
+  bool _preferredOnly = false;
+  bool _listView = true;
+  String _categoryFilter = 'All Categories';
+  String _itemSearchQuery = '';
+  String _itemCategoryFilter = 'All Categories';
+  String _itemStatusFilter = 'All Statuses';
+  String? _syncingItemId;
+
 
  final List<VendorHealthMetric> _vendorHealthMetrics = const [];
  final List<VendorOnboardingTask> _vendorOnboardingTasks = const [];
@@ -129,39 +146,106 @@ class _PlanningProcurementV2ScreenState
  List<SavingsOpportunity> _savingsOpportunities = const [];
  List<ComplianceMetric> _complianceMetrics = const [];
 
- StreamSubscription<List<VendorModel>>? _vendorsSub;
+ StreamSubscription<List<VendorModel>>? _vendorsSub;  /// Binds the page to the ACTIVE project — and re-binds when it changes.
+  ///
+  /// This used to run once, guarded by a plain `_didInitialize` flag. Opening
+  /// the page before the project data had finished loading therefore latched
+  /// `_projectId` to an empty string *for the rest of the session*: the page
+  /// never subscribed to a single stream, so every tab rendered empty and the
+  /// whole screen looked broken (voice note, 2026-09-10: "nothing is working …
+  /// just everything else on the page").
+  ///
+  /// The flag is now the *project the streams are bound to*. Because
+  /// [ProjectDataHelper.getData] is read listening, project data changes
+  /// re-enter here, which is what lets a late-arriving project id (and a
+  /// project switch) bind correctly instead of being ignored.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncActiveProject();
+  }
 
- @override
- void didChangeDependencies() {
- super.didChangeDependencies();
- if (_didInitialize) return;
+  void _syncActiveProject() {
+    final String projectId;
+    try {
+      projectId = (ProjectDataHelper.getData(context).projectId ?? '').trim();
+    } catch (_) {
+      return; // No project context on this screen — nothing to bind yet.
+    }
+    // No project selected, or already bound to this one: nothing to do. An
+    // empty id must NOT latch anything, so a project arriving later still
+    // initialises the page (see [shouldBindProject]).
+    if (!shouldBindProject(
+        boundProjectId: _boundProjectId, projectId: projectId)) {
+      return;
+    }
 
- final data = ProjectDataHelper.getData(context);
- _projectId = data.projectId ?? '';
- _didInitialize = true;
+    _boundProjectId = projectId;
+    _projectId = projectId;
+    _bindProject(projectId);
+  }
 
- if (_projectId.isEmpty) {
- return;
+  /// Tears down the previous project's streams, clears its data, then loads
+  /// everything for [projectId].
+  ///
+  /// The reset matters as much as the subscribe: without it, switching project
+  /// would keep showing the previous project's items until Firebase answered.
+  void _bindProject(String projectId) {
+    for (final subscription in _subscriptions) {
+      subscription.cancel();
+    }
+    _subscriptions.clear();
+    _vendorsSub?.cancel();
+    _vendorsSub = null;
+
+    setState(() {
+      _items = const [];
+      _trackableItems = const [];
+      _selectedTrackableIndex = 0;
+      _pos = const [];
+      _rfqs = const [];
+      _contracts = const [];
+      _vendors = const [];
+      _selectedVendorIds.clear();
+      _seedCheckRunning = false;
+    });
+
+    _subscribeToData();
+    unawaited(_bootstrapProjectData());
+  }
+
+  Future<void> _bootstrapProjectData() async {
+    if (!mounted) return;
+    await _loadProcurementWorkflowData();
+    if (!mounted) return;
+    await ScheduleLinkageService.checkAndSyncOnOpen(context);
+    if (!mounted) return;
+    await _checkAutoSeed();
+  }
+
+  @override
+  void dispose() {
+    for (final subscription in _subscriptions) {
+      subscription.cancel();
+    }
+    _vendorsSub?.cancel();
+    super.dispose();
+  }
+
+ /// Build-path safety net: if a data-driven section throws (e.g. a
+ /// "Bad state: No element" from unexpected Firestore data), isolate the
+ /// failure to that section instead of blanking the entire page.
+ Widget _safeSection(String label, Widget Function() builder) {
+ try {
+ return builder();
+ } catch (err, stack) {
+ debugPrint('Procurement section "$label" build error: $err\n$stack');
+ return ProcurementSectionErrorCard(
+ label: label,
+ message: err.toString(),
+ onRetry: () async => setState(() {}),
+ );
  }
-
- _subscribeToData();
- Future.microtask(() async {
- if (!mounted) return;
- await _loadProcurementWorkflowData();
- if (!mounted) return;
- await ScheduleLinkageService.checkAndSyncOnOpen(context);
- if (!mounted) return;
- await _checkAutoSeed();
- });
- }
-
- @override
- void dispose() {
- for (final subscription in _subscriptions) {
- subscription.cancel();
- }
- _vendorsSub?.cancel();
- super.dispose();
  }
 
  @override
@@ -169,7 +253,7 @@ class _PlanningProcurementV2ScreenState
  final isMobile = AppBreakpoints.isMobile(context);
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,13 +279,16 @@ class _PlanningProcurementV2ScreenState
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  PlanningPhaseHeader(title: 'Procurement', onExportPdf: _exportPdf),
- const SizedBox(height: 16),
- _buildHeader(context),
- const SizedBox(height: 24),
- _buildTabBar(),
- const SizedBox(height: 24),
- _buildTabContent(),
- const SizedBox(height: 96),
+ const SizedBox(height: 16),                _safeSection('Overview header', () => _buildHeader(context)),
+                const SizedBox(height: 24),
+                _buildTabBar(),
+                const SizedBox(height: 24),
+                KeyedSubtree(
+                  key: _tabContentKey,
+                  child: _safeSection(
+                      _tabLabels[_selectedTab], _buildTabContent),
+                ),
+                const SizedBox(height: 96),
  ],
  ),
  ),
@@ -303,17 +390,17 @@ class _PlanningProcurementV2ScreenState
  spacing: 10,
  runSpacing: 10,
  children: List<Widget>.generate(_tabLabels.length, (index) {
- final selected = index == _selectedTab;
- return ChoiceChip(
- label: Text(_tabLabels[index]),
- selected: selected,
- onSelected: (_) => setState(() => _selectedTab = index),
- selectedColor: const Color(0xFF111827),
+ final selected = index == _selectedTab;          return ChoiceChip(
+            label: Text(_tabLabels[index]),
+            selected: selected,
+            onSelected: (_) => _selectTab(index),
+            showCheckmark: false,
+            selectedColor: const Color(0xFF111827),
  labelStyle: TextStyle(
  color: selected ? Colors.white : const Color(0xFF111827),
  fontWeight: FontWeight.w600,
  ),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12),
  side: BorderSide(
@@ -325,10 +412,25 @@ class _PlanningProcurementV2ScreenState
  );
  }),
  );
- }
+ }  /// Switches to [index] and brings its content into view.
+  void _selectTab(int index) {
+    if (index == _selectedTab) return;
+    setState(() => _selectedTab = index);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final target = _tabContentKey.currentContext;
+      if (target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        alignment: 0,
+      );
+    });
+  }
 
- Widget _buildTabContent() {
- switch (_selectedTab) {
+  Widget _buildTabContent() {
+    switch (_selectedTab) {
  case 0:
  return _buildOverviewTab();
  case 1:
@@ -485,12 +587,11 @@ class _PlanningProcurementV2ScreenState
  value: '${overdueItems.length}',
  icon: Icons.schedule_outlined,
  ),
- const SizedBox(height: 12),
- OutlinedButton.icon(
- onPressed: () {},
- icon: const Icon(Icons.sync, size: 16),
- label: const Text('Sync Schedule'),
- ),
+ const SizedBox(height: 12),      OutlinedButton.icon(
+        onPressed: _syncProcurementSchedule,
+        icon: const Icon(Icons.sync, size: 16),
+        label: const Text('Sync Schedule'),
+      ),
  ],
  ),
  ),
@@ -516,13 +617,11 @@ class _PlanningProcurementV2ScreenState
  value: '${_pos.length}',
  icon: Icons.receipt_long_outlined,
  ),
- const SizedBox(height: 12),
- OutlinedButton.icon(
- onPressed: () =>
- setState(() => _selectedTab = 7),
- icon: const Icon(Icons.auto_awesome, size: 16),
- label: const Text('View Reports'),
- ),
+ const SizedBox(height: 12),              OutlinedButton.icon(
+                onPressed: () => _selectTab(7),
+                icon: const Icon(Icons.auto_awesome, size: 16),
+                label: const Text('View Reports'),
+              ),
  ],
  ),
  ),
@@ -533,20 +632,366 @@ class _PlanningProcurementV2ScreenState
  );
  }
 
+ List<ProcurementItemModel> get _filteredItems {
+ final query = _itemSearchQuery.trim().toLowerCase();
+ return _items.where((item) {
+ if (query.isNotEmpty &&
+ !'${item.name} ${item.description} ${item.category} ${item.responsibleMember}'
+ .toLowerCase()
+ .contains(query)) {
+ return false;
+ }
+ if (_itemCategoryFilter != 'All Categories' &&
+ item.category != _itemCategoryFilter) {
+ return false;
+ }
+ if (_itemStatusFilter != 'All Statuses' &&
+ item.status.label != _itemStatusFilter) {
+ return false;
+ }
+ return true;
+ }).toList(growable: false);
+ }
+
+ List<String> get _itemCategoryOptions {
+ final categories = _items
+ .map((item) => item.category.trim())
+ .where((category) => category.isNotEmpty)
+ .toSet()
+ .toList()
+ ..sort();
+ return ['All Categories', ...categories];
+ }
+
+ List<String> get _itemStatusOptions => [
+ 'All Statuses',
+ ...ProcurementItemStatus.values.map((status) => status.label),
+ ];
+
+ List<WorkItem> _flattenWbsItems(List<WorkItem> roots) {
+ final result = <WorkItem>[];
+ void visit(WorkItem item) {
+ result.add(item);
+ for (final child in item.children) {
+ visit(child);
+ }
+ }
+ for (final root in roots) {
+ visit(root);
+ }
+ return result;
+ }
+
+ Future<WorkItem?> _pickWbsItem(ProcurementItemModel item) async {
+ final options = _flattenWbsItems(ProjectDataHelper.getData(context).wbsTree)
+ .where((node) => node.id.trim().isNotEmpty)
+ .toList(growable: false);
+ if (options.isEmpty) {
+ _showProcurementMessage('Create a WBS item before linking procurement.');
+ return null;
+ }
+
+ return showDialog<WorkItem>(
+ context: context,
+ builder: (dialogContext) {
+ final queryController = SpellCheckTextEditingController();
+ return StatefulBuilder(
+ builder: (context, setDialogState) {
+ final query = queryController.text.trim().toLowerCase();
+ final filtered = options.where((node) {
+ if (query.isEmpty) return true;
+ return '${node.wbsCode} ${node.title} ${node.description}'
+ .toLowerCase()
+ .contains(query);
+ }).toList(growable: false);
+ return AlertDialog(
+ title: Text('Link "${item.name}" to WBS'),
+ content: SizedBox(
+ width: 520,
+ height: 460,
+ child: Column(
+ children: [
+ TextField(
+ controller: queryController,
+ onChanged: (_) => setDialogState(() {}),
+ decoration: const InputDecoration(
+ prefixIcon: Icon(Icons.search),
+ hintText: 'Search WBS items',
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ Expanded(
+ child: filtered.isEmpty
+ ? const Center(child: Text('No matching WBS items.'))
+ : ListView.builder(
+ itemCount: filtered.length,
+ itemBuilder: (context, index) {
+ final node = filtered[index];
+ return ListTile(
+ leading: const Icon(Icons.account_tree_outlined),
+ title: Text(node.title.trim().isEmpty ? 'Untitled WBS item' : node.title),
+ subtitle: Text(node.wbsCode.trim().isEmpty ? node.id : node.wbsCode),
+ onTap: () => Navigator.of(dialogContext).pop(node),
+ );
+ },
+ ),
+ ),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.of(dialogContext).pop(),
+ child: const Text('Cancel'),
+ ),
+ ],
+ );
+ },
+ );
+ },
+ );
+ }
+
+ void _showProcurementMessage(String message) {
+ if (!mounted) return;
+ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+ }
+
+ Future<void> _pullProcurementItemToWbsAndCost(ProcurementItemModel item) async {
+ if (_syncingItemId != null) return;
+ if (item.id.trim().isEmpty || _projectId.trim().isEmpty) {
+ _showProcurementMessage('This procurement item cannot be linked yet.');
+ return;
+ }
+
+ final wbsItem = await _pickWbsItem(item);
+ if (wbsItem == null || !mounted) return;
+
+ setState(() => _syncingItemId = item.id);
+ try {
+ final provider = ProjectDataHelper.getProvider(context);
+ final currentData = provider.projectData;
+ final packageId = 'procurement_${item.id}';
+ final costLineId = 'src_procurement_${item.id}';
+ final existingPackage = currentData.workPackages.firstWhere(
+ (package) =>
+ package.id == packageId || package.procurementItemIds.contains(item.id),
+ orElse: () => WorkPackage(id: packageId),
+ );
+ final linkedPackage = existingPackage.copyWith(
+ wbsItemId: wbsItem.id,
+ wbsLevel2Id: wbsItem.id,
+ wbsLevel2Title: wbsItem.title,
+ packageCode: wbsItem.wbsCode,
+ packageClassification: IntegratedWorkPackageService.procurementPackage,
+ title: item.name.trim(),
+ description: item.description.trim(),
+ type: 'procurement',
+ phase: item.projectPhase.trim().isEmpty ? 'planning' : item.projectPhase,
+ status: item.status == ProcurementItemStatus.cancelled ? 'cancelled' : 'planned',
+ owner: item.responsibleMember.trim(),
+ discipline: item.category.trim(),
+ budgetedCost: item.budget,
+ actualCost: item.spent,
+ vendorIds: item.vendorId == null || item.vendorId!.trim().isEmpty
+ ? existingPackage.vendorIds
+ : <String>[item.vendorId!.trim()],
+ contractIds: item.contractId == null || item.contractId!.trim().isEmpty
+ ? existingPackage.contractIds
+ : <String>[item.contractId!.trim()],
+ procurementItemIds: <String>{...existingPackage.procurementItemIds, item.id}.toList(),
+ milestoneIds: item.linkedMilestoneId == null || item.linkedMilestoneId!.trim().isEmpty
+ ? existingPackage.milestoneIds
+ : <String>[item.linkedMilestoneId!.trim()],
+ procurementBreakdown: existingPackage.procurementBreakdown.copyWith(
+ category: item.category,
+ scopeDefinition: item.description,
+ deliveryDate: item.requiredByDate?.toIso8601String() ??
+ item.estimatedDelivery?.toIso8601String() ?? '',
+ requiredByMilestoneId: item.linkedMilestoneId ?? '',
+ vendorScope: item.responsibleMember,
+ ),
+ notes: item.comments.trim().isEmpty ? item.notes : item.comments,
+ );
+
+ final updatedPackages = [
+ ...currentData.workPackages.where((package) =>
+ package.id != existingPackage.id &&
+ !package.procurementItemIds.contains(item.id)),
+ linkedPackage,
+ ];
+
+ final existingCost = currentData.costEstimateItems.firstWhere(
+ (cost) => cost.id == costLineId ||
+ (cost.source == 'project_procurement_item' &&
+ cost.reconciliationReference == 'procurement:${item.id}'),
+ orElse: () => CostEstimateItem(id: costLineId),
+ );
+ existingCost
+ ..title = item.name.trim()
+ ..notes = [item.category, item.description, item.comments]
+ .map((value) => value.trim())
+ .where((value) => value.isNotEmpty)
+ .join(' | ')
+ ..amount = item.budget
+ ..costType = 'direct'
+ ..source = 'project_procurement_item'
+ ..costState = 'forecast'
+ ..isBaseline = false
+ ..wbsItemId = wbsItem.id
+ ..workPackageId = linkedPackage.id
+ ..workPackageTitle = item.name.trim()
+ ..phase = item.projectPhase.trim().isEmpty ? 'planning' : item.projectPhase
+ ..estimatingMethod = 'bottoms_up'
+ ..estimatingBasis = 'Pulled from procurement item'
+ ..scheduleActivityId = item.linkedMilestoneId ?? ''
+ ..contractId = item.contractId ?? ''
+ ..reconciliationReference = 'procurement:${item.id}';
+
+ final updatedCosts = [
+ ...currentData.costEstimateItems.where((cost) =>
+ cost.id != existingCost.id &&
+ !(cost.source == 'project_procurement_item' &&
+ cost.reconciliationReference == 'procurement:${item.id}')),
+ existingCost,
+ ];    await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'procurement',
+      dataUpdater: (data) => data.copyWith(
+        workPackages: updatedPackages,
+        costEstimateItems: updatedCosts,
+      ),
+      showSnackbar: false,
+    );
+    await ProcurementService.updateItemScheduleLink(
+      _projectId,
+      item.id,
+      wbsId: wbsItem.id,
+      milestoneId: item.linkedMilestoneId,
+      requiredByDate: item.requiredByDate,
+    );
+
+    // The value has to land on the SCOPE, not only on a legacy record. Writing
+    // the project blob above used to be the whole story, so the budget moved
+    // nowhere the WBS module, the Cost Estimate overview or Cost by WBS could
+    // read it — which is what "the scope value should move from procurement to
+    // scope details" was about (voice note, 2026-09-10). The same money is now
+    // written into the live estimate and linked onto the WBS node.
+    final landedOnScope =
+        await _writeProcurementValueToEstimateAndWbs(item, wbsItem);
+
+    if (!mounted) return;
+    _showProcurementMessage(landedOnScope
+        ? '${item.name} — ${_currency.format(item.budget)} linked to WBS ${wbsItem.wbsCode} and the Cost Estimate.'
+        : '${item.name} is linked to WBS and Cost Estimate.');
+  } catch (error) {
+    if (mounted) _showProcurementMessage('Unable to link procurement item: $error');
+  } finally {
+    if (mounted) setState(() => _syncingItemId = null);
+  }
+}
+
+  static final NumberFormat _currency =
+      NumberFormat.currency(symbol: r'$', decimalDigits: 0);
+
+  /// Writes the item's budget into the live Cost Estimate as a procurement
+  /// line, then links that line onto the matching WBS node so the value rolls
+  /// up under the scope it belongs to.
+  ///
+  /// Idempotent: the line carries `basisReference = procurement:<item id>`, so
+  /// re-running the pull refreshes the one line instead of stacking up copies.
+  /// Returns whether the estimate was reached at all — the legacy write above
+  /// still counts as a successful link.
+  Future<bool> _writeProcurementValueToEstimateAndWbs(
+    ProcurementItemModel item,
+    WorkItem wbsItem,
+  ) async {
+    if (!mounted) return false;
+    final costProvider = context.read<CostEstimateProvider>();
+    final wbsProvider = context.read<WBSProvider>();
+    final data = ProjectDataHelper.getData(context, listen: false);
+    final projectName =
+        data.projectName.trim().isEmpty ? 'Project' : data.projectName.trim();
+    final reference = procurementCostReference(item.id);
+
+    await costProvider.ensureProjectLoaded(_projectId, projectName: projectName);
+    if (!mounted) return false;
+    if (costProvider.estimate == null || !costProvider.setupComplete) {
+      costProvider.setup(
+        projectId: _projectId,
+        projectName: projectName,
+        className: EstimateClass.class3,
+        deliveryModel: DeliveryModel.waterfall,
+      );
+    }
+
+    CostLine? existing;
+    for (final line in costProvider.estimate?.lines ?? const <CostLine>[]) {
+      if (line.basisReference == reference) {
+        existing = line;
+        break;
+      }
+    }
+
+    final line = procurementItemCostLine(
+      item: item,
+      wbsRef: wbsItem.wbsCode,
+      existingLineId: existing?.id,
+    );
+
+    if (existing == null) {
+      costProvider.addLine(line);
+    } else {
+      costProvider.updateLine(existing.id, line);
+    }
+
+    // Link the line onto the WBS node the WBS module knows, resolving the
+    // picked item by id first and falling back to its code — the legacy
+    // `wbsTree` work item and the WBS module's node are not guaranteed to
+    // share an id, but they do share the dotted code.
+    final node = wbsProvider.findNode(wbsItem.id) ??
+        findWbsNodeByCode(wbsProvider.wbs, wbsItem.wbsCode);
+    if (node != null) {
+      wbsProvider.linkCostLine(node.id, line.id);
+    }
+    return true;
+  }
+
+  Future<void> _syncProcurementSchedule() async {
+ try {
+ await ScheduleLinkageService.checkAndSyncOnOpen(context);
+ if (mounted) {
+ setState(() {});
+ _showProcurementMessage('Schedule-linked procurement dates refreshed.');
+ }
+ } catch (error) {
+ _showProcurementMessage('Unable to sync schedule links: $error');
+ }
+ }
+
  Widget _buildItemsTab() {
  final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
  return ProcurementItemsListView(
- items: _items,
+ items: _filteredItems,
  trackableItems: _trackableItems,
  selectedIndex: _selectedTrackableIndex,
- onSelectTrackable: (index) =>
- setState(() => _selectedTrackableIndex = index),
+ onSelectTrackable: (index) => setState(() => _selectedTrackableIndex = index),
  currencyFormat: currencyFormat,
  onAddItem: _openAddItemDialog,
  onEditItem: (item) => _openEditItemDialog(item),
  onDeleteItem: (item) => _removeItem(item),
+ onSearchChanged: (value) => setState(() => _itemSearchQuery = value),
+ onCategoryChanged: (value) => setState(() => _itemCategoryFilter = value),
+ onStatusChanged: (value) => setState(() => _itemStatusFilter = value),
+ categoryOptions: _itemCategoryOptions,
+ statusOptions: _itemStatusOptions,
+ selectedCategory: _itemCategoryFilter,
+ selectedStatus: _itemStatusFilter,
+ onPullToWbsCost: _pullProcurementItemToWbsAndCost,
  );
  }
+
 
  List<Widget> _buildDialogContextChips() {
  final data = ProjectDataHelper.getData(context);
@@ -877,8 +1322,8 @@ class _PlanningProcurementV2ScreenState
  }
 
  Future<void> _openInviteVendorDialog() async {
- final nameController = TextEditingController();
- final emailController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
+ final emailController = SpellCheckTextEditingController();
 
  final sent = await showDialog<bool>(
  context: context,
@@ -1496,10 +1941,10 @@ class _PlanningProcurementV2ScreenState
  }
 
  final palette = <Color>[
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  const Color(0xFF10B981),
  const Color(0xFFF59E0B),
- const Color(0xFF6D28D9),
+ const Color(0xFFB8860B),
  const Color(0xFFEF4444),
  ];
  final categoryEntries = categoryTotals.entries.toList()
@@ -1765,8 +2210,8 @@ class _PlanningProcurementV2ScreenState
  Future<ProcurementWorkflowStep?> _showWorkflowStepDialog({
  ProcurementWorkflowStep? initialStep,
  }) async {
- final nameController = TextEditingController(text: initialStep?.name ?? '');
- final durationController = TextEditingController(
+ final nameController = SpellCheckTextEditingController(text: initialStep?.name ?? '');
+ final durationController = SpellCheckTextEditingController(
  text: (initialStep?.duration ?? 1).toString(),
  );
  var unit = initialStep?.unit == 'month' ? 'month' : 'week';
@@ -1845,7 +2290,7 @@ class _PlanningProcurementV2ScreenState
  Navigator.of(dialogContext).pop(
  ProcurementWorkflowStep(
  id: initialStep?.id ??
- 'wf_${DateTime.now().microsecondsSinceEpoch}',
+ newId('wf_'),
  name: name,
  duration: duration,
  unit: unit,
@@ -1989,8 +2434,8 @@ class _PlanningProcurementV2ScreenState
  screenTitle: 'Planning Procurement',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_procurement_v2_notes'] ?? 'No data recorded.'),
  ],
@@ -2396,9 +2841,9 @@ class _ApprovalStatusBadge extends StatelessWidget {
  break;
  case 'pending':
  default:
- background = const Color(0xFFDBEAFE);
- border = const Color(0xFF93C5FD);
- foreground = const Color(0xFF1D4ED8);
+ background = const Color(0xFFFEF3C7);
+ border = const Color(0xFFFFC812);
+ foreground = const Color(0xFFFFC812);
  break;
  }
 

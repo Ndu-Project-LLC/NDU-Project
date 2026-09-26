@@ -5,7 +5,6 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/elevated_auth_container.dart';
-import 'package:ndu_project/screens/sign_in_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/services/security_services.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -13,6 +12,7 @@ import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/routing/app_router.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -22,12 +22,12 @@ class CreateAccountScreen extends StatefulWidget {
 }
 
 class _CreateAccountScreenState extends State<CreateAccountScreen> {
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
-  final _companyController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _firstNameController = SpellCheckTextEditingController();
+  final _lastNameController = SpellCheckTextEditingController();
+  final _companyController = SpellCheckTextEditingController();
+  final _emailController = SpellCheckTextEditingController();
+  final _passwordController = SpellCheckTextEditingController();
+  final _confirmPasswordController = SpellCheckTextEditingController();
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -302,8 +302,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
   // ignore: unused_element
   void _showSignInDialog(BuildContext context) {
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
+    final emailController = SpellCheckTextEditingController();
+    final passwordController = SpellCheckTextEditingController();
     bool isPasswordVisible = false;
     bool isLoading = false;
     final parentNav = Navigator.of(context);
@@ -480,7 +480,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         top: true,
         child: SingleChildScrollView(
@@ -550,7 +550,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                   color: Colors.grey.shade300, width: 1.5),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
-                              backgroundColor: Colors.white,
+                              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                             ),
                           ),
                         ),
@@ -706,9 +706,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             const SizedBox(height: 8),
                             SizedBox(
                               height: 52,
-                              child: VoiceTextField(
-                                enableKazAi: false,
-                                enableTextFormatting: false,
+                              child: TextField(
                                 controller: _passwordController,
                                 obscureText: !_isPasswordVisible,
                                 style: const TextStyle(fontSize: 15),
@@ -761,9 +759,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             const SizedBox(height: 8),
                             SizedBox(
                               height: 52,
-                              child: VoiceTextField(
-                                enableKazAi: false,
-                                enableTextFormatting: false,
+                              child: TextField(
                                 controller: _confirmPasswordController,
                                 obscureText: !_isConfirmPasswordVisible,
                                 style: const TextStyle(fontSize: 15),

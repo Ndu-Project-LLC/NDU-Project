@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -11,8 +13,6 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
-import 'package:ndu_project/screens/ui_ux_design_screen.dart';
-import 'package:ndu_project/screens/engineering_design_screen.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -20,9 +20,10 @@ import 'package:ndu_project/utils/file_upload_helper.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class BackendDesignScreen extends StatefulWidget {
  const BackendDesignScreen({super.key});
 
@@ -32,19 +33,19 @@ class BackendDesignScreen extends StatefulWidget {
 
 class _BackendDesignScreenState extends State<BackendDesignScreen> {
  final TextEditingController _architectureSummaryController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _databaseSummaryController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _quickComponentNameController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _quickComponentResponsibilityController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _quickEntityNameController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _quickEntityPrimaryKeyController =
- TextEditingController();
+ SpellCheckTextEditingController();
  final TextEditingController _quickEntityDescriptionController =
- TextEditingController();
+ SpellCheckTextEditingController();
 
  final List<_ArchitectureComponent> _components = [];
  final List<_ArchitectureDataFlow> _dataFlows = [];
@@ -137,7 +138,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  screenTitle: 'Backend Design',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['backend_design_screen'] ?? 'No data recorded.'),
  ],
@@ -167,7 +168,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  List<_ArchitectureComponent> _defaultComponents() {
  return [
  _ArchitectureComponent(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'API Gateway',
  type: 'Service',
  responsibility:
@@ -176,7 +177,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  status: 'Planned',
  ),
  _ArchitectureComponent(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'Operational Data Store',
  type: 'Data store',
  responsibility:
@@ -185,7 +186,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  status: 'Planned',
  ),
  _ArchitectureComponent(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'Venue Power Grid',
  type: 'Integration',
  responsibility:
@@ -194,7 +195,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  status: 'In progress',
  ),
  _ArchitectureComponent(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'HVAC Monitoring',
  type: 'Analytics',
  responsibility:
@@ -208,14 +209,14 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  List<_ArchitectureDataFlow> _defaultDataFlows() {
  return [
  _ArchitectureDataFlow(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  source: 'Ticket Scanner',
  destination: 'API Gateway',
  protocol: 'HTTP',
  notes: 'Scan payload in, validation result out.',
  ),
  _ArchitectureDataFlow(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  source: 'Guest Registration Form',
  destination: 'Operational Data Store',
  protocol: 'Event',
@@ -223,7 +224,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  'Guest profile, dietary data, and access class persist for operations.',
  ),
  _ArchitectureDataFlow(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  source: 'Fire Alarm Panel',
  destination: 'Sprinkler and Ops Escalation',
  protocol: 'Batch',
@@ -235,7 +236,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  List<_DesignDocument> _defaultDocuments() {
  return [
  _DesignDocument(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: 'Service topology pack',
  description:
  'Cloud services, auth boundary, and vendor integration map.',
@@ -244,7 +245,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  location: 'AWS Cloud / Architecture repo',
  ),
  _DesignDocument(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: 'Back-of-house operations layout',
  description:
  'Power, comms, storage, and logistics zones behind the customer-facing experience.',
@@ -258,7 +259,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  List<_DbEntity> _defaultEntities() {
  return [
  _DbEntity(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'GuestList',
  primaryKey: 'guest_id',
  owner: 'Operations',
@@ -266,7 +267,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  'Guest identity, access class, dietary restrictions, and arrival status.',
  ),
  _DbEntity(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'MaterialStock',
  primaryKey: 'stock_id',
  owner: 'Procurement',
@@ -274,7 +275,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  'Materials, quantities, storage location, and issue history.',
  ),
  _DbEntity(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: 'AccessCredential',
  primaryKey: 'credential_id',
  owner: 'Security',
@@ -286,7 +287,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  List<_DbField> _defaultFields() {
  return [
  _DbField(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  table: 'GuestList',
  field: 'dietary_restriction',
  type: 'string',
@@ -294,7 +295,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  notes: 'Shared with catering 2 hours before service.',
  ),
  _DbField(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  table: 'MaterialStock',
  field: 'weight_kg',
  type: 'decimal',
@@ -302,7 +303,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  notes: 'Used for load-bearing and transport planning.',
  ),
  _DbField(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  table: 'AccessCredential',
  field: 'zone_access',
  type: 'array',
@@ -317,8 +318,7 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  final padding = AppBreakpoints.pagePadding(context);
 
  return ResponsiveScaffold(
- activeItemLabel: 'Backend Design',
- backgroundColor: Colors.white,
+ activeItemLabel: 'Backend Design',  // Theme-aware background handled by ResponsiveScaffold
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
  padding: EdgeInsets.all(padding),
@@ -342,9 +342,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildDocumentsSecurityPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: UI/UX Design',
- nextLabel: 'Next: Engineering',
- onBack: () => context.push('/ui-ux-design'),onNext: () => context.push('/engineering-design'),
+ backLabel: PlanningPhaseNavigation.backLabel('backend_design'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('backend_design'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'backend_design'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'backend_design'),
  ),
  ],
  ),
@@ -381,7 +382,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  collapsible: true,
  initiallyExpanded: false,
  headerIcon: Icons.dns_outlined,
- headerIconColor: const Color(0xFF2563EB),
+ headerIconColor: const Color(0xFFFFC812),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -402,7 +403,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Component topology showing services, data stores, integrations, and structural dependencies. '
  'Each node should have a clear owner, type classification, and lifecycle status. Map connections '
  'to reveal data flow paths and integration touchpoints.',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -420,7 +421,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Authentication boundaries, authorization policies, and access control matrices. Define who '
  'can access what, at which level, and through which interface. Document encryption standards, '
  'audit logging, and compliance requirements.',
- const Color(0xFF6366F1),
+ const Color(0xFFB8860B),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -692,7 +693,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(
  flex: 2,
  child: Center(
- child: _buildStatusBadge(_dataFlows[i].protocol, const Color(0xFF6366F1)),
+ child: _buildStatusBadge(_dataFlows[i].protocol, const Color(0xFFB8860B)),
  ),
  ),
  Expanded(
@@ -727,7 +728,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 4),
  IconButton(
  onPressed: () => _openDataFlowDialog(existing: _dataFlows[i]),
- icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFFFFC812)),
  tooltip: 'Edit',
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -872,7 +873,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 4),
  IconButton(
  onPressed: () => _openDesignDocumentDialog(existing: _designDocuments[i]),
- icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFFFFC812)),
  tooltip: 'Edit',
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -941,7 +942,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('KAZ AI generation failed: $e');
  if (mounted) {
    ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failed: $e'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  } finally {
@@ -978,7 +979,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('KAZ AI field generation failed: $e');
  if (mounted) {
    ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failed: $e'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  }
@@ -1138,7 +1139,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(14),
  borderSide: const BorderSide(
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  width: 1.4,
  ),
  ),
@@ -1195,7 +1196,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(14),
  borderSide: const BorderSide(
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  width: 1.4,
  ),
  ),
@@ -1393,7 +1394,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  _components.add(
  _ArchitectureComponent(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: name,
  type: _quickComponentType,
  responsibility: responsibility,
@@ -1474,7 +1475,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  _entities.add(
  _DbEntity(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: name,
  primaryKey: primaryKey,
  owner: owner,
@@ -1494,9 +1495,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── Dialog Methods ────────────────────────────────────────────────────────
 
  Future<void> _openComponentDialog({_ArchitectureComponent? existing}) async {
- final nameController = TextEditingController(text: existing?.name ?? '');
+ final nameController = SpellCheckTextEditingController(text: existing?.name ?? '');
  final responsibilityController =
- TextEditingController(text: existing?.responsibility ?? '');
+ SpellCheckTextEditingController(text: existing?.responsibility ?? '');
  final ownerOptions = _ownerOptions(currentValue: existing?.owner);
  String type = existing?.type ?? _componentTypes.first;
  String owner = existing?.owner.isNotEmpty == true
@@ -1606,7 +1607,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (saved != true) return;
 
  final item = _ArchitectureComponent(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  name: nameController.text.trim(),
  type: type,
  responsibility: responsibilityController.text.trim(),
@@ -1633,10 +1634,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _openDataFlowDialog({_ArchitectureDataFlow? existing}) async {
  final sourceController =
- TextEditingController(text: existing?.source ?? '');
+ SpellCheckTextEditingController(text: existing?.source ?? '');
  final destinationController =
- TextEditingController(text: existing?.destination ?? '');
- final notesController = TextEditingController(text: existing?.notes ?? '');
+ SpellCheckTextEditingController(text: existing?.destination ?? '');
+ final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
  String protocol = existing?.protocol ?? _protocolOptions.first;
  final saved = await _showBackendDialog(
  title: existing == null ? 'Add data flow' : 'Edit data flow',
@@ -1729,7 +1730,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (saved != true) return;
 
  final item = _ArchitectureDataFlow(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  source: sourceController.text.trim(),
  destination: destinationController.text.trim(),
  protocol: protocol,
@@ -1751,11 +1752,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _openDesignDocumentDialog({_DesignDocument? existing}) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
  final descriptionController =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  final locationController =
- TextEditingController(text: existing?.location ?? '');
+ SpellCheckTextEditingController(text: existing?.location ?? '');
  final ownerOptions = _ownerOptions(currentValue: existing?.owner);
  String owner = existing?.owner.isNotEmpty == true
  ? existing!.owner
@@ -1979,7 +1980,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (saved != true) return;
 
  final item = _DesignDocument(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  title: titleController.text.trim(),
  description: descriptionController.text.trim(),
  owner: owner,
@@ -2008,11 +2009,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _openEntityDialog({_DbEntity? existing}) async {
- final nameController = TextEditingController(text: existing?.name ?? '');
+ final nameController = SpellCheckTextEditingController(text: existing?.name ?? '');
  final primaryKeyController =
- TextEditingController(text: existing?.primaryKey ?? '');
+ SpellCheckTextEditingController(text: existing?.primaryKey ?? '');
  final descriptionController =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  final ownerOptions = _ownerOptions(currentValue: existing?.owner);
  String owner = existing?.owner.isNotEmpty == true
  ? existing!.owner
@@ -2108,7 +2109,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (saved != true) return;
 
  final item = _DbEntity(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  name: nameController.text.trim(),
  primaryKey: primaryKeyController.text.trim(),
  owner: owner,
@@ -2130,12 +2131,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _openFieldDialog({_DbField? existing}) async {
- final tableController = TextEditingController(text: existing?.table ?? '');
- final fieldController = TextEditingController(text: existing?.field ?? '');
- final typeController = TextEditingController(text: existing?.type ?? '');
+ final tableController = SpellCheckTextEditingController(text: existing?.table ?? '');
+ final fieldController = SpellCheckTextEditingController(text: existing?.field ?? '');
+ final typeController = SpellCheckTextEditingController(text: existing?.type ?? '');
  final constraintsController =
- TextEditingController(text: existing?.constraints ?? '');
- final notesController = TextEditingController(text: existing?.notes ?? '');
+ SpellCheckTextEditingController(text: existing?.constraints ?? '');
+ final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
  final saved = await _showBackendDialog(
  title: existing == null ? 'Add field' : 'Edit field',
  content: StatefulBuilder(
@@ -2227,7 +2228,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (saved != true) return;
 
  final item = _DbField(
- id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: existing?.id ?? newId(),
  table: tableController.text.trim(),
  field: fieldController.text.trim(),
  type: typeController.text.trim(),
@@ -3325,7 +3326,7 @@ class _SectionHeader extends StatelessWidget {
  icon: const Icon(Icons.add, size: 16),
  label: Text(actionLabel),
  style: TextButton.styleFrom(
- foregroundColor: const Color(0xFF2563EB),
+ foregroundColor: const Color(0xFFFFC812),
  padding: EdgeInsets.zero,
  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
  minimumSize: const Size(0, 32),
@@ -3526,7 +3527,7 @@ class _EditCell extends StatelessWidget {
  Widget build(BuildContext context) {
  return IconButton(
  onPressed: onPressed,
- icon: const Icon(Icons.edit_outlined, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.edit_outlined, color: Color(0xFFFFC812)),
  tooltip: 'Edit',
  );
  }
@@ -3625,15 +3626,15 @@ class _ArchitectureComponent {
  'owner': owner,
  'status': status,
  };
- }
-
- static List<_ArchitectureComponent> fromList(dynamic raw) {
- if (raw is! List) return [];
- return raw.whereType<Map>().map((item) {
- final data = Map<String, dynamic>.from(item);
- return _ArchitectureComponent(
- id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ }  static List<_ArchitectureComponent> fromList(dynamic raw) {
+    if (raw is! List) return [];
+    // Rows saved with a missing or duplicated id are given a fresh one: two
+    // rows sharing an id can only ever be edited through the first of them.
+    final seen = <String>{};
+    return raw.whereType<Map>().map((item) {
+      final data = Map<String, dynamic>.from(item);
+      return _ArchitectureComponent(
+        id: persistedId(data['id'], seen),
  name: data['name']?.toString() ?? '',
  type: data['type']?.toString() ?? 'Service',
  responsibility: data['responsibility']?.toString() ?? '',
@@ -3682,15 +3683,13 @@ class _ArchitectureDataFlow {
  'protocol': protocol,
  'notes': notes,
  };
- }
-
- static List<_ArchitectureDataFlow> fromList(dynamic raw) {
- if (raw is! List) return [];
- return raw.whereType<Map>().map((item) {
- final data = Map<String, dynamic>.from(item);
- return _ArchitectureDataFlow(
- id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ }  static List<_ArchitectureDataFlow> fromList(dynamic raw) {
+    if (raw is! List) return [];
+    final seen = <String>{};
+    return raw.whereType<Map>().map((item) {
+      final data = Map<String, dynamic>.from(item);
+      return _ArchitectureDataFlow(
+        id: persistedId(data['id'], seen),
  source: data['source']?.toString() ?? '',
  destination: data['destination']?.toString() ?? '',
  protocol: data['protocol']?.toString() ?? 'HTTP',
@@ -3762,15 +3761,13 @@ class _DesignDocument {
  'uploadedFileUrl': uploadedFileUrl,
  'uploadedStoragePath': uploadedStoragePath,
  };
- }
-
- static List<_DesignDocument> fromList(dynamic raw) {
- if (raw is! List) return [];
- return raw.whereType<Map>().map((item) {
- final data = Map<String, dynamic>.from(item);
- return _DesignDocument(
- id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ }  static List<_DesignDocument> fromList(dynamic raw) {
+    if (raw is! List) return [];
+    final seen = <String>{};
+    return raw.whereType<Map>().map((item) {
+      final data = Map<String, dynamic>.from(item);
+      return _DesignDocument(
+        id: persistedId(data['id'], seen),
  title: data['title']?.toString() ?? '',
  description: data['description']?.toString() ?? '',
  owner: data['owner']?.toString() ?? '',
@@ -3822,15 +3819,13 @@ class _DbEntity {
  'owner': owner,
  'description': description,
  };
- }
-
- static List<_DbEntity> fromList(dynamic raw) {
- if (raw is! List) return [];
- return raw.whereType<Map>().map((item) {
- final data = Map<String, dynamic>.from(item);
- return _DbEntity(
- id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ }  static List<_DbEntity> fromList(dynamic raw) {
+    if (raw is! List) return [];
+    final seen = <String>{};
+    return raw.whereType<Map>().map((item) {
+      final data = Map<String, dynamic>.from(item);
+      return _DbEntity(
+        id: persistedId(data['id'], seen),
  name: data['name']?.toString() ?? '',
  primaryKey: data['primaryKey']?.toString() ?? '',
  owner: data['owner']?.toString() ?? '',
@@ -3883,15 +3878,13 @@ class _DbField {
  'constraints': constraints,
  'notes': notes,
  };
- }
-
- static List<_DbField> fromList(dynamic raw) {
- if (raw is! List) return [];
- return raw.whereType<Map>().map((item) {
- final data = Map<String, dynamic>.from(item);
- return _DbField(
- id: data['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ }  static List<_DbField> fromList(dynamic raw) {
+    if (raw is! List) return [];
+    final seen = <String>{};
+    return raw.whereType<Map>().map((item) {
+      final data = Map<String, dynamic>.from(item);
+      return _DbField(
+        id: persistedId(data['id'], seen),
  table: data['table']?.toString() ?? '',
  field: data['field']?.toString() ?? '',
  type: data['type']?.toString() ?? '',

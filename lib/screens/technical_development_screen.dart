@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:ndu_project/utils/unique_id.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/activity_log_service.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
@@ -20,9 +21,9 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 
-import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class TechnicalDevelopmentScreen extends StatefulWidget {
  const TechnicalDevelopmentScreen({super.key});
 
@@ -33,8 +34,8 @@ class TechnicalDevelopmentScreen extends StatefulWidget {
 
 class _TechnicalDevelopmentScreenState
  extends State<TechnicalDevelopmentScreen> {
- final TextEditingController _notesController = TextEditingController();
- final TextEditingController _approachController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
+ final TextEditingController _approachController = SpellCheckTextEditingController();
  final _Debouncer _saveDebouncer = _Debouncer();
  bool _isLoading = false;
  bool _suspendSave = false;
@@ -129,7 +130,6 @@ class _TechnicalDevelopmentScreenState
  @override
  void initState() {
  super.initState();
- _standardsChips = _defaultStandards();
  _workstreams = _defaultWorkstreams();
  _readinessItems = _defaultReadinessItems();
  _buildComponents = _defaultBuildComponents();
@@ -159,7 +159,7 @@ class _TechnicalDevelopmentScreenState
  screenTitle: 'Technical Development',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['technical_development_screen'] ?? 'No data recorded.'),
  ],
@@ -236,7 +236,6 @@ class _TechnicalDevelopmentScreenState
  'Production readiness now covers software build packs, fabrication packages, integration proving, mock venue rehearsals, and release controls before tools integration begins.';
  _approachController.text =
  'Run mixed software and physical workstreams in parallel, freeze interfaces early, validate prototypes before procurement, and push only after quality, safety, and rollback checks are complete.';
- _standardsChips = _defaultStandards();
  _workstreams = _defaultWorkstreams();
  _readinessItems = _defaultReadinessItems();
  _buildComponents = _defaultBuildComponents();
@@ -246,7 +245,7 @@ class _TechnicalDevelopmentScreenState
  } else {
  _notesController.text = data['notes']?.toString() ?? '';
  _approachController.text = data['approach']?.toString() ?? '';
- _standardsChips = chips.isEmpty ? _defaultStandards() : chips;
+ _standardsChips = chips;
  _workstreams =
  workstreams.isEmpty ? _defaultWorkstreams() : workstreams;
  _readinessItems =
@@ -305,18 +304,6 @@ class _TechnicalDevelopmentScreenState
  }
 
  // ─── Default data generators ──────────────────────────────────────────
-
- List<_ChipItem> _defaultStandards() {
- return [
- _ChipItem(id: _newId(), label: 'Coding guidelines signed off'),
- _ChipItem(id: _newId(), label: 'Fabrication tolerances locked'),
- _ChipItem(id: _newId(), label: 'Interface freeze before sprint cut-off'),
- _ChipItem(
- id: _newId(),
- label: 'Safety protocols cleared for site assembly',
- ),
- ];
- }
 
  List<_WorkstreamItem> _defaultWorkstreams() {
  return [
@@ -467,7 +454,7 @@ class _TechnicalDevelopmentScreenState
  ];
  }
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();
 
  void _logActivity(String action, {Map<String, dynamic>? details}) {
  final projectId =
@@ -504,7 +491,7 @@ class _TechnicalDevelopmentScreenState
 
  return ResponsiveScaffold(
  activeItemLabel: 'Technical Development',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [
@@ -533,15 +520,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 20),
  _buildReadinessChecklistPanel(),
  const SizedBox(height: 20),
- _buildStandardsGatesPanel(),
- const SizedBox(height: 20),
  _buildDocumentationPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Engineering Design',
- nextLabel: 'Next: Tools Integration',
- onBack: () => context.go('/${AppRoutes.engineeringDesign}'),
- onNext: () => context.push('/${AppRoutes.toolsIntegration}'),
+ backLabel: PlanningPhaseNavigation.backLabel('technical_development'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('technical_development'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'technical_development'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'technical_development'),
  ),
  ],
  ),
@@ -653,7 +638,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  title: 'Build & Sprint Execution',
  description:
  'Parallel workstreams, sprint sequencing, burndown tracking, and continuous integration.',
- color: Color(0xFF0EA5E9),
+ color: Color(0xFFFFC812),
  ),
  const _FrameworkGuideCard(
  icon: Icons.link_rounded,
@@ -687,7 +672,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle: 'Track build workstreams, ownership, and sprint progress',
  trailing: CsvEnabledSectionHeader(
  tableTitle: 'Workstream Register',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'title', label: 'Workstream', required: true),
  CsvColumnSpec(key: 'subtitle', label: 'Description'),
  CsvColumnSpec(key: 'status', label: 'Status', allowedValues: _workstreamStatusOptions),
@@ -698,7 +683,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  for (final row in rows) {
  _workstreams.add(_WorkstreamItem(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: row['title'] ?? '',
  subtitle: row['subtitle'] ?? '',
  status: row['status'] ?? 'In planning',
@@ -740,7 +725,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ? const Color(0xFF059669)
  : item.progress >= 40
  ? const Color(0xFFF59E0B)
- : const Color(0xFF0EA5E9);
+ : const Color(0xFFFFC812);
  return Container(
  margin: const EdgeInsets.only(bottom: 3),
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -848,7 +833,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Track deliverables across software modules, fabrication packages, and site build items',
  trailing: CsvEnabledSectionHeader(
  tableTitle: 'Component Build Register',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'name', label: 'Component', required: true),
  CsvColumnSpec(key: 'owner', label: 'Owner'),
  CsvColumnSpec(key: 'status', label: 'Status', allowedValues: _buildStatusOptions),
@@ -858,7 +843,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  for (final row in rows) {
  _buildComponents.add(_BuildComponentRow(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  name: row['name'] ?? '',
  owner: row['owner'] ?? '',
  status: row['status'] ?? 'In Progress',
@@ -964,7 +949,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Live connection checks between build components, services, and physical systems',
  trailing: CsvEnabledSectionHeader(
  tableTitle: 'Integration Register',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'label', label: 'Interface', required: true),
  CsvColumnSpec(key: 'description', label: 'Description'),
  CsvColumnSpec(key: 'status', label: 'Status', allowedValues: _integrationStatusOptions),
@@ -973,7 +958,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  for (final row in rows) {
  _integrations.add(_IntegrationRow(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  label: row['label'] ?? '',
  description: row['description'] ?? '',
  status: row['status'] ?? 'Pending',
@@ -1074,7 +1059,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Current build blockers, production exceptions, and technical rework items',
  trailing: CsvEnabledSectionHeader(
  tableTitle: 'Defect & Issue Register',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'title', label: 'Issue', required: true),
  CsvColumnSpec(key: 'severity', label: 'Severity', allowedValues: _severityOptions),
  CsvColumnSpec(key: 'detail', label: 'Detail/Description'),
@@ -1083,7 +1068,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  for (final row in rows) {
  _issues.add(_IssueRow(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: row['title'] ?? '',
  detail: row['detail'] ?? '',
  severity: row['severity'] ?? 'Medium',
@@ -1344,7 +1329,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
  color: isAuto
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF8E1)
  : const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(4),
  ),
@@ -1353,7 +1338,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  fontSize: 9,
  fontWeight: FontWeight.w600,
  color: isAuto
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF6B7280))),
  ),
  ),
@@ -1493,80 +1478,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- // ─── Standards Gates Panel ────────────────────────────────────────────
-
- Widget _buildStandardsGatesPanel() {
- return _PanelShell(
- title: 'Technical standards gates',
- subtitle: 'Active quality gates spanning software and physical controls',
- trailing: TextButton.icon(
- onPressed: _addStandardChip,
- icon: const Icon(Icons.add_rounded, size: 16),
- label: const Text('Add standard'),
- style: TextButton.styleFrom(
- foregroundColor: const Color(0xFF4154F1),
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
- ),
- ),
- child: Wrap(
- spacing: 8,
- runSpacing: 8,
- children: [
- ..._standardsChips.map(_buildEditableChip),
- ],
- ),
- );
- }
-
- Widget _buildEditableChip(_ChipItem chip) {
- final isActive = chip.label.toLowerCase().contains('signed') ||
- chip.label.toLowerCase().contains('active') ||
- chip.label.toLowerCase().contains('cleared') ||
- chip.label.toLowerCase().contains('locked');
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
- decoration: BoxDecoration(
- color: isActive
- ? const Color(0xFFECFDF5)
- : const Color(0xFFF3F4F6),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(
- color: isActive
- ? const Color(0xFF059669).withValues(alpha: 0.3)
- : const Color(0xFFD1D5DB),
- ),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(
- isActive ? Icons.check_circle_rounded : Icons.pending_actions_rounded,
- size: 14,
- color: isActive ? const Color(0xFF059669) : const Color(0xFF9CA3AF),
- ),
- const SizedBox(width: 6),
- InkWell(
- onTap: () => _openStandardsChipDialog(existing: chip),
- child: Text(chip.label,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: isActive
- ? const Color(0xFF059669)
- : const Color(0xFF6B7280),
- )),
- ),
- const SizedBox(width: 4),
- InkWell(
- onTap: () => _deleteStandardChipWithConfirm(chip),
- child: const Icon(Icons.close, size: 14, color: Color(0xFF9CA3AF)),
- ),
- ],
- ),
- );
- }
-
  // ─── Documentation & Notes Panel ──────────────────────────────────────
 
  Widget _buildDocumentationPanel() {
@@ -1600,18 +1511,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF0EA5E9)),
+ borderSide: const BorderSide(color: Color(0xFFFFC812)),
  ),
  ),
  style: const TextStyle(fontSize: 13, color: Color(0xFF334155)),
  ),
  const SizedBox(height: 16),
- const Text('Notes',
- style:
- TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
- const SizedBox(height: 8),
- VoiceTextField(
- controller: _notesController,
+        // Notes stay collapsed until the user opens them.
+        CollapsibleNotesSection(
+          title: 'Notes',
+          card: true,
+          child: VoiceTextField(
+          controller: _notesController,
  minLines: 3,
  maxLines: null,
  decoration: InputDecoration(
@@ -1630,14 +1541,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF0EA5E9)),
+ borderSide: const BorderSide(color: Color(0xFFFFC812)),
  ),
  ),
- style: const TextStyle(fontSize: 13, color: Color(0xFF334155)),
- ),
- ],
- ),
- );
+        style: const TextStyle(fontSize: 13, color: Color(0xFF334155)),
+      ),
+      ),
+    ],
+  ),
+);
  }
 
  // ─── Shared table helpers ─────────────────────────────────────────────
@@ -1703,7 +1615,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildTypeBadge(String type) {
  final isSoftware = type.toLowerCase().contains('software');
  final color =
- isSoftware ? const Color(0xFF2563EB) : const Color(0xFFD97706);
+ isSoftware ? const Color(0xFFFFC812) : const Color(0xFFD97706);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
@@ -1770,7 +1682,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  lower.contains('depends')) {
  return const Color(0xFF64748B);
  }
- return const Color(0xFF0EA5E9);
+ return const Color(0xFFFFC812);
  }
 
  Color _colorForSeverity(String severity) {
@@ -1785,9 +1697,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showWorkstreamDialog({_WorkstreamItem? existing}) {
  final isEdit = existing != null;
- final titleCtl = TextEditingController(text: existing?.title ?? '');
- final subtitleCtl = TextEditingController(text: existing?.subtitle ?? '');
- final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+ final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final subtitleCtl = SpellCheckTextEditingController(text: existing?.subtitle ?? '');
+ final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String status = existing?.status ?? _workstreamStatusOptions.first;
  int progress = existing?.progress ?? 0;
 
@@ -1866,7 +1778,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  SizedBox(
  width: 100,
  child: VoiceTextField(
- controller: TextEditingController(
+ controller: SpellCheckTextEditingController(
  text: progress.toString()),
  keyboardType: TextInputType.number,
  decoration: const InputDecoration(
@@ -1975,8 +1887,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showBuildComponentDialog({_BuildComponentRow? existing}) {
  final isEdit = existing != null;
- final nameCtl = TextEditingController(text: existing?.name ?? '');
- final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+ final nameCtl = SpellCheckTextEditingController(text: existing?.name ?? '');
+ final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String status = existing?.status ?? _buildStatusOptions.first;
  String type = existing?.type ?? 'Software';
 
@@ -2151,9 +2063,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showIntegrationDialog({_IntegrationRow? existing}) {
  final isEdit = existing != null;
- final labelCtl = TextEditingController(text: existing?.label ?? '');
+ final labelCtl = SpellCheckTextEditingController(text: existing?.label ?? '');
  final descCtl =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  String status = existing?.status ?? _integrationStatusOptions.first;
 
  showDialog(
@@ -2301,8 +2213,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showIssueDialog({_IssueRow? existing}) {
  final isEdit = existing != null;
- final titleCtl = TextEditingController(text: existing?.title ?? '');
- final detailCtl = TextEditingController(text: existing?.detail ?? '');
+ final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final detailCtl = SpellCheckTextEditingController(text: existing?.detail ?? '');
  String severity = existing?.severity ?? _severityOptions[1]; // Default to High
 
  showDialog(
@@ -2449,12 +2361,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showRiskSignalDialog({_RiskSignalRow? existing}) {
  final isEdit = existing != null;
- final signalCtl = TextEditingController(text: existing?.signal ?? '');
+ final signalCtl = SpellCheckTextEditingController(text: existing?.signal ?? '');
  final descCtl =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  final categoryCtl =
- TextEditingController(text: existing?.category ?? '');
- final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+ SpellCheckTextEditingController(text: existing?.category ?? '');
+ final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String severity = existing?.severity ?? 'High';
 
  showDialog(
@@ -2605,7 +2517,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showReadinessDialog({_ReadinessItem? existing}) {
  final isEdit = existing != null;
- final titleCtl = TextEditingController(text: existing?.title ?? '');
+ final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
  String owner = existing?.owner ??
  _ownerOptions(currentValue: existing?.owner).first;
  String status = existing?.status ?? _readinessStatusOptions.first;
@@ -2764,68 +2676,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- // ─── CRUD: Standards Chips ────────────────────────────────────────────
-
- void _addStandardChip() {
- _openStandardsChipDialog();
- }
-
- void _deleteStandardChipWithConfirm(_ChipItem chip) {
- setState(() => _standardsChips.removeWhere((item) => item.id == chip.id));
- _scheduleSave();
- _logActivity('Deleted standards chip', details: {'itemId': chip.id});
-    showDeleteSuccessSnackBar(context, itemLabel: 'Chip Item');
- }
-
- Future<void> _openStandardsChipDialog({_ChipItem? existing}) async {
- final controller = TextEditingController(text: existing?.label ?? '');
- final saved = await showDialog<bool>(
- context: context,
- builder: (dialogContext) => AlertDialog(
- title: Text(existing == null
- ? 'Add quality standard'
- : 'Edit quality standard'),
- content: SizedBox(
- width: 420,
- child: VoiceTextField(
- controller: controller,
- decoration: const InputDecoration(
- labelText: 'Standard / quality code',
- border: OutlineInputBorder(),
- ),
- ),
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(false),
- child: const Text('Cancel'),
- ),
- ElevatedButton(
- onPressed: () => Navigator.of(dialogContext).pop(true),
- child: Text(existing == null ? 'Add standard' : 'Save changes'),
- ),
- ],
- ),
- );
- if (saved != true) return;
- final item =
- _ChipItem(id: existing?.id ?? _newId(), label: controller.text.trim());
- setState(() {
- if (existing == null) {
- _standardsChips.add(item);
- } else {
- final index =
- _standardsChips.indexWhere((entry) => entry.id == existing.id);
- if (index != -1) _standardsChips[index] = item;
- }
- });
- _scheduleSave();
- _logActivity(
- existing == null ? 'Added standards chip' : 'Edited standards chip',
- details: {'itemId': item.id},
- );
- }
-
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2881,7 +2731,7 @@ class _WorkstreamItem {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _WorkstreamItem(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  title: map['title']?.toString() ?? '',
  subtitle: map['subtitle']?.toString() ?? '',
  status: map['status']?.toString() ?? 'In planning',
@@ -2929,7 +2779,7 @@ class _ReadinessItem {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _ReadinessItem(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  title: map['title']?.toString() ?? '',
  owner: map['owner']?.toString() ?? '',
  status: map['status']?.toString() ?? 'Draft',
@@ -2958,7 +2808,7 @@ class _ChipItem {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _ChipItem(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  label: map['label']?.toString() ?? '',
  );
  }).toList();
@@ -2994,7 +2844,7 @@ class _BuildComponentRow {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _BuildComponentRow(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  name: map['name']?.toString() ?? '',
  owner: map['owner']?.toString() ?? '',
  status: map['status']?.toString() ?? 'In Progress',
@@ -3030,7 +2880,7 @@ class _IntegrationRow {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _IntegrationRow(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  label: map['label']?.toString() ?? '',
  description: map['description']?.toString() ?? '',
  status: map['status']?.toString() ?? 'Pending',
@@ -3065,7 +2915,7 @@ class _IssueRow {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _IssueRow(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  title: map['title']?.toString() ?? '',
  detail: map['detail']?.toString() ?? '',
  severity: map['severity']?.toString() ?? 'Medium',
@@ -3111,7 +2961,7 @@ class _RiskSignalRow {
  final map = Map<String, dynamic>.from(item as Map? ?? {});
  return _RiskSignalRow(
  id: map['id']?.toString() ??
- DateTime.now().microsecondsSinceEpoch.toString(),
+ newId(),
  signal: map['signal']?.toString() ?? '',
  description: map['description']?.toString() ?? '',
  severity: map['severity']?.toString() ?? 'High',

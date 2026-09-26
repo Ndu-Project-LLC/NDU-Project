@@ -12,12 +12,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 enum _SecurityTab { dashboard, roles, permissions, settings, accessLogs }
 
@@ -209,9 +210,9 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
   }
 
   Future<void> _openRoleDialog() async {
-    final nameController = TextEditingController();
-    final tierController = TextEditingController(text: 'Tier 1');
-    final descriptionController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
+    final tierController = SpellCheckTextEditingController(text: 'Tier 1');
+    final descriptionController = SpellCheckTextEditingController();
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -277,10 +278,10 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
   }
 
   Future<void> _openPermissionDialog() async {
-    final nameController = TextEditingController();
-    final resourceController = TextEditingController();
-    final actionController = TextEditingController();
-    final descriptionController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
+    final resourceController = SpellCheckTextEditingController();
+    final actionController = SpellCheckTextEditingController();
+    final descriptionController = SpellCheckTextEditingController();
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -345,9 +346,9 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
   }
 
   Future<void> _openSettingDialog() async {
-    final nameController = TextEditingController();
-    final valueController = TextEditingController();
-    final descriptionController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
+    final valueController = SpellCheckTextEditingController();
+    final descriptionController = SpellCheckTextEditingController();
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -484,7 +485,7 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
     final double horizontalPadding = AppBreakpoints.isMobile(context) ? 20 : 32;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -507,17 +508,7 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
                             title: 'Security Management',
                             onExportPdf: _exportPdf),
                         const SizedBox(height: 16),
-                        if (_isAutoPopulating)
-                          const AutoPopulatingIndicator(),
-                        if (_carriedContext != null &&
-                            _carriedContext!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: CarriedContextBanner(
-                              checkpoint: 'security_management',
-                              contextText: _carriedContext!,
-                            ),
-                          ),
+                       
                         const _PageHeader(),
                         if (_loadingData) ...[
                           const SizedBox(height: 12),
@@ -568,8 +559,8 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
       screenTitle: 'Security Management',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',
@@ -616,7 +607,7 @@ class _SecurityNotesCard extends StatefulWidget {
 }
 
 class _SecurityNotesCardState extends State<_SecurityNotesCard> {
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = SpellCheckTextEditingController();
   final _saveDebounce = _Debouncer();
   bool _saving = false;
   DateTime? _lastSavedAt;
@@ -675,54 +666,25 @@ class _SecurityNotesCardState extends State<_SecurityNotesCard> {
   @override
   Widget build(BuildContext context) {
     final savedAt = _lastSavedAt;
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x0F000000), blurRadius: 18, offset: Offset(0, 12)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.note_outlined,
-                    color: Color(0xFF475569), size: 18),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Notes',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF111827)),
-                ),
-              ),
-              if (_saving)
-                const _StatusChip(label: 'Saving...', color: Color(0xFF64748B))
-              else if (savedAt != null)
-                _StatusChip(
+    // Notes stay collapsed until the user opens them.
+    return CollapsibleNotesSection(
+      title: 'Notes',
+      icon: Icons.note_outlined,
+      iconColor: const Color(0xFF475569),
+      card: true,
+      trailing: _saving
+          ? const _StatusChip(label: 'Saving...', color: Color(0xFF64748B))
+          : (savedAt != null
+              ? _StatusChip(
                   label:
                       'Saved ${TimeOfDay.fromDateTime(savedAt).format(context)}',
                   color: const Color(0xFF16A34A),
                   background: const Color(0xFFECFDF3),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
+                )
+              : null),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           const Text(
             'Summarize security priorities, access controls, and monitoring needs.',
             style:
@@ -1106,9 +1068,9 @@ class _SettingsViewState extends State<_SettingsView> {
     super.initState();
     final initial = widget.initialSettings;
     _sessionTimeoutController =
-        TextEditingController(text: initial.sessionTimeoutMinutes.toString());
+        SpellCheckTextEditingController(text: initial.sessionTimeoutMinutes.toString());
     _minPasswordLengthController =
-        TextEditingController(text: initial.minPasswordLength.toString());
+        SpellCheckTextEditingController(text: initial.minPasswordLength.toString());
     _requireMfa = initial.requireMfa;
     _requireUppercase = initial.requireUppercase;
     _requireNumbers = initial.requireNumbers;
@@ -1197,8 +1159,8 @@ class _SettingsViewState extends State<_SettingsView> {
           const SizedBox(height: 32),
           _SettingsSection(
             icon: Icons.verified_user_outlined,
-            iconBackground: const Color(0xFFEFF6FF),
-            iconColor: const Color(0xFF2563EB),
+            iconBackground: const Color(0xFFFFF8E1),
+            iconColor: const Color(0xFFFFC812),
             title: 'Authentication',
             subtitle: 'Enforce login security and session controls',
             children: [
@@ -1262,11 +1224,11 @@ class _SettingsViewState extends State<_SettingsView> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
+                  color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.tune_outlined,
-                    color: Color(0xFF2563EB), size: 22),
+                    color: Color(0xFFFFC812), size: 22),
               ),
               const SizedBox(width: 14),
               const Expanded(
@@ -1439,7 +1401,7 @@ class _AccessLogsView extends StatefulWidget {
 }
 
 class _AccessLogsViewState extends State<_AccessLogsView> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String? _statusFilter;
   late final VoidCallback _searchListener;
 
@@ -1498,11 +1460,11 @@ class _AccessLogsViewState extends State<_AccessLogsView> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
+                  color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.receipt_long_outlined,
-                    color: Color(0xFF2563EB), size: 22),
+                    color: Color(0xFFFFC812), size: 22),
               ),
               const SizedBox(width: 14),
               const Expanded(
@@ -1561,7 +1523,7 @@ class _AccessLogsViewState extends State<_AccessLogsView> {
                 child: ElevatedButton(
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
+                    backgroundColor: const Color(0xFFFFC812),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -1822,11 +1784,11 @@ class _SettingToggleRow extends StatelessWidget {
           onChanged: onChanged,
           thumbColor: WidgetStateProperty.resolveWith((states) =>
               states.contains(WidgetState.selected)
-                  ? const Color(0xFF2563EB)
+                  ? const Color(0xFFFFC812)
                   : null),
           trackColor: WidgetStateProperty.resolveWith((states) =>
               states.contains(WidgetState.selected)
-                  ? const Color(0xFF2563EB)
+                  ? const Color(0xFFFFC812)
                   : null),
         ),
       ],
@@ -2035,11 +1997,11 @@ class _RolesView extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
+                  color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.groups_outlined,
-                    color: Color(0xFF2563EB), size: 22),
+                    color: Color(0xFFFFC812), size: 22),
               ),
               const SizedBox(width: 14),
               const Expanded(
@@ -2068,7 +2030,7 @@ class _RolesView extends StatelessWidget {
               ElevatedButton(
                 onPressed: onAdd,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: const Color(0xFFFFC812),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding:
@@ -2538,7 +2500,7 @@ class _RoleTierBadge extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF2563EB),
+            color: const Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(label,
@@ -2818,7 +2780,7 @@ class _RoleTiersCard extends StatelessWidget {
     final total = roles.isEmpty ? 1 : roles.length;
     final slices = [
       _PieSlice(
-          color: const Color(0xFF0EA5E9),
+          color: const Color(0xFFFFC812),
           value: tierCounts['Tier 1']!.toDouble(),
           label: 'Tier 1'),
       _PieSlice(
@@ -2826,7 +2788,7 @@ class _RoleTiersCard extends StatelessWidget {
           value: tierCounts['Tier 2']!.toDouble(),
           label: 'Tier 2'),
       _PieSlice(
-          color: const Color(0xFF22D3EE),
+          color: const Color(0xFFFBBF24),
           value: tierCounts['Tier 3']!.toDouble(),
           label: 'Tier 3'),
       _PieSlice(
@@ -2856,7 +2818,7 @@ class _RoleTiersCard extends StatelessWidget {
                 _LegendEntry(
                     label: 'Tier 1',
                     value: '${_percent(tierCounts['Tier 1']!, total)}%',
-                    color: const Color(0xFF0EA5E9)),
+                    color: const Color(0xFFFFC812)),
                 _LegendEntry(
                     label: 'Tier 2',
                     value: '${_percent(tierCounts['Tier 2']!, total)}%',
@@ -2864,7 +2826,7 @@ class _RoleTiersCard extends StatelessWidget {
                 _LegendEntry(
                     label: 'Tier 3',
                     value: '${_percent(tierCounts['Tier 3']!, total)}%',
-                    color: const Color(0xFF22D3EE)),
+                    color: const Color(0xFFFBBF24)),
                 if (tierCounts['Other']! > 0)
                   _LegendEntry(
                       label: 'Other',
@@ -2976,10 +2938,10 @@ int _percent(int value, int total) {
 
 Color _resourceColor(int index) {
   const palette = [
-    Color(0xFF22D3EE),
+    Color(0xFFFBBF24),
     Color(0xFFF97316),
-    Color(0xFF6366F1),
-    Color(0xFFFB7185),
+    Color(0xFFB8860B),
+    Color(0xFFFBBF24),
     Color(0xFF34D399),
   ];
   return palette[index % palette.length];
@@ -3067,7 +3029,7 @@ class _StatusTile extends StatelessWidget {
             color: const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: const Color(0xFF2563EB), size: 20),
+          child: Icon(icon, color: const Color(0xFFFFC812), size: 20),
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -3096,7 +3058,7 @@ class _StatusTile extends StatelessWidget {
             style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF2563EB)),
+                color: Color(0xFFFFC812)),
           ),
         ),
       ],
@@ -3320,7 +3282,7 @@ class _DashedBorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final Paint paint = Paint()
-      ..color = const Color(0xFFE0E7FF)
+      ..color = const Color(0xFFFFF8E1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
@@ -3388,7 +3350,7 @@ class _MetricCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child:
-                    Icon(headerIcon, size: 18, color: const Color(0xFF2563EB)),
+                    Icon(headerIcon, size: 18, color: const Color(0xFFFFC812)),
               ),
               const SizedBox(width: 12),
               Expanded(

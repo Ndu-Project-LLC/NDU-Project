@@ -15,6 +15,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -23,7 +24,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Interface Management',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -48,7 +49,7 @@ class ExecutionPlanInterfaceManagementScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Interface Management',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -111,7 +112,7 @@ class _InterfaceManagementSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Interface Register',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'interfaceId',
                       label: 'Interface ID',
@@ -224,7 +225,7 @@ class _InterfaceManagementSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileInterfaceManagementActions()
+          const _MobileInterfaceManagementActions()
         else
           const _DesktopInterfaceManagementActions(),
       ],
@@ -334,16 +335,16 @@ class _InterfaceRegisterTable extends StatelessWidget {
       BuildContext context, InterfaceRegisterModel? entry, String projectId) {
     final isEdit = entry != null;
     final interfaceIdController =
-        TextEditingController(text: entry?.interfaceId ?? '');
+        SpellCheckTextEditingController(text: entry?.interfaceId ?? '');
     final interfaceNameController =
-        TextEditingController(text: entry?.interfaceName ?? '');
+        SpellCheckTextEditingController(text: entry?.interfaceName ?? '');
     String interfaceType = entry?.interfaceType ?? 'Physical';
-    final partyAController = TextEditingController(text: entry?.partyA ?? '');
-    final partyBController = TextEditingController(text: entry?.partyB ?? '');
+    final partyAController = SpellCheckTextEditingController(text: entry?.partyA ?? '');
+    final partyBController = SpellCheckTextEditingController(text: entry?.partyB ?? '');
     String status = entry?.status ?? 'Active';
     String frequency = entry?.frequency ?? 'Daily';
     final commentsController =
-        TextEditingController(text: entry?.comments ?? '');
+        SpellCheckTextEditingController(text: entry?.comments ?? '');
 
     const interfaceTypes = [
       'Physical',
@@ -383,7 +384,7 @@ class _InterfaceRegisterTable extends StatelessWidget {
                         const InputDecoration(labelText: 'Interface Name *')),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: interfaceType,
+                  initialValue: interfaceType,
                   decoration: const InputDecoration(labelText: 'Type *'),
                   items: interfaceTypes
                       .map((t) => DropdownMenuItem(value: t, child: Text(t)))
@@ -401,7 +402,7 @@ class _InterfaceRegisterTable extends StatelessWidget {
                     decoration: const InputDecoration(labelText: 'Party B *')),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: status,
+                  initialValue: status,
                   decoration: const InputDecoration(labelText: 'Status *'),
                   items: statuses
                       .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -410,7 +411,7 @@ class _InterfaceRegisterTable extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: frequency,
+                  initialValue: frequency,
                   decoration: const InputDecoration(labelText: 'Frequency *'),
                   items: frequencies
                       .map((f) => DropdownMenuItem(value: f, child: Text(f)))

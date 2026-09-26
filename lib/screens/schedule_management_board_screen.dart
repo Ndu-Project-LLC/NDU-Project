@@ -8,6 +8,8 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 const String _currencySymbol = r'$';
 
 class ScheduleManagementBoardScreen extends StatefulWidget {
@@ -45,7 +47,7 @@ class _ScheduleManagementBoardScreenState extends State<ScheduleManagementBoardS
  _ScheduleColumnData(
  title: 'In Progress',
  count: 3,
- background: Color(0xFFEFF6FF),
+ background: Color(0xFFFFF8E1),
  cards: [
  _ScheduleCardData(
  title: 'Foundation Systems',
@@ -128,8 +130,8 @@ class _ScheduleManagementBoardScreenState extends State<ScheduleManagementBoardS
  screenTitle: 'Schedule Management Board',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_schedule_management_board_notes'] ?? 'No data recorded.'),
  ],
@@ -153,7 +155,7 @@ class _PageHeader extends StatelessWidget {
 
  const chips = Wrap(
  spacing: 12,
- children: const [
+ children: [
  _SoftBadge(icon: Icons.group_outlined, label: 'Teams'),
  _SoftBadge(icon: Icons.bar_chart_outlined, label: 'Analytics'),
  ],
@@ -192,28 +194,23 @@ class _NotesArea extends StatelessWidget {
 
  final bool isMobile;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(24),
- boxShadow: [
- BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 24, offset: const Offset(0, 12)),
- ],
- ),
- child: VoiceTextField(
- minLines: isMobile ? 4 : 6,
- maxLines: isMobile ? 6 : 10,
- decoration: InputDecoration(
- hintText: 'Input your notes here...',
- border: InputBorder.none,
- hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[500]),
- ),
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    // Notes stay collapsed until the user opens them.
+    return CollapsibleNotesSection(
+      title: 'Notes',
+      card: true,
+      child: VoiceTextField(
+        minLines: isMobile ? 4 : 6,
+        maxLines: isMobile ? 6 : 10,
+        decoration: InputDecoration(
+          hintText: 'Input your notes here...',
+          border: InputBorder.none,
+          hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[500]),
+        ),
+      ),
+    );
+  }
 }
 
 class _ScheduleToolbar extends StatelessWidget {
@@ -222,7 +219,7 @@ class _ScheduleToolbar extends StatelessWidget {
  final bool isMobile;
 
  Future<void> _showCreateTaskDialog(BuildContext context) async {
- final controller = TextEditingController();
+ final controller = SpellCheckTextEditingController();
  try {
  final created = await showDialog<String>(
  context: context,
@@ -379,7 +376,7 @@ class _WorkBreakdownStructure extends StatelessWidget {
  ),
  const SizedBox(height: 24),
  const _LegendList(items: [
- _LegendItem(label: 'Project Cost', color: Color(0xFF2563EB)),
+ _LegendItem(label: 'Project Cost', color: Color(0xFFFFC812)),
  _LegendItem(label: 'Schedule Drift', color: Color(0xFFF59E0B)),
  _LegendItem(label: 'Critical Path Impact', color: Color(0xFFFF5A5F)),
  _LegendItem(label: 'Team Utilization', color: Color(0xFF16A34A)),
@@ -399,7 +396,7 @@ class _WorkBreakdownStructure extends StatelessWidget {
  children: [
  _WbsLane(
  badgeLabel: 'Infrastructure Development',
- badgeColor: Color(0xFF2563EB),
+ badgeColor: Color(0xFFFFC812),
  entries: [
  _WbsEntry(title: 'Unassigned Deliverables', subtitle: 'Filter to discipline', statusLabel: 'Unassigned'),
  _WbsEntry(title: 'Safety & Health Risk Assessment', subtitle: 'SSHER', statusLabel: 'Unassigned'),
@@ -725,7 +722,7 @@ class _BoardFooter extends StatelessWidget {
  final bool isMobile;
 
  Future<void> _showAddNoteDialog(BuildContext context) async {
- final controller = TextEditingController();
+ final controller = SpellCheckTextEditingController();
  try {
  final note = await showDialog<String>(
  context: context,
@@ -772,7 +769,7 @@ class _BoardFooter extends StatelessWidget {
  Widget build(BuildContext context) {
  const legendItems = [
  _LegendItem(label: 'Completed', color: Color(0xFF16A34A)),
- _LegendItem(label: 'In Progress', color: Color(0xFF2563EB)),
+ _LegendItem(label: 'In Progress', color: Color(0xFFFFC812)),
  _LegendItem(label: 'Pending', color: Color(0xFFF59E0B)),
  _LegendItem(label: 'Critical Path', color: Color(0xFFFF5A5F)),
  ];
@@ -800,14 +797,14 @@ class _BoardFooter extends StatelessWidget {
  ? Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _LegendList(items: legendItems),
+ const _LegendList(items: legendItems),
  const SizedBox(height: 24),
  buttons,
  ],
  )
  : Row(
  children: [
- Expanded(child: _LegendList(items: legendItems)),
+ const Expanded(child: _LegendList(items: legendItems)),
  const SizedBox(width: 24),
  buttons,
  ],
@@ -858,19 +855,19 @@ class _StatusPill extends StatelessWidget {
  case 'pending':
  case 'progress':
  case 'in progress':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case 'design':
- return const Color(0xFF9333EA);
+ return const Color(0xFFB8860B);
  case 'quality':
- return const Color(0xFF0EA5E9);
+ return const Color(0xFFFFC812);
  case 'technology':
- return const Color(0xFF1D4ED8);
+ return const Color(0xFFFFC812);
  case 'completed':
  return AppSemanticColors.success;
  case 'unassigned':
  return Colors.grey.shade600;
  case 'engineering':
- return const Color(0xFF0EA5E9);
+ return const Color(0xFFFFC812);
  case 'site prep':
  return const Color(0xFF16A34A);
  default:
@@ -1130,11 +1127,12 @@ class _ScheduleCardData {
  final double progressPercent;
 
  String get assigneeInitials {
- final parts = assignee.trim().split(' ');
+ final parts = assignee.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+ if (parts.isEmpty) return 'U';
  if (parts.length == 1) {
- return parts.first.substring(0, 1).toUpperCase();
+ return parts.first[0].toUpperCase();
  }
- return parts.take(2).map((part) => part.substring(0, 1).toUpperCase()).join();
+ return parts.take(2).map((part) => part[0].toUpperCase()).join();
  }
 }
 

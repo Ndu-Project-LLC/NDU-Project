@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart' show ProjectMethodology;
 export 'package:ndu_project/wbs/models/wbs_models.dart' show ProjectMethodology;
 
@@ -203,7 +204,7 @@ class RequirementRow {
   }
 
   static String _generateId() =>
-      DateTime.now().microsecondsSinceEpoch.toString();
+      newId();
 
   @override
   bool operator ==(Object other) {

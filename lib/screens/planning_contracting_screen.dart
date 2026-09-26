@@ -18,12 +18,12 @@ import 'package:ndu_project/models/planning_contracting_models.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart'
  as procurement_models;
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/screens/planning_procurement_screen.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBrandYellow = Color(0xFFFFC812);
 const Color _kFabYellow = Color(0xFFFBBF24);
@@ -127,7 +127,7 @@ class _PlanningContractingScreenState extends State<PlanningContractingScreen> {
  final hPad = isMobile ? 20.0 : 40.0;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,8 +223,8 @@ class _PlanningContractingScreenState extends State<PlanningContractingScreen> {
  screenTitle: 'Planning Contracting',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_contracting_notes'] ?? 'No data recorded.'),
  ],
@@ -626,7 +626,7 @@ class _OverviewTabState extends State<_OverviewTab> {
  _StatCard(
  value: _awardStrategy,
  label: 'Award Strategy',
- color: const Color(0xFF7C3AED),
+ color: const Color(0xFFB8860B),
  supporting: 'From strategy'),
  ],
  );
@@ -763,7 +763,7 @@ class _ApprovalGateSummary extends StatelessWidget {
  _InlineInfoCard(
  title: 'Sponsor Approval',
  detail: 'Required for every package before execution handoff.',
- color: Color(0xFF7C3AED),
+ color: Color(0xFFB8860B),
  ),
  _InlineInfoCard(
  title: 'Schedule Sync',
@@ -1205,12 +1205,12 @@ Color _statusColor(String status) {
 
 void _showCreateContractDialog(BuildContext context, String? projectId) {
  if (projectId == null || projectId.isEmpty) return;
- final nameCtrl = TextEditingController();
- final descCtrl = TextEditingController();
- final valueCtrl = TextEditingController();
- final scopeCtrl = TextEditingController();
- final disciplineCtrl = TextEditingController();
- final contractorCtrl = TextEditingController();
+ final nameCtrl = SpellCheckTextEditingController();
+ final descCtrl = SpellCheckTextEditingController();
+ final valueCtrl = SpellCheckTextEditingController();
+ final scopeCtrl = SpellCheckTextEditingController();
+ final disciplineCtrl = SpellCheckTextEditingController();
+ final contractorCtrl = SpellCheckTextEditingController();
  String contractType = 'Not Sure';
  String paymentType = 'TBD';
  String contractStartPhase = 'Not Sure';
@@ -1430,11 +1430,11 @@ Future<void> _showEditPackageDialog(
  final projectData = ProjectDataHelper.getData(context);
  final scopeOptions = _planningScopeOptionsFromData(projectData);
  final summaryCtrl =
- TextEditingController(text: contract.packageSummary ?? contract.description);
- final engineerEstimateCtrl = TextEditingController(
+ SpellCheckTextEditingController(text: contract.packageSummary ?? contract.description);
+ final engineerEstimateCtrl = SpellCheckTextEditingController(
  text: contract.engineerEstimate?.toStringAsFixed(0) ?? '');
  final plannedValueCtrl =
- TextEditingController(text: contract.estimatedValue.toStringAsFixed(0));
+ SpellCheckTextEditingController(text: contract.estimatedValue.toStringAsFixed(0));
  String selectedAwardStrategy = contract.awardStrategy ?? 'Sole Source';
  String selectedContractType =
  contract.contractType.isNotEmpty ? contract.contractType : 'Not Sure';
@@ -1917,7 +1917,7 @@ class _HandoffTab extends StatelessWidget {
  ? 'TBD'
  : '\$${_formatCurrency(procurementIssuedValue)}',
  label: 'Issued To Procurement',
- color: const Color(0xFF7C3AED),
+ color: const Color(0xFFB8860B),
  supporting: '${procurementIssuedContracts.length} packages'),
  ],
  ),
@@ -2530,7 +2530,7 @@ Color _rfqStatusColor(String s) {
  return const Color(0xFF22C55E);
  }
  if (l.contains('publish') || l.contains('active')) {
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  }
  if (l.contains('evaluat')) return const Color(0xFFF59E0B);
  return const Color(0xFF64748B);
@@ -2541,11 +2541,11 @@ void _showRfpDialog(
  String projectId, {
  PlanningRfq? existingRfq,
 }) {
- final titleCtrl = TextEditingController(text: existingRfq?.title ?? '');
+ final titleCtrl = SpellCheckTextEditingController(text: existingRfq?.title ?? '');
  final scopeCtrl =
- TextEditingController(text: existingRfq?.scopeOfWork ?? '');
- final notesCtrl = TextEditingController(text: existingRfq?.notes ?? '');
- final vendorsCtrl = TextEditingController(
+ SpellCheckTextEditingController(text: existingRfq?.scopeOfWork ?? '');
+ final notesCtrl = SpellCheckTextEditingController(text: existingRfq?.notes ?? '');
+ final vendorsCtrl = SpellCheckTextEditingController(
  text: (existingRfq?.invitedContractors ?? const []).join(', '));
  String linkedPackageId = existingRfq?.linkedScopeId ?? '';
  String rfqStatus = existingRfq?.status ?? 'Draft';
@@ -3143,21 +3143,21 @@ Future<void> _showEvaluationDialog(
  List<PlanningRfq> rfqs,
 ) async {
  final vendorCtrl =
- TextEditingController(text: contract.recommendedVendor ?? '');
- final awardValueCtrl = TextEditingController(
+ SpellCheckTextEditingController(text: contract.recommendedVendor ?? '');
+ final awardValueCtrl = SpellCheckTextEditingController(
  text: contract.recommendedAwardValue?.toStringAsFixed(0) ?? '');
  final comparisonCtrl =
- TextEditingController(text: contract.vendorComparisonSummary ?? '');
+ SpellCheckTextEditingController(text: contract.vendorComparisonSummary ?? '');
  final technicalNotesCtrl =
- TextEditingController(text: contract.technicalGateNotes ?? '');
+ SpellCheckTextEditingController(text: contract.technicalGateNotes ?? '');
  String selectedRfqId =
  _selectedRfqForContract(contract, rfqs)?.id ?? '';
  final initialCriteria = _selectedRfqForContract(contract, rfqs)?.evaluationCriteria ??
  const <EvaluationCriteria>[];
- final criteriaCtrl = TextEditingController(
+ final criteriaCtrl = SpellCheckTextEditingController(
  text: _formatCriteriaEditor(initialCriteria),
  );
- final vendorListCtrl = TextEditingController(
+ final vendorListCtrl = SpellCheckTextEditingController(
  text: _vendorCandidatesForEvaluation(
  contract,
  _selectedRfqForContract(contract, rfqs),
@@ -3926,7 +3926,7 @@ class _PaymentSummaryCards extends StatelessWidget {
  _StatCard(
  value: '$paidCount/${allMilestones.length}',
  label: 'Paid Milestones',
- color: const Color(0xFF7C3AED)),
+ color: const Color(0xFFB8860B)),
  ],
  );
  }
@@ -4007,7 +4007,7 @@ class _PaymentContractExpansion extends StatelessWidget {
 Color _paymentStatusColor(String s) {
  final l = s.toLowerCase();
  if (l == 'paid') return const Color(0xFF22C55E);
- if (l == 'approved') return const Color(0xFF7C3AED);
+ if (l == 'approved') return const Color(0xFFB8860B);
  if (l == 'submitted') return _kBrandYellow;
  if (l == 'due') return const Color(0xFFF59E0B);
  return const Color(0xFF64748B);
@@ -4402,8 +4402,8 @@ Future<void> _showNegotiationDialog(
  ContractModel contract,
 ) async {
  final objectivesCtrl =
- TextEditingController(text: contract.negotiationObjectives ?? '');
- final itemsCtrl = TextEditingController(
+ SpellCheckTextEditingController(text: contract.negotiationObjectives ?? '');
+ final itemsCtrl = SpellCheckTextEditingController(
  text: (contract.negotiationItems ?? const [])
  .map((item) =>
  '${item.item}|${item.ourPosition}|${item.theirPosition}|${item.status}')
@@ -4617,7 +4617,7 @@ class _BudgetTabState extends State<_BudgetTab> {
  _StatCard(
  value: allContracts.length.toString(),
  label: 'Contracts',
- color: const Color(0xFF7C3AED)),
+ color: const Color(0xFFB8860B)),
  ],
  ),
  const SizedBox(height: 20),
@@ -4718,18 +4718,198 @@ class _BudgetEditableTable extends StatelessWidget {
  final List<ContractModel> contracts;
  final String projectId;
 
+ void _showEditModal(BuildContext context, ContractModel contract) {
+ final baseController = SpellCheckTextEditingController(
+ text: contract.estimatedValue.toStringAsFixed(0));
+ final pctController = SpellCheckTextEditingController(
+ text: (contract.contingencyPercent ?? 0).toStringAsFixed(0));
+
+ showDialog(
+ context: context,
+ builder: (ctx) => StatefulBuilder(
+ builder: (ctx, setDialogState) {
+ final base = double.tryParse(baseController.text) ?? 0;
+ final pct = double.tryParse(pctController.text) ?? 0;
+ final contAmt = base * pct / 100;
+ final total = base + contAmt;
+
+ return AlertDialog(
+ title: Text('Edit: ${contract.name}'),
+ content: SizedBox(
+ width: 420,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ TextField(
+ controller: baseController,
+ keyboardType: TextInputType.number,
+ decoration: const InputDecoration(
+ labelText: 'Base Value (\$)',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ onChanged: (_) => setDialogState(() {}),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: pctController,
+ keyboardType: TextInputType.number,
+ decoration: const InputDecoration(
+ labelText: 'Contingency (%)',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ onChanged: (_) => setDialogState(() {}),
+ ),
+ const SizedBox(height: 16),
+ Row(
+ mainAxisAlignment: MainAxisAlignment.spaceBetween,
+ children: [
+ Text('Contingency: \$${contAmt.toStringAsFixed(0)}',
+ style: const TextStyle(fontSize: 13, color: Color(0xFFF59E0B))),
+ Text('Total: \$${total.toStringAsFixed(0)}',
+ style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF059669))),
+ ],
+ ),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+ ElevatedButton(
+ onPressed: () {
+ final newBase = double.tryParse(baseController.text) ?? 0;
+ final newPct = (double.tryParse(pctController.text) ?? 0).clamp(0.0, 100.0);
+ onChangedBaseValue(projectId, contract.id, newBase);
+ onChangedContingencyPercent(projectId, contract.id, newBase, newPct);
+ Navigator.pop(ctx);
+ },
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFFD97706),
+ foregroundColor: Colors.white,
+ ),
+ child: const Text('Save'),
+ ),
+ ],
+ );
+ },
+ ),
+ );
+ }
+
+ void _showAddModal(BuildContext context) {
+ final nameController = SpellCheckTextEditingController();
+ final baseController = SpellCheckTextEditingController(text: '0');
+ final pctController = SpellCheckTextEditingController(text: '0');
+
+ showDialog(
+ context: context,
+ builder: (ctx) => AlertDialog(
+ title: const Text('Add Contract Budget'),
+ content: SizedBox(
+ width: 420,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ TextField(
+ controller: nameController,
+ decoration: const InputDecoration(
+ labelText: 'Contract Name *',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: baseController,
+ keyboardType: TextInputType.number,
+ decoration: const InputDecoration(
+ labelText: 'Base Value (\$)',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: pctController,
+ keyboardType: TextInputType.number,
+ decoration: const InputDecoration(
+ labelText: 'Contingency (%)',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+ ElevatedButton(
+ onPressed: () async {
+ if (nameController.text.trim().isEmpty) return;
+ final base = double.tryParse(baseController.text) ?? 0;
+ final pct = (double.tryParse(pctController.text) ?? 0).clamp(0.0, 100.0);
+ final contAmt = base * pct / 100;
+ await ContractService.createContract(
+ projectId: projectId,
+ name: nameController.text.trim(),
+ description: '',
+ contractType: 'fixed_price',
+ paymentType: 'milestone',
+ status: 'draft',
+ estimatedValue: base,
+ scope: '',
+ discipline: '',
+ createdById: '',
+ createdByEmail: '',
+ createdByName: '',
+ );
+ Navigator.pop(ctx);
+ },
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFFD97706),
+ foregroundColor: Colors.white,
+ ),
+ child: const Text('Add'),
+ ),
+ ],
+ ),
+ );
+ }
+
  @override
  Widget build(BuildContext context) {
  final columns = [
- const _TableColumnDef('#', 60),
- const _TableColumnDef('Contract', 180),
+ const _TableColumnDef('#', 50),
+ const _TableColumnDef('Contract', 200),
  const _TableColumnDef('Base Value', 120),
  const _TableColumnDef('Contingency %', 100),
- const _TableColumnDef('Contingency', 120),
- const _TableColumnDef('Total', 120),
+ const _TableColumnDef('Contingency', 110),
+ const _TableColumnDef('Total', 110),
+ const _TableColumnDef('', 60),
  ];
 
- return _EditableTable(
+ return Column(
+ children: [
+ // Add button
+ Align(
+ alignment: Alignment.centerRight,
+ child: Padding(
+ padding: const EdgeInsets.only(bottom: 12),
+ child: OutlinedButton.icon(
+ onPressed: () => _showAddModal(context),
+ icon: const Icon(Icons.add, size: 16),
+ label: const Text('Add Contract', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+ style: OutlinedButton.styleFrom(
+ foregroundColor: const Color(0xFF475569),
+ side: const BorderSide(color: Color(0xFFE2E8F0)),
+ padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+ shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+ ),
+ ),
+ ),
+ ),
+ _EditableTable(
  columns: columns,
  rows: [
  for (int index = 0; index < contracts.length; index++)
@@ -4738,6 +4918,9 @@ class _BudgetEditableTable extends StatelessWidget {
  columns: columns,
  contract: contracts[index],
  index: index,
+ onEdit: () => _showEditModal(context, contracts[index]),
+ ),
+ ],
  ),
  ],
  );
@@ -4750,11 +4933,13 @@ class _BudgetEditableRow extends StatelessWidget {
  required this.columns,
  required this.contract,
  required this.index,
+ this.onEdit,
  });
 
  final List<_TableColumnDef> columns;
  final ContractModel contract;
  final int index;
+ final VoidCallback? onEdit;
 
  String get projectId => contract.projectId;
 
@@ -4798,27 +4983,18 @@ class _BudgetEditableRow extends StatelessWidget {
  SizedBox(
  width: columns[2].width,
  child: _TableFieldShell(
- child: _NumberInputCell(
- value: base,
- fieldKey: '${contract.id}_baseValue',
- prefix: '\$',
- onChanged: (value) {
- onChangedBaseValue(projectId, contract.id, value);
- },
+ child: Text(
+ '\$${_formatCurrency(base)}',
+ style: const TextStyle(fontSize: 12),
  ),
  ),
  ),
  SizedBox(
  width: columns[3].width,
  child: _TableFieldShell(
- child: _NumberInputCell(
- value: contPct,
- fieldKey: '${contract.id}_contPct',
- suffix: '%',
- onChanged: (value) {
- final newPct = value.clamp(0.0, 100.0);
- onChangedContingencyPercent(projectId, contract.id, base, newPct);
- },
+ child: Text(
+ '${contPct.toStringAsFixed(0)}%',
+ style: const TextStyle(fontSize: 12),
  ),
  ),
  ),
@@ -4847,6 +5023,18 @@ class _BudgetEditableRow extends StatelessWidget {
  ),
  ),
  ),
+ SizedBox(
+ width: columns[6].width,
+ child: _TableFieldShell(
+ child: IconButton(
+ icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF9CA3AF)),
+ onPressed: onEdit,
+ tooltip: 'Edit budget',
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(),
+ ),
+ ),
+ ),
  ],
  );
  }
@@ -4857,9 +5045,7 @@ class _NumberInputCell extends StatefulWidget {
  required this.value,
  required this.fieldKey,
  required this.onChanged,
- this.prefix,
- this.suffix,
- });
+ }) : prefix = null, suffix = null;
 
  final double value;
  final String fieldKey;
@@ -4877,7 +5063,7 @@ class _NumberInputCellState extends State<_NumberInputCell> {
  @override
  void initState() {
  super.initState();
- _controller = TextEditingController(text: widget.value.toStringAsFixed(0));
+ _controller = SpellCheckTextEditingController(text: widget.value.toStringAsFixed(0));
  }
 
  @override
@@ -5178,8 +5364,8 @@ class _CriteriaRowState extends State<_CriteriaRow> {
  @override
  void initState() {
  super.initState();
- _nameController = TextEditingController(text: widget.criterion.name);
- _weightController = TextEditingController(
+ _nameController = SpellCheckTextEditingController(text: widget.criterion.name);
+ _weightController = SpellCheckTextEditingController(
  text: widget.criterion.weight.toStringAsFixed(0));
  }
 

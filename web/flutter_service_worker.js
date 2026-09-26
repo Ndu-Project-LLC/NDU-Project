@@ -12,7 +12,7 @@
 // CACHE STRATEGY
 // --------------
 // - Network-first for everything. Falls back to cache only when offline.
-// - Cache name is versioned by build stamp (NDU_BUILD_STAMP below), so every
+// - Cache name is versioned by build stamp (_NDU_RESOLVED_STAMP below), so every
 //   new deployment gets a fresh cache namespace.
 // - On `activate`, ALL old caches (different version) are deleted, freeing
 //   disk space and preventing stale assets from being served.
@@ -27,15 +27,23 @@
 // rotation.
 // =============================================================================
 
-// NDU_BUILD_STAMP is replaced at build time by scripts/stamp_build_version.py.
-// Fallback 'dev-local' for `flutter run` so the SW still installs cleanly.
+// _NDU_RAW_STAMP is replaced at build time by scripts/stamp_build_version.py
+// with a 10-digit epoch timestamp (e.g. '1786708977').
+//
+// IMPORTANT: We must NOT compare _NDU_RAW_STAMP against the literal string
+// 'NDU_BUILD_STAMP' to detect the un-stamped source, because the stamp
+// script does a naive text.replace() on ALL occurrences — including any
+// literal placeholder in this comparison — which would make the check
+// always-false after stamping (i.e. always fall back to 'dev-local').
+// Instead, we detect the un-stamped source by checking that the value
+// is a 10-digit epoch timestamp.
 const _NDU_RAW_STAMP = 'NDU_BUILD_STAMP';
-const NDU_BUILD_STAMP =
-  (_NDU_RAW_STAMP && _NDU_RAW_STAMP !== 'NDU_BUILD_STAMP')
+const _NDU_RESOLVED_STAMP =
+  (_NDU_RAW_STAMP && /^\d{10}$/.test(_NDU_RAW_STAMP))
     ? _NDU_RAW_STAMP
     : 'dev-local';
 
-const CACHE_NAME = 'ndu-flutter-app-v' + NDU_BUILD_STAMP;
+const CACHE_NAME = 'ndu-flutter-app-v' + _NDU_RESOLVED_STAMP;
 
 // Skip waiting so the new SW activates as soon as it installs.
 self.addEventListener('install', (event) => {

@@ -11,6 +11,7 @@ import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/subscription_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class TwoFactorVerificationScreen extends StatefulWidget {
   final String email;
@@ -27,7 +28,7 @@ class TwoFactorVerificationScreen extends StatefulWidget {
 class _TwoFactorVerificationScreenState
     extends State<TwoFactorVerificationScreen> {
   final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
+      List.generate(6, (_) => SpellCheckTextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   bool _isLoading = false;
@@ -241,7 +242,7 @@ class _TwoFactorVerificationScreenState
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         top: true,
         child: SingleChildScrollView(
@@ -276,7 +277,7 @@ class _TwoFactorVerificationScreenState
                   Center(
                     child: Text(
                       widget.email,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: headlineAccent,
@@ -345,7 +346,7 @@ class _TwoFactorVerificationScreenState
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
+                                        borderSide: const BorderSide(
                                           color: headlineAccent,
                                           width: 2,
                                         ),
@@ -432,7 +433,7 @@ class _TwoFactorVerificationScreenState
                                   onTap: _isSending ? null : _sendCode,
                                   child: Text(
                                     _isSending ? 'Sending...' : 'Resend Code',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: headlineAccent,
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,

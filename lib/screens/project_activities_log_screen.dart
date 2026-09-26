@@ -8,11 +8,8 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
-import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
-import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
-import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/activity_log_panel.dart';
@@ -20,6 +17,7 @@ import 'package:ndu_project/widgets/activity_log_panel.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/my_raci_assignments_panel.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ProjectActivitiesLogScreen extends StatefulWidget {
  const ProjectActivitiesLogScreen({super.key});
@@ -64,7 +62,7 @@ class _ProjectActivitiesLogScreenState
  screenTitle: 'Project Activities Log',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
  ],
@@ -89,7 +87,7 @@ class _ProjectActivitiesLogScreenState
  }
  }
 
- final TextEditingController _searchController = TextEditingController();
+ final TextEditingController _searchController = SpellCheckTextEditingController();
 
  String _searchQuery = '';
  Set<String> _selectedStatuses = <String>{};
@@ -241,6 +239,7 @@ class _ProjectActivitiesLogScreenState
  )
  : ListView.builder(
  shrinkWrap: true,
+ physics: const NeverScrollableScrollPhysics(),
  itemCount: visibleOptions.length,
  itemBuilder: (context, index) {
  final option = visibleOptions[index];
@@ -450,30 +449,30 @@ class _ProjectActivitiesLogScreenState
  final allowStructuralEdit = isCreate || isCustom;
  final now = DateTime.now();
 
- final titleController = TextEditingController(text: existing?.title ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
  final descriptionController =
- TextEditingController(text: existing?.description ?? '');
- final sourceController = TextEditingController(
+ SpellCheckTextEditingController(text: existing?.description ?? '');
+ final sourceController = SpellCheckTextEditingController(
  text: existing?.sourceSection ?? 'manual_activity',
  );
- final phaseController = TextEditingController(
+ final phaseController = SpellCheckTextEditingController(
  text: existing?.phase.isNotEmpty == true
  ? existing!.phase
  : 'Planning Phase',
  );
- final disciplineController = TextEditingController(
+ final disciplineController = SpellCheckTextEditingController(
  text: existing?.discipline.isNotEmpty == true
  ? existing!.discipline
  : 'Project Management',
  );
- final roleController = TextEditingController(
+ final roleController = SpellCheckTextEditingController(
  text: existing?.role.isNotEmpty == true ? existing!.role : 'Project Lead',
  );
  final assignedToController =
- TextEditingController(text: existing?.assignedTo ?? '');
+ SpellCheckTextEditingController(text: existing?.assignedTo ?? '');
  final dueDateController =
- TextEditingController(text: existing?.dueDate ?? '');
- final appliesToController = TextEditingController(
+ SpellCheckTextEditingController(text: existing?.dueDate ?? '');
+ final appliesToController = SpellCheckTextEditingController(
  text: (existing?.applicableSections ?? const <String>[]).join(', '),
  );
 
@@ -770,7 +769,7 @@ class _ProjectActivitiesLogScreenState
  : filteredActivities.sublist(startIndex, endIndex);
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Stack(
  children: [
@@ -873,7 +872,7 @@ class _ProjectActivitiesLogScreenState
  child: _StatCard(
  title: 'Total Activities',
  value: '$totalCount',
- color: const Color(0xFF0EA5E9),
+ color: const Color(0xFFFFC812),
  ),
  ),
  SizedBox(
@@ -897,7 +896,7 @@ class _ProjectActivitiesLogScreenState
  child: _StatCard(
  title: 'Approved',
  value: '$approvedCount',
- color: const Color(0xFF6366F1),
+ color: const Color(0xFFB8860B),
  ),
  ),
  ],
@@ -1457,6 +1456,9 @@ class _FilterToolbar extends StatelessWidget {
  child: VoiceTextField(
  controller: searchController,
  onChanged: onSearchChanged,
+ enableVoice: false,
+ enableKazAi: false,
+ enableTextFormatting: false,
  decoration: InputDecoration(
  hintText: 'Search activity, owner, role, phase...',
  isDense: true,
@@ -2102,8 +2104,8 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
   }
   return FullScreenTableWrapper(
    title: 'Project Activities Log',
-   child: buildTable(bc),
    tableBuilder: buildTable,
+   child: buildTable(bc),
   );
  });
  }
@@ -2216,7 +2218,7 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
  fg = const Color(0xFF065F46);
  break;
  case 'Acknowledged':
- bg = const Color(0xFFE0E7FF);
+ bg = const Color(0xFFFFF8E1);
  fg = const Color(0xFF3730A3);
  break;
  case 'Rejected':

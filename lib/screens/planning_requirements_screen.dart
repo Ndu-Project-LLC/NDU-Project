@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +11,7 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/screens/ssher_stacked_screen.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/charter_lock_helper.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -22,11 +22,14 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
-import 'package:ndu_project/utils/download_helper.dart' as dl;
+import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_check_dialogs.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class PlanningRequirementsScreen extends StatefulWidget {
  const PlanningRequirementsScreen({super.key});
 
@@ -37,11 +40,21 @@ class PlanningRequirementsScreen extends StatefulWidget {
 
 class _PlanningRequirementsScreenState
  extends State<PlanningRequirementsScreen> {
- final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  final TextEditingController _requirementsPlanController =
- TextEditingController();
- final ScrollController _requirementsHorizontalController = ScrollController();
- final ScrollController _requirementsVerticalController = ScrollController();
+ SpellCheckTextEditingController();  final ScrollController _requirementsHorizontalController = ScrollController();
+  final ScrollController _requirementsVerticalController = ScrollController();
+
+  /// Controllers for the table shown by the Expand button.
+  ///
+  /// Expand pushes a non-opaque route, so the inline table underneath stays
+  /// mounted and stays attached to the controllers above. A [Scrollbar] with
+  /// `thumbVisibility` asserts when its controller has more than one
+  /// [ScrollPosition] ("The provided ScrollController is attached to more than
+  /// one ScrollPosition"), which threw on every frame of the expanded table and
+  /// took the page down. The expanded copy therefore gets its own pair.
+  final ScrollController _fullScreenHorizontalController = ScrollController();
+  final ScrollController _fullScreenVerticalController = ScrollController();
 
  bool _isGeneratingRequirements = false;
  bool _isGeneratingRequirementsPlan = false;
@@ -54,8 +67,23 @@ class _PlanningRequirementsScreenState
  Timer? _planTimer;
  DateTime? _lastAutoSaveSnackAt;
 
+ /// The requirement descriptions the current plan was generated from.
+ ///
+ /// The plan's only input is the requirement descriptions
+ /// ([_requirementsPlanContext]), so an edit that does not touch a description
+ /// — a type / discipline / role / person / phase change, or the comments
+ /// field — cannot change the plan. Every edit still reached
+ /// [_schedulePlanRegenerate], and each run sets state (rebuilding every row),
+ /// assembles the whole project context, calls the model and writes to
+ /// Firestore. Comparing the current descriptions against this text keeps that
+ /// work for the edits that can actually change the plan.
+ String _planSourceText = '';
+
  List<_AssignableMember> _memberOptions = const <_AssignableMember>[];
  final List<_RequirementRow> _rows = [];
+
+ bool get _isRequirementsLocked =>
+ CharterLockHelper.isFepLocked(ProjectDataHelper.getData(context));
 
  static const Set<String> _authorizedRequirementSubmitRoles = {
  'owner',
@@ -87,7 +115,8 @@ class _PlanningRequirementsScreenState
  _rows.add(_createRow(1));
  }
 
- if (_rows.length == 1 &&
+ if (!_isRequirementsLocked &&
+ _rows.length == 1 &&
  _rows.first.descriptionController.text.trim().isEmpty) {
  await _generateRequirementsFromContext();
  }
@@ -243,6 +272,7 @@ class _PlanningRequirementsScreenState
  }
 
  Future<void> _generateRequirementsFromContext() async {
+ if (_isRequirementsLocked) return;
  if (_isGeneratingRequirements) return;
  setState(() => _isGeneratingRequirements = true);
 
@@ -323,11 +353,13 @@ class _PlanningRequirementsScreenState
  }
 
  void _handleRequirementChanged() {
+ if (_isRequirementsLocked) return;
  _scheduleAutoSave();
  _schedulePlanRegenerate();
  }
 
  void _handlePlanChanged() {
+ if (_isRequirementsLocked) return;
  if (!_settingPlanFromAi) {
  _planEditedManually = _requirementsPlanController.text.trim().isNotEmpty;
  }
@@ -340,12 +372,23 @@ class _PlanningRequirementsScreenState
  _requirementsPlanController.text.trim().isNotEmpty) {
  return;
  }
+ // Nothing the plan is built from has changed, so another run would produce
+ // the same plan. This is what most table edits hit.
+ if (_currentPlanSourceText() == _planSourceText) return;
 
  _planTimer?.cancel();
- _planTimer = Timer(const Duration(milliseconds: 800), () {
+ // Long enough that the plan is regenerated after a working pause rather
+ // than after every sentence typed into a requirement.
+ _planTimer = Timer(const Duration(milliseconds: 2500), () {
  _generateRequirementsPlan();
  });
  }
+
+ /// The requirement descriptions the plan is generated from, in table order.
+ String _currentPlanSourceText() => _rows
+ .map((row) => row.descriptionController.text.trim())
+ .where((text) => text.isNotEmpty)
+ .join('\n');
 
  String _requirementsPlanContext() {
  final data = ProjectDataHelper.getData(context);
@@ -368,6 +411,7 @@ $requirementsList
  }
 
  Future<void> _generateRequirementsPlan({bool force = false}) async {
+ if (_isRequirementsLocked) return;
  if (_isGeneratingRequirementsPlan) return;
  if (!force &&
  _planEditedManually &&
@@ -378,6 +422,10 @@ $requirementsList
  final hasAnyRequirement =
  _rows.any((row) => row.descriptionController.text.trim().isNotEmpty);
  if (!hasAnyRequirement) return;
+
+ // Record what this run is generated from, so edits that cannot change the
+ // plan do not schedule another model call.
+ final sourceText = _currentPlanSourceText();
 
  setState(() => _isGeneratingRequirementsPlan = true);
 
@@ -400,6 +448,7 @@ $requirementsList
  _requirementsPlanController.text = text.trim();
  _settingPlanFromAi = false;
  _planEditedManually = false;
+ _planSourceText = sourceText;
  _commitAutoSave(showSnack: false);
  } catch (e) {
  debugPrint('AI requirements plan generation failed: $e');
@@ -416,6 +465,7 @@ $requirementsList
  }
 
  Future<void> _regenerateRequirementRow(int index) async {
+ if (_isRequirementsLocked) return;
  if (index < 0 || index >= _rows.length) return;
  if (_isGeneratingRequirements || _isRegeneratingRow) return;
 
@@ -502,6 +552,7 @@ $requirementsList
  }
 
  void _undoRequirementRow(int index) {
+ if (_isRequirementsLocked) return;
  if (index < 0 || index >= _rows.length) return;
  final row = _rows[index];
  final previous = row.aiUndoText;
@@ -768,6 +819,7 @@ $requirementsList
  bool _isRoleAuthorizedForRequirementSubmit(String role) {
  return _authorizedRequirementSubmitRoles.contains(_normalizeRole(role));
  }  void _onReorder(int oldIndex, int newIndex) {
+    if (_isRequirementsLocked) return;
     if (newIndex > oldIndex) newIndex--;
     if (oldIndex < 0 || oldIndex >= _rows.length) return;
     if (newIndex < 0 || newIndex >= _rows.length) return;
@@ -782,6 +834,7 @@ $requirementsList
   }
 
   void _deleteRow(int index) {
+    if (_isRequirementsLocked) return;
     if (index < 0 || index >= _rows.length) return;
     setState(() {
       _rows[index].dispose();
@@ -952,7 +1005,9 @@ $requirementsList
  nextScreenBuilder: () =>
  PlanningPhaseNavigation.resolveNextScreen(context, 'requirements') ??
  const SsherStackedScreen(),
- dataUpdater: (data) => data.copyWith(
+ dataUpdater: _isRequirementsLocked
+ ? null
+ : (data) => data.copyWith(
  frontEndPlanning: ProjectDataHelper.updateFEPField(
  current: data.frontEndPlanning,
  requirements: requirementsText,
@@ -969,6 +1024,7 @@ $requirementsList
  }
 
  void _scheduleAutoSave({bool showSnack = true}) {
+ if (_isRequirementsLocked) return;
  _autoSaveTimer?.cancel();
  _autoSaveTimer = Timer(const Duration(milliseconds: 500), () {
  _commitAutoSave(showSnack: showSnack);
@@ -976,7 +1032,7 @@ $requirementsList
  }
 
  void _commitAutoSave({bool showSnack = true}) {
- if (!mounted) return;
+ if (!mounted || _isRequirementsLocked) return;
 
  final items = _buildRequirementItems();
  final requirementsText = items
@@ -1042,6 +1098,7 @@ $requirementsList
  }
 
  Future<void> _confirmRegenerate() async {
+ if (_isRequirementsLocked) return;
  if (_isGeneratingRequirements) return;
  if (!_hasAnyRequirementInputs()) {
  await _generateRequirementsFromContext();
@@ -1076,9 +1133,10 @@ $requirementsList
  @override
  void dispose() {
  _autoSaveTimer?.cancel();
- _planTimer?.cancel();
- _requirementsHorizontalController.dispose();
- _requirementsVerticalController.dispose();
+ _planTimer?.cancel();    _requirementsHorizontalController.dispose();
+    _requirementsVerticalController.dispose();
+    _fullScreenHorizontalController.dispose();
+    _fullScreenVerticalController.dispose();
  _notesController.removeListener(_handleNotesChanged);
  _requirementsPlanController.removeListener(_handlePlanChanged);
  _notesController.dispose();
@@ -1092,7 +1150,7 @@ $requirementsList
  @override
  Widget build(BuildContext context) {
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1128,11 +1186,15 @@ $requirementsList
  children: [
  PlanningPhaseHeader(title: 'Requirements', onExportPdf: _exportPdf),
  const SizedBox(height: 16),
- _roundedField(
- controller: _notesController,
- hint: 'Input your notes here...',
- minLines: 3,
- ),
+ CollapsibleNotesSection(
+                    title: 'Notes',
+                    child: _roundedField(
+                      controller: _notesController,
+                      hint: 'Input your notes here...',
+                      minLines: 3,
+                      readOnly: _isRequirementsLocked,
+                    ),
+                  ),
  const SizedBox(height: 20),
  Row(
  crossAxisAlignment:
@@ -1171,16 +1233,16 @@ $requirementsList
  child:
  CircularProgressIndicator(
  strokeWidth: 2,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  )
  : const Icon(
  Icons.auto_fix_high,
  size: 20,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  onPressed:
- _isGeneratingRequirementsPlan
+ _isRequirementsLocked || _isGeneratingRequirementsPlan
  ? null
  : () =>
  _generateRequirementsPlan(
@@ -1188,6 +1250,20 @@ $requirementsList
  ),
  tooltip:
  'Regenerate requirements plan',
+ ),
+ // The generated plan is long prose, so the corrector is offered on the
+ // section itself: the review lists every correction and can apply them
+ // across the whole text. Disabled while the section is locked, because a
+ // locked plan cannot accept an edit.
+ IconButton(
+ icon: const Icon(Icons.spellcheck, size: 20, color: Color(0xFF6B7280)),
+ tooltip: 'Review spelling and grammar',
+ onPressed: _isRequirementsLocked
+ ? null
+ : () => showSpellCheckDialog(
+ context,
+ controller: _requirementsPlanController,
+ ),
  ),
  ],
  ),
@@ -1197,6 +1273,7 @@ $requirementsList
  hint:
  'AI will generate a requirements plan based on your entries...',
  minLines: 4,
+ readOnly: _isRequirementsLocked,
  ),
  const SizedBox(height: 24),
  Row(
@@ -1236,15 +1313,15 @@ $requirementsList
  child:
  CircularProgressIndicator(
  strokeWidth: 2,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  )
  : const Icon(
  Icons.refresh,
  size: 20,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
- onPressed: _isGeneratingRequirements
+ onPressed: _isRequirementsLocked || _isGeneratingRequirements
  ? null
  : _confirmRegenerate,
  tooltip: 'Regenerate requirements',
@@ -1252,9 +1329,9 @@ $requirementsList
  ],
  ),
  const SizedBox(height: 14),
- _buildRequirementsTable(context),
- const SizedBox(height: 16),
  _buildActionButtons(),
+ const SizedBox(height: 16),
+ _buildRequirementsTable(context),
  const SizedBox(height: 24),
  ],
  ),
@@ -1409,15 +1486,32 @@ $requirementsList
 
       return Container(
         key: ValueKey('req_row_$index'),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           border: Border(bottom: BorderSide(color: borderColor)),
         ),
         child: Row(
           children: [
             // Col 0: No + drag handle
-            ReorderableDragStartListener(
-              index: index,
-              child: SizedBox(
+            _isRequirementsLocked
+                ? SizedBox(
+                    width: colW[0],
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.lock_outline,
+                              size: 16, color: Color(0xFFCBD5E1)),
+                          const SizedBox(width: 4),
+                          Text('${row.number}',
+                              style: const TextStyle(
+                                  fontSize: 14, color: Color(0xFF111827))),
+                        ],
+                      ),
+                    ),
+                  )
+                : ReorderableDragStartListener(
+                    index: index,
+                    child: SizedBox(
                 width: colW[0],
                 child: Center(
                   child: Row(
@@ -1430,9 +1524,8 @@ $requirementsList
                       ),
                     ],
                   ),
-                ),
-              ),
-            ),
+                ),                    ),
+                  ),
             // Col 1: Requirement
             SizedBox(
               width: colW[1],
@@ -1450,10 +1543,12 @@ $requirementsList
                           Tooltip(
                             message: 'Regenerate (AI)',
                             child: IconButton(
-                              onPressed: isRowLoading ? null : () => _regenerateRequirementRow(index),
+                              onPressed: _isRequirementsLocked || isRowLoading
+                                  ? null
+                                  : () => _regenerateRequirementRow(index),
                               icon: isRowLoading
                                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                  : const Icon(Icons.refresh, size: 18, color: Color(0xFF2563EB)),
+                                  : const Icon(Icons.refresh, size: 18, color: Color(0xFFFFC812)),
                               padding: const EdgeInsets.all(6),
                               constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                               splashRadius: 18,
@@ -1462,7 +1557,9 @@ $requirementsList
                           Tooltip(
                             message: 'Undo',
                             child: IconButton(
-                              onPressed: () => _undoRequirementRow(index),
+                              onPressed: _isRequirementsLocked
+                                  ? null
+                                  : () => _undoRequirementRow(index),
                               icon: const Icon(Icons.undo, size: 18, color: Color(0xFF6B7280)),
                               padding: const EdgeInsets.all(6),
                               constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -1476,7 +1573,10 @@ $requirementsList
                       controller: row.descriptionController,
                       minLines: 2,
                       maxLines: null,
-                      onChanged: (_) => _handleRequirementChanged(),
+                      readOnly: _isRequirementsLocked,
+                      onChanged: _isRequirementsLocked
+                          ? null
+                          : (_) => _handleRequirementChanged(),
                       decoration: const InputDecoration(
                         hintText: 'Requirement description',
                         hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
@@ -1496,6 +1596,7 @@ $requirementsList
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: _TypeDropdown(
                   value: row.selectedType,
+                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     row.selectedType = value;
                     _handleRequirementChanged();
@@ -1510,6 +1611,7 @@ $requirementsList
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: _DisciplineDropdown(
                   value: row.selectedDiscipline,
+                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     row.selectedDiscipline = value;
                     _handleRequirementChanged();
@@ -1545,6 +1647,7 @@ $requirementsList
                   value: row.personController.text,
                   options: _memberOptions,
                   hint: 'Person',
+                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     row.personController.text = value;
                     _handleRequirementChanged();
@@ -1559,6 +1662,7 @@ $requirementsList
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: _PhaseDropdown(
                   value: row.selectedPhase,
+                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     row.selectedPhase = value;
                     _handleRequirementChanged();
@@ -1611,7 +1715,7 @@ $requirementsList
               child: Center(
                 child: IconButton(
                   icon: const Icon(Icons.delete_outline, size: 20, color: Color(0xFFEF4444)),
-                  onPressed: () => _deleteRow(index),
+                  onPressed: _isRequirementsLocked ? null : () => _deleteRow(index),
                   tooltip: 'Delete requirement',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -1639,15 +1743,24 @@ $requirementsList
           child: SingleChildScrollView(
             controller: _requirementsHorizontalController,
             scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: totalWidth),
+            // The table has a fixed content width (the sum of its column
+            // widths). This MUST be a bounded width: `minWidth` alone leaves
+            // maxWidth infinite, and inside a horizontal scroll view that
+            // propagates unbounded width to the vertical ReorderableListView
+            // ("Vertical viewport was given unbounded width") and to any Row
+            // with an Expanded child ("RenderFlex children have non-zero flex
+            // but incoming width constraints are unbounded"). The table only
+            // rendered while it was empty because the empty state has no
+            // viewport.
+            child: SizedBox(
+              width: totalWidth,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header row (non-draggable)
                   Container(
                     key: const ValueKey('req_header'),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: bgHeader,
                       border: Border(
                         bottom: BorderSide(color: borderColor),
@@ -1681,6 +1794,12 @@ $requirementsList
                             controller: _requirementsVerticalController,
                             thumbVisibility: true,
                             child: ReorderableListView(
+                              // The Scrollbar above paints from this very
+                              // controller, so the list must adopt it —
+                              // otherwise the Scrollbar throws "The Scrollbar's
+                              // ScrollController has no ScrollPosition
+                              // attached" every frame.
+                              scrollController: _requirementsVerticalController,
                               buildDefaultDragHandles: false,
                               onReorder: _onReorder,
                               children: List.generate(_rows.length, (i) => buildDataRow(i)),
@@ -1694,6 +1813,7 @@ $requirementsList
         ),
       ),
     ),
+
     tableBuilder: (fsContext) => Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1703,20 +1823,29 @@ $requirementsList
       child: SizedBox(
         height: 460,
         child: Scrollbar(
-          controller: _requirementsHorizontalController,
+          controller: _fullScreenHorizontalController,
           thumbVisibility: true,
           child: SingleChildScrollView(
-            controller: _requirementsHorizontalController,
+            controller: _fullScreenHorizontalController,
             scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: totalWidth),
+            // The table has a fixed content width (the sum of its column
+            // widths). This MUST be a bounded width: `minWidth` alone leaves
+            // maxWidth infinite, and inside a horizontal scroll view that
+            // propagates unbounded width to the vertical ReorderableListView
+            // ("Vertical viewport was given unbounded width") and to any Row
+            // with an Expanded child ("RenderFlex children have non-zero flex
+            // but incoming width constraints are unbounded"). The table only
+            // rendered while it was empty because the empty state has no
+            // viewport.
+            child: SizedBox(
+              width: totalWidth,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header row (non-draggable)
                   Container(
                     key: const ValueKey('req_header'),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: bgHeader,
                       border: Border(
                         bottom: BorderSide(color: borderColor),
@@ -1745,11 +1874,13 @@ $requirementsList
                               'No requirements yet. Add one or import from CSV.',
                               style: TextStyle(color: Color(0xFF9CA3AF)),
                             ),
-                          )
-                        : Scrollbar(
-                            controller: _requirementsVerticalController,
+                          )                        : Scrollbar(
+                            controller: _fullScreenVerticalController,
                             thumbVisibility: true,
                             child: ReorderableListView(
+                              // See the inline copy above: the Scrollbar and the
+                              // list must share one controller.
+                              scrollController: _fullScreenVerticalController,
                               buildDefaultDragHandles: false,
                               onReorder: _onReorder,
                               children: List.generate(_rows.length, (i) => buildDataRow(i)),
@@ -1763,6 +1894,8 @@ $requirementsList
         ),
       ),
     ),
+
+
     );
   }
 
@@ -1828,17 +1961,21 @@ $requirementsList
     const CsvColumnSpec(key: 'comments', label: 'Comments', sampleValue: 'High priority'),
   ];
 
+  /// Excel template with a numbered `Data` sheet plus a `Definitions` sheet.
+  /// Importing it back cannot fail on the instruction text, because the
+  /// importer only reads the Data sheet.
   void _downloadTemplate() {
-    final template = CsvImportHelper.generateTemplate(_csvColumns);
-    final filename = CsvImportHelper.templateFilename('Project Requirements');
-    final bytes = utf8.encode(template);
-    dl.downloadFile(bytes, filename, mimeType: 'text/csv');
+    TableImportHelper.downloadExcelTemplate(
+      tableTitle: 'Project Requirements',
+      columns: _csvColumns,
+    );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('CSV template downloaded!'),
+          content: Text(
+              'Excel template downloaded — fill the Data tab (row numbers included), the Definitions tab explains each column.'),
           backgroundColor: Color(0xFF10B981),
-          duration: Duration(seconds: 2),
+          duration: Duration(seconds: 4),
         ),
       );
     }
@@ -1850,7 +1987,9 @@ $requirementsList
   SizedBox(
   height: 44,
   child: OutlinedButton.icon(
-  onPressed: () async {
+                  onPressed: _isRequirementsLocked
+                      ? null
+                      : () async {
   final rows = await showCsvImportDialog(
   context,
   tableTitle: 'Project Requirements',
@@ -1880,14 +2019,13 @@ $requirementsList
  behavior: SnackBarBehavior.floating,
  ),
  );
- }
- },
- icon: const Icon(Icons.upload_file_outlined, size: 18),
+ }  },
+  icon: const Icon(Icons.upload_file_outlined, size: 18),
  label: const Text('Import CSV', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
  style: OutlinedButton.styleFrom(
- backgroundColor: Colors.white,
- foregroundColor: const Color(0xFF2563EB),
- side: const BorderSide(color: Color(0xFF93C5FD)),
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFFC812)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12),
  ),
@@ -1903,9 +2041,9 @@ $requirementsList
   icon: const Icon(Icons.download, size: 18),
   label: const Text('Template', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
   style: OutlinedButton.styleFrom(
-  backgroundColor: Colors.white,
-  foregroundColor: const Color(0xFF2563EB),
-  side: const BorderSide(color: Color(0xFF93C5FD)),
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+  foregroundColor: const Color(0xFFFFC812),
+  side: const BorderSide(color: Color(0xFFFFC812)),
   shape: RoundedRectangleBorder(
   borderRadius: BorderRadius.circular(12),
   ),
@@ -1917,14 +2055,16 @@ $requirementsList
   SizedBox(
   height: 44,
   child: OutlinedButton(
-  onPressed: () {
+  onPressed: _isRequirementsLocked
+      ? null
+      : () {
   setState(() {
   _rows.add(_createRow(_rows.length + 1));
   });
   _scheduleAutoSave(showSnack: false);
   },
   style: OutlinedButton.styleFrom(
-  backgroundColor: Colors.white,
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
   foregroundColor: const Color(0xFF111827),
   side: const BorderSide(color: Color(0xFFE5E7EB)),
   shape: RoundedRectangleBorder(
@@ -1946,6 +2086,7 @@ $requirementsList
  required TextEditingController controller,
  required String hint,
  int minLines = 1,
+ bool readOnly = false,
  }) {
  return Container(
  width: double.infinity,
@@ -1957,6 +2098,7 @@ $requirementsList
  padding: const EdgeInsets.all(14),
  child: VoiceTextField(
  controller: controller,
+ readOnly: readOnly,
  minLines: minLines,
  maxLines: null,
  decoration: InputDecoration(
@@ -1977,8 +2119,8 @@ $requirementsList
  screenTitle: 'Planning Requirements',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_requirements_notes'] ?? 'No data recorded.'),
  ],
@@ -2063,11 +2205,11 @@ class _RequirementRow {
  ];
 
  _RequirementRow({required this.number, this.onChanged})
- : descriptionController = TextEditingController(),
- commentsController = TextEditingController(),
- roleController = TextEditingController(),
- personController = TextEditingController(),
- sourceController = TextEditingController();
+ : descriptionController = SpellCheckTextEditingController(),
+ commentsController = SpellCheckTextEditingController(),
+ roleController = SpellCheckTextEditingController(),
+ personController = SpellCheckTextEditingController(),
+ sourceController = SpellCheckTextEditingController();
 
  int number;
 
@@ -2097,10 +2239,15 @@ class _RequirementRow {
 }
 
 class _TypeDropdown extends StatefulWidget {
- const _TypeDropdown({this.value, required this.onChanged});
+ const _TypeDropdown({
+ this.value,
+ required this.onChanged,
+ this.enabled = true,
+ });
 
  final String? value;
  final ValueChanged<String?> onChanged;
+ final bool enabled;
 
  @override
  State<_TypeDropdown> createState() => _TypeDropdownState();
@@ -2147,10 +2294,12 @@ class _TypeDropdownState extends State<_TypeDropdown> {
  size: 20,
  ),
  isExpanded: true,
- onChanged: (value) {
+ onChanged: widget.enabled
+ ? (value) {
  setState(() => _value = value);
  widget.onChanged(value);
- },
+ }
+ : null,
  items: _RequirementRow.requirementTypeOptions
  .map(
  (option) => DropdownMenuItem<String?>(
@@ -2170,10 +2319,15 @@ class _TypeDropdownState extends State<_TypeDropdown> {
 }
 
 class _DisciplineDropdown extends StatefulWidget {
- const _DisciplineDropdown({this.value, required this.onChanged});
+ const _DisciplineDropdown({
+ this.value,
+ required this.onChanged,
+ this.enabled = true,
+ });
 
  final String? value;
  final ValueChanged<String?> onChanged;
+ final bool enabled;
 
  @override
  State<_DisciplineDropdown> createState() => _DisciplineDropdownState();
@@ -2218,10 +2372,12 @@ class _DisciplineDropdownState extends State<_DisciplineDropdown> {
  size: 20,
  ),
  isExpanded: true,
- onChanged: (value) {
+ onChanged: widget.enabled
+ ? (value) {
  setState(() => _value = value);
  widget.onChanged(value);
- },
+ }
+ : null,
  items: _RequirementRow.disciplineOptions
  .map(
  (option) => DropdownMenuItem<String>(
@@ -2241,10 +2397,15 @@ class _DisciplineDropdownState extends State<_DisciplineDropdown> {
 }
 
 class _PhaseDropdown extends StatefulWidget {
- const _PhaseDropdown({this.value, required this.onChanged});
+ const _PhaseDropdown({
+ this.value,
+ required this.onChanged,
+ this.enabled = true,
+ });
 
  final String? value;
  final ValueChanged<String?> onChanged;
+ final bool enabled;
 
  @override
  State<_PhaseDropdown> createState() => _PhaseDropdownState();
@@ -2289,10 +2450,12 @@ class _PhaseDropdownState extends State<_PhaseDropdown> {
  size: 20,
  ),
  isExpanded: true,
- onChanged: (value) {
+ onChanged: widget.enabled
+ ? (value) {
  setState(() => _value = value);
  widget.onChanged(value);
- },
+ }
+ : null,
  items: _RequirementRow.phaseOptions
  .map(
  (option) => DropdownMenuItem<String>(
@@ -2317,12 +2480,14 @@ class _PersonDropdownField extends StatelessWidget {
  required this.options,
  required this.hint,
  required this.onChanged,
+ this.enabled = true,
  });
 
  final String value;
  final List<_AssignableMember> options;
  final String hint;
  final ValueChanged<String> onChanged;
+ final bool enabled;
 
  @override
  Widget build(BuildContext context) {
@@ -2330,7 +2495,7 @@ class _PersonDropdownField extends StatelessWidget {
  final noMembers = options.isEmpty;
 
  return InkWell(
- onTap: noMembers
+ onTap: !enabled || noMembers
  ? null
  : () async {
  final selected = await showDialog<_AssignableMember>(
@@ -2374,8 +2539,9 @@ class _PersonDropdownField extends StatelessWidget {
  Icon(
  Icons.search_rounded,
  size: 18,
- color:
- noMembers ? const Color(0xFFCBD5E1) : const Color(0xFF6B7280),
+ color: !enabled || noMembers
+ ? const Color(0xFFCBD5E1)
+ : const Color(0xFF6B7280),
  ),
  ],
  ),
@@ -2399,7 +2565,7 @@ class _MemberPickerDialog extends StatefulWidget {
 
 class _MemberPickerDialogState extends State<_MemberPickerDialog> {
  late final TextEditingController _searchController =
- TextEditingController(text: widget.initialQuery);
+ SpellCheckTextEditingController(text: widget.initialQuery);
 
  @override
  void dispose() {
@@ -2482,13 +2648,13 @@ class _MemberPickerDialogState extends State<_MemberPickerDialog> {
  dense: true,
  leading: CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFFDBEAFE),
+ backgroundColor: const Color(0xFFFEF3C7),
  child: Text(
  member.displayLabel[0].toUpperCase(),
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),

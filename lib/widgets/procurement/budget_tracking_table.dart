@@ -23,7 +23,7 @@ class BudgetTrackingTable extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: const Text(
           'No procurement items yet for budget tracking.',
@@ -40,7 +40,7 @@ class BudgetTrackingTable extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,9 +189,9 @@ class _MetricTile extends StatelessWidget {
       width: 180,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,9 +247,9 @@ class _BudgetStatusBadge extends StatelessWidget {
       case 'within':
       default:
         label = 'Within';
-        background = const Color(0xFFDBEAFE);
-        border = const Color(0xFF93C5FD);
-        foreground = const Color(0xFF1D4ED8);
+        background = const Color(0xFFFEF3C7);
+        border = const Color(0xFFFFC812);
+        foreground = const Color(0xFFFFC812);
         break;
     }
 

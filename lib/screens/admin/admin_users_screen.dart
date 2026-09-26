@@ -22,9 +22,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     NavigationContextService.instance
         .setLastAdminDashboard(AppRoutes.adminUsers);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),

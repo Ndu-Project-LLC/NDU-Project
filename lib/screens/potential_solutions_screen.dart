@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/openai/openai_config.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -30,6 +32,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/access_policy.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
+import 'package:ndu_project/utils/charter_lock_helper.dart';
 import 'package:ndu_project/widgets/skip_business_case_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
@@ -43,6 +46,8 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SafeSection — Build-time error boundary that prevents a single failing child
@@ -206,6 +211,18 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
 
  bool get _isAdminHost => AccessPolicy.isRestrictedAdminHost();
 
+ bool get _isBusinessCaseLocked {
+ final data = ProjectDataHelper.getData(context);
+ return BusinessCaseLockHelper.isBusinessCaseLocked(data) ||
+ CharterLockHelper.isFepLocked(data);
+ }
+
+ bool _guardMutation({String action = 'edit'}) {
+ if (!_isBusinessCaseLocked) return true;
+ BusinessCaseLockHelper.showLockedToast(context, action: action);
+ return false;
+ }
+
  TextEditingController _createDescriptionController({String text = ''}) {
  return RichTextEditingController(text: text);
  }
@@ -239,7 +256,7 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
  @override
  void initState() {
  super.initState();
- _projectNameController = TextEditingController();
+ _projectNameController = SpellCheckTextEditingController();
 
  // Initialize API key manager
  ApiKeyManager.initializeApiKey();
@@ -265,7 +282,7 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
  SolutionRow(
  id: solution.id,
  number: solution.number,
- titleController: TextEditingController(text: solution.title),
+ titleController: SpellCheckTextEditingController(text: solution.title),
  descriptionController:
  _createDescriptionController(text: solution.description),
  isAiGenerated: true,
@@ -315,6 +332,7 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
  }
 
  void _seedSolutionFieldHistory(SolutionRow solution) {
+ if (_isBusinessCaseLocked) return;
  final provider = ProjectDataHelper.getProvider(context);
  provider.addFieldToHistory(
  'solution_${solution.id}_title',
@@ -329,6 +347,7 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
  }
 
  void _seedFieldHistories() {
+ if (_isBusinessCaseLocked) return;
  final provider = ProjectDataHelper.getProvider(context);
  provider.addFieldToHistory(
  _notesFieldKey,
@@ -341,6 +360,7 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
  }
 
  void _syncDraftToProvider() {
+ if (_isBusinessCaseLocked) return;
  final provider = ProjectDataHelper.getProvider(context);
  final solutions = _solutions
  .map((s) => PotentialSolution(
@@ -358,6 +378,7 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
  }
 
  void _recordNotesEdit(String value) {
+ if (!_guardMutation()) return;
  final provider = ProjectDataHelper.getProvider(context);
  provider.addFieldToHistory(_notesFieldKey, value, isAiGenerated: true);
  _syncDraftToProvider();
@@ -365,6 +386,7 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
 
  void _recordSolutionFieldEdit(
  SolutionRow solution, String fieldName, String value) {
+ if (!_guardMutation()) return;
  final provider = ProjectDataHelper.getProvider(context);
  final fieldKey = 'solution_${solution.id}_$fieldName';
  provider.addFieldToHistory(fieldKey, value, isAiGenerated: true);
@@ -372,6 +394,7 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
  }
 
  Future<void> _undoNotesField() async {
+ if (!_guardMutation(action: 'undo')) return;
  final provider = ProjectDataHelper.getProvider(context);
  if (!provider.canUndoField(_notesFieldKey)) return;
  final previous = provider.projectData.undoField(_notesFieldKey);
@@ -385,6 +408,7 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
  }
 
  Future<void> _redoNotesField() async {
+ if (!_guardMutation(action: 'redo')) return;
  final provider = ProjectDataHelper.getProvider(context);
  if (!provider.canRedoField(_notesFieldKey)) return;
  final next = provider.projectData.redoField(_notesFieldKey);
@@ -398,6 +422,7 @@ class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
  }
 
  Future<void> _regenerateNotesField() async {
+ if (!_guardMutation(action: 'regenerate')) return;
  if (_incomingBusinessCase.trim().isEmpty) {
  ScaffoldMessenger.of(context).showSnackBar(
  const SnackBar(
@@ -454,7 +479,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  } catch (e) {
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Failed to regenerate notes: $e')),
+ SnackBar(content: Text('Failed to regenerate notes: ${aiErrorMessage(e)}')),
  );
  }
  }
@@ -521,6 +546,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  }
 
  void _applySolutions(List<AiSolutionItem> aiSolutions) {
+ if (_isBusinessCaseLocked) return;
  final targetCount = _isAdminHost ? 5 : 3;
 
  setState(() {
@@ -532,7 +558,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  SolutionRow(
  number: i + 1,
  titleController:
- TextEditingController(text: solutionsToUse[i].title),
+ SpellCheckTextEditingController(text: solutionsToUse[i].title),
  descriptionController: _createDescriptionController(
  text: solutionsToUse[i].description),
  isAiGenerated: true,
@@ -547,6 +573,10 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  }
 
  void _applyFallback(String errorMessage) {
+ if (_isBusinessCaseLocked) {
+ setState(() => _isLoadingSolutions = false);
+ return;
+ }
  final targetCount = _isAdminHost ? 5 : 3;
 
  setState(() {
@@ -557,7 +587,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  SolutionRow(
  number: i + 1,
  titleController:
- TextEditingController(text: 'Proposed Solution ${i + 1}'),
+ SpellCheckTextEditingController(text: 'Proposed Solution ${i + 1}'),
  descriptionController: _createDescriptionController(
  text:
  'Describe how this option addresses the project\'s needs, assumptions, constraints, and expected benefits.',
@@ -582,7 +612,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  final sidebarWidth = AppBreakpoints.sidebarWidth(context);
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  top: true,
  child: Stack(
@@ -634,7 +664,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
 
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: _buildMobileDrawer(),
  floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
  floatingActionButton: FloatingActionButton(
@@ -756,7 +786,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  size: 16,
  color: _solutions.length >= 3
  ? const Color(0xFF9CA3AF)
- : const Color(0xFF2563EB),
+ : const Color(0xFFFFC812),
  ),
  const SizedBox(width: 6),
  Text(
@@ -794,7 +824,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  onPressed: _openBusinessCase,
  style: OutlinedButton.styleFrom(
  foregroundColor: const Color(0xFF6B7280),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  side: const BorderSide(color: Color(0xFFD1D5DB)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12)),
@@ -873,7 +903,9 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  IconButton(
  tooltip: 'Delete solution',
- onPressed: () => _confirmDeleteSolution(index),
+ onPressed: _isBusinessCaseLocked
+                  ? null
+                  : () => _confirmDeleteSolution(index),
  icon: const Icon(Icons.delete_outline_rounded, size: 16),
  visualDensity: VisualDensity.compact,
  splashRadius: 18,
@@ -890,10 +922,10 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  letterSpacing: 0.3,
  ),
  ),
- const SizedBox(height: 4),
- VoiceTextField(
+ const SizedBox(height: 4),  VoiceTextField(
  controller: solution.titleController,
- onChanged: (_) => _saveSolutions(),
+ readOnly: _isBusinessCaseLocked,
+ onChanged: _isBusinessCaseLocked ? null : (_) => _saveSolutions(),
  decoration: InputDecoration(
  hintText: 'Solution title',
  filled: true,
@@ -922,9 +954,9 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  const SizedBox(height: 6),
  VoiceTextField(
  controller: solution.descriptionController,
- minLines: 3,
- maxLines: 5,
- onChanged: (_) => _saveSolutions(),
+ minLines: 3,  maxLines: 5,
+ readOnly: _isBusinessCaseLocked,
+ onChanged: _isBusinessCaseLocked ? null : (_) => _saveSolutions(),
  decoration: InputDecoration(
  hintText: 'Describe this solution...',
  filled: true,
@@ -997,7 +1029,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  children: [
  CircleAvatar(
  radius: 16,
- backgroundColor: Colors.blue[400],
+ backgroundColor: const Color(0xFFFBBF24),
  child: Text(
  FirebaseAuthService.displayNameOrEmail(fallback: 'U')
  .characters
@@ -1044,7 +1076,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  else
  CircleAvatar(
  radius: 16,
- backgroundColor: Colors.blue[400],
+ backgroundColor: const Color(0xFFFBBF24),
  child: Text(
  FirebaseAuthService.displayNameOrEmail(fallback: 'U')
  .characters
@@ -1531,21 +1563,14 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  ],
  ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Padding(
- padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
- child: Text(
- 'Notes',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w600,
- color: Colors.black,
- ),
- ),
- ),
- Padding(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CollapsibleNotesSection(
+                        title: 'Notes',
+                        headerPadding:
+                            const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                        child: Padding(
  padding: const EdgeInsets.symmetric(horizontal: 20),
  child: Container(
  decoration: BoxDecoration(
@@ -1559,7 +1584,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  HoverableFieldControls(
- isAiGenerated: true,
+ isAiGenerated: !_isBusinessCaseLocked,
  isLoading: false,
  canUndo: canUndoNotes,
  canRedo: canRedoNotes,
@@ -1580,6 +1605,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  child: VoiceTextField(
  controller: _notesController,
+ readOnly: _isBusinessCaseLocked,
  keyboardType: TextInputType.multiline,
  style: const TextStyle(
  fontSize: 14,
@@ -1596,17 +1622,18 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  minLines: 5,
  maxLines: null,
- onChanged: _recordNotesEdit,
- ),
- ),
- ),
- ],
- ),
- ),
- ),
- ],
- ),
- ),
+                          onChanged: _recordNotesEdit,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+                       ],
+        ),
+      ),
  SizedBox(height: sectionGap),
  Row(
  crossAxisAlignment: CrossAxisAlignment.end,
@@ -1656,7 +1683,9 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
                 ),
                 const Spacer(),
                 OutlinedButton.icon(
-                  onPressed: _isLoadingSolutions ? null : _addManualSolution,
+                  onPressed: _isLoadingSolutions || _isBusinessCaseLocked
+                      ? null
+                      : _addManualSolution,
                   icon: const Icon(Icons.add),
                   label: Text('Add Solution (${_solutions.length}/3)'),
                 ),
@@ -1719,9 +1748,8 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  ),
  ),
- const SizedBox(height: 16),
- OutlinedButton.icon(
- onPressed: _addManualSolution,
+ const SizedBox(height: 16),  OutlinedButton.icon(
+ onPressed: _isBusinessCaseLocked ? null : _addManualSolution,
  icon: const Icon(Icons.add),
  label: Text('Add Solution (${_solutions.length}/3)'),
  ),
@@ -1733,7 +1761,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
 
  /// Blue circular refresh button used to regenerate all solutions.
  Widget _buildRegenerateButton() {
- final isDisabled = _isLoadingSolutions;
+ final isDisabled = _isLoadingSolutions || _isBusinessCaseLocked;
  return Tooltip(
  message: 'Regenerate all solutions',
  child: Material(
@@ -1747,7 +1775,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  width: 36,
  height: 36,
  decoration: const BoxDecoration(
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  shape: BoxShape.circle,
  ),
  child: const Icon(
@@ -2071,7 +2099,9 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  width: 40,
  child: IconButton(
  tooltip: 'Delete solution',
- onPressed: () => _confirmDeleteSolution(index),
+ onPressed: _isBusinessCaseLocked
+                  ? null
+                  : () => _confirmDeleteSolution(index),
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
  icon: const Icon(
@@ -2096,7 +2126,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  final canUndo = provider.canUndoField(fieldKey);
  final canRedo = provider.canRedoField(fieldKey);
  return HoverableFieldControls(
- isAiGenerated: true,
+ isAiGenerated: !_isBusinessCaseLocked,
  isLoading: false,
  canUndo: canUndo,
  canRedo: canRedo,
@@ -2122,8 +2152,10 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  minLines: 1,
  maxLines: 2,
- onChanged: (value) =>
- _recordSolutionFieldEdit(solution, 'title', value),
+ readOnly: _isBusinessCaseLocked,
+ onChanged: _isBusinessCaseLocked
+ ? null
+ : (value) => _recordSolutionFieldEdit(solution, 'title', value),
  ),
  ),
  );
@@ -2138,7 +2170,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  final canUndo = provider.canUndoField(fieldKey);
  final canRedo = provider.canRedoField(fieldKey);
  return HoverableFieldControls(
- isAiGenerated: true,
+ isAiGenerated: !_isBusinessCaseLocked,
  isLoading: false,
  canUndo: canUndo,
  canRedo: canRedo,
@@ -2169,8 +2201,10 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  minLines: 3,
  maxLines: null,
- onChanged: (value) =>
- _recordSolutionFieldEdit(solution, 'description', value),
+ readOnly: _isBusinessCaseLocked,
+ onChanged: _isBusinessCaseLocked
+ ? null
+ : (value) => _recordSolutionFieldEdit(solution, 'description', value),
  ),
  ],
  ),
@@ -2203,7 +2237,9 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  color: Colors.black54)),
  IconButton(
  tooltip: 'Delete solution',
- onPressed: () => _confirmDeleteSolution(index),
+ onPressed: _isBusinessCaseLocked
+                  ? null
+                  : () => _confirmDeleteSolution(index),
  icon: const Icon(Icons.delete_outline,
  size: 20, color: Colors.redAccent),
  ),
@@ -2262,7 +2298,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
 
  FocusScope.of(context).unfocus();
 
- // Save solutions to provider
+ // Save solutions to provider only while the Business Case is editable.
  final provider = ProjectDataHelper.getProvider(context);
  final rowsToPersist =
  _isAdminHost ? _solutions : _solutions.take(3).toList();
@@ -2277,6 +2313,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  )
  .toList();
 
+ if (!_isBusinessCaseLocked) {
  provider.updateInitiationData(
  notes: trimmedNotes,
  potentialSolutions: potentialSolutions,
@@ -2284,6 +2321,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
 
  // Save to Firebase
  await provider.saveToFirebase(checkpoint: 'potential_solutions');
+ }
 
  // Show 3-second loading dialog
  if (!mounted) return;
@@ -2317,13 +2355,14 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  }
 
  Future<void> _addManualSolution() async {
+ if (!_guardMutation(action: 'add')) return;
  if (_solutions.length >= 3) return;
 
  late final SolutionRow created;
  setState(() {
  created = SolutionRow(
  number: _solutions.length + 1,
- titleController: TextEditingController(),
+ titleController: SpellCheckTextEditingController(),
  descriptionController: _createDescriptionController(),
  isAiGenerated: false,
  );
@@ -2352,6 +2391,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  }
 
  Future<void> _confirmDeleteSolution(int index) async {
+ if (!_guardMutation(action: 'delete')) return;
  if (index < 0 || index >= _solutions.length) return;
 
  final solutionTitle = _solutions[index].titleController.text.trim();
@@ -2381,6 +2421,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  }
 
   void _handleSolutionCsvImport(List<Map<String, String>> rows) {
+    if (!_guardMutation(action: 'import')) return;
     if (_solutions.length >= 3) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -2398,7 +2439,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
       if (title.trim().isEmpty && description.trim().isEmpty) continue;
       final created = SolutionRow(
         number: _solutions.length + 1,
-        titleController: TextEditingController(text: title),
+        titleController: SpellCheckTextEditingController(text: title),
         descriptionController: _createDescriptionController(text: description),
         isAiGenerated: false,
       );
@@ -2421,12 +2462,14 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
   }
 
  Future<void> _saveSolutions() async {
+ if (!_guardMutation(action: 'save')) return;
  final provider = ProjectDataHelper.getProvider(context);
  _syncDraftToProvider();
  await provider.saveToFirebase(checkpoint: 'potential_solutions');
  }
 
  Future<void> _confirmRegenerateAll() async {
+ if (!_guardMutation(action: 'regenerate')) return;
  final confirmed = await showDialog<bool>(
  context: context,
  builder: (context) => AlertDialog(
@@ -2453,6 +2496,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  }
 
  Future<void> _regenerateAllSolutions() async {
+ if (!_guardMutation(action: 'regenerate')) return;
  if (_incomingBusinessCase.trim().isEmpty) {
  ScaffoldMessenger.of(context).showSnackBar(
  const SnackBar(
@@ -2488,7 +2532,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  SolutionRow(
  number: i + 1,
  titleController:
- TextEditingController(text: solutionsToUse[i].title),
+ SpellCheckTextEditingController(text: solutionsToUse[i].title),
  descriptionController: _createDescriptionController(
  text: solutionsToUse[i].description,
  ),
@@ -2510,13 +2554,14 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  if (!mounted) return;
  setState(() => _isLoadingSolutions = false);
  messenger.showSnackBar(
- SnackBar(content: Text('Failed to regenerate solutions: $e')),
+ SnackBar(content: Text('Failed to regenerate solutions: ${aiErrorMessage(e)}')),
  );
  }
  }
 
  Future<void> _regenerateSolutionField(
  SolutionRow solution, String fieldName) async {
+ if (!_guardMutation(action: 'regenerate')) return;
  if (_incomingBusinessCase.trim().isEmpty) return;
 
  final provider = ProjectDataHelper.getProvider(context);
@@ -2559,12 +2604,13 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  } catch (e) {
  if (!mounted) return;
  messenger.showSnackBar(
- SnackBar(content: Text('Failed to regenerate field: $e')));
+ SnackBar(content: Text('Failed to regenerate field: ${aiErrorMessage(e)}')));
  }
  }
 
  Future<void> _undoSolutionField(
  SolutionRow solution, String fieldName) async {
+ if (!_guardMutation(action: 'undo')) return;
  final provider = ProjectDataHelper.getProvider(context);
  final fieldKey = 'solution_${solution.id}_$fieldName';
 
@@ -2590,6 +2636,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
 
  Future<void> _redoSolutionField(
  SolutionRow solution, String fieldName) async {
+ if (!_guardMutation(action: 'redo')) return;
  final provider = ProjectDataHelper.getProvider(context);
  final fieldKey = 'solution_${solution.id}_$fieldName';
 
@@ -2631,7 +2678,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  isDescriptionField && _shouldShowDescriptionToggle(controller.text);
 
  return HoverableFieldControls(
- isAiGenerated: true,
+ isAiGenerated: !_isBusinessCaseLocked,
  isLoading: false,
  canUndo: canUndo,
  canRedo: canRedo,
@@ -2654,7 +2701,10 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  style: const TextStyle(fontSize: 14),
  minLines: 2,
  maxLines: 5,
- onChanged: (value) {
+ readOnly: _isBusinessCaseLocked,
+ onChanged: _isBusinessCaseLocked
+ ? null
+ : (value) {
  _recordSolutionFieldEdit(solution, fieldName, value);
  },
  )
@@ -2672,7 +2722,10 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ).copyWith(hintText: hintText),
  minLines: isDescriptionExpanded ? 4 : 2,
  maxLines: isDescriptionExpanded ? 12 : 4,
- onChanged: (value) {
+ readOnly: _isBusinessCaseLocked,
+ onChanged: _isBusinessCaseLocked
+ ? null
+ : (value) {
  _recordSolutionFieldEdit(solution, fieldName, value);
  final shouldShowToggle =
  _shouldShowDescriptionToggle(value);
@@ -2739,7 +2792,10 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ).copyWith(hintText: hintText),
  minLines: 1,
  maxLines: 2,
- onChanged: (value) {
+ readOnly: _isBusinessCaseLocked,
+ onChanged: _isBusinessCaseLocked
+ ? null
+ : (value) {
  _recordSolutionFieldEdit(solution, fieldName, value);
  },
  ),
@@ -2782,7 +2838,7 @@ class SolutionRow {
  required this.titleController,
  required this.descriptionController,
  this.isAiGenerated = false,
- }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+ }) : id = id ?? newId();
 }
 
 class _SidebarItem {

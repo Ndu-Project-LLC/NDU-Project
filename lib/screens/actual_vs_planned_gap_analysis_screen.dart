@@ -1,19 +1,17 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/models/launch_phase_models.dart';
-import 'package:ndu_project/screens/commerce_viability_screen.dart';
-import 'package:ndu_project/screens/contract_close_out_screen.dart';
-import 'package:ndu_project/screens/project_close_out_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/download_helper.dart' as download_helper;
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
@@ -66,7 +64,7 @@ class _ActualVsPlannedGapAnalysisScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: '5. Scope & Deliverable Reconciliation',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -95,10 +93,10 @@ class _ActualVsPlannedGapAnalysisScreenState
             _buildFollowUpPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Vendor & Contract Closeout',
-              nextLabel: 'Next: Hypercare & Warranty Support',
-              onBack: () => ContractCloseOutScreen.open(context),
-              onNext: () => CommerceViabilityScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('actual_vs_planned_gap_analysis'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('actual_vs_planned_gap_analysis'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'actual_vs_planned_gap_analysis'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'actual_vs_planned_gap_analysis'),
             ),
             const SizedBox(height: 48),
           ],
@@ -109,6 +107,7 @@ class _ActualVsPlannedGapAnalysisScreenState
 
   Widget _buildScopeGapsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Scope Gap Analysis',
       subtitle: 'Compare planned deliverables vs actual outcomes.',
       columns: const [
@@ -234,6 +233,7 @@ class _ActualVsPlannedGapAnalysisScreenState
 
   Widget _buildMilestoneVariancePanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Milestone Variance',
       subtitle: 'Compare planned vs actual milestone dates.',
       columns: const [
@@ -371,6 +371,7 @@ class _ActualVsPlannedGapAnalysisScreenState
 
   Widget _buildBudgetVariancePanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Budget Variance',
       subtitle: 'Compare planned vs actual costs by category.',
       columns: const [
@@ -500,6 +501,7 @@ class _ActualVsPlannedGapAnalysisScreenState
 
   Widget _buildRootCausesPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Root Cause Analysis',
       subtitle:
           'For major gaps: identify root cause, impact, and corrective action.',
@@ -638,6 +640,7 @@ class _ActualVsPlannedGapAnalysisScreenState
 
   Widget _buildFollowUpPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Follow-Up Actions',
       subtitle: 'Items requiring post-project attention.',
       columns: const [
@@ -800,7 +803,7 @@ class _ActualVsPlannedGapAnalysisScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -844,7 +847,7 @@ class _ActualVsPlannedGapAnalysisScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -894,7 +897,7 @@ class _ActualVsPlannedGapAnalysisScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -942,7 +945,7 @@ class _ActualVsPlannedGapAnalysisScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -987,7 +990,7 @@ class _ActualVsPlannedGapAnalysisScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1325,7 +1328,7 @@ class _ActualVsPlannedGapAnalysisScreenState
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Scope Gap Analysis'),
@@ -1333,14 +1336,14 @@ class _ActualVsPlannedGapAnalysisScreenState
             if (_scopeGaps.isEmpty)
               pw.Text('No scope gaps.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1361,14 +1364,14 @@ class _ActualVsPlannedGapAnalysisScreenState
             if (_milestoneVariances.isEmpty)
               pw.Text('No milestone variances.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1396,14 +1399,14 @@ class _ActualVsPlannedGapAnalysisScreenState
             if (_budgetVariances.isEmpty)
               pw.Text('No budget variances.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1431,14 +1434,14 @@ class _ActualVsPlannedGapAnalysisScreenState
             if (_rootCauses.isEmpty)
               pw.Text('No root cause items.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1466,14 +1469,14 @@ class _ActualVsPlannedGapAnalysisScreenState
             if (_followUpActions.isEmpty)
               pw.Text('No follow-up actions.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1548,7 +1551,7 @@ class _ActualVsPlannedGapAnalysisScreenState
       sectionSubtitle:
           'Planned vs actual scope, deliverables, and acceptance status',
       sectionIcon: Icons.compare_arrows_outlined,
-      sectionColor: const Color(0xFF06B6D4),
+      sectionColor: const Color(0xFFD97706),
       completionPercent: completionPct,
       completionLabel: 'RECONCILED',
       completionCaption:
@@ -1574,7 +1577,7 @@ class _ActualVsPlannedGapAnalysisScreenState
           label: 'Milestones',
           value: '${projectData.keyMilestones.length}',
           icon: Icons.flag_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'planned checkpoints',
         ),
         LaunchKpiTile(

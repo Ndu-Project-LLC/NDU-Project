@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // ignore_for_file: unused_element
 
@@ -8,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/services/activity_log_service.dart';
@@ -16,17 +18,17 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
-import 'package:ndu_project/screens/backend_design_screen.dart';
-import 'package:ndu_project/screens/development_set_up_screen.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/design_planning_document.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class UiUxDesignScreen extends StatefulWidget {
  const UiUxDesignScreen({super.key});
 
@@ -144,7 +146,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  screenTitle: 'UI/UX Design',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['ui_ux_design_screen'] ?? 'No data recorded.'),
  ],
@@ -379,7 +381,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  _DesignTokenRow(
  id: _newId(),
  title: 'Color palette - Primary',
- description: 'Brand primary (#0F172A), secondary (#2563EB), accent (#F59E0B), surface (#F8FAFC) with usage rules for dark/light themes.',
+ description: 'Brand primary (#0F172A), secondary (#FFC812), accent (#F59E0B), surface (#F8FAFC) with usage rules for dark/light themes.',
  category: 'Colors',
  status: 'Ready',
  owner: 'Design Systems Lead',
@@ -542,7 +544,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  ];
  }
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();
 
  // ─── KAZ AI Row Regeneration ─────────────────────────────────────────────
 
@@ -585,7 +587,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -629,7 +631,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -673,7 +675,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -718,7 +720,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -764,7 +766,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  }
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  } finally {
  if (mounted) setState(() => _kazAiRegenerating[key] = false);
  }
@@ -779,7 +781,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'UI/UX Design',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [
@@ -809,9 +811,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildReviewGatesPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Development Set Up',
- nextLabel: 'Next: Backend Design',
- onBack: () => context.push('/development-set-up'),onNext: () => context.push('/backend-design')),
+ backLabel: PlanningPhaseNavigation.backLabel('ui_ux_design'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('ui_ux_design'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'ui_ux_design'),onNext: () => PlanningPhaseNavigation.goToNext(context, 'ui_ux_design')),
  ],
  ),
  ),
@@ -887,7 +889,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  '${_journeys.length}',
  'User Journeys',
  '$journeyMapped validated',
- const Color(0xFF0EA5E9),
+ const Color(0xFFFFC812),
  ),
  _StatCardData(
  '${_interfaces.length}',
@@ -905,7 +907,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  '$reviewPending',
  'Pending Reviews',
  reviewPending > 0 ? 'Require attention' : 'All reviewed',
- const Color(0xFF6366F1),
+ const Color(0xFFB8860B),
  ),
  ];
 
@@ -972,7 +974,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  collapsible: true,
  initiallyExpanded: false,
  headerIcon: Icons.auto_awesome_outlined,
- headerIconColor: const Color(0xFF6366F1),
+ headerIconColor: const Color(0xFFB8860B),
  child: Column(
  children: [
  const Text(
@@ -993,7 +995,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Define end-to-end user journeys from entry to task completion. Map touchpoints, '
  'decision points, and emotional arcs. Validate journeys against user research '
  'and business objectives before investing in interface design.',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -1238,18 +1240,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(icon: isRegenerating ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFF59E0B)), tooltip: 'KAZ AI', onPressed: isRegenerating ? null : () => _kazRegenerateJourney(i), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
- const SizedBox(width: 4),
- IconButton(
-   onPressed: () {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
-     );
-   },
-   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-   tooltip: 'KAZ AI',
-   padding: EdgeInsets.zero,
-   constraints: const BoxConstraints(minWidth: 28),
- ),
+
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16), onPressed: () => _showJourneyDialog(existing: row), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)), onPressed: () => _confirmDelete(() => _deleteJourney(row)), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  ],
@@ -1353,18 +1344,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(icon: isRegenerating ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFF59E0B)), tooltip: 'KAZ AI', onPressed: isRegenerating ? null : () => _kazRegenerateInterface(i), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
- const SizedBox(width: 4),
- IconButton(
-   onPressed: () {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
-     );
-   },
-   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-   tooltip: 'KAZ AI',
-   padding: EdgeInsets.zero,
-   constraints: const BoxConstraints(minWidth: 28),
- ),
+
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16), onPressed: () => _showInterfaceDialog(existing: row), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)), onPressed: () => _confirmDelete(() => _deleteInterface(row)), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  ],
@@ -1468,18 +1448,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(icon: isRegenerating ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFF59E0B)), tooltip: 'KAZ AI', onPressed: isRegenerating ? null : () => _kazRegenerateDesignToken(i), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
- const SizedBox(width: 4),
- IconButton(
-   onPressed: () {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
-     );
-   },
-   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-   tooltip: 'KAZ AI',
-   padding: EdgeInsets.zero,
-   constraints: const BoxConstraints(minWidth: 28),
- ),
+
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16), onPressed: () => _showDesignTokenDialog(existing: row), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)), onPressed: () => _confirmDelete(() => _deleteDesignToken(row)), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  ],
@@ -1586,17 +1555,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  IconButton(icon: isRegenerating ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFF59E0B)), tooltip: 'KAZ AI', onPressed: isRegenerating ? null : () => _kazRegenerateUsability(i), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  const SizedBox(width: 4),
- IconButton(
-   onPressed: () {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
-     );
-   },
-   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-   tooltip: 'KAZ AI',
-   padding: EdgeInsets.zero,
-   constraints: const BoxConstraints(minWidth: 28),
- ),
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16), onPressed: () => _showUsabilityDialog(existing: row), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)), onPressed: () => _confirmDelete(() => _deleteUsability(row)), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  ],
@@ -1705,18 +1663,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(icon: isRegenerating ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFF59E0B)), tooltip: 'KAZ AI', onPressed: isRegenerating ? null : () => _kazRegenerateReviewGate(i), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
- const SizedBox(width: 4),
- IconButton(
-   onPressed: () {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
-     );
-   },
-   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-   tooltip: 'KAZ AI',
-   padding: EdgeInsets.zero,
-   constraints: const BoxConstraints(minWidth: 28),
- ),
+
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16), onPressed: () => _showReviewGateDialog(existing: row), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)), onPressed: () => _confirmDelete(() => _deleteReviewGate(row)), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  ],
@@ -1816,7 +1763,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFF10B981);
  break;
  case 'In progress':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'Draft':
  color = const Color(0xFFF59E0B);
@@ -1845,7 +1792,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFF10B981);
  break;
  case 'Medium':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'Low':
  color = const Color(0xFFF59E0B);
@@ -1871,10 +1818,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFF10B981);
  break;
  case 'Prototype':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'User flow map':
- color = const Color(0xFF8B5CF6);
+ color = const Color(0xFFB8860B);
  break;
  case 'Wireframe':
  color = const Color(0xFFF59E0B);
@@ -1903,10 +1850,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Color color;
  switch (category) {
  case 'Colors':
- color = const Color(0xFF8B5CF6);
+ color = const Color(0xFFB8860B);
  break;
  case 'Typography':
- color = const Color(0xFF2563EB);
+ color = const Color(0xFFFFC812);
  break;
  case 'Layout':
  color = const Color(0xFF10B981);
@@ -1915,7 +1862,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFFF59E0B);
  break;
  case 'Motion':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'Iconography':
  color = const Color(0xFFEF4444);
@@ -1941,13 +1888,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFF10B981);
  break;
  case 'In review':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'Draft':
  color = const Color(0xFFF59E0B);
  break;
  case 'Planned':
- color = const Color(0xFF8B5CF6);
+ color = const Color(0xFFB8860B);
  break;
  case 'Deprecated':
  color = const Color(0xFF9CA3AF);
@@ -1976,7 +1923,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFFEF4444);
  break;
  case 'In progress':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'Conditional':
  color = const Color(0xFFF59E0B);
@@ -2005,7 +1952,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFF10B981);
  break;
  case 'In Review':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'Pending':
  color = const Color(0xFFF59E0B);
@@ -2014,7 +1961,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFFEF4444);
  break;
  case 'Waived':
- color = const Color(0xFF8B5CF6);
+ color = const Color(0xFFB8860B);
  break;
  case 'Not Started':
  color = const Color(0xFF9CA3AF);
@@ -2036,10 +1983,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── CRUD Dialogs ─────────────────────────────────────────────────
 
  Future<void> _showJourneyDialog({_JourneyRow? existing}) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
- final descController = TextEditingController(text: existing?.description ?? '');
- final touchpointsController = TextEditingController(text: existing?.touchpoints ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final descController = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final touchpointsController = SpellCheckTextEditingController(text: existing?.touchpoints ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String priority = existing?.priority ?? 'Medium';
  String status = existing?.status ?? 'Planned';
 
@@ -2129,9 +2076,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showInterfaceDialog({_InterfaceRow? existing}) async {
- final areaController = TextEditingController(text: existing?.area ?? '');
- final purposeController = TextEditingController(text: existing?.purpose ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
+ final areaController = SpellCheckTextEditingController(text: existing?.area ?? '');
+ final purposeController = SpellCheckTextEditingController(text: existing?.purpose ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String fidelity = existing?.fidelity ?? 'Low';
  String status = existing?.status ?? 'To define';
 
@@ -2214,9 +2161,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showDesignTokenDialog({_DesignTokenRow? existing}) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
- final descController = TextEditingController(text: existing?.description ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final descController = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String category = existing?.category ?? 'Colors';
  String status = existing?.status ?? 'Draft';
 
@@ -2299,11 +2246,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showUsabilityDialog({_UsabilityRow? existing}) async {
- final criteriaController = TextEditingController(text: existing?.criteria ?? '');
- final descController = TextEditingController(text: existing?.description ?? '');
- final standardController = TextEditingController(text: existing?.standard ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
- final notesController = TextEditingController(text: existing?.notes ?? '');
+ final criteriaController = SpellCheckTextEditingController(text: existing?.criteria ?? '');
+ final descController = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final standardController = SpellCheckTextEditingController(text: existing?.standard ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
+ final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
  String status = existing?.status ?? 'Not tested';
 
  final saved = await showDialog<bool>(
@@ -2389,10 +2336,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showReviewGateDialog({_ReviewGateRow? existing}) async {
- final gateController = TextEditingController(text: existing?.gate ?? '');
- final descController = TextEditingController(text: existing?.description ?? '');
- final approverController = TextEditingController(text: existing?.approver ?? '');
- final deptController = TextEditingController(text: existing?.department ?? '');
+ final gateController = SpellCheckTextEditingController(text: existing?.gate ?? '');
+ final descController = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final approverController = SpellCheckTextEditingController(text: existing?.approver ?? '');
+ final deptController = SpellCheckTextEditingController(text: existing?.department ?? '');
  String priority = existing?.priority ?? 'High';
  String status = existing?.status ?? 'Pending';
 
@@ -2521,7 +2468,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  controller.selection = TextSelection.fromPosition(TextPosition(offset: cleaned.length));
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+ if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  }
  isGeneratingNotifier.value = false;
  },

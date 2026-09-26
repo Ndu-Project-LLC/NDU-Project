@@ -4,6 +4,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/services/project_intelligence_service.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
+import 'package:ndu_project/utils/latest_phase_content.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
@@ -59,6 +60,17 @@ class ProjectDataHelper {
       case null:
         return null;
     }
+  }
+
+  /// Maps a resolved [ProjectMethodology] to the schedule/cost delivery
+  /// model vocabulary ('AGILE' / 'WATERFALL' / 'HYBRID'). Single source of
+  /// truth used by the Schedule and Cost Estimate module screens.
+  static String deliveryModelForMethodology(ProjectMethodology method) {
+    return switch (method) {
+      ProjectMethodology.agile => 'AGILE',
+      ProjectMethodology.hybrid => 'HYBRID',
+      ProjectMethodology.waterfall => 'WATERFALL',
+    };
   }
 
   static ProjectMethodology resolvedProjectMethodology(ProjectDataModel data) {
@@ -1038,6 +1050,95 @@ class ProjectDataHelper {
     return buf.toString().trim();
   }
 
+  /// Build a compact "latest topic versions" overlay from the central
+  /// project model, using [buildLatestContextSummary] semantics.
+  ///
+  /// Product rule (voice note, 2026-09-03): a topic that appears in several
+  /// phases (e.g. Goals in Initiation AND Planning) must be read from its
+  /// MOST RECENT phase — planning auto-carries initiation forward, so an AI
+  /// prompt must not re-anchor on the stale earlier copy. This overlay lists
+  /// each recurring topic once, tagged with the phase that holds its latest
+  /// version, so downstream AI seeds can prefer it.
+  static String buildLatestTopicOverlay(ProjectDataModel data) {
+    String fmtProjectGoals() {
+      final buf = StringBuffer();
+      for (final g in data.projectGoals) {
+        final name = g.name.trim().isEmpty ? 'Goal' : g.name.trim();
+        final desc = g.description.trim();
+        if (desc.isEmpty) {
+          buf.writeln('- $name');
+        } else {
+          buf.writeln('- $name: $desc');
+        }
+      }
+      return buf.toString().trim();
+    }
+
+    String fmtPlanningGoals() {
+      final buf = StringBuffer();
+      for (final g in data.planningGoals) {
+        final title = g.title.trim().isEmpty
+            ? 'Goal ${g.goalNumber}'
+            : g.title.trim();
+        final year = g.targetYear.trim();
+        final desc = g.description.trim();
+        final suffix = [
+          if (year.isNotEmpty) 'Target: $year',
+          if (desc.isNotEmpty) desc,
+        ].join(' | ');
+        buf.writeln(suffix.isEmpty ? '- $title' : '- $title ($suffix)');
+      }
+      return buf.toString().trim();
+    }
+
+    String fmtItTechnology() {
+      final it = data.itConsiderationsData;
+      if (it == null || it.solutionITData.isEmpty) return '';
+      final buf = StringBuffer();
+      for (final s in it.solutionITData) {
+        final title = s.solutionTitle.trim();
+        final tech = s.coreTechnology.trim();
+        if (tech.isEmpty) continue;
+        buf.writeln(title.isEmpty ? '- $tech' : '- $title: $tech');
+      }
+      return buf.toString().trim();
+    }
+
+    String fmtInfra() {
+      final infra = data.infrastructureConsiderationsData;
+      if (infra == null || infra.solutionInfrastructureData.isEmpty) {
+        return '';
+      }
+      final buf = StringBuffer();
+      for (final s in infra.solutionInfrastructureData) {
+        final title = s.solutionTitle.trim();
+        final major = s.majorInfrastructure.trim();
+        if (major.isEmpty) continue;
+        buf.writeln(title.isEmpty ? '- $major' : '- $title: $major');
+      }
+      return buf.toString().trim();
+    }
+
+    final areas = <String, List<PhaseContent>>{
+      'Goals': [
+        PhaseContent.initiation(fmtProjectGoals()),
+        PhaseContent.planning(fmtPlanningGoals()),
+      ],
+      'Technology': [
+        PhaseContent.initiation(fmtItTechnology()),
+        PhaseContent.planning(data.frontEndPlanning.technology),
+      ],
+      'Infrastructure': [
+        PhaseContent.initiation(fmtInfra()),
+        PhaseContent.planning(data.frontEndPlanning.infrastructure),
+      ],
+    };
+
+    final summary = buildLatestContextSummary(areas);
+    if (summary.trim().isEmpty) return '';
+    return 'Latest topic versions (prefer the phase marked "latest" — earlier copies of the same topic are superseded):\n$summary';
+  }
+
   /// Build launch-phase context by appending execution data summaries
   /// to the base context from buildExecutivePlanContext.
   /// All parameters are optional summaries pre-loaded from Firestore.
@@ -1128,6 +1229,42 @@ class ProjectDataHelper {
   static ProjectDataModel getDataListening(BuildContext context) {
     return Provider.of<ProjectDataProvider>(context).projectData;
   }
+
+  /// Returns `true` when the Project Charter has been approved for the
+  /// current project context.
+  ///
+  /// Once approved, the Initiation Phase + Front End Planning sub-section
+  /// pages must be LOCKED from editing (per Task 14). The user can still
+  /// navigate and view the data, but they cannot modify fields, add or
+  /// delete rows, or trigger AI generation on those pages.
+  ///
+  /// This reads the same flags that the project_charter_sections.dart
+  /// approval flow sets — `frontEndPlanning.charterApproved` OR the
+  /// legacy `charterApprovalDate` field. Either being present means the
+  /// charter has been signed off.
+  static bool isCharterApproved(BuildContext context, {bool listen = false}) {
+    try {
+      return isCharterApprovedIn(getData(context, listen: listen));
+    } catch (_) {
+      // If the provider isn't available (e.g. on a screen that doesn't
+      // have project context, such as a global admin screen), default
+      // to NOT locked — fail-open so we don't accidentally brick a
+      // page that should be editable.
+      return false;
+    }
+  }
+
+  /// [isCharterApproved] from a model instead of a [BuildContext].
+  ///
+  /// Heavy pages should read the lock through this in a `Selector` (or
+  /// `Consumer`) rather than subscribing the whole page with
+  /// `isCharterApproved(context, listen: true)`. The provider notifies on
+  /// every autosave debounce and again when the Firestore write lands, so a
+  /// page-level listener rebuilds its entire tree — usually a large table —
+  /// while the user is scrolling or typing.
+  static bool isCharterApprovedIn(ProjectDataModel data) =>
+      (data.frontEndPlanning.charterApproved == true) ||
+      (data.charterApprovalDate != null);
 
   /// Get provider from context
   static ProjectDataProvider getProvider(BuildContext context) {
@@ -1332,7 +1469,9 @@ class ProjectDataHelper {
   ///
   /// - `Estimate`: creates auto benefit line items from opportunities and auto
   ///   cost estimate items from allowances.
-  /// - `Schedule`: creates auto milestones.
+  /// - `Schedule`: no longer writes anything. Opportunities and allowances are
+  ///   not milestones, so the Apply-To tag must not materialise them as
+  ///   `Opportunity:` / `Allowance:` rows on the Project Milestones table.
   /// - `Training`: creates auto training activities.
   ///
   /// Auto-generated entries are refreshed each call and won't overwrite manual
@@ -1342,7 +1481,7 @@ class ProjectDataHelper {
     final fep = data.frontEndPlanning;
 
     final mergedMilestones =
-        _mergeAutoScheduleMilestones(data.keyMilestones, fep);
+        _stripAutoScheduleMilestones(data.keyMilestones);
     final mergedTraining =
         _mergeAutoTrainingActivities(data.trainingActivities, fep);
     final mergedCostAnalysis =
@@ -1470,61 +1609,27 @@ class ProjectDataHelper {
     return parts.join(' | ');
   }
 
-  static List<Milestone> _mergeAutoScheduleMilestones(
-    List<Milestone> current,
-    FrontEndPlanningData fep,
-  ) {
-    final manual = current
+  /// Keeps the Project Milestones table to milestones only.
+  ///
+  /// Project Opportunities and Allowances are review items, not milestones, so
+  /// they must never appear there. Earlier builds wrote them in as
+  /// `Opportunity: …` / `Allowance: …` rows tagged with
+  /// [_autoScheduleMarker]; this drops both those rows and the leftover rows
+  /// they produced, so the defect does not survive an upgrade.
+  static List<Milestone> _stripAutoScheduleMilestones(
+      List<Milestone> current) {
+    return current
         .where((m) => !m.comments.contains(_autoScheduleMarker))
+        .where((m) => !_looksLikeNonMilestone(m.name))
         .toList();
+  }
 
-    final generated = <Milestone>[];
-
-    for (final opp in fep.opportunityItems) {
-      if (!_hasTag(opp.appliesTo, 'Schedule')) continue;
-      final title =
-          _withFallback(opp.opportunity, 'Opportunity ${generated.length + 1}');
-      final scheduleSavings = opp.potentialScheduleSavings.trim();
-      final marker = '$_autoScheduleMarker | opp:${opp.id}';
-      generated.add(
-        Milestone(
-          name: 'Opportunity: $title',
-          discipline: _withFallback(opp.discipline, 'Planning'),
-          dueDate: '',
-          comments: _buildAutoNote(
-            source: marker,
-            owner: opp.assignedTo,
-            extra: scheduleSavings.isNotEmpty
-                ? 'Potential schedule savings: $scheduleSavings'
-                : null,
-          ),
-        ),
-      );
-    }
-
-    for (final allowance in fep.allowanceItems) {
-      if (!_hasTag(allowance.appliesTo, 'Schedule')) continue;
-      if (allowance.name.trim().isEmpty && allowance.notes.trim().isEmpty) {
-        continue;
-      }
-      final title = _withFallback(
-          allowance.name, 'Allowance ${allowance.number.toString()}');
-      final marker = '$_autoScheduleMarker | allow:${allowance.id}';
-      generated.add(
-        Milestone(
-          name: 'Allowance: $title',
-          discipline: _withFallback(allowance.type, 'Planning'),
-          dueDate: '',
-          comments: _buildAutoNote(
-            source: marker,
-            owner: allowance.assignedTo,
-            extra: allowance.notes.trim().isNotEmpty ? allowance.notes : null,
-          ),
-        ),
-      );
-    }
-
-    return [...manual, ...generated];
+  /// True for rows an earlier build generated from an opportunity or an
+  /// allowance (`"Opportunity: …"`, `"Allowance: …"`).
+  static bool _looksLikeNonMilestone(String name) {
+    final lower = name.trim().toLowerCase();
+    return lower.startsWith('opportunity:') ||
+        lower.startsWith('allowance:');
   }
 
   static List<TrainingActivity> _mergeAutoTrainingActivities(

@@ -1,11 +1,11 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:ndu_project/screens/punchlist_actions_screen.dart';
-import 'package:ndu_project/screens/scope_completion_screen.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -21,8 +21,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
-import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class GapAnalysisScopeReconcillationScreen extends StatefulWidget {
   const GapAnalysisScopeReconcillationScreen({
     super.key,
@@ -76,7 +76,7 @@ class _GapAnalysisScopeReconcillationScreenState
     final double horizontalPadding = isMobile ? 20 : 32;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,10 +129,10 @@ class _GapAnalysisScopeReconcillationScreenState
                         ),
                         const SizedBox(height: 24),
                         LaunchPhaseNavigation(
-                          backLabel: 'Back: Scope Completion',
-                          nextLabel: 'Next: Punchlist Actions',
-                          onBack: () => ScopeCompletionScreen.open(context),
-                          onNext: () => PunchlistActionsScreen.open(context),
+                          backLabel: PlanningPhaseNavigation.backLabel('gap_analysis_scope_reconcillation'),
+                          nextLabel: PlanningPhaseNavigation.nextLabel('gap_analysis_scope_reconcillation'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'gap_analysis_scope_reconcillation'),
+                          onNext: () => PlanningPhaseNavigation.goToNext(context, 'gap_analysis_scope_reconcillation'),
                         ),
                         const SizedBox(height: 48),
                       ],
@@ -319,7 +319,7 @@ class _GapAnalysisScopeReconcillationScreenState
           final owner = _extractField(details, 'Owner');
           final nextStep = _extractField(details, 'Next');
           return _GapEntry(
-            uid: DateTime.now().microsecondsSinceEpoch.toString(),
+            uid: newId(),
             id: entry.title.trim().isEmpty ? 'GAP' : entry.title.trim(),
             title: entry.title.trim(),
             stage: entry.status?.trim().isNotEmpty == true
@@ -341,7 +341,7 @@ class _GapAnalysisScopeReconcillationScreenState
     if (raw == null) return [];
     return raw
         .map((entry) => _RootCauseItem(
-              id: DateTime.now().microsecondsSinceEpoch.toString(),
+              id: newId(),
               text: entry.title.trim().isNotEmpty
                   ? entry.title.trim()
                   : entry.details.trim(),
@@ -358,7 +358,7 @@ class _GapAnalysisScopeReconcillationScreenState
           final owner = _extractField(details, 'Owner');
           final due = _extractField(details, 'Due');
           return _PlanEntry(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            id: newId(),
             title: entry.title.trim(),
             due: due.isNotEmpty ? due : entry.status?.trim() ?? '',
             owner: owner,
@@ -508,8 +508,8 @@ class _GapAnalysisScopeReconcillationScreenState
       screenTitle: 'Gap Analysis & Scope Reconciliation',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',
@@ -526,9 +526,9 @@ class _PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
           'Gap Analysis & Scope Reconciliation',
           style: TextStyle(
@@ -675,7 +675,7 @@ class _SummaryGrid extends StatelessWidget {
     title: 'Overall reconciliation health',
     headline: '82% aligned',
     annotation: 'Remaining gaps: 3 critical · 4 moderate',
-    accentColor: Color(0xFF2563EB),
+    accentColor: Color(0xFFFFC812),
     icon: Icons.insights_outlined,
     bullets: [
       'Material gaps tracked across design, ops, and adoption streams',
@@ -688,7 +688,7 @@ class _SummaryGrid extends StatelessWidget {
     title: 'Gaps',
     headline: '12 active',
     annotation: '5 closed this sprint · 2 newly logged',
-    accentColor: Color(0xFF0891B2),
+    accentColor: Color(0xFFD97706),
     icon: Icons.warning_amber_outlined,
     bullets: [
       'Critical: Prod-ready data sync · Release deployment',
@@ -700,7 +700,7 @@ class _SummaryGrid extends StatelessWidget {
     title: 'Scope',
     headline: '3 packages in review',
     annotation: 'Procurement lead-time risk easing',
-    accentColor: Color(0xFF7C3AED),
+    accentColor: Color(0xFFB8860B),
     icon: Icons.layers_outlined,
     bullets: [
       'MVP scope freeze by 18 Dec · Consumer onboarding locked',
@@ -1088,7 +1088,7 @@ class _GapRegisterCard extends StatelessWidget {
                   color: const Color(0xFF059669)),
               _Pill(
                   label: 'Resolved · ${counts['Resolved'] ?? 0}',
-                  color: const Color(0xFF2563EB)),
+                  color: const Color(0xFFFFC812)),
             ],
           ),
           const SizedBox(height: 18),
@@ -1105,8 +1105,8 @@ class _GapRegisterCard extends StatelessWidget {
                     width: tableWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Column(
                         children: [
@@ -1226,21 +1226,32 @@ class _GapRegisterCard extends StatelessWidget {
     return sorted;
   }
 
+  /// Auto-assigns the next sequential gap id (e.g. GAP-001, GAP-002) by
+  /// scanning the numeric suffixes of the ids already present in the register.
+  String _generateNextGapId(List<_GapEntry> entries) {
+    var max = 0;
+    for (final e in entries) {
+      final m = RegExp(r'^GAP-(\d+)$').firstMatch(e.id.trim());
+      if (m != null) {
+        final v = int.tryParse(m.group(1)!);
+        if (v != null && v > max) max = v;
+      }
+    }
+    return 'GAP-${(max + 1).toString().padLeft(3, '0')}';
+  }
+
   void _showGapEntryEditor(BuildContext context, {_GapEntry? existing}) {
     final isEdit = existing != null;
-    final idController = TextEditingController(
-        text: existing?.id ??
-            'GAP-${DateTime.now().millisecondsSinceEpoch % 10000}');
-    final titleController = TextEditingController(text: existing?.title ?? '');
-    final ownerController = TextEditingController(text: existing?.owner ?? '');
+    final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
+    final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
     final nextStepController =
-        TextEditingController(text: existing?.nextStep ?? '');
+        SpellCheckTextEditingController(text: existing?.nextStep ?? '');
     final impactAreaController =
-        TextEditingController(text: existing?.impactArea ?? '');
+        SpellCheckTextEditingController(text: existing?.impactArea ?? '');
     final targetDateController =
-        TextEditingController(text: existing?.targetDate ?? '');
+        SpellCheckTextEditingController(text: existing?.targetDate ?? '');
     final evidenceController =
-        TextEditingController(text: existing?.evidence ?? '');
+        SpellCheckTextEditingController(text: existing?.evidence ?? '');
     String selectedStage = existing?.stage ?? 'Moderate';
     String selectedCategory = existing?.category ?? 'Scope';
     String selectedSeverity = existing?.severity ?? 'Medium';
@@ -1257,14 +1268,6 @@ class _GapRegisterCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   VoiceTextField(
-                    controller: idController,
-                    decoration: const InputDecoration(
-                      labelText: 'Gap ID *',
-                      isDense: true,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  VoiceTextField(
                     controller: titleController,
                     decoration: const InputDecoration(
                       labelText: 'Gap description *',
@@ -1274,7 +1277,7 @@ class _GapRegisterCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedCategory,
+                    initialValue: selectedCategory,
                     decoration: const InputDecoration(
                       labelText: 'Category *',
                       isDense: true,
@@ -1294,7 +1297,7 @@ class _GapRegisterCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: selectedSeverity,
+                          initialValue: selectedSeverity,
                           decoration: const InputDecoration(
                             labelText: 'Severity *',
                             isDense: true,
@@ -1306,15 +1309,16 @@ class _GapRegisterCard extends StatelessWidget {
                                       style: const TextStyle(fontSize: 13))))
                               .toList(),
                           onChanged: (v) {
-                            if (v != null)
+                            if (v != null) {
                               setDialogState(() => selectedSeverity = v);
+                            }
                           },
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _priorityOptions.contains(selectedStage)
+                          initialValue: _priorityOptions.contains(selectedStage)
                               ? selectedStage
                               : _priorityOptions.first,
                           decoration: const InputDecoration(
@@ -1328,8 +1332,9 @@ class _GapRegisterCard extends StatelessWidget {
                                       style: const TextStyle(fontSize: 13))))
                               .toList(),
                           onChanged: (v) {
-                            if (v != null)
+                            if (v != null) {
                               setDialogState(() => selectedStage = v);
+                            }
                           },
                         ),
                       ),
@@ -1399,8 +1404,11 @@ class _GapRegisterCard extends StatelessWidget {
                 if (titleController.text.trim().isEmpty) return;
                 final entry = _GapEntry(
                   uid: existing?.uid ??
-                      DateTime.now().microsecondsSinceEpoch.toString(),
-                  id: idController.text.trim(),
+                      newId(),
+                  // Gap ids are generated internally (GAP-001, GAP-002, ...)
+                  // so the register keeps stable identifiers without asking
+                  // the user to type one.
+                  id: existing?.id ?? _generateNextGapId(entries),
                   title: titleController.text.trim(),
                   stage: selectedStage,
                   owner: ownerController.text.trim(),
@@ -1423,7 +1431,6 @@ class _GapRegisterCard extends StatelessWidget {
         ),
       ),
     ).then((_) {
-      idController.dispose();
       titleController.dispose();
       ownerController.dispose();
       nextStepController.dispose();
@@ -1526,9 +1533,9 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Root cause themes',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF374151)),
@@ -1547,8 +1554,8 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                     width: tableWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Column(
                         children: [
@@ -1642,9 +1649,9 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
               },
             ),
           const SizedBox(height: 24),
-          Text(
+          const Text(
             'Mitigation confidence',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF374151)),
@@ -1663,8 +1670,8 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                     width: tableWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Column(
                         children: [
@@ -1773,11 +1780,11 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
     _RootCauseItem? existing,
   }) {
     final isEdit = existing != null;
-    final textController = TextEditingController(text: existing?.text ?? '');
+    final textController = SpellCheckTextEditingController(text: existing?.text ?? '');
     final freqController =
-        TextEditingController(text: existing?.frequency ?? '');
+        SpellCheckTextEditingController(text: existing?.frequency ?? '');
     final recController =
-        TextEditingController(text: existing?.recommendation ?? '');
+        SpellCheckTextEditingController(text: existing?.recommendation ?? '');
     String selectedCategory = existing?.category ?? 'Process';
     String selectedMethod = existing?.methodology ?? '5 Whys';
     String selectedImpact = existing?.impact ?? 'Medium';
@@ -1804,7 +1811,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedCategory,
+                    initialValue: selectedCategory,
                     decoration: const InputDecoration(
                       labelText: 'Category *',
                       isDense: true,
@@ -1823,7 +1830,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedMethod,
+                    initialValue: selectedMethod,
                     decoration: const InputDecoration(
                       labelText: 'Analysis method *',
                       isDense: true,
@@ -1845,7 +1852,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: selectedImpact,
+                          initialValue: selectedImpact,
                           decoration: const InputDecoration(
                             labelText: 'Impact *',
                             isDense: true,
@@ -1866,7 +1873,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: selectedStatus,
+                          initialValue: selectedStatus,
                           decoration: const InputDecoration(
                             labelText: 'Status *',
                             isDense: true,
@@ -1918,7 +1925,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                 if (textController.text.trim().isEmpty) return;
                 final item = _RootCauseItem(
                   id: existing?.id ??
-                      DateTime.now().microsecondsSinceEpoch.toString(),
+                      newId(),
                   text: textController.text.trim(),
                   category: selectedCategory,
                   methodology: selectedMethod,
@@ -1950,7 +1957,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Root Cause'),
-        content: Text('Remove this root cause entry?'),
+        content: const Text('Remove this root cause entry?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -1975,7 +1982,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Mitigation'),
-        content: Text('Remove this mitigation entry?'),
+        content: const Text('Remove this mitigation entry?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -2019,19 +2026,19 @@ class _GapEntryRowState extends State<_GapEntryRow> {
   Color _categoryColor(String cat) {
     switch (cat) {
       case 'Scope':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Schedule':
         return const Color(0xFFF59E0B);
       case 'Cost':
         return const Color(0xFF059669);
       case 'Quality':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Compliance':
         return const Color(0xFFDC2626);
       case 'Resource':
         return const Color(0xFFEA580C);
       case 'Technical':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       case 'Process':
         return const Color(0xFF4F46E5);
       default:
@@ -2063,7 +2070,7 @@ class _GapEntryRowState extends State<_GapEntryRow> {
       case 'Low':
         return const Color(0xFF059669);
       case 'Resolved':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       default:
         return const Color(0xFF9CA3AF);
     }
@@ -2118,7 +2125,7 @@ class _GapEntryRowState extends State<_GapEntryRow> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Color(0xFFF1F5F9),
+                              color: const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -2360,11 +2367,11 @@ class _RootCauseRowState extends State<_RootCauseRow> {
       case 'Process':
         return const Color(0xFF4F46E5);
       case 'People':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Technology':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       case 'Requirements':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Governance':
         return const Color(0xFFDC2626);
       case 'External':
@@ -2398,13 +2405,13 @@ class _RootCauseRowState extends State<_RootCauseRow> {
       case 'Open':
         return const Color(0xFF9CA3AF);
       case 'Under Investigation':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Remediation In Progress':
         return const Color(0xFFF59E0B);
       case 'Verified Closed':
         return const Color(0xFF10B981);
       case 'Accepted Risk':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       default:
         return const Color(0xFF9CA3AF);
     }
@@ -2707,8 +2714,8 @@ class _ReconciliationPlanningCard extends StatelessWidget {
                     width: tableWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Column(
                         children: [
@@ -2826,14 +2833,14 @@ class _ReconciliationPlanningCard extends StatelessWidget {
 
   void _showPlanEditor(BuildContext context, {_PlanEntry? existing}) {
     final isEdit = existing != null;
-    final titleController = TextEditingController(text: existing?.title ?? '');
-    final dueController = TextEditingController(text: existing?.due ?? '');
-    final ownerController = TextEditingController(text: existing?.owner ?? '');
+    final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
+    final dueController = SpellCheckTextEditingController(text: existing?.due ?? '');
+    final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
     final gapRefController =
-        TextEditingController(text: existing?.gapReference ?? '');
+        SpellCheckTextEditingController(text: existing?.gapReference ?? '');
     final depController =
-        TextEditingController(text: existing?.dependency ?? '');
-    final notesController = TextEditingController(text: existing?.notes ?? '');
+        SpellCheckTextEditingController(text: existing?.dependency ?? '');
+    final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
     String selectedStatus = existing?.status ?? 'Not started';
     String selectedPhase = existing?.phase ?? 'Execution';
     int completionPct = existing?.completionPct ?? 0;
@@ -2863,7 +2870,7 @@ class _ReconciliationPlanningCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: selectedPhase,
+                          initialValue: selectedPhase,
                           decoration: const InputDecoration(
                             labelText: 'Phase *',
                             isDense: true,
@@ -2884,7 +2891,7 @@ class _ReconciliationPlanningCard extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _statusOptions.contains(selectedStatus)
+                          initialValue: _statusOptions.contains(selectedStatus)
                               ? selectedStatus
                               : _statusOptions.first,
                           decoration: const InputDecoration(
@@ -2999,7 +3006,7 @@ class _ReconciliationPlanningCard extends StatelessWidget {
                 if (titleController.text.trim().isEmpty) return;
                 final plan = _PlanEntry(
                   id: existing?.id ??
-                      DateTime.now().microsecondsSinceEpoch.toString(),
+                      newId(),
                   title: titleController.text.trim(),
                   due: dueController.text.trim(),
                   owner: ownerController.text.trim(),
@@ -3141,8 +3148,8 @@ class _ImpactAssessmentCard extends StatelessWidget {
                     width: tableWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Column(
                         children: [
@@ -3251,16 +3258,16 @@ class _ImpactAssessmentCard extends StatelessWidget {
 
   void _showImpactEditor(BuildContext context, {_ImpactRow? existing}) {
     final isEdit = existing != null;
-    final areaController = TextEditingController(text: existing?.area ?? '');
+    final areaController = SpellCheckTextEditingController(text: existing?.area ?? '');
     final detailController =
-        TextEditingController(text: existing?.detail ?? '');
+        SpellCheckTextEditingController(text: existing?.detail ?? '');
     final deliverableController =
-        TextEditingController(text: existing?.affectedDeliverable ?? '');
+        SpellCheckTextEditingController(text: existing?.affectedDeliverable ?? '');
     final exposureController =
-        TextEditingController(text: existing?.financialExposure ?? '');
-    final ownerController = TextEditingController(text: existing?.owner ?? '');
+        SpellCheckTextEditingController(text: existing?.financialExposure ?? '');
+    final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
     final mitigationController =
-        TextEditingController(text: existing?.mitigationLink ?? '');
+        SpellCheckTextEditingController(text: existing?.mitigationLink ?? '');
     String selectedRating = existing?.rating ?? 'Medium';
     String selectedTrend = existing?.trend ?? 'Stable';
     String selectedDomain = existing?.domain ?? 'Schedule';
@@ -3298,7 +3305,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: selectedDomain,
+                          initialValue: selectedDomain,
                           decoration: const InputDecoration(
                             labelText: 'Domain *',
                             isDense: true,
@@ -3319,7 +3326,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _ratingOptions.contains(selectedRating)
+                          initialValue: _ratingOptions.contains(selectedRating)
                               ? selectedRating
                               : _ratingOptions.first,
                           decoration: const InputDecoration(
@@ -3346,7 +3353,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _trendOptions.contains(selectedTrend)
+                          initialValue: _trendOptions.contains(selectedTrend)
                               ? selectedTrend
                               : _trendOptions.first,
                           decoration: const InputDecoration(
@@ -3426,7 +3433,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
                 if (areaController.text.trim().isEmpty) return;
                 final impact = _ImpactRow(
                   id: existing?.id ??
-                      DateTime.now().microsecondsSinceEpoch.toString(),
+                      newId(),
                   area: areaController.text.trim(),
                   rating: selectedRating,
                   trend: selectedTrend,
@@ -3508,9 +3515,9 @@ class _ReconPlanRowState extends State<_ReconPlanRow> {
   Color _phaseColor(String phase) {
     switch (phase) {
       case 'Execution':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Close-out':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Handover':
         return const Color(0xFF059669);
       case 'Remediation':
@@ -3529,7 +3536,7 @@ class _ReconPlanRowState extends State<_ReconPlanRow> {
       case 'Not started':
         return const Color(0xFF9CA3AF);
       case 'In progress':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'On track':
         return const Color(0xFF10B981);
       case 'At risk':
@@ -3539,7 +3546,7 @@ class _ReconPlanRowState extends State<_ReconPlanRow> {
       case 'Complete':
         return const Color(0xFF059669);
       case 'Deferred':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       default:
         return const Color(0xFF9CA3AF);
     }
@@ -3568,7 +3575,7 @@ class _ReconPlanRowState extends State<_ReconPlanRow> {
 
   Color _progressColor(int pct) {
     if (pct >= 80) return const Color(0xFF10B981);
-    if (pct >= 50) return const Color(0xFF2563EB);
+    if (pct >= 50) return const Color(0xFFFFC812);
     if (pct >= 25) return const Color(0xFFF59E0B);
     return const Color(0xFFEF4444);
   }
@@ -3836,11 +3843,11 @@ class _ImpactAssessmentRowState extends State<_ImpactAssessmentRow> {
   Color _domainColor(String domain) {
     switch (domain) {
       case 'Schedule':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Cost':
         return const Color(0xFF059669);
       case 'Quality':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Scope':
         return const Color(0xFFEA580C);
       case 'Compliance':
@@ -3850,7 +3857,7 @@ class _ImpactAssessmentRowState extends State<_ImpactAssessmentRow> {
       case 'Reputation':
         return const Color(0xFFF59E0B);
       case 'Operations':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       default:
         return const Color(0xFF64748B);
     }
@@ -3891,7 +3898,7 @@ class _ImpactAssessmentRowState extends State<_ImpactAssessmentRow> {
       case 'Improving':
         return const Color(0xFF10B981);
       case 'Stable':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Needs attention':
         return const Color(0xFFF59E0B);
       case 'Deteriorating':
@@ -4172,7 +4179,7 @@ class _ScenarioMatrixDialog extends StatefulWidget {
 }
 
 class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   final Set<String> _categoryFilters = {'All'};
 
   Future<void> _exportPdf() async {
@@ -4182,8 +4189,8 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
       screenTitle: 'Gap Analysis & Scope Reconciliation',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',
@@ -4247,7 +4254,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
           width: 42,
           height: 42,
           decoration: const BoxDecoration(
-            color: Color(0xFFEEF2FF),
+            color: Color(0xFFFFF8E1),
             borderRadius: BorderRadius.all(Radius.circular(14)),
           ),
           child: const Icon(Icons.grid_view_rounded, color: Color(0xFF4338CA)),
@@ -4274,9 +4281,9 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.all(Radius.circular(999)),
-            border: Border.all(color: Color(0xFFE2E8F0)),
+            color: const Color(0xFFF8FAFC),
+            borderRadius: const BorderRadius.all(Radius.circular(999)),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: Text('$totalCount scenarios',
               style:
@@ -4302,10 +4309,10 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
 
   Future<void> _openEditDialog(BuildContext context,
       {ScenarioRecord? record, List<ScenarioRecord>? currentList}) async {
-    final id = record?.id ?? DateTime.now().microsecondsSinceEpoch.toString();
-    final titleCtrl = TextEditingController(text: record?.title ?? '');
-    final detailCtrl = TextEditingController(text: record?.detail ?? '');
-    final ownerCtrl = TextEditingController(text: record?.owner ?? '');
+    final id = record?.id ?? newId();
+    final titleCtrl = SpellCheckTextEditingController(text: record?.title ?? '');
+    final detailCtrl = SpellCheckTextEditingController(text: record?.detail ?? '');
+    final ownerCtrl = SpellCheckTextEditingController(text: record?.owner ?? '');
     var category = record?.category ?? 'Custom';
     var owner = record?.owner ?? '';
     var severity = record?.severity ?? 2;
@@ -4333,7 +4340,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                     decoration: const InputDecoration(labelText: 'Owner')),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                    value: category,
+                    initialValue: category,
                     items: ['Custom', 'Impact', 'Gap', 'Plan']
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                         .toList(),
@@ -4343,7 +4350,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                 Row(children: [
                   Expanded(
                       child: DropdownButtonFormField<int>(
-                          value: severity,
+                          initialValue: severity,
                           items: [1, 2, 3]
                               .map((i) => DropdownMenuItem(
                                   value: i, child: Text('Severity $i')))
@@ -4354,7 +4361,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                       child: DropdownButtonFormField<int>(
-                          value: likelihood,
+                          initialValue: likelihood,
                           items: [1, 2, 3]
                               .map((i) => DropdownMenuItem(
                                   value: i, child: Text('Likelihood $i')))
@@ -4437,20 +4444,20 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
           child: VoiceTextField(
             controller: _searchController,
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               hintText: 'Search scenarios, owners, or tags',
-              prefixIcon: const Icon(Icons.search, size: 20),
+              prefixIcon: Icon(Icons.search, size: 20),
               filled: true,
-              fillColor: const Color(0xFFF8FAFC),
+              fillColor: Color(0xFFF8FAFC),
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              border: const OutlineInputBorder(
+                  EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(14)),
                   borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-              enabledBorder: const OutlineInputBorder(
+              enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(14)),
                   borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-              focusedBorder: const OutlineInputBorder(
+              focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(14)),
                   borderSide: BorderSide(color: Color(0xFF4338CA), width: 1.6)),
             ),
@@ -4478,7 +4485,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                 });
               },
               selectedColor: const Color(0xFF111827),
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               labelStyle: TextStyle(
                 color: selected ? Colors.white : const Color(0xFF475569),
                 fontWeight: FontWeight.w600,
@@ -4569,9 +4576,9 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4610,8 +4617,8 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  border: Border.all(color: Color(0xFFE2E8F0)),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -4632,7 +4639,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                               final rec = ProjectDataHelper.getData(context)
                                   .frontEndPlanning
                                   .scenarioMatrixItems
-                                  .firstWhere((r) => r.id == match.id);
+                                  .where((r) => r.id == match.id).firstOrNull;
                               _openEditDialog(context, record: rec);
                             },
                             icon: const Icon(Icons.edit, size: 18),
@@ -4998,9 +5005,9 @@ class _AxisHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Text(
         label,
@@ -5052,7 +5059,7 @@ class _Tag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Color(0xFFF1F5F9),
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(label,
@@ -5091,7 +5098,7 @@ class _ReconciliationWorkflowCardState
     _WorkflowBoardColumnConfig(
       keyName: 'active',
       label: 'Active',
-      accent: Color(0xFF2563EB),
+      accent: Color(0xFFFFC812),
     ),
     _WorkflowBoardColumnConfig(
       keyName: 'in_progress',
@@ -5146,8 +5153,8 @@ class _ReconciliationWorkflowCardState
   }
 
   Future<void> _openAddWorkflowItem() async {
-    final titleController = TextEditingController();
-    final descController = TextEditingController();
+    final titleController = SpellCheckTextEditingController();
+    final descController = SpellCheckTextEditingController();
     String status = _columns.first.label;
 
     try {
@@ -5173,7 +5180,7 @@ class _ReconciliationWorkflowCardState
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: status,
+                    initialValue: status,
                     items: _columns
                         .map((col) => DropdownMenuItem<String>(
                               value: col.label,
@@ -5673,9 +5680,9 @@ class _EmptyPanel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        color: const Color(0xFFF9FAFB),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
@@ -5862,9 +5869,9 @@ class _PriorityBadge extends StatelessWidget {
       case 'moderate':
         return const Color(0xFFFDE68A);
       case 'low':
-        return const Color(0xFFCFFAFE);
+        return const Color(0xFFFFF8E1);
       default:
-        return const Color(0xFFE0E7FF);
+        return const Color(0xFFFFF8E1);
     }
   }
 
@@ -5909,15 +5916,15 @@ class _StatusBadge extends StatelessWidget {
       case 'at risk':
         return const Color(0xFFF97316);
       case 'in review':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'not started':
         return const Color(0xFF4B5563);
       case 'complete':
         return const Color(0xFF0F766E);
       case 'upcoming':
-        return const Color(0xFF6366F1);
+        return const Color(0xFFB8860B);
       case 'planned':
-        return const Color(0xFF5B21B6);
+        return const Color(0xFFB8860B);
       default:
         return const Color(0xFF111827);
     }
@@ -5951,7 +5958,7 @@ class _TrendPill extends StatelessWidget {
       case 'improving':
         return const Color(0xFF16A34A);
       case 'stable':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'needs attention':
         return const Color(0xFFDC2626);
       default:
@@ -6110,7 +6117,7 @@ class _GapEntry {
   factory _GapEntry.fromJson(Map<String, dynamic> json) {
     return _GapEntry(
       uid: json['uid']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       stage: json['stage']?.toString() ?? 'Moderate',
@@ -6246,7 +6253,7 @@ class _ImpactRow {
   factory _ImpactRow.fromJson(Map<String, dynamic> json) {
     return _ImpactRow(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       area: json['area']?.toString() ?? '',
       rating: json['rating']?.toString() ?? 'Medium',
       trend: json['trend']?.toString() ?? 'Stable',
@@ -6304,7 +6311,7 @@ class _ImpactRow {
       }
     }
     return _ImpactRow(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       area: title,
       rating: rating,
       trend: trend,
@@ -6369,7 +6376,7 @@ class _RootCauseItem {
   factory _RootCauseItem.fromJson(Map<String, dynamic> json) {
     return _RootCauseItem(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       text: json['text']?.toString() ?? '',
       category: json['category']?.toString() ?? 'Process',
       methodology: json['methodology']?.toString() ?? '5 Whys',
@@ -6436,7 +6443,7 @@ InputDecoration _inputDecoration(String hintText, {bool dense = false}) {
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: Color(0xFF93C5FD)),
+      borderSide: const BorderSide(color: Color(0xFFFFC812)),
     ),
   );
 }

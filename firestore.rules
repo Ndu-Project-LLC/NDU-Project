@@ -67,6 +67,11 @@ service cloud.firestore {
     // and project names to any throwaway account). Now scoped to the
     // project owner + team members + admins.
     match /projects/{projectId} {
+      // get()/exists()-based checks. `projectId` is bound inside this match
+      // block, so these are valid for single-document operations and for the
+      // subcollection rules below — but NOT for top-level list queries, where
+      // Firestore cannot evaluate a get()/exists() against an unbounded query
+      // (that was breaking every projects list with permission-denied).
       function isProjectOwner() {
         return isAuthenticated()
           && exists(/databases/$(database)/documents/projects/$(projectId))
@@ -82,7 +87,34 @@ service cloud.firestore {
           || isAdmin();
       }
 
-      allow read: if isProjectOwner() || isProjectMember();
+      // Resource-only predicates. These are evaluable per-document, so they
+      // also authorize LIST queries: Firestore accepts a query when its
+      // filters provably satisfy the rule (e.g. where('ownerId', isEqualTo: uid)).
+      // .get() forms avoid hard errors on legacy docs missing the field.
+      function isProjectOwnerByResource() {
+        return isAuthenticated() && resource.data.get('ownerId', '') == request.auth.uid;
+      }
+
+      function isProjectMemberByResource() {
+        return isAuthenticated()
+          && (
+            // Direct field access (not .get(), no type guard) so the rules
+            // engine can prove this predicate from an array-contains('uid')
+            // query constraint — guards like `is list` block the proof.
+            // Docs missing the field simply never match array-contains.
+            request.auth.uid in resource.data.teamMembers
+            || ('teamMemberEmails' in resource.data
+              && resource.data.teamMemberEmails is list
+              && request.auth.token.email in resource.data.teamMemberEmails)
+          );
+      }
+
+      // Single-document get: full owner/member(email)/admin checks.
+      allow get: if isProjectOwner() || isProjectMember();
+
+      // Lists (ProjectService.streamProjects, dashboard metrics, etc.):
+      // resource-only checks only — get()-based checks cannot authorize queries.
+      allow list: if isProjectOwnerByResource() || isProjectMemberByResource();
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
       allow update: if isAuthenticated() && (
         request.auth.uid == resource.data.ownerId ||

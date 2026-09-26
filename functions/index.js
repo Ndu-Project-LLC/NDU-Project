@@ -2706,6 +2706,63 @@ exports.getAdminSurveyResponses = functions
   });
 
 // ============================================================================
+// listAllProjectsAdmin — admin panel project list
+// ============================================================================
+// The admin projects screen needs a list of ALL projects across owners.
+// Firestore list rules cannot authorize an unfiltered query (admin status
+// lives in a Firestore doc, which list rules cannot get()), so the admin
+// panel reads through this callable instead — same pattern as
+// getAdminSurveyResponses. The Admin SDK bypasses security rules.
+exports.listAllProjectsAdmin = functions
+  .runWith({ timeoutSeconds: 60, memory: '256MB' })
+  .https.onCall(async (data, context) => {
+    if (!context.auth || !context.auth.uid) {
+      throw new functions.https.HttpsError('unauthenticated', 'Sign in required.');
+    }
+    const ADMIN_EMAILS = ['chungu424@gmail.com'];
+    const callerEmail = (context.auth.token && context.auth.token.email) || '';
+    if (!ADMIN_EMAILS.includes(callerEmail)) {
+      throw new functions.https.HttpsError('permission-denied', 'Admin access required.');
+    }
+
+    try {
+      const snapshot = await db
+        .collection('projects')
+        .orderBy('createdAt', 'desc')
+        .get();
+
+      const projects = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        // Serialise timestamps so Dart can DateTime.parse them directly.
+        const toIso = (ts) => {
+          if (!ts) return null;
+          if (ts.toDate) return ts.toDate().toISOString();
+          if (ts instanceof Date) return ts.toISOString();
+          if (typeof ts === 'string') return ts;
+          return null;
+        };
+        return {
+          'projectId': doc.id,
+          'name': data.name || null,
+          'projectName': data.projectName || null,
+          'userId': data.ownerId || data.userId || null,
+          'ownerName': data.ownerName || null,
+          'createdAt': toIso(data.createdAt),
+          'updatedAt': toIso(data.updatedAt),
+        };
+      });
+
+      await logSecurityEvent('admin_projects_list', context.auth.uid, {
+        projectCount: projects.length,
+      });
+      return { projects };
+    } catch (error) {
+      console.error('listAllProjectsAdmin error:', error);
+      throw new functions.https.HttpsError('internal', `Failed to fetch projects: ${error.message}`);
+    }
+  });
+
+// ============================================================================
 // SECURITY UTILITIES (shared across all Cloud Functions)
 // ============================================================================
 

@@ -5,10 +5,12 @@ import 'package:ndu_project/models/acceptance_criteria.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/agile_gate_definitions.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/ac_confidence_score.dart';
 import 'package:ndu_project/widgets/acceptance_criteria_template_dialog.dart';
+import 'package:ndu_project/widgets/agile_gate_panel.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -37,6 +39,10 @@ class AgileAcceptanceCriteriaScreen extends StatefulWidget {
 class _AgileAcceptanceCriteriaScreenState
     extends State<AgileAcceptanceCriteriaScreen> {
   AcceptanceCriteriaConfig _config = AcceptanceCriteriaConfig();
+
+  /// Backlog Governance's saved gate, echoed read-only so Definition of Ready
+  /// and Definition of Done are defined once, not twice.
+  Map<String, dynamic> _governance = const {};
   String? _selectedTemplateId;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -118,9 +124,12 @@ class _AgileAcceptanceCriteriaScreenState
     setState(() => _isLoading = true);
     try {
       final config = await AgileWireframeService.loadAcceptanceCriteria(pid);
+      final governance =
+          await AgileWireframeService.loadBacklogGovernance(pid);
       if (!mounted) return;
       setState(() {
         _config = config;
+        _governance = governance;
         if (_selectedTemplateId == null && _templates.isNotEmpty) {
           final first = _templates.first;
           _selectedTemplateId = first.id;
@@ -429,19 +438,24 @@ class _AgileAcceptanceCriteriaScreenState
                                 ],
                               ),
                             ),
-                          _buildWorkItemTypeSelector(),
-                          const SizedBox(height: 16),
-                          _buildTemplateList(),
-                          const SizedBox(height: 16),
-                          if (_selectedTemplate != null) ...[
-                            _buildTemplateEditor(),
-                            const SizedBox(height: 16),
-                            _buildFormatSelector(),
-                            const SizedBox(height: 16),
-                            _buildCriteriaList(),
-                            const SizedBox(height: 16),
-                            _buildConfidenceCard(),
-                          ],
+                          // The gate reads ready → acceptance criteria → done.
+                          // Criteria sit above definition of done, and the two
+                          // outer gates are echoed from Backlog Governance
+                          // rather than redefined here.
+                          AgileGatePanel(
+                            ready: AgileGateDefinitions.ready(_governance),
+                            done: AgileGateDefinitions.done(_governance),
+                            acceptanceCriteriaSummary:
+                                _selectedTemplate == null
+                                    ? ''
+                                    : '${_selectedTemplate!.criteria.length} '
+                                        'criteria in ${_templateNameCtrl.text.trim().isEmpty ? 'this template' : _templateNameCtrl.text.trim()}',
+                            onOpenGovernance: () =>
+                                PlanningPhaseNavigation.goToCheckpoint(
+                                    context,
+                                    AgileGateDefinitions.governanceCheckpoint),
+                            acceptanceCriteria: _buildAcceptanceCriteriaSection(),
+                          ),
                         ],
                         const SizedBox(height: 24),
                         LaunchPhaseNavigation(
@@ -469,6 +483,30 @@ class _AgileAcceptanceCriteriaScreenState
           ],
         ),
       ),
+    );
+  }
+
+  /// Everything that defines the middle gate: the templates and their criteria.
+  Widget _buildAcceptanceCriteriaSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildWorkItemTypeSelector(),
+        const SizedBox(height: 16),
+        _buildTemplateList(),
+        const SizedBox(height: 16),
+        if (_selectedTemplate != null) ...[
+          _buildTemplateEditor(),
+          const SizedBox(height: 16),
+          _buildFormatSelector(),
+          const SizedBox(height: 16),
+          _buildCriteriaList(),
+          const SizedBox(height: 16),
+          _buildConfidenceCard(),
+        ] else
+          const Text('Select or add a template to define its acceptance criteria.',
+              style: TextStyle(fontSize: 13, color: _kMuted)),
+      ],
     );
   }
 
@@ -918,6 +956,22 @@ class _AgileAcceptanceCriteriaScreenState
         PdfSection.keyValue('Project Info', [
           {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
           {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
+        ]),
+        PdfSection.keyValue('Delivery Gate', [
+          {
+            'Definition of Ready (${AgileGateDefinitions.governanceScreenLabel})':
+                AgileGateDefinitions.ready(_governance).summary
+          },
+          {
+            'Acceptance Criteria (this page)': _templates.isEmpty
+                ? 'Not defined yet.'
+                : '${_templates.length} template(s): '
+                    '${_templates.take(3).map((t) => t.name.trim().isEmpty ? 'Untitled' : t.name.trim()).join(', ')}'
+          },
+          {
+            'Definition of Done (${AgileGateDefinitions.governanceScreenLabel})':
+                AgileGateDefinitions.done(_governance).summary
+          },
         ]),
         PdfSection.text(
             'Notes',

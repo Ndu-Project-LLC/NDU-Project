@@ -5,6 +5,7 @@ import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/agile_gate_definitions.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -25,27 +26,10 @@ const Color _kMuted = Color(0xFF6B7280);
 const Color _kHeadline = Color(0xFF111827);
 const Color _kAccent = Color(0xFFD97706);
 
-const List<String> _defaultDoRItems = [
-  'Story written and described',
-  'Acceptance criteria defined',
-  'Dependencies identified',
-  'Designs/UX available (if applicable)',
-  'Business approval obtained',
-  'Estimated (story points or size)',
-  'Test approach identified',
-  'Edge cases documented',
-];
-
-const List<String> _defaultDoDItems = [
-  'Code complete',
-  'Peer reviewed',
-  'Unit tests pass',
-  'Integration tests pass',
-  'Acceptance criteria met',
-  'Documentation updated',
-  'Deployed to staging',
-  'Product Owner approved',
-];
+// The Ready/Done seed lists live in AgileGateDefinitions, because the
+// Acceptance Criteria page echoes this gate and must show the same thing.
+const List<String> _defaultDoRItems = AgileGateDefinitions.defaultReadyItems;
+const List<String> _defaultDoDItems = AgileGateDefinitions.defaultDoneItems;
 
 const List<String> _defaultWorkingAgreements = [
   'Core hours: 9am-3pm team overlap',
@@ -87,6 +71,12 @@ class _AgileBacklogGovernanceScreenState
   List<_ChecklistItem> _doRItems = [];
   List<_ChecklistItem> _doDItems = [];
   List<_ChecklistItem> _waItems = [];
+
+  /// Saved keys for the prose form of the two gates.
+  static const List<String> _proseGateKeys = [
+    AgileGateDefinitions.readyFreeTextKey,
+    AgileGateDefinitions.doneFreeTextKey,
+  ];
 
   bool _showDoRChecklist = false;
   bool _showDoDChecklist = false;
@@ -143,6 +133,12 @@ class _AgileBacklogGovernanceScreenState
     super.initState();
     for (final f in _fields) {
       _controllers[f.key] = SpellCheckTextEditingController();
+    }
+    // The Ready/Done prose definitions are not `_fields` entries — they are only
+    // shown when checklist mode is off — but they still need a controller to
+    // edit and to save, otherwise the prose a user types is dropped.
+    for (final key in _proseGateKeys) {
+      _controllers[key] = SpellCheckTextEditingController();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
@@ -204,9 +200,16 @@ class _AgileBacklogGovernanceScreenState
           }
         }
       }
+      for (final key in _proseGateKeys) {
+        final value = data[key] as String? ?? '';
+        _controllers[key]?.text = value;
+        if (value.isNotEmpty) _recordFieldHistory(key, value);
+      }
       setState(() {
-        _doRItems = _checklistFromJson(data['dor_checklist'] as List?);
-        _doDItems = _checklistFromJson(data['dod_checklist'] as List?);
+        _doRItems =
+            _checklistFromJson(data[AgileGateDefinitions.readyChecklistKey] as List?);
+        _doDItems =
+            _checklistFromJson(data[AgileGateDefinitions.doneChecklistKey] as List?);
         _waItems = _checklistFromJson(data['working_agreements'] as List?);
         if (_doRItems.isEmpty) {
           _doRItems =
@@ -221,8 +224,10 @@ class _AgileBacklogGovernanceScreenState
               .map((l) => _ChecklistItem(label: l))
               .toList();
         }
-        _showDoRChecklist = data['dor_use_checklist'] as bool? ?? false;
-        _showDoDChecklist = data['dod_use_checklist'] as bool? ?? false;
+        _showDoRChecklist =
+            data[AgileGateDefinitions.readyChecklistModeKey] as bool? ?? false;
+        _showDoDChecklist =
+            data[AgileGateDefinitions.doneChecklistModeKey] as bool? ?? false;
       });
     } catch (e) {
       debugPrint('Error: $e');
@@ -246,11 +251,17 @@ class _AgileBacklogGovernanceScreenState
       for (final f in _fields) {
         data[f.key] = _controllers[f.key]?.text ?? '';
       }
-      data['dor_checklist'] = _checklistToJson(_doRItems);
-      data['dod_checklist'] = _checklistToJson(_doDItems);
+      // The prose gates were being edited but never written, so a definition
+      // typed in checklist-off mode disappeared on reload.
+      for (final key in _proseGateKeys) {
+        data[key] = _controllers[key]?.text ?? '';
+      }
+      data[AgileGateDefinitions.readyChecklistKey] =
+          _checklistToJson(_doRItems);
+      data[AgileGateDefinitions.doneChecklistKey] = _checklistToJson(_doDItems);
       data['working_agreements'] = _checklistToJson(_waItems);
-      data['dor_use_checklist'] = _showDoRChecklist;
-      data['dod_use_checklist'] = _showDoDChecklist;
+      data[AgileGateDefinitions.readyChecklistModeKey] = _showDoRChecklist;
+      data[AgileGateDefinitions.doneChecklistModeKey] = _showDoDChecklist;
       await AgileWireframeService.saveBacklogGovernance(
           projectId: pid, data: data);
       if (mounted) {
@@ -621,7 +632,7 @@ class _AgileBacklogGovernanceScreenState
               label: const Text('Add item'),
             ),
           ] else
-            _buildExistingField('definition_of_ready',
+            _buildExistingField(AgileGateDefinitions.readyFreeTextKey,
                 'Criteria a backlog item must meet before it can be pulled into a sprint.'),
         ],
       ),
@@ -686,7 +697,7 @@ class _AgileBacklogGovernanceScreenState
               label: const Text('Add item'),
             ),
           ] else
-            _buildExistingField('definition_of_done',
+            _buildExistingField(AgileGateDefinitions.doneFreeTextKey,
                 'Quality gate criteria for work to be considered complete.'),
         ],
       ),

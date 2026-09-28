@@ -229,23 +229,41 @@ migration, no crash. Covered by the `link checks` group in the new test file.
 
 ---
 
-### Task 5: Acceptance Criteria above Definition of Done, wired to Backlog Governance
+### Task 5: Acceptance Criteria above Definition of Done, wired to Backlog Governance — DONE
 
 **Files:**
-- Modify: `lib/screens/agile_acceptance_criteria_screen.dart` (930 lines; `AcceptanceCriteriaTemplate`, `_addTemplate`, `_generateDefaultTemplates`)
-- Modify: `lib/widgets/acceptance_criteria_template_dialog.dart`
-- Read: `lib/screens/agile_backlog_governance_screen.dart` (~578 `Definition of Ready`, ~643 `Definition of Done`)
-- Read: `lib/services/agile_wireframe_service.dart` (`loadAcceptanceCriteria`/`saveAcceptanceCriteria` ~206-236, and `loadBacklogGovernance`/`saveBacklogGovernance` ~125-158)
+- Added: `lib/utils/agile_gate_definitions.dart` (`AgileGateStage`,
+  `AgileGateDefinition`, `AgileGateDefinitions.ready/done/forStage`)
+- Added: `lib/widgets/agile_gate_panel.dart` (`AgileGatePanel`)
+- Modified: `lib/screens/agile_acceptance_criteria_screen.dart` (loads
+  governance, renders the gate, exports it)
+- Modified: `lib/screens/agile_backlog_governance_screen.dart` (see the bug
+  below; its seed lists now come from the util)
+- Tests: `test/utils/agile_gate_definitions_test.dart` (12),
+  `test/widgets/agile_gate_panel_test.dart` (7)
 
-**Step 1:** Reorder the template body to **Definition of Ready → Acceptance
-Criteria → Definition of Done**, and render Ready/Done as **read-only echoes of
-Backlog Governance** with a link to that screen, so the same gate is not
-maintained twice.
+**What landed.** The page now renders the gate in one ordered panel: step 1
+Definition of Ready (read-only, `FROM GOVERNANCE`, with an "Open Backlog
+Governance" link), step 2 Acceptance Criteria (`THIS PAGE`, badge + criteria
+count, containing the whole existing editor), step 3 Definition of Done
+(read-only). The order comes from `AgileGateDefinitions.order`, and the widget
+test asserts it **by on-screen position** — criteria above done — not by build
+order. The PDF export carries the same three stages.
 
-**Step 2:** Verify by test that editing Backlog Governance changes what the
-Acceptance Criteria template shows (single source of truth).
+**Bug found and fixed on the way.** Definition of Ready / Done have two forms in
+Backlog Governance — a checklist and a prose definition — and the prose form was
+never saved: `_controllers` was only seeded for the five `_fields` keys, and
+`_performSave` only wrote those keys. So a definition typed in checklist-off mode
+was dropped on reload, and there was nothing for the Acceptance Criteria page to
+echo. The prose keys now get controllers, are loaded back, and are written on
+save (guarded so checklist mode cannot blank a stored definition).
 
-**Step 3: Commit.**
+**Known pre-existing red test (not from this task).**
+`test/widgets/acceptance_criteria_template_dialog_test.dart` fails 5/5 on
+`staging`: it looks for `find.widgetWithText(FilledButton, 'Create template')`
+while the dialog builds `FilledButton.icon`, and `find.byType` does not match
+subclasses. Neither the test nor the dialog is touched by this work — worth a
+one-line finder fix in its own commit.
 
 ---
 

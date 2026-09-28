@@ -9,6 +9,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
+import 'package:ndu_project/utils/agile_feature_editor.dart';
 import 'package:ndu_project/utils/agile_story_template.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
@@ -440,17 +441,52 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
     showDeleteSuccessSnackBar(context, itemLabel: 'Epic');
   }
 
-  void _addFeature() {
+  /// Add asks for the fields the epic link needs ("you have the title … the
+  /// description [and] the priority of that feature. Because every feature will
+  /// be tied to an epic") instead of dropping an untitled row into the epic.
+  Future<void> _addFeature() async {
     final epicId = _selectedEpicId;
     if (epicId == null) return;
     final pid = _projectId;
     if (pid == null) return;
-    final feature = Feature(epicId: epicId);
+    final epic = _epics.where((e) => e.id == epicId).firstOrNull;
+    if (epic == null) return;
+    final feature = AgileFeatureEditor.newFor(epic);
     EpicFeatureService.saveFeature(
         projectId: pid, epicId: epicId, feature: feature);
     setState(() {
       _features.add(feature);
       _featuresByEpic[epicId] = List<Feature>.from(_features);
+    });
+    await _showFeatureEditorDialog(feature, isNew: true);
+  }
+
+  /// Move a feature to another epic: saved under the new epic, removed from the
+  /// old one, and taken out of the view when it no longer belongs to the epic
+  /// being shown.
+  void _reparentFeature(Feature feature, String newEpicId) {
+    final pid = _projectId;
+    final oldEpicId = feature.epicId;
+    if (pid == null || !AgileFeatureEditor.reparents(feature, newEpicId)) return;
+    final moved = AgileFeatureEditor.moveToEpic(feature, newEpicId);
+    EpicFeatureService.saveFeature(
+        projectId: pid, epicId: newEpicId, feature: moved);
+    EpicFeatureService.deleteFeature(
+        projectId: pid, epicId: oldEpicId, featureId: moved.id);
+    setState(() {
+      // Keep the object the open dialog is holding in step with the save.
+      feature.epicId = newEpicId;
+      _featuresByEpic[oldEpicId] = [
+        for (final f in _featuresByEpic[oldEpicId] ?? const <Feature>[])
+          if (f.id != moved.id) f,
+      ];
+      _featuresByEpic[newEpicId] = [
+        ...(_featuresByEpic[newEpicId] ?? const <Feature>[]),
+        moved,
+      ];
+      if (oldEpicId == _selectedEpicId) {
+        _features.removeWhere((f) => f.id == moved.id);
+      }
     });
   }
 
@@ -1742,7 +1778,8 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
     );
   }
 
-  Future<void> _showFeatureEditorDialog(Feature feature) async {
+  Future<void> _showFeatureEditorDialog(Feature feature,
+      {bool isNew = false}) async {
     _getController(_featureControllers, feature.id, feature.title).text =
         feature.title;
     _getController(
@@ -1760,8 +1797,8 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
             children: [
               const Icon(Icons.edit_note, color: Color(0xFFB27A00), size: 20),
               const SizedBox(width: 8),
-              const Text('Edit Feature',
-                  style: TextStyle(
+              Text(isNew ? 'Add Feature' : 'Edit Feature',
+                  style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: _kDarkText)),
@@ -1835,7 +1872,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                       child: DropdownButton<String>(
                         value: feature.priority,
                         isExpanded: true,
-                        items: ['critical', 'high', 'medium', 'low']
+                        items: AgileFeatureEditor.priorities
                             .map((p) => DropdownMenuItem(
                                 value: p,
                                 child: Row(children: [
@@ -1859,6 +1896,42 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                           setDialogState(() => feature.priority = v);
                           _updateFeature(feature);
                           setState(() {});
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _editorLabel('Parent epic'),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: _kBorder),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _epics.any((e) => e.id == feature.epicId)
+                            ? feature.epicId
+                            : null,
+                        isExpanded: true,
+                        hint: const Text('Select epic',
+                            style: TextStyle(fontSize: 13)),
+                        items: [
+                          for (final epic in _epics)
+                            DropdownMenuItem(
+                              value: epic.id,
+                              child: Text(
+                                  epic.title.isNotEmpty
+                                      ? epic.title
+                                      : 'Untitled epic',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 13)),
+                            ),
+                        ],
+                        onChanged: (v) {
+                          if (v == null) return;
+                          _reparentFeature(feature, v);
+                          setDialogState(() {});
                         },
                       ),
                     ),

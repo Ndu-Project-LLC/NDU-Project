@@ -11,6 +11,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/screen_flow_navigator.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -321,6 +322,11 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 24),
+                        ScreenFlowNavigator(
+                          steps: PlanningPhaseNavigation.agileDeliverySteps,
+                          currentCheckpoint: 'agile_scrum_config',
+                        ),
+                        const SizedBox(height: 24),
                         if (_isLoading)
                           const Center(child: CircularProgressIndicator())
                         else ...[
@@ -606,6 +612,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
           SizedBox(
             width: 140,
             child: DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: [
                 'Communication',
                 'Code Quality',
@@ -623,19 +630,24 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
               items: const [
                 DropdownMenuItem(
                     value: 'Communication',
-                    child:
-                        Text('Communication', style: TextStyle(fontSize: 11))),
+                    child: Text('Communication',
+                        style: TextStyle(fontSize: 11),
+                        overflow: TextOverflow.ellipsis)),
                 DropdownMenuItem(
                     value: 'Code Quality',
-                    child:
-                        Text('Code Quality', style: TextStyle(fontSize: 11))),
+                    child: Text('Code Quality',
+                        style: TextStyle(fontSize: 11),
+                        overflow: TextOverflow.ellipsis)),
                 DropdownMenuItem(
                     value: 'Collaboration',
-                    child:
-                        Text('Collaboration', style: TextStyle(fontSize: 11))),
+                    child: Text('Collaboration',
+                        style: TextStyle(fontSize: 11),
+                        overflow: TextOverflow.ellipsis)),
                 DropdownMenuItem(
                     value: 'Meeting',
-                    child: Text('Meeting', style: TextStyle(fontSize: 11))),
+                    child: Text('Meeting',
+                        style: TextStyle(fontSize: 11),
+                        overflow: TextOverflow.ellipsis)),
               ],
               onChanged: (v) {
                 if (v != null) {

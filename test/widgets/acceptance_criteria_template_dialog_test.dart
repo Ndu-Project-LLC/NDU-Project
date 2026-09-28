@@ -47,7 +47,17 @@ Future<Future<AcceptanceCriteriaTemplate?>> _openModal(
   return pending;
 }
 
-Finder get _createButton => find.widgetWithText(FilledButton, 'Create template');
+// The dialog builds the action as `FilledButton.icon`, which is a private
+// `FilledButton` subclass; `find.byType` only matches exact runtime types, so a
+// predicate is needed to reach it (and `tester.widget<FilledButton>` still
+// works, since the subclass is a `FilledButton`).
+Finder get _createButton => find.ancestor(
+      of: find.text('Create template'),
+      matching: find.byWidgetPredicate(
+        (widget) => widget is FilledButton,
+        description: 'FilledButton',
+      ),
+    );
 
 bool _enabled(WidgetTester tester) =>
     tester.widget<FilledButton>(_createButton).enabled;

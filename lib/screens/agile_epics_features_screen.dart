@@ -9,6 +9,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
+import 'package:ndu_project/utils/agile_epic_feature_table.dart';
 import 'package:ndu_project/utils/agile_feature_editor.dart';
 import 'package:ndu_project/utils/agile_story_template.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -18,6 +19,7 @@ import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/services/wbs_agile_sync_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/agile_feature_table_view.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -66,6 +68,17 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
 
   /// Set while a feature is spawning a story, so a double tap cannot add two.
   bool _isAddingStory = false;
+
+  /// The all-features list is the default: the review called the card-only
+  /// grid "not very efficient", because a feature only showed up after its
+  /// epic was selected. Cards stay for editing.
+  bool _tableView = true;
+
+  /// Free-text filter over the flat feature list (feature, epic, priority,
+  /// status, WBS link).
+  final TextEditingController _featureSearchController =
+      TextEditingController();
+  String _featureQuery = '';
   // Guards against infinite _loadData → _syncFromWbs → _loadData recursion
   // when the auto-sync-on-empty-list fires on first visit. Without this flag,
   // a sync that produces 0 new items (e.g. WBS exists but all nodes are
@@ -115,6 +128,13 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
     return null;
   }
 
+  /// The flat, cross-epic feature list behind the table view, narrowed by the
+  /// search box.
+  List<FeatureTableRow> get _featureTableRows => AgileEpicFeatureTable.filter(
+        AgileEpicFeatureTable.build(_epics, _featuresByEpic),
+        _featureQuery,
+      );
+
   @override
   void initState() {
     super.initState();
@@ -132,6 +152,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
     for (final c in _chipControllers.values) {
       c.dispose();
     }
+    _featureSearchController.dispose();
     super.dispose();
   }
 
@@ -894,6 +915,10 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                                 ),
                               ],
                               const Spacer(),
+                              if (_epics.isNotEmpty) ...[
+                                _buildViewToggle(),
+                                const SizedBox(width: 12),
+                              ],
                               FilledButton.icon(
                                 onPressed: _addEpic,
                                 icon: const Icon(Icons.add, size: 16),
@@ -918,7 +943,16 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                                   : 'No epics yet. Pull epics and features straight from the WBS you built — or let KAZ AI suggest a starting set.',
                               onSync: _isSyncing ? null : _syncFromWbs,
                             )
-                          else
+                          else if (_tableView) ...[
+                            _buildFeatureSearch(),
+                            const SizedBox(height: 12),
+                            AgileFeatureTableView(
+                              rows: _featureTableRows,
+                              epicsWithoutFeatures:
+                                  AgileEpicFeatureTable.epicsWithoutFeatures(
+                                      _epics, _featuresByEpic),
+                            ),
+                          ] else
                             // ── Responsive epic grid: >1200 → 3 cols,
                             //    >760 → 2 cols, else 1 col ────────────────
                             LayoutBuilder(
@@ -945,7 +979,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                               },
                             ),
                           const SizedBox(height: 28),
-                          if (_selectedEpicId != null) ...[
+                          if (!_tableView && _selectedEpicId != null) ...[
                             Row(
                               children: [
                                 Flexible(
@@ -1292,6 +1326,74 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
           ]),
         ),
       ],
+    );
+  }
+
+  /// Table/Cards switch. Table lists every feature across every epic, which is
+  /// what the review asked for; Cards keeps the epic grid and the per-epic
+  /// feature rows for editing.
+  Widget _buildViewToggle() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text('View: ', style: TextStyle(fontSize: 13, color: _kMuted)),
+        ChoiceChip(
+          label: Text('Table',
+              style: TextStyle(
+                  fontSize: 12,
+                  color: _tableView ? Colors.white : _kDarkText)),
+          selected: _tableView,
+          selectedColor: _kAccent,
+          onSelected: (_) => setState(() => _tableView = true),
+        ),
+        const SizedBox(width: 6),
+        ChoiceChip(
+          label: Text('Cards',
+              style: TextStyle(
+                  fontSize: 12,
+                  color: !_tableView ? Colors.white : _kDarkText)),
+          selected: !_tableView,
+          selectedColor: _kAccent,
+          onSelected: (_) => setState(() => _tableView = false),
+        ),
+      ],
+    );
+  }
+
+  /// Search across feature, epic, priority, status, and WBS link — so a feature
+  /// can be found without knowing which epic it sits under.
+  Widget _buildFeatureSearch() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 420),
+      child: TextField(
+        key: const ValueKey('features-search'),
+        controller: _featureSearchController,
+        onChanged: (value) => setState(() => _featureQuery = value),
+        decoration: InputDecoration(
+          isDense: true,
+          hintText: 'Search features, epics, priorities…',
+          hintStyle: const TextStyle(fontSize: 13, color: _kMuted),
+          prefixIcon: const Icon(Icons.search, size: 18, color: _kMuted),
+          suffixIcon: _featureSearchController.text.isEmpty
+              ? null
+              : IconButton(
+                  tooltip: 'Clear search',
+                  icon: const Icon(Icons.close, size: 16),
+                  onPressed: () => setState(() {
+                    _featureSearchController.clear();
+                    _featureQuery = '';
+                  }),
+                ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: _kBorder),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: _kBorder),
+          ),
+        ),
+      ),
     );
   }
 

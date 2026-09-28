@@ -373,24 +373,45 @@ FEP milestone pickers on stories) is what makes this section fill up.
 
 ---
 
-### Task 8: De-duplicate Metrics Planning and Backlog Governance
+### Task 8: De-duplicate Metrics Planning and Backlog Governance — DONE (owner said keep both)
 
 **Files:**
-- Modify: `lib/screens/agile_metrics_planning_screen.dart` (553 lines)
-- Modify: `lib/screens/agile_backlog_governance_screen.dart` (930 lines)
-- Read: `lib/services/agile_wireframe_service.dart` (`loadMetricsConfig`/`saveMetricsConfig` ~297-325, `loadBacklogGovernance`/`saveBacklogGovernance`)
+- Modified: `lib/services/agile_wireframe_service.dart` (sub-map key constants +
+  the two payload builders)
+- Modified: `lib/screens/agile_metrics_planning_screen.dart`,
+  `lib/screens/agile_backlog_governance_screen.dart` (use the builders)
+- Test: `test/services/agile_wireframe_config_keys_test.dart` (5)
 
-**Step 1:** Decide with the owner which of the two keeps each field. The
-recording gives no verdict ("I don't know what the difference between this and
-the Backlog Governance is"), so ask before deleting anything.
+**The owner's verdict: keep them as they are.** Asked directly (the recording
+gave no answer), the answer was to keep both screens and their fields. So nothing
+was merged, moved, or deleted, and the flow keeps the Metrics Planning step.
 
-**Step 2:** Whichever way it goes, the persisted keys must agree:
-`loadMetricsConfig` and `loadBacklogGovernance` currently read the same Firestore
-doc (`agile_wireframe_service._loadDoc`), so a field saved by one and edited by
-the other will silently fight. Add a test that saves via one path and reads via
-the other.
+**Correction to the plan's premise.** The plan said the two screens "read the
+same Firestore doc, so a field saved by one and edited by the other will silently
+fight". They do share the doc, but not a key: Metrics Planning writes
+`metricsConfig`, Backlog Governance writes `backlogGovernance`, and every save
+uses `SetOptions(merge: true)`. There was no collision to fix.
 
-**Step 3: Commit** — message must say which screen owns what now.
+**What settled instead.** Both screens' payloads are now built by
+`AgileWireframeService.metricsConfigData` / `backlogGovernanceData`, the keys are
+named constants, and a test asserts the two payloads share no key at all — plus
+that the gate keys the Acceptance Criteria page echoes (Task 5) are still in the
+governance payload. That is the guard the plan actually wanted; if someone later
+points both screens at one key, the test fails instead of a screen quietly
+blanking the other.
+
+Field ownership, for the record:
+- **Backlog Governance** — prioritization framework, refinement cadence,
+  estimation framework, backlog ownership, grooming rules; Definition of Ready
+  and Done (checklist or prose); working agreements.
+- **Metrics Planning** — the tracked metric set and its notes (Task 9 makes those
+  drive the dashboard).
+
+**Deviation: no Firestore round trip.** The plan asked for "a test that saves via
+one path and reads via the other". That needs a fake Firestore, and the project
+has no `fake_cloud_firestore` (or `mockito`) dependency — adding one would pull in
+new packages for a single test. The key-disjointness check above is the
+achievable proxy and is noted as such in the test file.
 
 ---
 

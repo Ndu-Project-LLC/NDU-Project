@@ -226,10 +226,12 @@ class _AgileMetricsPlanningScreenState
           _allMetrics.where((m) => m.selected).map((m) => m.key).toList();
       await AgileWireframeService.saveMetricsConfig(
         projectId: pid,
-        data: {
-          'selectedMetrics': selected,
-          'notes': _notesCtrl.text,
-        },
+        // Built by the service so the keys Metrics Planning writes are declared
+        // in one place and checked against Backlog Governance's.
+        data: AgileWireframeService.metricsConfigData(
+          selectedMetrics: selected,
+          notes: _notesCtrl.text,
+        ),
       );
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();

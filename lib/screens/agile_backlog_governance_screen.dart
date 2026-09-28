@@ -247,21 +247,22 @@ class _AgileBacklogGovernanceScreenState
     try {
       final pid = _projectId;
       if (pid == null) return;
-      final data = <String, dynamic>{};
-      for (final f in _fields) {
-        data[f.key] = _controllers[f.key]?.text ?? '';
-      }
-      // The prose gates were being edited but never written, so a definition
-      // typed in checklist-off mode disappeared on reload.
-      for (final key in _proseGateKeys) {
-        data[key] = _controllers[key]?.text ?? '';
-      }
-      data[AgileGateDefinitions.readyChecklistKey] =
-          _checklistToJson(_doRItems);
-      data[AgileGateDefinitions.doneChecklistKey] = _checklistToJson(_doDItems);
-      data['working_agreements'] = _checklistToJson(_waItems);
-      data[AgileGateDefinitions.readyChecklistModeKey] = _showDoRChecklist;
-      data[AgileGateDefinitions.doneChecklistModeKey] = _showDoDChecklist;
+      // Built by the service so the keys Backlog Governance writes are declared
+      // in one place and checked against Metrics Planning's. The prose gates
+      // are included explicitly — they were being edited but never written, so
+      // a definition typed in checklist-off mode disappeared on reload.
+      final data = AgileWireframeService.backlogGovernanceData(
+        fields: <String, String>{
+          for (final f in _fields) f.key: _controllers[f.key]?.text ?? '',
+        },
+        readyProse: _controllers[AgileGateDefinitions.readyFreeTextKey]?.text ?? '',
+        doneProse: _controllers[AgileGateDefinitions.doneFreeTextKey]?.text ?? '',
+        readyChecklist: _checklistToJson(_doRItems),
+        doneChecklist: _checklistToJson(_doDItems),
+        workingAgreements: _checklistToJson(_waItems),
+        readyChecklistMode: _showDoRChecklist,
+        doneChecklistMode: _showDoDChecklist,
+      );
       await AgileWireframeService.saveBacklogGovernance(
           projectId: pid, data: data);
       if (mounted) {

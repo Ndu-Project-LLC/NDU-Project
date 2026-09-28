@@ -1,0 +1,397 @@
+# Agile Delivery review fixes (Lusaka 26) Implementation Plan
+
+> **For the agent picking this up:** this plan came out of the 2026-09-28 Lusaka 26
+> walkthrough. The owner's verbatim asks (with transcription caveats) are in
+> `docs/voice_notes/2026-09-28-lusaka-26-agile-planning-walkthrough-transcript.md`.
+
+**Goal:** Make the Planning-phase Agile Delivery flow match what the owner
+reviewed — Kanban Configuration under Epics & Features, a real Epic → Feature →
+Story → Task backlog with a table view, a "User Story Template" section with
+several named templates, a Release Plan driven by epics + milestones, and a
+Metrics Planning step that feeds the dashboard instead of duplicating Backlog
+Governance.
+
+**Architecture:** No new screens. Every ask lands on an existing section screen
+(`lib/screens/agile_*.dart`), its existing service (`EpicFeatureService`,
+`AgileService`, `AgileWireframeService`, `KanbanConfigService`), and the existing
+nav surfaces that define order (sidebar service, planning-phase nav, the
+sidebar widget's hardcoded sub-menu). Data already carries the links we need:
+`Feature.epicId`, `AgileTask.epicId`/`AgileTask.featureId`,
+`AgileReleasePlan.epicIds`/`featureIds`, and `ProjectDataModel.keyMilestones`.
+
+**Tech stack:** Flutter/Dart, Provider, Firestore via the existing services,
+`flutter_test` widget tests, `analysis_options.yaml` lints.
+
+---
+
+## Ordering rule for the whole plan
+
+The owner gave the flow order twice, so **do Task 1 first**: everything else is
+ordered relative to it.
+
+Target Agile Delivery order:
+
+```
+Agile Delivery Model → Scrum Configuration → Capacity Planning →
+Backlog Governance → Agile Team Structure → Epics & Features →
+Kanban Configuration → Acceptance Criteria Planning → Sprint Cadence &
+Calendar → Release Plan → Metrics Planning → Agile Map Out
+```
+
+Two changes versus today: **Kanban Configuration moves after Epics & Features**
+(ask 1), and **Metrics Planning moves above Agile Map Out** (ask 9).
+
+> Confirm the Metrics-Planning/Agile-Map-Out swap with the owner before landing it
+> — the recording supports "metrics planning goes above … which will come in the
+> dashboard", but the sentence is partially garbled.
+
+---
+
+### Task 1: Reorder Kanban Configuration and Metrics Planning in every nav surface
+
+**Files:**
+- Modify: `lib/services/sidebar_navigation_service.dart` (~lines 203-224)
+- Modify: `lib/utils/planning_phase_navigation.dart` (Agile `PlanningPage` entries, ~lines 150-230)
+- Modify: `lib/widgets/initiation_like_sidebar.dart` (known-label list ~255-259; sub-sub menu ~2894-2906)
+- Modify: `lib/services/project_route_registry.dart` only if a checkpoint is renamed (none should be)
+- Test: `test/screens/agile_screen_navigator_test.dart` (the explicit checkpoint-order `expect`, and the `Step N of 12` strings)
+
+**Step 1: Write the failing test first.** Update the order expectation in
+`agile_screen_navigator_test.dart` to the target order above, keeping the same
+12 checkpoints:
+
+```dart
+expect(steps.map((s) => s.checkpoint).toList(), [
+  'agile_delivery_model',
+  'agile_scrum_config',
+  'agile_capacity_planning',
+  'agile_backlog_governance',
+  'agile_team_structure',
+  'agile_epics_features',
+  'agile_kanban_config',
+  'agile_acceptance_criteria',
+  'agile_sprint_calendar',
+  'agile_release_plan',
+  'agile_metrics_planning',
+  'agile_map_out',
+]);
+```
+
+**Step 2: Run it and watch it fail.**
+Run: `flutter test test/screens/agile_screen_navigator_test.dart`
+Expected: FAIL — the actual list still has `agile_kanban_config` before
+`agile_epics_features`.
+
+**Step 3: Move the entries.** Move the `SidebarItem(checkpoint: 'agile_kanban_config', …)`
+entry in `_sidebarOrder` so it sits directly after `agile_epics_features`, and
+move the `agile_metrics_planning` entry so it sits directly before `agile_map_out`.
+Mirror the same two moves in the `PlanningPhaseNavigation.pages` list, and in
+`initiation_like_sidebar.dart` (both the `_isActiveLabel('Agile Delivery Model - …')`
+label list and the `_buildSubSubMenuItem(...)` calls, which must stay in the same
+order).
+
+**Step 4: Re-run.** Run: `flutter test test/screens/agile_screen_navigator_test.dart`
+Expected: PASS. The `Step N of 12` assertions still pass because the first three
+screens are unchanged; if you touch them, update the numbers.
+
+**Step 4b: Move the navigator's range boundary.**
+`PlanningPhaseNavigation.agileDeliverySteps` reads
+`itemsBetween('agile_delivery_model', 'agile_metrics_planning')`. Once Metrics
+Planning sits *before* Agile Map Out, that range clips the last screen off the
+on-page navigator (11 steps instead of 12) — change the boundary to
+`agile_map_out`, which is now the last Agile Delivery screen.
+
+**Step 5: Sweep for other hardcoded orders.**
+Run: `grep -rn "agile_kanban_config" lib test | grep -v "\.g\.dart"`
+Expected: hits only in the registry, nav services, and tests — no screen with its
+own "next screen" list, no snapshot/`golden` fixture.
+
+**Step 6: Commit.**
+```bash
+git add lib/services/sidebar_navigation_service.dart lib/utils/planning_phase_navigation.dart lib/widgets/initiation_like_sidebar.dart test/screens/agile_screen_navigator_test.dart
+git commit -m "fix(agile): put Kanban Configuration after Epics & Features and Metrics Planning before Agile Map Out"
+```
+
+---
+
+### Task 2: Kanban Configuration says what is actually configurable
+
+**Files:**
+- Modify: `lib/screens/agile_kanban_config_screen.dart` (187 lines — it renders `KanbanBoardPanel` and nothing else)
+- Modify: `lib/services/kanban_config_service.dart` (`loadWorkflowColumns`, `alignStatusesToWorkflow`)
+- Read for context: `lib/screens/agile_kanban_board_screen.dart` (`KanbanBoardPanel`, Board column definitions)
+
+**Step 1:** In `agile_kanban_config_screen.dart`, render an explicit
+**editable vs locked** block above the board: column name, order and WIP limit
+editable; the board's status set (Backlog / In Progress / Review) and the drag
+rules locked. Load the current values with
+`KanbanConfigService.loadWorkflowColumns(projectId)` instead of showing static
+cards.
+
+**Step 2:** Persist edits through `AgileWireframeService.saveKanbanConfig`
+(existing: `loadKanbanConfig`/`saveKanbanConfig`, ~lines 327-345) and re-run
+`KanbanConfigService.alignStatusesToWorkflow` on save so cards on the board do
+not end up in a column that no longer exists.
+
+**Step 3:** Verify the board still renders: `flutter analyze lib/screens/agile_kanban_config_screen.dart`
+Expected: no issues.
+
+**Step 4: Commit** with a message naming the clarify-not-configure change.
+
+---
+
+### Task 3: Backlog table view — Epic → Feature → Story → Task
+
+**Files:**
+- Modify: `lib/screens/agile_stories_backlog_screen.dart` (690 lines; already loads `Epic`, `Feature`, `AgileTask`)
+- Reuse: `lib/services/epic_feature_service.dart` — `loadEpics`, `loadAllFeatures`, `loadFeatures(projectId, epicId)`; `ExecutionPhaseService.loadAgileTasks`
+- Reuse the table widget the rest of the app uses (`LaunchDataTable` / `buildNduDataTable` + `ResponsiveDataTableWrapper`), matching the SSHER/Design table pattern
+- Test: add `test/screens/agile_stories_backlog_test.dart` following the provider/pump harness in `test/screens/agile_screen_navigator_test.dart` (`pumpScreen` helper)
+
+**Step 1: Write the failing test** — pump `AgileStoriesBacklogScreen` with one
+epic → one feature → one story and assert the table shows the story name, its
+feature name and its epic name in the same row.
+
+**Step 2: Run it and watch it fail.**
+Run: `flutter test test/screens/agile_stories_backlog_test.dart`
+Expected: FAIL — the row does not exist yet.
+
+**Step 3:** Add the table. Columns: Epic | Feature | Type (Story/Task) | Title |
+Parent | Priority | Estimate | Iteration/Status. Populate by walking
+`loadEpics` → `loadFeatures` (or `loadAllFeatures` + group by `epicId`) →
+`loadAgileTasks` filtered on `featureId`. Stories whose `featureId` is empty must
+be surfaced as an **"Unlinked"** group rather than hidden — that is the
+regression that let the missing breakdown go unnoticed.
+
+**Step 4:** Keep the existing card view as a toggle; table becomes the default.
+The owner's words: "currently they just, as cards … that's not very efficient",
+and for the SSHER section they already asked for table-as-default, so match it.
+
+**Step 5:** Run the test, then `flutter analyze lib/screens/agile_stories_backlog_screen.dart`.
+Expected: PASS, no analyzer issues.
+
+**Step 6: Commit.**
+
+---
+
+### Task 4: Enforce Story → Feature → Epic, and let a Feature spawn its stories
+
+**Files:**
+- Modify: `lib/models/agile_task.dart` (has `epicId`, `featureId`)
+- Modify: `lib/services/agile_service.dart` (`createStory` at ~line 91, `updateStory` ~127, `deleteStory` ~149)
+- Modify: `lib/screens/agile_epics_features_screen.dart` (1924 lines) — "Add story" action on a feature
+- Modify: `lib/screens/agile_stories_backlog_screen.dart` — story editor requires a feature
+- Test: extend `test/screens/agile_stories_backlog_test.dart`
+
+**Step 1: Write the failing test** — creating a story with an empty `featureId`
+must be rejected (validation error surfaced to the UI), and creating one from a
+feature must store both `featureId` and the feature's `epicId`.
+
+**Step 2: Run it and watch it fail.**
+Run: `flutter test test/screens/agile_stories_backlog_test.dart`
+
+**Step 3: Implement.** In `AgileService.createStory`, derive `epicId` from the
+feature when the caller does not pass one (single lookup, keep `featureId`
+authoritative). In both screens, the feature picker becomes a required field, and
+the "Add story" entry point appears on the feature row in Epics & Features.
+
+**Step 4:** Run the test. Expected: PASS.
+
+**Step 5:** Manual check: stories created before this change (no `featureId`)
+must still load and appear in the Unlinked group from Task 3 — no migration, no
+crash.
+
+**Step 6: Commit.**
+
+---
+
+### Task 5: Acceptance Criteria above Definition of Done, wired to Backlog Governance
+
+**Files:**
+- Modify: `lib/screens/agile_acceptance_criteria_screen.dart` (930 lines; `AcceptanceCriteriaTemplate`, `_addTemplate`, `_generateDefaultTemplates`)
+- Modify: `lib/widgets/acceptance_criteria_template_dialog.dart`
+- Read: `lib/screens/agile_backlog_governance_screen.dart` (~578 `Definition of Ready`, ~643 `Definition of Done`)
+- Read: `lib/services/agile_wireframe_service.dart` (`loadAcceptanceCriteria`/`saveAcceptanceCriteria` ~206-236, and `loadBacklogGovernance`/`saveBacklogGovernance` ~125-158)
+
+**Step 1:** Reorder the template body to **Definition of Ready → Acceptance
+Criteria → Definition of Done**, and render Ready/Done as **read-only echoes of
+Backlog Governance** with a link to that screen, so the same gate is not
+maintained twice.
+
+**Step 2:** Verify by test that editing Backlog Governance changes what the
+Acceptance Criteria template shows (single source of truth).
+
+**Step 3: Commit.**
+
+---
+
+### Task 6: Rename the template section to "User Story Template", support N named templates
+
+**Files:**
+- Modify: `lib/screens/agile_acceptance_criteria_screen.dart` (section title, `_addTemplate`, template list UI)
+- Modify: `lib/widgets/acceptance_criteria_template_dialog.dart`
+- Modify: `lib/models/acceptance_criteria.dart` if the list needs a `isDefault` flag
+- Modify: `lib/widgets/initiation_like_sidebar.dart` and `lib/services/sidebar_navigation_service.dart` if the label is user-visible text
+- Test: `test/screens/agile_acceptance_criteria_test.dart` (new)
+
+**Step 1:** Rename user-facing strings from "Acceptance Criteria Planning"/
+"Edit" wording to **User Story Template** where the owner pointed at the template
+body, and make the section list **named** templates with one marked default
+("they can name the template and decide what it will be from"). Keep
+given/when/then inside the template.
+
+**Step 2:** Hide the top-level clutter the owner called out ("they can be
+hidden, they should be hidden") behind a collapsed "Advanced" disclosure rather
+than deleting the fields.
+
+**Step 3:** Test: two templates can coexist, each named; the default is used by
+a newly created story.
+
+**Step 4:** `flutter analyze` the touched files; commit.
+
+---
+
+### Task 7: Release Plan shows epics + milestones and ties them automatically
+
+**Files:**
+- Modify: `lib/screens/agile_release_plan_screen.dart` (1132 lines; `_ReleasePlanEditDialog`, `ReleaseScopePicker`, `_buildSectionHeader`)
+- Modify: `lib/models/agile_release_plan.dart` (`epicIds`, `featureIds`)
+- Read: `lib/models/project_data_model.dart` (`keyMilestones`, `List<Milestone>`), `lib/services/planning_sync_service.dart` (`importSourceMilestone`, `_resolveMilestoneNamesForTask`), `lib/models/planning_contracting_models.dart` for the milestone shape
+- Test: `test/screens/agile_release_plan_test.dart` (new)
+
+**Step 1: Write the failing test** — with two epics and two key milestones in the
+project data, the release plan screen renders both epics and both milestones, and
+a release whose `epicIds` includes an epic shows that epic's milestone without
+the user re-selecting it.
+
+**Step 2:** Implement: read `ProjectDataModel.keyMilestones` (already rendered on
+the Project Baseline and Deliverables screens) and the project's epics, show them
+in the plan, auto-resolve milestones from the epics' WBS/schedule linkage
+(`PlanningSyncService` already tags imported milestones with
+`importSourceMilestone`), and start from a blank plan when nothing is saved
+("this should start with a blank").
+
+**Step 3:** Add the table view the owner asked for ("I can type view, like the
+[table] view") alongside the existing card layout.
+
+**Step 4:** Run the new test plus `flutter analyze lib/screens/agile_release_plan_screen.dart`. Expected: PASS.
+
+**Step 5: Commit.**
+
+---
+
+### Task 8: De-duplicate Metrics Planning and Backlog Governance
+
+**Files:**
+- Modify: `lib/screens/agile_metrics_planning_screen.dart` (553 lines)
+- Modify: `lib/screens/agile_backlog_governance_screen.dart` (930 lines)
+- Read: `lib/services/agile_wireframe_service.dart` (`loadMetricsConfig`/`saveMetricsConfig` ~297-325, `loadBacklogGovernance`/`saveBacklogGovernance`)
+
+**Step 1:** Decide with the owner which of the two keeps each field. The
+recording gives no verdict ("I don't know what the difference between this and
+the Backlog Governance is"), so ask before deleting anything.
+
+**Step 2:** Whichever way it goes, the persisted keys must agree:
+`loadMetricsConfig` and `loadBacklogGovernance` currently read the same Firestore
+doc (`agile_wireframe_service._loadDoc`), so a field saved by one and edited by
+the other will silently fight. Add a test that saves via one path and reads via
+the other.
+
+**Step 3: Commit** — message must say which screen owns what now.
+
+---
+
+### Task 9: Metrics drive the dashboard; stop asking the user to pick metrics
+
+**Files:**
+- Modify: `lib/screens/agile_metrics_planning_screen.dart` (metric-selection UI)
+- Modify: `lib/screens/agile_dashboard_screen.dart` (1049 lines)
+- Read: `lib/screens/agile_metrics_screen.dart` (1117 lines) — check whether this is a third surface that should merge into the dashboard
+- Test: `test/screens/agile_dashboard_test.dart` (new)
+
+**Step 1: Write the failing test** — with a saved metrics config, the dashboard
+renders a tile per configured metric without any user selection step.
+
+**Step 2:** Pre-select the tracked metric set (velocity, predictability, plus the
+existing business metrics as optional) and have the dashboard read them from the
+metrics config. The owner's ask: "just have the metrics available. And then the
+dashboard is going to reflect those metrics."
+
+**Step 3:** Check the dashboard against the "everything a dashboard should have"
+bar — every tile must trace to a metric defined in Metrics Planning. Remove or
+relabel anything that does not ("it does not look like it's driving any certain
+output").
+
+**Step 4:** Run the test, `flutter analyze`, commit.
+
+---
+
+### Task 10: Capacity Planning is editable and cadence-driven
+
+**Files:**
+- Modify: `lib/screens/agile_capacity_planning_screen.dart` (849 lines)
+- Read: `lib/services/agile_wireframe_service.dart` (`loadCapacityPlanning`/`saveCapacityPlanning` ~267-295) and `AgileDeliveryModelScreen`'s saved cadence for the sprint length (the two-week model)
+
+**Step 1:** Make the planning-stage values editable and persist them on change
+(debounced save, matching the pattern in `agile_stories_backlog_screen.dart`'s
+`_saveDebounce`), and derive the per-sprint capacity from the saved delivery
+model cadence rather than a hardcoded two weeks.
+
+**Step 2:** Test: change sprint length in the delivery model → capacity planning
+recomputes. Commit.
+
+---
+
+### Task 11: Work through the rest of the review
+
+Remaining asks that are small and independent — do them as one commit each:
+
+1. Feature add/edit dialog fields: title, description, priority, parent epic
+   (ask 12) — `lib/screens/agile_epics_features_screen.dart`.
+2. Feature list view (all features, all epics) in Epics & Features — same file;
+   the current card-only grid is the "not very efficient" complaint.
+3. WBS shows one more level (epic → feature → story) — `wbs/screens/wbs_module_screen.dart`
+   plus whatever `EpicFeatureService` view it renders.
+4. Backlog drag-to-prioritize + search across epic/feature/story, and the
+   pull-into-Kanban action — `lib/screens/agile_stories_backlog_screen.dart`,
+   `lib/screens/agile_kanban_config_screen.dart`.
+5. Confirm the Kanban board is still reachable from the Execution phase (ask 1's
+   second half) and fix the phase wiring if it is not.
+
+> Ordering places that look plausible but do **not** need editing:
+> `initiation_like_sidebar.dart`'s `agileWireframeCheckpoints` list (a `contains`
+> membership check, so order is inert) and `project_route_registry.dart` (a
+> checkpoint → screen map, not an order).
+
+---
+
+## Verification for the whole plan
+
+Run after each commit, and once at the end:
+
+```bash
+flutter analyze
+flutter test test/screens/agile_screen_navigator_test.dart
+flutter test test/screens/agile_stories_backlog_test.dart
+flutter test test/screens/agile_release_plan_test.dart
+flutter test test/screens/agile_dashboard_test.dart
+```
+
+The nav regression test is the canary: it asserts the exact 12-step order, so any
+later reordering of the Agile flow fails loudly instead of silently drifting.
+
+## Manual walkthrough before handing back
+
+1. Agile Delivery Model → … → Epics & Features → Kanban Configuration order, both
+   in the sidebar and by Back/Next.
+2. Create epic → feature → story; confirm the story cannot exist without a feature
+   and appears in the backlog table with its epic and feature.
+3. Open the Kanban board from Execution and confirm the story can be pulled in.
+4. Release Plan shows the epics + milestones with no manual milestone picking.
+5. Acceptance Criteria template reads Ready → Acceptance Criteria → Done, and the
+   template section is named "User Story Template".
+
+## Not code work (from the same recording)
+
+- Continue the review session tomorrow; the organiser moves that invitation to
+  **2 PM PST**.

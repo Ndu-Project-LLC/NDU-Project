@@ -460,19 +460,39 @@ strip is a presentational widget with its own tests.
 
 ---
 
-### Task 10: Capacity Planning is editable and cadence-driven
+### Task 10: Capacity Planning is editable and cadence-driven — DONE
 
 **Files:**
-- Modify: `lib/screens/agile_capacity_planning_screen.dart` (849 lines)
-- Read: `lib/services/agile_wireframe_service.dart` (`loadCapacityPlanning`/`saveCapacityPlanning` ~267-295) and `AgileDeliveryModelScreen`'s saved cadence for the sprint length (the two-week model)
+- Added: `lib/utils/agile_capacity_model.dart` (`AgileCapacityModel`,
+  `CapacityPlan`, `VelocityBasis`)
+- Modified: `lib/screens/agile_capacity_planning_screen.dart` (reads the cadence
+  from the delivery model, derives every number from it, adds a velocity-basis
+  control, exports the derived capacity)
+- Test: `test/utils/agile_capacity_model_test.dart` (9)
 
-**Step 1:** Make the planning-stage values editable and persist them on change
-(debounced save, matching the pattern in `agile_stories_backlog_screen.dart`'s
-`_saveDebounce`), and derive the per-sprint capacity from the saved delivery
-model cadence rather than a hardcoded two weeks.
+**The values were already editable — the cadence was the missing part.** The
+sliders for working days, availability, meeting overhead and buffer already
+wrote through a 500 ms debounced save, so that half of the ask needed no change.
+What was wrong is that none of it knew about the sprint length: `_focusFactor`
+hardcoded a 40-hour week (`_meetingOverhead / 40`) and "per sprint" meant nothing.
 
-**Step 2:** Test: change sprint length in the delivery model → capacity planning
-recomputes. Commit.
+**What landed.** `_sprintLengthDays` is read from the delivery model's saved
+`sprintLength` (`'2 Weeks'` → 14 days, blank or `'Kanban'` → the two-week
+default) and passed through `AgileCapacityModel.derive`, which now reports the
+sprint's working days, hours, focus factor, capacity per sprint, and capacity per
+week, and labels the cadence it derived them for. A **Velocity stated: per
+sprint / per week** control makes the cadence consequential: a per-week velocity
+doubles with a two-week sprint, while a per-sprint velocity stays put and shows
+a slower week instead. The formula is backward compatible — at two weeks, four
+hours of meetings a week against ten eight-hour days is still the same 10%
+overhead the old hardcoded `/40` produced.
+
+**Deviation: leave and holidays are not fed into the number yet.**
+`AgileCapacityModel.derive` accepts `leaveDays`/`holidayDays` and is tested with
+them, but the page has no sprint start/end dates, so applying them would mean
+inventing a window and quietly changing the answer. It passes zero for now,
+matching the previous behaviour (leave never affected the number anyway). Worth
+closing when the sprint calendar gives this page real dates.
 
 ---
 

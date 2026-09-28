@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
+import 'package:ndu_project/utils/agile_capacity_model.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -12,6 +13,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/screen_flow_navigator.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -78,17 +80,27 @@ class _AgileCapacityPlanningScreenState
   final Map<String, TextEditingController> _leavePersonCtrls = {};
   final Map<String, TextEditingController> _holidayNameCtrls = {};
 
-  double get _focusFactor {
-    final overheadFraction = _meetingOverhead / 40;
-    final bufferFraction = _buffer / 100;
-    return (_availability / 100) *
-        (1 - overheadFraction) *
-        (1 - bufferFraction);
-  }
+  /// The sprint length, in days, read from the delivery model's cadence. The
+  /// review's input was that model ("we said it was going to be two weeks"), so
+  /// capacity is no longer computed against an assumed two weeks.
+  int _sprintLengthDays = AgileCapacityModel.fallbackSprintDays;
 
-  double get _effectiveCapacity {
-    return _historicalVelocity * _focusFactor;
-  }
+  VelocityBasis _velocityBasis = VelocityBasis.perSprint;
+
+  /// Everything the page reports, derived from the cadence and the factors.
+  ///
+  /// Leave and holidays are collected below but not fed in here: applying them
+  /// needs sprint start/end dates this page does not have yet, and inventing a
+  /// window would silently change the number.
+  CapacityPlan get _plan => AgileCapacityModel.derive(
+        sprintLengthDays: _sprintLengthDays,
+        workingDaysPerWeek: _workingDays,
+        availabilityPct: _availability,
+        meetingOverheadHoursPerWeek: _meetingOverhead,
+        bufferPct: _buffer,
+        historicalVelocity: _historicalVelocity,
+        velocityBasis: _velocityBasis,
+      );
 
   String? get _projectId {
     try {
@@ -123,8 +135,16 @@ class _AgileCapacityPlanningScreenState
     setState(() => _isLoading = true);
     try {
       final data = await AgileWireframeService.loadCapacityPlanning(pid);
+      // The cadence lives on the delivery model, not on this page, so read it
+      // from there and fall back to the two-week default when it is unset.
+      final deliveryModel = await AgileWireframeService.loadDeliveryModel(pid);
       if (!mounted) return;
       setState(() {
+        _sprintLengthDays = AgileCapacityModel.sprintLengthDaysFor(
+            deliveryModel['sprintLength']?.toString() ?? '');
+        _velocityBasis = (data['velocityBasis']?.toString() ?? '') == 'perWeek'
+            ? VelocityBasis.perWeek
+            : VelocityBasis.perSprint;
         _workingDays = (data['workingDays'] as num?)?.toInt() ?? 5;
         _availability = (data['availability'] as num?)?.toDouble() ?? 80;
         _meetingOverhead = (data['meetingOverhead'] as num?)?.toDouble() ?? 4;
@@ -213,6 +233,10 @@ class _AgileCapacityPlanningScreenState
         'meetingOverhead': _meetingOverhead,
         'buffer': _buffer,
         'velocitySource': _velocitySource,
+        'velocityBasis': _velocityBasis.name,
+        // Recorded so the page can show which cadence the numbers were derived
+        // for, even after the delivery model changes.
+        'sprintLengthDays': _sprintLengthDays,
         'historicalVelocity': _historicalVelocity,
         'velocityNotes': _velocityNotesCtrl.text,
         'leaveEntries': _leaveEntries
@@ -341,6 +365,11 @@ class _AgileCapacityPlanningScreenState
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 24),
+                        ScreenFlowNavigator(
+                          steps: PlanningPhaseNavigation.agileDeliverySteps,
+                          currentCheckpoint: 'agile_capacity_planning',
+                        ),
+                        const SizedBox(height: 24),
                         if (_isLoading)
                           const Center(child: CircularProgressIndicator())
                         else ...[
@@ -413,10 +442,37 @@ class _AgileCapacityPlanningScreenState
               const SizedBox(width: 32),
               _buildStat('Buffer', '${_buffer.round()}%'),
               const SizedBox(width: 32),
-              _buildStat('Focus Factor', '${(_focusFactor * 100).round()}%'),
+              _buildStat('Focus Factor', '${(_plan.focusFactor * 100).round()}%'),
               const SizedBox(width: 32),
-              _buildStat('Est. Capacity', '${_effectiveCapacity.round()} pts'),
+              _buildStat(
+                  'Est. Capacity', '${_plan.capacityPerSprint.round()} pts'),
             ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            key: const ValueKey('capacity-cadence'),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: _kAccent.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.event_repeat, size: 15, color: _kAccent),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Sprint cadence: ${_plan.cadenceLabel} '
+                    '(${_plan.sprintHours.round()} hrs) — from the Agile '
+                    'Delivery Model. Capacity is per sprint: '
+                    '${_plan.capacityPerWeek.round()} pts/week.',
+                    style: const TextStyle(fontSize: 12, color: _kHeadline),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -786,6 +842,36 @@ class _AgileCapacityPlanningScreenState
             ],
           ),
           const SizedBox(height: 12),
+          // Which cadence the number above is stated for. A per-week velocity is
+          // what actually scales when the delivery model's sprint length
+          // changes; per-sprint is what the field has always meant.
+          Row(
+            children: [
+              const Text('Velocity stated: ',
+                  style: TextStyle(fontSize: 13, color: _kHeadline)),
+              const SizedBox(width: 8),
+              SegmentedButton<VelocityBasis>(
+                segments: const [
+                  ButtonSegment(
+                      value: VelocityBasis.perSprint,
+                      label: Text('Per sprint')),
+                  ButtonSegment(
+                      value: VelocityBasis.perWeek, label: Text('Per week')),
+                ],
+                selected: {_velocityBasis},
+                onSelectionChanged: (v) {
+                  setState(() => _velocityBasis = v.first);
+                  _scheduleAutoSave();
+                },
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  textStyle: WidgetStatePropertyAll(
+                      TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           VoiceTextField(
             controller: SpellCheckTextEditingController.fromValue(
               TextEditingValue(
@@ -831,6 +917,18 @@ class _AgileCapacityPlanningScreenState
         PdfSection.keyValue('Project Info', [
           {'Project Name': projectData.projectName},
           {'Solution Title': projectData.solutionTitle},
+        ]),
+        PdfSection.keyValue('Derived Capacity', [
+          {'Sprint cadence': _plan.cadenceLabel},
+          {'Sprint hours': '${_plan.sprintHours.round()}'},
+          {
+            'Velocity basis': _velocityBasis == VelocityBasis.perWeek
+                ? 'Per week'
+                : 'Per sprint'
+          },
+          {'Focus factor': '${(_plan.focusFactor * 100).round()}%'},
+          {'Capacity per sprint': '${_plan.capacityPerSprint.round()} pts'},
+          {'Capacity per week': '${_plan.capacityPerWeek.round()} pts'},
         ]),
         PdfSection.text(
             'Notes',

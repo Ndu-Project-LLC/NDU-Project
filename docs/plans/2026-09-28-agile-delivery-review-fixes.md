@@ -114,29 +114,36 @@ git commit -m "fix(agile): put Kanban Configuration after Epics & Features and M
 
 ---
 
-### Task 2: Kanban Configuration says what is actually configurable
+### Task 2: Kanban Configuration says what is actually configurable — DONE
 
 **Files:**
-- Modify: `lib/screens/agile_kanban_config_screen.dart` (187 lines — it renders `KanbanBoardPanel` and nothing else)
-- Modify: `lib/services/kanban_config_service.dart` (`loadWorkflowColumns`, `alignStatusesToWorkflow`)
-- Read for context: `lib/screens/agile_kanban_board_screen.dart` (`KanbanBoardPanel`, Board column definitions)
+- Modified: `lib/screens/agile_kanban_config_screen.dart`
+- Modified: `lib/services/kanban_config_service.dart` (`KanbanColumnConfig`,
+  `defaultColumns`, `loadColumns`, `saveColumns`, `parseWipLimit`,
+  `wipLimitLabel`, `columnIdFor`)
+- Modified: `lib/screens/agile_kanban_board_screen.dart` (board reads its
+  columns and its fallback through the service)
+- Tests: `test/screens/agile_kanban_config_test.dart`,
+  `test/services/kanban_config_service_test.dart`
 
-**Step 1:** In `agile_kanban_config_screen.dart`, render an explicit
-**editable vs locked** block above the board: column name, order and WIP limit
-editable; the board's status set (Backlog / In Progress / Review) and the drag
-rules locked. Load the current values with
-`KanbanConfigService.loadWorkflowColumns(projectId)` instead of showing static
-cards.
+**What landed.** The page is split into *Workflow Columns* (rename, reorder,
+WIP limit, add/remove, Save, UNSAVED badge) and *Fixed on Every Kanban Board*
+(the lock list: state derived from the column name, drag-to-move, WIP gating,
+re-homing on rename/remove, one workflow per project). Columns load from the
+saved config (`AgileWireframeService.loadKanbanConfig`), falling back to the
+board's own defaults, and save through `KanbanConfigService.saveColumns`.
 
-**Step 2:** Persist edits through `AgileWireframeService.saveKanbanConfig`
-(existing: `loadKanbanConfig`/`saveKanbanConfig`, ~lines 327-345) and re-run
-`KanbanConfigService.alignStatusesToWorkflow` on save so cards on the board do
-not end up in a column that no longer exists.
+**Correction to the original step 2.** Do **not** run
+`KanbanConfigService.alignStatusesToWorkflow` over the saved column names. It
+normalises `Backlog` and `Ready` to `To Do` and then de-duplicates, so saving
+the owner's five-column board through it would silently collapse two columns.
+The board already re-homes a card whose `workflowState` no longer exists to the
+first column, so no extra alignment step is needed for renames or removals.
 
-**Step 3:** Verify the board still renders: `flutter analyze lib/screens/agile_kanban_config_screen.dart`
-Expected: no issues.
-
-**Step 4: Commit** with a message naming the clarify-not-configure change.
+**One drift fixed on the way.** `agile_kanban_board_screen.dart` carried its
+own hardcoded default columns and its own name→id slug. Both now come from
+`KanbanConfigService` (`defaultColumns`, `columnIdFor`, `columnsFromConfig`), so
+the page and the board cannot disagree about the starting workflow.
 
 ---
 

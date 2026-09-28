@@ -4,6 +4,7 @@ import 'package:ndu_project/models/feature_model.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
+import 'package:ndu_project/services/kanban_config_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -114,55 +115,23 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
   }
 
   List<_KanbanColumn> _buildColumnsFromConfig(Map<String, dynamic> data) {
-    final rawCols = data['columns'] as List?;
-    if (rawCols == null || rawCols.isEmpty) {
-      return const [
+    // The configuration page reads and writes these same columns through
+    // KanbanConfigService, so both the saved shape and the fallback come from
+    // there — the board cannot drift from what the user configured.
+    final configured = KanbanConfigService.columnsFromConfig(data);
+    final columns = configured.isEmpty
+        ? KanbanConfigService.defaultColumns
+        : configured;
+    return [
+      for (final entry in columns.asMap().entries)
         _KanbanColumn(
-            id: 'backlog',
-            title: 'Backlog',
-            accent: Color(0xFF6B7280),
-            wipLimit: 999),
-        _KanbanColumn(
-            id: 'ready',
-            title: 'Ready',
-            accent: Color(0xFFFFC812),
-            wipLimit: 8),
-        _KanbanColumn(
-            id: 'in_progress',
-            title: 'In Progress',
-            accent: _kAccent,
-            wipLimit: 5),
-        _KanbanColumn(
-            id: 'in_review',
-            title: 'In Review',
-            accent: Color(0xFFB8860B),
-            wipLimit: 3),
-        _KanbanColumn(
-            id: 'done',
-            title: 'Done',
-            accent: Color(0xFF10B981),
-            wipLimit: 999),
-      ];
-    }
-    return rawCols.asMap().entries.map((entry) {
-      final item = Map<String, dynamic>.from(entry.value as Map);
-      final name = item['name']?.toString() ?? 'Column';
-      final id = _normalizeColumnId(name, fallback: 'column_${entry.key + 1}');
-      return _KanbanColumn(
-        id: id,
-        title: name,
-        accent: _accentForIndex(entry.key),
-        wipLimit: (item['wipLimit'] as num?)?.toInt() ?? 999,
-      );
-    }).toList();
-  }
-
-  String _normalizeColumnId(String value, {required String fallback}) {
-    final normalized = value
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
-        .replaceAll(RegExp(r'^_+|_+$'), '');
-    return normalized.isEmpty ? fallback : normalized;
+          id: KanbanConfigService.columnIdFor(entry.value.name,
+              fallback: 'column_${entry.key + 1}'),
+          title: entry.value.name,
+          accent: _accentForIndex(entry.key),
+          wipLimit: entry.value.wipLimit,
+        ),
+    ];
   }
 
   Color _accentForIndex(int index) {

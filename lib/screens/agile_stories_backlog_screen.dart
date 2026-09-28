@@ -12,6 +12,7 @@ import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/roadmap_service.dart';
+import 'package:ndu_project/utils/agile_backlog_order.dart';
 import 'package:ndu_project/utils/agile_backlog_table.dart';
 import 'package:ndu_project/utils/agile_story_linkage.dart';
 import 'package:ndu_project/utils/agile_story_template.dart';
@@ -124,19 +125,61 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     return _featuresByEpic[_selectedEpicId] ?? [];
   }
 
-  List<AgileTask> _storiesForFeature(String featureId) {
-    final filtered = _stories.where((story) => story.featureId == featureId);
-    if (_searchQuery.trim().isEmpty) {
-      return filtered.toList()
-        ..sort((a, b) => a.backlogOrder.compareTo(b.backlogOrder));
+  Feature? _featureFor(String featureId) {
+    for (final features in _featuresByEpic.values) {
+      for (final feature in features) {
+        if (feature.id == featureId) return feature;
+      }
     }
-    final q = _searchQuery.toLowerCase();
-    return filtered.where((story) {
-      return story.userStory.toLowerCase().contains(q) ||
-          story.taskDescription.toLowerCase().contains(q) ||
-          story.acceptanceCriteria.toLowerCase().contains(q);
-    }).toList()
-      ..sort((a, b) => a.backlogOrder.compareTo(b.backlogOrder));
+    return null;
+  }
+
+  String _epicTitleFor(String epicId) {
+    for (final epic in _epics) {
+      if (epic.id == epicId) return epic.title;
+    }
+    return '';
+  }
+
+  /// This feature's stories in priority order, narrowed by the search box.
+  ///
+  /// The search reaches the feature and epic titles too — the review asked to
+  /// "search for epic, feature, story" — so typing an epic name surfaces its
+  /// stories instead of nothing.
+  List<AgileTask> _storiesForFeature(String featureId) {
+    final stories = AgileBacklogOrdering.forFeature(_stories, featureId);
+    final query = _searchQuery.trim();
+    if (query.isEmpty) return stories;
+    final feature = _featureFor(featureId);
+    final epicTitle = feature == null ? '' : _epicTitleFor(feature.epicId);
+    return [
+      for (final story in stories)
+        if (AgileBacklogOrdering.matches(
+          story,
+          query: query,
+          featureTitle: feature?.title ?? '',
+          epicTitle: epicTitle,
+        ))
+          story,
+    ];
+  }
+
+  /// Reorder within a feature's story list. The drop is stored as the story's
+  /// backlog position, so priority survives a reload instead of living in the
+  /// widget.
+  void _reorderStories(Feature feature, int oldIndex, int newIndex) {
+    final reordered = AgileBacklogOrdering.moveWithinFeature(
+      stories: _stories,
+      featureId: feature.id,
+      oldIndex: oldIndex,
+      newIndex: newIndex,
+    );
+    setState(() {
+      _stories
+        ..clear()
+        ..addAll(reordered);
+    });
+    _scheduleSave();
   }
 
   Future<void> _persistStories() async {
@@ -283,7 +326,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                           VoiceTextField(
                             controller: _searchController,
                             decoration: InputDecoration(
-                              hintText: 'Search stories...',
+                              hintText: 'Search stories, features, epics...',
                               prefixIcon: const Icon(Icons.search, size: 20),
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10)),
@@ -525,13 +568,51 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                     : 'No stories planned for this feature yet.',
                 style: const TextStyle(color: _kMuted),
               )
+            else if (_searchQuery.trim().isNotEmpty)
+              // Dropping into a filtered list would renumber against the wrong
+              // neighbours, so dragging waits until the search is cleared.
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Clear the search to drag these stories into priority order.',
+                    style: TextStyle(fontSize: 12, color: _kMuted),
+                  ),
+                  const SizedBox(height: 8),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: stories.length,
+                    itemBuilder: (context, i) =>
+                        _buildStoryCard(stories[i], feature),
+                  ),
+                ],
+              )
             else
-              ListView.builder(
+              // Drag to prioritise: the whole point of the backlog, per the
+              // review ("drag them up and down to prioritize them").
+              ReorderableListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
                 itemCount: stories.length,
-                itemBuilder: (context, i) =>
-                    _buildStoryCard(stories[i], feature),
+                onReorder: (oldIndex, newIndex) =>
+                    _reorderStories(feature, oldIndex, newIndex),
+                itemBuilder: (context, i) => KeyedSubtree(
+                  key: ValueKey('story-${stories[i].id}'),
+                  child: _buildStoryCard(
+                    stories[i],
+                    feature,
+                    dragHandle: ReorderableDragStartListener(
+                      index: i,
+                      child: const Tooltip(
+                        message: 'Drag to prioritize',
+                        child: Icon(Icons.drag_indicator,
+                            size: 18, color: _kMuted),
+                      ),
+                    ),
+                  ),
+                ),
               ),
           ],
         ),
@@ -539,7 +620,8 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     );
   }
 
-  Widget _buildStoryCard(AgileTask story, Feature feature) {
+  Widget _buildStoryCard(AgileTask story, Feature feature,
+      {Widget? dragHandle}) {
     final titleCtrl = SpellCheckTextEditingController(text: story.userStory);
     final descCtrl = SpellCheckTextEditingController(text: story.taskDescription);
     final acCtrl = SpellCheckTextEditingController(text: story.acceptanceCriteria);
@@ -576,6 +658,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                   child: const Text('WBS linked',
                       style: TextStyle(fontSize: 11, color: Color(0xFFB8860B))),
                 ),
+              if (dragHandle != null) dragHandle,
               IconButton(
                 icon: const Icon(Icons.delete_outline,
                     color: Colors.red, size: 18),

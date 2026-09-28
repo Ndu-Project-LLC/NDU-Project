@@ -90,6 +90,40 @@ class AgileBacklogOrdering {
     ];
   }
 
+  /// [stories] with [storyId] moved one step earlier or later among its
+  /// feature's stories — the table view's explicit move actions, where there is
+  /// no drop position to interpret.
+  ///
+  /// A nudge off either end of the feature is a no-op, so the buttons never
+  /// have to know where the ends are.
+  static List<AgileTask> nudgeWithinFeature({
+    required List<AgileTask> stories,
+    required String storyId,
+    required int delta,
+  }) {
+    if (delta == 0) return sorted(stories);
+    final ordered = sorted(stories);
+    final found = ordered.indexWhere((story) => story.id == storyId);
+    if (found == -1) return ordered;
+    final featureId = ordered[found].featureId;
+    if (featureId.isEmpty) return ordered;
+
+    final siblings = forFeature(ordered, featureId);
+    final index = siblings.indexWhere((story) => story.id == storyId);
+    if (index == -1) return ordered;
+    final landing = index + delta;
+    if (landing < 0 || landing >= siblings.length) return ordered;
+
+    return moveWithinFeature(
+      stories: ordered,
+      featureId: featureId,
+      oldIndex: index,
+      // moveWithinFeature takes an insertion slot, which is one past the
+      // landing spot for a downward move.
+      newIndex: delta > 0 ? landing + 1 : landing,
+    );
+  }
+
   /// Whether [story] matches a backlog search.
   ///
   /// The review asked to "search for epic, feature, story", so the parent

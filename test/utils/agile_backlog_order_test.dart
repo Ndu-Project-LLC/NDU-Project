@@ -148,6 +148,52 @@ void main() {
     });
   });
 
+  group('nudgeWithinFeature', () {
+    test('moves a story one place later', () {
+      final result = AgileBacklogOrdering.nudgeWithinFeature(
+        stories: backlog,
+        storyId: 's1',
+        delta: 1,
+      );
+
+      expect(ids(result), ['s2', 's1', 's3', 's4']);
+      expect(orders(result), [1, 2, 3, 4]);
+    });
+
+    test('moves a story one place earlier', () {
+      final result = AgileBacklogOrdering.nudgeWithinFeature(
+        stories: backlog,
+        storyId: 's2',
+        delta: -1,
+      );
+
+      // s2 swaps with the story above it, and nothing else moves.
+      expect(ids(result), ['s2', 's1', 's3', 's4']);
+    });
+
+    test('a nudge off the end of the feature is a no-op', () {
+      expect(
+        ids(AgileBacklogOrdering.nudgeWithinFeature(
+            stories: backlog, storyId: 's3', delta: 1)),
+        ['s1', 's2', 's3', 's4'],
+        reason: 's3 is already last in fA',
+      );
+      expect(
+        ids(AgileBacklogOrdering.nudgeWithinFeature(
+            stories: backlog, storyId: 's1', delta: -1)),
+        ['s1', 's2', 's3', 's4'],
+      );
+    });
+
+    test('a story that does not exist changes nothing', () {
+      expect(
+        ids(AgileBacklogOrdering.nudgeWithinFeature(
+            stories: backlog, storyId: 'nope', delta: 1)),
+        ['s1', 's2', 's3', 's4'],
+      );
+    });
+  });
+
   group('matches', () {
     test('reads the story itself', () {
       final story = _story(

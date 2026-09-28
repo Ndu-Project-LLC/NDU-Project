@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/utils/agile_backlog_table.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
@@ -19,11 +20,28 @@ class AgileBacklogTableView extends StatelessWidget {
     required this.sprintLabel,
     required this.releaseLabel,
     this.featuresWithoutStories = 0,
+    this.onMoveUp,
+    this.onMoveDown,
+    this.boardLabel,
     this.emptyMessage =
         'No stories in the backlog yet. Switch to Cards to add a story to a feature.',
   });
 
   final List<BacklogTableRow> rows;
+
+  /// Move a story one place earlier in its feature's priority.
+  ///
+  /// The table is the default view, so prioritising cannot live only in the
+  /// drag handle on the cards — the review asked to be able to reorder the
+  /// backlog ("drag them up and down to prioritize them").
+  final void Function(AgileTask story)? onMoveUp;
+
+  /// Move a story one place later in its feature's priority.
+  final void Function(AgileTask story)? onMoveDown;
+
+  /// Which board column a story currently sits in, when the caller knows it.
+  /// The column is only rendered when this is supplied.
+  final String Function(AgileTask story)? boardLabel;
 
   /// Resolves a target sprint id for display.
   final String Function(String id) sprintLabel;
@@ -86,16 +104,18 @@ class AgileBacklogTableView extends StatelessWidget {
   }) {
     // With no parent to show, say why instead of rendering two blank columns.
     final columns = showParentColumns
-        ? const [
-            DataColumn(label: Text('Epic')),
-            DataColumn(label: Text('Feature')),
-            DataColumn(label: Text('Story')),
-            DataColumn(label: Text('Priority')),
-            DataColumn(label: Text('Points'), numeric: true),
-            DataColumn(label: Text('Readiness')),
-            DataColumn(label: Text('Sprint')),
-            DataColumn(label: Text('Release')),
-            DataColumn(label: Text('WBS')),
+        ? [
+            const DataColumn(label: Text('Epic')),
+            const DataColumn(label: Text('Feature')),
+            const DataColumn(label: Text('Story')),
+            const DataColumn(label: Text('Order')),
+            const DataColumn(label: Text('Priority')),
+            const DataColumn(label: Text('Points'), numeric: true),
+            const DataColumn(label: Text('Readiness')),
+            const DataColumn(label: Text('Sprint')),
+            const DataColumn(label: Text('Release')),
+            if (boardLabel != null) const DataColumn(label: Text('Board')),
+            const DataColumn(label: Text('WBS')),
           ]
         : const [
             DataColumn(label: Text('Story')),
@@ -119,11 +139,13 @@ class AgileBacklogTableView extends StatelessWidget {
                   DataCell(Text(row.story.userStory.isNotEmpty
                       ? row.story.userStory
                       : 'Untitled story')),
+                  DataCell(_orderCell(row.story)),
                   DataCell(Text(row.story.priority)),
                   DataCell(Text('${row.story.storyPoints}')),
                   DataCell(Text(row.story.readinessStatus)),
                   DataCell(Text(sprintLabel(row.story.plannedSprintId))),
                   DataCell(Text(releaseLabel(row.story.plannedReleaseId))),
+                  if (boardLabel != null) DataCell(Text(boardLabel!(row.story))),
                   DataCell(Text(row.story.wbsId.isNotEmpty ? 'Linked' : '—')),
                 ]
               : [
@@ -136,6 +158,50 @@ class AgileBacklogTableView extends StatelessWidget {
                   DataCell(Text(row.story.readinessStatus)),
                 ]),
       ],
+    );
+  }
+
+  /// The story's stored priority, plus the move actions when the screen wired
+  /// them up.
+  Widget _orderCell(AgileTask story) {
+    if (onMoveUp == null && onMoveDown == null) {
+      return Text('#${story.backlogOrder}');
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('#${story.backlogOrder}'),
+        const SizedBox(width: 4),
+        _moveButton(
+          key: ValueKey('backlog-up-${story.id}'),
+          tooltip: 'Move earlier',
+          icon: Icons.keyboard_arrow_up,
+          onPressed: onMoveUp == null ? null : () => onMoveUp!(story),
+        ),
+        _moveButton(
+          key: ValueKey('backlog-down-${story.id}'),
+          tooltip: 'Move later',
+          icon: Icons.keyboard_arrow_down,
+          onPressed: onMoveDown == null ? null : () => onMoveDown!(story),
+        ),
+      ],
+    );
+  }
+
+  Widget _moveButton({
+    required Key key,
+    required String tooltip,
+    required IconData icon,
+    required VoidCallback? onPressed,
+  }) {
+    return IconButton(
+      key: key,
+      tooltip: tooltip,
+      icon: Icon(icon, size: 16, color: _kMuted),
+      onPressed: onPressed,
+      constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
     );
   }
 

@@ -157,4 +157,53 @@ void main() {
 
     expect(find.byKey(const ValueKey('backlog-unlinked-section')), findsNothing);
   });
+
+  testWidgets('the table can prioritise a story, and shows its board column',
+      (tester) async {
+    AgileTask? movedUp;
+    AgileTask? movedDown;
+
+    tester.view.physicalSize = const Size(2600, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: AgileBacklogTableView(
+              rows: [_row('Reset password', order: 2)],
+              sprintLabel: (id) => id.isEmpty ? 'Unassigned' : 'Sprint 1',
+              releaseLabel: (id) => id.isEmpty ? 'Unassigned' : 'R1',
+              onMoveUp: (story) => movedUp = story,
+              onMoveDown: (story) => movedDown = story,
+              boardLabel: (story) => 'Backlog',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 50));
+
+    // The table is the default view, so priority has to be workable here.
+    expect(find.text('Order'), findsOneWidget);
+    expect(find.text('#2'), findsOneWidget);
+    expect(find.text('Board'), findsOneWidget);
+    expect(find.text('Backlog'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('backlog-up-Reset password')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('backlog-down-Reset password')));
+    await tester.pump();
+
+    expect(movedUp?.id, 'Reset password');
+    expect(movedDown?.id, 'Reset password');
+  });
+
+  testWidgets('no board column when the caller does not supply one',
+      (tester) async {
+    await _pump(tester, [_row('Reset password')]);
+
+    expect(find.text('Board'), findsNothing);
+  });
 }

@@ -13,6 +13,7 @@ import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/roadmap_service.dart';
 import 'package:ndu_project/utils/agile_backlog_order.dart';
+import 'package:ndu_project/utils/agile_board_pull.dart';
 import 'package:ndu_project/utils/agile_backlog_table.dart';
 import 'package:ndu_project/utils/agile_story_linkage.dart';
 import 'package:ndu_project/utils/agile_story_template.dart';
@@ -54,6 +55,10 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
   /// The User Story Template config, so a story added here starts with the
   /// default template's acceptance criteria instead of a blank field.
   AcceptanceCriteriaConfig _acConfig = AcceptanceCriteriaConfig();
+
+  /// The project's Kanban configuration, so pulling a story onto the board
+  /// targets the columns the board actually uses.
+  Map<String, dynamic> _kanbanConfig = const {};
   bool _isLoading = true;
   bool _isSaving = false;
   Timer? _saveDebounce;
@@ -102,6 +107,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
       final sprints = await RoadmapService.loadSprints(projectId: pid);
       final releases = await AgileWireframeService.loadReleasePlans(pid);
       final acConfig = await AgileWireframeService.loadAcceptanceCriteria(pid);
+      final kanbanConfig = await AgileWireframeService.loadKanbanConfig(pid);
       if (!mounted) return;
       setState(() {
         _epics = epics;
@@ -111,6 +117,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
         _sprints = sprints;
         _releases = releases;
         _acConfig = acConfig;
+        _kanbanConfig = kanbanConfig;
         _selectedEpicId =
             _selectedEpicId ?? (epics.isNotEmpty ? epics.first.id : null);
         _isLoading = false;
@@ -214,6 +221,38 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
   void _scheduleSave() {
     _saveDebounce?.cancel();
     _saveDebounce = Timer(const Duration(milliseconds: 500), _persistStories);
+  }
+
+  /// Move a story one place earlier or later among its feature's stories — the
+  /// table view's explicit priority actions.
+  void _nudgeStory(AgileTask story, int delta) {
+    final nudged = AgileBacklogOrdering.nudgeWithinFeature(
+      stories: _stories,
+      storyId: story.id,
+      delta: delta,
+    );
+    setState(() {
+      _stories
+        ..clear()
+        ..addAll(nudged);
+    });
+    _scheduleSave();
+  }
+
+  /// Pull a story onto the Kanban board: out of the board's entry column and
+  /// into its first working column, which is what the review meant by
+  /// "pull them into the Kanban".
+  void _pullIntoBoard(AgileTask story) {
+    final pulled = AgileBoardPull.pull(story, _kanbanConfig);
+    setState(() => _updateStory(pulled));
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            'Sent to ${AgileBoardPull.columnTitle(pulled, _kanbanConfig)} on the Kanban board'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   void _addStory(Feature feature) {
@@ -480,6 +519,9 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
           : 0,
       sprintLabel: _sprintLabel,
       releaseLabel: _releaseLabel,
+      onMoveUp: (story) => _nudgeStory(story, -1),
+      onMoveDown: (story) => _nudgeStory(story, 1),
+      boardLabel: (story) => AgileBoardPull.columnTitle(story, _kanbanConfig),
       emptyMessage: _searchQuery.trim().isNotEmpty
           ? 'No stories match your search.'
           : 'No stories in the backlog yet. Switch to Cards to add a story to a feature.',
@@ -751,6 +793,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                   _updateStory(story);
                 },
               ),
+              _buildBoardAction(story),
               _dropdownField<String>(
                 label: 'Target release',
                 value: story.plannedReleaseId.isEmpty
@@ -809,6 +852,27 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
           ],
         ],
       ),
+    );
+  }
+
+  /// Whether this story has been pulled onto the board, and the action to do
+  /// it (or the column it is already working in).
+  Widget _buildBoardAction(AgileTask story) {
+    if (AgileBoardPull.isOnBoard(story, _kanbanConfig)) {
+      return Chip(
+        key: ValueKey('story-board-${story.id}'),
+        avatar: const Icon(Icons.view_kanban_outlined, size: 16),
+        label: Text(
+          'On the board · ${AgileBoardPull.columnTitle(story, _kanbanConfig)}',
+          style: const TextStyle(fontSize: 12),
+        ),
+      );
+    }
+    return OutlinedButton.icon(
+      key: ValueKey('story-pull-${story.id}'),
+      onPressed: () => _pullIntoBoard(story),
+      icon: const Icon(Icons.view_kanban_outlined, size: 16),
+      label: const Text('Send to board'),
     );
   }
 

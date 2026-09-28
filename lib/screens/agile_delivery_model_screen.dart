@@ -14,6 +14,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/screen_flow_navigator.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -23,7 +24,7 @@ const Color _kMuted = Color(0xFF6B7280);
 const Color _kHeadline = Color(0xFF111827);
 const Color _kAccent = Color(0xFFD97706);
 
-const List<String> _frameworkOptions = ['Scrum', 'Kanban', 'ScrumBan', 'Waterfall'];
+const List<String> _frameworkOptions = ['Scrum', 'Kanban', 'ScrumBan'];
 const List<String> _sprintLengthOptions = [
   '1 Week',
   '2 Weeks',
@@ -40,7 +41,13 @@ const List<String> _estimationOptions = [
 ];
 
 class AgileDeliveryModelScreen extends StatefulWidget {
-  const AgileDeliveryModelScreen({super.key});
+  const AgileDeliveryModelScreen({super.key, this.metricsOnly = false});
+
+  /// When true, the screen renders only the "Metrics & Reporting" content
+  /// with no tab bar — the view opened from the sidebar's
+  /// "Metrics & Reporting" entry under Agile Delivery. Load, auto-save,
+  /// and AI generation behave exactly as on the tabbed screen.
+  final bool metricsOnly;
 
   @override
   State<AgileDeliveryModelScreen> createState() =>
@@ -76,7 +83,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
   /// Backlog Governance, Team Structure & Roles, and Impediment & Risk
   /// Handling were removed from this screen because they each have their
   /// own dedicated sidebar sub-section under Agile Delivery. Metrics &
-  /// Reporting was moved to its own dedicated sub-tab — see
+  /// Reporting was moved out the same way — it now opens from its own
+  /// sidebar entry ([AgileDeliveryModelScreen.metricsOnly]) — see
   /// [_metricsFields] below.
   static const List<_FieldConfig> _fields = [
     _FieldConfig(
@@ -87,7 +95,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     ),
   ];
 
-  /// Fields shown on the "Metrics & Reporting" sub-tab.
+  /// Fields shown on the "Metrics & Reporting" section (its own sidebar
+  /// page since the tab was removed from this screen).
   /// Persisted at the top level of the deliveryModel document under the
   /// `metrics` key — same key as before the move, so existing data is
   /// preserved.
@@ -365,8 +374,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
         'Context:\n$contextText\n\n'
         'The selected framework is "$_selectedFramework". Tailor the recommendations to that framework.\n\n'
         'Return ONLY a valid JSON object with these exact keys:\n'
-        '- "framework": "Scrum", "Kanban", "ScrumBan", or "Waterfall"\n'
-        '- "sprintLength": "1 Week", "2 Weeks", "3 Weeks", or "4 Weeks" (omit for Kanban / Waterfall)\n'
+        '- "framework": "Scrum", "Kanban", or "ScrumBan"\n'
+        '- "sprintLength": "1 Week", "2 Weeks", "3 Weeks", or "4 Weeks" (omit for Kanban)\n'
         '- "estimationMethod": "Story Points (Fibonacci)", "T-Shirt Sizes", "Ideal Days", etc.\n'
         '- "cadence": Sprint cadence & calendar (2-3 sentences)\n'
         '- "metrics": Metrics & reporting (2-3 sentences)\n'
@@ -530,9 +539,12 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
   Widget build(BuildContext context) {
     final bool isMobile = AppBreakpoints.isMobile(context);
     final double hp = isMobile ? 20 : 40;
+    final String activeSidebarLabel = widget.metricsOnly
+        ? 'Agile Delivery Model - Metrics & Reporting'
+        : 'Agile Delivery Model - Delivery Model';
 
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         backgroundColor: _kBackground,
       body: SafeArea(
@@ -541,16 +553,14 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           children: [
             DraggableSidebar(
               openWidth: AppBreakpoints.sidebarWidth(context),
-              child: const InitiationLikeSidebar(
-                  activeItemLabel: 'Agile Delivery Model - Delivery Model'),
+              child: InitiationLikeSidebar(activeItemLabel: activeSidebarLabel),
             ),
             Expanded(
               child: Stack(
                 children: [
-                  const MobileSidebarHamburger(
+                  MobileSidebarHamburger(
                     sidebar: InitiationLikeSidebar(
-                        activeItemLabel:
-                            'Agile Delivery Model - Delivery Model'),
+                        activeItemLabel: activeSidebarLabel),
                   ),
                   SingleChildScrollView(
                     padding: EdgeInsets.symmetric(horizontal: hp, vertical: 32),
@@ -565,7 +575,12 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                               context, 'agile_delivery_model'),
                           onExportPdf: _exportPdf,
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
+                        ScreenFlowNavigator(
+                          steps: PlanningPhaseNavigation.agileDeliverySteps,
+                          currentCheckpoint: 'agile_delivery_model',
+                        ),
+                        const SizedBox(height: 24),
                         Row(
                           children: [
                             const Expanded(
@@ -602,7 +617,10 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                                 ],
                               ),
                             ),
-                          _buildTabs(),
+                          if (widget.metricsOnly)
+                            _buildMetricsOnlySection()
+                          else
+                            _buildTabs(),
                         ],
                         const SizedBox(height: 24),
                         LaunchPhaseNavigation(
@@ -634,20 +652,21 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     );
   }
 
-  /// Three-tab layout for the Agile Delivery Model screen.
+  /// Two-tab layout for the Agile Delivery Model screen.
   ///
   ///  * **Delivery Model** — framework / sprint length / estimation /
   ///    cadence fields. Backlog Governance, Team Structure & Roles, and
   ///    Impediment & Risk Handling were removed because they have their
   ///    own sidebar sub-sections under Agile Delivery.
-  ///  * **Metrics & Reporting** — velocity, throughput, predictability,
-  ///    and quality measures.
   ///  * **Release Strategy** — the 9 typical sections that define how
   ///    product increments will be planned, validated, and released to
   ///    deliver value throughout the project lifecycle.
   ///
-  /// All three tabs share the same auto-save pipeline — typing in any tab
-  /// triggers the same 500ms debounced save to Firestore.
+  /// **Metrics & Reporting** no longer has a tab on this screen — it moved
+  /// to its own sidebar entry under Agile Delivery and renders through
+  /// [AgileDeliveryModelScreen.metricsOnly]. The two remaining tabs share
+  /// the same auto-save pipeline — typing in any tab triggers the same
+  /// 500ms debounced save to Firestore.
   Widget _buildTabs() {
     final bool isWaterfall = _selectedFramework == 'Waterfall';
     return Column(
@@ -656,7 +675,6 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
         const TabBar(
           tabs: [
             Tab(text: 'Delivery Model'),
-            Tab(text: 'Metrics & Reporting'),
             Tab(text: 'Release Strategy'),
           ],
           labelColor: _kAccent,
@@ -677,9 +695,6 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
             children: [
               SingleChildScrollView(
                 child: _buildDeliveryModelTab(),
-              ),
-              SingleChildScrollView(
-                child: _buildMetricsTab(),
               ),
               SingleChildScrollView(
                 child: _buildReleaseStrategyTab(isWaterfall: isWaterfall),
@@ -800,6 +815,24 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           ),
         ),
         ..._metricsFields.map((f) => _buildField(f)),
+      ],
+    );
+  }
+
+  /// Metrics & Reporting content shown when the screen is opened from the
+  /// sidebar's "Metrics & Reporting" entry ([metricsOnly] == true): the
+  /// metrics fields as a standalone section instead of a tab.
+  Widget _buildMetricsOnlySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Metrics & Reporting',
+          style: TextStyle(
+              fontSize: 22, fontWeight: FontWeight.w700, color: _kHeadline),
+        ),
+        const SizedBox(height: 16),
+        _buildMetricsTab(),
       ],
     );
   }

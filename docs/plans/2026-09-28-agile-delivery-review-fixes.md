@@ -147,37 +147,41 @@ the page and the board cannot disagree about the starting workflow.
 
 ---
 
-### Task 3: Backlog table view — Epic → Feature → Story → Task
+### Task 3: Backlog table view — Epic → Feature → Story — DONE
 
 **Files:**
-- Modify: `lib/screens/agile_stories_backlog_screen.dart` (690 lines; already loads `Epic`, `Feature`, `AgileTask`)
-- Reuse: `lib/services/epic_feature_service.dart` — `loadEpics`, `loadAllFeatures`, `loadFeatures(projectId, epicId)`; `ExecutionPhaseService.loadAgileTasks`
-- Reuse the table widget the rest of the app uses (`LaunchDataTable` / `buildNduDataTable` + `ResponsiveDataTableWrapper`), matching the SSHER/Design table pattern
-- Test: add `test/screens/agile_stories_backlog_test.dart` following the provider/pump harness in `test/screens/agile_screen_navigator_test.dart` (`pumpScreen` helper)
+- Modified: `lib/screens/agile_stories_backlog_screen.dart` (table is now the
+  default view, with a Table / Cards toggle; the card view is untouched)
+- Added: `lib/utils/agile_backlog_table.dart` (`AgileBacklogTable.build`,
+  `BacklogTableRow`, `featuresWithoutStories`)
+- Added: `lib/widgets/agile_backlog_table_view.dart` (`AgileBacklogTableView`)
+- Tests: `test/utils/agile_backlog_table_test.dart` (12),
+  `test/widgets/agile_backlog_table_view_test.dart` (6)
 
-**Step 1: Write the failing test** — pump `AgileStoriesBacklogScreen` with one
-epic → one feature → one story and assert the table shows the story name, its
-feature name and its epic name in the same row.
+**What landed.** Columns load through the existing `EpicFeatureService` /
+`ExecutionPhaseService` data: Epic | Feature | Story | Priority | Points |
+Readiness | Sprint | Release | WBS, ordered epic → feature → backlog order, using
+`buildNduTableWithExpand` (wrapped cells + full-screen expand) so it matches the
+SSHER/Design tables. Stories with no feature are grouped below in their own
+amber section rather than dropped, with the reason ("No feature set" or "Feature
+x no longer exists"), and features with no stories are counted off in a notice —
+that is the breakdown gap the review found.
 
-**Step 2: Run it and watch it fail.**
-Run: `flutter test test/screens/agile_stories_backlog_test.dart`
-Expected: FAIL — the row does not exist yet.
+**Deviation: no "Type" column.** The plan called for Type (Story/Task).
+`AgileTask` has no story/task discriminator — tasks only appear when a story is
+pulled into an iteration, which is the second half of ask 3 and is not built
+yet. A Type column would print "Story" on every row, so it was left out until
+there is something to distinguish.
 
-**Step 3:** Add the table. Columns: Epic | Feature | Type (Story/Task) | Title |
-Parent | Priority | Estimate | Iteration/Status. Populate by walking
-`loadEpics` → `loadFeatures` (or `loadAllFeatures` + group by `epicId`) →
-`loadAgileTasks` filtered on `featureId`. Stories whose `featureId` is empty must
-be surfaced as an **"Unlinked"** group rather than hidden — that is the
-regression that let the missing breakdown go unnoticed.
-
-**Step 4:** Keep the existing card view as a toggle; table becomes the default.
-The owner's words: "currently they just, as cards … that's not very efficient",
-and for the SSHER section they already asked for table-as-default, so match it.
-
-**Step 5:** Run the test, then `flutter analyze lib/screens/agile_stories_backlog_screen.dart`.
-Expected: PASS, no analyzer issues.
-
-**Step 6: Commit.**
+**Testability deviation.** The original step 1 wanted a widget test that pumps
+`AgileStoriesBacklogScreen` with fixture epics/features/stories. That cannot
+work: the screen's Firestore loads never complete under `flutter test` (no
+platform handler), so the page sits on its spinner forever and nothing renders.
+The table was therefore split into a presentational `AgileBacklogTableView`
+(rows in, table out) with its own widget tests, and the row construction into a
+pure builder with its own unit tests. **Follow-up worth doing:** `_loadData` has
+no timeout, so a hung store leaves this page loading indefinitely — the same
+shape of bug would be a blank screen in production.
 
 ---
 

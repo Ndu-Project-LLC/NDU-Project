@@ -11,8 +11,10 @@ import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/roadmap_service.dart';
+import 'package:ndu_project/utils/agile_backlog_table.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/agile_backlog_table_view.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -50,6 +52,11 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
   final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
   String? _selectedEpicId;
+
+  /// The table is the default view: the review found the card-only backlog
+  /// "not very efficient" for seeing what a story is and which feature and
+  /// epic it came from. Cards stay for editing.
+  bool _tableView = true;
 
   String? get _projectId {
     try {
@@ -239,6 +246,8 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                         else ...[
                           _buildSummaryBar(),
                           const SizedBox(height: 16),
+                          _buildViewToggle(),
+                          const SizedBox(height: 12),
                           VoiceTextField(
                             controller: _searchController,
                             decoration: InputDecoration(
@@ -250,19 +259,23 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                             onChanged: (v) => setState(() => _searchQuery = v),
                           ),
                           const SizedBox(height: 16),
-                          _buildEpicTabs(),
-                          const SizedBox(height: 16),
-                          if (_visibleFeatures.isEmpty)
-                            _buildEmptyState(
-                                'No features found for this epic. Define features first in Epics & Features.')
-                          else
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _visibleFeatures.length,
-                              itemBuilder: (context, i) =>
-                                  _buildFeatureSection(_visibleFeatures[i]),
-                            ),
+                          if (_tableView)
+                            _buildBacklogTableView()
+                          else ...[
+                            _buildEpicTabs(),
+                            const SizedBox(height: 16),
+                            if (_visibleFeatures.isEmpty)
+                              _buildEmptyState(
+                                  'No features found for this epic. Define features first in Epics & Features.')
+                            else
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _visibleFeatures.length,
+                                itemBuilder: (context, i) =>
+                                    _buildFeatureSection(_visibleFeatures[i]),
+                              ),
+                          ],
                           const SizedBox(height: 24),
                           LaunchPhaseNavigation(
                             backLabel: PlanningPhaseNavigation.backLabel(
@@ -336,6 +349,65 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
           Text(value, style: const TextStyle(color: _kMuted)),
         ],
       ),
+    );
+  }
+
+  /// Table (default) or the editable card view.
+  Widget _buildViewToggle() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        const Text('Backlog view:',
+            style: TextStyle(fontSize: 13, color: _kMuted)),
+        ChoiceChip(
+          key: const ValueKey('backlog-view-table'),
+          label: const Text('Table'),
+          avatar: const Icon(Icons.table_rows_outlined, size: 16),
+          selected: _tableView,
+          onSelected: (_) => setState(() => _tableView = true),
+          selectedColor: _kAccent.withValues(alpha: 0.12),
+        ),
+        ChoiceChip(
+          key: const ValueKey('backlog-view-cards'),
+          label: const Text('Cards'),
+          avatar: const Icon(Icons.view_agenda_outlined, size: 16),
+          selected: !_tableView,
+          onSelected: (_) => setState(() => _tableView = false),
+          selectedColor: _kAccent.withValues(alpha: 0.12),
+        ),
+      ],
+    );
+  }
+
+  /// The whole backlog in one table: every story with the feature and epic it
+  /// descends from, plus an explicit group for stories no feature claims.
+  Widget _buildBacklogTableView() {
+    if (_epics.isEmpty) {
+      return _buildEmptyState(
+          'No epics found. Define epics before breaking work into stories.');
+    }
+
+    return AgileBacklogTableView(
+      rows: AgileBacklogTable.build(
+        epics: _epics,
+        featuresByEpic: _featuresByEpic,
+        stories: _stories,
+        query: _searchQuery,
+      ),
+      featuresWithoutStories: _searchQuery.trim().isEmpty
+          ? AgileBacklogTable.featuresWithoutStories(
+              epics: _epics,
+              featuresByEpic: _featuresByEpic,
+              stories: _stories,
+            ).length
+          : 0,
+      sprintLabel: _sprintLabel,
+      releaseLabel: _releaseLabel,
+      emptyMessage: _searchQuery.trim().isNotEmpty
+          ? 'No stories match your search.'
+          : 'No stories in the backlog yet. Switch to Cards to add a story to a feature.',
     );
   }
 

@@ -19,7 +19,14 @@ import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.d
 const double _defaultColumnWidth = 160;
 const double _tableHorizontalPadding = 20;
 const double _columnGap = 12;
-const double _actionColumnWidth = 96;
+/// Width of the row-actions column. It must fit the widest set of actions a
+/// row can carry: KAZ AI + edit + delete — three [IconButton]s and the two 2px
+/// gaps between them. Material pads every button to the 48px touch-target
+/// minimum (`MaterialTapTargetSize.padded`), regardless of the smaller
+/// `constraints` passed to [IconButton], so that is 3 * 48 + 2 * 2 = 148px.
+/// A narrower slot makes the actions [Row] overflow its SizedBox and paint the
+/// yellow/black overflow marker down the right edge of every row.
+const double _actionColumnWidth = 148;
 
 /// Estimated body-row height for a virtualized table body, used to size the
 /// viewport before the rows have been laid out.
@@ -1243,13 +1250,21 @@ class _LaunchDateCellState extends State<LaunchDateCell> {
                   size: 13, color: Color(0xFF9CA3AF)),
               const SizedBox(width: 6),
             ],
-            Text(
-              isEmpty ? '—' : text,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w500,
-                color:
-                    isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF111827),
+            Flexible(
+              // Let a long or scaled-up date shrink to the column width
+              // instead of pushing this Row past the date column and
+              // painting the overflow marker.
+              child: Text(
+                isEmpty ? '—' : text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                  color: isEmpty
+                      ? const Color(0xFF9CA3AF)
+                      : const Color(0xFF111827),
+                ),
               ),
             ),
           ],

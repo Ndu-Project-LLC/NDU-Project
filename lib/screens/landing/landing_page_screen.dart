@@ -393,11 +393,11 @@ class _HeroSection extends StatelessWidget {
                 const SizedBox(height: 32),
                 // Value props
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  _valueProp('Define, plan, and execute in one continuous system'),
+                  Expanded(child: _valueProp('Define, plan, and execute in one continuous system')),
                   const SizedBox(width: 24),
-                  _valueProp('Predict risks, delays, and cost impacts before they happen'),
+                  Expanded(child: _valueProp('Predict risks, delays, and cost impacts before they happen')),
                   const SizedBox(width: 24),
-                  _valueProp('Align teams and decisions in real time'),
+                  Expanded(child: _valueProp('Align teams and decisions in real time')),
                 ]),
                 const SizedBox(height: 40),
                 // CTAs
@@ -450,7 +450,9 @@ class _HeroSection extends StatelessWidget {
   }
 
   Widget _valueProp(String text) {
-    return Row(children: [const Icon(Icons.check_circle, color: _green, size: 16), const SizedBox(width: 6), Text(text, style: const TextStyle(color: _textSecondary, fontSize: 13, fontFamily: appFontFamily))]);
+    // Text sits in an Expanded so it wraps inside its column instead of
+    // forcing the value-prop Row to overflow on narrower desktop widths.
+    return Row(children: [const Icon(Icons.check_circle, color: _green, size: 16), const SizedBox(width: 6), Expanded(child: Text(text, style: const TextStyle(color: _textSecondary, fontSize: 13, fontFamily: appFontFamily)))]);
   }
 
   Widget _ctaButton(String label, Color bg, Color fg, VoidCallback onTap, {bool border = false}) {
@@ -608,8 +610,12 @@ class _SolutionSection extends StatelessWidget {
             style: TextStyle(color: _textSecondary, fontSize: 16, height: 1.6, fontFamily: appFontFamily)),
           const SizedBox(height: 40),
           // Capability grid
+          // One grid only, with shrinkWrap: this section lives inside the
+          // page's SliverList, whose children get unbounded height — a
+          // non-shrinkWrap GridView here crashes with "Vertical viewport was
+          // given unbounded height" (an aborted migration left two sibling
+          // grids, which also rendered every card twice).
           GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 4, crossAxisSpacing: 20, mainAxisSpacing: 20, childAspectRatio: 1.0, children: caps.map((c) => _capCard(c.$1, c.$2, c.$3, c.$4)).toList()),
-          GridView.count(physics: const NeverScrollableScrollPhysics(), crossAxisCount: 4, crossAxisSpacing: 20, mainAxisSpacing: 20, childAspectRatio: 1.0, children: caps.map((c) => _capCard(c.$1, c.$2, c.$3, c.$4)).toList()),
           const SizedBox(height: 40),
           // Comparison table
           Container(decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Column(children: [

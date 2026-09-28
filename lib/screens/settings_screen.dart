@@ -1096,11 +1096,17 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _integrationsPanel() {
-    return ListView(
+    // Column, not ListView: this panel is rendered inside the page's
+    // SingleChildScrollView, so a viewport here would get unbounded height
+    // and crash (same fix as the Interface Management screen).
+    return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      children: [
-        _openAiIntegrationTile(),
-      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _openAiIntegrationTile(),
+        ],
+      ),
     );
   }
 
@@ -1750,9 +1756,14 @@ class _SettingsScreenState extends State<SettingsScreen>
     const accent = Color(0xFFFFC107);
     final theme = Theme.of(context);
 
-    return ListView(
+    // Column, not ListView: this panel is rendered inside the page's
+    // SingleChildScrollView, so a viewport here would get unbounded height
+    // and crash (same fix as the Interface Management screen).
+    return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
         Card(
           margin: EdgeInsets.zero,
           shape:
@@ -2028,7 +2039,8 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 

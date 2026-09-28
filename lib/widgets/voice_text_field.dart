@@ -595,15 +595,70 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
 /// Shows a branded, friendly permission request dialog before accessing the
 /// microphone. Returns true if the user grants permission, false otherwise.
 ///
-/// Used by both [VoiceTextField] and [VoiceTextFormField] before starting
-/// voice input.
+/// Used by every widget that offers dictation — [VoiceTextField],
+/// [VoiceTextFormField] and the inline speech-to-text overlay control —
+/// before starting voice input.
 bool _microphonePermissionDisclosureAccepted = false;
+
+/// In-flight disclosure, so simultaneous callers wait for the same answer
+/// instead of stacking duplicate dialogs.
+Future<bool>? _microphonePermissionRequestInFlight;
+
+/// Preference recording that the user granted microphone access. Once true,
+/// the disclosure dialog is never shown again — on this device, across app
+/// launches: permission is asked for exactly once and sticks from then on.
+const String kMicrophonePermissionGrantedKey =
+    'pref_microphone_permission_granted';
+
+/// Clears the in-memory grant cache so tests can simulate a fresh app launch
+/// (the persisted preference is the source of truth across launches).
+@visibleForTesting
+void resetMicrophonePermissionCacheForTest() {
+  _microphonePermissionDisclosureAccepted = false;
+  _microphonePermissionRequestInFlight = null;
+}
 
 Future<bool> requestMicrophonePermission(BuildContext context) async {
   if (_microphonePermissionDisclosureAccepted) return true;
+  final inFlight = _microphonePermissionRequestInFlight;
+  if (inFlight != null) return inFlight;
+
+  final request = _askMicrophonePermission(context);
+  _microphonePermissionRequestInFlight = request;
+  try {
+    return await request;
+  } finally {
+    _microphonePermissionRequestInFlight = null;
+  }
+}
+
+Future<bool> _askMicrophonePermission(BuildContext context) async {
+  // Stick to a previous grant: read it once, then skip the dialog forever.
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(kMicrophonePermissionGrantedKey) ?? false) {
+      _microphonePermissionDisclosureAccepted = true;
+      return true;
+    }
+  } catch (_) {
+    // Storage unavailable — fall through and ask for this session only.
+  }
+
+  if (!context.mounted) return false;
   final result = await showMicrophonePermissionDialog(context);
-  if (result == true) _microphonePermissionDisclosureAccepted = true;
-  return result ?? false;
+  final granted = result == true;
+  if (granted) {
+    // The grant sticks two ways: for this session immediately, and for every
+    // future launch once the preference is persisted.
+    _microphonePermissionDisclosureAccepted = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(kMicrophonePermissionGrantedKey, true);
+    } catch (_) {
+      // Session-level grant still applies; a later call retries the write.
+    }
+  }
+  return granted;
 }
 
 Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
@@ -616,11 +671,53 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
           borderRadius: BorderRadius.circular(24),
         ),
         contentPadding: EdgeInsets.zero,
+        // AlertDialog gives `content` a bounded (Flexible) slot, so this
+        // section scrolls on short windows while the pinned actions below
+        // stay visible — the buttons are never pushed off-screen.
+        actionsPadding: const EdgeInsets.fromLTRB(28, 4, 28, 20),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              "Don't Allow",
+              style: TextStyle(
+                color: Color(0xFF6B7280),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            icon: const Icon(Icons.mic, size: 18),
+            label: const Text(
+              'Allow',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFB800),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+          ),
+        ],
         content: SizedBox(
           width: 420,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               // ── Header with gradient + mic icon ──
               Container(
                 padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
@@ -727,55 +824,8 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                   ],
                 ),
               ),
-              // ── Footer: Don't Allow + Allow ──
-              Container(
-                padding: const EdgeInsets.fromLTRB(28, 0, 28, 20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(false),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          "Don't Allow",
-                          style: TextStyle(
-                            color: Color(0xFF6B7280),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => Navigator.of(dialogContext).pop(true),
-                        icon: const Icon(Icons.mic, size: 18),
-                        label: const Text(
-                          'Allow',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFB800),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
+            ),
           ),
         ),
       );

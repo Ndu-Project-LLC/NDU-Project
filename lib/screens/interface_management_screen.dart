@@ -898,16 +898,16 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildTableHeader(),
-                  ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: entries.length,
-                    itemBuilder: (context, index) {
-                      final entry = entries[index];
-                      return _InterfaceRegisterRow(
-                        index: index + 1,
-                        entry: entry,
-                      );
-                    },
+                  // Column of rows, not ListView: this table lives inside the
+                  // page's SingleChildScrollView, so a viewport here would be
+                  // given unbounded height and crash the screen
+                  // (see the same note in launch_data_table.dart).
+                  ...List.generate(
+                    entries.length,
+                    (index) => _InterfaceRegisterRow(
+                      index: index + 1,
+                      entry: entries[index],
+                    ),
                   ),
                 ],
               );
@@ -975,7 +975,7 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
                   style: headerStyle, textAlign: TextAlign.center)),
           SizedBox(width: 12),
           SizedBox(
-              width: 80,
+              width: 96,
               child: Text('Actions',
                   style: headerStyle, textAlign: TextAlign.center)),
         ],
@@ -1138,8 +1138,10 @@ class _InterfaceRegisterRow extends StatelessWidget {
             child: _StatusBadge(label: entry.status),
           ),
           const SizedBox(width: 12),
+          // 96 = two IconButtons at Material's 48px padded tap target;
+          // anything narrower overflows the row by 16px.
           SizedBox(
-            width: 80,
+            width: 96,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -1926,12 +1928,10 @@ class _RaciGovernanceSection extends StatelessWidget {
                       ],
                     ),
                   ),
-                  ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: entries.length,
-                    itemBuilder: (context, index) =>
-                        _buildRaciRow(entries[index]),
-                  ),
+                  // Column of rows, not ListView: nested in the page's
+                  // SingleChildScrollView a viewport gets unbounded height
+                  // and crashes (see launch_data_table.dart).
+                  ...entries.map((entry) => _buildRaciRow(entry)),
                 ],
               );
               if (!needsScroll) return table;
@@ -2525,24 +2525,23 @@ class _MaturitySectionState extends State<_MaturitySection> {
         const SizedBox(height: 24),
 
         // Per-interface maturity bars
-        ListView.builder(
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: entries.length,
-          itemBuilder: (context, index) {
-            final entry = entries[index];
-            final score = scores[index];
-            if (!_showAll && index >= 10) return const SizedBox.shrink();
-            return _MaturityBar(
-              name: entry.boundary.trim().isNotEmpty
-                  ? entry.boundary.trim()
-                  : 'Unnamed',
-              score: score,
-              color: _maturityColor(score),
-              bgColor: _maturityBgColor(score),
-              label: _maturityLabel(score),
-            );
-          },
-        ),
+        // Column of rows, not ListView: nested in the page's
+        // SingleChildScrollView a viewport gets unbounded height and crashes
+        // (see launch_data_table.dart).
+        ...List.generate(entries.length, (index) {
+          final entry = entries[index];
+          final score = scores[index];
+          if (!_showAll && index >= 10) return const SizedBox.shrink();
+          return _MaturityBar(
+            name: entry.boundary.trim().isNotEmpty
+                ? entry.boundary.trim()
+                : 'Unnamed',
+            score: score,
+            color: _maturityColor(score),
+            bgColor: _maturityBgColor(score),
+            label: _maturityLabel(score),
+          );
+        }),
 
         if (entries.length > 10) ...[
           const SizedBox(height: 8),
@@ -3331,10 +3330,10 @@ class _AuditTrailSection extends StatelessWidget {
                     ),
                   ),
                   // Log rows
-                  ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: logEntries.length,
-                    itemBuilder: (context, index) {
+                  // Column of rows, not ListView: nested in the page's
+                  // SingleChildScrollView a viewport gets unbounded height
+                  // and crashes (see launch_data_table.dart).
+                  ...List.generate(logEntries.length, (index) {
                       final entry = logEntries[index];
                       final color = _actionColor(entry.action);
                       final icon = _actionIcon(entry.action);
@@ -3419,8 +3418,7 @@ class _AuditTrailSection extends StatelessWidget {
                           ],
                         ),
                       );
-                    },
-                  ),
+                    }),
                 ],
               );
               if (!needsScroll) return table;
@@ -3507,11 +3505,10 @@ class _HandoffReadinessSection extends StatelessWidget {
         _buildOverallSummary(entries),
         const SizedBox(height: 20),
         // Per-interface readiness cards
-        ListView.builder(
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: entries.length,
-          itemBuilder: (context, index) => _HandoffCard(entry: entries[index]),
-        ),
+        // Column of cards, not ListView: nested in the page's
+        // SingleChildScrollView a viewport gets unbounded height and crashes
+        // (see launch_data_table.dart).
+        ...entries.map((entry) => _HandoffCard(entry: entry)),
       ],
     );
   }

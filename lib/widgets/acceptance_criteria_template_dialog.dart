@@ -112,6 +112,11 @@ class _AcceptanceCriteriaTemplateDialogState
   late AcFormat _format = widget.initialFormat;
   _CriteriaSeed _seed = _kSeeds.first;
 
+  /// Ask for this template to become the one a new story starts from. The
+  /// caller enforces "exactly one default", so this is a request, not a flag
+  /// the dialog owns.
+  bool _isDefault = false;
+
   String get _name => _nameCtrl.text.trim();
 
   /// A template already using this name for this work item type. Names are
@@ -168,6 +173,7 @@ class _AcceptanceCriteriaTemplateDialogState
       description: _descCtrl.text.trim(),
       workItemType: _workItemType,
       format: _format,
+      isDefault: _isDefault,
       criteria: <AcceptanceCriterion>[
         for (final category in _seed.categories)
           AcceptanceCriterion(description: '', category: category),
@@ -186,8 +192,11 @@ class _AcceptanceCriteriaTemplateDialogState
         ? 'You will have the first ${_workItemType.label} template.'
         : '${_workItemType.label} already has $siblings '
             '${siblings == 1 ? 'template' : 'templates'}.';
+    final isDefault = _isDefault
+        ? ' It will be the default new stories start from.'
+        : '';
     return 'Creates a ${_workItemType.label} template in '
-        '${_format.label} with $criteriaLabel. $existing';
+        '${_format.label} with $criteriaLabel. $existing$isDefault';
   }
 
   @override
@@ -236,6 +245,8 @@ class _AcceptanceCriteriaTemplateDialogState
                       _typeAndFormat(),
                       const SizedBox(height: 14),
                       _seedPicker(),
+                      const SizedBox(height: 6),
+                      _defaultToggle(),
                       const SizedBox(height: 16),
                       _summaryBanner(),
                     ],
@@ -439,6 +450,37 @@ class _AcceptanceCriteriaTemplateDialogState
               style: const TextStyle(fontSize: 11.5, color: _kMuted)),
         ),
       ],
+    );
+  }
+
+  Widget _defaultToggle() {
+    return InkWell(
+      onTap: () => setState(() => _isDefault = !_isDefault),
+      borderRadius: BorderRadius.circular(8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Checkbox(
+            value: _isDefault,
+            onChanged: (v) => setState(() => _isDefault = v ?? false),
+            visualDensity: VisualDensity.compact,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          const SizedBox(width: 6),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Use as the default template',
+                    style: TextStyle(fontSize: 13, color: _kHeadline)),
+                SizedBox(height: 2),
+                Text('New stories start from this one unless another is set.',
+                    style: TextStyle(fontSize: 11, color: _kMuted)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

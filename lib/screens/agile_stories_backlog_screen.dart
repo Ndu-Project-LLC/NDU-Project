@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/models/acceptance_criteria.dart';
 import 'package:ndu_project/models/agile_release_plan.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/epic_model.dart';
@@ -13,6 +14,7 @@ import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/roadmap_service.dart';
 import 'package:ndu_project/utils/agile_backlog_table.dart';
 import 'package:ndu_project/utils/agile_story_linkage.dart';
+import 'package:ndu_project/utils/agile_story_template.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/agile_backlog_table_view.dart';
@@ -47,6 +49,10 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
   List<AgileTask> _stories = [];
   List<RoadmapSprint> _sprints = [];
   List<AgileReleasePlan> _releases = [];
+
+  /// The User Story Template config, so a story added here starts with the
+  /// default template's acceptance criteria instead of a blank field.
+  AcceptanceCriteriaConfig _acConfig = AcceptanceCriteriaConfig();
   bool _isLoading = true;
   bool _isSaving = false;
   Timer? _saveDebounce;
@@ -94,6 +100,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
       final tasks = await ExecutionPhaseService.loadAgileTasks(projectId: pid);
       final sprints = await RoadmapService.loadSprints(projectId: pid);
       final releases = await AgileWireframeService.loadReleasePlans(pid);
+      final acConfig = await AgileWireframeService.loadAcceptanceCriteria(pid);
       if (!mounted) return;
       setState(() {
         _epics = epics;
@@ -102,6 +109,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
           ..sort((a, b) => a.backlogOrder.compareTo(b.backlogOrder));
         _sprints = sprints;
         _releases = releases;
+        _acConfig = acConfig;
         _selectedEpicId =
             _selectedEpicId ?? (epics.isNotEmpty ? epics.first.id : null);
         _isLoading = false;
@@ -167,10 +175,12 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
 
   void _addStory(Feature feature) {
     // Every story is born under a feature: the linkage rule owns both ids and
-    // the backlog position.
-    final story = AgileStoryLinkage.newStoryFor(
+    // the backlog position. The User Story Template then seeds its acceptance
+    // criteria from whichever template is marked default.
+    final story = AgileStoryTemplate.newStoryFor(
       feature: feature,
       existing: _stories,
+      config: _acConfig,
     );
     setState(() => _stories.add(story));
     _scheduleSave();

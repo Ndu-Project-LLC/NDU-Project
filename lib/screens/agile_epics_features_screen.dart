@@ -6,9 +6,10 @@ import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/epic_model.dart';
 import 'package:ndu_project/models/feature_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
-import 'package:ndu_project/utils/agile_story_linkage.dart';
+import 'package:ndu_project/utils/agile_story_template.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
@@ -374,9 +375,16 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
     try {
       final existing =
           await ExecutionPhaseService.loadAgileTasks(projectId: pid);
+      // A story spawned here starts from the default User Story Template, the
+      // same as one added from the backlog — the two paths must not disagree.
+      final acConfig = await AgileWireframeService.loadAcceptanceCriteria(pid);
       final List<AgileTask> updated = [
         ...existing,
-        AgileStoryLinkage.newStoryFor(feature: feature, existing: existing),
+        AgileStoryTemplate.newStoryFor(
+          feature: feature,
+          existing: existing,
+          config: acConfig,
+        ),
       ];
       await ExecutionPhaseService.saveAgileTasks(
           projectId: pid, tasks: updated);

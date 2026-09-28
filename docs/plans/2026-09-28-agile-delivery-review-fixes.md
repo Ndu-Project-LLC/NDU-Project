@@ -267,29 +267,64 @@ one-line finder fix in its own commit.
 
 ---
 
-### Task 6: Rename the template section to "User Story Template", support N named templates
+### Task 6: Rename the template section to "User Story Template", support N named templates — DONE
 
 **Files:**
-- Modify: `lib/screens/agile_acceptance_criteria_screen.dart` (section title, `_addTemplate`, template list UI)
-- Modify: `lib/widgets/acceptance_criteria_template_dialog.dart`
-- Modify: `lib/models/acceptance_criteria.dart` if the list needs a `isDefault` flag
-- Modify: `lib/widgets/initiation_like_sidebar.dart` and `lib/services/sidebar_navigation_service.dart` if the label is user-visible text
-- Test: `test/screens/agile_acceptance_criteria_test.dart` (new)
+- Modified: `lib/models/acceptance_criteria.dart` (`AcceptanceCriteriaTemplate.isDefault`)
+- Added: `lib/utils/agile_story_template.dart` (`AgileStoryTemplate`)
+- Modified: `lib/screens/agile_acceptance_criteria_screen.dart` (section heading,
+  default marking, `Advanced` disclosure)
+- Modified: `lib/widgets/acceptance_criteria_template_dialog.dart` ("use as the
+  default template" choice)
+- Modified: `lib/screens/agile_stories_backlog_screen.dart` and
+  `lib/screens/agile_epics_features_screen.dart` (a new story starts from the
+  default template)
+- Tests: `test/utils/agile_story_template_test.dart` (13),
+  `test/screens/agile_acceptance_criteria_test.dart` (2)
 
-**Step 1:** Rename user-facing strings from "Acceptance Criteria Planning"/
-"Edit" wording to **User Story Template** where the owner pointed at the template
-body, and make the section list **named** templates with one marked default
-("they can name the template and decide what it will be from"). Keep
-given/when/then inside the template.
+**What landed.** The template block is titled **User Story Template** and lists
+named templates. `AcceptanceCriteriaTemplate` gained `isDefault`; the rules live
+in one pure place, `AgileStoryTemplate` (`sectionTitle`, `userStoryTemplates`,
+`defaultTemplate`, `markDefault`, `ensureDefault`, `acceptanceCriteriaFor`,
+`newStoryFor`). Exactly one template is the default: each list tile carries a
+`Default` badge and a star toggle, the create-template modal has a "Use as the
+default template" choice, and a config saved before the flag existed — or one
+whose default was deleted — is backfilled on load. A newly created story, from
+the backlog or from Epics & Features' "Add story", starts with the default
+template's criteria as a `• ` bullet list (the app's existing list format), and
+still goes through `AgileStoryLinkage.newStoryFor` so it inherits the feature and
+that feature's epic.
 
-**Step 2:** Hide the top-level clutter the owner called out ("they can be
-hidden, they should be hidden") behind a collapsed "Advanced" disclosure rather
-than deleting the fields.
+**Section body kept.** The format selector (Checklist / Given-When-Then /
+Scenario) and the Task 5 gate (Definition of Ready → Acceptance Criteria →
+Definition of Done) stay inside the section; the review asked for given/when/then
+to stay in the template, and for the two outer gates not to be restated here.
 
-**Step 3:** Test: two templates can coexist, each named; the default is used by
-a newly created story.
+**Where "Advanced" came from.** The clutter the owner pointed at ("all those
+things, you know, at the top … they can be hidden, they should be hidden") is the
+ten-chip **work item type** row. It now sits behind a collapsed `Advanced`
+disclosure instead of being deleted — the filter still exists, it just is not the
+first thing on the page. Nothing was removed.
 
-**Step 4:** `flutter analyze` the touched files; commit.
+**Why the page is still called "Acceptance Criteria Planning".** That string is
+the nav checkpoint, not the section: renaming it would move the step in
+`sidebar_navigation_service.dart` / `planning_phase_navigation.dart` and break
+navigation. The rename is scoped to the template section, which is what the
+owner pointed at.
+
+**Pre-existing red test in the touched file, fixed here.**
+`test/screens/agile_acceptance_criteria_add_template_test.dart` could not tap its
+own "Add" button: the Task 5 gate panel put that button below the 800×600 test
+window (measured at y≈923 on `staging`, before this task), so `tester.tap`
+warned and missed. The test now calls `ensureVisible` first and both cases pass.
+This is the gate panel's height, not the rename — verified against `staging`.
+
+**Still red, untouched, unrelated.**
+`test/widgets/acceptance_criteria_template_dialog_test.dart` (5 failures) still
+looks for `find.widgetWithText(FilledButton, 'Create template')` while the dialog
+builds `FilledButton.icon`, and `find.byType` does not match subclasses. Task 6's
+dialog change (the default checkbox) does not add to or remove from those — the
+count is 5 before and after. One-line finder fix, its own commit.
 
 ---
 

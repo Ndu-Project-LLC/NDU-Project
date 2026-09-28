@@ -6,6 +6,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/agile_gate_definitions.dart';
+import 'package:ndu_project/utils/agile_story_template.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/ac_confidence_score.dart';
@@ -126,12 +127,20 @@ class _AgileAcceptanceCriteriaScreenState
       final config = await AgileWireframeService.loadAcceptanceCriteria(pid);
       final governance =
           await AgileWireframeService.loadBacklogGovernance(pid);
+      // A config saved before the default flag existed — or one whose default
+      // was deleted — must still leave one template a new story can start
+      // from. Backfill it, and only write back when that actually changed
+      // something.
+      final defaultsBefore = _defaultIds(config);
+      AgileStoryTemplate.ensureDefault(config);
+      final defaultsAfter = _defaultIds(config);
       if (!mounted) return;
       setState(() {
         _config = config;
         _governance = governance;
         if (_selectedTemplateId == null && _templates.isNotEmpty) {
-          final first = _templates.first;
+          final first =
+              AgileStoryTemplate.defaultTemplate(_config) ?? _templates.first;
           _selectedTemplateId = first.id;
           _selectedWorkItemType = first.workItemType;
           _templateNameCtrl.text = first.name;
@@ -140,6 +149,7 @@ class _AgileAcceptanceCriteriaScreenState
         }
         _isLoading = false;
       });
+      if (defaultsBefore != defaultsAfter) _scheduleAutoSave();
       if (_templates.isEmpty && !_isGenerating) {
         _generateDefaultTemplates();
       }
@@ -178,6 +188,22 @@ class _AgileAcceptanceCriteriaScreenState
     _scheduleAutoSave();
   }
 
+  /// The comma-joined ids of the templates currently marked default, used to
+  /// tell whether a backfill actually changed anything.
+  String _defaultIds(AcceptanceCriteriaConfig config) => config.templates
+      .where((t) => t.isDefault)
+      .map((t) => t.id)
+      .join(',');
+
+  /// Make [t] the template a newly created story starts from. Exactly one
+  /// template is the default at any time, matching the review's "they can name
+  /// the template and decide what it will be from".
+  void _setDefaultTemplate(AcceptanceCriteriaTemplate t) {
+    setState(
+        () => AgileStoryTemplate.markDefault(_config.templates, t.id));
+    _scheduleAutoSave();
+  }
+
   /// "Add" opens the modal and only adds the template the user actually
   /// described — it used to silently drop an unnamed `New <Type> Template`
   /// into the list with two blank criteria, which every user then had to
@@ -192,6 +218,14 @@ class _AgileAcceptanceCriteriaScreenState
     if (template == null || !mounted) return;
     setState(() {
       _config.templates.add(template);
+      // The dialog can ask for the new template to be the default; otherwise
+      // the section keeps whichever default it already had (and backfills one
+      // if this is the first template).
+      if (template.isDefault) {
+        AgileStoryTemplate.markDefault(_config.templates, template.id);
+      } else {
+        AgileStoryTemplate.ensureDefault(_config);
+      }
       // Follow the new template, including across the work item type filter
       // and format selector, so the editor below opens on it.
       _selectedWorkItemType = template.workItemType;
@@ -216,6 +250,9 @@ class _AgileAcceptanceCriteriaScreenState
       } else {
         _selectedTemplate = null;
       }
+      // Deleting the default leaves the section without one; promote another
+      // so a new story still has a template to start from.
+      AgileStoryTemplate.ensureDefault(_config);
     });
     _scheduleAutoSave();
       showDeleteSuccessSnackBar(context, itemLabel: 'Template');
@@ -278,10 +315,12 @@ class _AgileAcceptanceCriteriaScreenState
       );
       final parsed = _parseTemplates(result);
       if (parsed.isNotEmpty && mounted) {
-        setState(() => _config.templates = parsed);
-        if (_templates.isNotEmpty) {
-          _selectedTemplate = _templates.first;
-        }
+        setState(() {
+          _config.templates = parsed;
+          AgileStoryTemplate.ensureDefault(_config);
+        });
+        final defaulted = AgileStoryTemplate.defaultTemplate(_config);
+        if (defaulted != null) _selectedTemplate = defaulted;
         _performSave();
       }
     } catch (e) {
@@ -414,7 +453,7 @@ class _AgileAcceptanceCriteriaScreenState
                         ),
                         const SizedBox(height: 32),
                         const Text(
-                          'Define acceptance criteria templates, configure criteria per work item type, and score readiness for execution.',
+                          'Name the user story templates your stories start from, define the acceptance criteria each one carries, and score readiness for execution.',
                           style: TextStyle(fontSize: 15, color: _kMuted),
                         ),
                         const SizedBox(height: 24),
@@ -491,7 +530,7 @@ class _AgileAcceptanceCriteriaScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildWorkItemTypeSelector(),
+        _buildAdvancedSection(),
         const SizedBox(height: 16),
         _buildTemplateList(),
         const SizedBox(height: 16),
@@ -507,6 +546,36 @@ class _AgileAcceptanceCriteriaScreenState
           const Text('Select or add a template to define its acceptance criteria.',
               style: TextStyle(fontSize: 13, color: _kMuted)),
       ],
+    );
+  }
+
+  /// The knobs the review called clutter ("all those things, you know, at the
+  /// top … they can be hidden, they should be hidden") are folded into a
+  /// collapsed disclosure instead of being deleted — the work item type filter
+  /// is still there, it just no longer greets every visitor with ten chips.
+  Widget _buildAdvancedSection() {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        border: Border.all(color: _kBorder),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          key: const ValueKey('acAdvanced'),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          title: const Text('Advanced',
+              style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _kHeadline)),
+          subtitle: const Text('Work item type filter',
+              style: TextStyle(fontSize: 11, color: _kMuted)),
+          children: [_buildWorkItemTypeSelector()],
+        ),
+      ),
     );
   }
 
@@ -558,13 +627,25 @@ class _AgileAcceptanceCriteriaScreenState
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Templates',
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: _kHeadline)),
-                const Spacer(),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(AgileStoryTemplate.sectionTitle,
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: _kHeadline)),
+                      SizedBox(height: 2),
+                      Text(
+                          'Named templates your stories start from — one is the default.',
+                          style: TextStyle(fontSize: 11, color: _kMuted)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: _isGenerating ? null : _generateDefaultTemplates,
                   icon: _isGenerating
@@ -642,12 +723,38 @@ class _AgileAcceptanceCriteriaScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    t.name.isNotEmpty ? t.name : 'Untitled Template',
-                    style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _kHeadline),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          t.name.isNotEmpty ? t.name : 'Untitled Template',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: _kHeadline),
+                        ),
+                      ),
+                      if (t.isDefault) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: _kAccent.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            AgileStoryTemplate.defaultBadge,
+                            style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: _kAccent,
+                                letterSpacing: 0.4),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   if (t.description.isNotEmpty)
                     Padding(
@@ -660,7 +767,15 @@ class _AgileAcceptanceCriteriaScreenState
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            IconButton(
+              tooltip: t.isDefault ? 'Default template' : 'Set as default',
+              onPressed: t.isDefault ? null : () => _setDefaultTemplate(t),
+              icon: Icon(t.isDefault ? Icons.star : Icons.star_border,
+                  size: 18, color: t.isDefault ? _kAccent : _kMuted),
+              constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+              padding: EdgeInsets.zero,
+            ),
+            const SizedBox(width: 4),
             AcConfidenceScore(template: t, compact: true),
             const SizedBox(width: 8),
             Text('${t.criteria.length}',

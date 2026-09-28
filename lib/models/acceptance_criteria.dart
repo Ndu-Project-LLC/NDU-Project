@@ -179,6 +179,13 @@ class AcceptanceCriteriaTemplate {
   List<AcceptanceCriterion> criteria;
   AcFormat format;
 
+  /// The template a newly created story starts from.
+  ///
+  /// Exactly one template should carry this — see `AgileStoryTemplate`, which
+  /// owns the "one default at a time" rule. Older saved configs have no
+  /// default at all, so it is backfilled on load rather than assumed.
+  bool isDefault;
+
   AcceptanceCriteriaTemplate({
     String? id,
     this.name = '',
@@ -186,6 +193,7 @@ class AcceptanceCriteriaTemplate {
     this.workItemType = WorkItemType.userStory,
     List<AcceptanceCriterion>? criteria,
     this.format = AcFormat.checklist,
+    this.isDefault = false,
   })  : id = id ?? newId(),
         criteria = criteria ?? [];
 
@@ -234,6 +242,7 @@ class AcceptanceCriteriaTemplate {
     WorkItemType? workItemType,
     List<AcceptanceCriterion>? criteria,
     AcFormat? format,
+    bool? isDefault,
   }) {
     return AcceptanceCriteriaTemplate(
       id: id,
@@ -242,6 +251,7 @@ class AcceptanceCriteriaTemplate {
       workItemType: workItemType ?? this.workItemType,
       criteria: criteria ?? List.from(this.criteria),
       format: format ?? this.format,
+      isDefault: isDefault ?? this.isDefault,
     );
   }
 
@@ -252,6 +262,7 @@ class AcceptanceCriteriaTemplate {
         'workItemType': workItemType.name,
         'criteria': criteria.map((c) => c.toJson()).toList(),
         'format': format.name,
+        'isDefault': isDefault,
       };
 
   factory AcceptanceCriteriaTemplate.fromJson(Map<String, dynamic> json) {
@@ -268,6 +279,7 @@ class AcceptanceCriteriaTemplate {
               .toList() ??
           [],
       format: AcFormat.fromString(json['format']?.toString() ?? ''),
+      isDefault: json['isDefault'] == true,
     );
   }
 }

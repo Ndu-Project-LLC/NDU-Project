@@ -47,6 +47,10 @@ void main() {
 
     expect(find.text('No templates for this work item type.'), findsOneWidget);
 
+    // The gate panel and the section put the Add button below the test
+    // window's fold, so scroll to it before tapping — a tap at an off-screen
+    // offset silently misses.
+    await tester.ensureVisible(find.text('Add'));
     await tester.tap(find.text('Add'));
     for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
@@ -74,6 +78,7 @@ void main() {
       (tester) async {
     await _pumpScreen(tester);
 
+    await tester.ensureVisible(find.text('Add'));
     await tester.tap(find.text('Add'));
     for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));

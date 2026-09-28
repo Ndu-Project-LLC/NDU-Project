@@ -249,6 +249,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   static const Set<String> _agileWireframeLabels = {
     'Agile Delivery Model - Delivery Model',
+    'Agile Delivery Model - Metrics & Reporting',
     'Agile Delivery Model - Backlog Governance',
     'Agile Delivery Model - Team Structure',
     'Agile Delivery Model - Kanban Configuration',
@@ -1354,6 +1355,13 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   void _openAgileDeliveryModel() {
     _navigateWithCheckpoint(
         'agile_delivery_model', const AgileDeliveryModelScreen());
+  }
+
+  void _openAgileMetricsReporting() {
+    // Same checkpoint/data document as the delivery-model screen — only the
+    // view differs (Metrics & Reporting content, no tab bar).
+    _navigateWithCheckpoint('agile_delivery_model',
+        const AgileDeliveryModelScreen(metricsOnly: true));
   }
 
   void _openAgileTeamStructure() {
@@ -2873,30 +2881,37 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _buildSubSubMenuItem('Agile Delivery Model',
               onTap: _openAgileDeliveryModel,
               isActive: _isActiveLabel('Agile Delivery Model - Delivery Model')),
+          _buildSubSubMenuItem('Metrics & Reporting',
+              onTap: _openAgileMetricsReporting,
+              isActive:
+                  _isActiveLabel('Agile Delivery Model - Metrics & Reporting')),
           _buildSubSubMenuItem('Backlog Governance',
               onTap: _openAgileBacklogGovernance,
               isActive: _isActiveLabel('Agile Delivery Model - Backlog Governance')),
           _buildSubSubMenuItem('Agile Team Structure',
               onTap: _openAgileTeamStructure,
               isActive: _isActiveLabel('Agile Delivery Model - Team Structure')),
-          _buildSubSubMenuItem('Kanban Configuration',
-              onTap: _openAgileKanbanConfig,
-              isActive: _isActiveLabel('Agile Delivery Model - Kanban Configuration')),
           _buildSubSubMenuItem('Epics & Features',
               onTap: _openAgileEpicsFeatures,
               isActive: _isActiveLabel('Agile Delivery Model - Epics & Features')),
+          // Kanban Configuration configures the board the breakdown above feeds.
+          _buildSubSubMenuItem('Kanban Configuration',
+              onTap: _openAgileKanbanConfig,
+              isActive: _isActiveLabel('Agile Delivery Model - Kanban Configuration')),
           _buildSubSubMenuItem('Acceptance Criteria Planning',
               onTap: _openAgileAcceptanceCriteria,
               isActive: _isActiveLabel('Agile Delivery Model - Acceptance Criteria Planning')),
-          _buildSubSubMenuItem('Agile Map Out',
-              onTap: _openAgileMapOut,
-              isActive: _isActiveLabel('Agile Delivery Model - Agile Map Out')),
           _buildSubSubMenuItem('Release Plan',
               onTap: _openAgileReleasePlan,
               isActive: _isActiveLabel('Agile Delivery Model - Release Plan')),
+          // Metrics are defined before the Agile Map Out/dashboard that reports
+          // them.
           _buildSubSubMenuItem('Agile Metrics Planning',
               onTap: _openAgileMetricsPlanning,
               isActive: _isActiveLabel('Agile Delivery Model - Metrics Planning')),
+          _buildSubSubMenuItem('Agile Map Out',
+              onTap: _openAgileMapOut,
+              isActive: _isActiveLabel('Agile Delivery Model - Agile Map Out')),
         ],
         _buildSubExpandableHeader(
           'Execution Plan',
@@ -3791,6 +3806,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(Icons.route_outlined, 'Agile Delivery Model',
           onTap: _openAgileDeliveryModel,
           isActive: _isActiveLabel('Agile Delivery Model - Delivery Model')));
+    }
+    if ('metrics & reporting'.contains(query) ||
+        'metrics reporting'.contains(query) ||
+        'reporting'.contains(query)) {
+      results.add(_buildMenuItem(Icons.insights_outlined, 'Metrics & Reporting',
+          onTap: _openAgileMetricsReporting,
+          isActive:
+              _isActiveLabel('Agile Delivery Model - Metrics & Reporting')));
     }
     if ('schedule'.contains(query)) {
       results.add(_buildMenuItem(Icons.calendar_today_outlined, 'Schedule',

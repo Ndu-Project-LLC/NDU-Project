@@ -209,19 +209,22 @@ class SidebarNavigationService {
         checkpoint: 'agile_backlog_governance', label: 'Backlog Governance'),
     SidebarItem(
         checkpoint: 'agile_team_structure', label: 'Agile Team Structure'),
+    SidebarItem(checkpoint: 'agile_epics_features', label: 'Epics & Features'),
+    // Kanban Configuration configures the board that the Epics & Features
+    // breakdown feeds, so it follows that breakdown in the flow.
     SidebarItem(
         checkpoint: 'agile_kanban_config', label: 'Kanban Configuration'),
-    SidebarItem(checkpoint: 'agile_epics_features', label: 'Epics & Features'),
     SidebarItem(
         checkpoint: 'agile_acceptance_criteria',
         label: 'Acceptance Criteria Planning'),
     SidebarItem(
         checkpoint: 'agile_sprint_calendar',
         label: 'Sprint Cadence & Calendar'),
-    SidebarItem(checkpoint: 'agile_map_out', label: 'Agile Map Out'),
     SidebarItem(checkpoint: 'agile_release_plan', label: 'Release Plan'),
+    // Define the metrics before the Agile Map Out/dashboard that reports them.
     SidebarItem(
         checkpoint: 'agile_metrics_planning', label: 'Agile Metrics Planning'),
+    SidebarItem(checkpoint: 'agile_map_out', label: 'Agile Map Out'),
     // Execution Plan sub-items (full flow matching sidebar order)
     SidebarItem(checkpoint: 'execution_plan', label: 'Execution Plan Overview'),
     SidebarItem(
@@ -495,6 +498,20 @@ class SidebarNavigationService {
     }
 
     return _sidebarOrder[currentIndex - 1];
+  }
+
+  /// Ordered items of the sidebar flow between [startCheckpoint] and
+  /// [endCheckpoint] (inclusive). Used by on-page screen navigators so they
+  /// always mirror the selector's screens and order.
+  List<SidebarItem> itemsBetween(String startCheckpoint, String endCheckpoint) {
+    final startIndex =
+        _sidebarOrder.indexWhere((item) => item.checkpoint == startCheckpoint);
+    final endIndex =
+        _sidebarOrder.indexWhere((item) => item.checkpoint == endCheckpoint);
+    if (startIndex == -1 || endIndex == -1 || endIndex < startIndex) {
+      return const <SidebarItem>[];
+    }
+    return _sidebarOrder.sublist(startIndex, endIndex + 1);
   }
 
   /// Check if a checkpoint has been reached based on sidebar order

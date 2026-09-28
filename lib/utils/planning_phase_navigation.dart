@@ -165,14 +165,16 @@ class PlanningPhaseNavigation {
       builder: (_) => const AgileTeamStructureScreen(),
     ),
     PlanningPage(
-      id: 'agile_kanban_config',
-      title: 'Kanban Configuration',
-      builder: (_) => const AgileKanbanConfigScreen(),
-    ),
-    PlanningPage(
       id: 'agile_epics_features',
       title: 'Epics & Features',
       builder: (_) => const AgileEpicsFeaturesScreen(),
+    ),
+    // Kanban Configuration configures the board that the Epics & Features
+    // breakdown feeds, so it follows that breakdown in the flow.
+    PlanningPage(
+      id: 'agile_kanban_config',
+      title: 'Kanban Configuration',
+      builder: (_) => const AgileKanbanConfigScreen(),
     ),
     PlanningPage(
       id: 'agile_stories_backlog',
@@ -190,19 +192,20 @@ class PlanningPhaseNavigation {
       builder: (_) => const AgileSprintCalendarScreen(),
     ),
     PlanningPage(
-      id: 'agile_map_out',
-      title: 'Agile Map Out',
-      builder: (_) => const DeliverableRoadmapAgileMapOutScreen(),
-    ),
-    PlanningPage(
       id: 'agile_release_plan',
       title: 'Release Plan',
       builder: (_) => const AgileReleasePlanScreen(),
     ),
+    // Define the metrics before the Agile Map Out/dashboard that reports them.
     PlanningPage(
       id: 'agile_metrics_planning',
       title: 'Agile Metrics Planning',
       builder: (_) => const AgileMetricsPlanningScreen(),
+    ),
+    PlanningPage(
+      id: 'agile_map_out',
+      title: 'Agile Map Out',
+      builder: (_) => const DeliverableRoadmapAgileMapOutScreen(),
     ),
     // Execution Plan — full flow matching sidebar order
     PlanningPage(
@@ -500,6 +503,35 @@ class PlanningPhaseNavigation {
     }
     final next = nextPage(currentId);
     return next == null ? 'Next' : 'Next: ${next.title}';
+  }
+
+  /// The Agile Delivery screen flow, in sidebar-selector order.
+  ///
+  /// Shared by the on-page screen navigator so it always reflects the
+  /// selector's screens overall — including Scrum Configuration and Capacity
+  /// Planning, which have no sidebar entry of their own. The range ends on
+  /// [agile_map_out], which is now the last Agile Delivery screen (Metrics
+  /// Planning moved ahead of it), so the navigator never clips the tail.
+  static List<SidebarItem> get agileDeliverySteps => SidebarNavigationService
+      .instance
+      .itemsBetween('agile_delivery_model', 'agile_map_out');
+
+  /// Navigate directly to [checkpoint] (used by the screen navigator's step
+  /// chips). Flushes any pending auto-save first, like the Back/Next flow.
+  static void goToCheckpoint(BuildContext context, String checkpoint) {
+    final provider = ProjectDataInherited.maybeOf(context);
+    if (provider != null) {
+      unawaited(provider.flushAutoSave());
+    }
+    final screen = NavigationRouteResolver.resolveCheckpointToScreen(
+      checkpoint,
+      context,
+    );
+    if (screen == null) return;
+    context.push(
+      NavigationRouteResolver.resolveCheckpointToUrl(checkpoint),
+      extra: screen,
+    );
   }
 
   static void goToPrevious(BuildContext context, String currentId) {

@@ -496,21 +496,56 @@ closing when the sprint calendar gives this page real dates.
 
 ---
 
-### Task 11: Work through the rest of the review
+### Task 11: Work through the rest of the review — DONE
 
-Remaining asks that are small and independent — do them as one commit each:
+Remaining asks that were small and independent, one commit each:
 
-1. Feature add/edit dialog fields: title, description, priority, parent epic
-   (ask 12) — `lib/screens/agile_epics_features_screen.dart`.
-2. Feature list view (all features, all epics) in Epics & Features — same file;
-   the current card-only grid is the "not very efficient" complaint.
-3. WBS shows one more level (epic → feature → story) — `wbs/screens/wbs_module_screen.dart`
-   plus whatever `EpicFeatureService` view it renders.
-4. Backlog drag-to-prioritize + search across epic/feature/story, and the
-   pull-into-Kanban action — `lib/screens/agile_stories_backlog_screen.dart`,
-   `lib/screens/agile_kanban_config_screen.dart`.
-5. Confirm the Kanban board is still reachable from the Execution phase (ask 1's
-   second half) and fix the phase wiring if it is not.
+1. **Feature add/edit dialog fields** (`c232cb7e`) — title, description, priority
+   and parent epic. New `lib/utils/agile_feature_editor.dart` (`priorities`,
+   `defaultTitle`, `newFor`, `reparents`, `moveToEpic`, `displayTitle`,
+   `normalisePriority`) keeps the rules pure; the screen wires the dialog.
+   Test: `test/utils/agile_feature_editor_test.dart`.
+2. **Flat all-features list in Epics & Features** (`98a5e061`) — the review's
+   "not very efficient" complaint about a card-only grid. New
+   `lib/utils/agile_epic_feature_table.dart` (`FeatureTableRow`;
+   `AgileEpicFeatureTable.displayEpicTitle`/`build`/`matches`/`filter`/
+   `epicsWithoutFeatures`/`epicCount`/`totalPoints`) and
+   `lib/widgets/agile_feature_table_view.dart`. The table is now the default
+   view, with a Table/Cards toggle, a features search, and an "epics without
+   features" notice. Tests: `test/utils/agile_epic_feature_table_test.dart`,
+   `test/widgets/agile_feature_table_view_test.dart`.
+3. **WBS shows the story level** (`705c5274`) — the `_ExportAndLinkTab` summary
+   in `lib/wbs/screens/wbs_module_screen.dart` now reports levels 1→3 from
+   `countNodes`, plus a `storyGapHint` in amber when an agile WBS has features
+   but no stories. New `lib/utils/wbs_agile_level_summary.dart`. Test:
+   `test/utils/wbs_agile_level_summary_test.dart`.
+4. **Backlog drag-to-prioritize, cross-level search, pull-into-Kanban**
+   (`fa71116c`, `04173a51`) — the Cards view is a `ReorderableListView`
+   (long-press handle), search matches story, feature and epic titles, and the
+   order is renumbered 1..n within its feature. The table view gained **Order**
+   (move up/down) and **Board** columns plus a card action that pulls a story
+   into the board's *first working column* — not the entry column, which every
+   story already occupies — reusing `KanbanConfigService` so a renamed or
+   reordered column moves the entry and landing points with it. New
+   `lib/utils/agile_backlog_order.dart` and `lib/utils/agile_board_pull.dart`.
+   Tests: `test/utils/agile_backlog_order_test.dart`,
+   `test/utils/agile_board_pull_test.dart`,
+   `test/widgets/agile_backlog_table_view_test.dart`.
+5. **Kanban board reachable from the Execution phase — confirmed, no change
+   needed.** The Execution hub's tile (case 4,
+   `lib/screens/agile_project_hub_screen.dart:386`) calls
+   `AgileKanbanBoardScreen.open(context)`, and the route is registered as
+   `/agile-kanban-board` (`lib/routing/app_router.dart`, constant at :464, route
+   at :1584). Ask 1's second half was already satisfied; the only thing missing
+   was the reorder done in Task 1.
+
+**Deviations.** (a) "Pull them into the Kanban" was read as *promote to the
+first working column*, not *create* — every story already resolves to the entry
+column, so a pull has to mean movement out of it, while "Done" would skip the
+board altogether. (b) Ordering was added to the **table** as well as Cards: the
+table is now the default view, so drag-only ordering would be unreachable there.
+(c) `backlogOrder` is renumbered per feature; a story's position is never
+absolute across features, matching the Epic → Feature → Story model.
 
 > Ordering places that look plausible but do **not** need editing:
 > `initiation_like_sidebar.dart`'s `agileWireframeCheckpoints` list (a `contains`
@@ -526,13 +561,21 @@ Run after each commit, and once at the end:
 ```bash
 flutter analyze
 flutter test test/screens/agile_screen_navigator_test.dart
-flutter test test/screens/agile_stories_backlog_test.dart
-flutter test test/screens/agile_release_plan_test.dart
-flutter test test/screens/agile_dashboard_test.dart
+test/utils/agile_backlog_table_test.dart test/utils/agile_backlog_order_test.dart
+test/widgets/agile_backlog_table_view_test.dart
+test/utils/agile_epic_feature_table_test.dart test/widgets/agile_feature_table_view_test.dart
+test/utils/agile_board_pull_test.dart test/utils/agile_capacity_model_test.dart
+test/widgets/acceptance_criteria_template_dialog_test.dart
 ```
 
 The nav regression test is the canary: it asserts the exact 12-step order, so any
 later reordering of the Agile flow fails loudly instead of silently drifting.
+
+**Correction (2026-09-28):** the three screen tests originally listed here
+(`agile_stories_backlog_test.dart`, `agile_release_plan_test.dart`,
+`agile_dashboard_test.dart`) were never written — these screens need Firestore, so
+their behaviour is covered by the pure-util and presentational-widget tests above
+instead. `flutter test` reports "Does not exist" for them, not a failure.
 
 ## Manual walkthrough before handing back
 

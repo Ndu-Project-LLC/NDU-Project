@@ -12,6 +12,7 @@ import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/roadmap_service.dart';
 import 'package:ndu_project/utils/agile_backlog_table.dart';
+import 'package:ndu_project/utils/agile_story_linkage.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/agile_backlog_table_view.dart';
@@ -138,11 +139,20 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
       await ExecutionPhaseService.saveAgileTasks(
           projectId: pid, tasks: _stories);
       if (mounted) {
+        // Report the breakdown gap on save: a story under no feature never
+        // rolls up to an epic, and the review asked to be able to see that.
+        final unlinked = AgileStoryLinkage.countUnlinked(
+          _stories,
+          featuresByEpic: _featuresByEpic,
+        );
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Backlog stories saved'),
-              duration: Duration(seconds: 1)),
+          SnackBar(
+            content: Text(unlinked == 0
+                ? 'Backlog stories saved'
+                : 'Backlog stories saved · $unlinked still have no feature'),
+            duration: const Duration(seconds: 2),
+          ),
         );
       }
     } finally {
@@ -156,19 +166,31 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
   }
 
   void _addStory(Feature feature) {
-    final nextOrder =
-        _stories.where((s) => s.featureId == feature.id).length + 1;
-    final story = AgileTask(
-      epicId: feature.epicId,
-      featureId: feature.id,
-      userStory: 'New story $nextOrder',
-      storyPoints: 3,
-      priority: 'Medium',
-      status: 'To-Do',
-      readinessStatus: 'Draft',
-      backlogOrder: nextOrder,
+    // Every story is born under a feature: the linkage rule owns both ids and
+    // the backlog position.
+    final story = AgileStoryLinkage.newStoryFor(
+      feature: feature,
+      existing: _stories,
     );
     setState(() => _stories.add(story));
+    _scheduleSave();
+  }
+
+  /// Feature id → "Epic · Feature", for the per-story feature picker.
+  Map<String, String> get _featureOptions => AgileStoryLinkage.optionLabels(
+        epics: _epics,
+        featuresByEpic: _featuresByEpic,
+      );
+
+  /// Re-parent a story onto a feature. The feature's epic comes with it.
+  void _linkStoryToFeature(AgileTask story, String featureId) {
+    final feature = AgileStoryLinkage.allFeatures(
+      epics: _epics,
+      featuresByEpic: _featuresByEpic,
+    ).where((f) => f.id == featureId).firstOrNull;
+    if (feature == null) return;
+    final linked = AgileStoryLinkage.link(story, feature);
+    setState(() => _updateStory(linked));
     _scheduleSave();
   }
 
@@ -586,6 +608,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
             spacing: 12,
             runSpacing: 12,
             children: [
+              _featurePicker(story),
               _dropdownField<int>(
                 label: 'Story points',
                 value: story.storyPoints,
@@ -692,6 +715,42 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  /// The feature this story belongs to. Required: a story that is under no
+  /// feature cannot roll up to an epic, which is the gap the review found, so
+  /// an unlinked story says so and offers the list to fix it.
+  Widget _featurePicker(AgileTask story) {
+    final options = _featureOptions;
+    final linked = options.containsKey(story.featureId);
+    return SizedBox(
+      width: 320,
+      child: DropdownButtonFormField<String>(
+        key: ValueKey('story-feature-${story.id}'),
+        initialValue: linked ? story.featureId : null,
+        isExpanded: true,
+        decoration: InputDecoration(
+          labelText: 'Feature',
+          border: const OutlineInputBorder(),
+          errorText: linked ? null : 'Not under any feature',
+          helperText: linked
+              ? 'Every story sits under a feature so it can roll up to an epic.'
+              : 'Pick the feature this story belongs to.',
+        ),
+        hint: const Text('Select a feature'),
+        items: [
+          for (final entry in options.entries)
+            DropdownMenuItem<String>(
+              value: entry.key,
+              child: Text(entry.value, overflow: TextOverflow.ellipsis),
+            ),
+        ],
+        onChanged: (featureId) {
+          if (featureId == null) return;
+          _linkStoryToFeature(story, featureId);
+        },
       ),
     );
   }

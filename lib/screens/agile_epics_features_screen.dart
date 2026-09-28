@@ -2,10 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/epic_model.dart';
 import 'package:ndu_project/models/feature_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
+import 'package:ndu_project/services/execution_phase_service.dart';
+import 'package:ndu_project/utils/agile_story_linkage.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
@@ -58,6 +61,9 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
   bool _isLoading = true;
   bool _isGenerating = false;
   bool _isSyncing = false;
+
+  /// Set while a feature is spawning a story, so a double tap cannot add two.
+  bool _isAddingStory = false;
   // Guards against infinite _loadData → _syncFromWbs → _loadData recursion
   // when the auto-sync-on-empty-list fires on first visit. Without this flag,
   // a sync that produces 0 new items (e.g. WBS exists but all nodes are
@@ -353,6 +359,48 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
       _selectedEpicId = epic.id;
     });
     _loadFeatures();
+  }
+
+  /// Break a feature down from where the feature is: spawn its next story and
+  /// land it in the canonical backlog store the backlog and Kanban read.
+  ///
+  /// `saveAgileTasks` replaces the whole task list, so the existing stories are
+  /// loaded first and saved back with the new one — writing only the new story
+  /// would wipe every other feature's backlog.
+  Future<void> _addStoryToFeature(Feature feature) async {
+    final pid = _projectId;
+    if (pid == null || _isAddingStory) return;
+    setState(() => _isAddingStory = true);
+    try {
+      final existing =
+          await ExecutionPhaseService.loadAgileTasks(projectId: pid);
+      final List<AgileTask> updated = [
+        ...existing,
+        AgileStoryLinkage.newStoryFor(feature: feature, existing: existing),
+      ];
+      await ExecutionPhaseService.saveAgileTasks(
+          projectId: pid, tasks: updated);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Story added to ${feature.title.trim().isEmpty ? 'this feature' : feature.title.trim()}'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (error) {
+      debugPrint('AgileEpicsFeaturesScreen add story error: $error');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not add the story. Please try again.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isAddingStory = false);
+    }
   }
 
   void _updateEpic(Epic epic) {
@@ -1355,6 +1403,17 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                     fontWeight: FontWeight.w600,
                     color: _kMuted)),
             const SizedBox(width: 4),
+            IconButton(
+              tooltip: 'Add story',
+              key: ValueKey('add-story-${feature.id}'),
+              icon: const Icon(Icons.playlist_add,
+                  size: 16, color: Color(0xFF059669)),
+              onPressed:
+                  _isAddingStory ? null : () => _addStoryToFeature(feature),
+              constraints:
+                  const BoxConstraints(minWidth: 30, minHeight: 30),
+              padding: EdgeInsets.zero,
+            ),
             IconButton(
               tooltip: 'Edit',
               icon: const Icon(Icons.edit_outlined,

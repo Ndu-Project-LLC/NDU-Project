@@ -185,34 +185,47 @@ shape of bug would be a blank screen in production.
 
 ---
 
-### Task 4: Enforce Story → Feature → Epic, and let a Feature spawn its stories
+### Task 4: Enforce Story → Feature → Epic, and let a Feature spawn its stories — DONE
 
 **Files:**
-- Modify: `lib/models/agile_task.dart` (has `epicId`, `featureId`)
-- Modify: `lib/services/agile_service.dart` (`createStory` at ~line 91, `updateStory` ~127, `deleteStory` ~149)
-- Modify: `lib/screens/agile_epics_features_screen.dart` (1924 lines) — "Add story" action on a feature
-- Modify: `lib/screens/agile_stories_backlog_screen.dart` — story editor requires a feature
-- Test: extend `test/screens/agile_stories_backlog_test.dart`
+- Added: `lib/utils/agile_story_linkage.dart` (`AgileStoryLinkage.link`,
+  `newStoryFor`, `isLinked`, `featureFor`, `countUnlinked`, `optionLabels`)
+- Modified: `lib/screens/agile_stories_backlog_screen.dart` (feature picker on
+  every story card; stories created through the rule; unlinked count on save)
+- Modified: `lib/screens/agile_epics_features_screen.dart` (an "Add story"
+  action on each feature row)
+- Tests: `test/utils/agile_story_linkage_test.dart` (12)
 
-**Step 1: Write the failing test** — creating a story with an empty `featureId`
-must be rejected (validation error surfaced to the UI), and creating one from a
-feature must store both `featureId` and the feature's `epicId`.
+**Correction: the plan pointed at the wrong service.** It said to derive `epicId`
+in `AgileService.createStory`. `AgileService` is the *legacy* `agile_stories`
+store — its own doc comment says "Prefer `AgileTask` persisted via
+`ExecutionPhaseService` for canonical backlog/execution/schedule integration" —
+and the backlog screen never touches it.
 
-**Step 2: Run it and watch it fail.**
-Run: `flutter test test/screens/agile_stories_backlog_test.dart`
+The rule now lives in one pure place, `AgileStoryLinkage`, and every path uses
+it: `newStoryFor` gives a story its feature **and that feature's epic**, ordered
+by highest-order-plus-one rather than a count (so deleting a story cannot make
+the next one collide); `link` re-parents an existing story and replaces a stale
+epic. The card view gained a **Feature** picker that cannot be cleared and shows
+"Not under any feature" with the fix list for anything unlinked, and saving now
+reports "· N still have no feature".
 
-**Step 3: Implement.** In `AgileService.createStory`, derive `epicId` from the
-feature when the caller does not pass one (single lookup, keep `featureId`
-authoritative). In both screens, the feature picker becomes a required field, and
-the "Add story" entry point appears on the feature row in Epics & Features.
+**Hazard found while wiring "Add story" to a feature.**
+`ExecutionPhaseService.saveAgileTasks` replaces the **whole** `agileTasks`
+array, so any caller holding a subset of stories wipes the rest. The new action
+loads the existing list first and saves it back with the new story appended.
 
-**Step 4:** Run the test. Expected: PASS.
+Audit of the other callers, so nobody has to redo it: `agile_stories_backlog`
+and `agile_development_iterations` hold the full list they loaded;
+`agile_iteration_table_widget` and `wbs_agile_sync_service` load-then-append (the
+WBS one even documents the hazard); `agile_kanban_board_screen` saves the full
+list it loaded. `agile_task_board_screen.dart` saves whatever `initialTasks` it
+was handed, but nothing in `lib/` constructs `AgileTaskBoardScreen`, so that path
+is dead rather than dangerous.
 
-**Step 5:** Manual check: stories created before this change (no `featureId`)
-must still load and appear in the Unlinked group from Task 3 — no migration, no
-crash.
-
-**Step 6: Commit.**
+**Legacy tolerance (plan step 5).** Stories with no feature still load; they are
+flagged in the card picker, counted on save and grouped in the Task 3 table — no
+migration, no crash. Covered by the `link checks` group in the new test file.
 
 ---
 

@@ -415,28 +415,48 @@ achievable proxy and is noted as such in the test file.
 
 ---
 
-### Task 9: Metrics drive the dashboard; stop asking the user to pick metrics
+### Task 9: Metrics drive the dashboard; stop asking the user to pick metrics — DONE
 
 **Files:**
-- Modify: `lib/screens/agile_metrics_planning_screen.dart` (metric-selection UI)
-- Modify: `lib/screens/agile_dashboard_screen.dart` (1049 lines)
-- Read: `lib/screens/agile_metrics_screen.dart` (1117 lines) — check whether this is a third surface that should merge into the dashboard
-- Test: `test/screens/agile_dashboard_test.dart` (new)
+- Added: `lib/utils/agile_metrics_catalog.dart` (`AgileMetric`,
+  `AgileMetricsCatalog`, `defaultTrackedKeys`, `trackedMetrics`,
+  `usesDefaultTrackedSet`)
+- Added: `lib/widgets/agile_tracked_metrics_strip.dart`
+  (`AgileTrackedMetricsStrip`)
+- Modified: `lib/screens/agile_metrics_planning_screen.dart` (the metric list now
+  comes from the catalog; the default tracked set is pre-selected)
+- Modified: `lib/screens/agile_dashboard_screen.dart` (loads the metrics config,
+  renders the tracked strip, and tags the cards that report a tracked metric)
+- Tests: `test/utils/agile_metrics_catalog_test.dart` (7),
+  `test/widgets/agile_tracked_metrics_strip_test.dart` (3)
 
-**Step 1: Write the failing test** — with a saved metrics config, the dashboard
-renders a tile per configured metric without any user selection step.
+**What landed.** The 16-metric list moved out of Metrics Planning into
+`AgileMetricsCatalog`, so it is one list rather than two that drift. A project
+that has never chosen now gets the default tracked set — velocity, sprint
+predictability, delivery confidence, and the business metrics, which are labelled
+`optional` — instead of an empty selection ("just have the metrics available …
+and nobody's choosing"). The dashboard reads `metricsConfig` through
+`AgileWireframeService.loadMetricsConfig`, renders a **Tracked metrics** strip
+with one chip per metric, and says out loud when it is only showing the defaults
+instead of passing them off as the user's choice.
 
-**Step 2:** Pre-select the tracked metric set (velocity, predictability, plus the
-existing business metrics as optional) and have the dashboard read them from the
-metrics config. The owner's ask: "just have the metrics available. And then the
-dashboard is going to reflect those metrics."
+**Dashboard tile audit (the "does not look like it's driving an output" ask).**
+Each metric card now carries the catalog key it reports: Velocity → `velocity`,
+Stories Completed → `throughput`, and those show a small tracked marker. Active
+Sprint and Team Capacity carry no key because no planning metric defines them —
+they are sprint context, which the owner explicitly allowed to stay ("it's still
+okay to have it here"). Nothing was removed.
 
-**Step 3:** Check the dashboard against the "everything a dashboard should have"
-bar — every tile must trace to a metric defined in Metrics Planning. Remove or
-relabel anything that does not ("it does not look like it's driving any certain
-output").
+**`agile_metrics_screen.dart` is not a third duplicate.** It is the
+Execution-phase metrics detail page (velocity chart, predictability gauge,
+lead/cycle time, defect trend, capacity), reachable from the Agile Project Hub
+and not part of the Agile Delivery planning flow, and it reads its own
+`execution_phase_entries` data. Left alone; the planning set drives the dashboard.
 
-**Step 4:** Run the test, `flutter analyze`, commit.
+**Deviation: the test is on the catalog and the strip, not the screen.** Same
+reason as Tasks 3 and 7 — the dashboard's loads do not complete under
+`flutter test`, so the rule that decides the tracked set is tested pure, and the
+strip is a presentational widget with its own tests.
 
 ---
 

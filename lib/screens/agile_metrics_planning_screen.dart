@@ -13,6 +13,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/agile_metrics_catalog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
@@ -42,97 +43,23 @@ class _MetricItem {
   }) : selected = false;
 }
 
-final List<_MetricGroup> _allMetricGroups = [
-  _MetricGroup(
-    category: 'Delivery',
-    metrics: [
-      _MetricItem(
-          key: 'velocity',
-          label: 'Velocity',
-          description: 'Story points completed per sprint'),
-      _MetricItem(
-          key: 'throughput',
-          label: 'Throughput',
-          description: 'Number of work items completed per sprint'),
-      _MetricItem(
-          key: 'burndown',
-          label: 'Burndown',
-          description: 'Remaining work vs time within a sprint'),
-      _MetricItem(
-          key: 'burnup',
-          label: 'Burnup',
-          description: 'Completed work vs total scope over time'),
-    ],
-  ),
-  _MetricGroup(
-    category: 'Quality',
-    metrics: [
-      _MetricItem(
-          key: 'escaped_defects',
-          label: 'Escaped Defects',
-          description: 'Defects found in production post-release'),
-      _MetricItem(
-          key: 'defect_density',
-          label: 'Defect Density',
-          description: 'Defects per story point or per feature'),
-      _MetricItem(
-          key: 'rework',
-          label: 'Rework %',
-          description: 'Percentage of work requiring rework'),
-    ],
-  ),
-  _MetricGroup(
-    category: 'Flow',
-    metrics: [
-      _MetricItem(
-          key: 'lead_time',
-          label: 'Lead Time',
-          description: 'Time from work item created to delivered'),
-      _MetricItem(
-          key: 'cycle_time',
-          label: 'Cycle Time',
-          description: 'Time from work started to delivered'),
-      _MetricItem(
-          key: 'work_item_aging',
-          label: 'Work Item Aging',
-          description: 'How long items have been in progress'),
-    ],
-  ),
-  _MetricGroup(
-    category: 'Predictability',
-    metrics: [
-      _MetricItem(
-          key: 'sprint_predictability',
-          label: 'Sprint Predictability',
-          description: 'Ratio of planned vs completed story points'),
-      _MetricItem(
-          key: 'commitment_reliability',
-          label: 'Commitment Reliability',
-          description: 'How often the team meets sprint commitments'),
-      _MetricItem(
-          key: 'delivery_confidence',
-          label: 'Delivery Confidence',
-          description: 'Forecast confidence for release dates'),
-    ],
-  ),
-  _MetricGroup(
-    category: 'Business',
-    metrics: [
-      _MetricItem(
-          key: 'value_delivered',
-          label: 'Value Delivered',
-          description: 'Business value realized per release'),
-      _MetricItem(
-          key: 'feature_adoption',
-          label: 'Feature Adoption',
-          description: 'User adoption rate of delivered features'),
-      _MetricItem(
-          key: 'customer_satisfaction',
-          label: 'Customer Satisfaction',
-          description: 'CSAT or NPS scores per release'),
-    ],
-  ),
-];
+/// The metric list lives in [AgileMetricsCatalog] so the dashboard reports the
+/// same set this page defines, instead of the two drifting apart. Grouped here
+/// for display only.
+List<_MetricGroup> _catalogGroups() => [
+      for (final category in AgileMetricsCatalog.categories)
+        _MetricGroup(
+          category: category,
+          metrics: [
+            for (final metric in AgileMetricsCatalog.inCategory(category))
+              _MetricItem(
+                key: metric.key,
+                label: metric.label,
+                description: metric.description,
+              ),
+          ],
+        ),
+    ];
 
 class AgileMetricsPlanningScreen extends StatefulWidget {
   const AgileMetricsPlanningScreen({super.key});
@@ -167,18 +94,7 @@ class _AgileMetricsPlanningScreenState
   @override
   void initState() {
     super.initState();
-    _groups = _allMetricGroups
-        .map((g) => _MetricGroup(
-              category: g.category,
-              metrics: g.metrics
-                  .map((m) => _MetricItem(
-                        key: m.key,
-                        label: m.label,
-                        description: m.description,
-                      ))
-                  .toList(),
-            ))
-        .toList();
+    _groups = _catalogGroups();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
@@ -196,12 +112,19 @@ class _AgileMetricsPlanningScreenState
     try {
       final data = await AgileWireframeService.loadMetricsConfig(pid);
       if (!mounted) return;
+      // Pre-select the default tracked set when the project has never chosen,
+      // so the dashboard has metrics to report without anyone ticking boxes —
+      // the review's "nobody's choosing".
       final selected = (data['selectedMetrics'] as List?)
-              ?.map((e) => e.toString())
+              ?.map((e) => e.toString().trim())
+              .where((key) => key.isNotEmpty)
               .toList() ??
-          [];
+          const <String>[];
+      final keys = selected.isEmpty
+          ? AgileMetricsCatalog.defaultTrackedKeys
+          : selected.toSet();
       for (final m in _allMetrics) {
-        m.selected = selected.contains(m.key);
+        m.selected = keys.contains(m.key);
       }
       _notesCtrl.text = data['notes'] as String? ?? '';
     } catch (e) {
@@ -344,8 +267,9 @@ class _AgileMetricsPlanningScreenState
                             children: [
                               const Expanded(
                                 child: Text(
-                                  'Select the metrics your team will track during execution. '
-                                  'Selections auto-configure the execution dashboard.',
+                                  'These are the metrics the execution dashboard reports. '
+                                  'A default tracking set is already selected — adjust it '
+                                  'and the dashboard follows.',
                                   style: TextStyle(
                                       fontSize: 15, color: _kMuted),
                                 ),

@@ -35,6 +35,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/wbs_agile_level_summary.dart';
 import 'package:ndu_project/widgets/cross_section_sync_card.dart';
 import 'package:ndu_project/widgets/scrollable_section_header.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -299,6 +300,27 @@ class _ExportAndLinkTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         final counts = countNodes(wbs);
+        // The summary reports three levels, not two: Agile's chain is Level 1
+        // Epic → Level 2 Feature → Level 3 User Story, and stopping at the
+        // feature level hid whether the stories had been broken out at all.
+        final levelCounts = <int, int>{
+          1: counts.level1,
+          2: counts.level2,
+          3: counts.level3,
+          4: counts.level4,
+          5: counts.level5,
+          6: counts.level6,
+          7: counts.level7,
+          8: counts.level8,
+        };
+        final levelSummary = WbsLevelSummary.summaryLine(
+          framework: wbs.framework,
+          countsByLevel: levelCounts,
+        );
+        final storyGap = WbsLevelSummary.storyGapHint(
+          framework: wbs.framework,
+          countsByLevel: levelCounts,
+        );
         final json = const JsonEncoder.withIndent('  ').convert({
           'id': wbs.id,
           'projectName': wbs.projectName,
@@ -376,10 +398,18 @@ class _ExportAndLinkTab extends StatelessWidget {
                                   fontWeight: FontWeight.w700)),
                           const SizedBox(height: 4),
                           Text(
-                            '${wbs.framework.label} · ${counts.level1} ${wbs.framework.level1Label} · ${counts.level2} ${wbs.framework.level2Label}',
+                            '${wbs.framework.label} · $levelSummary',
                             style: const TextStyle(
                                 color: Color(0xFF6B7280), fontSize: 12),
                           ),
+                          if (storyGap != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              storyGap,
+                              style: const TextStyle(
+                                  color: Color(0xFFB8860B), fontSize: 11.5),
+                            ),
+                          ],
                         ],
                       ),
                     ),

@@ -5,11 +5,14 @@ import 'package:ndu_project/models/agile_release_plan.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/epic_model.dart';
 import 'package:ndu_project/models/feature_model.dart';
+import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
+import 'package:ndu_project/utils/agile_release_scope.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/widgets/agile_release_plan_table.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -38,9 +41,18 @@ class AgileReleasePlanScreen extends StatefulWidget {
 class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
   List<AgileReleasePlan> _plans = [];
   List<AgileTask> _stories = [];
+  List<Epic> _epics = [];
+  Map<String, List<Feature>> _featuresByEpic = {};
+  List<Milestone> _milestones = [];
+  List<WorkPackage> _workPackages = [];
   bool _isLoading = true;
   final DateFormat _df = DateFormat('MMM dd, yyyy');
   final Set<int> _expandedCards = {};
+
+  /// The table tells the story the review said the cards did not ("this plan
+  /// doesn't tell me anything"): which epic each release covers and which
+  /// already-identified milestones come with it. Cards stay for editing.
+  bool _tableView = true;
 
   String? get _projectId {
     try {
@@ -60,14 +72,34 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
     final pid = _projectId;
     if (pid == null) return;
     setState(() => _isLoading = true);
+    // Read the project data before the first await — the milestones and work
+    // packages live on it, and the context is only safe to touch synchronously.
+    // Guarded like `_projectId`: a host without the provider must degrade to
+    // "no milestones to show", not take the page down.
+    ProjectDataModel? projectData;
+    try {
+      projectData = ProjectDataHelper.getData(context);
+    } catch (_) {
+      projectData = null;
+    }
     try {
       final plans = await AgileWireframeService.loadReleasePlans(pid);
       final stories =
           await ExecutionPhaseService.loadAgileTasks(projectId: pid);
+      final epics = await EpicFeatureService.loadEpics(pid);
+      final featuresByEpic = <String, List<Feature>>{};
+      for (final epic in epics) {
+        featuresByEpic[epic.id] =
+            await EpicFeatureService.loadFeatures(pid, epic.id);
+      }
       if (mounted) {
         setState(() {
           _plans = plans;
           _stories = stories;
+          _epics = epics;
+          _featuresByEpic = featuresByEpic;
+          _milestones = projectData?.keyMilestones ?? const <Milestone>[];
+          _workPackages = projectData?.workPackages ?? const <WorkPackage>[];
           _isLoading = false;
         });
       }
@@ -76,16 +108,29 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
     }
   }
 
+  /// Milestones a release shows without the user picking any.
+  List<Milestone> _milestonesFor(AgileReleasePlan plan) =>
+      AgileReleaseScope.milestonesForRelease(
+        release: plan,
+        epics: _epics,
+        featuresByEpic: _featuresByEpic,
+        stories: _stories,
+        milestones: _milestones,
+        workPackages: _workPackages,
+      );
+
   void _addPlan() {
-    final plan = AgileReleasePlan(
-      releaseLabel: 'Release ${_plans.length + 1}',
-    );
+    // "This should start with a blank" — a new plan is not pre-named, because
+    // `Release N` read as content while holding nothing.
+    final plan = AgileReleaseScope.blankPlan();
     final pid = _projectId;
     showDialog(
       context: context,
       builder: (ctx) => _ReleasePlanEditDialog(
         plan: plan,
         projectId: pid ?? '',
+        milestones: _milestones,
+        workPackages: _workPackages,
         onSave: (updated) {
           if (pid == null) return;
           AgileWireframeService.saveReleasePlan(projectId: pid, plan: updated);
@@ -103,6 +148,8 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
       builder: (ctx) => _ReleasePlanEditDialog(
         plan: plan,
         projectId: pid ?? '',
+        milestones: _milestones,
+        workPackages: _workPackages,
         onSave: (updated) {
           if (pid == null) return;
           AgileWireframeService.saveReleasePlan(projectId: pid, plan: updated);
@@ -166,7 +213,36 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                         if (_isLoading)
                           const Center(child: CircularProgressIndicator())
                         else ...[
-                          if (_plans.isEmpty)
+                          _buildViewToggle(),
+                          const SizedBox(height: 16),
+                          if (_tableView)
+                            AgileReleasePlanTableView(
+                              rows: AgileReleaseScope.tableRows(
+                                releases: _plans,
+                                epics: _epics,
+                                featuresByEpic: _featuresByEpic,
+                                stories: _stories,
+                                milestones: _milestones,
+                                workPackages: _workPackages,
+                              ),
+                              epicRows: AgileReleaseScope.epicMilestoneRows(
+                                epics: _epics,
+                                featuresByEpic: _featuresByEpic,
+                                stories: _stories,
+                                milestones: _milestones,
+                                workPackages: _workPackages,
+                              ),
+                              unclaimedMilestones:
+                                  AgileReleaseScope.milestonesOutsideReleases(
+                                releases: _plans,
+                                epics: _epics,
+                                featuresByEpic: _featuresByEpic,
+                                stories: _stories,
+                                milestones: _milestones,
+                                workPackages: _workPackages,
+                              ),
+                            )
+                          else if (_plans.isEmpty)
                             _buildEmptyState(
                                 'No release plans yet. Create your first release.')
                           else
@@ -216,6 +292,34 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildViewToggle() {
+    return Row(
+      children: [
+        const Text('View: ',
+            style: TextStyle(fontSize: 13, color: _kMuted)),
+        ChoiceChip(
+          label: Text('Table',
+              style: TextStyle(
+                  fontSize: 12,
+                  color: _tableView ? Colors.white : const Color(0xFF111827))),
+          selected: _tableView,
+          selectedColor: _kAccent,
+          onSelected: (_) => setState(() => _tableView = true),
+        ),
+        const SizedBox(width: 6),
+        ChoiceChip(
+          label: Text('Cards',
+              style: TextStyle(
+                  fontSize: 12,
+                  color: !_tableView ? Colors.white : const Color(0xFF111827))),
+          selected: !_tableView,
+          selectedColor: _kAccent,
+          onSelected: (_) => setState(() => _tableView = false),
+        ),
+      ],
     );
   }
 
@@ -325,6 +429,24 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                 _buildTag('${_releaseReadyStoryCount(plan)} sprint-ready'),
               ],
             ),
+            if (_milestonesFor(plan).isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFFDE68A)),
+                ),
+                child: Text(
+                  'Milestones (automatic): '
+                  '${_milestonesFor(plan).map((m) => m.name.isNotEmpty ? m.name : 'Unnamed milestone').join(', ')}',
+                  style: const TextStyle(
+                      fontSize: 12, color: Color(0xFF9A3412), height: 1.4),
+                ),
+              ),
+            ],
             if (_releaseUnassignedSprintCount(plan) > 0) ...[
               const SizedBox(height: 8),
               Container(
@@ -543,6 +665,27 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
     );
   }
 
+  /// One line per release for the export: what it covers and the milestones
+  /// that came with it, so the PDF says something too.
+  String _releaseSummary(AgileReleasePlan plan) {
+    final epics = AgileReleaseScope.epicsFor(
+      release: plan,
+      epics: _epics,
+      featuresByEpic: _featuresByEpic,
+    );
+    final epicLabel = epics.isEmpty
+        ? 'none'
+        : epics
+            .map((e) => e.title.isNotEmpty ? e.title : 'Untitled epic')
+            .join(', ');
+    final milestoneNames = _milestonesFor(plan)
+        .map((m) => m.name.isNotEmpty ? m.name : 'Unnamed milestone')
+        .toList();
+    final milestoneLabel =
+        milestoneNames.isEmpty ? 'none' : milestoneNames.join(', ');
+    return 'Epics: $epicLabel \u00b7 Milestones: $milestoneLabel';
+  }
+
   Future<void> _exportPdf() async {
     final projectData = ProjectDataHelper.getData(context);
     await PdfExportHelper.exportScreenPdf(
@@ -552,6 +695,34 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
         PdfSection.keyValue('Project Info', [
           {'Project Name': projectData.projectName},
           {'Solution Title': projectData.solutionTitle},
+        ]),
+        PdfSection.keyValue('Release Plan', [
+          if (_plans.isEmpty)
+            {'Releases': 'None defined yet.'}
+          else
+            for (final plan in _plans)
+              {
+                plan.releaseLabel.isNotEmpty
+                    ? plan.releaseLabel
+                    : 'Untitled release': _releaseSummary(plan)
+              },
+        ]),
+        PdfSection.keyValue('Project Epics & Milestones', [
+          for (final row in AgileReleaseScope.epicMilestoneRows(
+            epics: _epics,
+            featuresByEpic: _featuresByEpic,
+            stories: _stories,
+            milestones: _milestones,
+            workPackages: _workPackages,
+          ))
+            {
+              row.epic.title.isNotEmpty ? row.epic.title : 'Untitled epic':
+                  row.milestones.isEmpty
+                      ? 'No milestones tied yet.'
+                      : row.milestones
+                          .map((m) => m.name.isNotEmpty ? m.name : 'Unnamed milestone')
+                          .join(', ')
+            },
         ]),
         PdfSection.text(
             'Notes',
@@ -565,11 +736,20 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
 class _ReleasePlanEditDialog extends StatefulWidget {
   final AgileReleasePlan plan;
   final String projectId;
+
+  /// The project's already-identified milestones and work packages, so the
+  /// dialog can show which milestones the current scope brings with it instead
+  /// of asking the user to pick them again.
+  final List<Milestone> milestones;
+  final List<WorkPackage> workPackages;
+
   final ValueChanged<AgileReleasePlan> onSave;
 
   const _ReleasePlanEditDialog({
     required this.plan,
     required this.projectId,
+    this.milestones = const [],
+    this.workPackages = const [],
     required this.onSave,
   });
 
@@ -704,6 +884,71 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
     _feedbackCtrl.dispose();
     _improvementCtrl.dispose();
     super.dispose();
+  }
+
+  /// Milestones the current scope pulls in, resolved from the selected epics'
+  /// stories and WBS packages — nothing here is hand-picked.
+  List<Milestone> get _autoMilestones => AgileReleaseScope.milestonesForRelease(
+        release: AgileReleasePlan(
+          id: widget.plan.id,
+          epicIds: _selectedEpicIds.toList(),
+          featureIds: _selectedFeatureIds.toList(),
+          storyIds: _selectedStoryIds.toList(),
+        ),
+        epics: _epics,
+        featuresByEpic: _featuresByEpic,
+        stories: _stories,
+        milestones: widget.milestones,
+        workPackages: widget.workPackages,
+      );
+
+  Widget _buildAutoMilestones() {
+    final milestones = _autoMilestones;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        border: Border.all(color: const Color(0xFFFDE68A)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (milestones.isEmpty)
+            const Text(
+              'No milestones are tied to the selected epics yet. Milestones '
+              'come from the stories and WBS packages under them.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF9A3412)),
+            )
+          else
+            for (final milestone in milestones)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    const Icon(Icons.flag_outlined,
+                        size: 14, color: Color(0xFFB8860B)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        milestone.name.isNotEmpty
+                            ? milestone.name
+                            : 'Unnamed milestone',
+                        style: const TextStyle(
+                            fontSize: 12, color: Color(0xFF9A3412)),
+                      ),
+                    ),
+                    if (milestone.dueDate.isNotEmpty)
+                      Text(milestone.dueDate,
+                          style: const TextStyle(
+                              fontSize: 11, color: Color(0xFFB8860B))),
+                  ],
+                ),
+              ),
+        ],
+      ),
+    );
   }
 
   Widget _buildSectionHeader(String title) {
@@ -863,6 +1108,11 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
                   _selectedStoryIds.remove(storyId);
                 }
               }),
+            ),
+            _buildSectionHeader('Auto-linked Milestones'),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _buildAutoMilestones(),
             ),
             _buildSectionHeader('Release Cadence'),
             _buildDropdown(

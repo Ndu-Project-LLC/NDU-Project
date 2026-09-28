@@ -328,32 +328,48 @@ count is 5 before and after. One-line finder fix, its own commit.
 
 ---
 
-### Task 7: Release Plan shows epics + milestones and ties them automatically
+### Task 7: Release Plan shows epics + milestones and ties them automatically — DONE
 
 **Files:**
-- Modify: `lib/screens/agile_release_plan_screen.dart` (1132 lines; `_ReleasePlanEditDialog`, `ReleaseScopePicker`, `_buildSectionHeader`)
-- Modify: `lib/models/agile_release_plan.dart` (`epicIds`, `featureIds`)
-- Read: `lib/models/project_data_model.dart` (`keyMilestones`, `List<Milestone>`), `lib/services/planning_sync_service.dart` (`importSourceMilestone`, `_resolveMilestoneNamesForTask`), `lib/models/planning_contracting_models.dart` for the milestone shape
-- Test: `test/screens/agile_release_plan_test.dart` (new)
+- Added: `lib/utils/agile_release_scope.dart` (`AgileReleaseScope`,
+  `ReleasePlanTableRow`, `EpicMilestoneRow`)
+- Added: `lib/widgets/agile_release_plan_table.dart` (`AgileReleasePlanTableView`)
+- Modified: `lib/screens/agile_release_plan_screen.dart` (loads epics/features/
+  milestones/work packages, table + cards toggle, blank new plans, auto
+  milestones on the cards and in the dialog, export)
+- Tests: `test/utils/agile_release_scope_test.dart` (10),
+  `test/widgets/agile_release_plan_table_test.dart` (3)
 
-**Step 1: Write the failing test** — with two epics and two key milestones in the
-project data, the release plan screen renders both epics and both milestones, and
-a release whose `epicIds` includes an epic shows that epic's milestone without
-the user re-selecting it.
+**What landed.** The page now shows what the project already has — every epic and
+`ProjectDataModel.keyMilestones` — in a "Project epics & milestones" table, then
+a "Release plan" table with one row per release and epic, and a notice naming any
+milestone no release has claimed. A release's milestones are **resolved, never
+picked**: `milestoneIdsForEpic` reads `AgileTask.milestoneIds` from the stories
+under the epic, and — the owner's "reflected automatically with the associated
+[WBS] item" — `WorkPackage.milestoneIds` for packages sitting on the epic's
+`wbsId`. The editor dialog shows the same list read-only for the current scope,
+the cards carry the same auto banner, and a new plan is created blank instead of
+pre-named `Release N`.
 
-**Step 2:** Implement: read `ProjectDataModel.keyMilestones` (already rendered on
-the Project Baseline and Deliverables screens) and the project's epics, show them
-in the plan, auto-resolve milestones from the epics' WBS/schedule linkage
-(`PlanningSyncService` already tags imported milestones with
-`importSourceMilestone`), and start from a blank plan when nothing is saved
-("this should start with a blank").
+**Deviation: the test is on the pure rules, not the screen.** The plan wanted a
+widget test that pumps `AgileReleasePlanScreen` with fixture epics/milestones.
+That cannot work for the same reason as Task 3: the screen's Firestore loads
+never complete under `flutter test`, so it stays on its spinner. The rules live
+in `AgileReleaseScope` with unit tests, and the table is a presentational widget
+with its own tests; the screen only wires them.
 
-**Step 3:** Add the table view the owner asked for ("I can type view, like the
-[table] view") alongside the existing card layout.
+**Defensive read added.** The screen reads milestones/work packages from
+`ProjectDataHelper.getData(context)`, which needs `Provider<ProjectDataProvider>`
+above it. That read is now guarded like `_projectId`, so a host without the
+provider degrades to "no milestones" instead of throwing
+`ProviderNotFoundException` — which is exactly what the existing
+`agile_release_plan_dialog_test.dart` would otherwise have hit.
 
-**Step 4:** Run the new test plus `flutter analyze lib/screens/agile_release_plan_screen.dart`. Expected: PASS.
-
-**Step 5: Commit.**
+**Milestone→epic linkage is derived, so it is only as good as the data.** A
+project whose stories carry no `milestoneIds` and whose epics carry no `wbsId`
+shows every milestone under "not tied to a release yet" rather than inventing a
+tie. That is the honest reading, but it means Task 11's story/task work (and the
+FEP milestone pickers on stories) is what makes this section fill up.
 
 ---
 

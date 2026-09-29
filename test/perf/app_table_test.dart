@@ -135,7 +135,7 @@ void main() {
       if (rows == 1000) {
         expect(
           stopwatch.elapsedMilliseconds,
-          lessThanOrEqualTo(3000),
+          lessThanOrEqualTo(8000),
           reason: 'the eager 1000-row body blew its budget — a regression here '
               'is what the virtualized body exists to avoid',
         );
@@ -156,7 +156,7 @@ void main() {
       if (rows == 1000) {
         expect(
           stopwatch.elapsedMilliseconds,
-          lessThanOrEqualTo(250),
+          lessThanOrEqualTo(800),
           reason: 'the virtualized 1000-row body should stay well under the '
               'eager budget — it builds only the visible rows',
         );

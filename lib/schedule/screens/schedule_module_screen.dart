@@ -433,19 +433,17 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
           breadcrumbPhase: 'Planning Phase',
           breadcrumbTitle: 'Schedule',
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: Column(
-            children: [
-              // Scrollable, self-collapsing section header: the tab content
-              // below always keeps its share of the page.
-              ScrollableSectionHeader(
-                label: 'Schedule',
-                icon: Icons.calendar_month_outlined,
-                summary: _sectionTabs[_tabController.index].label,
-                scrollKey: const ValueKey('scheduleHeaderScroll'),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+          body: ScrollableSectionHeader(
+            label: 'Schedule',
+            icon: Icons.calendar_month_outlined,
+            summary: _sectionTabs[_tabController.index].label,
+            scrollKey: const ValueKey('scheduleHeaderScroll'),
+            // The header stack scrolls away with the page — one vertical
+            // scroll surface, no capped inner viewport.
+            header: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                     // ── World-class Section Navigator ──────────────────────
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -603,20 +601,17 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                       currentSection: CrossSection.schedule,
                     ),
                   ],
-                ),
-              ),
-              // Tab content
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: const [
-                    BuilderScreen(),
-                    GanttScreen(),
-                    ListViewScreen(),
-                  ],
-                ),
-              ),
-            ],
+            ),
+            // Tab content: inherits the NestedScrollView inner controller,
+            // so header and content scroll as one continuous surface.
+            body: TabBarView(
+              controller: _tabController,
+              children: const [
+                BuilderScreen(),
+                GanttScreen(),
+                ListViewScreen(),
+              ],
+            ),
           ),
         );
       },

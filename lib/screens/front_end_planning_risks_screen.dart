@@ -9,6 +9,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/form_validation_engine.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/risk_log.dart';
 import 'package:ndu_project/widgets/content_text.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
@@ -89,6 +90,17 @@ class _FrontEndPlanningRisksScreenState
  {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ // The risk log itself. The export used to print only Project Info and Notes,
+ // so the table "didn't show anything" (Lusaka 27).
+ if (fep.riskRegisterItems.isNotEmpty)
+ PdfSection.table(
+ 'Risk Log',
+ headers: RiskLogRow.columnLabels,
+ rows: [
+ for (final row in RiskLogRow.fromRegisterItems(fep.riskRegisterItems))
+ row.values,
+ ],
+ ),
  ],
  );
  }
@@ -118,6 +130,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  probability: item.likelihood,
  impact: item.impactLevel,
  riskValue: '',
+ costImpact: RiskLogRow.costImpactLabel(item),
+ scheduleImpact: RiskLogRow.scheduleImpactLabel(item),
  riskLevel: _deriveRiskLevel(item.likelihood, item.impactLevel),
  mitigation: item.mitigationStrategy,
  discipline: item.discipline,
@@ -529,6 +543,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  probability: '',
  impact: '',
  riskValue: '',
+ costImpact: '',
+ scheduleImpact: '',
  riskLevel: '',
  mitigation: '',
  discipline: '',
@@ -557,6 +573,12 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  final disciplineCtrl = SpellCheckTextEditingController(text: current.discipline);
  final projectRoleCtrl = SpellCheckTextEditingController(text: current.projectRole);
  final ownerCtrl = SpellCheckTextEditingController(text: current.owner);
+ // Quantitative impact (Lusaka 27: "the potential cost impact with the
+ // schedule impact … all done on the table"). Left blank when unknown.
+ final costImpactCtrl = SpellCheckTextEditingController(
+     text: current.costImpact.isEmpty ? '' : current.costImpact);
+ final scheduleImpactCtrl = SpellCheckTextEditingController(
+     text: current.scheduleImpact.isEmpty ? '' : current.scheduleImpact);
  // Dropdown options
  const requirementTypeOptions = [
  'Technical',
@@ -738,6 +760,24 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ],
  ),
  const SizedBox(height: 12),
+ Row(
+ children: [
+ Expanded(
+ child: _LabeledField(
+ label: 'Cost Impact (\$)',
+ controller: costImpactCtrl,
+ hintText: 'e.g. 12500'),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: _LabeledField(
+ label: 'Schedule Impact (days)',
+ controller: scheduleImpactCtrl,
+ hintText: 'e.g. 12'),
+ ),
+ ],
+ ),
+ const SizedBox(height: 12),
  _LabeledField(
  label: 'Mitigation', controller: mitigationCtrl),
  const SizedBox(height: 12),
@@ -773,6 +813,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  probability: selectedProbability,
  impact: selectedImpact,
  riskValue: current.riskValue,
+ costImpact: costImpactCtrl.text.trim(),
+ scheduleImpact: scheduleImpactCtrl.text.trim(),
  riskLevel: selectedRiskLevel,
  mitigation: mitigationCtrl.text.trim(),
  discipline: disciplineCtrl.text.trim(),
@@ -980,15 +1022,17 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  _isApplyingNotesSummary = true;
  _notesController.clear();
  _isApplyingNotesSummary = false;
- }
-
- final riskRegisterItems = _rows
+ } final riskRegisterItems = _rows
  .map((r) => RiskRegisterItem(
  riskName: r.risk.trim(),
  description: r.description.trim(),
  category: r.category.trim(),
  requirement: r.requirement.trim(),
  requirementType: r.requirementType.trim(),
+ costImpactMostLikely:
+ double.tryParse(r.costImpact.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0,
+ scheduleImpactMostLikely:
+ int.tryParse(r.scheduleImpact.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
  impactLevel: (r.impact.trim().isNotEmpty
  ? r.impact.trim()
  : r.riskLevel.trim())
@@ -1151,30 +1195,15 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  return 'Key risks: ${highlights.join(', ')}$suffix.';
  }
 
- String _normalizeRiskScale(String rawValue, {String fallback = 'Medium'}) {
- final normalized = rawValue.trim().toLowerCase();
- if (normalized.startsWith('h')) return 'High';
- if (normalized.startsWith('l')) return 'Low';
- if (normalized.startsWith('m')) return 'Medium';
- return fallback;
- }
+ /// One implementation, shared with the Planning risk log
+ /// (`lib/models/risk_log.dart`) so both sides rate a risk the same way.
+ String _normalizeRiskScale(String rawValue, {String fallback = 'Medium'}) =>
+ RiskLogRow.normalizeScale(rawValue, fallback: fallback);
 
- String _deriveRiskLevel(String probability, String impact) {
- final prob =
- _normalizeRiskScale(probability, fallback: 'Medium').toLowerCase();
- final imp = _normalizeRiskScale(impact, fallback: 'Medium').toLowerCase();
- if ((prob == 'high' && imp == 'high') ||
- (prob == 'high' && imp == 'medium') ||
- (prob == 'medium' && imp == 'high')) {
- return 'High';
- }
- if ((prob == 'low' && imp == 'low') ||
- (prob == 'low' && imp == 'medium') ||
- (prob == 'medium' && imp == 'low')) {
- return 'Low';
- }
- return 'Medium';
- }
+ /// The overall rating for a probability × impact pair — see
+ /// [RiskLogRow.deriveRiskLevel].
+ String _deriveRiskLevel(String probability, String impact) =>
+ RiskLogRow.deriveRiskLevel(probability, impact);
 
  String _shortRiskLabel(String value, {int maxChars = 54}) {
  final normalized = value.replaceAll(RegExp(r'\s+'), ' ').trim();
@@ -2371,6 +2400,12 @@ class _RiskItem {
  final String probability;
  final String impact;
  final String riskValue;
+
+ /// Potential cost impact in project currency, blank when not recorded.
+ final String costImpact;
+
+ /// Potential schedule impact in days, blank when not recorded.
+ final String scheduleImpact;
  final String riskLevel;
  final String mitigation;
  final String discipline;
@@ -2387,6 +2422,8 @@ class _RiskItem {
  required this.probability,
  required this.impact,
  required this.riskValue,
+ this.costImpact = '',
+ this.scheduleImpact = '',
  required this.riskLevel,
  required this.mitigation,
  required this.discipline,
@@ -2405,6 +2442,8 @@ class _RiskItem {
  String? probability,
  String? impact,
  String? riskValue,
+ String? costImpact,
+ String? scheduleImpact,
  String? riskLevel,
  String? mitigation,
  String? discipline,
@@ -2422,6 +2461,8 @@ class _RiskItem {
  probability: probability ?? this.probability,
  impact: impact ?? this.impact,
  riskValue: riskValue ?? this.riskValue,
+ costImpact: costImpact ?? this.costImpact,
+ scheduleImpact: scheduleImpact ?? this.scheduleImpact,
  riskLevel: riskLevel ?? this.riskLevel,
  mitigation: mitigation ?? this.mitigation,
  discipline: discipline ?? this.discipline,
@@ -2631,7 +2672,8 @@ class _LabeledField extends StatelessWidget {
  required this.controller,
  this.autofocus = false,
  this.enabled = true,
- }) : hintText = null;
+ this.hintText,
+ });
 
  @override
  Widget build(BuildContext context) {

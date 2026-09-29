@@ -204,16 +204,14 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
           breadcrumbTitle: 'WBS',
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           floatingActionButton: const KazAiChatBubble(positioned: false),
-          body: Column(
-            children: [
-              // Scrollable, self-collapsing section header: the tab content
-              // below always keeps its share of the page.
-              ScrollableSectionHeader(
-                label: 'WBS',
-                icon: Icons.account_tree_outlined,
-                summary: _sectionTabs[_tabController.index].label,
-                scrollKey: const ValueKey('wbsHeaderScroll'),
-                child: Column(
+          body: ScrollableSectionHeader(
+            label: 'WBS',
+            icon: Icons.account_tree_outlined,
+            summary: _sectionTabs[_tabController.index].label,
+            scrollKey: const ValueKey('wbsHeaderScroll'),
+            // The header stack scrolls away with the page — one vertical
+            // scroll surface, no capped inner viewport.
+            header: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -253,32 +251,30 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
                       currentSection: CrossSection.wbs,
                     ),
                   ],
-                ),
+            ),
+            // Tab content: inherits the NestedScrollView inner controller,
+            // so header and content scroll as one continuous surface.
+            body: TabBarView(
+              controller: _tabController,
+              children: const [
+                WBSBuilderScreen(),
+                CostByWBSTab(),
+                WBSAIScreen(),
+                WBSValidatorScreen(),
+                _ExportAndLinkTab(),
+              ],
+            ),
+            // Navigation footer: stays put under the scroll so back/next are
+            // always reachable.
+            footer: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+              child: LaunchPhaseNavigation(
+                backLabel: PlanningPhaseNavigation.backLabel('work_breakdown_structure'),
+                nextLabel: PlanningPhaseNavigation.nextLabel('work_breakdown_structure'),
+                onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'work_breakdown_structure'),
+                onNext: () => PlanningPhaseNavigation.goToNext(context, 'work_breakdown_structure'),
               ),
-              // Tab content
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: const [
-                    WBSBuilderScreen(),
-                    CostByWBSTab(),
-                    WBSAIScreen(),
-                    WBSValidatorScreen(),
-                    _ExportAndLinkTab(),
-                  ],
-                ),
-              ),
-              // Navigation footer
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                child: LaunchPhaseNavigation(
-                  backLabel: PlanningPhaseNavigation.backLabel('work_breakdown_structure'),
-                  nextLabel: PlanningPhaseNavigation.nextLabel('work_breakdown_structure'),
-                  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'work_breakdown_structure'),
-                  onNext: () => PlanningPhaseNavigation.goToNext(context, 'work_breakdown_structure'),
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },

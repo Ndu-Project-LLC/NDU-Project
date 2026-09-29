@@ -8,7 +8,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/screens/agile_kanban_board_screen.dart'
-    show KanbanBoardPanel;
+    show KanbanBoardPanel, AgileKanbanBoardScreen, kKanbanBoardPreviewHeight;
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
@@ -18,6 +18,21 @@ const Color _kMuted = Color(0xFF6B7280);
 const Color _kHeadline = Color(0xFF111827);
 const Color _kAccent = Color(0xFFB8860B);
 const Color _kAccentBg = Color(0xFFFEF3C7);
+
+/// The page's two tabs: what you configure, and the board that renders it.
+enum _KanbanConfigTab { workflow, board }
+
+/// The tab last shown on this page, so navigating away and back reopens the
+/// same one. Session-scoped on purpose — [AgileKanbanConfigScreen] instances
+/// are rebuilt by every navigation, so instance state cannot carry this.
+_KanbanConfigTab _lastSelectedTab = _KanbanConfigTab.workflow;
+
+/// Test hook: statics outlive `tester.pumpWidget`, so each test case must
+/// start from the default tab.
+@visibleForTesting
+void resetKanbanConfigTabForTest() {
+  _lastSelectedTab = _KanbanConfigTab.workflow;
+}
 
 /// Kanban workflow configuration.
 ///
@@ -33,11 +48,18 @@ class AgileKanbanConfigScreen extends StatefulWidget {
       _AgileKanbanConfigScreenState();
 }
 
-class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
+class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   bool _isSaving = false;
   bool _isDirty = false;
   List<_ColumnDraft> _drafts = const [];
+
+  late final TabController _tabController = TabController(
+    length: _KanbanConfigTab.values.length,
+    vsync: this,
+    initialIndex: _lastSelectedTab.index,
+  );
 
   String? get _projectId {
     try {
@@ -55,6 +77,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
 
   @override
   void dispose() {
+    _tabController.dispose();
     for (final draft in _drafts) {
       draft.dispose();
     }
@@ -211,11 +234,12 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                         if (_isLoading)
                           const Center(child: CircularProgressIndicator())
                         else ...[
-                          _buildEditableColumnsSection(),
+                          _buildTabBar(),
                           const SizedBox(height: 24),
-                          _buildLockedSection(),
-                          const SizedBox(height: 24),
-                          _buildBoardSection(),
+                          [
+                            _buildWorkflowTab(),
+                            _buildBoardTab(),
+                          ][_tabController.index],
                           const SizedBox(height: 24),
                         ],
                         const SizedBox(height: 24),
@@ -243,6 +267,38 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Two tabs (Lusaka 27 follow-up): the workflow you edit and the board it
+  /// drives no longer share one long scroll. Index-based switch, same pattern
+  /// as the roadmap screen — the page state (drafts, dirty flag) lives above
+  /// the tabs so it survives switching.
+  Widget _buildTabBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _kBorder),
+      ),
+      child: TabBar(
+        controller: _tabController,
+        isScrollable: true,
+        labelColor: _kAccent,
+        unselectedLabelColor: _kMuted,
+        indicatorColor: _kAccent,
+        indicatorSize: TabBarIndicatorSize.label,
+        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: const TextStyle(fontSize: 13),
+        onTap: (index) {
+          _lastSelectedTab = _KanbanConfigTab.values[index];
+          setState(() {});
+        },
+        tabs: const [
+          Tab(text: 'Workflow Columns'),
+          Tab(text: 'Kanban Board'),
+        ],
       ),
     );
   }
@@ -276,6 +332,19 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                   foreground: const Color(0xFFB91C1C),
                 ),
               ],
+              const SizedBox(width: 8),
+              // Compact on purpose (Lusaka 27): "can the button be like
+              // something little" / "I feel like it's covering the entire
+              // page". In the section header rather than after the last
+              // column, so it — and the section's own description under it —
+              // stays visible without scrolling.
+              IconButton(
+                key: const ValueKey('kanban-add-column'),
+                onPressed: _addColumn,
+                tooltip: 'Add column',
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.add, size: 18),
+              ),
             ],
           ),
           const SizedBox(height: 4),
@@ -295,12 +364,6 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              OutlinedButton.icon(
-                key: const ValueKey('kanban-add-column'),
-                onPressed: _addColumn,
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Add column'),
-              ),
               FilledButton.icon(
                 key: const ValueKey('kanban-save-config'),
                 onPressed: (_isSaving || _projectId == null)
@@ -465,36 +528,64 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
         'Execution phase opens it.',
   ];
 
-  /// Live Kanban Board — the same existing board widget used by the
-  /// Kanban Board screen, driven by the workflow columns from the saved
-  /// Kanban configuration.
-  Widget _buildBoardSection() {
+  /// The workflow tab: the editable columns plus the rules that are fixed.
+  Widget _buildWorkflowTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildEditableColumnsSection(),
+        const SizedBox(height: 24),
+        _buildLockedSection(),
+      ],
+    );
+  }
+
+  /// Live Kanban Board tab — the same board widget the Kanban Board screen
+  /// uses,
+  /// driven by the workflow columns saved above, but bounded to a preview
+  /// height so it does not take the configuration page over (Lusaka 27: "I feel
+  /// like it's covering the entire page"). Each column still scrolls, and the
+  /// working view is one click away.
+  Widget _buildBoardTab() {
     return _panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Text('Kanban Board',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: _kHeadline)),
-              const Spacer(),
+              // Expanded, not a Spacer: the title gives up the room the badge
+              // and the full-board action need, so the header cannot overflow
+              // on a narrow window.
+              const Expanded(
+                child: Text('Kanban Board',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: _kHeadline)),
+              ),
               _badge(
                 label: 'LIVE',
                 background: _kAccentBg,
                 foreground: _kAccent,
               ),
+              const SizedBox(width: 4),
+              TextButton.icon(
+                onPressed: () => AgileKanbanBoardScreen.open(context),
+                icon: const Icon(Icons.open_in_full, size: 14),
+                label: const Text('Open full board'),
+              ),
             ],
           ),
           const SizedBox(height: 4),
           const Text(
-              'Shows the columns saved above. Drag stories between columns, '
-              'then Save Board.',
+              'A preview of the columns saved above — each column scrolls. '
+              'Drag stories between columns, then Save Board, or open the full '
+              'board to work on it.',
               style: TextStyle(fontSize: 12, color: _kMuted)),
           const SizedBox(height: 16),
-          const KanbanBoardPanel(),
+          const KanbanBoardPanel(boardHeight: kKanbanBoardPreviewHeight),
         ],
       ),
     );

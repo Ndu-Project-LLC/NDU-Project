@@ -16,13 +16,10 @@ import 'package:ndu_project/screens/execution_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_solutions_screen.dart';
 import 'package:ndu_project/screens/execution_plan_details_screen.dart';
 import 'package:ndu_project/screens/execution_enabling_work_plan_screen.dart';
-import 'package:ndu_project/screens/execution_issue_management_screen.dart';
-import 'package:ndu_project/screens/execution_plan_lessons_learned_screen.dart';
 import 'package:ndu_project/screens/execution_plan_best_practices_screen.dart';
 import 'package:ndu_project/screens/execution_plan_construction_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_infrastructure_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_agile_delivery_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_stakeholder_identification_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_screen.dart';
 import 'package:ndu_project/screens/execution_plan_communication_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_plan_screen.dart';
@@ -65,6 +62,7 @@ import 'package:ndu_project/screens/project_baseline_screen.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/navigation_route_resolver.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 
 class PlanningPhaseNavigation {
   static final List<PlanningPage> pages = [
@@ -241,16 +239,9 @@ class PlanningPhaseNavigation {
       title: 'Enabling Work Plan',
       builder: (_) => const ExecutionEnablingWorkPlanScreen(),
     ),
-    PlanningPage(
-      id: 'execution_issue_management',
-      title: 'Execution Issue Management',
-      builder: (_) => const ExecutionIssueManagementScreen(),
-    ),
-    PlanningPage(
-      id: 'execution_plan_stakeholder_identification',
-      title: 'Execution Stakeholder Identification',
-      builder: (_) => const ExecutionPlanStakeholderIdentificationScreen(),
-    ),
+    // Issue Management, Lessons Learned and Stakeholder Identification are
+    // project-wide sections already in this flow, so there is no
+    // Execution-specific copy of any of them (Lusaka 27).
     PlanningPage(
       id: 'execution_plan_construction_plan',
       title: 'Construction Plan',
@@ -265,11 +256,6 @@ class PlanningPhaseNavigation {
       id: 'execution_plan_agile_delivery_plan',
       title: 'Agile Delivery Plan',
       builder: (_) => const ExecutionPlanAgileDeliveryPlanScreen(),
-    ),
-    PlanningPage(
-      id: 'execution_plan_lessons_learned',
-      title: 'Execution Lessons Learned',
-      builder: (_) => const ExecutionPlanLessonsLearnedScreen(),
     ),
     PlanningPage(
       id: 'execution_plan_best_practices',
@@ -432,22 +418,34 @@ class PlanningPhaseNavigation {
     return SidebarNavigationService.instance.findItemByCheckpoint(id) != null;
   }
 
+  /// The project's delivery model, or null when it has not picked one. The
+  /// same source the sidebar gates on (Lusaka 27).
+  static String? deliveryModelOf(BuildContext context) {
+    final data = ProjectDataInherited.maybeOf(context)?.projectData;
+    return data == null ? null : ProjectDataHelper.deliveryModelOrNull(data);
+  }
+
   static SidebarItem? _nextSidebarItem(BuildContext context, String currentId) {
     final isBasicPlan =
         ProjectDataInherited.maybeOf(context)?.projectData.isBasicPlanProject ??
             false;
-    return SidebarNavigationService.instance
-        .getNextAccessibleItem(currentId, isBasicPlan);
+    return SidebarNavigationService.instance.getNextAccessibleItem(
+      currentId,
+      isBasicPlan,
+      deliveryModel: deliveryModelOf(context),
+    );
   }
 
-  static SidebarItem? _previousSidebarItem(String currentId) {
+  static SidebarItem? _previousSidebarItem(String currentId,
+      {String? deliveryModel}) {
     return SidebarNavigationService.instance
-        .getPreviousAccessibleItem(currentId);
+        .getPreviousAccessibleItem(currentId, deliveryModel: deliveryModel);
   }
 
   static Widget? resolvePreviousScreen(BuildContext context, String currentId) {
     if (_usesSidebarOrder(currentId)) {
-      final prev = _previousSidebarItem(currentId);
+      final prev = _previousSidebarItem(currentId,
+          deliveryModel: deliveryModelOf(context));
       if (prev == null) return null;
       return NavigationRouteResolver.resolveCheckpointToScreen(
         prev.checkpoint,
@@ -487,18 +485,24 @@ class PlanningPhaseNavigation {
     return null;
   }
 
-  static String backLabel(String currentId) {
+  /// [deliveryModel], when supplied, is the model the flow is gated on, so the
+  /// label matches the screen [goToPrevious] would actually open (e.g. on the
+  /// Waterfall side of the Agile Delivery section).
+  static String backLabel(String currentId, {String? deliveryModel}) {
     if (_usesSidebarOrder(currentId)) {
-      final prev = _previousSidebarItem(currentId);
+      final prev =
+          _previousSidebarItem(currentId, deliveryModel: deliveryModel);
       return prev == null ? 'Back' : 'Back: ${prev.label}';
     }
     final prev = previousPage(currentId);
     return prev == null ? 'Back' : 'Back: ${prev.title}';
   }
 
-  static String nextLabel(String currentId) {
+  /// [deliveryModel] behaves as in [backLabel].
+  static String nextLabel(String currentId, {String? deliveryModel}) {
     if (_usesSidebarOrder(currentId)) {
-      final next = SidebarNavigationService.instance.getNextItem(currentId);
+      final next = SidebarNavigationService.instance
+          .getNextItem(currentId, deliveryModel: deliveryModel);
       return next == null ? 'Next' : 'Next: ${next.label}';
     }
     final next = nextPage(currentId);
@@ -542,7 +546,8 @@ class PlanningPhaseNavigation {
     }
 
     if (_usesSidebarOrder(currentId)) {
-      final prev = _previousSidebarItem(currentId);
+      final prev = _previousSidebarItem(currentId,
+          deliveryModel: deliveryModelOf(context));
       if (prev != null) {
         final screen = resolvePreviousScreen(context, currentId);
         if (screen != null) {

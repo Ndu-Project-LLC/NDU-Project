@@ -1051,9 +1051,13 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
                                 _buildFlowGateNotice(),
                               LaunchPhaseNavigation(
                                 backLabel: PlanningPhaseNavigation.backLabel(
-                                    'technology'),
+                                    'technology',
+                                    deliveryModel: PlanningPhaseNavigation
+                                        .deliveryModelOf(context)),
                                 nextLabel: PlanningPhaseNavigation.nextLabel(
-                                    'technology'),
+                                    'technology',
+                                    deliveryModel: PlanningPhaseNavigation
+                                        .deliveryModelOf(context)),
                                 onBack: () =>
                                     PlanningPhaseNavigation.goToPrevious(
                                   context,

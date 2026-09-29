@@ -152,17 +152,34 @@ class VoiceInputService {
     // Try to auto-restart if we're still supposed to be listening.
     if (_isListening) {
       try {
-        final restarted = webVoiceStart(_webRecognition, null);
-        if (restarted) {
-          debugPrint('[VoiceInputService] Web recognition auto-restarted');
-          return;
-        }
+        // Fire-and-forget: the restart is async now that webVoiceStart awaits
+        // out a transient shutdown, but onWebEnd stays a plain callback (the
+        // web bridge invokes it from an event handler) and nothing here needs
+        // the result — a failed restart falls through to the stopped state
+        // below.
+        unawaited(webVoiceStart(_webRecognition, null).then((restarted) {
+          if (restarted) {
+            debugPrint('[VoiceInputService] Web recognition auto-restarted');
+            return;
+          }
+          _finishUnexpectedWebEnd();
+        }).catchError((Object e) {
+          debugPrint('[VoiceInputService] Web auto-restart failed: $e');
+          _finishUnexpectedWebEnd();
+        }));
+        return;
       } catch (e) {
         debugPrint('[VoiceInputService] Web auto-restart failed: $e');
       }
     }
 
     // Could not restart — mark session as stopped
+    _finishUnexpectedWebEnd();
+  }
+
+  /// Marks the session stopped and flushes the text captured so far — the
+  /// tail of [onWebEnd] once a restart did not happen.
+  void _finishUnexpectedWebEnd() {
     _isListening = false;
     final fullText = _buildFullText();
     if (!_resultController.isClosed) {
@@ -253,7 +270,10 @@ class VoiceInputService {
 
     if (kIsWeb) {
       // On web, verify recognition actually starts before updating state.
-      final started = webVoiceStart(_webRecognition, localeId);
+      // The start can be transiently refused while a previous session is
+      // still shutting down (Stop → quick re-Dictate), so this await may
+      // take a couple of retry cycles.
+      final started = await webVoiceStart(_webRecognition, localeId);
       if (!started) {
         debugPrint('[VoiceInputService] Web startListening failed');
         return false;
@@ -278,6 +298,11 @@ class VoiceInputService {
     String? localeId,
   }) async {
     try {
+      // `listen()` completes when the session started; the platform package
+      // signals refusal (missing entitlement, recognizer unavailable…) by
+      // throwing `ListenFailedException` — NOT through its return value,
+      // which is always null. Awaiting it lets a refusal surface as an
+      // error status instead of a "Stop" pill that can never transcribe.
       await _speech!.listen(
         onResult: _onNativeResult,
         listenFor: const Duration(seconds: 60),
@@ -291,7 +316,7 @@ class VoiceInputService {
       debugPrint('[VoiceInputService] Native startListening failed: $e');
       _isListening = false;
       if (!_statusController.isClosed) {
-        _statusController.add(VoiceStatus.stopped);
+        _statusController.add(VoiceStatus.error);
       }
       return false;
     }

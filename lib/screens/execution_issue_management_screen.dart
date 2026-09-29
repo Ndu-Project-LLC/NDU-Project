@@ -251,7 +251,7 @@ class _IssuesManagementSectionState extends State<_IssuesManagementSection> {
             mainAxisSize: MainAxisSize.min,
             children: [
               CsvTableImportButton(
-                tableTitle: 'Issues',
+                tableTitle: 'Issue Log',
                 columns: const [
                   CsvColumnSpec(
                       key: 'issueTopic',
@@ -655,7 +655,7 @@ class _IssuesManagementTable extends StatelessWidget {
  }
 
  return FullScreenTableWrapper(
- title: 'Issues Management',
+ title: 'Issue Log',
  child: Container(
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(18),
@@ -688,7 +688,7 @@ class _IssuesManagementTable extends StatelessWidget {
  children: [
  TableRow(
  children: [
- buildCell('No', isHeader: true, align: TextAlign.center),
+ buildCell('#', isHeader: true, align: TextAlign.center),
  buildCell('Issue Topic', isHeader: true),
  buildCell('Description', isHeader: true),
  buildCell('Discipline', isHeader: true),
@@ -796,7 +796,7 @@ class _IssuesManagementTable extends StatelessWidget {
  children: [
  TableRow(
  children: [
- buildCell('No', isHeader: true, align: TextAlign.center),
+ buildCell('#', isHeader: true, align: TextAlign.center),
  buildCell('Issue Topic', isHeader: true),
  buildCell('Description', isHeader: true),
  buildCell('Discipline', isHeader: true),

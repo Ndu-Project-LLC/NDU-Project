@@ -33,13 +33,10 @@ import 'package:ndu_project/screens/execution_work_packages_screen.dart';
 import 'package:ndu_project/screens/execution_plan_solutions_screen.dart';
 import 'package:ndu_project/screens/execution_plan_details_screen.dart';
 import 'package:ndu_project/screens/execution_enabling_work_plan_screen.dart';
-import 'package:ndu_project/screens/execution_issue_management_screen.dart';
-import 'package:ndu_project/screens/execution_plan_lessons_learned_screen.dart';
 import 'package:ndu_project/screens/execution_plan_best_practices_screen.dart';
 import 'package:ndu_project/screens/execution_plan_construction_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_infrastructure_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_agile_delivery_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_stakeholder_identification_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_screen.dart';
 import 'package:ndu_project/screens/execution_plan_communication_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_plan_screen.dart';
@@ -61,6 +58,7 @@ import 'package:ndu_project/screens/agile_project_baseline_screen.dart';
 import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
 import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
 import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
+import 'package:ndu_project/screens/agile_dashboard_screen.dart';
 import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
 import 'package:ndu_project/screens/stakeholder_management_screen.dart';
 import 'package:ndu_project/screens/lessons_learned_screen.dart';
@@ -76,6 +74,8 @@ import 'package:ndu_project/screens/deliverable_roadmap_subsections_screen.dart'
 import 'package:ndu_project/screens/organization_plan_subsections_screen.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/utils/delivery_model_nav_gate.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/screens/issue_management_screen.dart';
 import 'package:ndu_project/screens/risk_assessment_screen.dart';
@@ -249,7 +249,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   static const Set<String> _agileWireframeLabels = {
     'Agile Delivery Model - Delivery Model',
-    'Agile Delivery Model - Metrics & Reporting',
     'Agile Delivery Model - Backlog Governance',
     'Agile Delivery Model - Team Structure',
     'Agile Delivery Model - Kanban Configuration',
@@ -524,6 +523,17 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     final item = SidebarNavigationService.instance
         .findItemByCheckpoint(currentCheckpoint);
     return item?.label;
+  }
+
+  /// The project's delivery model, for gating the Planning-phase sections the
+  /// project does not use (Lusaka 27).
+  ///
+  /// Read from the project data already in scope; a bare sidebar (a test, or a
+  /// frame before the project loads) has no model, which keeps the flow
+  /// ungated exactly as it was.
+  String? _deliveryModelForNav() {
+    final data = ProjectDataInherited.maybeOf(context)?.projectData;
+    return data == null ? null : ProjectDataHelper.deliveryModelOrNull(data);
   }
 
   bool _isActiveLabel(String label) {
@@ -1281,18 +1291,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   }
 
   // ignore: unused_element
-  void _openExecutionIssueManagement() {
-    _navigateWithCheckpoint(
-        'execution_issue_management', const ExecutionIssueManagementScreen());
-  }
-
-  // ignore: unused_element
-  void _openExecutionPlanLessonsLearned() {
-    _navigateWithCheckpoint('execution_plan_lessons_learned',
-        const ExecutionPlanLessonsLearnedScreen());
-  }
-
-  // ignore: unused_element
   void _openExecutionPlanBestPractices() {
     _navigateWithCheckpoint('execution_plan_best_practices',
         const ExecutionPlanBestPracticesScreen());
@@ -1337,12 +1335,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         const ExecutionPlanInterfaceManagementOverviewScreen());
   }
 
-  // ignore: unused_element
-  void _openExecutionPlanStakeholderIdentification() {
-    _navigateWithCheckpoint('execution_plan_stakeholder_identification',
-        const ExecutionPlanStakeholderIdentificationScreen());
-  }
-
   void _openTechnology() {
     _navigateWithCheckpoint('technology', const PlanningTechnologyScreen());
   }
@@ -1357,11 +1349,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'agile_delivery_model', const AgileDeliveryModelScreen());
   }
 
-  void _openAgileMetricsReporting() {
-    // Same checkpoint/data document as the delivery-model screen — only the
-    // view differs (Metrics & Reporting content, no tab bar).
-    _navigateWithCheckpoint('agile_delivery_model',
-        const AgileDeliveryModelScreen(metricsOnly: true));
+  void _openAgileDashboard() {
+    // The dashboard reports the metrics chosen in Metrics Planning; it is the
+    // home of what used to be the standalone "Metrics & Reporting" entry.
+    _navigateWithCheckpoint(
+        'agile_metrics_planning', const AgileDashboardScreen());
   }
 
   void _openAgileTeamStructure() {
@@ -2501,6 +2493,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   }
 
   List<Widget> _buildAllMenuItems() {
+    // An Agile project has no Execution Plan section and a Waterfall project no
+    // Agile Delivery flow (Lusaka 27), so each group is only built when the
+    // project's delivery model keeps it.
+    final deliveryModel = _deliveryModelForNav();
+    final showAgileDelivery =
+        DeliveryModelNavGate.showsAgileDelivery(deliveryModel);
+    final showExecutionPlan =
+        DeliveryModelNavGate.showsExecutionPlan(deliveryModel);
     final lockContractVendorQuotes = _isBasicPlanLocked('Contracting');
     final lockSecurity = _isBasicPlanLocked('Security');
     final lockAllowance = _isBasicPlanLocked('Allowance');
@@ -2868,23 +2868,27 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           isActive: _isActiveLabel('Interface Management'),
           isDisabled: lockInterfaceManagement,
         ),
-        _buildSubExpandableHeader(
-          'Agile Delivery',
-          expanded: _agileWireframeExpanded,
-          onTap: () => setState(() {
-            _agileWireframeExpanded = !_agileWireframeExpanded;
-            _sharedAgileWireframeExpanded = _agileWireframeExpanded;
-          }),
-          isActive: _activeIn(_agileWireframeLabels),
-        ),
-        if (_agileWireframeExpanded) ...[
+        if (showAgileDelivery)
+          _buildSubExpandableHeader(
+            'Agile Delivery',
+            expanded: _agileWireframeExpanded,
+            onTap: () => setState(() {
+              _agileWireframeExpanded = !_agileWireframeExpanded;
+              _sharedAgileWireframeExpanded = _agileWireframeExpanded;
+            }),
+            isActive: _activeIn(_agileWireframeLabels),
+          ),
+        if (showAgileDelivery && _agileWireframeExpanded) ...[
           _buildSubSubMenuItem('Agile Delivery Model',
               onTap: _openAgileDeliveryModel,
               isActive: _isActiveLabel('Agile Delivery Model - Delivery Model')),
-          _buildSubSubMenuItem('Metrics & Reporting',
-              onTap: _openAgileMetricsReporting,
-              isActive:
-                  _isActiveLabel('Agile Delivery Model - Metrics & Reporting')),
+          // Metrics & Reporting is not a section of its own (Lusaka 27:
+          // "it's supposed to be turned into a dashboard, Agile dashboard").
+          // It is the Agile Dashboard — one entry, with Metrics Planning
+          // where the tracked metrics are chosen.
+          _buildSubSubMenuItem('Agile Dashboard',
+              onTap: _openAgileDashboard,
+              isActive: _isActiveLabel('Agile Delivery Model - Agile Dashboard')),
           _buildSubSubMenuItem('Backlog Governance',
               onTap: _openAgileBacklogGovernance,
               isActive: _isActiveLabel('Agile Delivery Model - Backlog Governance')),
@@ -2913,16 +2917,17 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               onTap: _openAgileMapOut,
               isActive: _isActiveLabel('Agile Delivery Model - Agile Map Out')),
         ],
-        _buildSubExpandableHeader(
-          'Execution Plan',
-          expanded: _executionPlanExpanded,
-          onTap: () => setState(() {
-            _executionPlanExpanded = !_executionPlanExpanded;
-            _sharedExecutionPlanExpanded = _executionPlanExpanded;
-          }),
-          isActive: _activeIn(_executionPlanLabels),
-        ),
-        if (_executionPlanExpanded) ...[
+        if (showExecutionPlan)
+          _buildSubExpandableHeader(
+            'Execution Plan',
+            expanded: _executionPlanExpanded,
+            onTap: () => setState(() {
+              _executionPlanExpanded = !_executionPlanExpanded;
+              _sharedExecutionPlanExpanded = _executionPlanExpanded;
+            }),
+            isActive: _activeIn(_executionPlanLabels),
+          ),
+        if (showExecutionPlan && _executionPlanExpanded) ...[
           _buildSubSubMenuItem(
             'Overview',
             onTap: _openExecutionPlan,
@@ -2953,27 +2958,15 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             onTap: _openExecutionEnablingWorkPlan,
             isActive: _isActiveLabel('Execution Enabling Work Plan'),
           ),
-          _buildSubSubMenuItem(
-            'Execution Issue Management',
-            onTap: _openExecutionIssueManagement,
-            isActive: _isActiveLabel('Execution Issue Management'),
-          ),
-          _buildSubSubMenuItem(
-            'Execution Stakeholder Identification',
-            onTap: _openExecutionPlanStakeholderIdentification,
-            isActive: _isActiveLabel('Execution Stakeholder Identification'),
-          ),
+          // Issue Management, Lessons Learned and Stakeholder Identification
+          // are project-wide sections, so no Execution-specific copy of any of
+          // them appears here (Lusaka 27).
           _buildSubSubMenuItem('Construction Plan',
               onTap: _openExecutionPlanConstructionPlan,
               isActive: _isActiveLabel('Execution Plan - Construction Plan')),
           _buildSubSubMenuItem('Infrastructure Plan',
               onTap: _openExecutionPlanInfrastructurePlan,
               isActive: _isActiveLabel('Execution Plan - Infrastructure Plan')),
-          _buildSubSubMenuItem(
-            'Execution Lessons Learned',
-            onTap: _openExecutionPlanLessonsLearned,
-            isActive: _isActiveLabel('Execution Lessons Learned'),
-          ),
           _buildSubSubMenuItem(
             'Best Practices',
             onTap: _openExecutionPlanBestPractices,
@@ -3809,11 +3802,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     }
     if ('metrics & reporting'.contains(query) ||
         'metrics reporting'.contains(query) ||
-        'reporting'.contains(query)) {
-      results.add(_buildMenuItem(Icons.insights_outlined, 'Metrics & Reporting',
-          onTap: _openAgileMetricsReporting,
-          isActive:
-              _isActiveLabel('Agile Delivery Model - Metrics & Reporting')));
+        'reporting'.contains(query) ||
+        'agile dashboard'.contains(query)) {
+      results.add(_buildMenuItem(Icons.dashboard_outlined, 'Agile Dashboard',
+          onTap: _openAgileDashboard,
+          isActive: _isActiveLabel('Agile Delivery Model - Agile Dashboard')));
     }
     if ('schedule'.contains(query)) {
       results.add(_buildMenuItem(Icons.calendar_today_outlined, 'Schedule',

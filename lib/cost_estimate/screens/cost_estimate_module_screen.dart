@@ -242,16 +242,14 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
           breadcrumbPhase: 'Planning Phase',
           breadcrumbTitle: 'Cost Estimate',
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: Column(
-            children: [
-              // Scrollable, self-collapsing section header: the tab content
-              // below always keeps its share of the page.
-              ScrollableSectionHeader(
-                label: 'Cost Estimate',
-                icon: Icons.attach_money_outlined,
-                summary: _sectionTabs[_tabController.index].label,
-                scrollKey: const ValueKey('costEstimateHeaderScroll'),
-                child: Column(
+          body: ScrollableSectionHeader(
+            label: 'Cost Estimate',
+            icon: Icons.attach_money_outlined,
+            summary: _sectionTabs[_tabController.index].label,
+            scrollKey: const ValueKey('costEstimateHeaderScroll'),
+            // The header stack scrolls away with the page — one vertical
+            // scroll surface, no capped inner viewport.
+            header: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -270,13 +268,12 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                       ),
                     ),
                   ],
-                ),
-              ),
-              // Tab content
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
+            ),
+            // Tab content: inherits the NestedScrollView inner controller,
+            // so header and content scroll as one continuous surface.
+            body: TabBarView(
+              controller: _tabController,
+              children: [
                     _CostDashboardTab(provider: provider),
                     const BuilderScreen(),
                     // Must stay in the same order as the SectionTab strip above.
@@ -289,9 +286,7 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                     const BaselineScreen(),
                     const VarianceScreen(),
                   ],
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -340,6 +335,13 @@ List<Map<String, String>>? Function()? riskRegisterSourceOverride;
 /// production — only a test sets it.
 @visibleForTesting
 List<SsherEntry>? Function()? ssherEntriesSourceOverride;
+
+/// Test seam for the dashboard's Personnel Costs card (see
+/// [_PersonnelCostCard.rowsSource]): when non-null, the card loads the Staff
+/// Team staffing rows from this function instead of Firestore. Always null in
+/// production — only a test sets it.
+@visibleForTesting
+List<StaffingRow>? Function()? staffingRowsSourceOverride;
 
 /// Test seam for the dashboard's Cost of Quality card (see
 /// [_QualityCostCard.dataSource]): when non-null, the card reads the Cost of
@@ -780,6 +782,7 @@ class _CostDashboardTab extends StatelessWidget {
     return _PersonnelCostCard(
       lines: lines,
       currencySymbol: currencySymbol,
+      rowsSource: staffingRowsSourceOverride,
     );
   }
 
@@ -1314,9 +1317,16 @@ class _PersonnelCostCard extends StatefulWidget {
   final List<CostLine> lines;
   final String currencySymbol;
 
+  /// Test seam: when set, the card reads the staffing rows from here instead
+  /// of Firestore (same `List<StaffingRow>` shape
+  /// [ExecutionPhaseService.loadStaffingRows] returns). Production builds
+  /// never set it, so they keep the live `execution_phase_entries` read.
+  final List<StaffingRow>? Function()? rowsSource;
+
   const _PersonnelCostCard({
     required this.lines,
     required this.currencySymbol,
+    this.rowsSource,
   });
 
   @override
@@ -1343,6 +1353,15 @@ class _PersonnelCostCardState extends State<_PersonnelCostCard> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
+      final override = widget.rowsSource;
+      if (override != null) {
+        if (!mounted) return;
+        setState(() {
+          _rows = override() ?? const <StaffingRow>[];
+          _loading = false;
+        });
+        return;
+      }
       final projectData = context.read<ProjectDataProvider>().projectData;
       final projectId = projectData.projectId;
       if (projectId == null || projectId.isEmpty) {
@@ -1513,7 +1532,7 @@ class _PersonnelCostCardState extends State<_PersonnelCostCard> {
                   child: Text(
                     allPulled
                         ? '$inEstimate of $inEstimate roles already priced in the estimate ✓'
-                        : '$pending of ${rows.length} roles not yet in the estimate — '
+                        : '${pending.length} of ${rows.length} roles not yet in the estimate — '
                             '${widget.currencySymbol}${pendingTotal.toStringAsFixed(0)} '
                             'to add.',
                     style: TextStyle(

@@ -1,63 +1,84 @@
-/// A height-capped, scrollable host for a module screen's section-header stack.
+/// One vertical scroll experience for a module screen's header + tab content.
 ///
-/// Each module screen (Schedule, Cost Estimate, WBS, Project Controls) used to
-/// pin its header stack — the section navigator, the context banner and the
-/// status cards — above the tab content. On a short window, or as soon as one of
-/// those cards was expanded, the pinned stack squeezed the tab content instead
-/// of getting out of the way. Wrapping the stack in this widget instead:
+/// The old design capped the header stack (section navigator, context banner,
+/// status cards) at half the viewport and scrolled it inside that cap — a
+/// scrollport inside the scrollport. On any real window that meant the stack
+/// clipped its own content behind a "Scroll for more" pill, fought the tab
+/// content's own scroll gesture below, and auto-collapsed itself out from
+/// under the user's finger mid-scroll.
 ///
-/// - caps it at half the viewport (never shorter than [minHeight]), so the tab
-///   content below always keeps its half,
-/// - scrolls the stack inside that cap,
-/// - floats a subtle "Scroll for more" pill while there is more below,
-/// - auto-collapses the whole stack to a slim summary bar once the user has
-///   scrolled it partway ([autoCollapseAfter]) and the scroll has settled,
-///   handing the freed height to the content below. The bar's "Show header"
-///   button brings the stack back.
+/// This widget replaces all of it with a single [NestedScrollView]:
+///
+/// - The header stack renders as ordinary slivers of the page's outer scroll,
+///   so it scrolls away naturally with the content. No cap, no clipping, no
+///   second scrollport, no hint pill, no collapse timers.
+/// - A slim pinned bar (module label + active tab) stays available however
+///   deep the user is in the tab content; tapping it scrolls the header back
+///   in.
+/// - The tab body inherits the [NestedScrollView] inner controller through the
+///   [PrimaryScrollController], so one continuous drag hands off between
+///   header and content exactly once.
+///
+/// The name is kept for continuity with the four module screens that host
+/// their stacks here (Schedule, WBS, Cost Estimate, Project Controls).
+///
+/// Layout contract: this widget adapts to its parent. Under a bounded parent
+/// (the module screens' `ResponsiveScaffold`, a Scaffold body, an `Expanded`)
+/// it fills the available height. Under an unbounded parent (a [Column] or
+/// scrollable handing down infinite height) it sizes itself to the viewport
+/// height instead of crashing, so it can be dropped into any layout — the
+/// internal [NestedScrollView] always needs a bounded scrollport.
 library;
-
-import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
 class ScrollableSectionHeader extends StatefulWidget {
   const ScrollableSectionHeader({
     super.key,
-    required this.child,
-    required this.label,
-    this.icon = Icons.dashboard_outlined,
+    required this.header,
+    required this.body,
+    this.footer,
+    this.label = '',
+    this.icon,
     this.summary,
     this.scrollKey,
-    this.autoCollapseAfter = 56,
-    this.minHeight = 200,
-    this.maxHeightFactor = 0.5,
+    this.showPinnedBar = true,
+    this.pinnedBarHeight = 44,
   });
 
-  /// The section-header stack itself.
-  final Widget child;
+  /// The section-header stack — section navigator, context banner, status
+  /// cards. Rendered as the first sliver of the page scroll, uncapped: it is
+  /// always fully laid out and simply scrolls away with the page.
+  final Widget header;
 
-  /// Short module name, shown on the collapsed summary bar.
+  /// The tab content. Its primary vertical scrollable attaches to the
+  /// [NestedScrollView] inner controller automatically, so header and content
+  /// scroll as one continuous surface.
+  final Widget body;
+
+  /// Optional row rendered underneath the scroll (e.g. the WBS module's
+  /// back/next phase navigation), outside the scroll so it never scrolls off.
+  final Widget? footer;
+
+  /// Short module name shown on the pinned bar.
   final String label;
 
-  /// Icon for the collapsed summary bar.
-  final IconData icon;
+  /// Icon shown on the pinned bar.
+  final IconData? icon;
 
-  /// Optional context for the collapsed bar — the active tab's label is a good
-  /// fit, so the bar still says which section the user is in.
+  /// Active tab label, shown as a chip on the pinned bar so the bar still says
+  /// which section the user is in after the stack has scrolled away.
   final String? summary;
 
-  /// Key for the stack's scroll view, so tests can drive it.
+  /// Key for the underlying [NestedScrollView], so tests can drive the page
+  /// scroll.
   final Key? scrollKey;
 
-  /// How far the user must scroll the stack before it auto-collapses.
-  final double autoCollapseAfter;
+  /// Whether the pinned summary bar is shown at all.
+  final bool showPinnedBar;
 
-  /// Floor for the cap, so the navigator stays usable on short windows.
-  final double minHeight;
-
-  /// Share of the viewport the stack may occupy before it starts scrolling.
-  final double maxHeightFactor;
+  /// Height of the pinned summary bar.
+  final double pinnedBarHeight;
 
   @override
   State<ScrollableSectionHeader> createState() =>
@@ -66,213 +87,118 @@ class ScrollableSectionHeader extends StatefulWidget {
 
 class _ScrollableSectionHeaderState extends State<ScrollableSectionHeader> {
   static const _textPrimary = Color(0xFF1A1D1F);
-  static const _textSecondary = Color(0xFF6B7280);
   static const _textMuted = Color(0xFF9CA3AF);
   static const _border = Color(0xFFE4E7EC);
   static const _accent = Color(0xFFB8860B);
 
-  /// `keepScrollOffset: false`: the stack is rebuilt from scratch each time it
-  /// is shown again, and a restored offset would immediately re-collapse it.
-  final ScrollController _controller =
-      ScrollController(keepScrollOffset: false);
-
-  bool _collapsed = false;
-  bool _hasMoreBelow = false;
-  Timer? _collapseTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    // The hint has to know about the very first layout's metrics.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncFromPosition());
-  }
+  final ScrollController _outerController = ScrollController();
 
   @override
   void dispose() {
-    _collapseTimer?.cancel();
-    _controller.dispose();
+    _outerController.dispose();
     super.dispose();
   }
 
-  bool _onScrollNotification(ScrollNotification notification) {
-    _syncFromPosition();
-    return false;
-  }
-
-  bool _onScrollMetricsNotification(ScrollMetricsNotification notification) {
-    _syncFromPosition();
-    return false;
-  }
-
-  /// Re-reads this stack's own position. Notifications bubble up from the
-  /// scroll views nested inside the stack (the context banner and the tab
-  /// pills scroll horizontally) and carry copies of their metrics, so taking
-  /// the position from [_controller] is the only reliable source.
-  void _syncFromPosition() {
-    if (!mounted || !_controller.hasClients) return;
-    final position = _controller.position;
-
-    final hasMore = position.extentAfter > 8;
-    if (hasMore != _hasMoreBelow) {
-      _hasMoreBelow = hasMore;
-      // Scroll metrics change during layout, so rebuild on the next frame.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() {});
-      });
-    }
-    if (!_collapsed && position.pixels > widget.autoCollapseAfter) {
-      _scheduleAutoCollapse();
-    }
-  }
-
-  /// Collapses once the scroll settles, so the stack is never torn down while
-  /// the user is still dragging it.
-  void _scheduleAutoCollapse() {
-    _collapseTimer?.cancel();
-    _collapseTimer = Timer(const Duration(milliseconds: 260), () {
-      if (!mounted || _collapsed) return;
-      final position = _controller.hasClients ? _controller.position : null;
-      if (position == null || position.pixels <= widget.autoCollapseAfter) {
-        return;
-      }
-      setState(() {
-        _collapsed = true;
-        _hasMoreBelow = false;
-      });
-    });
-  }
-
-  void _expand() {
-    setState(() {
-      _collapsed = false;
-      _hasMoreBelow = false;
-    });
+  /// Brings the header stack back into view — the pinned bar's one job.
+  void _scrollToHeader() {
+    if (!_outerController.hasClients) return;
+    _outerController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Half the viewport, floored so the navigator stays usable on short
-        // windows. The stack is a non-flexible child of the screen's Column, so
-        // it is laid out with an unbounded main axis: fall back to the window
-        // height whenever the incoming constraints do not bound it.
-        final availableHeight = constraints.hasBoundedHeight
-            ? constraints.maxHeight
-            : MediaQuery.sizeOf(context).height;
-        final maxHeight = math.max(
-          widget.minHeight,
-          availableHeight * widget.maxHeightFactor,
-        );
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+    final footer = widget.footer;
 
-        return AnimatedSize(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
-          child: _collapsed
-              ? _buildCollapsedBar()
-              : ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: maxHeight),
-                  child: Stack(
-                    children: [
-                      NotificationListener<ScrollNotification>(
-                        onNotification: _onScrollNotification,
-                        child:
-                            NotificationListener<ScrollMetricsNotification>(
-                          onNotification: _onScrollMetricsNotification,
-                          child: Scrollbar(
-                            controller: _controller,
-                            child: SingleChildScrollView(
-                              key: widget.scrollKey,
-                              controller: _controller,
-                              child: widget.child,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: IgnorePointer(
-                          child: AnimatedOpacity(
-                            key: const ValueKey('sectionHeaderScrollHint'),
-                            opacity: _hasMoreBelow ? 1 : 0,
-                            duration: const Duration(milliseconds: 180),
-                            child: _buildScrollHint(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-        );
-      },
-    );
-  }
-
-  /// The subtle "there is more above/below" cue for the header stack.
-  Widget _buildScrollHint() {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.keyboard_arrow_down, size: 13, color: _textMuted),
-            SizedBox(width: 4),
-            Text(
-              'Scroll for more',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: _textSecondary,
+    // The NestedScrollView needs a bounded height. Under a bounded parent the
+    // outer Column fills it (Expanded) and the footer renders below the
+    // scroll; under an unbounded parent (plain Column, scrollable) a flex
+    // child would crash, so the scrollport is sized to the viewport instead.
+    // Sizing to the viewport keeps the one-scroll-surface behaviour even in
+    // that layout: the header stack scrolls away inside the scrollport and
+    // the pinned bar stays reachable.
+    final scroll = NestedScrollView(
+      key: widget.scrollKey,
+      controller: _outerController,
+      headerSliverBuilder: (context, innerBoxIsScrolled) => [
+        if (widget.showPinnedBar)
+          SliverAppBar(
+            primary: false,
+            pinned: true,
+            automaticallyImplyLeading: false,
+            backgroundColor: scaffoldBg,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            toolbarHeight: widget.pinnedBarHeight,
+            titleSpacing: 16,
+            shape: Border(
+              bottom: BorderSide(
+                color: _border.withValues(alpha: 0.7),
               ),
             ),
-          ],
-        ),
-      ),
+            title: _buildPinnedBar(),
+          ),
+        SliverToBoxAdapter(child: widget.header),
+      ],
+      body: widget.body,
     );
+
+    return LayoutBuilder(builder: (context, constraints) {
+      final hasBoundedHeight = constraints.hasBoundedHeight;
+      return Column(children: [
+        if (hasBoundedHeight)
+          Expanded(child: scroll)
+        else
+          // Viewport-sized, so the scrollport stays bounded even when the
+          // parent hands down infinite height. As a non-flex child it cannot
+          // share space with a footer, so the footer renders over the bottom
+          // edge of the scroll instead of below it.
+          SizedBox(
+            height: MediaQuery.heightOf(context),
+            child: footer == null
+                ? scroll
+                : Stack(children: [
+                    Positioned.fill(child: scroll),
+                    Positioned(left: 0, right: 0, bottom: 0, child: footer),
+                  ]),
+          ),
+        if (footer != null && hasBoundedHeight) footer,
+      ]);
+    });
   }
 
-  /// The slim bar the stack collapses into, so the tab content gains the room.
-  Widget _buildCollapsedBar() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _border),
-      ),
+  /// The slim always-available bar: module label + active tab, tap to return
+  /// to the header stack.
+  Widget _buildPinnedBar() {
+    final summary = widget.summary?.trim();
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _scrollToHeader,
       child: Row(
         children: [
-          Icon(widget.icon, size: 16, color: _accent),
-          const SizedBox(width: 8),
-          Text(
-            widget.label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: _textPrimary,
+          if (widget.icon != null) ...[
+            Icon(widget.icon, size: 15, color: _accent),
+            const SizedBox(width: 7),
+          ],
+          Flexible(
+            child: Text(
+              widget.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: _textPrimary,
+              ),
             ),
           ),
-          if (widget.summary != null && widget.summary!.trim().isNotEmpty) ...[
-            const SizedBox(width: 10),
+          if (summary != null && summary.isNotEmpty) ...[
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
@@ -280,7 +206,7 @@ class _ScrollableSectionHeaderState extends State<ScrollableSectionHeader> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                widget.summary!,
+                summary,
                 style: const TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
@@ -290,19 +216,9 @@ class _ScrollableSectionHeaderState extends State<ScrollableSectionHeader> {
             ),
           ],
           const Spacer(),
-          TextButton.icon(
-            onPressed: _expand,
-            icon: const Icon(Icons.unfold_more, size: 14),
-            label: const Text(
-              'Show header',
-              style: TextStyle(fontSize: 11),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              foregroundColor: _textSecondary,
-            ),
+          const Tooltip(
+            message: 'Back to top',
+            child: Icon(Icons.vertical_align_top, size: 15, color: _textMuted),
           ),
         ],
       ),

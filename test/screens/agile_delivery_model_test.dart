@@ -3,9 +3,11 @@
 //  1. "Waterfall" is no longer an option in the Delivery Framework selector
 //     (legacy projects that already saved Waterfall keep rendering safely
 //     via the isWaterfall guards, but no one can pick it anymore).
-//  2. The "Metrics & Reporting" TAB was removed from this screen and moved
-//     to its own sidebar entry directly below "Agile Delivery Model" —
-//     opening it renders `AgileDeliveryModelScreen(metricsOnly: true)`.
+//  2. The "Metrics & Reporting" TAB was removed from this screen, and the
+//     standalone sidebar entry is gone too (Lusaka 27: "it's supposed to be
+//     turned into a dashboard, Agile dashboard") — the sidebar now opens the
+//     Agile Dashboard, and this screen keeps only Delivery Model + Release
+//     Strategy.
 // ignore_for_file: depend_on_referenced_packages
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_core_platform_interface/test.dart';
@@ -98,28 +100,12 @@ void main() {
     expect(find.text('ScrumBan'), findsOneWidget);
   });
 
-  testWidgets('metricsOnly view renders the Metrics & Reporting section',
-      (tester) async {
-    await pumpScreen(
-        tester, const AgileDeliveryModelScreen(metricsOnly: true));
-    expect(takeAllExceptions(tester), isEmpty);
-
-    // No tab bar at all — this is a standalone section page.
-    expect(find.byType(TabBar), findsNothing);
-    expect(find.text('Release Strategy'), findsNothing);
-
-    // The metrics content renders (title + intro banner + field).
-    expect(find.text('Metrics & Reporting'), findsWidgets);
-    expect(
-        find.textContaining('Define how delivery progress'), findsOneWidget);
-  });
-
   testWidgets(
-      'sidebar lists Metrics & Reporting directly below Agile Delivery Model',
+      'sidebar has no standalone Metrics & Reporting entry under Agile Delivery',
       (tester) async {
     // Tall viewport so the entire sidebar menu fits without lazy-ListView
     // gaps — the Agile Delivery group sits ~2700px down a 977px menu.
-    await pumpScreen(tester, const AgileDeliveryModelScreen(metricsOnly: true),
+    await pumpScreen(tester, const AgileDeliveryModelScreen(),
         size: const Size(2000, 4400));
     expect(takeAllExceptions(tester), isEmpty);
 
@@ -127,22 +113,24 @@ void main() {
     // menu on one screen all of its items are built.
     expect(find.text('Agile Delivery'), findsWidgets);
     expect(find.text('Agile Delivery Model'), findsWidgets);
-    expect(find.text('Metrics & Reporting'), findsWidgets);
+    // The standalone entry is gone — the dashboard replaces it (Lusaka 27).
+    expect(find.text('Metrics & Reporting'), findsNothing);
+    expect(find.text('Agile Dashboard'), findsWidgets);
     expect(find.text('Backlog Governance'), findsWidgets);
 
     // The first occurrence of each label is in the sidebar (the sidebar
     // builds before the page content).
     final modelY =
         tester.getTopLeft(find.text('Agile Delivery Model').first).dy;
-    final metricsY =
-        tester.getTopLeft(find.text('Metrics & Reporting').first).dy;
+    final dashboardY =
+        tester.getTopLeft(find.text('Agile Dashboard').first).dy;
     final backlogY =
         tester.getTopLeft(find.text('Backlog Governance').first).dy;
 
-    expect(metricsY, greaterThan(modelY),
-        reason: 'Metrics & Reporting must sit below Agile Delivery Model');
-    expect(metricsY, lessThan(backlogY),
-        reason: 'Metrics & Reporting must sit above the items that follow '
+    expect(dashboardY, greaterThan(modelY),
+        reason: 'Agile Dashboard must sit below Agile Delivery Model');
+    expect(dashboardY, lessThan(backlogY),
+        reason: 'Agile Dashboard must sit above the items that follow '
             '(Backlog Governance)');
   });
 }

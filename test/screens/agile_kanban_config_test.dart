@@ -14,10 +14,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
+import 'package:ndu_project/screens/agile_kanban_board_screen.dart'
+    show KanbanBoardPanel, kKanbanBoardHeight, kKanbanBoardPreviewHeight;
+import 'package:ndu_project/screens/agile_kanban_config_screen.dart'
+    show AgileKanbanConfigScreen, resetKanbanConfigTabForTest;
 
-Future<void> _pumpScreen(WidgetTester tester) async {
-  tester.view.physicalSize = const Size(2200, 1500);
+Future<void> _pumpScreen(WidgetTester tester,
+    {Size size = const Size(2200, 1500)}) async {
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
 
@@ -45,6 +49,16 @@ Future<void> _pumpScreen(WidgetTester tester) async {
   }
 }
 
+/// Drains every recorded layout exception, so one failure never hides another.
+List<Object> _takeAllExceptions(WidgetTester tester) {
+  final errors = <Object>[];
+  Object? error;
+  while ((error = tester.takeException()) != null) {
+    errors.add(error!);
+  }
+  return errors;
+}
+
 String _nameAt(WidgetTester tester, int index) => tester
     .widget<TextField>(find.byKey(ValueKey('kanban-column-name-$index')))
     .controller!
@@ -66,7 +80,12 @@ void main() {
     await Firebase.initializeApp();
   });
 
-  setUp(() => SharedPreferences.setMockInitialValues(<String, Object>{}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    // The tab memory is a static that outlives pumpWidget, so every test
+    // starts from the default tab regardless of run order.
+    resetKanbanConfigTabForTest();
+  });
 
   testWidgets('lists the workflow columns the board will render',
       (tester) async {
@@ -77,8 +96,51 @@ void main() {
     // Blank WIP means "no limit" — the same 999 the board reads.
     expect([for (var i = 0; i < 5; i++) _wipAt(tester, i)],
         ['', '8', '5', '3', '']);
-    expect(find.text('Workflow Columns'), findsOneWidget);
+    // The label appears twice: the tab and the section title under it.
+    expect(find.text('Workflow Columns'), findsNWidgets(2));
     expect(find.text('YOURS TO CHANGE'), findsOneWidget);
+    // The board lives on its own tab now, not below the columns.
+    expect(find.byType(KanbanBoardPanel), findsNothing);
+  });
+
+  testWidgets('the workflow and the board live in separate tabs',
+      (tester) async {
+    await _pumpScreen(tester);
+
+    // Workflow tab: the editable columns and the locked rules.
+    expect(find.text('Fixed on Every Kanban Board'), findsOneWidget);
+    expect(find.byType(KanbanBoardPanel), findsNothing);
+
+    await tester.tap(find.text('Kanban Board'));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+
+    // Board tab: the live board, none of the column editing.
+    expect(find.byType(KanbanBoardPanel), findsOneWidget);
+    expect(find.byKey(const ValueKey('kanban-add-column')), findsNothing);
+  });
+
+  testWidgets('reopens the tab you left the page on', (tester) async {
+    await _pumpScreen(tester);
+
+    // Leave on the board tab, as a user navigating away would.
+    await tester.tap(find.text('Kanban Board'));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+    expect(find.byType(KanbanBoardPanel), findsOneWidget);
+
+    // Navigating away and back rebuilds the screen from scratch; the tab
+    // memory survives the rebuild, so the board tab is open again.
+    await _pumpScreen(tester);
+
+    expect(find.byType(KanbanBoardPanel), findsOneWidget,
+        reason: 'the page reopens on the tab the user left it on');
+
+    // Coming back one more time keeps the choice — it is not a one-shot.
+    await _pumpScreen(tester);
+    expect(find.byType(KanbanBoardPanel), findsOneWidget);
   });
 
   testWidgets('states what the board owns and will not let you change',
@@ -130,6 +192,54 @@ void main() {
     await tester.tap(find.byTooltip('Remove column 3'));
     await tester.pump();
     expect(_names(tester, 5), ['Ready', 'Backlog', 'In Review', 'Done', 'New Column']);
+  });
+
+  testWidgets('embeds a bounded board preview and links to the full board',
+      (tester) async {
+    await _pumpScreen(tester);
+
+    await tester.tap(find.text('Kanban Board'));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+
+    // Lusaka 27: "I feel like it's covering the entire page" — the board on
+    // this page is a preview of the saved columns, not the working board.
+    final panel =
+        tester.widget<KanbanBoardPanel>(find.byType(KanbanBoardPanel));
+    expect(panel.boardHeight, kKanbanBoardPreviewHeight,
+        reason: 'the configuration page embeds a preview board');
+    expect(panel.boardHeight, lessThan(kKanbanBoardHeight),
+        reason: 'the preview is shorter than the board screen');
+    expect(find.text('Open full board'), findsOneWidget,
+        reason: 'the full board is one click away, not a dead end');
+  });
+
+  testWidgets('renders on a narrow window without layout exceptions',
+      (tester) async {
+    // The section header gained the compact add control and the board tab
+    // gained the full-board action, so the header must not overflow when there
+    // is far less room than the desktop it was designed on.
+    await _pumpScreen(tester, size: const Size(1000, 900));
+
+    expect(_takeAllExceptions(tester), isEmpty);
+    expect(find.byKey(const ValueKey('kanban-add-column')), findsOneWidget);
+    // The section's own description is still on the page.
+    expect(find.textContaining('Rename a column'), findsOneWidget);
+
+    // The board tab renders without layout exceptions too.
+    await tester.tap(find.text('Kanban Board'));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+    expect(_takeAllExceptions(tester), isEmpty);
+    expect(find.text('Open full board'), findsOneWidget);
+    expect(
+      tester
+          .widget<KanbanBoardPanel>(find.byType(KanbanBoardPanel))
+          .boardHeight,
+      kKanbanBoardPreviewHeight,
+    );
   });
 
   testWidgets('the last column cannot be removed', (tester) async {

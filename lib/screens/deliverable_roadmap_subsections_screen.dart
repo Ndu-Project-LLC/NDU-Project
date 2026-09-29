@@ -259,9 +259,13 @@ class _DeliverableRoadmapAgileMapOutScreenState
                             const SizedBox(height: 24),
                             LaunchPhaseNavigation(
                               backLabel: PlanningPhaseNavigation.backLabel(
-                                  'agile_map_out'),
+                                  'agile_map_out',
+                                  deliveryModel: PlanningPhaseNavigation
+                                      .deliveryModelOf(context)),
                               nextLabel: PlanningPhaseNavigation.nextLabel(
-                                  'agile_map_out'),
+                                  'agile_map_out',
+                                  deliveryModel: PlanningPhaseNavigation
+                                      .deliveryModelOf(context)),
                               onBack: () =>
                                   PlanningPhaseNavigation.goToPrevious(
                                       context, 'agile_map_out'),

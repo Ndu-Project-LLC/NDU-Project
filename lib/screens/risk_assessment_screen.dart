@@ -7,9 +7,15 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/risk_log.dart';
+import 'package:ndu_project/models/risk_assessment_signoff.dart';
+import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:math' as math;
@@ -41,9 +47,18 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  'In Progress',
  'Monitoring',
  'Closed',
- ];
+ ];  final List<_RiskEntry> _entries = [];
 
- final List<_RiskEntry> _entries = [];
+  /// The project's risk log, carried over from Front End Planning — the same
+  /// rows and columns as the FEP risk register (Lusaka 27). Empty until a
+  /// project has a register to carry over, in which case the planning-local
+  /// entries below stand in for the numbers.
+  List<RiskLogRow> _logRows = const [];
+
+  /// The required stakeholder sign-off on this section, and the review cadence
+  /// recorded with it (Lusaka 27).
+  RiskAssessmentSignoff _signoff = RiskAssessmentSignoff.empty;
+  bool _signoffSaving = false;
  final TextEditingController _searchController = SpellCheckTextEditingController();
  String? _statusFilter;
  bool _loadingEntries = false;
@@ -87,10 +102,10 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  void didChangeDependencies() {
  super.didChangeDependencies();
  if (_didInitNotes) return;
- final data = ProjectDataHelper.getData(context);
- _notesController.text =
- data.planningNotes['planning_risk_assessment_notes'] ?? '';
- _didInitNotes = true;
+ final data = ProjectDataHelper.getData(context);    _notesController.text =
+        data.planningNotes['planning_risk_assessment_notes'] ?? '';
+    _signoff = RiskAssessmentSignoff.fromPlanningNotes(data.planningNotes);
+    _didInitNotes = true;
  }
 
  @override
@@ -103,11 +118,16 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  controller.dispose();
  }
  super.dispose();
- }
+ }  Future<void> _loadEntries() async {
+    final data = ProjectDataHelper.getData(context);
+    // The risk log starts from what Front End Planning already logged, so the
+    // two views of the same project report the same risks (Lusaka 27).
+    final logRows =
+        RiskLogRow.fromRegisterItems(data.frontEndPlanning.riskRegisterItems);
+    if (mounted) setState(() => _logRows = logRows);
 
- Future<void> _loadEntries() async {
- final projectId = ProjectDataHelper.getData(context).projectId;
- if (projectId == null || projectId.isEmpty) return;
+    final projectId = data.projectId;
+    if (projectId == null || projectId.isEmpty) return;
  if (!mounted) return;
  setState(() => _loadingEntries = true);
  try {
@@ -345,12 +365,81 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  entry.category,
  entry.owner,
  entry.status,
- ].join(' ').toLowerCase();
- return haystack.contains(query);
- }).toList();
- }
+ ].join(' ').toLowerCase();      return haystack.contains(query);
+    }).toList();
+  }
 
- Future<void> _openFilterDialog() async {
+  /// The planning-local entries shaped like log rows. Only used for the
+  /// metrics and matrix when the project has no carried-over risk log yet.
+  List<RiskLogRow> _riskLogRowsFromEntries(List<_RiskEntry> entries) => [
+        for (var i = 0; i < entries.length; i++)
+          RiskLogRow(
+            id: entries[i].id.trim().isEmpty
+                ? RiskLogRow.idForIndex(i)
+                : entries[i].id.trim(),
+            title: '',
+            description: entries[i].description,
+            category: entries[i].category,
+            probability: entries[i].probability,
+            impact: entries[i].impact,
+            costImpact: '',
+            scheduleImpact: '',
+            riskLevel: RiskLogRow.deriveRiskLevel(
+                entries[i].probability, entries[i].impact),
+            mitigation: _mitigationPlans[entries[i].docId] ?? '',
+            discipline: entries[i].discipline,
+            projectRole: entries[i].role,
+            owner: entries[i].owner,
+            status: entries[i].status,
+          ),
+      ];  /// The rows this section reports and gates on: the carried-over risk log when
+  /// the project has one, otherwise the planning-local entries.
+  List<RiskLogRow> get _riskLogRows =>
+      _logRows.isNotEmpty ? _logRows : _riskLogRowsFromEntries(_entries);
+
+  /// The budget the risk allowance is a percentage of.
+  double get _budget => ProjectDataHelper.getTotalEstimatedCostValue(
+      ProjectDataHelper.getData(context));
+
+  Future<void> _persistSignoff(RiskAssessmentSignoff next) async {
+    setState(() {
+      _signoff = next;
+      _signoffSaving = true;
+    });
+    final success = await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'risk_assessment',
+      dataUpdater: (data) => data.copyWith(
+        planningNotes: {...data.planningNotes, ...next.toPlanningNotes()},
+      ),
+      showSnackbar: false,
+    );
+    if (!mounted) return;
+    setState(() => _signoffSaving = false);
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save the risk assessment sign-off.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Next is blocked while the section is incomplete (Lusaka 27): the reviewer
+  /// confirms the stakeholder review before the flow moves on.
+  void _handleForward() {
+    final blocker = _signoff.blockerFor(_riskLogRows);
+    if (blocker != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(blocker), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+    PlanningPhaseNavigation.goToNext(context, 'risk_assessment');
+  }
+
+  Future<void> _openFilterDialog() async {
  final current = _statusFilter;
  final options = ['All', 'Open', 'In Progress', 'Monitoring', 'Closed'];
  final result = await showDialog<String?>(
@@ -383,8 +472,13 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  @override
  Widget build(BuildContext context) {
  final entries = _filteredEntries();
- final stats = _RiskStats.fromEntries(entries);
- final isMobile = AppBreakpoints.isMobile(context);
+    // When the project has a carried-over risk log, the metrics, the matrix and
+    // the sign-off all count those same rows, so Planning and Front End
+    // Planning cannot report different risk numbers for one project (Lusaka 27).
+    final logRows = _logRows;
+    final gateRows = _riskLogRows;
+    final stats = _RiskStats.fromRows(gateRows);
+    final isMobile = AppBreakpoints.isMobile(context);
 
  return ResponsiveScaffold(
  activeItemLabel: 'Risk Mitigation',
@@ -397,8 +491,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  breadcrumbTitle: 'Risk Assessment',
  onBack: () => PlanningPhaseNavigation.goToPrevious(
  context, 'risk_assessment'),
- onForward: () =>
- PlanningPhaseNavigation.goToNext(context, 'risk_assessment'), onExportPdf: _exportPdf),
+ onForward: _handleForward, onExportPdf: _exportPdf),
  Expanded(
  child: SingleChildScrollView(
  padding: EdgeInsets.fromLTRB(
@@ -419,10 +512,13 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  const SizedBox(height: 4),
  const Text('Identify, analyze and mitigate project risks.',
  style:
- TextStyle(fontSize: 14, color: Color(0xFF6B7280))),
- const SizedBox(height: 24),
- // Notes
- _RiskNotesCard(
+ TextStyle(fontSize: 14, color: Color(0xFF6B7280))),                const SizedBox(height: 24),
+                // The worst risks and their mitigation plans, up front so they
+                // "can be seen immediately" (Lusaka 27).
+                _TopRisksCard(rows: gateRows),
+                const SizedBox(height: 16),
+                // Notes
+                _RiskNotesCard(
  controller: _notesController,
  saving: _notesSaving,
  savedAt: _notesSavedAt,
@@ -430,11 +526,23 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  const SizedBox(height: 16),
  // Metrics
  _MetricsWrap(stats: stats),
- const SizedBox(height: 16),
- // Risk Matrix
- _RiskMatrixCard(stats: stats),
- const SizedBox(height: 16),
- // Mitigation Plan
+ const SizedBox(height: 16),                // Risk Matrix
+                _RiskMatrixCard(stats: stats),
+                const SizedBox(height: 16),
+                // Risk allowance — 0.6 % of the budget, shown before the risk
+                // table, which is where the owner wants it (Lusaka 27).
+                _RiskAllowanceCard(
+                  budget: _budget,
+                  allowance: RiskAssessmentSignoff.riskAllowanceFor(_budget),
+                ),
+                const SizedBox(height: 16),
+                // Risk Log — the same table, columns and rows as the FEP risk
+                // register, carried on over (Lusaka 27).
+                if (logRows.isNotEmpty) ...[
+                  _RiskLogSection(rows: logRows),
+                  const SizedBox(height: 16),
+                ],
+                // Mitigation Plan
  _MitigationPlanCard(
  entries: entries,
  controllers: _mitigationControllers,
@@ -445,6 +553,13 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  saving: _mitigationSaving,
  savedAt: _mitigationSavedAt,
  regeneratingIds: _regeneratingMitigationIds),
+ const SizedBox(height: 16),
+ // Required sign-off — the gate on completing this section (Lusaka 27).
+ _RiskSignoffCard(
+ signoff: _signoff,
+ blocker: _signoff.blockerFor(gateRows),
+ saving: _signoffSaving,
+ onChanged: _persistSignoff),
  const SizedBox(height: 16),    // Risk Register
         _RiskRegister(
           entries: entries,
@@ -504,8 +619,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  const SizedBox(width: 8),
  _circleIcon(
  icon: Icons.chevron_right_rounded,
- onTap: () =>
- PlanningPhaseNavigation.goToNext(context, 'risk_assessment'),
+ onTap: _handleForward,
  ),
  const SizedBox(width: 12),
  const Expanded(
@@ -815,14 +929,548 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  PdfSection.keyValue('Project Info', [
  {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
- ]),
- PdfSection.text('Notes', projectData.planningNotes['planning_risk_assessment_notes'] ?? 'No data recorded.'),
- ],
- );
- }
+ ]),        PdfSection.text('Notes', projectData.planningNotes['planning_risk_assessment_notes'] ?? 'No data recorded.'),
+        // The carried-over risk log, so the export shows the table the owner
+        // was looking at instead of exporting nothing (Lusaka 27).
+        if (_logRows.isNotEmpty)
+          PdfSection.table(
+            'Risk Log',
+            headers: RiskLogRow.columnLabels,
+            rows: [for (final row in _logRows) row.values],
+          ),
+      ],
+    );
+  }
 }
 
 // ─── UI Widgets ─────────────────────────────────────────────────────────────
+
+/// The top risks and their mitigation plans, shown before the rest of the
+/// section so they "can be seen immediately" (Lusaka 27).
+class _TopRisksCard extends StatelessWidget {
+  const _TopRisksCard({required this.rows});
+
+  final List<RiskLogRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final top = RiskAssessmentSignoff.topRisks(rows);
+    final missing = RiskAssessmentSignoff.topRisksMissingMitigation(rows);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Top Risks & Mitigation',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF111827)),
+                ),
+              ),
+              if (missing.isEmpty && top.isNotEmpty)
+                const _StatusChip(
+                    label: 'All mitigated',
+                    color: Color(0xFF16A34A),
+                    background: Color(0xFFECFDF3))
+              else if (missing.isNotEmpty)
+                _StatusChip(
+                    label: '${missing.length} without a plan',
+                    color: const Color(0xFF92400E),
+                    background: const Color(0xFFFEF3C7)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'The ${RiskAssessmentSignoff.minimumTopRisks}–'
+            '${RiskAssessmentSignoff.maximumTopRisks} highest risks carry the '
+            'mitigation plan the review signs off on.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 12),
+          if (top.isEmpty)
+            const Text(
+              'No risks logged yet — the log below starts from Front End '
+              'Planning.',
+              style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+            )
+          else
+            for (final row in top) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          row.id,
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF6B7280)),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            row.title.isEmpty ? row.description : row.title,
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF111827)),
+                          ),
+                        ),
+                        if (row.riskLevel.isNotEmpty)
+                          _RiskTag(label: row.riskLevel),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      row.mitigation.isEmpty
+                          ? 'No mitigation plan yet.'
+                          : row.mitigation,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: row.mitigation.isEmpty
+                            ? const Color(0xFFB91C1C)
+                            : const Color(0xFF4B5563),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+        ],
+      ),
+    );
+  }
+}
+
+/// The risk allowance: 0.6 % of the project budget, before the risk table
+/// (Lusaka 27).
+class _RiskAllowanceCard extends StatelessWidget {
+  const _RiskAllowanceCard({required this.budget, required this.allowance});
+
+  final double budget;
+  final double allowance;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasBudget = budget > 0;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.savings_outlined,
+              size: 22, color: Color(0xFF6B7280)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Risk Allowance',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF111827)),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  hasBudget
+                      ? '${RiskAssessmentSignoff.riskAllowanceLabel} of '
+                          '${formatCurrency(budget)} budget.'
+                      : '${RiskAssessmentSignoff.riskAllowanceLabel} — no '
+                          'budget recorded yet.',
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            formatCurrency(allowance),
+            style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF111827)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The required sign-off: the owner's confirmation sentence plus the review
+/// record, and what still blocks the section (Lusaka 27).
+class _RiskSignoffCard extends StatelessWidget {
+  const _RiskSignoffCard({
+    required this.signoff,
+    required this.blocker,
+    required this.saving,
+    required this.onChanged,
+  });
+
+  final RiskAssessmentSignoff signoff;
+  final String? blocker;
+  final bool saving;
+  final ValueChanged<RiskAssessmentSignoff> onChanged;
+
+  Future<void> _pickReviewDate(BuildContext context) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.tryParse(signoff.reviewedOn) ?? now,
+      firstDate: DateTime(now.year - 3),
+      lastDate: DateTime(now.year + 2),
+    );
+    if (picked == null) return;
+    onChanged(signoff.copyWith(
+      reviewedOn: picked.toIso8601String().split('T').first,
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isComplete = blocker == null;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: isComplete
+                ? const Color(0xFFBBF7D0)
+                : const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Sign-off',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF111827)),
+                ),
+              ),
+              if (saving)
+                const _StatusChip(
+                    label: 'Saving...', color: Color(0xFF64748B)),
+            ],
+          ),
+          CheckboxListTile(
+            value: signoff.confirmed,
+            onChanged: (value) =>
+                onChanged(signoff.copyWith(confirmed: value ?? false)),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            title: const Text(
+              RiskAssessmentSignoff.confirmationSentence,
+              style: TextStyle(fontSize: 13, color: Color(0xFF111827)),
+            ),
+            subtitle: const Text(
+              'Required before this section can be completed.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => _pickReviewDate(context),
+                  borderRadius: BorderRadius.circular(10),
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: 'Reviewed with stakeholders on',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                    ),
+                    child: Text(
+                      signoff.hasReviewDate
+                          ? signoff.reviewedOn
+                          : 'Select a date',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: signoff.hasReviewDate
+                            ? const Color(0xFF111827)
+                            : const Color(0xFF9CA3AF),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  key: ValueKey(signoff.reviewCadence),
+                  initialValue: RiskAssessmentSignoff.reviewCadences
+                          .contains(signoff.reviewCadence)
+                      ? signoff.reviewCadence
+                      : null,
+                  decoration: InputDecoration(
+                    labelText: 'Risk review cadence',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 12),
+                  ),
+                  hint: const Text('Select cadence',
+                      style: TextStyle(fontSize: 13)),
+                  items: [
+                    for (final cadence in RiskAssessmentSignoff.reviewCadences)
+                      DropdownMenuItem<String>(
+                        value: cadence,
+                        child: Text(cadence,
+                            style: const TextStyle(fontSize: 13)),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) return;
+                    onChanged(signoff.copyWith(reviewCadence: value));
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                isComplete
+                    ? Icons.check_circle_outline
+                    : Icons.error_outline,
+                size: 16,
+                color: isComplete
+                    ? const Color(0xFF16A34A)
+                    : const Color(0xFFB45309),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  blocker ?? 'Section complete — recorded as reviewed and accepted.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isComplete
+                        ? const Color(0xFF16A34A)
+                        : const Color(0xFFB45309),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The project's risk log, carried over from Front End Planning: the same
+/// columns and the same rows the FEP risk register shows (Lusaka 27).
+///
+/// Table first, with the card view as the secondary toggle, and the table
+/// expandable to full screen (`buildNduTableWithExpand`).
+class _RiskLogSection extends StatelessWidget {
+  const _RiskLogSection({required this.rows});
+
+  final List<RiskLogRow> rows;
+
+  static bool _matches(dynamic item, String query) {
+    final row = item as RiskLogRow;
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    return row.id.toLowerCase().contains(q) ||
+        row.title.toLowerCase().contains(q) ||
+        row.description.toLowerCase().contains(q) ||
+        row.category.toLowerCase().contains(q) ||
+        row.owner.toLowerCase().contains(q) ||
+        row.status.toLowerCase().contains(q);
+  }
+
+  List<RiskLogRow> _matching(String query) {
+    if (query.trim().isEmpty) return rows;
+    return rows.where((row) => _matches(row, query)).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SearchableTableSection(
+      title: 'Risk Log',
+      subtitle:
+          'Carried over from Front End Planning — the same risks, columns and '
+          'statuses as the FEP risk register.',
+      items: rows,
+      searchHint: 'Search the risk log...',
+      searchFilter: _matches,
+      tableBuilder: (context, query) => _buildTable(context, _matching(query)),
+      cardBuilder: (context, query) => _buildCards(context, _matching(query)),
+    );
+  }
+
+  Widget _buildTable(BuildContext context, List<RiskLogRow> visible) {
+    if (visible.isEmpty) {
+      return buildNduTableEmptyState(context,
+          message: 'No risks match this search.');
+    }
+    return buildNduTableWithExpand(
+      context: context,
+      title: 'Risk Log',
+      minWidth: 1500,
+      columnSpacing: 16,
+      columns: [
+        for (final column in riskLogColumns) DataColumn(label: Text(column.label)),
+      ],
+      rows: [
+        for (final row in visible)
+          DataRow(
+            cells: [
+              for (final column in riskLogColumns)
+                DataCell(_riskLogCell(column.key, row)),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _riskLogCell(String key, RiskLogRow row) {
+    final value = row.valueFor(key);
+    if (value.isEmpty) return const Text('—');
+    switch (key) {
+      case 'probability':
+      case 'impact':
+      case 'riskLevel':
+        return _RiskTag(label: value);
+      case 'status':
+        return _StatusChip(label: value, color: const Color(0xFF374151));
+      case 'title':
+      case 'description':
+      case 'mitigation':
+        return WrappedText(value,
+            maxLines: 3, overflow: TextOverflow.ellipsis);
+      default:
+        return Text(value);
+    }
+  }
+
+  Widget _buildCards(BuildContext context, List<RiskLogRow> visible) {
+    if (visible.isEmpty) {
+      return buildNduTableEmptyState(context,
+          message: 'No risks match this search.');
+    }
+    return Column(
+      children: [
+        for (final row in visible)
+          Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        row.id,
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF6B7280)),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          row.title.isEmpty ? row.description : row.title,
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF111827)),
+                        ),
+                      ),
+                      if (row.riskLevel.isNotEmpty)
+                        _RiskTag(label: row.riskLevel),
+                    ],
+                  ),
+                  if (row.description.isNotEmpty && row.title.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      row.description,
+                      style: const TextStyle(
+                          fontSize: 13, color: Color(0xFF4B5563)),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 6,
+                    children: [
+                      _logMeta('Category', row.category),
+                      _logMeta('Probability', row.probability),
+                      _logMeta('Impact', row.impact),
+                      _logMeta('Owner', row.owner),
+                      _logMeta('Status', row.status),
+                    ],
+                  ),
+                  if (row.mitigation.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      'Mitigation: ${row.mitigation}',
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF6B7280)),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _logMeta(String label, String value) {
+    if (value.isEmpty) return const SizedBox.shrink();
+    return Text(
+      '$label: $value',
+      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+    );
+  }
+}
 
 class _RiskNotesCard extends StatelessWidget {
  const _RiskNotesCard({
@@ -962,10 +1610,10 @@ class _RiskStats {
  required this.topRiskArea,
  required this.openCount,
  required this.matrixCounts,
- });
-
- factory _RiskStats.fromEntries(List<_RiskEntry> entries) {
- final total = entries.length;
+ });  /// Counts the carried-over risk log rows, so the metrics and the matrix
+  /// report what the risk log table shows (Lusaka 27).
+  factory _RiskStats.fromRows(List<RiskLogRow> rows) {
+    final total = rows.length;
  final statusCounts = <String, int>{};
  int closedCount = 0;
  final areaCounts = <String, int>{};
@@ -974,20 +1622,19 @@ class _RiskStats {
  level: {for (final inner in _levels) inner: 0}
  };
 
- for (final entry in entries) {
- final status = entry.status.trim();
+ for (final row in rows) {
+      final status = row.status.trim();
  if (status.isNotEmpty) {
  statusCounts[status] = (statusCounts[status] ?? 0) + 1;
  if (status.toLowerCase() == 'closed') {
  closedCount += 1;
  }
- }
- final category = entry.category.trim();
- if (category.isNotEmpty) {
- areaCounts[category] = (areaCounts[category] ?? 0) + 1;
- }
- final probability = _normalizeLevel(entry.probability);
- final impact = _normalizeLevel(entry.impact);
+ }      final category = row.category.trim();
+      if (category.isNotEmpty) {
+        areaCounts[category] = (areaCounts[category] ?? 0) + 1;
+      }
+      final probability = RiskLogRow.normalizeScale(row.probability);
+      final impact = RiskLogRow.normalizeScale(row.impact);
  matrixCounts[probability]?[impact] =
  (matrixCounts[probability]?[impact] ?? 0) + 1;
  }
@@ -1022,16 +1669,7 @@ class _RiskStats {
  openCount: openCount,
  matrixCounts: matrixCounts,
  );
- }
-
- static const List<String> _levels = ['Low', 'Medium', 'High'];
-
- static String _normalizeLevel(String value) {
- final lower = value.trim().toLowerCase();
- if (lower.startsWith('h')) return 'High';
- if (lower.startsWith('m')) return 'Medium';
- return 'Low';
- }
+ }  static const List<String> _levels = ['Low', 'Medium', 'High'];
 
  final int total;
  final Map<String, int> statusCounts;

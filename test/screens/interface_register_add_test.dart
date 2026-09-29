@@ -54,6 +54,15 @@ void main() {
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 200));
     }
+
+    // The screen opens on the Status Dashboard (Lusaka 27), so select the
+    // register tab before exercising the add flow.
+    final registerTab = find.widgetWithText(InkWell, 'Interface Register');
+    expect(registerTab, findsOneWidget);
+    await tester.ensureVisible(registerTab);
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(registerTab);
+    await tester.pump(const Duration(milliseconds: 350));
   }
 
   /// Drains every recorded exception so one failure never hides the others.
@@ -126,5 +135,37 @@ void main() {
       (tester) async {
     await pumpScreen(tester, size: const Size(1000, 900));
     await _runAddFlow(tester);
+  });
+
+  testWidgets('the Add Interface modal stays a sensible size on desktop',
+      (tester) async {
+    // Regression: the dialog used to size itself at 85% of the window width,
+    // which on a wide desktop produced a near full-screen modal.
+    await pumpScreen(tester, size: const Size(2000, 1200));
+    await tester.ensureVisible(find.text('Add Interface'));
+    await pumpFrames(tester, 2);
+    await tester.tap(find.text('Add Interface'));
+    await pumpFrames(tester);
+
+    expect(find.text('Add Interface Entry'), findsOneWidget);
+    expect(takeAllExceptions(tester), isEmpty);
+
+    // Measure the dialog *card*, not `find.byType(AlertDialog)`: the latter's
+    // first render box is the dialog route's padding/align, which fills the
+    // window (2000 here) no matter how narrow the card is. The card is the
+    // first Material the dialog builds.
+    final dialogCard = find
+        .descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(Material),
+        )
+        .first;
+    final dialogSize = tester.getSize(dialogCard);
+    expect(dialogSize.width, lessThanOrEqualTo(660),
+        reason: 'dialog must not scale with the window width');
+    expect(dialogSize.height, lessThanOrEqualTo(820),
+        reason: 'dialog content scrolls instead of filling the window');
+    expect(dialogSize.width, greaterThan(280),
+        reason: 'dialog keeps a readable form width');
   });
 }

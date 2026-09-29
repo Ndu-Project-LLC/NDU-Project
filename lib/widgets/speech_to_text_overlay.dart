@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/providers/display_preferences_provider.dart';
 import 'package:ndu_project/services/voice_input_service.dart';
@@ -194,6 +195,22 @@ class _SpeechToTextOverlayState extends State<SpeechToTextOverlay> {
         if (status == VoiceStatus.stopped || status == VoiceStatus.error) {
           if (mounted) setState(() => _isListening = false);
           _cancelSubscriptions();
+          // A silent revert to "Dictate" reads as a dead button — surface the
+          // engine's reason (blocked mic, no microphone, network…) exactly
+          // like the in-field voice control does.
+          if (status == VoiceStatus.error && mounted) {
+            final message = _voiceService.lastErrorMessage;
+            if (message.isNotEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(message),
+                  duration: const Duration(seconds: 5),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: const Color(0xFFEF4444),
+                ),
+              );
+            }
+          }
         }
       });
 
@@ -205,7 +222,11 @@ class _SpeechToTextOverlayState extends State<SpeechToTextOverlay> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Speech recognition is not available right now.'),
+              content: Text(
+                  kIsWeb
+                      ? 'Voice input unavailable. Use Chrome/Edge/Safari over '
+                          'HTTPS and allow mic access. Firefox is not supported.'
+                      : 'Speech recognition is not available on this device.'),
               behavior: SnackBarBehavior.floating,
             ),
           );

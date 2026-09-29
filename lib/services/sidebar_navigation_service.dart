@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/delivery_model_nav_gate.dart';
+
 /// Service that maintains the sidebar as the source of truth for project flow.
 /// The order of items in this list determines the chronological flow of the project.
 class SidebarNavigationService {
@@ -103,18 +105,25 @@ class SidebarNavigationService {
     return _skippedCheckpoints.contains(item.checkpoint);
   }
 
-  /// Get the next accessible item in the sidebar order
+  /// Get the next accessible item in the sidebar order.
+  ///
+  /// Pass [deliveryModel] (`'AGILE' | 'WATERFALL' | 'HYBRID'`) to skip the
+  /// sections the project does not use — the Execution Plan for Agile, the
+  /// Agile Delivery flow for Waterfall (Lusaka 27). Omit it, or pass an unset
+  /// / Hybrid model, and the walk is the unchanged, ungated order.
   SidebarItem? getNextAccessibleItem(
-      String? currentCheckpoint, bool isBasicPlan) {
-    if (currentCheckpoint == null) return _sidebarOrder.first;
+      String? currentCheckpoint, bool isBasicPlan,
+      {String? deliveryModel}) {
+    final order = _flowOrder(deliveryModel);
+    if (currentCheckpoint == null) return order.first;
 
-    int currentIndex = _sidebarOrder
-        .indexWhere((item) => item.checkpoint == currentCheckpoint);
+    int currentIndex =
+        order.indexWhere((item) => item.checkpoint == currentCheckpoint);
     if (currentIndex == -1) return null;
 
     // Look ahead for the first non-locked, non-skipped item
-    for (int i = currentIndex + 1; i < _sidebarOrder.length; i++) {
-      final item = _sidebarOrder[i];
+    for (int i = currentIndex + 1; i < order.length; i++) {
+      final item = order[i];
       if (isItemSkipped(item)) continue;
       if (!isItemLocked(item, isBasicPlan)) {
         return item;
@@ -124,16 +133,19 @@ class SidebarNavigationService {
   }
 
   /// Get the previous accessible item in the sidebar order, skipping
-  /// any items in [_skippedCheckpoints].
-  SidebarItem? getPreviousAccessibleItem(String? currentCheckpoint) {
+  /// any items in [_skippedCheckpoints] and the sections [deliveryModel] does
+  /// not use (see [getNextAccessibleItem]).
+  SidebarItem? getPreviousAccessibleItem(String? currentCheckpoint,
+      {String? deliveryModel}) {
     if (currentCheckpoint == null || currentCheckpoint.isEmpty) return null;
 
-    int currentIndex = _sidebarOrder
-        .indexWhere((item) => item.checkpoint == currentCheckpoint);
+    final order = _flowOrder(deliveryModel);
+    int currentIndex =
+        order.indexWhere((item) => item.checkpoint == currentCheckpoint);
     if (currentIndex <= 0) return null;
 
     for (int i = currentIndex - 1; i >= 0; i--) {
-      final item = _sidebarOrder[i];
+      final item = order[i];
       if (isItemSkipped(item)) continue;
       return item;
     }
@@ -240,12 +252,9 @@ class SidebarNavigationService {
     SidebarItem(
         checkpoint: 'execution_enabling_work_plan',
         label: 'Execution Enabling Work Plan'),
-    SidebarItem(
-        checkpoint: 'execution_issue_management',
-        label: 'Execution Issue Management'),
-    SidebarItem(
-        checkpoint: 'execution_plan_stakeholder_identification',
-        label: 'Execution Stakeholder Identification'),
+    // Issue Management, Lessons Learned and Stakeholder Identification are
+    // project-wide sections already in this flow, so there is no
+    // Execution-specific copy of any of them (Lusaka 27).
     SidebarItem(
         checkpoint: 'execution_plan_construction_plan',
         label: 'Construction Plan'),
@@ -255,9 +264,6 @@ class SidebarNavigationService {
     SidebarItem(
         checkpoint: 'execution_plan_agile_delivery_plan',
         label: 'Agile Delivery Plan'),
-    SidebarItem(
-        checkpoint: 'execution_plan_lessons_learned',
-        label: 'Execution Lessons Learned'),
     SidebarItem(
         checkpoint: 'execution_plan_best_practices', label: 'Best Practices'),
     SidebarItem(
@@ -421,19 +427,43 @@ class SidebarNavigationService {
   /// the complete project navigation model.
   static List<SidebarItem> get allItems => List.unmodifiable(_sidebarOrder);
 
-  /// Get the next item in the sidebar order after the current checkpoint
-  SidebarItem? getNextItem(String? currentCheckpoint) {
+  /// Whether [item] belongs to a section the project's [deliveryModel] does not
+  /// use — the Execution Plan for Agile, the Agile Delivery flow for Waterfall
+  /// (Lusaka 27). Unknown and Hybrid models hide nothing.
+  bool isItemHiddenByDeliveryModel(SidebarItem item, String? deliveryModel) =>
+      DeliveryModelNavGate.hidesCheckpoint(item.checkpoint, deliveryModel);
+
+  /// The sidebar flow for [deliveryModel]: the full order minus the sections
+  /// that model does not use. An unset model returns [allItems] unchanged, so
+  /// existing surfaces that do not know the model keep today's behaviour.
+  List<SidebarItem> itemsForDeliveryModel(String? deliveryModel) {
+    if (deliveryModel == null) return allItems;
+    return List.unmodifiable(_sidebarOrder
+        .where((item) => !isItemHiddenByDeliveryModel(item, deliveryModel)));
+  }
+
+  /// The order the flow-walking methods traverse for [deliveryModel].
+  List<SidebarItem> _flowOrder(String? deliveryModel) => deliveryModel == null
+      ? _sidebarOrder
+      : itemsForDeliveryModel(deliveryModel);
+
+  /// Get the next item in the sidebar order after the current checkpoint.
+  ///
+  /// [deliveryModel] skips the sections that model does not use, like
+  /// [getNextAccessibleItem].
+  SidebarItem? getNextItem(String? currentCheckpoint, {String? deliveryModel}) {
+    final order = _flowOrder(deliveryModel);
     if (currentCheckpoint == null || currentCheckpoint.isEmpty) {
-      return _sidebarOrder.first;
+      return order.first;
     }
 
-    final currentIndex = _sidebarOrder
-        .indexWhere((item) => item.checkpoint == currentCheckpoint);
-    if (currentIndex == -1 || currentIndex >= _sidebarOrder.length - 1) {
+    final currentIndex =
+        order.indexWhere((item) => item.checkpoint == currentCheckpoint);
+    if (currentIndex == -1 || currentIndex >= order.length - 1) {
       return null; // Already at the end or checkpoint not found
     }
 
-    return _sidebarOrder[currentIndex + 1];
+    return order[currentIndex + 1];
   }
 
   /// Find a sidebar item by its display label (case-insensitive).
@@ -485,33 +515,38 @@ class SidebarNavigationService {
     return _sidebarOrder.sublist(startIndex, destinationIndex + 1);
   }
 
-  /// Get the previous item in the sidebar order before the current checkpoint
-  SidebarItem? getPreviousItem(String? currentCheckpoint) {
+  /// Get the previous item in the sidebar order before the current checkpoint.
+  /// [deliveryModel] skips the sections that model does not use.
+  SidebarItem? getPreviousItem(String? currentCheckpoint,
+      {String? deliveryModel}) {
     if (currentCheckpoint == null || currentCheckpoint.isEmpty) {
       return null;
     }
 
-    final currentIndex = _sidebarOrder
-        .indexWhere((item) => item.checkpoint == currentCheckpoint);
+    final order = _flowOrder(deliveryModel);
+    final currentIndex =
+        order.indexWhere((item) => item.checkpoint == currentCheckpoint);
     if (currentIndex <= 0) {
       return null; // Already at the beginning or checkpoint not found
     }
 
-    return _sidebarOrder[currentIndex - 1];
+    return order[currentIndex - 1];
   }
 
   /// Ordered items of the sidebar flow between [startCheckpoint] and
   /// [endCheckpoint] (inclusive). Used by on-page screen navigators so they
   /// always mirror the selector's screens and order.
-  List<SidebarItem> itemsBetween(String startCheckpoint, String endCheckpoint) {
+  List<SidebarItem> itemsBetween(String startCheckpoint, String endCheckpoint,
+      {String? deliveryModel}) {
+    final order = _flowOrder(deliveryModel);
     final startIndex =
-        _sidebarOrder.indexWhere((item) => item.checkpoint == startCheckpoint);
+        order.indexWhere((item) => item.checkpoint == startCheckpoint);
     final endIndex =
-        _sidebarOrder.indexWhere((item) => item.checkpoint == endCheckpoint);
+        order.indexWhere((item) => item.checkpoint == endCheckpoint);
     if (startIndex == -1 || endIndex == -1 || endIndex < startIndex) {
       return const <SidebarItem>[];
     }
-    return _sidebarOrder.sublist(startIndex, endIndex + 1);
+    return order.sublist(startIndex, endIndex + 1);
   }
 
   /// Check if a checkpoint has been reached based on sidebar order

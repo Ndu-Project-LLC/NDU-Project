@@ -1,11 +1,13 @@
-// The Schedule module's section-header stack (Section Navigator, context
-// banner, WBS Packages card, Cross-Section Sync card) must be scrollable.
+// The Schedule module's header stack (Section Navigator, context banner, WBS
+// Packages card, Cross-Section Sync card) and its tab content must scroll as
+// ONE continuous page.
 //
-// It used to be pinned above the tab content, so on a short window — or once
-// the WBS Packages / Cross-Section Sync cards were expanded — it squeezed the
-// tab content rather than getting out of the way. It is now capped at half the
-// viewport, scrolls inside that cap, hints that there is more to scroll, and
-// collapses into a slim bar once the user scrolls it partway.
+// They used to be two competing scroll surfaces: the header was capped at half
+// the viewport and scrolled inside that cap (clipping its own cards behind a
+// "Scroll for more" pill) while the tab content scrolled below it. The header
+// now renders as ordinary slivers of the page's NestedScrollView and scrolls
+// away with the content; a slim pinned bar keeps the module label + active tab
+// available and returns the user to the header.
 //
 // Driven as the user meets it: the real ScheduleModuleScreen with the real
 // providers. No Firebase, no network.
@@ -58,9 +60,9 @@ ScheduleProvider newScheduleProvider() {
   return provider;
 }
 
-/// The header stack's own scroll view — the outermost vertical scrollable
-/// inside the keyed [SingleChildScrollView].
-ScrollableState headerScrollable(WidgetTester tester) {
+/// The page scroll's outer position — the first scrollable under the keyed
+/// [NestedScrollView].
+ScrollableState pageScrollable(WidgetTester tester) {
   return tester.state<ScrollableState>(
     find
         .descendant(
@@ -70,11 +72,6 @@ ScrollableState headerScrollable(WidgetTester tester) {
         .first,
   );
 }
-
-double hintOpacity(WidgetTester tester) => tester
-    .widget<AnimatedOpacity>(
-        find.byKey(const ValueKey('sectionHeaderScrollHint')))
-    .opacity;
 
 Future<void> pumpModule(WidgetTester tester, {required Size size}) async {
   tester.view.physicalSize = size;
@@ -104,7 +101,12 @@ Future<void> pumpModule(WidgetTester tester, {required Size size}) async {
       child: const MaterialApp(home: ScheduleModuleScreen()),
     ),
   );
-  await tester.pumpAndSettle();
+  // Bounded pumps rather than `pumpAndSettle`: the module's tab screens host
+  // perpetual animations (loading spinners) that `pumpAndSettle` would wait
+  // on forever.
+  for (var i = 0; i < 10; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
 void main() {
@@ -112,48 +114,78 @@ void main() {
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('the header stack scrolls, then collapses out of the way',
+  testWidgets('the header stack and tab content scroll as one page',
       (tester) async {
-    await pumpModule(tester, size: const Size(1400, 480));
+    await pumpModule(tester, size: const Size(1400, 800));
 
-    // The header is taller than its cap at this height…
-    final header = headerScrollable(tester);
-    expect(header.position.maxScrollExtent, greaterThan(56),
-        reason: 'the header stack should scroll instead of squeezing '
-            'the tab content');
-    // …so the stack hints that there is more below…
-    expect(hintOpacity(tester), 1);
-
-    // …the tab content is still laid out below it…
-    expect(find.byType(TabBarView), findsOneWidget);
+    // The whole header stack is laid out — nothing clipped behind a cap.
     expect(find.text('Schedule Navigation'), findsOneWidget);
+    expect(find.text('WBS Packages'), findsOneWidget);
+    expect(find.text('Search WBS packages by code or name'), findsOneWidget);
 
-    // …and scrolling the stack partway collapses it into the slim bar,
-    // handing the freed height to the tab content.
+    // One vertical scroll experience: no capped inner viewport chrome.
+    expect(find.text('Scroll for more'), findsNothing);
+    expect(find.text('Show header'), findsNothing);
+
+    // Dragging on the header content scrolls the page…
     await tester.drag(find.text('Schedule Navigation'), const Offset(0, -140));
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pumpAndSettle();
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(pageScrollable(tester).position.pixels, greaterThan(0));
 
-    expect(find.text('Show header'), findsOneWidget);
-    expect(find.text('Schedule Navigation'), findsNothing);
+    // …and the tab content still renders below the stack.
     expect(find.byType(TabBarView), findsOneWidget);
     expect(tester.takeException(), isNull);
-
-    // The bar brings the module header back.
-    await tester.tap(find.text('Show header'));
-    await tester.pumpAndSettle();
-    expect(find.text('Schedule Navigation'), findsOneWidget);
-    expect(headerScrollable(tester).position.pixels, 0);
   });
 
-  testWidgets('the header stack stays at its natural height when it fits',
+  testWidgets(
+      'a long drag on the tab body hands off to the page scroll and the pinned bar restores the header',
       (tester) async {
-    await pumpModule(tester, size: const Size(1400, 1400));
+    await pumpModule(tester, size: const Size(1400, 800));
 
-    // Nothing to scroll: the tall window shows the whole stack and leaves the
-    // rest of the page to the tab content.
-    expect(headerScrollable(tester).position.maxScrollExtent, 0);
-    expect(hintOpacity(tester), 0);
+    // A long drag starting on the tab content exhausts the body's extent and
+    // hands off to the page scroll, scrolling the header stack away.
+    await tester.drag(find.byType(TabBarView), const Offset(0, -4000));
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    final position = pageScrollable(tester).position;
+    expect(position.maxScrollExtent, greaterThan(0));
+    expect(position.pixels, position.maxScrollExtent);
+    expect(find.text('Schedule Navigation'), findsNothing);
+
+    // The pinned bar keeps the module + active tab available however deep the
+    // user is (the Builder tab paints its own 'Schedule' heading too, so
+    // scope to the pinned bar's SliverAppBar).
+    expect(
+      find.descendant(
+        of: find.byType(SliverAppBar),
+        matching: find.text('Schedule'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Builder'), findsOneWidget);
+
+    // …and tapping it brings the header stack back.
+    await tester.tap(find.byTooltip('Back to top'));
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 40));
+    }
+    expect(pageScrollable(tester).position.pixels, 0);
+    expect(find.text('Schedule Navigation'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the whole header stack is visible at rest on a tall window',
+      (tester) async {
+    await pumpModule(tester, size: const Size(1400, 1600));
+
+    // The stack renders uncapped and fully laid out — nothing clipped behind
+    // a cap or hidden behind a hint pill. The page still scrolls (the header
+    // stack scrolls away with the content by design), but at rest the user
+    // sees the whole stack plus the tab content below it.
     expect(find.text('Schedule Navigation'), findsOneWidget);
     expect(find.text('WBS Packages'), findsOneWidget);
     expect(find.byType(TabBarView), findsOneWidget);

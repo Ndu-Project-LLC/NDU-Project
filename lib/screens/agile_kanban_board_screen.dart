@@ -19,11 +19,25 @@ import 'package:go_router/go_router.dart';
 /// Rendered standalone on /agile-kanban-board and embedded under
 /// the Kanban Workflow Configuration page.
 class KanbanBoardPanel extends StatefulWidget {
-  const KanbanBoardPanel({super.key});
+  const KanbanBoardPanel({super.key, this.boardHeight = kKanbanBoardHeight});
+
+  /// Height of the desktop board area (the row of columns); on a narrow window
+  /// the columns stack and this is ignored.
+  ///
+  /// The Kanban Board screen keeps [kKanbanBoardHeight]. The Kanban
+  /// Configuration page embeds the same panel as a **preview**, so it passes a
+  /// smaller height — Lusaka 27: *"I feel like it's covering the entire page"*
+  /// — and the board no longer takes the configuration page over.
+  final double boardHeight;
 
   @override
   State<KanbanBoardPanel> createState() => _KanbanBoardPanelState();
 }
+
+/// The desktop board area when the board **is** the page (the Kanban Board
+/// screen), and the preview height when it is embedded in configuration.
+const double kKanbanBoardHeight = 640;
+const double kKanbanBoardPreviewHeight = 320;
 
 class AgileKanbanBoardScreen extends StatefulWidget {
   const AgileKanbanBoardScreen({super.key});
@@ -477,7 +491,7 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
       );
     }
     return Container(
-      height: 640,
+      height: widget.boardHeight,
       decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),

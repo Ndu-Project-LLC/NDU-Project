@@ -80,6 +80,20 @@ class ProjectDataHelper {
         ProjectMethodology.waterfall;
   }
 
+  /// The project's delivery model in `'AGILE' / 'WATERFALL' / 'HYBRID'` form,
+  /// or `null` when the project has not picked one yet.
+  ///
+  /// Same precedence as [resolvedProjectMethodology], but it reports the
+  /// absence of a choice instead of falling back to Waterfall. Navigation
+  /// gating needs that distinction: an unconfigured project must keep its
+  /// current flow rather than silently lose the Agile Delivery section.
+  static String? deliveryModelOrNull(ProjectDataModel data) {
+    final hasChoice = data.designManagementData != null ||
+        projectMethodologyFromOverallFramework(data.overallFramework) != null;
+    if (!hasChoice) return null;
+    return deliveryModelForMethodology(resolvedProjectMethodology(data));
+  }
+
   /// Check if a destination checkpoint is locked/not accessible
   /// Returns true if the destination is locked, false if accessible
   static bool isDestinationLocked(

@@ -41,13 +41,7 @@ const List<String> _estimationOptions = [
 ];
 
 class AgileDeliveryModelScreen extends StatefulWidget {
-  const AgileDeliveryModelScreen({super.key, this.metricsOnly = false});
-
-  /// When true, the screen renders only the "Metrics & Reporting" content
-  /// with no tab bar — the view opened from the sidebar's
-  /// "Metrics & Reporting" entry under Agile Delivery. Load, auto-save,
-  /// and AI generation behave exactly as on the tabbed screen.
-  final bool metricsOnly;
+  const AgileDeliveryModelScreen({super.key});
 
   @override
   State<AgileDeliveryModelScreen> createState() =>
@@ -82,10 +76,11 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
   ///
   /// Backlog Governance, Team Structure & Roles, and Impediment & Risk
   /// Handling were removed from this screen because they each have their
-  /// own dedicated sidebar sub-section under Agile Delivery. Metrics &
-  /// Reporting was moved out the same way — it now opens from its own
-  /// sidebar entry ([AgileDeliveryModelScreen.metricsOnly]) — see
-  /// [_metricsFields] below.
+  /// own dedicated sidebar sub-section under Agile Delivery. The old
+  /// standalone "Metrics & Reporting" sidebar entry is gone too (Lusaka 27:
+  /// "it's supposed to be turned into a dashboard, Agile dashboard") — the
+  /// metrics prose lives on in this screen's fields and the tracked metrics
+  /// are chosen in Metrics Planning and reported on the Agile Dashboard.
   static const List<_FieldConfig> _fields = [
     _FieldConfig(
       key: 'cadence',
@@ -539,9 +534,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
   Widget build(BuildContext context) {
     final bool isMobile = AppBreakpoints.isMobile(context);
     final double hp = isMobile ? 20 : 40;
-    final String activeSidebarLabel = widget.metricsOnly
-        ? 'Agile Delivery Model - Metrics & Reporting'
-        : 'Agile Delivery Model - Delivery Model';
+    const String activeSidebarLabel = 'Agile Delivery Model - Delivery Model';
 
     return DefaultTabController(
       length: 2,
@@ -617,10 +610,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                                 ],
                               ),
                             ),
-                          if (widget.metricsOnly)
-                            _buildMetricsOnlySection()
-                          else
-                            _buildTabs(),
+                          _buildTabs(),
                         ],
                         const SizedBox(height: 24),
                         LaunchPhaseNavigation(
@@ -815,24 +805,6 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           ),
         ),
         ..._metricsFields.map((f) => _buildField(f)),
-      ],
-    );
-  }
-
-  /// Metrics & Reporting content shown when the screen is opened from the
-  /// sidebar's "Metrics & Reporting" entry ([metricsOnly] == true): the
-  /// metrics fields as a standalone section instead of a tab.
-  Widget _buildMetricsOnlySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Metrics & Reporting',
-          style: TextStyle(
-              fontSize: 22, fontWeight: FontWeight.w700, color: _kHeadline),
-        ),
-        const SizedBox(height: 16),
-        _buildMetricsTab(),
       ],
     );
   }

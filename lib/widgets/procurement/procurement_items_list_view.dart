@@ -2,12 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
 import 'package:ndu_project/models/procurement/procurement_ui_extensions.dart';
+import 'package:ndu_project/models/procurement_log.dart';
 import 'package:ndu_project/widgets/procurement/procurement_common_widgets.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 
-class ProcurementItemsListView extends StatelessWidget {
+/// Which way the procurement log is read: the table (default) or the cards.
+///
+/// Lusaka 27: "this procurement table now [can] be called a procurement log …
+/// the table makes sense". The table is the log — numbered rows, expandable to
+/// full screen — and the cards stay as the secondary view.
+enum ProcurementLogView { table, card }
+
+class ProcurementItemsListView extends StatefulWidget {
   const ProcurementItemsListView({
     super.key,
     required this.items,
@@ -26,7 +36,17 @@ class ProcurementItemsListView extends StatelessWidget {
     this.selectedCategory = 'All Categories',
     this.selectedStatus = 'All Statuses',
     this.onPullToWbsCost,
+    this.initialView = ProcurementLogView.table,
+    this.vendorNames = const <String, String>{},
   });
+
+  /// Which view the log opens in. The table is the log; the cards are the
+  /// secondary view.
+  final ProcurementLogView initialView;
+
+  /// Vendor id → vendor name, so the log's Vendor column can show a name even
+  /// though an item only stores an id.
+  final Map<String, String> vendorNames;
 
   final List<ProcurementItemModel> items;
   final List<ProcurementItemModel> trackableItems;
@@ -46,7 +66,18 @@ class ProcurementItemsListView extends StatelessWidget {
   final ValueChanged<ProcurementItemModel>? onPullToWbsCost;
 
   @override
+  State<ProcurementItemsListView> createState() =>
+      _ProcurementItemsListViewState();
+}
+
+class _ProcurementItemsListViewState extends State<ProcurementItemsListView> {
+  late ProcurementLogView _view = widget.initialView;
+
+  @override
   Widget build(BuildContext context) {
+    final items = widget.items;
+    final trackableItems = widget.trackableItems;
+    final selectedIndex = widget.selectedIndex;
     final totalItems = items.length;
     final criticalItems = items
         .where((item) => item.priority == ProcurementPriority.critical)
@@ -70,37 +101,181 @@ class ProcurementItemsListView extends StatelessWidget {
           totalItems: totalItems,
           criticalItems: criticalItems,
           pendingApprovals: pendingApprovals,
-          totalBudgetLabel: currencyFormat.format(totalBudget),
+          totalBudgetLabel: widget.currencyFormat.format(totalBudget),
         ),
         const SizedBox(height: 24),
         _ItemsToolbar(
-          onAddItem: onAddItem,
-          onSearchChanged: onSearchChanged,
-          onCategoryChanged: onCategoryChanged,
-          onStatusChanged: onStatusChanged,
-          categoryOptions: categoryOptions,
-          statusOptions: statusOptions,
-          selectedCategory: selectedCategory,
-          selectedStatus: selectedStatus,
+          onAddItem: widget.onAddItem,
+          onSearchChanged: widget.onSearchChanged,
+          onCategoryChanged: widget.onCategoryChanged,
+          onStatusChanged: widget.onStatusChanged,
+          categoryOptions: widget.categoryOptions,
+          statusOptions: widget.statusOptions,
+          selectedCategory: widget.selectedCategory,
+          selectedStatus: widget.selectedStatus,
+          view: _view,
+          onViewChanged: (view) => setState(() => _view = view),
         ),
         const SizedBox(height: 20),
-        _ItemsGrid(
-          items: items,
-          currencyFormat: currencyFormat,
-          onAddItem: onAddItem,
-          onEditItem: onEditItem,
-          onDeleteItem: onDeleteItem,
-          onPullToWbsCost: onPullToWbsCost,
-        ),
+        if (_view == ProcurementLogView.table)
+          _ProcurementLogTable(
+            items: widget.items,
+            vendorNames: widget.vendorNames,
+            onAddItem: widget.onAddItem,
+            onEditItem: widget.onEditItem,
+            onDeleteItem: widget.onDeleteItem,
+          )
+        else
+          _ItemsGrid(
+            items: widget.items,
+            currencyFormat: widget.currencyFormat,
+            onAddItem: widget.onAddItem,
+            onEditItem: widget.onEditItem,
+            onDeleteItem: widget.onDeleteItem,
+            onPullToWbsCost: widget.onPullToWbsCost,
+          ),
         const SizedBox(height: 28),
         _TrackableAndTimeline(
-          trackableItems: trackableItems,
-          selectedIndex: selectedIndex,
-          onSelectTrackable: onSelectTrackable,
+          trackableItems: widget.trackableItems,
+          selectedIndex: widget.selectedIndex,
+          onSelectTrackable: widget.onSelectTrackable,
           selectedItem: selectedTrackable,
         ),
       ],
     );
+  }
+}
+
+/// The procurement log itself: numbered rows, the item, its category, priority,
+/// whether it is long lead, what it costs, when it lands, who is supplying it
+/// and where it is in the process.
+class _ProcurementLogTable extends StatelessWidget {
+  const _ProcurementLogTable({
+    required this.items,
+    required this.vendorNames,
+    required this.onAddItem,
+    required this.onEditItem,
+    required this.onDeleteItem,
+  });
+
+  final List<ProcurementItemModel> items;
+  final Map<String, String> vendorNames;
+  final VoidCallback onAddItem;
+  final ValueChanged<ProcurementItemModel> onEditItem;
+  final ValueChanged<ProcurementItemModel> onDeleteItem;
+
+  List<ProcurementLogRow> get _rows => <ProcurementLogRow>[
+        for (var i = 0; i < items.length; i++)
+          ProcurementLogRow.fromItem(
+            items[i],
+            number: i + 1,
+            vendorName: vendorNames[items[i].vendorId ?? ''] ?? '',
+          ),
+      ];
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = _rows;
+    if (rows.isEmpty) {
+      return ProcurementEmptyStateCard(
+        icon: Icons.inventory_2_outlined,
+        title: 'No procurement items yet',
+        message:
+            'Add the items you plan to buy — equipment, long-lead purchases, '
+            'and everything else on the bill.',
+        actionLabel: 'Add Item',
+        onAction: onAddItem,
+      );
+    }
+    return buildNduTableWithExpand(
+      context: context,
+      title: 'Procurement Log',
+      minWidth: 1560,
+      columnSpacing: 16,
+      columns: <DataColumn>[
+        for (final column in procurementLogColumns)
+          DataColumn(label: Text(column.label)),
+        const DataColumn(label: Text('')),
+      ],
+      rows: <DataRow>[
+        for (var i = 0; i < rows.length; i++)
+          DataRow(cells: <DataCell>[
+            for (final column in procurementLogColumns)
+              DataCell(_cell(context, column.key, rows[i])),
+            DataCell(_actions(items[i])),
+          ]),
+      ],
+    );
+  }
+
+  Widget _actions(ProcurementItemModel item) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextButton(
+          onPressed: () => onEditItem(item),
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFFB45309),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            minimumSize: const Size(0, 32),
+          ),
+          child: const Text('Edit', style: TextStyle(fontSize: 12)),
+        ),
+        IconButton(
+          onPressed: () => onDeleteItem(item),
+          tooltip: 'Delete item',
+          iconSize: 18,
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(Icons.delete_outline,
+              color: Color(0xFFDC2626)),
+        ),
+      ],
+    );
+  }
+
+  Widget _cell(BuildContext context, String key, ProcurementLogRow row) {
+    final value = row.valueFor(key);
+    switch (key) {
+      case 'item':
+        return WrappedText(value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w600));
+      case 'longLead':
+        if (!row.longLead) return const Text('No');
+        return const _BadgePill(
+          label: 'Long lead',
+          background: Color(0xFFFFF7ED),
+          foreground: Color(0xFFC2410C),
+        );
+      case 'priority':
+        return _BadgePill(
+          label: value,
+          background: const Color(0xFFF1F5F9),
+          foreground: const Color(0xFF334155),
+        );
+      case 'status':
+        return _BadgePill(
+          label: value,
+          background: const Color(0xFFFFF8E1),
+          foreground: const Color(0xFF92400E),
+        );
+      case 'number':
+        return Text(value,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF64748B)));
+      case 'budget':
+        return Text(value,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF047857)));
+      default:
+        return WrappedText(value, maxLines: 2, overflow: TextOverflow.ellipsis);
+    }
   }
 }
 
@@ -185,6 +360,8 @@ class _ItemsToolbar extends StatelessWidget {
     required this.statusOptions,
     required this.selectedCategory,
     required this.selectedStatus,
+    required this.view,
+    required this.onViewChanged,
   });
 
   final VoidCallback onAddItem;
@@ -195,40 +372,63 @@ class _ItemsToolbar extends StatelessWidget {
   final List<String> statusOptions;
   final String selectedCategory;
   final String selectedStatus;
+  final ProcurementLogView view;
+  final ValueChanged<ProcurementLogView> onViewChanged;
+
+  /// A control only earns its place when it does something: the owner's note on
+  /// this section was "if you have an overview then you can remove the search
+  /// [section]", and the screen used to render a search box with no handler
+  /// behind it.
+  bool get _hasSearch => onSearchChanged != null;
+  bool get _hasCategoryFilter =>
+      onCategoryChanged != null && categoryOptions.length > 1;
+  bool get _hasStatusFilter =>
+      onStatusChanged != null && statusOptions.length > 1;
 
   @override
   Widget build(BuildContext context) {
     final isMobile = AppBreakpoints.isMobile(context);
+    final toggle = _LogViewToggle(view: view, onChanged: onViewChanged);
 
     if (isMobile) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SearchField(onChanged: onSearchChanged),
-          const SizedBox(height: 12),
+          if (_hasSearch) ...[
+            _SearchField(onChanged: onSearchChanged),
+            const SizedBox(height: 12),
+          ],
+          if (_hasCategoryFilter || _hasStatusFilter) ...[
+            Row(
+              children: [
+                if (_hasCategoryFilter)
+                  Expanded(
+                    child: _DropdownField(
+                      label: selectedCategory,
+                      options: categoryOptions,
+                      onChanged: onCategoryChanged,
+                    ),
+                  ),
+                if (_hasCategoryFilter && _hasStatusFilter)
+                  const SizedBox(width: 12),
+                if (_hasStatusFilter)
+                  Expanded(
+                    child: _DropdownField(
+                      label: selectedStatus,
+                      options: statusOptions,
+                      onChanged: onStatusChanged,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
           Row(
             children: [
-              Expanded(
-                child: _DropdownField(
-                  label: selectedCategory,
-                  options: categoryOptions,
-                  onChanged: onCategoryChanged,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _DropdownField(
-                  label: selectedStatus,
-                  options: statusOptions,
-                  onChanged: onStatusChanged,
-                ),
-              ),
+              toggle,
+              const Spacer(),
+              _AddItemButton(onPressed: onAddItem),
             ],
-          ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: _AddItemButton(onPressed: onAddItem),
           ),
         ],
       );
@@ -236,31 +436,116 @@ class _ItemsToolbar extends StatelessWidget {
 
     return Row(
       children: [
-        SizedBox(
-          width: 320,
-          child: _SearchField(onChanged: onSearchChanged),
-        ),
-        const SizedBox(width: 16),
-        SizedBox(
-          width: 190,
-          child: _DropdownField(
-            label: selectedCategory,
-            options: categoryOptions,
-            onChanged: onCategoryChanged,
+        if (_hasSearch) ...[
+          SizedBox(
+            width: 320,
+            child: _SearchField(onChanged: onSearchChanged),
           ),
-        ),
-        const SizedBox(width: 16),
-        SizedBox(
-          width: 190,
-          child: _DropdownField(
-            label: selectedStatus,
-            options: statusOptions,
-            onChanged: onStatusChanged,
+          const SizedBox(width: 16),
+        ],
+        if (_hasCategoryFilter) ...[
+          SizedBox(
+            width: 190,
+            child: _DropdownField(
+              label: selectedCategory,
+              options: categoryOptions,
+              onChanged: onCategoryChanged,
+            ),
           ),
-        ),
+          const SizedBox(width: 16),
+        ],
+        if (_hasStatusFilter) ...[
+          SizedBox(
+            width: 190,
+            child: _DropdownField(
+              label: selectedStatus,
+              options: statusOptions,
+              onChanged: onStatusChanged,
+            ),
+          ),
+          const SizedBox(width: 16),
+        ],
         const Spacer(),
+        toggle,
+        const SizedBox(width: 12),
         _AddItemButton(onPressed: onAddItem),
       ],
+    );
+  }
+}
+
+/// Table (the log) / card toggle.
+class _LogViewToggle extends StatelessWidget {
+  const _LogViewToggle({required this.view, required this.onChanged});
+
+  final ProcurementLogView view;
+  final ValueChanged<ProcurementLogView> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _ToggleButton(
+            icon: Icons.table_chart_outlined,
+            tooltip: 'Log view',
+            isActive: view == ProcurementLogView.table,
+            onTap: () => onChanged(ProcurementLogView.table),
+          ),
+          Container(width: 1, height: 26, color: const Color(0xFFE2E8F0)),
+          _ToggleButton(
+            icon: Icons.view_agenda_outlined,
+            tooltip: 'Card view',
+            isActive: view == ProcurementLogView.card,
+            onTap: () => onChanged(ProcurementLogView.card),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ToggleButton extends StatelessWidget {
+  const _ToggleButton({
+    required this.icon,
+    required this.tooltip,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(9),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: isActive ? const Color(0xFFFFF8E1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: isActive
+                ? const Color(0xFF92400E)
+                : const Color(0xFF94A3B8),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -573,24 +858,30 @@ class _MetricItem extends StatelessWidget {
 }
 
 class _BadgePill extends StatelessWidget {
-  const _BadgePill({required this.label});
+  const _BadgePill({
+    required this.label,
+    this.background = const Color(0xFFF1F5F9),
+    this.foreground = const Color(0xFF64748B),
+  });
 
   final String label;
+  final Color background;
+  final Color foreground;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: background,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF64748B)),
+            color: foreground),
       ),
     );
   }

@@ -100,9 +100,12 @@ class ProjectRouteRegistry {
 
   /// Get the next accessible screen based on current checkpoint and plan type
   static Widget? getNextScreen(BuildContext context, String currentCheckpoint) {
-    final isBasicPlan = ProjectDataHelper.getData(context).isBasicPlanProject;
-    final nextItem = SidebarNavigationService.instance
-        .getNextAccessibleItem(currentCheckpoint, isBasicPlan);
+    final data = ProjectDataHelper.getData(context);
+    final nextItem = SidebarNavigationService.instance.getNextAccessibleItem(
+      currentCheckpoint,
+      data.isBasicPlanProject,
+      deliveryModel: ProjectDataHelper.deliveryModelOrNull(data),
+    );
     return nextItem != null ? getScreen(context, nextItem.checkpoint) : null;
   }
 

@@ -189,17 +189,14 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
           appBarTitle: 'Project Controls',
           breadcrumbPhase: 'Execution Phase',
           breadcrumbTitle: 'Project Controls',
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: Column(
-            children: [
-              // Scrollable, self-collapsing section header: the tab content
-              // below always keeps its share of the page.
-              ScrollableSectionHeader(
-                label: 'Project Controls',
-                icon: Icons.dashboard_outlined,
-                summary: _sectionTabs[_tabController.index].label,
-                scrollKey: const ValueKey('projectControlsHeaderScroll'),
-                child: Column(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,          body: ScrollableSectionHeader(
+            label: 'Project Controls',
+            icon: Icons.dashboard_outlined,
+            summary: _sectionTabs[_tabController.index].label,
+            scrollKey: const ValueKey('projectControlsHeaderScroll'),
+            // The header stack scrolls away with the page — one vertical
+            // scroll surface, no capped inner viewport.
+            header: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -225,13 +222,12 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                       currentSection: CrossSection.projectControls,
                     ),
                   ],
-                ),
-              ),
-              // Tab content
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
+            ),
+            // Tab content: inherits the NestedScrollView inner controller,
+            // so header and content scroll as one continuous surface.
+            body: TabBarView(
+              controller: _tabController,
+              children: [
                     _DashboardTab(
                         state: state,
                         aiContext: aiContext,
@@ -260,9 +256,7 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                     _ResourceControlTab(state: state),
                     _ReportingAuditTab(state: state, provider: provider),
                   ],
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },

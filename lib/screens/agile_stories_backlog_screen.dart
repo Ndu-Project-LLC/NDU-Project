@@ -13,6 +13,7 @@ import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/roadmap_service.dart';
 import 'package:ndu_project/utils/agile_backlog_order.dart';
+import 'package:ndu_project/utils/agile_backlog_demo_seed.dart';
 import 'package:ndu_project/utils/agile_board_pull.dart';
 import 'package:ndu_project/utils/agile_backlog_table.dart';
 import 'package:ndu_project/utils/agile_story_linkage.dart';
@@ -255,6 +256,45 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     );
   }
 
+  /// Seed a demo-ready backlog (Lusaka 27 follow-up: "build us stories
+  /// there, some story points and stuff like that … so that way we can test
+  /// the schedule"). Adds sized, linked stories under every feature that has
+  /// none, then saves the same way an added story is saved.
+  Future<void> _seedDemoStories() async {
+    final features = <Feature>[
+      for (var epicIndex = 0;
+          epicIndex < _epics.length;
+          epicIndex++)
+        ..._featuresByEpic[_epics[epicIndex].id] ?? const <Feature>[],
+    ];
+    if (!AgileBacklogDemoSeed.backlogNeedsSeeding(features,
+        stories: _stories)) {
+      _snack('Every feature already has sized stories.');
+      return;
+    }
+    final seeds = <AgileTask>[
+      for (var i = 0; i < features.length; i++)
+        ...AgileBacklogDemoSeed.storiesForFeature(
+          features[i],
+          featureIndex: i,
+          existing: _stories,
+        ),
+    ];
+    if (seeds.isEmpty) {
+      _snack('Define epics and features first, then seed the backlog.');
+      return;
+    }
+    setState(() => _stories.addAll(seeds));
+    await _persistStories();
+  }
+
+  void _snack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
+  }
+
   void _addStory(Feature feature) {
     // Every story is born under a feature: the linkage rule owns both ids and
     // the backlog position. The User Story Template then seeds its acceptance
@@ -360,7 +400,22 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                         else ...[
                           _buildSummaryBar(),
                           const SizedBox(height: 16),
-                          _buildViewToggle(),
+                          Row(
+                            children: [
+                              Expanded(child: _buildViewToggle()),
+                              const SizedBox(width: 12),
+                              OutlinedButton.icon(
+                                key: const ValueKey('backlog-seed-demo'),
+                                onPressed: _seedDemoStories,
+                                icon: const Icon(Icons.auto_awesome, size: 16),
+                                label: const Text('Seed demo stories'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: _kAccent,
+                                  side: const BorderSide(color: _kAccent),
+                                ),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 12),
                           VoiceTextField(
                             controller: _searchController,

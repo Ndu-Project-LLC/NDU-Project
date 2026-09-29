@@ -1,9 +1,9 @@
 // The Schedule module's scrollable section-header stack is shared with the
 // Cost Estimate, WBS and Project Controls modules. This is the wiring smoke
-// test: each of those screens must host its header in
-// [ScrollableSectionHeader] (which caps it, scrolls it, hints when there is
-// more below, and collapses it to a slim bar), while the tab content keeps
-// rendering below.
+// test: each of those screens must host its header in [ScrollableSectionHeader]
+// (which renders the stack as slivers of one continuous page scroll — no cap,
+// no hint pill — with a slim pinned bar keeping the module + active tab
+// available), while the tab content keeps rendering below.
 //
 // The behaviour of the host itself is covered by
 // test/widgets/scrollable_section_header_test.dart.

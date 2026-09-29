@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/models/interface_raci.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/ai_suggesting_textfield.dart';
@@ -21,6 +22,10 @@ import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.d
 // ─── Tab definitions ────────────────────────────────────────────────────────
 
 enum _ImTab {
+  // The Status Dashboard leads the tab strip (Lusaka 27): "the adjustment that
+  // we're trying to make is to put the, I think, status dashboard at the
+  // front."
+  dashboard('Status Dashboard'),
   register('Interface Register'),
   architecture('Architecture'),
   raci('RACI & Governance'),
@@ -28,7 +33,6 @@ enum _ImTab {
   dependencies('Dependencies'),
   handoff('Handoff Readiness'),
   maturity('Maturity'),
-  dashboard('Status Dashboard'),
   audit('Audit Trail');
 
   const _ImTab(this.label);
@@ -89,7 +93,8 @@ class InterfaceManagementScreen extends StatefulWidget {
 }
 
 class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
-  _ImTab _selectedTab = _ImTab.register;
+  // Open on the dashboard, which is the tab the owner asked to see first.
+  _ImTab _selectedTab = _ImTab.dashboard;
 
   @override
   Widget build(BuildContext context) {
@@ -381,7 +386,9 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
           switch (_selectedTab) {
             _ImTab.register => const _InterfaceRegisterSection(),
             _ImTab.architecture => const _ArchitectureSection(),
-            _ImTab.raci => const _RaciGovernanceSection(),
+            _ImTab.raci => _RaciGovernanceSection(
+                onOpenRegister: () =>
+                    setState(() => _selectedTab = _ImTab.register)),
             _ImTab.risks => const _RisksDecisionsSection(),
             _ImTab.dependencies => const _DependencyManagementSection(),
             _ImTab.handoff => const _HandoffReadinessSection(),
@@ -1450,124 +1457,130 @@ class _InterfaceEntryDialogState extends State<_InterfaceEntryDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Keep the modal a sensible size: a 640px-wide form that scrolls inside
+    // ~60% of the window height. The old `size.width * 0.85` SizedBox won
+    // over the 900px cap because AlertDialog stretches its column children,
+    // so the dialog grew to nearly the full window on desktop.
+    final maxContentHeight =
+        (MediaQuery.sizeOf(context).height * 0.6).clamp(280.0, 640.0);
     return AlertDialog(
       title: Text(widget.initial == null
           ? 'Add Interface Entry'
           : 'Edit Interface Entry'),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.85,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Suggested names from Technology Planning
-                if (widget.suggestedNames.isNotEmpty &&
-                    widget.initial == null) ...[
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('Suggested from Technology Planning:',
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF6B7280))),
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: widget.suggestedNames.take(8).map((name) {
-                      return ActionChip(
-                        label: Text(name),
-                        onPressed: () {
-                          _boundaryCtrl.text = name;
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 12),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                ],
-                _field('Interface Name / Boundary *', _boundaryCtrl),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                        child: _dropdown('Interface Type *', _interfaceType,
-                            _kInterfaceTypes)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child:
-                            _dropdown('Priority *', _priority, _kPriorities)),
-                  ],
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                        child: _field('Party A (Provider) *', _partyACtrl)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: _field('Party B (Receiver) *', _partyBCtrl)),
-                  ],
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                        child: _dropdown(
-                            'Criticality *', _criticality, _kCriticalities)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: _dropdown('Data Flow', _dataFlow, _kDataFlows)),
-                  ],
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                        child: _dropdown('Protocol', _protocol, _kProtocols)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _dropdown('Status *', _status, _kStatuses)),
-                  ],
-                ),
-                _field('Owner', _ownerCtrl),
-                _dropdown('Review Cadence', _cadence, _kCadences),
-                _field('Notes', _notesCtrl, maxLines: 3),
-                const SizedBox(height: 8),
-                const Divider(),
-                const SizedBox(height: 8),
-                // Interface Management Plan fields
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 640,
+          maxHeight: maxContentHeight,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Suggested names from Technology Planning
+              if (widget.suggestedNames.isNotEmpty &&
+                  widget.initial == null) ...[
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Interface Management Plan Details',
+                  child: Text('Suggested from Technology Planning:',
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF6B7280))),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                        child: _dropdown('Classification', _interfaceClassification,
-                            _kInterfaceClassifications)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: _dropdown('Dependencies',
-                            _dependenciesCtrl.text.isEmpty ? 'Deliverable' : _dependenciesCtrl.text,
-                            _kDependencyTypes)),
-                  ],
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: widget.suggestedNames.take(8).map((name) {
+                    return ActionChip(
+                      label: Text(name),
+                      onPressed: () {
+                        _boundaryCtrl.text = name;
+                      },
+                    );
+                  }).toList(),
                 ),
-                _field('Conflict Resolution Process', _conflictResolutionCtrl),
-                _field('Escalation Path', _escalationPathCtrl),
-                _field('Assumptions', _assumptionsCtrl),
-                _field('Change Impacts', _changeImpactsCtrl),
+                const SizedBox(height: 12),
+                const Divider(),
+                const SizedBox(height: 8),
               ],
-            ),
+              _field('Interface Name / Boundary *', _boundaryCtrl),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                      child: _dropdown('Interface Type *', _interfaceType,
+                          _kInterfaceTypes)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child:
+                          _dropdown('Priority *', _priority, _kPriorities)),
+                ],
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                      child: _field('Party A (Provider) *', _partyACtrl)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: _field('Party B (Receiver) *', _partyBCtrl)),
+                ],
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                      child: _dropdown(
+                          'Criticality *', _criticality, _kCriticalities)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: _dropdown('Data Flow', _dataFlow, _kDataFlows)),
+                ],
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                      child: _dropdown('Protocol', _protocol, _kProtocols)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _dropdown('Status *', _status, _kStatuses)),
+                ],
+              ),
+              _field('Owner', _ownerCtrl),
+              _dropdown('Review Cadence', _cadence, _kCadences),
+              _field('Notes', _notesCtrl, maxLines: 3),
+              const SizedBox(height: 8),
+              const Divider(),
+              const SizedBox(height: 8),
+              // Interface Management Plan fields
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Interface Management Plan Details',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF6B7280))),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                      child: _dropdown('Classification', _interfaceClassification,
+                          _kInterfaceClassifications)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: _dropdown('Dependencies',
+                          _dependenciesCtrl.text.isEmpty ? 'Deliverable' : _dependenciesCtrl.text,
+                          _kDependencyTypes)),
+                ],
+              ),
+              _field('Conflict Resolution Process', _conflictResolutionCtrl),
+              _field('Escalation Path', _escalationPathCtrl),
+              _field('Assumptions', _assumptionsCtrl),
+              _field('Change Impacts', _changeImpactsCtrl),
+            ],
           ),
         ),
       ),
@@ -1867,20 +1880,31 @@ class _ArrowRow extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class _RaciGovernanceSection extends StatelessWidget {
-  const _RaciGovernanceSection();
+  const _RaciGovernanceSection({this.onOpenRegister});
+
+  /// Switches the page to the Interface Register tab — the source of every row
+  /// in this matrix — so "where did this come from?" is one click away
+  /// (Lusaka 27: "this information you detailed got filled up from where?").
+  final VoidCallback? onOpenRegister;
 
   @override
   Widget build(BuildContext context) {
     final data = ProjectDataHelper.getDataListening(context);
     final entries = data.interfaceEntries;
 
+    final rows = InterfaceRaciRow.fromEntries(entries);
+    final coverage = RaciCoverage.fromRows(rows);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'The RACI matrix clarifies who is Responsible, Accountable, Consulted, and Informed for each interface. Governance defines review cadence, escalation paths, and last sync dates to keep interfaces aligned throughout the project lifecycle.',
-          style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
-        ),
+        // The owner's first question about this tab was where the values came
+        // from, so the answer sits above the matrix instead of in a tooltip.
+        _buildProvenance(),
+        const SizedBox(height: 16),
+        _buildLegend(),
+        const SizedBox(height: 16),
+        _buildCoverage(coverage),
         const SizedBox(height: 20),
 
         // RACI Table
@@ -1895,43 +1919,21 @@ class _RaciGovernanceSection extends StatelessWidget {
         else
           LayoutBuilder(
             builder: (context, constraints) {
-              const minTableWidth = 560.0;
+              const minTableWidth = 700.0;
               final needsScroll = constraints.maxWidth < minTableWidth;
               final table = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildRaciHeader(),
-                  // Tooltip row
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        SizedBox(width: 10),
-                        Expanded(
-                          flex: 3,
-                          child: Text('',
-                              style: TextStyle(
-                                  fontSize: 10, color: Color(0xFF9CA3AF))),
-                        ),
-                        SizedBox(width: 8),
-                        _RaciTooltipBadge(
-                            label: 'R', tip: 'Responsible — does the work'),
-                        SizedBox(width: 8),
-                        _RaciTooltipBadge(
-                            label: 'A', tip: 'Accountable — owns the outcome'),
-                        SizedBox(width: 8),
-                        _RaciTooltipBadge(
-                            label: 'C', tip: 'Consulted — provides input'),
-                        SizedBox(width: 8),
-                        _RaciTooltipBadge(
-                            label: 'I', tip: 'Informed — kept up to date'),
-                      ],
-                    ),
-                  ),
                   // Column of rows, not ListView: nested in the page's
                   // SingleChildScrollView a viewport gets unbounded height
                   // and crashes (see launch_data_table.dart).
-                  ...entries.map((entry) => _buildRaciRow(entry)),
+                  //
+                  // The R/A/C/I legend now sits above the table (with the
+                  // register field each letter is read from), so the second
+                  // header strip that only carried tooltips is gone.
+                  ...entries.asMap().entries.map((pair) =>
+                      _buildRaciRow(context, pair.value, rows[pair.key])),
                 ],
               );
               if (!needsScroll) return table;
@@ -1948,52 +1950,340 @@ class _RaciGovernanceSection extends StatelessWidget {
         _SectionSubcard(
           title: 'Governance & Cadence',
           subtitle:
-              'Review rhythm, escalation, and last synchronization for each interface.',
+              'Owner, review rhythm, escalation path and last sync for each '
+              'interface — a highlighted cell is an action item.',
           child: entries.every(
                   (e) => e.cadence.trim().isEmpty && e.owner.trim().isEmpty)
               ? const Text(
                   'Define interface owners and cadences to anchor your governance.',
                   style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
                 )
-              : Column(
-                  children: entries
-                      .where((e) =>
-                          e.cadence.trim().isNotEmpty ||
-                          e.owner.trim().isNotEmpty)
-                      .map((entry) {
-                    final name = entry.boundary.trim().isNotEmpty
-                        ? entry.boundary.trim()
-                        : 'Unnamed';
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.circle,
-                              size: 8, color: Color(0xFF9CA3AF)),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              '$name | Owner: ${entry.owner.trim().isNotEmpty ? entry.owner.trim() : "Unassigned"}'
-                              '${entry.cadence.trim().isNotEmpty ? " | Cadence: ${entry.cadence.trim()}" : ""}'
-                              '${entry.lastSync.trim().isNotEmpty ? " | Last sync: ${entry.lastSync.trim()}" : ""}',
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF374151),
-                                  height: 1.4),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
+              : _buildGovernanceTable(context, entries, rows),
         ),
       ],
     );
   }
 
   Widget _buildRaciHeader() {
+    const style = TextStyle(
+        fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151));
+    const sourceStyle = TextStyle(
+        fontSize: 9, fontWeight: FontWeight.w500, color: Color(0xFF6B7280));
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        border: Border.fromBorderSide(BorderSide(color: Color(0xFFE5E7EB))),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(8),
+          topRight: Radius.circular(8),
+        ),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(
+              width: 24,
+              child: Text('#', style: style, textAlign: TextAlign.center)),
+          const SizedBox(width: 8),
+          const Expanded(flex: 3, child: Text('Interface', style: style)),
+          for (final role in RaciRole.values) ...[
+            const SizedBox(width: 8),
+            _roleHeader(role, style, sourceStyle),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// `R` over the register field that letter is read from, so the header
+  /// answers "where did this come from?" without a hover.
+  Widget _roleHeader(RaciRole role, TextStyle style, TextStyle sourceStyle) {
+    return SizedBox(
+      width: 88,
+      child: Column(
+        children: [
+          Text(role.letter, style: style, textAlign: TextAlign.center),
+          Text(
+            role.isCaptured ? role.sourceField : 'not captured',
+            style: sourceStyle,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRaciRow(
+      BuildContext context, InterfaceEntry entry, InterfaceRaciRow row) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: const BoxDecoration(
+        border: Border(
+          left: BorderSide(color: Color(0xFFE5E7EB)),
+          right: BorderSide(color: Color(0xFFE5E7EB)),
+          bottom: BorderSide(color: Color(0xFFE5E7EB)),
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 24,
+            child: Text('${row.number}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF9CA3AF))),
+          ),
+          const SizedBox(width: 8),
+          _editNameCell(context, entry, row, flex: 3),
+          for (final role in RaciRole.values) ...[
+            const SizedBox(width: 8),
+            _raciCell(role, row),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// The interface name is the way into the record the matrix reads, so it is a
+  /// link: this is the answer to "when did you assign yourself to that?" — you
+  /// set it on the interface, and you can get there from here.
+  Widget _editNameCell(BuildContext context, InterfaceEntry entry,
+      InterfaceRaciRow row,
+      {required int flex}) {
+    return Expanded(
+      flex: flex,
+      child: Tooltip(
+        message: 'Edit this interface in the register',
+        child: InkWell(
+          onTap: () => _InterfaceEntryDialog.show(context, entry, const []),
+          borderRadius: BorderRadius.circular(6),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    row.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFB45309)),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                // The interface's own status, so "who owns this?" is read next
+                // to "is it still live?".
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(row.status,
+                      style: const TextStyle(
+                          fontSize: 9, color: Color(0xFF6B7280))),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.edit_outlined,
+                    size: 12, color: Color(0xFF9CA3AF)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// One RACI cell: the register value in the role's own colour, or an honest
+  /// [kRaciNotSet] when the register has nothing — never an invented value.
+  Widget _raciCell(RaciRole role, InterfaceRaciRow row) {
+    final filled = row.isFilled(role);
+    return SizedBox(
+      width: 88,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(
+          color: filled ? _roleBackground(role) : const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(4),
+          border: filled ? null : Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Text(
+          row.valueFor(role),
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 11,
+            color: filled ? const Color(0xFF374151) : const Color(0xFF9CA3AF),
+            fontStyle: filled ? FontStyle.normal : FontStyle.italic,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// One colour per letter, so a row can be scanned: R amber, A blue, C green,
+  /// I grey.
+  static Color _roleBackground(RaciRole role) {
+    switch (role) {
+      case RaciRole.responsible:
+        return const Color(0xFFFEF3C7);
+      case RaciRole.accountable:
+        return const Color(0xFFDBEAFE);
+      case RaciRole.consulted:
+        return const Color(0xFFD1FAE5);
+      case RaciRole.informed:
+        return const Color(0xFFF3F4F6);
+    }
+  }
+
+  /// Where the matrix comes from, stated before the matrix.
+  Widget _buildProvenance() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        border: Border.all(color: const Color(0xFFFDE68A)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.info_outline,
+                  size: 16, color: Color(0xFFB45309)),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text('Where this matrix comes from',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF92400E))),
+              ),
+              if (onOpenRegister != null)
+                TextButton.icon(
+                  onPressed: onOpenRegister,
+                  icon: const Icon(Icons.edit_note, size: 16),
+                  label: const Text('Open the register'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Every row is one interface from the Interface Register, and every '
+            'letter is read from that interface\'s own fields — nothing is '
+            'typed into the matrix directly. So a blank cell means the field '
+            'is blank on the interface: tap a name to open it and fill it in. '
+            'Informed has no field on the register yet, so it reads "Not set" '
+            'on every row rather than showing a value nobody entered.',
+            style: TextStyle(
+                fontSize: 12, color: Color(0xFF92400E), height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// The letters, with the register field each one is read from.
+  Widget _buildLegend() {
+    return Wrap(
+      spacing: 16,
+      runSpacing: 8,
+      children: [
+        for (final role in RaciRole.values)
+          // Wrap hands its children the whole line width, and a Row lays a plain
+          // Text out unbounded — so the text is Flexible and the item is capped,
+          // which is what keeps the longest legend line from overflowing.
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 340),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _RaciTooltipBadge(
+                    label: role.letter,
+                    tip: '${role.letter} — ${role.meaning}',
+                    width: 30),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(role.legendLine,
+                      style: const TextStyle(
+                          fontSize: 11, color: Color(0xFF4B5563))),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// What still needs a value, counted on the same rows the table draws.
+  Widget _buildCoverage(RaciCoverage coverage) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _coverageChip('${coverage.total} interfaces'),
+        _coverageChip('${coverage.missingAccountable} with no accountable owner',
+            flagged: coverage.missingAccountable > 0),
+        _coverageChip('${coverage.missingCadence} with no cadence',
+            flagged: coverage.missingCadence > 0),
+        _coverageChip('${coverage.neverSynced} never synced',
+            flagged: coverage.neverSynced > 0),
+      ],
+    );
+  }
+
+  Widget _coverageChip(String label, {bool flagged = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: flagged ? const Color(0xFFFEF3C7) : const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: flagged
+                  ? const Color(0xFFB45309)
+                  : const Color(0xFF6B7280))),
+    );
+  }
+
+  /// The governance half as a table: one row per interface, so a hole is a cell
+  /// you can see instead of a sentence you have to parse.
+  Widget _buildGovernanceTable(BuildContext context,
+      List<InterfaceEntry> entries, List<InterfaceRaciRow> rows) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const minTableWidth = 900.0;
+        final table = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _governanceHeader(),
+            for (var i = 0; i < rows.length; i++)
+              _governanceRow(context, entries[i], rows[i]),
+          ],
+        );
+        if (constraints.maxWidth >= minTableWidth) return table;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(width: minTableWidth, child: table),
+        );
+      },
+    );
+  }
+
+  Widget _governanceHeader() {
     const style = TextStyle(
         fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151));
     return Container(
@@ -2008,32 +2298,26 @@ class _RaciGovernanceSection extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          Expanded(flex: 3, child: Text('Interface', style: style)),
-          SizedBox(width: 8),
           SizedBox(
-              width: 80,
-              child: Text('R', style: style, textAlign: TextAlign.center)),
+              width: 24,
+              child: Text('#', style: style, textAlign: TextAlign.center)),
           SizedBox(width: 8),
-          SizedBox(
-              width: 80,
-              child: Text('A', style: style, textAlign: TextAlign.center)),
+          Expanded(flex: 2, child: Text('Interface', style: style)),
           SizedBox(width: 8),
-          SizedBox(
-              width: 80,
-              child: Text('C', style: style, textAlign: TextAlign.center)),
+          SizedBox(width: 150, child: Text('Owner', style: style)),
           SizedBox(width: 8),
-          SizedBox(
-              width: 80,
-              child: Text('I', style: style, textAlign: TextAlign.center)),
+          SizedBox(width: 110, child: Text('Cadence', style: style)),
+          SizedBox(width: 8),
+          SizedBox(width: 180, child: Text('Escalation path', style: style)),
+          SizedBox(width: 8),
+          SizedBox(width: 120, child: Text('Last sync', style: style)),
         ],
       ),
     );
   }
 
-  Widget _buildRaciRow(InterfaceEntry entry) {
-    final name =
-        entry.boundary.trim().isNotEmpty ? entry.boundary.trim() : 'Unnamed';
-    const cellStyle = TextStyle(fontSize: 12, color: Color(0xFF4B5563));
+  Widget _governanceRow(
+      BuildContext context, InterfaceEntry entry, InterfaceRaciRow row) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: const BoxDecoration(
@@ -2045,80 +2329,58 @@ class _RaciGovernanceSection extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            flex: 3,
-            child: Text(name,
-                style:
-                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          SizedBox(
+            width: 24,
+            child: Text('${row.number}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF9CA3AF))),
           ),
           const SizedBox(width: 8),
-          SizedBox(
-            width: 80,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEF3C7),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                entry.partyA.trim().isNotEmpty ? entry.partyA.trim() : '-',
-                style: cellStyle,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
+          _editNameCell(context, entry, row, flex: 2),
           const SizedBox(width: 8),
-          SizedBox(
-            width: 80,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEF3C7),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                entry.owner.trim().isNotEmpty ? entry.owner.trim() : '-',
-                style: cellStyle,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
+          _governanceCell(row.accountable,
+              width: 150, missing: row.hasNoAccountable, missingLabel: 'No owner'),
           const SizedBox(width: 8),
-          SizedBox(
-            width: 80,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFD1FAE5),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                entry.partyB.trim().isNotEmpty ? entry.partyB.trim() : '-',
-                style: cellStyle,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
+          _governanceCell(row.cadence,
+              width: 110, missing: row.hasNoCadence, missingLabel: 'No cadence'),
           const SizedBox(width: 8),
-          SizedBox(
-            width: 80,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text(
-                'Team',
-                style: cellStyle,
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
+          _governanceCell(row.escalationPath,
+              width: 180,
+              missing: row.escalationPath.isEmpty,
+              missingLabel: 'Not set'),
+          const SizedBox(width: 8),
+          _governanceCell(row.lastSync,
+              width: 120,
+              missing: row.isNeverSynced,
+              missingLabel: 'Never synced'),
         ],
+      ),
+    );
+  }
+
+  /// A governance cell. A hole says what is missing, in amber, so the row reads
+  /// as an action item rather than a blank.
+  Widget _governanceCell(String value,
+      {required double width,
+      required bool missing,
+      required String missingLabel}) {
+    final text = missing
+        ? missingLabel
+        : (value.isEmpty ? kRaciNotSet : value);
+    return SizedBox(
+      width: width,
+      child: Text(
+        text,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 11,
+          color: missing ? const Color(0xFFB45309) : const Color(0xFF374151),
+          fontStyle: missing ? FontStyle.italic : FontStyle.normal,
+        ),
       ),
     );
   }
@@ -3986,14 +4248,18 @@ bool _isOpenStatus(String status) {
 // ─── RACI Tooltip Badge ──────────────────────────────────────────────────────
 
 class _RaciTooltipBadge extends StatelessWidget {
-  const _RaciTooltipBadge({required this.label, required this.tip});
+  const _RaciTooltipBadge(
+      {required this.label, required this.tip, this.width = 80});
   final String label;
   final String tip;
+
+  /// The legend uses a narrow badge; the table header used the 80 px default.
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 80,
+      width: width,
       child: Tooltip(
         message: tip,
         child: Container(

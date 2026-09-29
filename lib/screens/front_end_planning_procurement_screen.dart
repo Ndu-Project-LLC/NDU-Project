@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert' show jsonDecode, jsonEncode;
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,6 +23,8 @@ import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
+import 'package:ndu_project/models/procurement_log.dart';
+import 'package:ndu_project/models/procurement_cycle.dart';
 import 'package:ndu_project/services/procurement_service.dart';
 import 'package:ndu_project/services/vendor_service.dart';
 import 'package:ndu_project/services/user_service.dart';
@@ -31,6 +34,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/models/procurement/procurement_ui_extensions.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/widgets/procurement/procurement_common_widgets.dart';
 import 'package:ndu_project/widgets/procurement/procurement_items_list_view.dart';
 import 'package:ndu_project/widgets/procurement/procurement_section_error_card.dart';
 import 'package:ndu_project/widgets/procurement/procurement_vendor_management.dart';
@@ -76,6 +80,19 @@ class _FrontEndPlanningProcurementScreenState
  static const int _streamLimitStep = 40;
  static const String _procurementNotesKey = 'planning_procurement_notes';
  static const String _procurementPlanNoteKey = 'planning_procurement_plan';
+
+ /// The limited procurement cycle, stored as JSON in planningNotes.
+ static const String _procurementCycleNoteKey = 'planning_procurement_cycle';
+
+ /// The project's saved procurement cycle, or the default template.
+ ProcurementCycle _procurementCycleFrom(ProjectDataModel data) {
+ final raw = data.planningNotes[_procurementCycleNoteKey];
+ if (raw == null || raw.trim().isEmpty) {
+ return ProcurementCycle.withDefaults(DateTime.now());
+ }
+ return ProcurementCycle.fromMap(jsonDecode(raw)) ??
+ ProcurementCycle.withDefaults(DateTime.now());
+ }
  static const String _procurementSeededKey =
  'planning_procurement_seeded_from_initiation';
  static const String _workflowCollectionName = 'procurement_workflows';
@@ -196,6 +213,18 @@ class _FrontEndPlanningProcurementScreenState
  StreamSubscription<List<PurchaseOrderModel>>? _purchaseOrdersSub;
  bool _isAutoAssigningVendors = false;
  bool _isEnsuringPurchaseOrders = false;
+
+ /// The parts of the old procurement dashboard the 2026-09-28 review took off
+ /// the page: the contract-scope block ("contracting work is not going to be
+ /// here"), the procurement-strategies table ("strategy name, category status,
+ /// I don't know what that is"), the second copy of the item list ("Procurement
+ /// Scope") and "What to procure" ("this what-to-procure I don't understand
+ /// that. So we need to take that out.").
+ ///
+ /// Hidden rather than deleted, so nothing is lost if the strategy rows want
+ /// re-homing elsewhere; the models, services and seeded data behind them are
+ /// untouched either way. Set to true to bring the old dashboard back.
+ bool get _showLegacyProcurementSections => false;
 
  bool get _canCommenceContractingActivities => AdminEditToggle.isAdmin();
 
@@ -913,6 +942,17 @@ class _FrontEndPlanningProcurementScreenState
  {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ // The Procurement Log itself, from the same rows the on-screen table
+ // draws (Lusaka 27), with vendors resolved the same way.
+ if (_items.isNotEmpty)
+ PdfSection.table(
+ 'Procurement Log',
+ headers: procurementLogExportHeaders(),
+ rows: procurementLogExportRows(
+ _items,
+ vendorNames: {for (final vendor in _vendors) vendor.id: vendor.name},
+ ),
+ ),
  ],
  );
  }
@@ -3605,18 +3645,20 @@ class _FrontEndPlanningProcurementScreenState
  case _ProcurementTab.itemsList:
  return _withSectionValidation(
  sectionKey: _itemsSectionKey,
- errorText: _itemsSectionErrorText(),
- child: ProcurementItemsListView(
- key: const ValueKey('procurement_items_list'),
- items: _items,
- trackableItems: _trackableItems,
- selectedIndex: _selectedTrackableIndex,
- onSelectTrackable: _handleTrackableSelected,
- currencyFormat: _currencyFormat,
- onAddItem: _openAddItemDialog,
- onEditItem: _openEditItemDialog,
- onDeleteItem: _removeItem,
- ),
+ errorText: _itemsSectionErrorText(),            child: ProcurementItemsListView(
+              key: const ValueKey('procurement_items_list'),
+              items: _items,
+              trackableItems: _trackableItems,
+              selectedIndex: _selectedTrackableIndex,
+              onSelectTrackable: _handleTrackableSelected,
+              currencyFormat: _currencyFormat,
+              onAddItem: _openAddItemDialog,
+              onEditItem: _openEditItemDialog,
+              onDeleteItem: _removeItem,
+              vendorNames: <String, String>{
+                for (final vendor in _vendors) vendor.id: vendor.name,
+              },
+            ),
  );
  case _ProcurementTab.vendorManagement:
  return _withSectionValidation(
@@ -3935,60 +3977,91 @@ class _FrontEndPlanningProcurementScreenState
  _skipMissingDataAndContinue();
  },
  );
- }
-
- Widget _buildDashboardSection({Key? key}) {
- return Column(
- key: key ?? const ValueKey('procurement_dashboard'),
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(child: _PlanHeader(onItemListTap: _handleItemListTap)),
- PageRegenerateAllButton(
- onRegenerateAll: () async {
- final confirmed = await showRegenerateAllConfirmation(context);
- if (confirmed && mounted) {
- await _regenerateAllProcurement();
- }
- },
- isLoading: _isGeneratingData,
- tooltip: 'Generate starter procurement data',
- ),
- ],
- ),
- const SizedBox(height: 10),
- const Text(
- 'Missing procurement records auto-generate on load, and you can regenerate manually anytime.',
- style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
- ),
- const SizedBox(height: 16),
- _ContractScopeManagementSection(
- scopes: _items,
- canStartProcess: _canCommenceContractingActivities,
- startedScopeCount: _items
- .where((item) => item.status != ProcurementItemStatus.planning)
- .length,
- onStartProcessForScope: _startProcessForScope,
- ),
- const SizedBox(height: 16),
- _ProcurementStrategiesSection(
- strategies: _strategies,
- onAddStrategy: _openAddStrategyDialog,
- onEditStrategy: _openEditStrategyDialog,
- onDeleteStrategy: _deleteStrategy,
- ),
- const SizedBox(height: 20),
- _StrategiesSection(
- items: _items,
- currencyFormat: _currencyFormat,
- onAddScope: _openAddItemDialog,
- ),
- const SizedBox(height: 20),
- _buildWhatToProcureSection(),
- const SizedBox(height: 32),
- _VendorsSection(
+ }  /// The overview tab (Lusaka 27).
+  ///
+  /// The owner's shape for this section: a short overview at the top carrying
+  /// the plan note, then the log — "this procurement [log] to be at the top …
+  /// The dashboard … there should be a dashboard that could be the procurement
+  /// overview … the overview could include a plan section that just gives you
+  /// the spot to put in that information … in the overview at the top".
+  ///
+  /// Everything that was here before but is not procurement is gone: the
+  /// contract scope management block ("contracting work is not going to be
+  /// here"), the procurement-strategies table ("strategy name, category status,
+  /// I don't know what that is"), the second copy of the item list
+  /// ("Procurement Scope"), and "What to procure" ("this what-to-procure I don't
+  /// understand that. So we need to take that out.").
+  Widget _buildDashboardSection({Key? key}) {
+    final projectData = ProjectDataHelper.getData(context);
+    return Column(
+      key: key ?? const ValueKey('procurement_dashboard'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _PlanHeader(onItemListTap: _handleItemListTap)),
+            PageRegenerateAllButton(
+              onRegenerateAll: () async {
+                final confirmed = await showRegenerateAllConfirmation(context);
+                if (confirmed && mounted) {
+                  await _regenerateAllProcurement();
+                }
+              },
+              isLoading: _isGeneratingData,
+              tooltip: 'Generate starter procurement data',
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          'Missing procurement records auto-generate on load, and you can regenerate manually anytime.',
+          style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+        ),
+        const SizedBox(height: 16),
+        _ProcurementPlanCard(
+          initialText: projectData.planningNotes[_procurementPlanNoteKey],
+          checkpointId: _checkpointId,
+        ),
+        const SizedBox(height: 16),
+        _ProcurementCycleCard(
+          cycle: _procurementCycleFrom(projectData),
+          checkpointId: _checkpointId,
+        ),
+        const SizedBox(height: 20),
+        _ProcurementStatusDashboard(
+          summary: ProcurementStatusSummary.fromItems(_items),
+          currencyFormat: _currencyFormat,
+          onOpenLog: _handleItemListTap,
+        ),
+        if (_showLegacyProcurementSections) ...[
+          const SizedBox(height: 16),
+          _ContractScopeManagementSection(
+            scopes: _items,
+            canStartProcess: _canCommenceContractingActivities,
+            startedScopeCount: _items
+                .where((item) => item.status != ProcurementItemStatus.planning)
+                .length,
+            onStartProcessForScope: _startProcessForScope,
+          ),
+          const SizedBox(height: 16),
+          _ProcurementStrategiesSection(
+            strategies: _strategies,
+            onAddStrategy: _openAddStrategyDialog,
+            onEditStrategy: _openEditStrategyDialog,
+            onDeleteStrategy: _deleteStrategy,
+          ),
+          const SizedBox(height: 20),
+          _StrategiesSection(
+            items: _items,
+            currencyFormat: _currencyFormat,
+            onAddScope: _openAddItemDialog,
+          ),
+          const SizedBox(height: 20),
+          _buildWhatToProcureSection(),
+        ],
+        const SizedBox(height: 28),
+        _VendorsSection(
  vendors: _filteredVendors,
  allVendorsCount: _vendors.length,
  selectedVendorIds: _selectedVendorIds,
@@ -5611,7 +5684,6 @@ class _FrontEndPlanningProcurementScreenState
 
  @override
  Widget build(BuildContext context) {
- final projectData = ProjectDataHelper.getData(context);
  final isMobile = AppBreakpoints.isMobile(context);
  // Task 14: Once the Project Charter is approved, lock this section
  // from editing. The user can still view the data and scroll through
@@ -5696,19 +5768,10 @@ class _FrontEndPlanningProcurementScreenState
  label: const Text(
  'Approved Vendor List'),
  ),
- ),
- if (_isPlanningMode) ...[
- const SizedBox(height: 20),
- CharterLockBanner.applyLock(
- locked: charterLocked,
- child: _ProcurementPlanCard(
- initialText: projectData
- .planningNotes[_procurementPlanNoteKey],
- checkpointId: _checkpointId,
- ),
- ),
- ],
- const SizedBox(height: 32),
+ ),                // The plan note lives in the overview tab (see
+                // [_buildDashboardSection]) so it sits at the top of the
+                // section in one place, in both FEP and planning modes.
+                const SizedBox(height: 32),
  const SizedBox(height: 24),
  // The tab body holds the editable forms for the selected tab, so it stays
  // behind the lock. The tab strip above and the "Next:" button below are
@@ -5966,6 +6029,388 @@ class _UserBadge extends StatelessWidget {
  roleLabel,
  style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
  ),
+ ],
+ ),
+ );
+ }
+}
+
+/// The procurement overview: the key status of the items being bought and what
+/// they cost — "it's gonna be a dashboard that kind of shows the key status of
+/// the procured items and the cost and all of that. It can sort of blank and
+/// then fill up as they get the work done." The numbers come from
+/// [ProcurementStatusSummary], the same module the log rows come from.
+class _ProcurementStatusDashboard extends StatelessWidget {
+ const _ProcurementStatusDashboard({
+  required this.summary,
+  required this.currencyFormat,
+  required this.onOpenLog,
+ });
+
+ final ProcurementStatusSummary summary;
+ final NumberFormat currencyFormat;
+ final VoidCallback onOpenLog;
+
+ @override
+ Widget build(BuildContext context) {
+  return Column(
+   crossAxisAlignment: CrossAxisAlignment.start,
+   children: [
+    Row(
+     children: [
+      const Expanded(
+       child: Text(
+        'Procurement Overview',
+        style: TextStyle(
+         fontSize: 18,
+         fontWeight: FontWeight.w700,
+         color: Color(0xFF0F172A),
+        ),
+       ),
+      ),
+      OutlinedButton.icon(
+       onPressed: onOpenLog,
+       icon: const Icon(Icons.table_chart_outlined, size: 16),
+       label: const Text('Procurement Log'),
+       style: OutlinedButton.styleFrom(
+        foregroundColor: const Color(0xFF0F172A),
+        side: const BorderSide(color: Color(0xFFCBD5E1)),
+       ),
+      ),
+     ],
+    ),
+    const SizedBox(height: 6),
+    const Text(
+     'The key status of the items you plan to buy, and their cost. It fills up as the work gets done.',
+     style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+    ),
+    const SizedBox(height: 14),
+    if (summary.isEmpty)
+     buildNduTableEmptyState(
+      context,
+      message:
+       'No procurement items yet. Add the equipment and long-lead items you plan to buy.',
+     )
+    else
+     _buildCards(context),
+   ],
+  );
+ }
+
+ Widget _buildCards(BuildContext context) {
+  final isMobile = AppBreakpoints.isMobile(context);
+  final cards = <Widget>[
+   ProcurementSummaryCard(
+    icon: Icons.inventory_2_outlined,
+    iconBackground: const Color(0xFFFFF8E1),
+    value: '${summary.totalItems}',
+    label: 'Items',
+   ),
+   ProcurementSummaryCard(
+    icon: Icons.local_shipping_outlined,
+    iconBackground: const Color(0xFFFFF7ED),
+    value: '${summary.longLeadItems}',
+    label: 'Long Lead',
+    valueColor: const Color(0xFFC2410C),
+   ),
+   ProcurementSummaryCard(
+    icon: Icons.shopping_cart_outlined,
+    iconBackground: const Color(0xFFF1F5F9),
+    value: '${summary.orderedItems}',
+    label: 'Ordered',
+   ),
+   ProcurementSummaryCard(
+    icon: Icons.event_busy_outlined,
+    iconBackground: const Color(0xFFFEF2F2),
+    value: '${summary.overdueItems}',
+    label: 'Overdue',
+    valueColor: const Color(0xFFDC2626),
+   ),
+   ProcurementSummaryCard(
+    icon: Icons.attach_money,
+    iconBackground: const Color(0xFFFFF8E1),
+    value: currencyFormat.format(summary.totalBudget),
+    label: 'Total Budget',
+    valueColor: const Color(0xFF047857),
+   ),
+   ProcurementSummaryCard(
+    icon: Icons.pie_chart_outline,
+    iconBackground: const Color(0xFFFFF8E1),
+    value: '${summary.committedRate}%',
+    label: 'Committed',
+   ),
+  ];
+  if (isMobile) {
+   return Column(
+    children: [
+     for (var i = 0; i < cards.length; i++) ...[
+      cards[i],
+      if (i != cards.length - 1) const SizedBox(height: 12),
+     ],
+    ],
+   );
+  }
+  return Wrap(
+   spacing: 16,
+   runSpacing: 16,
+   children: [
+    for (final card in cards) SizedBox(width: 240, child: card),
+   ],
+  );
+ }
+}
+
+/// The limited procurement cycle (Lusaka 27 follow-up: "we will identify a
+/// few … items, and we will get their quotes, and then we will buy it"). A
+/// compact card beside the plan note: the stage durations, the dated walk and
+/// the purchase date, editable through [showProcurementCycleDialog].
+class _ProcurementCycleCard extends StatelessWidget {
+ const _ProcurementCycleCard({
+ required this.cycle,
+ required this.checkpointId,
+ });
+
+ final ProcurementCycle cycle;
+ final String checkpointId;
+
+ @override
+ Widget build(BuildContext context) {
+ final windows = cycle.windows();
+ return Container(
+ width: double.infinity,
+ padding: const EdgeInsets.all(20),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ const Expanded(
+ child: Text(
+ 'Procurement Cycle',
+ style: TextStyle(
+ fontSize: 16,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827)),
+ ),
+ ),
+ IconButton(
+ tooltip: 'Edit procurement cycle',
+ onPressed: () => showProcurementCycleDialog(
+ context: context,
+ cycle: cycle,
+ checkpointId: checkpointId,
+ ),
+ icon: const Icon(Icons.edit_outlined, size: 18),
+ visualDensity: VisualDensity.compact,
+ ),
+ ],
+ ),
+ const SizedBox(height: 6),
+ Text(
+ 'A limited cycle, not the whole contracting process: identify the '
+ 'items, get quotes, buy.',
+ style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+ ),
+ const SizedBox(height: 12),
+ Wrap(
+ spacing: 8,
+ runSpacing: 8,
+ crossAxisAlignment: WrapCrossAlignment.center,
+ children: [
+ for (var i = 0; i < windows.length; i++) ...[
+ if (i > 0)
+ const Icon(Icons.chevron_right,
+ size: 16, color: Color(0xFF9CA3AF)),
+ _ProcurementCycleStageChip(window: windows[i]),
+ ],
+ ],
+ ),
+ const SizedBox(height: 10),
+ Text(
+ cycle.summary,
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF0F172A)),
+ ),
+ ],
+ ),
+ );
+ }
+}
+
+/// Edit the limited procurement cycle: a start date plus week steppers per
+/// stage — the same interaction as the contract's RFP cycle popup, scaled/// down to three stages. Persists into `planningNotes` under
+/// [_procurementCycleNoteKey] as JSON.
+Future<void> showProcurementCycleDialog({
+ required BuildContext context,
+ required ProcurementCycle cycle,
+ required String checkpointId,
+}) async {
+ var working = cycle;
+ final result = await showDialog<ProcurementCycle>(
+ context: context,
+ barrierDismissible: true,
+ builder: (dialogContext) => StatefulBuilder(
+ builder: (dialogContext, setDialogState) => AlertDialog(
+ title: const Text('Procurement Cycle'),
+ content: SizedBox(
+ width: 420,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(
+ 'Identify the items, get quotes, buy — not the whole '
+ 'contracting process.',
+ style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+ ),
+ const SizedBox(height: 12),
+ Row(
+ children: [
+ const Text('Starts',
+ style: TextStyle(
+ fontSize: 13, fontWeight: FontWeight.w600)),
+ const Spacer(),
+ TextButton.icon(
+ onPressed: () async {
+ final picked = await showDatePicker(
+ context: dialogContext,
+ initialDate: working.startDate,
+ firstDate: DateTime(2020),
+ lastDate: DateTime(2100),
+ );
+ if (picked != null) {
+ setDialogState(
+ () => working = working.withStartDate(picked));
+ }
+ },
+ icon: const Icon(Icons.calendar_today, size: 16),
+ label: Text(formatProcurementCycleDate(working.startDate)),
+ ),
+ ],
+ ),
+ for (final stage in ProcurementCycle.adjustableStages) ...[
+ const SizedBox(height: 8),
+ Row(
+ children: [
+ Expanded(child: Text(stage.label,
+ style: const TextStyle(fontSize: 13))),
+ IconButton(
+ visualDensity: VisualDensity.compact,
+ onPressed: () => setDialogState(
+ () => working = working.withStageWeeks(
+ stage,
+ working.weeksFor(stage) - 1),
+ ),
+ icon: const Icon(Icons.remove_circle_outline, size: 18),
+ ),
+ Text('${working.weeksFor(stage)} wk',
+ style: const TextStyle(
+ fontSize: 13, fontWeight: FontWeight.w600)),
+ IconButton(
+ visualDensity: VisualDensity.compact,
+ onPressed: () => setDialogState(
+ () => working = working.withStageWeeks(
+ stage,
+ working.weeksFor(stage) + 1),
+ ),
+ icon: const Icon(Icons.add_circle_outline, size: 18),
+ ),
+ ],
+ ),
+ ],
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.of(dialogContext).pop(),
+ child: const Text('Cancel'),
+ ),
+ FilledButton(
+ onPressed: () {
+ if (working.validate() != null) return;
+ Navigator.of(dialogContext).pop(working);
+ },
+ child: const Text('Save cycle'),
+ ),
+ ],
+ ),
+ ),
+ );
+ if (result == null) return;
+ await ProjectDataHelper.updateAndSave(
+ context: context,
+ checkpoint: checkpointId,
+ dataUpdater: (data) => data.copyWith(
+ planningNotes: {
+ ...data.planningNotes,
+ _FrontEndPlanningProcurementScreenState._procurementCycleNoteKey:
+ jsonEncode(result.toMap()),
+ },
+ ),
+ showSnackbar: false,
+ );
+ if (context.mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text('Procurement cycle saved.'),
+ duration: Duration(seconds: 2),
+ ),
+ );
+ }
+}
+
+class _ProcurementCycleStageChip extends StatelessWidget {
+ const _ProcurementCycleStageChip({required this.window});
+
+ final ProcurementCycleWindow window;
+
+ @override
+ Widget build(BuildContext context) {
+ final stage = window.stage;
+ final weeks = window.isMilestone ? 0 : stage.defaultWeeks;
+ final label = window.isMilestone
+ ? stage.label
+ : '${stage.label} · ${weeks == 1 ? '1 wk' : '$weeks wks'}';
+ final date = formatProcurementCycleDate(window.start);
+ return Container(
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+ decoration: BoxDecoration(
+ color: window.isMilestone
+ ? const Color(0xFFE8FFF4)
+ : const Color(0xFFF8FAFC),
+ borderRadius: BorderRadius.circular(999),
+ border: Border.all(
+ color: window.isMilestone
+ ? const Color(0xFFA7F3D0)
+ : const Color(0xFFE5E7EB),
+ ),
+ ),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Icon(
+ window.isMilestone
+ ? Icons.shopping_cart_checkout
+ : Icons.circle_outlined,
+ size: 13,
+ color: window.isMilestone
+ ? const Color(0xFF047857)
+ : const Color(0xFF64748B),
+ ),
+ const SizedBox(width: 6),
+ Text('$label · $date',
+ style: const TextStyle(
+ fontSize: 11.5,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF374151))),
  ],
  ),
  );
@@ -6396,8 +6841,7 @@ class _PlanHeader extends StatelessWidget {
  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
  shape:
  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
- ),
- child: const Text('Scope Details'),
+ ),          child: const Text('Procurement Log'),
  ),
  ],
  );
@@ -12270,9 +12714,8 @@ extension _ProcurementTabExtension on _ProcurementTab {
  String get label {
  switch (this) {
  case _ProcurementTab.procurementDashboard:
- return 'Procurement';
- case _ProcurementTab.itemsList:
- return 'Scope Details';
+ return 'Procurement';    case _ProcurementTab.itemsList:
+      return 'Procurement Log';
  case _ProcurementTab.rfqWorkflow:
  return 'Procurement Workflow';
  case _ProcurementTab.contractingWorkflow:

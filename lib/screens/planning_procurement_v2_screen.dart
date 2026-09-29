@@ -8,6 +8,7 @@ import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/models/planning_contracting_models.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
+import 'package:ndu_project/models/procurement_log.dart';
 import 'package:ndu_project/models/procurement/procurement_ui_extensions.dart';
 import 'package:ndu_project/models/procurement/procurement_workflow_step.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -127,6 +128,10 @@ class _PlanningProcurementV2ScreenState
 
  List<VendorModel> _vendors = const [];
  final Set<String> _selectedVendorIds = {};  bool _approvedOnly = false;
+
+ /// The FEP procurement log's item count — the work this page continues —
+ /// refreshed whenever the project binds or the items stream fires.
+ int _fepItemCountCache = 0;
   bool _preferredOnly = false;
   bool _listView = true;
   String _categoryFilter = 'All Categories';
@@ -530,6 +535,18 @@ class _PlanningProcurementV2ScreenState
  ],
  ),
  ),
+ const SizedBox(height: 16),
+ // Continuity, not a fresh page (Lusaka 27: "the good news about already
+ // doing some work is that you can just continue from where you stopped
+ // … that continuity is important for every single section"): the FEP
+ // procurement work this section continues, restated as the walk so far.
+ _ContinuityStrip(
+ fepItems: _fepItemCountCache,
+ carriedItems:
+ _items.where((i) => i.projectPhase.toLowerCase() == 'planning').length,
+ executedItems:
+ _items.where((i) => i.projectPhase.toLowerCase() != 'planning').length,
+ ),
  const SizedBox(height: 20),
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -630,6 +647,19 @@ class _PlanningProcurementV2ScreenState
  ),
  ],
  );
+ }
+
+ /// How many items FEP's procurement log already carries. Read straight from
+ /// the same `procurement_items` collection the FEP screen writes, so the two
+ /// pages can never disagree about what exists.
+ Future<int> _loadFepItemCount() async {
+ if (_projectId.isEmpty) return 0;
+ try {
+ final snapshot = await ProcurementService.streamItems(_projectId).first;
+ return snapshot.length;
+ } catch (_) {
+ return 0;
+ }
  }
 
  List<ProcurementItemModel> get _filteredItems {
@@ -986,10 +1016,12 @@ class _PlanningProcurementV2ScreenState
  onStatusChanged: (value) => setState(() => _itemStatusFilter = value),
  categoryOptions: _itemCategoryOptions,
  statusOptions: _itemStatusOptions,
- selectedCategory: _itemCategoryFilter,
- selectedStatus: _itemStatusFilter,
- onPullToWbsCost: _pullProcurementItemToWbsAndCost,
- );
+ selectedCategory: _itemCategoryFilter,      selectedStatus: _itemStatusFilter,
+      onPullToWbsCost: _pullProcurementItemToWbsAndCost,
+      vendorNames: <String, String>{
+        for (final vendor in _vendors) vendor.id: vendor.name,
+      },
+    );
  }
 
 
@@ -1789,6 +1821,13 @@ class _PlanningProcurementV2ScreenState
  _subscriptions.addAll([
  ProcurementService.streamItems(_projectId).listen((items) {
  if (!mounted) return;
+ // FEP and planning share one `procurement_items` store; its size is what
+ // the continuity strip reports, so refresh it with the items.
+ unawaited(_loadFepItemCount().then((count) {
+ if (mounted && count != _fepItemCountCache) {
+ setState(() => _fepItemCountCache = count);
+ }
+ }));
  setState(() {
  _items = items;
  _trackableItems = items.where(
@@ -2438,6 +2477,17 @@ class _PlanningProcurementV2ScreenState
  {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_procurement_v2_notes'] ?? 'No data recorded.'),
+ // The Procurement Log itself, from the same rows the on-screen table
+ // draws (Lusaka 27), with vendors resolved the same way.
+ if (_items.isNotEmpty)
+ PdfSection.table(
+ 'Procurement Log',
+ headers: procurementLogExportHeaders(),
+ rows: procurementLogExportRows(
+ _items,
+ vendorNames: {for (final vendor in _vendors) vendor.id: vendor.name},
+ ),
+ ),
  ],
  );
  }
@@ -2539,6 +2589,68 @@ class _SectionCard extends StatelessWidget {
  ),
  const SizedBox(height: 18),
  child,
+ ],
+ ),
+ );
+ }
+}
+
+/// The continuity strip: what FEP procurement already did and where this page
+/// picks it up (Lusaka 27: "the good news about already doing some work is
+/// that you can just continue from where you stopped … that continuity is
+/// important for every single section of the site").
+class _ContinuityStrip extends StatelessWidget {
+ const _ContinuityStrip({
+ required this.fepItems,
+ required this.carriedItems,
+ required this.executedItems,
+ });
+
+ /// Items in the shared procurement store (what FEP's log shows).
+ final int fepItems;
+
+ /// Items still being planned on this page.
+ final int carriedItems;
+
+ /// Items moved into ordering/delivery.
+ final int executedItems;
+
+ @override
+ Widget build(BuildContext context) {
+ return Container(
+ width: double.infinity,
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+ decoration: BoxDecoration(
+ color: const Color(0xFFFFFBEB),
+ borderRadius: BorderRadius.circular(14),
+ border: Border.all(color: const Color(0xFFFDE68A)),
+ ),
+ child: Wrap(
+ spacing: 24,
+ runSpacing: 8,
+ crossAxisAlignment: WrapCrossAlignment.center,
+ children: [
+ Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ const Icon(Icons.link_outlined,
+ size: 16, color: Color(0xFFB45309)),
+ const SizedBox(width: 8),
+ const Text(
+ 'Continuing from Front-End Planning',
+ style: TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF92400E)),
+ ),
+ ],
+ ),
+ Text(
+ '$fepItems item${fepItems == 1 ? '' : 's'} in the procurement log · '
+ '$carriedItems still in planning · '
+ '$executedItems ordered or delivered',
+ style: const TextStyle(fontSize: 12.5, color: Color(0xFF92400E)),
+ ),
  ],
  ),
  );

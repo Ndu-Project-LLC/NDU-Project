@@ -98,8 +98,8 @@ class WbsPackageRow {
     return '$c — $n';
   }
 
-  /// A linked activity whose dates are missing while the package has a planned
-  /// window — the case the "attach the WBS timeline" action fixes.
+  /// A scheduled package none of whose activities carry a date yet — the
+  /// package-level view of "the schedule row is blank".
   bool get needsScheduleDates => onSchedule && !hasScheduleDates;
 }
 
@@ -219,10 +219,53 @@ List<WbsPackagePull> wbsPackagesMissingFromSchedule({
       .toList(growable: false);
 }
 
-/// Number of scheduled packages whose activities still carry no dates, so the
-/// card can offer "attach the WBS timeline" only when it would do something.
+/// Number of scheduled packages whose activities all still carry no dates, so
+/// callers can summarise "packages with a blank row". Package-level: a package
+/// with one dated and one un-dated activity is *not* counted here — use
+/// [countActivitiesFillableFromWbs] when the question is per activity.
 int countPackagesAwaitingScheduleDates(List<WbsPackageRow> rows) =>
     rows.where((row) => row.needsScheduleDates).length;
+
+/// Number of schedule activities the "Fill schedule dates from WBS" action
+/// would actually date: linked to a WBS node, carrying no dates of their own,
+/// whose package has a planned window on the WBS.
+///
+/// Deliberately activity-level and defined to mirror
+/// `ScheduleProvider.applyWbsPlannedDates` condition-for-condition, so the
+/// count is 0 exactly when the action itself would be a no-op — the gate the
+/// button enables on. A package-level count cannot do this: a package with one
+/// dated and one un-dated row looks "already scheduled" as a whole, yet still
+/// has a row the fill would fix.
+int countActivitiesFillableFromWbs({
+  required WBS? wbs,
+  required List<ScheduleActivity> activities,
+}) {
+  if (wbs == null) return 0;
+
+  final hasPlannedWindow = <String, bool>{
+    for (final row in buildWbsPackageRows(wbs: wbs, activities: activities))
+      row.nodeId: row.hasPlannedWindow,
+  };
+
+  var count = 0;
+  void walk(ScheduleActivity activity) {
+    final nodeId = (activity.wbsNodeId ?? '').trim();
+    if (nodeId.isNotEmpty &&
+        activity.startDate == null &&
+        activity.endDate == null &&
+        (hasPlannedWindow[nodeId] ?? false)) {
+      count++;
+    }
+    for (final child in activity.children) {
+      walk(child);
+    }
+  }
+
+  for (final root in activities) {
+    walk(root);
+  }
+  return count;
+}
 
 /// Indexes every activity in [roots] by the WBS node it is linked to.
 ///

@@ -273,6 +273,71 @@ void main() {
     });
   });
 
+  group('countActivitiesFillableFromWbs', () {
+    test('counts only undated rows whose package has a planned window', () {
+      final wbs = wbsWith([
+        wbsNode('n1', '1', 'Engineering',
+            plannedStart: DateTime(2026, 1, 5),
+            plannedFinish: DateTime(2026, 2, 5)),
+        wbsNode('n2', '2', 'Procurement'),
+        wbsNode('n3', '3', 'Construction',
+            plannedStart: DateTime(2026, 3, 1)),
+      ]);
+
+      final count = countActivitiesFillableFromWbs(
+        wbs: wbs,
+        activities: [
+          activity('a1', wbsNodeId: 'n1'), // fillable
+          activity('a2', wbsNodeId: 'n1',
+              start: DateTime(2026, 1, 5)), // already dated
+          activity('a3', wbsNodeId: 'n2'), // no planned window on the WBS
+          activity('a4'), // not linked to the WBS at all
+          activity('a5', wbsNodeId: 'n3'), // a start-only window still fills
+        ],
+      );
+
+      expect(count, 2);
+    });
+
+    test('mirrors what ScheduleProvider.applyWbsPlannedDates would write', () {
+      final provider = ScheduleProvider();
+      provider.setup(projectName: 'Lusaka', deliveryModel: 'WATERFALL');
+      final wbs = wbsWith([
+        wbsNode('n1', '1', 'Engineering',
+            plannedStart: DateTime(2026, 1, 5),
+            plannedFinish: DateTime(2026, 1, 9)),
+      ]);
+      provider.setActivities([
+        ScheduleActivity(
+          id: 'root',
+          level: 0,
+          code: '0',
+          name: 'Lusaka',
+          type: ActivityType.summary,
+          domain: ScheduleDomain.engineering,
+          dependencies: const [],
+          aiGenerated: false,
+          children: [
+            // Dated on one side only — the fill never overwrites it.
+            activity('a1', wbsNodeId: 'n1', start: DateTime(2026, 6, 1)),
+            activity('a2', wbsNodeId: 'n1'), // blank — the fill dates it
+          ],
+        ),
+      ]);
+
+      final fillable = countActivitiesFillableFromWbs(
+        wbs: wbs,
+        activities: provider.schedule!.activities,
+      );
+      final filled = provider.applyWbsPlannedDates({
+        'n1': (start: DateTime(2026, 1, 5), finish: DateTime(2026, 1, 9)),
+      });
+
+      // The gate is 0 exactly when the action would be a no-op.
+      expect(fillable, filled);
+    });
+  });
+
   group('ScheduleProvider.attachWbsPackages', () {
     ScheduleProvider newSchedule() {
       final provider = ScheduleProvider();

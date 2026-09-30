@@ -93,13 +93,13 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
     final onSchedule = rows.where((r) => r.onSchedule).length;
     final missing = rows.length - onSchedule;
     final priced = rows.where((r) => r.isPriced).length;
-    final awaitingDates = countPackagesAwaitingScheduleDates(rows);
-    final canFillFromWbs = rows
-        .where((r) =>
-            r.needsScheduleDates &&
-            r.hasPlannedWindow &&
-            (r.plannedStart != null || r.plannedFinish != null))
-        .length;
+    // Each button is enabled exactly when tapping it would write something —
+    // computed from the same data the action writes from, never a package-level
+    // proxy. A package whose rows are *partly* dated still has fillable rows,
+    // and dated rows are precisely the input the WBS attach needs.
+    final canAttachToWbs = collectScheduleTimelines(activities).isNotEmpty;
+    final fillableFromWbs =
+        countActivitiesFillableFromWbs(wbs: wbs, activities: activities);
 
     final query = _query.trim().toLowerCase();
     final filtered = query.isEmpty
@@ -173,9 +173,9 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
                     ),
                   ),
                   OutlinedButton.icon(
-                    onPressed: (_busy || canFillFromWbs == 0)
+                    onPressed: (_busy || fillableFromWbs == 0)
                         ? null
-                        : () => _fillScheduleDatesFromWbs(canFillFromWbs),
+                        : () => _fillScheduleDatesFromWbs(),
                     icon: const Icon(Icons.south, size: 16),
                     label: const Text('Fill schedule dates from WBS'),
                     style: OutlinedButton.styleFrom(
@@ -188,7 +188,7 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
                     ),
                   ),
                   OutlinedButton.icon(
-                    onPressed: (_busy || awaitingDates == 0)
+                    onPressed: (_busy || !canAttachToWbs)
                         ? null
                         : _attachScheduleDatesToWbs,
                     icon: const Icon(Icons.north, size: 16),
@@ -599,7 +599,7 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
     }
   }
 
-  Future<void> _fillScheduleDatesFromWbs(int expected) async {
+  Future<void> _fillScheduleDatesFromWbs() async {
     final scheduleProvider = context.read<ScheduleProvider>();
     final wbsProvider = context.read<WBSProvider>();
     final messenger = ScaffoldMessenger.of(context);

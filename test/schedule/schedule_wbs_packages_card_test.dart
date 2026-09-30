@@ -236,4 +236,110 @@ void main() {
     expect(activity.startDate, DateTime(2026, 1, 5));
     expect(activity.endDate, DateTime(2026, 1, 30));
   });
+
+  testWidgets('offers the WBS date fill when only some rows of a package are '
+      'dated', (tester) async {
+    final wbs = await newWbsProvider(tester);
+    final node = wbs.addChildNode(wbs.wbs!.level0.id, 'Engineering');
+    expect(
+      wbs.applyScheduleTimelines({
+        node: (start: DateTime(2026, 2, 2), finish: DateTime(2026, 3, 2)),
+      }),
+      1,
+    );
+
+    // The package has TWO schedule rows: one dated, one blank. The package as
+    // a whole is on the schedule and already shows a scheduled window, so only
+    // an activity-level gate sees the blank row the fill would fix.
+    final schedule = newScheduleProvider(children: [
+      ScheduleActivity(
+        id: 'a1',
+        level: 1,
+        code: '1',
+        name: 'Engineering design',
+        type: ActivityType.task,
+        domain: ScheduleDomain.engineering,
+        wbsNodeId: node,
+        startDate: DateTime(2026, 2, 2),
+        endDate: DateTime(2026, 3, 2),
+        dependencies: const [],
+        aiGenerated: false,
+        children: const [],
+      ),
+      ScheduleActivity(
+        id: 'a2',
+        level: 1,
+        code: '2',
+        name: 'Engineering review',
+        type: ActivityType.task,
+        domain: ScheduleDomain.engineering,
+        wbsNodeId: node,
+        dependencies: const [],
+        aiGenerated: false,
+        children: const [],
+      ),
+    ]);
+
+    await pumpCard(tester, wbs: wbs, schedule: schedule);
+
+    await tester.ensureVisible(find.text('Fill schedule dates from WBS'));
+    await tester.tap(find.text('Fill schedule dates from WBS'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    final rows = schedule.schedule!.activities.first.children;
+    // The dated row keeps its own window; the blank one takes the WBS window.
+    expect(rows.first.startDate, DateTime(2026, 2, 2));
+    expect(rows.last.startDate, DateTime(2026, 2, 2));
+    expect(rows.last.endDate, DateTime(2026, 3, 2));
+  });
+
+  testWidgets('pushes dated schedule rows back onto the WBS packages',
+      (tester) async {
+    final wbs = await newWbsProvider(tester);
+    final node = wbs.addChildNode(wbs.wbs!.level0.id, 'Engineering');
+
+    // The schedule row is dated — the normal case after the builder or a fill
+    // has run. Regression: the attach button used to be gated on packages with
+    // *no* dates, so it was disabled exactly when it had work to do.
+    final schedule = newScheduleProvider(children: [
+      ScheduleActivity(
+        id: 'a1',
+        level: 1,
+        code: '1',
+        name: 'Engineering',
+        type: ActivityType.task,
+        domain: ScheduleDomain.engineering,
+        wbsNodeId: node,
+        startDate: DateTime(2026, 4, 1),
+        endDate: DateTime(2026, 5, 15),
+        dependencies: const [],
+        aiGenerated: false,
+        children: const [],
+      ),
+    ]);
+
+    await pumpCard(tester, wbs: wbs, schedule: schedule);
+
+    final button = tester.widget<OutlinedButton>(
+      find
+          .ancestor(
+            of: find.text('Attach schedule dates to WBS'),
+            matching: find.byType(OutlinedButton),
+          )
+          .first,
+    );
+    expect(button.onPressed, isNotNull);
+
+    await tester.ensureVisible(find.text('Attach schedule dates to WBS'));
+    await tester.tap(find.text('Attach schedule dates to WBS'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    // The WBS node now carries the window the schedule computed.
+    final attached =
+        wbs.wbs!.level0.children.singleWhere((n) => n.id == node);
+    expect(attached.plannedStart, DateTime(2026, 4, 1));
+    expect(attached.plannedFinish, DateTime(2026, 5, 15));
+  });
 }

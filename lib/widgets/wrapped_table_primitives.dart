@@ -346,11 +346,29 @@ class _FullScreenTablePage extends StatelessWidget {
               ),
             ),
             clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: tableBuilder(context),
-              ),
+            // Fill the body: the card spans the full screen with the table at
+            // the top-left, instead of hugging the table's intrinsic size.
+            alignment: Alignment.topLeft,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // The table must span the full viewport width: DataTable lays
+                // out at its intrinsic column widths unless forced wider, so
+                // without this floor the expanded view bunched every column
+                // on the left and left dead space across the rest of the
+                // screen. Wider-than-viewport tables still scroll horizontally.
+                final minWidth = constraints.maxWidth.isFinite
+                    ? constraints.maxWidth
+                    : 0.0;
+                return SingleChildScrollView(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minWidth: minWidth),
+                      child: tableBuilder(context),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),

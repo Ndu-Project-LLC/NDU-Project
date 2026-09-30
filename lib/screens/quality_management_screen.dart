@@ -5234,7 +5234,13 @@ class _WorkflowControlDialogState extends State<_WorkflowControlDialog> {
                       DropdownButtonFormField<String>(
                         initialValue: _owner,
                         decoration: _inputDecoration(context, ''),
-                        items: widget.ownerOptions
+                        // A saved entry can carry an owner that is not a
+                        // current team role/member (e.g. 'Unassigned'). Keep
+                        // it selectable so the dropdown never asserts on a
+                        // value outside the items.
+                        items: (widget.ownerOptions.contains(_owner)
+                                ? widget.ownerOptions
+                                : [_owner, ...widget.ownerOptions])
                             .map((e) =>
                                 DropdownMenuItem(value: e, child: Text(e)))
                             .toList(),
@@ -5731,7 +5737,13 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
                       DropdownButtonFormField<String>(
                         initialValue: _owner,
                         decoration: _inputDecoration(context, ''),
-                        items: widget.ownerOptions
+                        // A saved entry can carry an owner that is not a
+                        // current team role/member (e.g. 'Unassigned'). Keep
+                        // it selectable so the dropdown never asserts on a
+                        // value outside the items.
+                        items: (widget.ownerOptions.contains(_owner)
+                                ? widget.ownerOptions
+                                : [_owner, ...widget.ownerOptions])
                             .map((e) =>
                                 DropdownMenuItem(value: e, child: Text(e)))
                             .toList(),
@@ -5958,7 +5970,13 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
                       DropdownButtonFormField<String>(
                         initialValue: _owner,
                         decoration: _inputDecoration(context, ''),
-                        items: widget.ownerOptions
+                        // A saved entry can carry an owner that is not a
+                        // current team role/member (e.g. 'Unassigned'). Keep
+                        // it selectable so the dropdown never asserts on a
+                        // value outside the items.
+                        items: (widget.ownerOptions.contains(_owner)
+                                ? widget.ownerOptions
+                                : [_owner, ...widget.ownerOptions])
                             .map((e) =>
                                 DropdownMenuItem(value: e, child: Text(e)))
                             .toList(),

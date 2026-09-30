@@ -9,6 +9,7 @@
 
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/theme.dart';
@@ -31,101 +32,169 @@ class WBSBuilderScreen extends StatefulWidget {
 
 enum _SimpleAxis { topDown, leftRight }
 
-class _TopDownConnectorBand extends StatelessWidget {
-  const _TopDownConnectorBand({required this.childCount});
+/// Shared geometry for the Simple view's diagram so the connector bands and
+/// the card rows always agree on where each card sits — the invariant that
+/// makes every drawn line start and end exactly on a card edge.
+abstract final class _SimpleDiagram {
+  /// Matches the card's own `maxWidth` constraint.
+  static const double cardMaxWidth = 240;
 
-  final int childCount;
+  /// Horizontal room one top-level subtree occupies: the widest card plus
+  /// breathing room. Sibling cards therefore never overlap and every slot's
+  /// centre is where the connector band drops its stub.
+  static const double slotWidth = 260;
+
+  /// Height of the parent stub and the child stubs on either side of the
+  /// top-down rail.
+  static const double topDownDrop = 14;
+
+  /// Width of the left-right spine band the branch runs through.
+  static const double leftRightBandWidth = 16;
+
+  /// Vertical gap between consecutive child rows in the left-right diagram.
+  /// The spine painter crosses it so the rows read as one continuous rail.
+  static const double leftRightRowGap = 18;
+}
+
+/// Vertical band between a parent card and its row of child subtrees in the
+/// top-down diagram. Sits flush under the parent card with the child cards
+/// flush under it, so its stubs touch cards on both ends.
+///
+/// [childSlots] carries how many layout slots each child subtree occupies, so
+/// a slot that is itself an expanded subtree keeps its stub on the child's
+/// true centre instead of a hard-coded offset.
+class _TopDownConnectorBand extends StatelessWidget {
+  const _TopDownConnectorBand({required this.childSlots});
+
+  final List<int> childSlots;
 
   @override
   Widget build(BuildContext context) {
-    if (childCount <= 0) return const SizedBox.shrink();
+    if (childSlots.isEmpty) return const SizedBox.shrink();
     return CustomPaint(
-      size: Size(144.0 * childCount, 28.0),
-      painter: _TopDownConnectorPainter(childCount: childCount),
+      size: Size(
+          _SimpleDiagram.slotWidth * childSlots.length,
+          _SimpleDiagram.topDownDrop * 2),
+      painter: _TopDownConnectorPainter(childSlots: childSlots),
     );
   }
 }
 
 class _TopDownConnectorPainter extends CustomPainter {
-  const _TopDownConnectorPainter({required this.childCount});
+  const _TopDownConnectorPainter({required this.childSlots});
 
-  final int childCount;
+  final List<int> childSlots;
 
   @override
   void paint(Canvas canvas, Size size) {
-    const lineColor = Color(0xFF64748B);
     final paint = Paint()
-      ..color = lineColor
+      ..color = const Color(0xFF64748B)
       ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.square;
 
     final centerX = size.width / 2;
-    canvas.drawLine(Offset(centerX, 0), Offset(centerX, 12), paint);
-    if (childCount == 1) {
-      canvas.drawLine(Offset(centerX, 12), Offset(centerX, size.height), paint);
+    final railY = _SimpleDiagram.topDownDrop;
+    // Parent stub: from the parent card's bottom edge (the band sits flush
+    // under it) down to the rail.
+    canvas.drawLine(Offset(centerX, 0), Offset(centerX, railY), paint);
+    if (childSlots.length == 1) {
+      // Single child: one straight line from parent into the child card.
+      canvas.drawLine(
+          Offset(centerX, railY), Offset(centerX, size.height), paint);
       return;
     }
-    const firstAnchor = 72.0;
-    final lastX = size.width - 72.0;
-    canvas.drawLine(
-        const Offset(firstAnchor, 12.0), Offset(lastX, 12.0), paint);
-    for (int i = 0; i < childCount; i++) {
-      final x = 72.0 + (144.0 * i);
-      canvas.drawLine(Offset(x, 12.0), Offset(x, size.height), paint);
+
+    // Rail across every child slot's centre, then a stub down into each card.
+    final firstX = _SimpleDiagram.slotWidth / 2;
+    final lastX = size.width - _SimpleDiagram.slotWidth / 2;
+    canvas.drawLine(Offset(firstX, railY), Offset(lastX, railY), paint);
+    for (int i = 0; i < childSlots.length; i++) {
+      final x = _SimpleDiagram.slotWidth * (i + childSlots[i] / 2);
+      canvas.drawLine(Offset(x, railY), Offset(x, size.height), paint);
     }
   }
 
   @override
   bool shouldRepaint(covariant _TopDownConnectorPainter oldDelegate) {
-    return oldDelegate.childCount != childCount;
+    return !listEquals(oldDelegate.childSlots, childSlots);
   }
 }
 
-class _LeftRightConnectorBand extends StatelessWidget {
-  const _LeftRightConnectorBand({required this.isFirst, required this.isLast});
+/// Horizontal link between a parent card and its rows of child subtrees in
+/// the left-right diagram. Stretched to the rows' full height with the parent
+/// card centred in its box, so its line runs from the parent card's right
+/// edge straight into the rows' spine at the exact vertical centre.
+class _LeftRightParentStubPainter extends CustomPainter {
+  const _LeftRightParentStubPainter();
 
-  final bool isFirst;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF64748B)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.square;
+
+    canvas.drawLine(Offset(0, size.height / 2),
+        Offset(size.width, size.height / 2), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LeftRightParentStubPainter oldDelegate) {
+    return false;
+  }
+}
+
+/// One child row's spine band in the left-right diagram. Stretched to the row
+/// height: the branch leaves at the card's vertical centre, and — unless it
+/// is the last row — the spine continues across the inter-row gap so all rows
+/// read as one continuous rail the parent stub plugs into.
+class _LeftRightConnectorBand extends StatelessWidget {
+  const _LeftRightConnectorBand({required this.isLast});
+
   final bool isLast;
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      size: const Size(48, 96),
-      painter: _LeftRightConnectorPainter(isFirst: isFirst, isLast: isLast),
+    return SizedBox(
+      width: _SimpleDiagram.leftRightBandWidth,
+      child: CustomPaint(
+        painter: _LeftRightConnectorPainter(isLast: isLast),
+      ),
     );
   }
 }
 
 class _LeftRightConnectorPainter extends CustomPainter {
-  const _LeftRightConnectorPainter(
-      {required this.isFirst, required this.isLast});
+  const _LeftRightConnectorPainter({required this.isLast});
 
-  final bool isFirst;
   final bool isLast;
 
   @override
   void paint(Canvas canvas, Size size) {
-    const lineColor = Color(0xFF64748B);
     final paint = Paint()
-      ..color = lineColor
+      ..color = const Color(0xFF64748B)
       ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.square;
 
-    final spineX = size.width * 0.35;
-    final midY = size.height / 2;
+    // The spine runs on the band's left edge — exactly where the parent stub
+    // ends — and the branch runs to the band's right edge, which is the child
+    // card's left edge.
+    final branchY = size.height / 2;
 
-    if (!isFirst) {
-      canvas.drawLine(Offset(spineX, 0), Offset(spineX, midY), paint);
-    }
-    canvas.drawLine(Offset(spineX, midY), Offset(size.width, midY), paint);
+    canvas.drawLine(const Offset(0, 0), Offset(0, branchY), paint);
+    canvas.drawLine(Offset(0, branchY), Offset(size.width, branchY), paint);
     if (!isLast) {
-      canvas.drawLine(Offset(spineX, midY), Offset(spineX, size.height), paint);
+      canvas.drawLine(Offset(0, branchY),
+          Offset(0, size.height + _SimpleDiagram.leftRightRowGap), paint);
     }
   }
 
   @override
   bool shouldRepaint(covariant _LeftRightConnectorPainter oldDelegate) {
-    return oldDelegate.isFirst != isFirst || oldDelegate.isLast != isLast;
+    return oldDelegate.isLast != isLast;
   }
 }
 
@@ -653,6 +722,19 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
     );
   }
 
+  /// How many layout slots a subtree occupies in the top-down diagram: 1 for
+  /// a card, or the sum of its children's slots when it is expanded. Computed
+  /// bottom-up so connector bands and card rows agree on every centre.
+  int _topDownSlotCount(WBSNode node, {required bool expanded}) {
+    if (node.children.isEmpty || !expanded) return 1;
+    var slots = 0;
+    for (final child in node.children) {
+      slots += _topDownSlotCount(child,
+          expanded: _expanded.contains(child.id));
+    }
+    return slots;
+  }
+
   Widget _buildTopDownDiagram(
     BuildContext context,
     WBSProvider provider,
@@ -662,6 +744,10 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
   }) {
     final isExpanded = _expanded.contains(node.id) || isRoot;
     final children = node.children;
+    final slotCounts = <int>[
+      for (final child in children)
+        _topDownSlotCount(child, expanded: _expanded.contains(child.id)),
+    ];
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -677,18 +763,23 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
         if (isRoot && children.isEmpty)
           _buildSimpleEmptyState(context, provider, fm),
         if (children.isNotEmpty && (isExpanded || isRoot)) ...[
-          const SizedBox(height: 10),
-          _TopDownConnectorBand(childCount: children.length),
-          const SizedBox(height: 6),
+          // Flush under the parent card: the band's parent stub starts on the
+          // card's bottom edge, and the child cards sit flush under the band,
+          // so every line touches at both ends.
+          _TopDownConnectorBand(childSlots: slotCounts),
           Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: children
-                .map((child) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      child: _buildTopDownSubtree(context, provider, child, fm),
-                    ))
-                .toList(),
+            children: [
+              for (var i = 0; i < children.length; i++)
+                SizedBox(
+                  // Each subtree occupies exactly the slots the band drew
+                  // stubs for, with the card centred in its slot.
+                  width: _SimpleDiagram.slotWidth * slotCounts[i],
+                  child: _buildTopDownDiagram(
+                      context, provider, children[i], fm),
+                ),
+            ],
           ),
         ],
       ],
@@ -704,74 +795,87 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
   }) {
     final isExpanded = _expanded.contains(node.id) || isRoot;
     final children = node.children;
-    final childTrees = children
-        .map((child) => _buildLeftRightDiagram(context, provider, child, fm))
-        .toList();
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final parentColumn = Column(
       mainAxisSize: MainAxisSize.min,
+      // Centred so the parent card's middle lines up with the child rows'
+      // centre, where the parent stub draws its link.
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        SizedBox(
-          width: 220,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _buildDiagramNodeCard(
-                context,
-                provider,
-                node,
-                fm,
-                isRoot: isRoot,
-                isExpanded: isExpanded,
-              ),
-              if (isRoot && children.isEmpty) ...[
-                const SizedBox(height: 16),
-                _buildSimpleEmptyState(context, provider, fm),
-              ],
-            ],
-          ),
+        _buildDiagramNodeCard(
+          context,
+          provider,
+          node,
+          fm,
+          isRoot: isRoot,
+          isExpanded: isExpanded,
         ),
-        if (children.isNotEmpty && (isExpanded || isRoot)) ...[
-          const SizedBox(width: 16),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: List.generate(children.length, (index) {
-              final isFirst = index == 0;
-              final isLast = index == children.length - 1;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 18),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    _LeftRightConnectorBand(isFirst: isFirst, isLast: isLast),
-                    const SizedBox(width: 12),
-                    childTrees[index],
-                  ],
-                ),
-              );
-            }),
-          ),
+        if (isRoot && children.isEmpty) ...[
+          const SizedBox(height: 16),
+          _buildSimpleEmptyState(context, provider, fm),
         ],
       ],
     );
-  }
 
-  Widget _buildTopDownSubtree(
-    BuildContext context,
-    WBSProvider provider,
-    WBSNode node,
-    WBSFramework fm,
-  ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(width: 2, height: 16, color: const Color(0xFF64748B)),
-        _buildTopDownDiagram(context, provider, node, fm),
-      ],
+    if (children.isEmpty || !(isExpanded || isRoot)) {
+      return parentColumn;
+    }
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // The parent column hugs its card, so the stub that follows starts
+          // exactly on the card's right edge — a fixed-width column here left
+          // dead space between card and connector.
+          parentColumn,
+          // Parent link: drawn in its own stretched box so it runs from the
+          // parent card's right edge into the rows' spine with no gap.
+          SizedBox(
+            width: _SimpleDiagram.leftRightBandWidth,
+            child: CustomPaint(
+              painter: const _LeftRightParentStubPainter(),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var i = 0; i < children.length; i++)
+                Padding(
+                  padding: EdgeInsets.only(
+                      bottom: i == children.length - 1
+                          ? 0
+                          : _SimpleDiagram.leftRightRowGap),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _LeftRightConnectorBand(
+                            isLast: i == children.length - 1),
+                        // Centred in the stretched row so the band's branch
+                        // lands on the child card's vertical centre.
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLeftRightDiagram(
+                                context, provider, children[i], fm),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -790,17 +894,13 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
     final hasChildren = node.children.isNotEmpty;
     final canAddChild = node.level.value < fm.maxDepth;
     return Container(
-      constraints: const BoxConstraints(minWidth: 170, maxWidth: 240),
+      constraints: const BoxConstraints(
+          minWidth: 170, maxWidth: _SimpleDiagram.cardMaxWidth),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white,
-            accent.withValues(alpha: 0.03),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        // One flat, readable surface per card — the old white→accent gradient
+        // made the cards look washed out against the diagram background.
+        color: accent.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: accent.withValues(alpha: 0.4), width: 1.5),
         boxShadow: [

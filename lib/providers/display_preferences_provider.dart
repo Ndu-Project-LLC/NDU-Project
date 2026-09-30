@@ -12,16 +12,19 @@ class DisplayPreferencesProvider extends ChangeNotifier {
   static const String _compactModeKey = 'pref_compact_mode';
   static const String _reduceAnimationsKey = 'pref_reduce_animations';
   static const String _speechToTextKey = 'pref_speech_to_text';
+  static const String _kazAiEnabledKey = 'pref_kaz_ai_enabled';
 
   String _fontSize = 'medium';
   bool _compactMode = false;
   bool _reduceAnimations = false;
   bool _speechToTextEnabled = true;
+  bool _kazAiEnabled = true;
 
   String get fontSize => _fontSize;
   bool get compactMode => _compactMode;
   bool get reduceAnimations => _reduceAnimations;
   bool get speechToTextEnabled => _speechToTextEnabled;
+  bool get kazAiEnabled => _kazAiEnabled;
 
   double get textScaleFactor => switch (_fontSize) {
         'small' => 0.9,
@@ -36,6 +39,7 @@ class DisplayPreferencesProvider extends ChangeNotifier {
       _compactMode = prefs.getBool(_compactModeKey) ?? false;
       _reduceAnimations = prefs.getBool(_reduceAnimationsKey) ?? false;
       _speechToTextEnabled = prefs.getBool(_speechToTextKey) ?? true;
+      _kazAiEnabled = prefs.getBool(_kazAiEnabledKey) ?? true;
     } catch (_) {
       // Keep defaults when local preference storage is temporarily unavailable.
     }
@@ -74,6 +78,13 @@ class DisplayPreferencesProvider extends ChangeNotifier {
     await _persist((prefs) => prefs.setBool(_speechToTextKey, value));
   }
 
+  Future<void> setKazAiEnabled(bool value) async {
+    if (_kazAiEnabled == value) return;
+    _kazAiEnabled = value;
+    notifyListeners();
+    await _persist((prefs) => prefs.setBool(_kazAiEnabledKey, value));
+  }
+
   Future<void> _persist(
     Future<bool> Function(SharedPreferences prefs) write,
   ) async {
@@ -102,6 +113,20 @@ bool speechToTextEnabledFor(
   try {
     return Provider.of<DisplayPreferencesProvider>(context, listen: listen)
         .speechToTextEnabled;
+  } catch (_) {
+    // Some isolated dialogs/tests are rendered outside MyApp's provider tree.
+    return true;
+  }
+}
+
+/// Read the shared KAZ AI preference from any widget context.
+bool kazAiEnabledFor(
+  BuildContext context, {
+  bool listen = true,
+}) {
+  try {
+    return Provider.of<DisplayPreferencesProvider>(context, listen: listen)
+        .kazAiEnabled;
   } catch (_) {
     // Some isolated dialogs/tests are rendered outside MyApp's provider tree.
     return true;

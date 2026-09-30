@@ -2227,6 +2227,14 @@ class RequirementItem {
   String requirementSource;
   String comments;
 
+  /// Lusaka 28: every requirement must map to the WBS. [wbsGoalId] holds the
+  /// LEVEL-1 element ("G1", "G2" — or "ALL" when a requirement spans the
+  /// whole project) and [wbsElementIds] holds the LEVEL-2 elements under it
+  /// ("G2.1", "G2.4"…). This mirrors how milestones are tied to goals, and
+  /// is the linkage the contract / procurement / schedule sections read.
+  String wbsGoalId;
+  List<String> wbsElementIds;
+
   RequirementItem({
     this.id = '',
     this.description = '',
@@ -2237,7 +2245,9 @@ class RequirementItem {
     this.phase = '',
     this.requirementSource = '',
     this.comments = '',
-  });
+    this.wbsGoalId = '',
+    List<String>? wbsElementIds,
+  }) : wbsElementIds = wbsElementIds ?? [];
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -2249,12 +2259,21 @@ class RequirementItem {
         'phase': phase,
         'requirementSource': requirementSource,
         'comments': comments,
+        'wbsGoalId': wbsGoalId,
+        'wbsElementIds': wbsElementIds,
       };
 
   factory RequirementItem.fromJson(Map<String, dynamic> json) {
     return RequirementItem(
       id: json['id']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
+      wbsGoalId: json['wbsGoalId']?.toString() ??
+          json['wbs_goal_id']?.toString() ??
+          '',
+      wbsElementIds: (json['wbsElementIds'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
       requirementType: json['requirementType']?.toString() ??
           json['requirement_type']?.toString() ??
           '',

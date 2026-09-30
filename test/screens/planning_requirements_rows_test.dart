@@ -34,6 +34,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/planning_requirements_screen.dart';
+import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 
 // Printed by the framework if the table lays out with unbounded width.
 const String _unboundedFlex =
@@ -61,8 +62,13 @@ Future<void> _pumpWithRows(WidgetTester tester) async {
   await tester.pumpWidget(
     ProjectDataInherited(
       provider: provider,
-      child: ChangeNotifierProvider<ProjectDataProvider>.value(
-        value: provider,
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ProjectDataProvider>.value(value: provider),
+          // The requirement rows' WBS goal/element pickers (Lusaka 28) read
+          // the WBS tree.
+          ChangeNotifierProvider<WBSProvider>.value(value: WBSProvider()),
+        ],
         child: const MaterialApp(home: PlanningRequirementsScreen()),
       ),
     ),

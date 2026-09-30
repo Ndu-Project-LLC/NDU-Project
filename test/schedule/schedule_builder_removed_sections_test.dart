@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
+import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/screens/builder_screen.dart';
 import 'package:ndu_project/schedule/screens/gantt_screen.dart';
@@ -19,6 +20,18 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  // BuilderScreen and ListViewScreen read the project data (FEP milestones)
+  // for the Lusaka 28 date-mismatch warnings, so the harness must supply the
+  // provider. The default empty model is enough — calling updateProjectData
+  // would schedule a debounced Firebase autosave that keeps a timer pending
+  // at teardown.
+  Widget withProjectData(Widget child) {
+    return ChangeNotifierProvider<ProjectDataProvider>.value(
+      value: ProjectDataProvider(),
+      child: child,
+    );
+  }
+
   Future<void> pumpBuilder(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1600, 1000);
     tester.view.devicePixelRatio = 1.0;
@@ -28,16 +41,18 @@ void main() {
       ..setup(projectName: 'Test Project', deliveryModel: 'WATERFALL');
 
     await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<ScheduleProvider>.value(
-              value: scheduleProvider),
-          ChangeNotifierProvider<WBSProvider>.value(value: WBSProvider()),
-          ChangeNotifierProvider<CostEstimateProvider>.value(
-              value: CostEstimateProvider()),
-        ],
-        child: const MaterialApp(
-          home: Scaffold(body: BuilderScreen()),
+      withProjectData(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ScheduleProvider>.value(
+                value: scheduleProvider),
+            ChangeNotifierProvider<WBSProvider>.value(value: WBSProvider()),
+            ChangeNotifierProvider<CostEstimateProvider>.value(
+                value: CostEstimateProvider()),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(body: BuilderScreen()),
+          ),
         ),
       ),
     );
@@ -100,10 +115,12 @@ void main() {
       ..setup(projectName: 'Test Project', deliveryModel: 'WATERFALL');
 
     await tester.pumpWidget(
-      ChangeNotifierProvider<ScheduleProvider>.value(
-        value: scheduleProvider,
-        child: const MaterialApp(
-          home: Scaffold(body: GanttScreen()),
+      withProjectData(
+        ChangeNotifierProvider<ScheduleProvider>.value(
+          value: scheduleProvider,
+          child: const MaterialApp(
+            home: Scaffold(body: GanttScreen()),
+          ),
         ),
       ),
     );
@@ -124,10 +141,12 @@ void main() {
       ..setup(projectName: 'Test Project', deliveryModel: 'WATERFALL');
 
     await tester.pumpWidget(
-      ChangeNotifierProvider<ScheduleProvider>.value(
-        value: scheduleProvider,
-        child: const MaterialApp(
-          home: Scaffold(body: ListViewScreen()),
+      withProjectData(
+        ChangeNotifierProvider<ScheduleProvider>.value(
+          value: scheduleProvider,
+          child: const MaterialApp(
+            home: Scaffold(body: ListViewScreen()),
+          ),
         ),
       ),
     );

@@ -1651,7 +1651,7 @@ parentheses to disambiguate.''';
         if (e.frequency.isNotEmpty) {
           plansBuffer.writeln('   Frequency: ${e.frequency}');
         }
-        if (e.owner.isNotEmpty) plansBuffer.writeln('   Owner: ${e.owner}');
+        if (e.owner.isNotEmpty) plansBuffer.writeln('   Relationship owner: ${e.owner}');
         if (e.status.isNotEmpty) plansBuffer.writeln('   Status: ${e.status}');
         if (e.q1Plan.isNotEmpty ||
             e.q2Plan.isNotEmpty ||
@@ -3126,14 +3126,14 @@ class _StakeholdersTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final columns = [
       const _TableColumnDef('#', 56),
-      const _TableColumnDef('Stakeholder', 240),
+      const _TableColumnDef('Contact person', 240),
       const _TableColumnDef('Organization', 160),
       const _TableColumnDef('Role/Title', 180),
       const _TableColumnDef('Contact Info', 220),
       const _TableColumnDef('Influence', 130),
       const _TableColumnDef('Interest', 130),
       const _TableColumnDef('Channel', 150),
-      const _TableColumnDef('Owner', 160),
+      const _TableColumnDef('Relationship owner', 180),
       const _TableColumnDef('Notes', 260),
       const _TableColumnDef('Actions', 130),
     ];
@@ -3162,7 +3162,7 @@ class _StakeholdersTable extends StatelessWidget {
               _TextCell(
                 value: entries[index].name,
                 fieldKey: '${entries[index].id}_name',
-                hintText: 'Name',
+                hintText: 'Contact person’s name',
                 onChanged: (value) =>
                     onChanged(entries[index].copyWith(name: value)),
               ),
@@ -3211,7 +3211,7 @@ class _StakeholdersTable extends StatelessWidget {
               _TextCell(
                 value: entries[index].owner,
                 fieldKey: '${entries[index].id}_owner',
-                hintText: 'Owner',
+                hintText: 'Relationship owner',
                 onChanged: (value) =>
                     onChanged(entries[index].copyWith(owner: value)),
               ),
@@ -3627,7 +3627,7 @@ class _MappingRowActions extends StatelessWidget {
                   TextField(
                     controller: nameController,
                     decoration: const InputDecoration(
-                      labelText: 'Stakeholder Name',
+                      labelText: 'Contact person’s name',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -3806,7 +3806,7 @@ class _EngagementPlansTableState extends State<_EngagementPlansTable> {
       const _TableColumnDef('Objective', 240),
       const _TableColumnDef('Method', 160),
       const _TableColumnDef('Frequency', 140),
-      const _TableColumnDef('Owner', 150),
+      const _TableColumnDef('Relationship owner', 180),
       const _TableColumnDef('Status', 130),
       const _TableColumnDef('Next Touchpoint', 160),
       const _TableColumnDef('Notes', 220),
@@ -3927,7 +3927,7 @@ class _EngagementPlanRow extends StatelessWidget {
             _TextCell(
               value: entry.owner,
               fieldKey: '${entry.id}_owner',
-              hintText: 'Owner',
+              hintText: 'Relationship owner',
               onChanged: (value) => onChanged(entry.copyWith(owner: value)),
             ),
             _DropdownCell(
@@ -4830,7 +4830,7 @@ class _RowActions extends StatelessWidget {
                   TextField(
                     controller: nameController,
                     decoration: const InputDecoration(
-                      labelText: 'Stakeholder Name',
+                      labelText: 'Contact person’s name',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -4906,7 +4906,8 @@ class _RowActions extends StatelessWidget {
                   TextField(
                     controller: ownerController,
                     decoration: const InputDecoration(
-                      labelText: 'Owner',
+                      labelText: 'Relationship owner',
+                      helperText: 'Team member responsible for stakeholder engagement',
                       border: OutlineInputBorder(),
                     ),
                   ),

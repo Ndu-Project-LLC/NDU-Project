@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
 import 'package:ndu_project/openai/openai_config.dart';
+import 'package:ndu_project/providers/display_preferences_provider.dart';
 import 'package:ndu_project/services/ai/local_ai_client.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,7 +34,11 @@ class KazAiChatBubble extends StatefulWidget {
   final bool positioned;
 
   /// Public static method to open the KAZ AI chat dialog from anywhere.
+  ///
+  /// No-op when the KAZ AI preference is disabled (Settings → Display &
+  /// Accessibility → KAZ AI).
   static void openChat(BuildContext context) {
+    if (!kazAiEnabledFor(context, listen: false)) return;
     showGeneralDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.15),
@@ -98,6 +103,10 @@ class _KazAiChatBubbleState extends State<KazAiChatBubble>
 
   @override
   Widget build(BuildContext context) {
+    // The Settings → Display & Accessibility → KAZ AI toggle hides the chat
+    // bubble app-wide. Watching the provider here means every bubble instance
+    // (and there is one per screen) reacts immediately to the change.
+    if (!kazAiEnabledFor(context)) return const SizedBox.shrink();
     final bubble = AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {

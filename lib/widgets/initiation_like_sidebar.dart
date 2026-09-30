@@ -3010,10 +3010,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         _buildSubMenuItem('Schedule',
             onTap: _openSchedule,
             isActive: _isActiveLabel('Schedule')),
-        _buildSubMenuItem('Integration Dashboard',
-            onTap: _openIntegrationDashboard,
-            isActive:
-                _isActiveLabel('Integration Dashboard')),
         _buildSubExpandableHeader(
           'Cost Estimate',
           expanded: _costEstimateExpanded,
@@ -3028,6 +3024,13 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               onTap: _openCostEstimate,
               isActive: _isActiveLabel('Cost Estimate')),
         ],
+        // Integration Dashboard — moved below the Cost Estimate (Lusaka 28):
+        // after Schedule you go straight to Cost; the dashboard is a unified
+        // wrap-up view, not a step in the build-the-schedule flow.
+        _buildSubMenuItem('Integration Dashboard',
+            onTap: _openIntegrationDashboard,
+            isActive:
+                _isActiveLabel('Integration Dashboard')),
         _buildSubExpandableHeader(
           'Project Services',
           expanded: _projectServicesExpanded,

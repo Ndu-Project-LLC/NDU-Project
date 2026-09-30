@@ -6,8 +6,84 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 
-class GanttScreen extends StatelessWidget {
+/// Timeline zoom levels for the Gantt (Lusaka 28): the schedule has to be
+/// able to show the WHOLE project (16 months, years) and then zoom in to the
+/// working level (week / month / quarter) as you build each element.
+enum _GanttScale {
+  week('Week', 7),
+  month('Month', 30),
+  quarter('Quarter', 91),
+  year('Year', 365);
+
+  const _GanttScale(this.label, this.days);
+
+  final String label;
+  final int days;
+
+  /// Pixel width of one scale-unit cell on the timeline.
+  double get cellWidth => switch (this) {
+        _GanttScale.week => 56.0,
+        _GanttScale.month => 96.0,
+        _GanttScale.quarter => 120.0,
+        _GanttScale.year => 160.0,
+      };
+
+  String labelFor(DateTime date) => switch (this) {
+        _GanttScale.week =>
+          '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}',
+        _GanttScale.month => _monthAbbrs[date.month - 1],
+        _GanttScale.quarter => 'Q${((date.month - 1) ~/ 3) + 1} ${date.year % 100}',
+        _GanttScale.year => date.year.toString(),
+      };
+
+  DateTime next(DateTime date) => switch (this) {
+        _GanttScale.week => date.add(const Duration(days: 7)),
+        _GanttScale.month => DateTime(date.year, date.month + 1, 1),
+        _GanttScale.quarter => DateTime(date.year, date.month + 3, 1),
+        _GanttScale.year => DateTime(date.year + 1, 1, 1),
+      };
+
+  /// Days remaining in the cell containing [date].
+  int cellDaysLeft(DateTime date) => switch (this) {
+        _GanttScale.week =>
+          7 - ((date.weekday - DateTime.monday) % 7),
+        _GanttScale.month =>
+          DateTime(date.year, date.month + 1, 1)
+              .difference(DateTime(date.year, date.month, 1))
+              .inDays -
+              date.day +
+              1,
+        _GanttScale.quarter =>
+          DateTime(date.year, ((date.month - 1) ~/ 3) * 3 + 4, 1)
+              .difference(DateTime(date.year, date.month, 1))
+              .inDays -
+              date.day +
+              1,
+        _GanttScale.year =>
+          DateTime(date.year + 1, 1, 1)
+              .difference(DateTime(date.year, 1, 1))
+              .inDays -
+              date.day +
+              1,
+      };
+
+  static const _monthAbbrs = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+}
+
+class GanttScreen extends StatefulWidget {
   const GanttScreen({super.key});
+
+  @override
+  State<GanttScreen> createState() => _GanttScreenState();
+}
+
+class _GanttScreenState extends State<GanttScreen> {
+  /// Current timeline zoom. Week keeps the legacy default; a 16-month project
+  /// should still be viewable whole (quarter / year) per Lusaka 28.
+  _GanttScale _scale = _GanttScale.week;
 
   @override
   Widget build(BuildContext context) {
@@ -73,16 +149,30 @@ class GanttScreen extends StatelessWidget {
         final maxEndDate =
             rows.map((r) => r.endDate).reduce((a, b) => a.isAfter(b) ? a : b);
 
-        final totalDays = maxEndDate.difference(baseDate).inDays + 1;
-        final weekCount = (totalDays / 7).ceil().clamp(1, 52);
-        const cellWidth = 56.0;
-
-        final weekLabels = List<String>.generate(weekCount, (i) {
-          final start = baseDate.add(Duration(days: i * 7));
-          return '${start.month.toString().padLeft(2, '0')}/${start.day.toString().padLeft(2, '0')}';
-        });
+        // Walk the timeline in scale-sized cells from the base date until it
+        // covers the last finish. A 16-month project at Year zoom renders 2
+        // cells; at Week zoom it renders ~70 — same data, chosen altitude.
+        final cellLabels = <String>[];
+        final cellStarts = <DateTime>[];
+        var cursor = DateTime(baseDate.year, baseDate.month, baseDate.day);
+        final cellWidth = _scale.cellWidth;
+        while (cellStarts.isEmpty ||
+            cursor.isBefore(maxEndDate.add(Duration(days: _scale.days))) ) {
+          cellLabels.add(_scale.labelFor(cursor));
+          cellStarts.add(cursor);
+          cursor = _scale.next(cursor);
+          if (cellStarts.length > 400) break; // safety valve
+        }
+        final cellCount = cellStarts.length;
+        final timelineStart = cellStarts.first;
 
         final criticalCount = rows.where((r) => r.isCritical).length;
+        final milestoneCount = rows.where((r) => r.isMilestone).length;
+        final goalCount = rows
+            .map((r) => r.goalKey)
+            .where((g) => g.isNotEmpty)
+            .toSet()
+            .length;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -102,11 +192,27 @@ class GanttScreen extends StatelessWidget {
                             fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis),
                   ),
+                  const Spacer(),
+                  // Zoom selector (Lusaka 28): week / month / quarter / year.
+                  SegmentedButton<_GanttScale>(
+                    segments: _GanttScale.values
+                        .map((s) => ButtonSegment(
+                              value: s,
+                              label: Text(s.label,
+                                  style: const TextStyle(fontSize: 12)),
+                            ))
+                        .toList(),
+                    selected: {_scale},
+                    showSelectedIcon: false,
+                    onSelectionChanged: (selection) {
+                      setState(() => _scale = selection.first);
+                    },
+                  ),
                 ],
               ),
               const SizedBox(height: 4),
               Text(
-                '$totalCount activities · $criticalCount on critical path · $weekCount-week view',
+                '$totalCount activities · $criticalCount on critical path · $milestoneCount milestones · $cellCount ${_scale.label.toLowerCase()} view',
                 style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
               ),
               const SizedBox(height: 16),
@@ -180,15 +286,16 @@ class GanttScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _GanttHeaderRow(
-                            weekLabels: weekLabels,
+                            cellLabels: cellLabels,
                             leftColWidth: 280,
                             cellWidth: cellWidth),
                         const Divider(
                             color: Color(0xFFE4E7EC), height: 1, thickness: 1),
                         ...rows.map((r) => _GanttRow(
                               row: r,
-                              baseDate: baseDate,
-                              weekCount: weekCount,
+                              timelineStart: timelineStart,
+                              cellStarts: cellStarts,
+                              scale: _scale,
                               cellWidth: cellWidth,
                               leftColWidth: 280,
                             )),
@@ -216,6 +323,8 @@ class GanttScreen extends StatelessWidget {
                       child: Text(
                         '${rows.length} activities displayed. '
                         '$criticalCount on critical path. '
+                        '$milestoneCount milestones shown as diamonds. '
+                        '${goalCount > 0 ? 'Color-coded by $goalCount goal(s). ' : ''}'
                         '${unscheduledCount > 0 ? "$unscheduledCount work package${unscheduledCount == 1 ? ' has' : 's have'} no dates yet and cannot be placed on the timeline — " : ''}'
                         'Use "Run CPM" in the Builder tab to recompute dates and critical path.',
                         style: const TextStyle(
@@ -305,6 +414,8 @@ class GanttScreen extends StatelessWidget {
         name: a.name,
         domainColor: a.domain.color,
         isCritical: a.isCriticalPath,
+        isMilestone: a.type == ActivityType.milestone,
+        goalKey: _goalKeyOf(a),
         startDate: start,
         endDate: finish,
         sprintLabel: a.sprintLabel ?? '',
@@ -339,15 +450,64 @@ class GanttScreen extends StatelessWidget {
     rows.sort((a, b) => a.startDate.compareTo(b.startDate));
     return (rows: rows, unscheduled: unscheduled, total: total);
   }
+
+  /// The goal (top-level WBS element, e.g. G1 / G2) an activity rolls up to.
+  ///
+  /// Lusaka 28: "everything under goal one might all be this specific color,
+  /// anything that fits goal two, goal three…" — color coding by goal makes
+  /// misplaced items visually obvious. Derived from the G-prefixed WBS code
+  /// (G1.2.3 → G1); activities without a WBS code fall back to their domain.
+  String _goalKeyOf(ScheduleActivity a) {
+    var node = a;
+    String? code;
+    // Prefer the activity's own WBS code; parents are materialised in the
+    // tree, so walking up covers summary-level placements.
+    while (code == null || code.isEmpty) {
+      final c = node.wbsCode?.trim() ?? '';
+      if (c.isNotEmpty) {
+        code = c;
+        break;
+      }
+      if (node.wbsNodeId != null && node.wbsNodeId!.trim().isNotEmpty) {
+        code = node.wbsCode ?? '';
+        break;
+      }
+      break;
+    }
+    if (code != null && code.isNotEmpty) {
+      final topLevel = code.split('.').first.trim();
+      if (topLevel.isNotEmpty) return topLevel;
+    }
+    return '';
+  }
+
+  /// Deterministic bar color per goal key (G1 → color 0, G2 → color 1, …).
+  /// Activities outside any goal keep their domain color.
+  static const List<int> _goalPalette = [
+    0xFF6366F1, // indigo
+    0xFF0EA5E9, // sky
+    0xFF10B981, // emerald
+    0xFFF97316, // orange
+    0xFFEC4899, // pink
+    0xFF8B5CF6, // violet
+    0xFF14B8A6, // teal
+    0xFFEF4444, // red
+  ];
+
+  static Color colorForGoal(String goalKey, int domainColor) {
+    if (goalKey.isEmpty) return Color(domainColor);
+    final idx = goalKey.hashCode.abs() % _goalPalette.length;
+    return Color(_goalPalette[idx]);
+  }
 }
 
 class _GanttHeaderRow extends StatelessWidget {
-  final List<String> weekLabels;
+  final List<String> cellLabels;
   final double leftColWidth;
   final double cellWidth;
 
   const _GanttHeaderRow({
-    required this.weekLabels,
+    required this.cellLabels,
     required this.leftColWidth,
     required this.cellWidth,
   });
@@ -371,7 +531,7 @@ class _GanttHeaderRow extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5)),
         ),
-        ...weekLabels.map((label) => Container(
+        ...cellLabels.map((label) => Container(
               width: cellWidth,
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: const BoxDecoration(
@@ -393,15 +553,17 @@ class _GanttHeaderRow extends StatelessWidget {
 
 class _GanttRow extends StatelessWidget {
   final _GanttRowData row;
-  final DateTime baseDate;
-  final int weekCount;
+  final DateTime timelineStart;
+  final List<DateTime> cellStarts;
+  final _GanttScale scale;
   final double cellWidth;
   final double leftColWidth;
 
   const _GanttRow({
     required this.row,
-    required this.baseDate,
-    required this.weekCount,
+    required this.timelineStart,
+    required this.cellStarts,
+    required this.scale,
     required this.cellWidth,
     required this.leftColWidth,
   });
@@ -446,13 +608,15 @@ class _GanttRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final daysSinceBase = row.startDate.difference(baseDate).inDays;
-    final durationDays = row.endDate.difference(row.startDate).inDays + 1;
-    final pxPerDay = cellWidth / 7;
-
-    final barLeft = daysSinceBase * pxPerDay;
-    final barWidth = durationDays * pxPerDay;
-    final timelineWidth = weekCount * cellWidth;
+    // Scale-aware placement: interpolate pixel offsets directly from dates
+    // across the visible timeline.
+    final pxPerDay = cellWidth / scale.days;
+    final barLeft = row.startDate.difference(timelineStart).inDays * pxPerDay;
+    final barRight =
+        (row.endDate.difference(timelineStart).inDays + 1) * pxPerDay;
+    final barWidth = (barRight - barLeft).clamp(cellWidth / scale.days, double.infinity);
+    final timelineWidth = cellStarts.length * cellWidth;
+    final isMilestone = row.isMilestone;
 
     return Column(
       children: [
@@ -531,7 +695,7 @@ class _GanttRow extends StatelessWidget {
               color: Colors.white,
               child: Stack(
                 children: [
-                  ...List.generate(weekCount + 1, (i) {
+                  ...List.generate(cellStarts.length + 1, (i) {
                     return Positioned(
                       left: i * cellWidth,
                       top: 0,
@@ -542,46 +706,89 @@ class _GanttRow extends StatelessWidget {
                       ),
                     );
                   }),
-                  Positioned(
-                    left: barLeft + 2,
-                    top: 8,
-                    bottom: 8,
-                    width: barWidth - 4,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: row.isCritical
-                            ? Color(row.domainColor).withValues(alpha: 0.85)
-                            : Color(row.domainColor).withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: row.isCritical
-                              ? LightModeColors.accent
-                              : Color(row.domainColor),
-                          width: row.isCritical ? 1.5 : 0,
+                  if (isMilestone)
+                    // Milestones render as diamonds (Lusaka 28): they have to
+                    // be visually distinct from work bars so the crew can see
+                    // what the schedule is being built around.
+                    Positioned(
+                      left: barLeft - 7,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: Tooltip(
+                          message:
+                              '${row.name} — ${row.endDate.month}/${row.endDate.day}/${row.endDate.year}',
+                          child: Transform.rotate(
+                            angle: 3.14159 / 4,
+                            child: Container(
+                              width: 14,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                color: _GanttScreenState.colorForGoal(
+                                    row.goalKey, row.domainColor),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.25),
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            '${durationDays}d',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.4),
-                                  blurRadius: 2,
-                                ),
-                              ],
+                    )
+                  else
+                    Positioned(
+                      left: barLeft + 2,
+                      top: 8,
+                      bottom: 8,
+                      width: (barWidth - 4).clamp(4.0, double.infinity),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          // Lusaka 28: color-code by GOAL (top-level WBS
+                          // element) so everything under G1 reads as one
+                          // family, G2 another, etc. Activities without a WBS
+                          // link keep their domain color.
+                          color: _GanttScreenState
+                              .colorForGoal(row.goalKey, row.domainColor)
+                              .withValues(alpha: row.isCritical ? 0.85 : 0.6),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: row.isCritical
+                                ? LightModeColors.accent
+                                : Color(row.domainColor),
+                            width: row.isCritical ? 1.5 : 0,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '${row.endDate.difference(row.startDate).inDays + 1}d',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                shadows: [
+                                  Shadow(
+                                    color:
+                                        Colors.black.withValues(alpha: 0.4),
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -599,6 +806,8 @@ class _GanttRowData {
   final String name;
   final int domainColor;
   final bool isCritical;
+  final bool isMilestone;
+  final String goalKey;
   final DateTime startDate;
   final DateTime endDate;
   final String sprintLabel;
@@ -616,6 +825,8 @@ class _GanttRowData {
     required this.isCritical,
     required this.startDate,
     required this.endDate,
+    this.isMilestone = false,
+    this.goalKey = '',
     this.sprintLabel = '',
     this.releaseLabel = '',
     this.agileEpicTitle = '',

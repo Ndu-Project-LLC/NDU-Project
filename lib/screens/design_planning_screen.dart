@@ -18,6 +18,7 @@ import 'package:ndu_project/utils/design_planning_document.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/architecture_whiteboard.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
@@ -2577,7 +2578,8 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
       sectionKey: _sectionKeys['overview']!,
       title: 'Project Overview',
       subtitle:
-          'Capture the design basis, objectives, success criteria, and the planning boundary for the whole design effort.',
+          'Review the project context carried from initiation and planning. '
+          'Success criteria and scope remain in their original project sections.',
       accent: _kPrimary,
       child: Column(
         children: [
@@ -2600,38 +2602,12 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
             onChanged: (_) => _queueSave(),
           ),
           const SizedBox(height: 14),
-          _ResponsivePair(
-            left: _TextAreaField(
-              controller: _objectivesController,
-              label: 'Objectives',
-              hintText: 'One item per line',
-              minLines: 5,
-              onChanged: (_) => _queueSave(),
-            ),
-            right: _TextAreaField(
-              controller: _successCriteriaController,
-              label: 'Success criteria',
-              hintText: 'One item per line',
-              minLines: 5,
-              onChanged: (_) => _queueSave(),
-            ),
-          ),
-          const SizedBox(height: 14),
-          _ResponsivePair(
-            left: _TextAreaField(
-              controller: _scopeController,
-              label: 'In scope',
-              hintText: 'One item per line',
-              minLines: 4,
-              onChanged: (_) => _queueSave(),
-            ),
-            right: _TextAreaField(
-              controller: _outOfScopeController,
-              label: 'Out of scope',
-              hintText: 'One item per line',
-              minLines: 4,
-              onChanged: (_) => _queueSave(),
-            ),
+          _TextAreaField(
+            controller: _objectivesController,
+            label: 'Objectives',
+            hintText: 'Carried from project objectives and planning goals',
+            minLines: 5,
+            onChanged: (_) => _queueSave(),
           ),
         ],
       ),
@@ -2800,6 +2776,15 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
           // now says what one is before showing numbered cards.
           const _ArchitectureModuleExplainer(),
           const SizedBox(height: 14),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: _showArchitectureWhiteboard,
+              icon: const Icon(Icons.schema_outlined),
+              label: const Text('Open architecture whiteboard'),
+            ),
+          ),
+          const SizedBox(height: 12),
           _SubHeader(
             title: 'Modules',
             actionLabel: 'Add module',
@@ -2864,7 +2849,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
               owners: owners,
               onChanged: _queueSave,
               onRemove: () {
-                setState(() => _document.modules.removeAt(i));
+                setState(() => _document.removeArchitectureModule(_document.modules[i].id));
                 _queueSave();
               },
             ),
@@ -2956,6 +2941,34 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
       if (!mounted) return;
       _showToast('Could not export specifications: $e');
     }
+  }
+
+  Future<void> _showArchitectureWhiteboard() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog.fullscreen(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Architecture whiteboard'),
+            leading: IconButton(
+              tooltip: 'Close whiteboard',
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(16),
+            child: ArchitectureWhiteboard(
+              document: _document,
+              onChanged: _queueSave,
+            ),
+          ),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    setState(() {});
+    if (_pendingSave) await _saveDocument();
   }
 
   /// Pop the architecture modules out as a single table.

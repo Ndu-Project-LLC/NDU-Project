@@ -6797,8 +6797,72 @@ class _TrendLinePainter extends CustomPainter {
 /// Quality Register tab — shows the Nonconformance (NCR) workflow and the
 /// Corrective Action log. Reads from QualityManagementData.correctiveActions
 /// (each CorrectiveActionEntry represents an NCR with its corrective action).
-class _QualityRegisterView extends StatelessWidget {
+class _QualityRegisterView extends StatefulWidget {
   const _QualityRegisterView();
+
+  @override
+  State<_QualityRegisterView> createState() => _QualityRegisterViewState();
+}
+
+class _QualityRegisterViewState extends State<_QualityRegisterView> {
+  Future<void> _editAction(CorrectiveActionEntry entry) async {
+    final result = await showDialog<CorrectiveActionEntry>(
+      context: context,
+      builder: (_) => _CorrectiveActionDialog(
+        ownerOptions: _ownerOptions(context), initialValue: entry),
+    );
+    if (!mounted || result == null) return;
+    await _updateQualityData(context, checkpoint: 'quality_management',
+      successMessage: 'Corrective action updated',
+      updater: (current) => current.copyWith(correctiveActions: [
+        for (final action in current.correctiveActions)
+          if (action.id == entry.id) result else action,
+      ]));
+  }
+
+  Future<void> _removeAction(CorrectiveActionEntry entry) async {
+    await _updateQualityData(context, checkpoint: 'quality_management',
+      successMessage: 'Corrective action removed',
+      updater: (current) => current.copyWith(correctiveActions:
+        current.correctiveActions.where((action) => action.id != entry.id).toList()));
+  }
+
+  Future<void> _editAudit(QualityAuditEntry entry) async {
+    final result = await showDialog<QualityAuditEntry>(
+      context: context,
+      builder: (_) => _QualityAuditDialog(
+        ownerOptions: _ownerOptions(context), initialValue: entry),
+    );
+    if (!mounted || result == null) return;
+    await _updateQualityData(context, checkpoint: 'quality_management',
+      successMessage: 'Audit result updated',
+      updater: (current) => current.copyWith(auditPlan: [
+        for (final audit in current.auditPlan)
+          if (audit.id == entry.id) result else audit,
+      ]));
+  }
+
+  Future<void> _removeAudit(QualityAuditEntry entry) async {
+    await _updateQualityData(context, checkpoint: 'quality_management',
+      successMessage: 'Audit entry removed',
+      updater: (current) => current.copyWith(auditPlan:
+        current.auditPlan.where((audit) => audit.id != entry.id).toList()));
+  }
+
+  Future<void> _createAction(QualityAuditEntry audit) async {
+    final result = await showDialog<CorrectiveActionEntry>(
+      context: context,
+      builder: (_) => _CorrectiveActionDialog(
+        ownerOptions: _ownerOptions(context),
+        initialValue: CorrectiveActionEntry.empty().copyWith(
+          auditEntryId: audit.id, title: 'Corrective action for ${audit.title}')),
+    );
+    if (!mounted || result == null) return;
+    await _updateQualityData(context, checkpoint: 'quality_management',
+      successMessage: 'Corrective action created',
+      updater: (current) => current.copyWith(correctiveActions:
+        [...current.correctiveActions, result]));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -6819,6 +6883,19 @@ class _QualityRegisterView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const _SectionHeader(
+          title: 'Quality Results',
+          subtitle: 'The same audit records used in QC Tracking: record pass/fail '
+              'outcomes here without entering them twice.',
+        ),
+        const SizedBox(height: 12),
+        _AuditPlanTable(
+          audits: qData.auditPlan,
+          onEdit: _editAudit,
+          onRemove: _removeAudit,
+          onCreateCorrectiveAction: _createAction,
+        ),
+        const SizedBox(height: 24),
         // Summary metric cards
         Wrap(
           spacing: 12,
@@ -6869,8 +6946,8 @@ class _QualityRegisterView extends StatelessWidget {
               else
                 _CorrectiveActionsTable(
                   actions: correctiveActions,
-                  onEdit: (_) {},
-                  onRemove: (_) {},
+                  onEdit: _editAction,
+                  onRemove: _removeAction,
                 ),
             ],
           ),

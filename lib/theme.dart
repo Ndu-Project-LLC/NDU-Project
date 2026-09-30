@@ -269,9 +269,9 @@ ThemeData get lightTheme => ThemeData(
         dividerThickness: 0.8,
         columnSpacing: 18,
         horizontalMargin: 14,
-        headingRowHeight: 52,
-        dataRowMinHeight: 60,
-        dataRowMaxHeight: 220,
+        headingRowHeight: 44,
+        dataRowMinHeight: 48,
+        dataRowMaxHeight: 120,
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
@@ -493,9 +493,9 @@ ThemeData get darkTheme => ThemeData(
         dividerThickness: 0.8,
         columnSpacing: 18,
         horizontalMargin: 14,
-        headingRowHeight: 52,
-        dataRowMinHeight: 60,
-        dataRowMaxHeight: 220,
+        headingRowHeight: 44,
+        dataRowMinHeight: 48,
+        dataRowMaxHeight: 120,
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(

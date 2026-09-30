@@ -53,6 +53,11 @@ class BuilderScreen extends StatefulWidget {
 }
 
 class _BuilderScreenState extends State<BuilderScreen> {
+  /// How the Activity Tree renders. Table is the DEFAULT (Lusaka 28 follow-up):
+  /// a compact, small-row table shows many more line items at once than the
+  /// card tree; the Cards view keeps the original tree for deep-nesting work.
+  bool _activityTreeAsTable = true;
+
   @override
   void initState() {
     super.initState();
@@ -591,9 +596,87 @@ class _BuilderScreenState extends State<BuilderScreen> {
               ),
               const SizedBox(height: 22),
               // ═══════════════════════════════════════════════════════════════
-              // ACTIVITY TREE (full width, scrollable on narrow screens)
+              // ACTIVITY TREE — compact table by default (Lusaka 28 follow-up);
+              // the card tree remains available via the view toggle.
               // ═══════════════════════════════════════════════════════════════
-              SizedBox(
+              Row(
+                children: [
+                  const Spacer(),
+                  SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(
+                        value: true,
+                        icon: Icon(Icons.table_rows_outlined, size: 14),
+                        label: Text('Table', style: TextStyle(fontSize: 12)),
+                      ),
+                      ButtonSegment(
+                        value: false,
+                        icon: Icon(Icons.account_tree_outlined, size: 14),
+                        label: Text('Cards', style: TextStyle(fontSize: 12)),
+                      ),
+                    ],
+                    selected: {_activityTreeAsTable},
+                    showSelectedIcon: false,
+                    style: SegmentedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    onSelectionChanged: (selection) {
+                      setState(() => _activityTreeAsTable = selection.first);
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              // Shared section header (title + counts) above both views.
+              Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: TreasuryTokens.brandSoft,
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(
+                          color: TreasuryTokens.brand.withValues(alpha: 0.3)),
+                    ),
+                    child: const Icon(Icons.account_tree_rounded,
+                        size: 16, color: TreasuryTokens.brandDeep),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text('Activity Tree',
+                      style: TextStyle(
+                          color: TreasuryTokens.ink,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.1)),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: TreasuryTokens.surfaceAlt,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: TreasuryTokens.hairline),
+                    ),
+                    child: Text(
+                        '${root.children.length} L1 · ${_countTotalActivities(root)} total',
+                        style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: TreasuryTokens.muted,
+                            letterSpacing: 0.3)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              if (_activityTreeAsTable)
+                _ActivityTreeTable(
+                  root: root,
+                  provider: provider,
+                  isLocked: schedule.isLocked,
+                )
+              else
+                SizedBox(
                 width: double.infinity,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -613,47 +696,6 @@ class _BuilderScreenState extends State<BuilderScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 30,
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  color: TreasuryTokens.brandSoft,
-                                  borderRadius: BorderRadius.circular(9),
-                                  border: Border.all(
-                                      color: TreasuryTokens.brand.withValues(alpha: 0.3)),
-                                ),
-                                child: const Icon(Icons.account_tree_rounded,
-                                    size: 16, color: TreasuryTokens.brandDeep),
-                              ),
-                              const SizedBox(width: 10),
-                              const Text('Activity Tree',
-                                  style: TextStyle(
-                                      color: TreasuryTokens.ink,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: -0.1)),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: TreasuryTokens.surfaceAlt,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: TreasuryTokens.hairline),
-                                ),
-                                child: Text(
-                                    '${root.children.length} L1 · ${_countTotalActivities(root)} total',
-                                    style: const TextStyle(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: TreasuryTokens.muted,
-                                        letterSpacing: 0.3)),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
                           _ActivityNode(
                               activity: root,
                               isRoot: true,
@@ -1617,6 +1659,24 @@ class _ActivityNode extends StatelessWidget {
   }
 
   void _showActivityEditDialog(BuildContext context) {
+    showActivityEditDialog(
+      context,
+      activity: activity,
+      provider: provider,
+      isLocked: isLocked,
+      isRoot: isRoot,
+    );
+  }
+
+  /// Row editor shared by the card tree and the compact table (Lusaka 28
+  /// follow-up). Static so both views open the identical dialog.
+  static void showActivityEditDialog(
+    BuildContext context, {
+    required ScheduleActivity activity,
+    required ScheduleProvider provider,
+    required bool isLocked,
+    bool isRoot = false,
+  }) {
     if (isRoot || isLocked) return;
     final deps = List<ActivityDependency>.from(activity.dependencies);
     var startDate = activity.startDate;
@@ -1760,6 +1820,21 @@ class _ActivityNode extends StatelessWidget {
     BuildContext context,
     CostLine? linkedLine,
   ) {
+    return buildCostActions(
+      context,
+      activity: activity,
+      provider: provider,
+      linkedLine: linkedLine,
+    );
+  }
+
+  /// Static variant used by both the card rows and the compact table rows.
+  static List<Widget> buildCostActions(
+    BuildContext context, {
+    required ScheduleActivity activity,
+    required ScheduleProvider provider,
+    required CostLine? linkedLine,
+  }) {
     final canAddNew = activity.children.isEmpty;
     if (linkedLine == null && !canAddNew) return const [];
 
@@ -1781,8 +1856,12 @@ class _ActivityNode extends StatelessWidget {
           size: 14,
           color: color,
         ),
-        onPressed: () =>
-            _openCostDialog(context, linkedLine),
+        onPressed: () => openCostDialog(
+          context,
+          activity: activity,
+          provider: provider,
+          linkedLine: linkedLine,
+        ),
         constraints: const BoxConstraints(),
         padding: const EdgeInsets.all(4),
       ),
@@ -1794,10 +1873,15 @@ class _ActivityNode extends StatelessWidget {
   /// from the activity name. After save/update the activity's `costLineId`
   /// is stamped so the Schedule ↔ Cost link is bidirectional and repeat
   /// pulls stay idempotent.
-  Future<void> _openCostDialog(
-    BuildContext context,
+  ///
+  /// Static so both the card rows and the compact table rows (Lusaka 28
+  /// follow-up) open the identical dialog.
+  static Future<void> openCostDialog(
+    BuildContext context, {
+    required ScheduleActivity activity,
+    required ScheduleProvider provider,
     CostLine? linkedLine,
-  ) async {
+  }) async {
     final savedId = await showDialog<String>(
       context: context,
       builder: (ctx) => AddLineDialog(
@@ -2123,8 +2207,7 @@ class _DrawingFromChip extends StatelessWidget {
         color: tintSoft,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: tint.withValues(alpha: 0.28)),
-      ),
-      child: Row(
+      ),      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: tint),
@@ -2158,4 +2241,386 @@ class _DrawingFromChip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Compact default table view of the Activity Tree (Lusaka 28 follow-up).
+///
+/// The card tree is readable but tall — one card per activity meant scrolling
+/// screen after screen on a synced schedule (89 L1 · 105 total in the review).
+/// This table keeps every column the cards carried (code, name, domain,
+/// duration, start, finish, cost status, actions) but with SMALL rows: ~30px,
+/// hairline dividers, no card chrome. Indentation preserves the tree
+/// structure and summary rows can expand/collapse their children.
+class _ActivityTreeTable extends StatefulWidget {
+  const _ActivityTreeTable({
+    required this.root,
+    required this.provider,
+    required this.isLocked,
+  });
+
+  final ScheduleActivity root;
+  final ScheduleProvider provider;
+  final bool isLocked;
+
+  @override
+  State<_ActivityTreeTable> createState() => _ActivityTreeTableState();
+}
+
+class _ActivityTreeTableState extends State<_ActivityTreeTable> {
+  static const double _indentWidth = 16;
+  static const double _rowHeight = 30;
+
+  final Set<String> _collapsed = <String>{};
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <_TreeRowSpec>[];
+
+    void visit(ScheduleActivity node, int depth) {
+      final isRoot = depth == 0;
+      final hasChildren = node.children.isNotEmpty;
+      final collapsed = _collapsed.contains(node.id);
+      rows.add(_TreeRowSpec(
+        activity: node,
+        depth: depth,
+        isRoot: isRoot,
+        hasChildren: hasChildren,
+        collapsed: collapsed,
+      ));
+      if (hasChildren && !collapsed) {
+        for (final child in node.children) {
+          visit(child, depth + 1);
+        }
+      }
+    }
+
+    visit(widget.root, 0);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: TreasuryTokens.hairline),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        // IntrinsicWidth + minWidth mirrors the card tree's bounded-width
+        // trick: inside the horizontal scroll view the incoming width is
+        // unbounded, and an Expanded in the header/name cells would throw
+        // "RenderFlex children have non-zero flex but incoming width
+        // constraints are unbounded". IntrinsicWidth converts that to a
+        // bounded width (max of minWidth and intrinsic content width).
+        child: IntrinsicWidth(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: MediaQuery.of(context).size.width - 40,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _headerRow(),
+                ...rows.map((spec) => _row(context, spec)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _headerRow() {
+    Widget cell(String text, double w, {bool right = false}) => SizedBox(
+          width: w,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: Text(
+              text,
+              textAlign: right ? TextAlign.right : TextAlign.left,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: TreasuryTokens.muted,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ),
+        );
+
+    return Container(
+      color: TreasuryTokens.surfaceAlt,
+      child: Row(
+        children: [
+          const SizedBox(width: 24), // expander gutter
+          cell('Code', 64),
+          Expanded(child: cell('Activity', 0)),
+          cell('Domain', 92),
+          cell('Duration', 66, right: true),
+          cell('Start', 74, right: true),
+          cell('Finish', 74, right: true),
+          cell('Cost', 78, right: true),
+          const SizedBox(width: 60), // actions gutter
+        ],
+      ),
+    );
+  }
+
+  Widget _row(BuildContext context, _TreeRowSpec spec) {
+    final a = spec.activity;
+    final domainColor = Color(a.domain.color);
+    final isMilestone = a.type == ActivityType.milestone;
+
+    // Linked cost line for the priced/unpriced badge.
+    CostLine? linkedCostLine;
+    final linkedCostId = (a.costLineId ?? '').trim();
+    if (linkedCostId.isNotEmpty) {
+      final estimate = context.watch<CostEstimateProvider>().estimate;
+      if (estimate != null) {
+        for (final line in estimate.lines) {
+          if (line.id == linkedCostId) {
+            linkedCostLine = line;
+            break;
+          }
+        }
+      }
+    }
+
+    final durationText =
+        formatDuration(a.duration, a.durationUnit);
+
+    return InkWell(
+      onTap: () => _ActivityNode.showActivityEditDialog(
+        context,
+        activity: a,
+        provider: widget.provider,
+        isLocked: widget.isLocked,
+        isRoot: spec.isRoot,
+      ),
+      child: Container(
+        height: _rowHeight,
+        decoration: BoxDecoration(
+          border: const Border(
+            bottom: BorderSide(color: TreasuryTokens.hairline, width: 0.5),
+          ),
+          color: spec.isRoot ? TreasuryTokens.surfaceAlt : null,
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 24 + spec.depth * _indentWidth,
+              child: spec.hasChildren
+                  ? InkWell(
+                      onTap: () => setState(() {
+                        _collapsed.contains(a.id)
+                            ? _collapsed.remove(a.id)
+                            : _collapsed.add(a.id);
+                      }),
+                      child: Icon(
+                        spec.collapsed
+                            ? Icons.keyboard_arrow_right
+                            : Icons.keyboard_arrow_down,
+                        size: 14,
+                        color: TreasuryTokens.muted,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            // Code
+            SizedBox(
+              width: 64,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  a.code,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontFamily: appFontFamily,
+                    fontWeight: FontWeight.w800,
+                    color: isMilestone
+                        ? LightModeColors.accent
+                        : TreasuryTokens.inkSoft,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+            // Name (with domain dot / milestone diamond)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Row(
+                  children: [
+                    if (isMilestone)
+                      Transform.rotate(
+                        angle: 3.14159 / 4,
+                        child: Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: domainColor,
+                            border: Border.all(
+                                color: Colors.white, width: 0.8),
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: domainColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        a.name,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: TreasuryTokens.ink,
+                          fontWeight: spec.isRoot
+                              ? FontWeight.w800
+                              : (a.type == ActivityType.summary
+                                  ? FontWeight.w700
+                                  : FontWeight.w500),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Domain
+            SizedBox(
+              width: 92,
+              child: Text(
+                a.domain.label,
+                style: const TextStyle(
+                    fontSize: 10, color: TreasuryTokens.inkSoft),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            // Duration
+            SizedBox(
+              width: 66,
+              child: Text(
+                durationText,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: TreasuryTokens.info,
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            // Start
+            SizedBox(
+              width: 74,
+              child: Text(
+                a.startDate != null
+                    ? DateFormat('MM/dd/yy').format(a.startDate!)
+                    : '—',
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Color(0xFF047857),
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            // Finish
+            SizedBox(
+              width: 74,
+              child: Text(
+                a.endDate != null
+                    ? DateFormat('MM/dd/yy').format(a.endDate!)
+                    : '—',
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Color(0xFFB45309),
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            // Cost status
+            SizedBox(
+              width: 78,
+              child: linkedCostLine == null
+                  ? const Text('—',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                          fontSize: 10, color: TreasuryTokens.muted))
+                  : Text(
+                      _ActivityNode.isPricedCostLine(linkedCostLine)
+                          ? '\$${_fmtCost(linkedCostLine.total)}'
+                          : 'not priced',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: _ActivityNode.isPricedCostLine(linkedCostLine)
+                            ? const Color(0xFF16A34A)
+                            : const Color(0xFFB45309),
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+            ),
+            // Actions
+            SizedBox(
+              width: 60,
+              child: spec.isRoot || widget.isLocked
+                  ? const SizedBox.shrink()
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ..._ActivityNode.buildCostActions(
+                          context,
+                          activity: a,
+                          provider: widget.provider,
+                          linkedLine: linkedCostLine,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline,
+                              size: 12, color: Color(0xFFB91C1C)),
+                          onPressed: () =>
+                              widget.provider.removeActivity(a.id),
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.all(2),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _fmtCost(double v) =>
+      v == v.roundToDouble() ? v.round().toString() : v.toStringAsFixed(2);
+}
+
+/// One visible row of [_ActivityTreeTable].
+class _TreeRowSpec {
+  const _TreeRowSpec({
+    required this.activity,
+    required this.depth,
+    required this.isRoot,
+    required this.hasChildren,
+    required this.collapsed,
+  });
+
+  final ScheduleActivity activity;
+  final int depth;
+  final bool isRoot;
+  final bool hasChildren;
+  final bool collapsed;
 }

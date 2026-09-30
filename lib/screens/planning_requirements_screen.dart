@@ -10,6 +10,7 @@ import 'package:ndu_project/services/project_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/screens/ssher_stacked_screen.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/charter_lock_helper.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
@@ -30,6 +31,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_check_dialogs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:provider/provider.dart';
 class PlanningRequirementsScreen extends StatefulWidget {
  const PlanningRequirementsScreen({super.key});
 
@@ -223,6 +225,10 @@ class _PlanningRequirementsScreenState
  _resolvePersonSelection(item.person, roleHint: item.role);
  row.selectedPhase = _normalizePhaseSelection(item.phase);
  row.sourceController.text = item.requirementSource;
+ row.selectedWbsGoal = item.wbsGoalId.trim().isEmpty
+ ? null
+ : item.wbsGoalId.trim();
+ row.selectedWbsElements = List<String>.from(item.wbsElementIds);
  return row;
  }).toList(),
  );
@@ -859,6 +865,8 @@ $requirementsList
  phase: row.selectedPhase ?? '',
  requirementSource: row.sourceController.text.trim(),
  comments: row.commentsController.text.trim(),
+ wbsGoalId: row.selectedWbsGoal ?? '',
+ wbsElementIds: List<String>.from(row.selectedWbsElements),
  ),
  )
  .where(
@@ -1453,20 +1461,24 @@ $requirementsList
     const borderColor = Color(0xFFE5E7EB);
     const bgHeader = Color(0xFFF9FAFB);
 
-    // Column widths matching the original table
+    // Column widths matching the original table. The WBS Goal / WBS Element
+    // columns (Lusaka 28) are inserted after Phase and narrow the two widest
+    // free-text columns so the table does not grow unbounded.
     const colW = <double>[
       64,   // 0: No + drag handle
-      612,  // 1: Requirement
+      520,  // 1: Requirement
       190,  // 2: Requirement type
       180,  // 3: Discipline
       190,  // 4: Role
       190,  // 5: Person
       150,  // 6: Phase
-      260,  // 7: Requirement source
-      468,  // 8: Comments & source links
-      56,   // 9: Delete
+      170,  // 7: WBS goal (level 1)
+      200,  // 8: WBS elements (level 2)
+      230,  // 9: Requirement source
+      380,  // 10: Comments & source links
+      56,   // 11: Delete
     ];
-    const totalWidth = 2360.0;
+    const totalWidth = 2520.0;
 
     // Helper to build a header cell
     Widget hCell(String text, double w) {
@@ -1670,9 +1682,45 @@ $requirementsList
                 ),
               ),
             ),
-            // Col 7: Requirement source
+            // Col 7: WBS goal (level 1) — Lusaka 28
             SizedBox(
               width: colW[7],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: _WbsGoalDropdown(
+                  value: row.selectedWbsGoal,
+                  enabled: !_isRequirementsLocked,
+                  onChanged: (value) {
+                    setState(() {
+                      row.selectedWbsGoal = value;
+                      // Elements live under the goal — reset them when the
+                      // goal changes so stale children cannot linger.
+                      row.selectedWbsElements = [];
+                    });
+                    _handleRequirementChanged();
+                  },
+                ),
+              ),
+            ),
+            // Col 8: WBS elements (level 2) — Lusaka 28
+            SizedBox(
+              width: colW[8],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: _WbsElementMultiSelect(
+                  goalId: row.selectedWbsGoal,
+                  selectedIds: row.selectedWbsElements,
+                  enabled: !_isRequirementsLocked,
+                  onChanged: (ids) {
+                    setState(() => row.selectedWbsElements = ids);
+                    _handleRequirementChanged();
+                  },
+                ),
+              ),
+            ),
+            // Col 9: Requirement source
+            SizedBox(
+              width: colW[9],
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: VoiceTextField(
@@ -1689,9 +1737,9 @@ $requirementsList
                 ),
               ),
             ),
-            // Col 8: Comments & source links
+            // Col 10: Comments & source links
             SizedBox(
-              width: colW[8],
+              width: colW[10],
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: VoiceTextField(
@@ -1709,9 +1757,9 @@ $requirementsList
                 ),
               ),
             ),
-            // Col 9: Delete
+            // Col 11: Delete
             SizedBox(
-              width: colW[9],
+              width: colW[11],
               child: Center(
                 child: IconButton(
                   icon: const Icon(Icons.delete_outline, size: 20, color: Color(0xFFEF4444)),
@@ -1775,9 +1823,11 @@ $requirementsList
                         hCell('Role', colW[4]),
                         hCell('Person', colW[5]),
                         hCell('Phase', colW[6]),
-                        hCell('Requirement source', colW[7]),
-                        hCell('Comments and Requirement Source Links', colW[8]),
-                        hCell('', colW[9]),
+                        hCell('WBS Goal (Level 1)', colW[7]),
+                        hCell('WBS Elements (Level 2)', colW[8]),
+                        hCell('Requirement source', colW[9]),
+                        hCell('Comments and Requirement Source Links', colW[10]),
+                        hCell('', colW[11]),
                       ],
                     ),
                   ),
@@ -1860,9 +1910,11 @@ $requirementsList
                         hCell('Role', colW[4]),
                         hCell('Person', colW[5]),
                         hCell('Phase', colW[6]),
-                        hCell('Requirement source', colW[7]),
-                        hCell('Comments and Requirement Source Links', colW[8]),
-                        hCell('', colW[9]),
+                        hCell('WBS Goal (Level 1)', colW[7]),
+                        hCell('WBS Elements (Level 2)', colW[8]),
+                        hCell('Requirement source', colW[9]),
+                        hCell('Comments and Requirement Source Links', colW[10]),
+                        hCell('', colW[11]),
                       ],
                     ),
                   ),
@@ -1957,6 +2009,8 @@ $requirementsList
     const CsvColumnSpec(key: 'role', label: 'Role', sampleValue: 'Requirements Lead'),
     const CsvColumnSpec(key: 'person', label: 'Person', sampleValue: 'John Doe'),
     const CsvColumnSpec(key: 'phase', label: 'Phase', allowedValues: _RequirementRow.phaseOptions, defaultValue: 'Planning', sampleValue: 'Planning'),
+    const CsvColumnSpec(key: 'wbsGoal', label: 'WBS Goal (Level 1)', sampleValue: 'G1'),
+    const CsvColumnSpec(key: 'wbsElements', label: 'WBS Elements (Level 2)', sampleValue: 'G1.1, G1.2'),
     const CsvColumnSpec(key: 'source', label: 'Source', sampleValue: 'Stakeholder interview'),
     const CsvColumnSpec(key: 'comments', label: 'Comments', sampleValue: 'High priority'),
   ];
@@ -2007,6 +2061,13 @@ $requirementsList
  newRow.personController.text = row['person'] ?? '';
  newRow.sourceController.text = row['source'] ?? '';
  newRow.commentsController.text = row['comments'] ?? '';
+ final csvGoal = (row['wbsGoal'] ?? '').trim();
+ newRow.selectedWbsGoal = csvGoal.isEmpty ? null : csvGoal;
+ newRow.selectedWbsElements = (row['wbsElements'] ?? '')
+     .split(',')
+     .map((e) => e.trim())
+     .where((e) => e.isNotEmpty)
+     .toList();
  _rows.add(newRow);
  }
  });
@@ -2222,6 +2283,13 @@ class _RequirementRow {
  String? selectedType;
  String? selectedDiscipline;
  String? selectedPhase = 'Planning';
+
+ /// Lusaka 28 — WBS mapping: level-1 goal ("G1" / "ALL") and the level-2
+ /// elements under it ("G2.1", "G2.4"…). Every requirement must be traceable
+ /// to the WBS so contract / procurement / schedule can read from it.
+ String? selectedWbsGoal;
+ List<String> selectedWbsElements = [];
+
  final VoidCallback? onChanged;
  String? aiUndoText;
 
@@ -2683,6 +2751,282 @@ class _MemberPickerDialogState extends State<_MemberPickerDialog> {
  child: const Text('Cancel'),
  ),
  ],
+ );
+ }
+}
+
+/// WBS Goal (Level 1) dropdown for the requirements table — Lusaka 28.
+///
+/// Options come from the live WBS tree (top-level codes G1, G2, …), plus an
+/// explicit "ALL — Entire project" choice for requirements that span every
+/// goal. Selecting a goal scopes the Level-2 element picker beside it.
+class _WbsGoalDropdown extends StatefulWidget {
+ const _WbsGoalDropdown({
+ this.value,
+ required this.onChanged,
+ this.enabled = true,
+ });
+
+ final String? value;
+ final ValueChanged<String?> onChanged;
+ final bool enabled;
+
+ @override
+ State<_WbsGoalDropdown> createState() => _WbsGoalDropdownState();
+}
+
+class _WbsGoalDropdownState extends State<_WbsGoalDropdown> {
+ @override
+ Widget build(BuildContext context) {
+ final wbs = context.watch<WBSProvider>().wbs;
+ final goalOptions = <String>[];
+ if (wbs != null) {
+ for (final child in wbs.level0.children) {
+ final code = child.code.trim();
+ if (code.isNotEmpty && !goalOptions.contains(code)) {
+ goalOptions.add(code);
+ }
+ }
+ }
+
+ String? coerced = widget.value;
+ if (coerced != null &&
+     coerced != 'ALL' &&
+     !goalOptions.contains(coerced)) {
+ coerced = null;
+ }
+
+ return Container(
+ height: 40,
+ padding: const EdgeInsets.symmetric(horizontal: 12),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(10),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: DropdownButtonHideUnderline(
+ child: DropdownButton<String>(
+ value: coerced,
+ hint: const Text(
+ 'Select goal…',
+ style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+ ),
+ icon: const Icon(
+ Icons.keyboard_arrow_down_rounded,
+ color: Color(0xFF6B7280),
+ size: 20,
+ ),
+ isExpanded: true,
+ onChanged: widget.enabled ? (value) => widget.onChanged(value) : null,
+ items: [
+ const DropdownMenuItem<String>(
+ value: 'ALL',
+ child: Text(
+ 'ALL — Entire project',
+ style: TextStyle(fontSize: 13),
+ overflow: TextOverflow.ellipsis,
+ ),
+ ),
+ for (final goal in goalOptions)
+ DropdownMenuItem<String>(
+ value: goal,
+ child: _goalLabel(context, goal),
+ ),
+ ],
+ ),
+ ),
+ );
+ }
+
+ Widget _goalLabel(BuildContext context, String goal) {
+ final wbs = context.watch<WBSProvider>().wbs;
+ String name = '';
+ if (wbs != null) {
+ for (final child in wbs.level0.children) {
+ if (child.code.trim() == goal) {
+ name = child.name.trim();
+ break;
+ }
+ }
+ }
+ return Text(
+ name.isEmpty ? goal : '$goal — $name',
+ style: const TextStyle(fontSize: 13),
+ overflow: TextOverflow.ellipsis,
+ );
+ }
+}
+
+/// WBS Elements (Level 2) multi-select for the requirements table — Lusaka 28.
+///
+/// Shows the Level-2 children of the selected goal (G2.1, G2.4, …). Supports
+/// multi-select because a requirement can impact several elements; saving the
+/// goal alone with no elements is also valid.
+class _WbsElementMultiSelect extends StatefulWidget {
+ const _WbsElementMultiSelect({
+ required this.goalId,
+ required this.selectedIds,
+ required this.onChanged,
+ this.enabled = true,
+ });
+
+ final String? goalId;
+ final List<String> selectedIds;
+ final ValueChanged<List<String>> onChanged;
+ final bool enabled;
+
+ @override
+ State<_WbsElementMultiSelect> createState() =>
+     _WbsElementMultiSelectState();
+}
+
+class _WbsElementMultiSelectState extends State<_WbsElementMultiSelect> {
+ Future<void> _openPicker() async {
+ final wbs = context.read<WBSProvider>().wbs;
+ final options = <(String, String)>[]; // (code, name)
+ if (wbs != null && (widget.goalId ?? '').isNotEmpty) {
+ for (final goal in wbs.level0.children) {
+ if (goal.code.trim() != widget.goalId) continue;
+ for (final element in goal.children) {
+ options.add((element.code.trim(), element.name.trim()));
+ }
+ break;
+ }
+ }
+ if (!mounted) return;
+ if (options.isEmpty) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Select a WBS goal first — its Level-2 elements will appear here.'),
+ duration: Duration(seconds: 2),
+ ),
+ );
+ return;
+ }
+
+ final result = await showDialog<List<String>>(
+ context: context,
+ builder: (dialogContext) {
+ final draft = List<String>.from(widget.selectedIds);
+ return StatefulBuilder(
+ builder: (context, setDialogState) => AlertDialog(
+ title: Text('WBS Elements under ${widget.goalId}'),
+ content: SizedBox(
+ width: 420,
+ child: SingleChildScrollView(
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ CheckboxListTile(
+ dense: true,
+ controlAffinity: ListTileControlAffinity.leading,
+ value: options.isNotEmpty &&
+ options.every((o) => draft.contains(o.$1)),
+ onChanged: (checked) {
+ setDialogState(() {
+ if (checked == true) {
+ draft
+   ..clear()
+   ..addAll(options.map((o) => o.$1));
+ } else {
+ draft.clear();
+ }
+ });
+ },
+ title: const Text('Select all',
+ style: TextStyle(fontWeight: FontWeight.w600)),
+ ),
+ ...options.map(
+ (o) => CheckboxListTile(
+ dense: true,
+ controlAffinity: ListTileControlAffinity.leading,
+ value: draft.contains(o.$1),
+ title: Text(
+ o.$2.isEmpty ? o.$1 : '${o.$1} — ${o.$2}',
+ style: const TextStyle(fontSize: 13),
+ ),
+ onChanged: (checked) {
+ setDialogState(() {
+ if (checked == true) {
+ draft.add(o.$1);
+ } else {
+ draft.remove(o.$1);
+ }
+ });
+ },
+ ),
+ ),
+ ],
+ ),
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.pop(dialogContext, null),
+ child: const Text('Cancel'),
+ ),
+ FilledButton(
+ onPressed: () => Navigator.pop(dialogContext, draft),
+ child: const Text('Done'),
+ ),
+ ],
+ ),
+ );
+ },
+ );
+
+ if (result != null) {
+ widget.onChanged(result);
+ }
+ }
+
+ @override
+ Widget build(BuildContext context) {
+ final label = widget.selectedIds.isEmpty
+ ? 'Select elements…'
+ : widget.selectedIds.join(', ');
+ final hasSelection = widget.selectedIds.isNotEmpty;
+
+ return InkWell(
+ onTap: widget.enabled ? _openPicker : null,
+ borderRadius: BorderRadius.circular(10),
+ child: Container(
+ height: 40,
+ padding: const EdgeInsets.symmetric(horizontal: 12),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(10),
+ border: Border.all(
+ color: hasSelection
+ ? const Color(0xFFFCD34D)
+ : const Color(0xFFE5E7EB),
+ ),
+ ),
+ child: Row(
+ children: [
+ Expanded(
+ child: Text(
+ label,
+ style: TextStyle(
+ fontSize: 13,
+ color: hasSelection
+ ? const Color(0xFF111827)
+ : const Color(0xFF9CA3AF),
+ ),
+ overflow: TextOverflow.ellipsis,
+ maxLines: 1,
+ ),
+ ),
+ const Icon(
+ Icons.keyboard_arrow_down_rounded,
+ color: Color(0xFF6B7280),
+ size: 20,
+ ),
+ ],
+ ),
+ ),
  );
  }
 }

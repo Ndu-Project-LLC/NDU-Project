@@ -157,8 +157,9 @@ void main() {
     expect(find.text('Schedule Navigation'), findsNothing);
 
     // The pinned bar keeps the module + active tab available however deep the
-    // user is (the Builder tab paints its own 'Schedule' heading too, so
-    // scope to the pinned bar's SliverAppBar).
+    // user is (the List View tab paints its own 'Schedule' heading too, so
+    // scope to the pinned bar's SliverAppBar). List View is the default tab
+    // (Lusaka 28), so the pinned bar shows it as the active section.
     expect(
       find.descendant(
         of: find.byType(SliverAppBar),
@@ -166,7 +167,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Builder'), findsOneWidget);
+    expect(find.text('List View'), findsWidgets);
 
     // …and tapping it brings the header stack back.
     await tester.tap(find.byTooltip('Back to top'));

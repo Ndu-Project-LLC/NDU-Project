@@ -128,6 +128,47 @@ void main() {
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  testWidgets('quality register exposes audit results and working corrective actions',
+      (tester) async {
+    final provider = await _pumpQualityScreen(tester);
+    final audit = QualityAuditEntry.empty().copyWith(
+      title: 'Checkout inspection', result: AuditResultStatus.fail,
+      owner: 'Unassigned');
+    final action = CorrectiveActionEntry.empty().copyWith(
+      title: 'Repair checkout', auditEntryId: audit.id, owner: 'Unassigned',
+      rootCause: 'Missing validation', action: 'Add validation',
+      dueDate: '2026-10-10');
+    provider.updateProjectData(provider.projectData.copyWith(
+      qualityManagementData: QualityManagementData.empty().copyWith(
+        auditPlan: [audit], correctiveActions: [action])));
+    await tester.pump();
+    final registerTab = find.text('Quality Register');
+    await tester.ensureVisible(registerTab);
+    await tester.tap(registerTab);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Checkout inspection'), findsOneWidget);
+    expect(find.text('Fail'), findsOneWidget);
+    expect(find.text('Repair checkout'), findsOneWidget);
+    final editButtons = find.widgetWithIcon(IconButton, Icons.edit_outlined);
+    await tester.ensureVisible(editButtons.last);
+    await tester.tap(editButtons.last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Edit Corrective Action'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    final deleteButtons = find.widgetWithIcon(IconButton, Icons.delete_outline);
+    await tester.ensureVisible(deleteButtons.last);
+    await tester.tap(deleteButtons.last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(provider.projectData.qualityManagementData!.correctiveActions, isEmpty);
+    expect(provider.projectData.qualityManagementData!.auditPlan.single.id, audit.id);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the Cost of Quality tab starts empty and says so',
       (tester) async {
     await _pumpQualityScreen(tester);

@@ -60,10 +60,14 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
 
   /// The module's sub-sections. Shared by the [SectionNavigator] tabs and by
   /// the collapsed section-header bar's summary.
+  ///
+  /// List View is the DEFAULT tab (Lusaka 28): when you are building a
+  /// schedule you need to see all line items at once and fill in dates and
+  /// durations inline — not open one card at a time. Builder and Gantt follow.
   static const List<SectionTab> _sectionTabs = [
+    SectionTab(icon: Icons.list_alt, label: 'List View'),
     SectionTab(icon: Icons.build_outlined, label: 'Builder'),
     SectionTab(icon: Icons.bar_chart, label: 'Gantt'),
-    SectionTab(icon: Icons.list_alt, label: 'List View'),
   ];
 
   /// Guards the build-time project sync so a project change triggers exactly
@@ -604,12 +608,13 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
             ),
             // Tab content: inherits the NestedScrollView inner controller,
             // so header and content scroll as one continuous surface.
+            // Order matches _sectionTabs — List View first (default).
             body: TabBarView(
               controller: _tabController,
               children: const [
+                ListViewScreen(),
                 BuilderScreen(),
                 GanttScreen(),
-                ListViewScreen(),
               ],
             ),
           ),

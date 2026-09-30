@@ -17,6 +17,7 @@ void main() {
       expect(provider.compactMode, isFalse);
       expect(provider.reduceAnimations, isFalse);
       expect(provider.speechToTextEnabled, isTrue);
+      expect(provider.kazAiEnabled, isTrue);
     });
 
     test('updates observers immediately and persists across instances',
@@ -30,13 +31,15 @@ void main() {
       await provider.setCompactMode(true);
       await provider.setReduceAnimations(true);
       await provider.setSpeechToTextEnabled(false);
+      await provider.setKazAiEnabled(false);
 
       expect(provider.fontSize, 'large');
       expect(provider.textScaleFactor, 1.15);
       expect(provider.compactMode, isTrue);
       expect(provider.reduceAnimations, isTrue);
       expect(provider.speechToTextEnabled, isFalse);
-      expect(notifications, 4);
+      expect(provider.kazAiEnabled, isFalse);
+      expect(notifications, 5);
 
       final restored = DisplayPreferencesProvider();
       await restored.load();
@@ -44,6 +47,7 @@ void main() {
       expect(restored.compactMode, isTrue);
       expect(restored.reduceAnimations, isTrue);
       expect(restored.speechToTextEnabled, isFalse);
+      expect(restored.kazAiEnabled, isFalse);
     });
 
     test('normalizes unknown font size values to medium', () async {

@@ -389,8 +389,8 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
   Widget _row(WbsPackageRow row, List<CostLine> lines) {
     final priced = _costedValue(row, lines);
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: const Color(0xFFFCFCFD),
         borderRadius: BorderRadius.circular(9),

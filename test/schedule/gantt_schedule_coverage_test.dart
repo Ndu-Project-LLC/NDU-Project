@@ -110,8 +110,10 @@ void main() {
     expect(find.text('Engineering Deliverable'), findsOneWidget);
     // The project root is the schedule itself, never its own row.
     expect(find.text('Test Project'), findsNothing);
-    expect(find.text('2 activities displayed. 0 on critical path.'
-        ' Use "Run CPM" in the Builder tab to recompute dates and critical path.'),
+    // Summary now also reports milestones and goal color-coding (Lusaka 28).
+    expect(find.text('2 activities displayed. 0 on critical path. '
+        '0 milestones shown as diamonds. '
+        'Use "Run CPM" in the Builder tab to recompute dates and critical path.'),
         findsOneWidget);
   });
 

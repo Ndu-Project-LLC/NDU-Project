@@ -1385,11 +1385,12 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  CharterLockBanner(visible: charterLocked),
- CharterLockBanner.applyLock(
- locked: charterLocked,
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
+ // Lusaka 28 follow-up: the blanket `CharterLockBanner.applyLock` that
+ // used to wrap this whole column swallowed scroll drags too — a locked
+ // page could not scroll at all. The lock is now applied ONLY to the
+ // editable controls (notes field, regenerate button, row editors, add
+ // button) so the user can still scroll, search, and expand every cell
+ // while the section stays read-only.
  CollapsibleNotesSection(
  title: 'Notes',
  child: _roundedField(
@@ -1397,6 +1398,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  hint: 'Input your notes here...',
  minLines: 2,
  maxLines: 4,
+ readOnly: charterLocked,
  ),
  ),
  const SizedBox(height: 22),
@@ -1433,6 +1435,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ],
  ),
  ),
+ // Regenerate is an EDIT action — gated by the lock.
+ if (!charterLocked)
  PageRegenerateAllButton(
  onRegenerateAll: () async {
  final confirmed =
@@ -1450,15 +1454,17 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  const SizedBox(height: 14),
  _buildRiskDistributionMatrix(),
  const SizedBox(height: 14),
- const Row(
+ Row(
  children: [
- Icon(Icons.info_outline,
+ const Icon(Icons.info_outline,
  size: 16, color: Color(0xFF6B7280)),
- SizedBox(width: 6),
+ const SizedBox(width: 6),
  Expanded(
  child: Text(
- 'Use the Action column or double-click any row cell to edit risk details.',
- style: TextStyle(
+ charterLocked
+ ? 'This section is read-only — the Charter has been approved. You can still scroll, search, and expand rows to view all content.'
+ : 'Use the Action column or double-click any row cell to edit risk details.',
+ style: const TextStyle(
  fontSize: 12.5,
  color: Color(0xFF6B7280),
  ),
@@ -1482,7 +1488,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  )
  else
- _buildRiskTable(context),
+ _buildRiskTable(context, locked: charterLocked),
  if (_riskTableHasError) ...[
  const SizedBox(height: 8),
  Text(
@@ -1496,6 +1502,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  ],
  const SizedBox(height: 16),
+ // Add Item is an EDIT action — gated by the lock.
+ if (!charterLocked)
  Align(
  alignment: Alignment.centerLeft,
  child: ElevatedButton.icon(
@@ -1519,9 +1527,6 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  ),
  const SizedBox(height: 140),
- ],
- ),
- ),
  ],
  ),
  ),
@@ -2059,7 +2064,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  );
  }
 
- Widget _buildRiskTable(BuildContext context) {
+ Widget _buildRiskTable(BuildContext context, {bool locked = false}) {
 		return SearchableTableSection(
 			title: 'Risks',
 			items: _rows,
@@ -2072,12 +2077,12 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
 						r.category.toLowerCase().contains(q) ||
 						r.owner.toLowerCase().contains(q);
 			},
-			tableBuilder: (fsContext, query) => _buildRiskTableContent(query.isEmpty ? null : _rows.where((r) => r.risk.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.category.toLowerCase().contains(query.trim().toLowerCase()) || r.owner.toLowerCase().contains(query.trim().toLowerCase())).toList()),
+			tableBuilder: (fsContext, query) => _buildRiskTableContent(query.isEmpty ? null : _rows.where((r) => r.risk.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.category.toLowerCase().contains(query.trim().toLowerCase()) || r.owner.toLowerCase().contains(query.trim().toLowerCase())).toList(), locked),
 			cardBuilder: (fsContext, query) => Column(children: _rows.where((r) => r.risk.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.category.toLowerCase().contains(query.trim().toLowerCase()) || r.owner.toLowerCase().contains(query.trim().toLowerCase())).map((r) => Card(child: ListTile(title: Text(r.risk), subtitle: Text(r.description)))).toList()),
 		);
  }
 
-	Widget _buildRiskTableContent([List<_RiskItem>? rowsOverride]) {
+	Widget _buildRiskTableContent([List<_RiskItem>? rowsOverride, bool locked = false]) {
 		final rowsSource = rowsOverride ?? _rows;
  const border = BorderSide(color: Color(0xFFE5E7EB));
  const headerStyle = TextStyle(
@@ -2151,34 +2156,36 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  _th('Status', headerStyle),
  _th('Action', headerStyle),
  ],
- ),
- ...List.generate(_rows.length, (i) {
+ ),	...List.generate(_rows.length, (i) {
  final r = _rows[i];
  final severity = _displayRiskSeverity(r);
  final rowCanUndo = _canUndoRiskRow(i);
+ // Charter lock (Lusaka 28 follow-up): viewing, scrolling, searching and
+ // expanding stay live; only the EDIT affordances are gated.
+ final canEdit = !locked;
  return TableRow(children: [
  _td(WrappedText(r.id, style: cellStyle),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  _ExpandableCellText(
  text: r.risk,
  style: cellStyle,
  collapsedLines: 2,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  _ExpandableCellText(
  text: r.description,
  style: cellStyle,
  collapsedLines: 2,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  r.category.isEmpty
  ? const SizedBox.shrink()
  : _chip(r.category, const Color(0xFFFFF8E1),
  const Color(0xFFB8860B)),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  WrappedText(
  r.probability.trim().isEmpty
@@ -2186,58 +2193,58 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  : r.probability,
  style: cellStyle,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  WrappedText(
  r.impact.trim().isEmpty ? '-' : r.impact,
  style: cellStyle,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  severity.isEmpty
  ? const SizedBox.shrink()
  : _riskLevelChip(severity),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  _ExpandableCellText(
  text: r.mitigation,
  style: cellStyle,
  collapsedLines: 2,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  _ExpandableCellText(
  text: r.discipline,
  style: cellStyle,
  collapsedLines: 2,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  _ExpandableCellText(
  text: r.projectRole,
  style: cellStyle,
  collapsedLines: 2,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  _ExpandableCellText(
  text: r.owner,
  style: cellStyle,
  collapsedLines: 2,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  r.status.isEmpty
  ? const SizedBox.shrink()
  : _statusPill(r.status),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  Center(
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
  InkWell(
- onTap: () => _showEditRiskSheet(i),
+ onTap: canEdit ? () => _showEditRiskSheet(i) : null,
  borderRadius: BorderRadius.circular(8),
  child: Container(
  padding: const EdgeInsets.all(6),
@@ -2245,42 +2252,51 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  color: const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(8),
  ),
- child: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF4B5563)),
+ child: Icon(Icons.edit_outlined,
+ size: 16,
+ color: canEdit
+ ? const Color(0xFF4B5563)
+ : const Color(0xFF9CA3AF)),
  ),
  ),
  const SizedBox(width: 6),
  InkWell(
- onTap:
- rowCanUndo ? () => _undoRiskRow(i) : null,
+ onTap: canEdit && rowCanUndo
+ ? () => _undoRiskRow(i)
+ : null,
  borderRadius: BorderRadius.circular(8),
  child: Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: rowCanUndo
+ color: canEdit && rowCanUndo
  ? const Color(0xFFFFF8E1)
  : const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(Icons.undo_rounded,
  size: 16,
- color: rowCanUndo
+ color: canEdit && rowCanUndo
  ? const Color(0xFFFFC812)
  : const Color(0xFF9CA3AF)),
  ),
  ),
  const SizedBox(width: 6),
  InkWell(
- onTap: () => _confirmAndDeleteRow(i),
+ onTap: canEdit ? () => _confirmAndDeleteRow(i) : null,
  borderRadius: BorderRadius.circular(8),
  child: Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: const Color(0xFFFEF2F2),
+ color: canEdit
+ ? const Color(0xFFFEF2F2)
+ : const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(8),
  ),
- child: const Icon(Icons.delete_outline,
- size: 16, color: Color(0xFFDC2626)),
+ child: Icon(Icons.delete_outline,
+ size: 16,
+ color: canEdit
+ ? const Color(0xFFDC2626)
+ : const Color(0xFF9CA3AF)),
  ),
  ),
  ],
@@ -2637,7 +2653,8 @@ Widget _roundedField(
  {required TextEditingController controller,
  required String hint,
  int minLines = 1,
- int maxLines = 4}) {
+ int maxLines = 4,
+ bool readOnly = false}) {
  return Container(
  width: double.infinity,
  decoration: BoxDecoration(
@@ -2648,6 +2665,7 @@ Widget _roundedField(
  padding: const EdgeInsets.all(14),
  child: VoiceTextField(
  controller: controller,
+ readOnly: readOnly,
  minLines: minLines,
  maxLines: maxLines,
  decoration: InputDecoration(

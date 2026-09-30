@@ -298,7 +298,9 @@ class SidebarNavigationService {
     // Schedule & Cost
     SidebarItem(checkpoint: 'schedule', label: 'Schedule'),
     SidebarItem(checkpoint: 'cost_estimate', label: 'Cost Estimate Overview'),
-    // PMB Integration — the unified Scope ↔ WBS ↔ Schedule ↔ Controls view
+    // PMB Integration — the unified Scope ↔ WBS ↔ Schedule ↔ Controls view.
+    // Placed AFTER the Cost Estimate (Lusaka 28): the build-the-plan flow runs
+    // Schedule → Cost, and the dashboard is the roll-up view that follows.
     SidebarItem(
         checkpoint: 'integration_dashboard', label: 'Integration Dashboard'),
     // Scope & Change Management

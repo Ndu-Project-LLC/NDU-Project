@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
+import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/schedule/screens/builder_screen.dart';
@@ -14,6 +15,18 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
+
+  // ListViewScreen reads the project data (FEP milestones) for the Lusaka 28
+  // date-mismatch warnings, so its harness must supply ProjectDataProvider.
+  // The default empty model is enough — calling updateProjectData would
+  // schedule a debounced Firebase autosave that keeps a timer pending at
+  // teardown.
+  Widget withProjectData(Widget child) {
+    return ChangeNotifierProvider<ProjectDataProvider>.value(
+      value: ProjectDataProvider(),
+      child: child,
+    );
+  }
 
   group('Schedule Builder null schedule handling', () {
     testWidgets('BuilderScreen shows loading indicator when schedule is null',
@@ -179,8 +192,8 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<ScheduleProvider>.value(
           value: scheduleProvider,
-          child: const MaterialApp(
-            home: Scaffold(body: ListViewScreen()),
+          child: MaterialApp(
+            home: Scaffold(body: withProjectData(const ListViewScreen())),
           ),
         ),
       );
@@ -205,8 +218,8 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<ScheduleProvider>.value(
           value: scheduleProvider,
-          child: const MaterialApp(
-            home: Scaffold(body: ListViewScreen()),
+          child: MaterialApp(
+            home: Scaffold(body: withProjectData(const ListViewScreen())),
           ),
         ),
       );
@@ -232,8 +245,8 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<ScheduleProvider>.value(
           value: scheduleProvider,
-          child: const MaterialApp(
-            home: Scaffold(body: ListViewScreen()),
+          child: MaterialApp(
+            home: Scaffold(body: withProjectData(const ListViewScreen())),
           ),
         ),
       );
@@ -300,8 +313,8 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<ScheduleProvider>.value(
           value: scheduleProvider,
-          child: const MaterialApp(
-            home: Scaffold(body: ListViewScreen()),
+          child: MaterialApp(
+            home: Scaffold(body: withProjectData(const ListViewScreen())),
           ),
         ),
       );

@@ -806,6 +806,12 @@ class _SettingsScreenState extends State<SettingsScreen>
                           displayPreferences.setSpeechToTextEnabled,
                           icon: Icons.mic_none_outlined,
                         ),
+                        toggleRow(
+                          'KAZ AI',
+                          displayPreferences.kazAiEnabled,
+                          displayPreferences.setKazAiEnabled,
+                          icon: Icons.smart_toy_outlined,
+                        ),
                         const SizedBox(height: 8),
                         toggleRow('Disable Open Editor', _disableOpenEditor,
                             (v) {

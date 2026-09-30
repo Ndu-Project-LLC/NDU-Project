@@ -306,12 +306,12 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  onSeverityFilterChanged: (value) =>
  setState(() => _selectedSeverityFilter = value),
  ),
- const SizedBox(height: 24),
- _IssueLogCard(
+ const SizedBox(height: 24),  _IssueLogCard(
  entries: searchedIssues,
  searchQuery: _searchQuery,
  onSearchChanged: (value) =>
  setState(() => _searchQuery = value),
+ onAdd: _handleNewIssue,
  onEdit: _handleEditIssue,
  onDelete: _handleDeleteIssue,
  ),
@@ -679,6 +679,7 @@ class _IssueLogCard extends StatelessWidget {
  required this.entries,
  required this.searchQuery,
  required this.onSearchChanged,
+ required this.onAdd,
  required this.onEdit,
  required this.onDelete,
  });
@@ -686,6 +687,7 @@ class _IssueLogCard extends StatelessWidget {
  final List<IssueLogItem> entries;
  final String searchQuery;
  final ValueChanged<String> onSearchChanged;
+ final VoidCallback onAdd;
  final void Function(IssueLogItem) onEdit;
  final void Function(IssueLogItem) onDelete;
 
@@ -708,8 +710,7 @@ class _IssueLogCard extends StatelessWidget {
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
+ children: [  Row(
  children: [
  const Text(
  'Issue Log',
@@ -719,8 +720,9 @@ class _IssueLogCard extends StatelessWidget {
  color: Color(0xFF111827)),
  ),
  const Spacer(),
- SizedBox(
- width: 260,
+ Flexible(
+ child: ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 260),
  child: TextField(
  onChanged: onSearchChanged,
  decoration: InputDecoration(
@@ -743,6 +745,13 @@ class _IssueLogCard extends StatelessWidget {
  ),
  ),
  ),
+ ),
+ ),
+ const SizedBox(width: 12),
+ FilledButton.icon(
+ onPressed: onAdd,
+ icon: const Icon(Icons.add, size: 18),
+ label: const Text('Add issue'),
  ),
  ],
  ),

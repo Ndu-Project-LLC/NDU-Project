@@ -158,13 +158,13 @@ void main() {
       findsOneWidget,
     );
 
-    final lines = provider.estimate!.lines;
+    // The estimate also carries the four Additional Elements
+    // template defaults (Lusaka 32) — filter by category to see
+    // the quality lines.
+    final lines = provider.estimate!.lines
+        .where((l) => l.category == CostCategory.quality)
+        .toList();
     expect(lines, hasLength(4));
-    expect(
-      lines.every((l) => l.category == CostCategory.quality),
-      isTrue,
-      reason: 'quality costs must land in the quality category, not SSHER',
-    );
     expect(lines.every((l) => l.aiGenerated == false), isTrue);
 
     // The category is carried into the sub-category, so prevention and external
@@ -206,6 +206,7 @@ void main() {
     // Data layer: re-pulling the same entries adds nothing.
     final again = provider.pullQualityCostLines(
       provider.estimate!.lines
+          .where((l) => l.category == CostCategory.quality)
           .map((l) => (
                 entryId: '',
                 description: l.description,
@@ -223,6 +224,10 @@ void main() {
       find.textContaining('Quality costs are in the estimate'),
       findsOneWidget,
     );
-    expect(provider.estimate!.lines, hasLength(4));
+    expect(
+      provider.estimate!.lines
+          .where((l) => l.category == CostCategory.quality),
+      hasLength(4),
+    );
   });
 }

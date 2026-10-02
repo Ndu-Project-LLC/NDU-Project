@@ -16,6 +16,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/widgets/context_banner.dart';
@@ -333,22 +334,32 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
         if (schedule == null || !provider.setupComplete) {
           return ResponsiveScaffold(
             activeItemLabel: 'Schedule',
-            appBarTitle: 'Schedule',
-            breadcrumbPhase: 'Planning Phase',
-            breadcrumbTitle: 'Schedule',
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            body: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 12),
-                  Text(
-                    'Loading schedule…',
-                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+            body: const Column(
+              children: [
+                PlanningPhaseHeader(
+                  title: 'Schedule',
+                  breadcrumbPhase: 'Planning Phase',
+                  breadcrumbTitle: 'Schedule',
+                  showExportPdf: false,
+                ),
+                SizedBox(height: 12),
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 12),
+                        Text(
+                          'Loading schedule…',
+                          style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         }
@@ -433,9 +444,6 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
 
         return ResponsiveScaffold(
           activeItemLabel: 'Schedule',
-          appBarTitle: 'Schedule',
-          breadcrumbPhase: 'Planning Phase',
-          breadcrumbTitle: 'Schedule',
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: ScrollableSectionHeader(
             label: 'Schedule',
@@ -448,6 +456,16 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                    // ── Page header — the same section the Development
+                    // Set Up screen shows: back chevron, centered title
+                    // and the outstanding-tasks pill ──────────────────────
+                    const PlanningPhaseHeader(
+                      title: 'Schedule',
+                      breadcrumbPhase: 'Planning Phase',
+                      breadcrumbTitle: 'Schedule',
+                      showExportPdf: false,
+                    ),
+                    const SizedBox(height: 12),
                     // ── World-class Section Navigator ──────────────────────
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),

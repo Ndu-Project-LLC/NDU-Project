@@ -16,6 +16,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
+import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
@@ -152,7 +155,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                         style: const TextStyle(
                             color: Color(0xFF1A1D1F), fontSize: 13),
                         decoration: InputDecoration(
-                          hintText: 'Search by name, code, or owner…',
+                          hintText: 'Search by name, code, cost, or status…',
                           hintStyle: const TextStyle(
                               color: Color(0xFF9CA3AF), fontSize: 13),
                           prefixIcon: const Icon(Icons.search,
@@ -271,12 +274,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
                               onSort: (c, asc) => _onSort(_SortBy.finish, asc),
                             ),
                             DataColumn(
-                              label: const Text('Owner',
+                              label: const Text('Cost',
                                   style: TextStyle(
                                       color: Color(0xFF6B7280),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.owner, asc),
+                              onSort: (c, asc) => _onSort(_SortBy.cost, asc),
                             ),
                             DataColumn(
                               label: const Text('Status',
@@ -353,10 +356,18 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                       onChanged: (date) => _updateActivityDates(
                                           r, finish: date),
                                     )),
-                                    DataCell(Text(r.owner,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 12))),
+                                    // Lusaka 32: cost is the headline
+                                    // number per work package — bold and
+                                    // dark when linked, muted when not.
+                                    DataCell(Text(r.cost,
+                                        style: TextStyle(
+                                            color: r.sortCost == null
+                                                ? const Color(0xFF9CA3AF)
+                                                : const Color(0xFF1A1D1F),
+                                            fontSize: 13,
+                                            fontWeight: r.sortCost == null
+                                                ? FontWeight.w400
+                                                : FontWeight.w800))),
                                     DataCell(_StatusBadge(status: r.status)),
                                     DataCell(r.dateMismatchMessage.isEmpty
                                         ? _TraceabilityCell(row: r)
@@ -430,12 +441,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
                               onSort: (c, asc) => _onSort(_SortBy.finish, asc),
                             ),
                             DataColumn(
-                              label: const Text('Owner',
+                              label: const Text('Cost',
                                   style: TextStyle(
                                       color: Color(0xFF6B7280),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.owner, asc),
+                              onSort: (c, asc) => _onSort(_SortBy.cost, asc),
                             ),
                             DataColumn(
                               label: const Text('Status',
@@ -512,10 +523,18 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                       onChanged: (date) => _updateActivityDates(
                                           r, finish: date),
                                     )),
-                                    DataCell(Text(r.owner,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 12))),
+                                    // Lusaka 32: cost is the headline
+                                    // number per work package — bold and
+                                    // dark when linked, muted when not.
+                                    DataCell(Text(r.cost,
+                                        style: TextStyle(
+                                            color: r.sortCost == null
+                                                ? const Color(0xFF9CA3AF)
+                                                : const Color(0xFF1A1D1F),
+                                            fontSize: 13,
+                                            fontWeight: r.sortCost == null
+                                                ? FontWeight.w400
+                                                : FontWeight.w800))),
                                     DataCell(_StatusBadge(status: r.status)),
                                     DataCell(r.dateMismatchMessage.isEmpty
                                         ? _TraceabilityCell(row: r)
@@ -613,6 +632,9 @@ class _ListViewScreenState extends State<ListViewScreen> {
     // Live activities from the provider (skip the root project node).
     void walk(ScheduleActivity node) {
       if (node.level > 0) {
+        // Lusaka 32: cost per work package, resolved from the
+        // cost estimate so the schedule table shows real numbers.
+        final cost = _costFor(node);
         rows.add(_ListRow(
           code: node.code,
           name: node.name,
@@ -621,7 +643,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
           duration: formatDuration(node.duration, node.durationUnit),
           start: formatDate(node.startDate),
           finish: formatDate(node.endDate),
-          owner: node.owner ?? '—',
+          cost: cost.text,
+          sortCost: cost.amount,
           status: node.status ?? 'Not Started',
           isCritical: node.isCriticalPath,
           activityId: node.id,
@@ -730,6 +753,52 @@ class _ListViewScreenState extends State<ListViewScreen> {
     );
   }
 
+  /// Lusaka 32: resolve the cost a work package carries in the Cost
+  /// Estimate — "the cost needs to be very clear … obvious and
+  /// jumping out".
+  ///
+  /// The Builder stamps `ScheduleActivity.costLineId` when a line is
+  /// created or pulled from the schedule, so that link wins. If it
+  /// was never stamped (or the line was pulled by an older build),
+  /// fall back to in-schedule estimate lines that carry the same WBS
+  /// code, then the same name. Returns a muted "—" when the activity
+  /// has no cost line yet.
+  ///
+  /// The CostEstimateProvider is optional here — the list view is
+  /// also hosted in tests that only wire the schedule — so a missing
+  /// provider just leaves the cost column blank.
+  ({String text, double? amount}) _costFor(ScheduleActivity node) {
+    final List<CostLine> lines;
+    try {
+      lines =
+          context.read<CostEstimateProvider>().estimate?.lines ?? const [];
+    } catch (_) {
+      return (text: '—', amount: null);
+    }
+    final linkedId = node.costLineId;
+    if (linkedId != null && linkedId.isNotEmpty) {
+      for (final l in lines) {
+        if (l.id == linkedId) {
+          return (text: formatCurrency(l.total), amount: l.total);
+        }
+      }
+    }
+    final wbsCode = node.wbsCode;
+    CostLine? fallback;
+    for (final l in lines) {
+      if (!l.inSchedule) continue;
+      if (wbsCode != null && wbsCode.isNotEmpty && l.wbsRef == wbsCode) {
+        fallback = l;
+        break;
+      }
+      if (fallback == null && l.description == node.name) {
+        fallback = l;
+      }
+    }
+    if (fallback == null) return (text: '—', amount: null);
+    return (text: formatCurrency(fallback.total), amount: fallback.total);
+  }
+
   List<_ListRow> _sampleRows() {
     return [
       _ListRow(
@@ -740,7 +809,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '20 d',
         start: '01/06/26',
         finish: '01/30/26',
-        owner: 'Process Eng',
+        cost: '\$185,000',
+        sortCost: 185000,
         status: 'Complete',
         isCritical: false,
         sortStart: DateTime(2026, 1, 6).millisecondsSinceEpoch,
@@ -755,7 +825,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '45 d',
         start: '02/02/26',
         finish: '03/20/26',
-        owner: 'Buyer',
+        cost: '\$1,240,000',
+        sortCost: 1240000,
         status: 'In Progress',
         isCritical: true,
         sortStart: DateTime(2026, 2, 2).millisecondsSinceEpoch,
@@ -770,7 +841,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '60 d',
         start: '03/23/26',
         finish: '05/22/26',
-        owner: 'Fab Shop',
+        cost: '\$860,000',
+        sortCost: 860000,
         status: 'Not Started',
         isCritical: true,
         sortStart: DateTime(2026, 3, 23).millisecondsSinceEpoch,
@@ -785,7 +857,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '10 d',
         start: '05/25/26',
         finish: '06/05/26',
-        owner: 'Site Sup',
+        cost: '\$95,000',
+        sortCost: 95000,
         status: 'Not Started',
         isCritical: false,
         sortStart: DateTime(2026, 5, 25).millisecondsSinceEpoch,
@@ -800,7 +873,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '35 d',
         start: '06/08/26',
         finish: '07/17/26',
-        owner: 'Mech Crew',
+        cost: '\$410,000',
+        sortCost: 410000,
         status: 'Not Started',
         isCritical: true,
         sortStart: DateTime(2026, 6, 8).millisecondsSinceEpoch,
@@ -815,7 +889,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '15 d',
         start: '07/20/26',
         finish: '08/07/26',
-        owner: 'Commissioning Eng',
+        cost: '\$60,000',
+        sortCost: 60000,
         status: 'Not Started',
         isCritical: true,
         sortStart: DateTime(2026, 7, 20).millisecondsSinceEpoch,
@@ -830,7 +905,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '12 d',
         start: '08/10/26',
         finish: '08/22/26',
-        owner: 'Commissioning Eng',
+        cost: '\$75,000',
+        sortCost: 75000,
         status: 'Not Started',
         isCritical: true,
         sortStart: DateTime(2026, 8, 10).millisecondsSinceEpoch,
@@ -850,7 +926,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
       out = out.where((r) {
         return r.name.toLowerCase().contains(q) ||
             r.code.toLowerCase().contains(q) ||
-            r.owner.toLowerCase().contains(q) ||
+            r.cost.toLowerCase().contains(q) ||
             r.status.toLowerCase().contains(q);
       }).toList();
     }
@@ -876,8 +952,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         case _SortBy.finish:
           cmp = a.sortFinish.compareTo(b.sortFinish);
           break;
-        case _SortBy.owner:
-          cmp = a.owner.toLowerCase().compareTo(b.owner.toLowerCase());
+        case _SortBy.cost:
+          cmp = (a.sortCost ?? -1).compareTo(b.sortCost ?? -1);
           break;
         case _SortBy.status:
           cmp = a.status.compareTo(b.status);
@@ -889,7 +965,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
   }
 }
 
-enum _SortBy { code, name, domain, duration, start, finish, owner, status }
+enum _SortBy { code, name, domain, duration, start, finish, cost, status }
 
 class _ListRow {
   final String code;
@@ -899,7 +975,12 @@ class _ListRow {
   final String duration;
   final String start;
   final String finish;
-  final String owner;
+
+  /// Lusaka 32: the cost associated with this work package, resolved
+  /// from the cost estimate. `sortCost` is null when nothing is
+  /// linked, so unlinked rows sort first and render a muted "—".
+  final String cost;
+  final double? sortCost;
   final String status;
   final bool isCritical;
 
@@ -932,7 +1013,8 @@ class _ListRow {
     required this.duration,
     required this.start,
     required this.finish,
-    required this.owner,
+    required this.cost,
+    this.sortCost,
     required this.status,
     required this.isCritical,
     this.activityId,

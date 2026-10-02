@@ -20,6 +20,7 @@ import 'package:ndu_project/project_controls/providers/change_management_provide
 import 'package:ndu_project/project_controls/utils/cr_variance_attribution.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
+import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/widgets/project_controls_tab_scaffold.dart';
@@ -176,20 +177,26 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
         if (!provider.isLoaded) {
           return ResponsiveScaffold(
             activeItemLabel: 'Project Controls',
-            appBarTitle: 'Project Controls',
-            breadcrumbPhase: 'Execution Phase',
-            breadcrumbTitle: 'Project Controls',
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            body: const PageShimmerSkeleton(),
+            body: const Column(
+              children: [
+                PlanningPhaseHeader(
+                  title: 'Project Controls',
+                  breadcrumbPhase: 'Execution Phase',
+                  breadcrumbTitle: 'Project Controls',
+                  showExportPdf: false,
+                ),
+                SizedBox(height: 12),
+                Expanded(child: PageShimmerSkeleton()),
+              ],
+            ),
           );
         }
 
         return ResponsiveScaffold(
           activeItemLabel: 'Project Controls',
-          appBarTitle: 'Project Controls',
-          breadcrumbPhase: 'Execution Phase',
-          breadcrumbTitle: 'Project Controls',
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,          body: ScrollableSectionHeader(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: ScrollableSectionHeader(
             label: 'Project Controls',
             icon: Icons.dashboard_outlined,
             summary: _sectionTabs[_tabController.index].label,
@@ -200,6 +207,16 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // ── Page header — the same section the Development
+                    // Set Up screen shows: back chevron, centered title
+                    // and the outstanding-tasks pill ─────────────────────
+                    const PlanningPhaseHeader(
+                      title: 'Project Controls',
+                      breadcrumbPhase: 'Execution Phase',
+                      breadcrumbTitle: 'Project Controls',
+                      showExportPdf: false,
+                    ),
+                    const SizedBox(height: 12),
                     // ── World-class Section Navigator ─────────────────────
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -400,133 +417,19 @@ class _DashboardTab extends StatelessWidget {
 
   // ── AI-Powered Context Insights Card ─────────────────────────────────-
   Widget _aiInsightsCard() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFFFF8E1),
-            Color(0xFFFFF8E1),
-          ],
-        ),
-        border: Border.all(
-          color: PcPalette.indigo.withValues(alpha: 0.4),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: PcPalette.indigo.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 24,
-            right: 24,
-            child: Container(
-              height: 3,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(2),
-                gradient: LinearGradient(
-                  colors: [
-                    PcPalette.indigo.withValues(alpha: 0),
-                    PcPalette.indigo,
-                    PcPalette.violet,
-                    PcPalette.indigo.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [PcPalette.indigo, PcPalette.violet],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: PcPalette.indigo.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.auto_awesome_rounded,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'AI-Powered Context Insights',
-                            style: TextStyle(
-                              color: PcPalette.inkPrimary,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.1,
-                              fontFamily: appFontFamily,
-                            ),
-                          ),
-                          SizedBox(height: 3),
-                          Text(
-                            'Auto-populated from project data across all phases',
-                            style: TextStyle(
-                              color: PcPalette.inkSecondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: appFontFamily,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: PcPalette.indigo.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: PcPalette.indigo.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: const Text(
-                        'AI CONTEXT',
-                        style: TextStyle(
-                          color: PcPalette.indigo,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                          fontFamily: appFontFamily,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+    return _AiInsightsCard(
+      body: _aiInsightsBody(),
+    );
+  }
+
+  /// The sections of the AI-Powered Context Insights card,
+  /// handed to [_AiInsightsCard] so the card can collapse
+  /// them behind its tappable header.
+  Widget _aiInsightsBody() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
                 if (aiMilestones.isNotEmpty) ...[
                   _aiSectionLabel('SCOPE MILESTONES (from project data)'),
                   const SizedBox(height: 8),
@@ -663,11 +566,7 @@ class _DashboardTab extends StatelessWidget {
                   ),
                 ],
               ],
-            ),
-          ),
-        ],
-      ),
-    );
+            );
   }
 
   Widget _aiSectionLabel(String text) {
@@ -1088,6 +987,185 @@ class _DashboardTab extends StatelessWidget {
 // ═════════════════════════════════════════════════════════════════════════
 // TAB: Scope Tracking
 // ═════════════════════════════════════════════════════════════════════════
+
+/// AI-Powered Context Insights card — collapsible overall and
+/// collapsed by default, so the dashboard leads with the health
+/// and EVM cards. Tap the header to expand the sections.
+class _AiInsightsCard extends StatefulWidget {
+  final Widget body;
+
+  const _AiInsightsCard({
+    required this.body,
+  });
+
+  @override
+  State<_AiInsightsCard> createState() => _AiInsightsCardState();
+}
+
+class _AiInsightsCardState extends State<_AiInsightsCard> {
+  // Collapsed by default — the header stays put and the
+  // sections appear on tap.
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFFFF8E1),
+            Color(0xFFFFF8E1),
+          ],
+        ),
+        border: Border.all(
+          color: PcPalette.indigo.withValues(alpha: 0.4),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: PcPalette.indigo.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 24,
+            right: 24,
+            child: Container(
+              height: 3,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(2),
+                gradient: LinearGradient(
+                  colors: [
+                    PcPalette.indigo.withValues(alpha: 0),
+                    PcPalette.indigo,
+                    PcPalette.violet,
+                    PcPalette.indigo.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => setState(() => _expanded = !_expanded),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [PcPalette.indigo, PcPalette.violet],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: PcPalette.indigo.withValues(alpha: 0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.auto_awesome_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'AI-Powered Context Insights',
+                                style: TextStyle(
+                                  color: PcPalette.inkPrimary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.1,
+                                  fontFamily: appFontFamily,
+                                ),
+                              ),
+                              SizedBox(height: 3),
+                              Text(
+                                'Auto-populated from project data across all phases',
+                                style: TextStyle(
+                                  color: PcPalette.inkSecondary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: appFontFamily,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: PcPalette.indigo.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: PcPalette.indigo.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: const Text(
+                            'AI CONTEXT',
+                            style: TextStyle(
+                              color: PcPalette.indigo,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                              fontFamily: appFontFamily,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Icon(
+                          _expanded
+                              ? Icons.expand_less_rounded
+                              : Icons.expand_more_rounded,
+                          color: PcPalette.indigo,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                AnimatedCrossFade(
+                  duration: const Duration(milliseconds: 220),
+                  crossFadeState: _expanded
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  firstChild: const SizedBox(width: double.infinity),
+                  secondChild: widget.body,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _ScopeTrackingTab extends StatelessWidget {
   final ProjectControlsState state;

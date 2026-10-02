@@ -315,4 +315,5 @@ Map<CostCategory, ({String code, String name})> defaultGLMappings() => {
       CostCategory.startup: (code: '7700', name: 'Startup & Transition'),
       CostCategory.warranty: (code: '7800', name: 'Warranty & Closeout'),
       CostCategory.decommissioning: (code: '7900', name: 'Decommissioning'),
+      CostCategory.other: (code: '7950', name: 'Other'),
     };

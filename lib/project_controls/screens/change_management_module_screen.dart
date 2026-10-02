@@ -32,6 +32,7 @@ import 'package:ndu_project/project_controls/providers/change_management_provide
 import 'package:ndu_project/utils/download_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
+import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
@@ -182,11 +183,18 @@ class _ChangeManagementModuleScreenState
 
         return ResponsiveScaffold(
           activeItemLabel: 'Change Management',
-          appBarTitle: 'Change Management',
-          breadcrumbPhase: 'Execution Phase',
-          breadcrumbTitle: 'Change Management',
           body: Column(
             children: [
+              // ── Page header — the same section the Development Set Up
+              // screen shows: back chevron, centered title and the
+              // outstanding-tasks pill ────────────────────────────────
+              const PlanningPhaseHeader(
+                title: 'Change Management',
+                breadcrumbPhase: 'Execution Phase',
+                breadcrumbTitle: 'Change Management',
+                showExportPdf: false,
+              ),
+              const SizedBox(height: 12),
               // ── World-class Section Navigator ─────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),

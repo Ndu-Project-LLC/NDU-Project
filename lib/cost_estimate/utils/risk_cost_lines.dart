@@ -106,3 +106,11 @@ String _normalizeLevel(String value) {
 
 /// The CostCategory the risk pull writes into.
 const CostCategory riskCostCategory = CostCategory.riskAllowance;
+
+/// Description of the single aggregated risk-allowance line the
+/// register pull writes (Lusaka 32: "the risk should just be one
+/// line"). Shared by the provider (which writes it) and the
+/// dashboard card (which reads it back to tell "reflected" from
+/// "not yet pulled").
+const String riskRegisterLineDescription =
+    'Risk allowance — Risk Register total';

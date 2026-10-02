@@ -12,6 +12,11 @@ library;
 /// Shows cost lines grouped by category with add/edit/delete + live totals
 /// sidebar (TotalsPanel).
 ///
+/// Lusaka 32: a second view — **Schedule Work Packages** — shows every
+/// scheduled work package in a table (work package, duration, cost) with
+/// the cost loudest and tappable, so the estimator can price each package
+/// without leaving the Builder.
+///
 /// Rendered inside the Cost Estimate module's [ResponsiveScaffold] body —
 /// no Scaffold of its own.
 
@@ -27,6 +32,7 @@ import 'package:ndu_project/services/user_preferences_service.dart';
 // `EstimationMethod` is declared in the WBS model library too, so that import
 // hides it and the Cost Estimate's copy stays unambiguous.
 import 'package:ndu_project/cost_estimate/utils/cost_descriptor_text.dart';
+import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
 import 'package:ndu_project/schedule/utils/schedule_work_packages.dart';
@@ -43,6 +49,11 @@ class BuilderScreen extends StatefulWidget {
 class _BuilderScreenState extends State<BuilderScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  /// Which face of the Builder is showing (Lusaka 32): the category
+  /// line builder, or the Schedule work-package table where every
+  /// scheduled work package carries its duration and cost side by side.
+  _BuilderViewMode _viewMode = _BuilderViewMode.lines;
 
   static const _subTabs = [
     ('Direct Costs', [
@@ -74,6 +85,7 @@ class _BuilderScreenState extends State<BuilderScreen>
       CostCategory.startup,
       CostCategory.warranty,
       CostCategory.decommissioning,
+      CostCategory.other,
     ]),
   ];
 
@@ -229,18 +241,24 @@ class _BuilderScreenState extends State<BuilderScreen>
                 ),
                 const SizedBox(height: 22),
 
-                // ── 3. Treasury sub-tab bar ──────────────────────────────
-                _TreasurySubTabBar(
-                  controller: _tabController,
-                  tabs: _subTabs.map((t) => t.$1).toList(),
-                  tints: _tabTints,
-                  tintsSoft: _tabTintsSoft,
-                  counts: _subTabs
-                      .map((t) => estimate.lines
-                          .where((l) => t.$2.contains(l.category))
-                          .length)
-                      .toList(),
+                // ── 3. View switch: line builder ↔ schedule packages ──
+                _BuilderViewToggle(
+                  mode: _viewMode,
+                  onChanged: (mode) => setState(() => _viewMode = mode),
                 ),
+                const SizedBox(height: 14),
+                if (_viewMode == _BuilderViewMode.lines)
+                  _TreasurySubTabBar(
+                    controller: _tabController,
+                    tabs: _subTabs.map((t) => t.$1).toList(),
+                    tints: _tabTints,
+                    tintsSoft: _tabTintsSoft,
+                    counts: _subTabs
+                        .map((t) => estimate.lines
+                            .where((l) => t.$2.contains(l.category))
+                            .length)
+                        .toList(),
+                  ),
                 if (isBaselined) ...[
                   const SizedBox(height: 14),
                   _BaselinedNotice(version: estimate.baseline?.version ?? 1,
@@ -252,19 +270,28 @@ class _BuilderScreenState extends State<BuilderScreen>
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Lines column
+                    // Lines column — or the Schedule work-package table
+                    // (Lusaka 32) when that view is showing.
                     Expanded(
-                      child: _buildLinesColumn(
-                        context,
-                        provider,
-                        estimate,
-                        tabCategories,
-                        tabLines,
-                        tabTotal,
-                        canEditNow,
-                        currencySymbol,
-                        tabIndex,
-                      ),
+                      child: _viewMode == _BuilderViewMode.lines
+                          ? _buildLinesColumn(
+                              context,
+                              provider,
+                              estimate,
+                              tabCategories,
+                              tabLines,
+                              tabTotal,
+                              canEditNow,
+                              currencySymbol,
+                              tabIndex,
+                            )
+                          : _buildSchedulePackagesColumn(
+                              context,
+                              provider,
+                              estimate,
+                              canEditNow,
+                              currencySymbol,
+                            ),
                     ),
                     const SizedBox(width: 14),
                     // Totals sidebar
@@ -410,7 +437,6 @@ class _BuilderScreenState extends State<BuilderScreen>
   void _startFromSchedule(BuildContext context) {
     final messenger = ScaffoldMessenger.of(context);
     final scheduleProvider = context.read<ScheduleProvider>();
-    final wbsProvider = context.read<WBSProvider>();
     final costProvider = context.read<CostEstimateProvider>();
 
     final schedule = scheduleProvider.schedule;
@@ -435,32 +461,7 @@ class _BuilderScreenState extends State<BuilderScreen>
         .toList(growable: false);
 
     final result = costProvider.pullScheduleWorkPackages(candidates);
-
-    // Link each created line back to its activity and WBS node.
-    if (result.addedByActivityId.isNotEmpty) {
-      final wbs = wbsProvider.wbs;
-      final nodeIdByCode = <String, String>{};
-      if (wbs != null) {
-        for (final flat in flattenWBS(wbs)) {
-          final path = flat.path.trim();
-          if (path.isNotEmpty) nodeIdByCode[path] = flat.id;
-        }
-      }
-      // Snapshot taken before any mutation: `findActivityById` only reads.
-      final roots = scheduleProvider.schedule?.activities ?? const [];
-      result.addedByActivityId.forEach((activityId, lineId) {
-        final activity = findActivityById(roots, activityId);
-        if (activity == null) return;
-        scheduleProvider.updateActivity(
-          activityId,
-          activity.copyWith(costLineId: lineId),
-        );
-        final code = (activity.wbsCode ?? '').trim();
-        if (code.isEmpty) return;
-        final nodeId = nodeIdByCode[code];
-        if (nodeId != null) wbsProvider.linkCostLine(nodeId, lineId);
-      });
-    }
+    _stampScheduleLinks(context, result);
 
     messenger.showSnackBar(SnackBar(
       content: Text(
@@ -476,6 +477,169 @@ class _BuilderScreenState extends State<BuilderScreen>
       duration: const Duration(seconds: 6),
       behavior: SnackBarBehavior.floating,
     ));
+  }
+
+  /// Link every line created by a schedule pull back to its schedule
+  /// activity (`costLineId`) and the WBS node the work package sits
+  /// under — shared by the hero-band pull and the single-package pull
+  /// from the Schedule work-package table.
+  void _stampScheduleLinks(
+      BuildContext context, ScheduleWorkPackagePullResult result) {
+    if (result.addedByActivityId.isEmpty) return;
+    final scheduleProvider = context.read<ScheduleProvider>();
+    final wbsProvider = context.read<WBSProvider>();
+    final wbs = wbsProvider.wbs;
+    final nodeIdByCode = <String, String>{};
+    if (wbs != null) {
+      for (final flat in flattenWBS(wbs)) {
+        final path = flat.path.trim();
+        if (path.isNotEmpty) nodeIdByCode[path] = flat.id;
+      }
+    }
+    // Snapshot taken before any mutation: `findActivityById` only reads.
+    final roots = scheduleProvider.schedule?.activities ?? const [];
+    result.addedByActivityId.forEach((activityId, lineId) {
+      final activity = findActivityById(roots, activityId);
+      if (activity == null) return;
+      scheduleProvider.updateActivity(
+        activityId,
+        activity.copyWith(costLineId: lineId),
+      );
+      final code = (activity.wbsCode ?? '').trim();
+      if (code.isEmpty) return;
+      final nodeId = nodeIdByCode[code];
+      if (nodeId != null) wbsProvider.linkCostLine(nodeId, lineId);
+    });
+  }
+
+  /// The Schedule work-package view (Lusaka 32): a table like the
+  /// Schedule's own list, picking up **every work package from the
+  /// Schedule** — work package, duration, cost.
+  ///
+  /// The cost is the point of the view ("the cost aspect has to be
+  /// very clear … obvious and jumping out"), so it is the loudest
+  /// column and every cost cell is tappable. Duration rides along
+  /// because adjusting a too-long duration is how an over-high cost
+  /// comes down.
+  Widget _buildSchedulePackagesColumn(
+    BuildContext context,
+    CostEstimateProvider provider,
+    CostEstimate estimate,
+    bool canEditNow,
+    String currencySymbol,
+  ) {
+    final scheduleProvider = context.watch<ScheduleProvider>();
+    final activities = scheduleProvider.schedule?.activities ?? const [];
+    final candidates = collectScheduleWorkPackages(activities)
+        .map((wp) => ScheduleWorkPackageCandidate(
+              activityId: wp.activityId,
+              title: wp.title,
+              wbsRef: wp.wbsRef,
+              activityCostLineId: wp.activityCostLineId,
+              category: wp.category,
+            ))
+        .toList(growable: false);
+
+    // Duration belongs to the Schedule; cost belongs to the estimate
+    // line that represents the package (matched by foreign key first,
+    // then by identical in-schedule line).
+    var pricedCount = 0;
+    var pricedTotal = 0.0;
+    final rows = <_SchedulePackageRow>[];
+    for (final candidate in candidates) {
+      final activity = findActivityById(activities, candidate.activityId);
+      final duration = activity == null
+          ? '—'
+          : formatDuration(activity.duration, activity.durationUnit);
+      CostLine? matched;
+      for (final line in estimate.lines) {
+        if (CostEstimateProvider.isScheduleWorkPackageLine(candidate, line)) {
+          matched = line;
+          break;
+        }
+      }
+      if (matched != null) {
+        pricedCount++;
+        pricedTotal += matched.total;
+      }
+      rows.add(_SchedulePackageRow(
+        candidate: candidate,
+        duration: duration,
+        matchedLine: matched,
+      ));
+    }
+
+    return TreasurySectionCard(
+      title: 'Schedule Work Packages',
+      subtitle: candidates.isEmpty
+          ? 'Nothing scheduled yet'
+          : '${candidates.length} work packages · $pricedCount of '
+              '${candidates.length} priced · '
+              '$currencySymbol${treasuryFmt(pricedTotal)}',
+      trailing: canEditNow
+          ? TreasuryPrimaryButton(
+              icon: Icons.download_rounded,
+              label: 'Start from Schedule',
+              onPressed: () => _startFromSchedule(context),
+            )
+          : null,
+      child: candidates.isEmpty
+          ? const TreasuryEmptyState(
+              icon: Icons.event_note_rounded,
+              title: 'No work packages on the Schedule',
+              body: 'This table picks up every work package from the '
+                  'Schedule — its name, duration and cost. Build the '
+                  'Schedule first, then price each package here.',
+            )
+          : _SchedulePackagesTable(
+              rows: rows,
+              canEdit: canEditNow,
+              currencySymbol: currencySymbol,
+              onEditCost: (row) =>
+                  _editSchedulePackageCost(context, provider, row),
+            ),
+    );
+  }
+
+  /// Open the cost editor for one schedule work package (Lusaka 32).
+  ///
+  /// An already-pulled package opens its existing line for editing.
+  /// A package not yet in the estimate is pulled first (as a $0
+  /// direct-cost line, linked back to its activity and WBS node) and
+  /// the editor opens on the fresh line — one tap from "unpriced" to
+  /// "priced".
+  void _editSchedulePackageCost(
+    BuildContext context,
+    CostEstimateProvider provider,
+    _SchedulePackageRow row,
+  ) {
+    final candidate = row.candidate;
+    CostLine? matched;
+    for (final line in provider.estimate!.lines) {
+      if (CostEstimateProvider.isScheduleWorkPackageLine(candidate, line)) {
+        matched = line;
+        break;
+      }
+    }
+    if (matched != null) {
+      _showAddLineDialog(context, provider, matched.category, matched);
+      return;
+    }
+
+    final result = provider.pullScheduleWorkPackages([candidate]);
+    final newLineId = result.addedByActivityId[candidate.activityId];
+    if (newLineId != null) {
+      _stampScheduleLinks(context, result);
+      for (final line in provider.estimate!.lines) {
+        if (line.id == newLineId) {
+          _showAddLineDialog(context, provider, line.category, line);
+          return;
+        }
+      }
+    }
+    // Fallback (e.g. the package was represented by an unlinked
+    // line): open a plain add dialog under the package's category.
+    _showAddLineDialog(context, provider, candidate.category);
   }
 
   void _showAddLineDialog(
@@ -624,6 +788,303 @@ class _TreasurySubTabPill extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUILDER VIEW MODE — line builder ↔ schedule work packages (Lusaka 32)
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum _BuilderViewMode {
+  lines,
+  schedulePackages;
+
+  String get label => switch (this) {
+        _BuilderViewMode.lines => 'Line Builder',
+        _BuilderViewMode.schedulePackages => 'Schedule Work Packages',
+      };
+
+  IconData get icon => switch (this) {
+        _BuilderViewMode.lines => Icons.receipt_long_rounded,
+        _BuilderViewMode.schedulePackages => Icons.table_rows_rounded,
+      };
+}
+
+class _BuilderViewToggle extends StatelessWidget {
+  const _BuilderViewToggle({required this.mode, required this.onChanged});
+
+  final _BuilderViewMode mode;
+  final ValueChanged<_BuilderViewMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: TreasuryTokens.surfaceAlt,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: TreasuryTokens.hairline),
+      ),
+      child: Row(
+        children: [
+          for (final m in _BuilderViewMode.values) ...[
+            if (m.index > 0) const SizedBox(width: 4),
+            Expanded(
+              child: _ViewTogglePill(
+                label: m.label,
+                icon: m.icon,
+                active: mode == m,
+                onTap: () => onChanged(m),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ViewTogglePill extends StatelessWidget {
+  const _ViewTogglePill({
+    required this.label,
+    required this.icon,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: active ? TreasuryTokens.brandDeep : Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 15,
+                color: active ? Colors.white : TreasuryTokens.inkSoft,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                    color: active ? Colors.white : TreasuryTokens.inkSoft,
+                    letterSpacing: 0.1,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCHEDULE WORK-PACKAGES TABLE — work package · duration · cost (Lusaka 32)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// One row of the Schedule work-package table: the package itself,
+/// its duration (owned by the Schedule) and the cost line that
+/// prices it.
+class _SchedulePackageRow {
+  const _SchedulePackageRow({
+    required this.candidate,
+    required this.duration,
+    required this.matchedLine,
+  });
+
+  final ScheduleWorkPackageCandidate candidate;
+  final String duration;
+  final CostLine? matchedLine;
+}
+
+class _SchedulePackagesTable extends StatelessWidget {
+  const _SchedulePackagesTable({
+    required this.rows,
+    required this.canEdit,
+    required this.currencySymbol,
+    required this.onEditCost,
+  });
+
+  final List<_SchedulePackageRow> rows;
+  final bool canEdit;
+  final String currencySymbol;
+  final void Function(_SchedulePackageRow row) onEditCost;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = rows.fold(0.0, (sum, row) => sum + (row.matchedLine?.total ?? 0));
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columnSpacing: 28,
+        columns: const [
+          DataColumn(label: Text('Work Package')),
+          DataColumn(label: Text('Duration')),
+          DataColumn(label: Text('Cost')),
+        ],
+        rows: [
+          for (final row in rows)
+            DataRow(
+              cells: [
+                DataCell(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        row.candidate.title,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: TreasuryTokens.ink,
+                        ),
+                      ),
+                      if ((row.candidate.wbsRef ?? '').trim().isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          'WBS ${row.candidate.wbsRef}',
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            color: TreasuryTokens.muted,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    row.duration,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: TreasuryTokens.inkSoft,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+                DataCell(
+                  _ScheduleCostCell(
+                    line: row.matchedLine,
+                    canEdit: canEdit,
+                    currencySymbol: currencySymbol,
+                    onTap: () => onEditCost(row),
+                  ),
+                ),
+              ],
+            ),
+          // Carry total — the number the cost estimator is here for.
+          DataRow(
+            cells: [
+              const DataCell(
+                Text(
+                  'Total',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w900,
+                    color: TreasuryTokens.ink,
+                  ),
+                ),
+              ),
+              const DataCell(SizedBox.shrink()),
+              DataCell(
+                Text(
+                  '$currencySymbol${treasuryFmt(total)}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: TreasuryTokens.ink,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The loudest cell in the table (Lusaka 32): "the cost aspect has to
+/// be very clear to them. It has to be obvious and jumping out."
+/// A priced package shows a bold tabular figure on a brand wash; an
+/// unpriced one shows a muted dash. Tapping either opens the editor.
+class _ScheduleCostCell extends StatelessWidget {
+  const _ScheduleCostCell({
+    required this.line,
+    required this.canEdit,
+    required this.currencySymbol,
+    required this.onTap,
+  });
+
+  final CostLine? line;
+  final bool canEdit;
+  final String currencySymbol;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final priced = line != null;
+    final amount = Text(
+      priced ? '$currencySymbol${treasuryFmt(line!.total)}' : '—',
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: priced ? FontWeight.w900 : FontWeight.w600,
+        color: priced ? TreasuryTokens.ink : TreasuryTokens.muted,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
+    if (!canEdit) return amount;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: priced
+              ? TreasuryTokens.brand.withValues(alpha: 0.14)
+              : TreasuryTokens.surfaceAlt,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: priced
+                ? TreasuryTokens.brandDeep.withValues(alpha: 0.35)
+                : TreasuryTokens.hairline,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            amount,
+            const SizedBox(width: 4),
+            Icon(
+              priced ? Icons.edit_rounded : Icons.add_rounded,
+              size: 13,
+              color: priced ? TreasuryTokens.brandDeep : TreasuryTokens.muted,
+            ),
+          ],
         ),
       ),
     );

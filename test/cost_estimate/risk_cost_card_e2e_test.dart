@@ -1,6 +1,7 @@
 // End-to-end widget test for the Risk Allowances card on the Cost Dashboard
 // (the Risk Register → Cost Estimate pull, Lusaka 22: "whatever the total
-// comes out to should show up on the cost estimate as well").
+// comes out to should show up on the cost estimate as well"; Lusaka 32:
+// "the risk should just be one line … just have the total amount for it").
 //
 // The card is driven exactly as the user meets it — the real
 // CostEstimateModuleScreen, real CostEstimateProvider, real pull — with only
@@ -8,7 +9,9 @@
 // Firebase and no network are involved. Verifies:
 //   1. the register renders (stated amount + P×I matrix default, closed and
 //      blank-description risks excluded);
-//   2. tapping Pull creates the right riskAllowance lines;
+//   2. tapping Pull creates ONE aggregated riskAllowance line carrying the
+//      register total (the Additional Elements template defaults ride along,
+//      so assertions filter by category);
 //   3. the dashboard's Total Estimated Cost KPI moves by the pulled amount;
 //   4. the pull is idempotent.
 
@@ -22,6 +25,7 @@ import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart'
 import 'package:ndu_project/cost_estimate/screens/cost_estimate_module_screen.dart'
     as cost_dashboard;
 import 'package:ndu_project/cost_estimate/screens/cost_estimate_module_screen.dart';
+import 'package:ndu_project/cost_estimate/utils/risk_cost_lines.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 
@@ -94,7 +98,7 @@ void main() {
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('risk register renders with pending count and total',
+  testWidgets('risk register renders with the register total',
       (tester) async {
     tester.view.physicalSize = const Size(1400, 2400);
     tester.view.devicePixelRatio = 1.0;
@@ -103,20 +107,22 @@ void main() {
     await pumpDashboard(tester);
 
     // Card headline and its register total: 12,000 + 25,000 (Medium×High) =
-    // 34,000 → rendered through the card's K formatter as 34K.
+    // 37,000 → rendered through the card's K formatter as 37K.
     expect(find.text('Risk Allowances (Risk Register)'), findsOneWidget);
-    // Closed and blank-description risks are skipped: 2 valid of 4 docs.
-    expect(find.textContaining('2 of 4 risks not yet in the estimate'),
-        findsOneWidget);
+    // The register reports its combined exposure as one amount to add.
+    expect(
+      find.textContaining('Not yet in the estimate'),
+      findsOneWidget,
+    );
     // 12,000 (stated) + 25,000 (Medium×High matrix cell) = 37,000 to add.
     expect(find.textContaining(r'$15500'), findsNothing);
     expect(find.textContaining('14500'), findsNothing);
     expect(find.textContaining('37000'), findsOneWidget);
-    // The pull button offers exactly the pending risks.
-    expect(find.text('Pull 2 into Cost Estimate'), findsOneWidget);
+    // The pull button offers the single aggregated allowance.
+    expect(find.text('Pull total into Cost Estimate'), findsOneWidget);
   });
 
-  testWidgets('pulling creates the risk allowance lines and moves the KPI',
+  testWidgets('pulling creates ONE aggregated line and moves the KPI',
       (tester) async {
     tester.view.physicalSize = const Size(1400, 2400);
     tester.view.devicePixelRatio = 1.0;
@@ -124,42 +130,40 @@ void main() {
 
     final provider = await pumpDashboard(tester);
 
-    await tester.ensureVisible(find.text('Pull 2 into Cost Estimate'));
-    await tester.tap(find.text('Pull 2 into Cost Estimate'));
+    await tester.ensureVisible(find.text('Pull total into Cost Estimate'));
+    await tester.tap(find.text('Pull total into Cost Estimate'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    // Snackbar confirms both lines and the combined total.
+    // Snackbar confirms the single line and the combined total.
     expect(
-      find.textContaining('Added 2 risk allowance lines'),
+      find.textContaining('Added 1 risk allowance line'),
       findsOneWidget,
     );
     expect(find.textContaining(r'$37000 total'), findsOneWidget);
 
-    // The estimate now carries exactly the two expected lines.
+    // The estimate carries exactly ONE risk allowance line (the four
+    // Additional Elements template defaults ride along — filter by
+    // category to see the register line).
     final lines = provider.estimate!.lines;
-    expect(lines, hasLength(2));
-    expect(
-      lines.every((l) => l.category == CostCategory.riskAllowance),
-      isTrue,
-    );
-    expect(
-      lines.every((l) => l.subCategory == 'Risk (register)'),
-      isTrue,
-    );
-    expect(
-      lines.every((l) => l.aiGenerated == false),
-      isTrue,
-    );
-
-    final stated = lines.singleWhere((l) => l.description == 'Budget overrun on steel supply');
-    expect(stated.total, 12000);
-    // The basis records the register id and the risk's matrix position.
-    expect(stated.basisReference, contains('Risk register R-241'));
-
-    final matrix = lines.singleWhere((l) => l.description == 'Vendor delay on CPE devices');
-    expect(matrix.total, 25000);
-    expect(matrix.basisReference, contains('P: Medium × I: High'));
+    final riskLines = lines
+        .where((l) => l.category == CostCategory.riskAllowance)
+        .toList();
+    expect(riskLines, hasLength(1));
+    final line = riskLines.single;
+    expect(line.subCategory, 'Risk (register)');
+    expect(line.description, riskRegisterLineDescription);
+    expect(line.aiGenerated, isFalse);
+    // 12,000 (stated) + 25,000 (Medium×High matrix cell) = 37,000.
+    expect(line.total, 37000);
+    // The basis records the register ids, the risk count and each
+    // risk's probability × impact position.
+    expect(line.basisReference, contains('Risk register'));
+    expect(line.basisReference, contains('R-241'));
+    expect(line.basisReference, contains('R-242'));
+    expect(line.basisReference, contains('2 risks'));
+    expect(line.basisReference, contains('P: High × I: High'));
+    expect(line.basisReference, contains('P: Medium × I: High'));
 
     // The dashboard's headline KPI reflects the pulled allowance: 12,000 +
     // 25,000 = 37,000 → 37K.
@@ -171,7 +175,7 @@ void main() {
     expect(provider.estimate!.totals.riskAllowances, 37000);
   });
 
-  testWidgets('the pull is idempotent — the card reports everything reflected',
+  testWidgets('the pull is idempotent — the card reports the total reflected',
       (tester) async {
     tester.view.physicalSize = const Size(1400, 2400);
     tester.view.devicePixelRatio = 1.0;
@@ -179,30 +183,42 @@ void main() {
 
     final provider = await pumpDashboard(tester);
 
-    await tester.ensureVisible(find.text('Pull 2 into Cost Estimate'));
-    await tester.tap(find.text('Pull 2 into Cost Estimate'));
+    await tester.ensureVisible(find.text('Pull total into Cost Estimate'));
+    await tester.tap(find.text('Pull total into Cost Estimate'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    // Data-layer idempotency: re-pulling the same candidates adds nothing.
-    final again = provider.pullRiskCostLines(provider.estimate!.lines
-        .map((l) => (
-              riskId: '',
-              description: l.description,
-              probability: 'High',
-              impact: 'High',
-              total: l.total,
-            ))
-        .toList());
+    // Data-layer idempotency: re-pulling the same register candidates
+    // adds nothing — the aggregated line already carries the total.
+    final again = provider.pullRiskCostLines(const [
+      (
+        riskId: 'R-241',
+        description: 'Budget overrun on steel supply',
+        probability: 'High',
+        impact: 'High',
+        total: 12000,
+      ),
+      (
+        riskId: 'R-242',
+        description: 'Vendor delay on CPE devices',
+        probability: 'Medium',
+        impact: 'High',
+        total: 25000,
+      ),
+    ]);
     expect(again.pulled, 0);
     expect(again.alreadyInEstimate, 2);
 
-    // UI idempotency: the card now shows the all-pulled state and the button
-    // is gone.
-    expect(find.textContaining('risks reflected in the estimate'),
+    // UI idempotency: the card now shows the all-reflected state and the
+    // button is gone.
+    expect(find.textContaining('reflected in the estimate'),
         findsOneWidget);
-    expect(find.text('Pull 2 into Cost Estimate'), findsNothing);
-    // And the estimate still holds exactly two risk lines.
-    expect(provider.estimate!.lines, hasLength(2));
+    expect(find.text('Pull total into Cost Estimate'), findsNothing);
+    // And the estimate still holds exactly one register line.
+    expect(
+      provider.estimate!.lines
+          .where((l) => l.category == CostCategory.riskAllowance),
+      hasLength(1),
+    );
   });
 }

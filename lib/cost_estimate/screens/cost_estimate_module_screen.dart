@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
+import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/widgets/context_banner.dart';
@@ -150,9 +151,13 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
     }
 
     // Auto-import cost items from the Initial Cost Estimate if the cost
-    // estimate has no lines yet. This populates the Cost by WBS tab with data
-    // from the project's cost estimate items.
-    if (provider.estimate != null && provider.estimate!.lines.isEmpty) {
+    // estimate has no lines yet — or only the unpriced template defaults,
+    // which a late-arriving initiation import replaces. This populates the
+    // Cost by WBS tab with data from the project's cost estimate items.
+    if (provider.estimate != null &&
+        (provider.estimate!.lines.isEmpty ||
+            CostEstimateProvider.hasOnlyUnpricedTemplateLines(
+                provider.estimate!.lines))) {
       if (projectData.costEstimateItems.isNotEmpty) {
         provider.importFromProjectCostEstimateItems(
             projectData.costEstimateItems);
@@ -161,6 +166,11 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
       // the central ProjectDataModel when corresponding sections in the
       // estimate are empty.
       provider.ensureSeededFromProjectData(projectData);
+      // Additional Elements template defaults: contingency, management
+      // reserve, escalation and taxes start in the template and can be
+      // blanked out when not needed (Lusaka 32). Re-seeds after an
+      // import replaced the unpriced defaults.
+      provider.ensureTemplateDefaults();
     }
 
     if (mounted) setState(() {});
@@ -209,13 +219,16 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
         }
 
         // Auto-populate from the Initiation Phase: if the estimate has no
-        // lines yet and the project captured initial cost items, import them.
+        // lines yet (or only the unpriced template defaults) and the project
+        // captured initial cost items, import them.
         // Checked on every build (not just initState) so late-arriving
         // project data (async Firebase load) still seeds the dashboard — but
         // only once the estimate is bound to THIS project, so another
         // project's estimate can never be seeded.
         if (provider.activeProjectId == scopeId &&
-            estimate.lines.isEmpty &&
+            (estimate.lines.isEmpty ||
+                CostEstimateProvider.hasOnlyUnpricedTemplateLines(
+                    estimate.lines)) &&
             projectData.costEstimateItems.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
@@ -224,6 +237,9 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
               // Non-destructive: seeds stakeholder/BOE/review info from the
               // central ProjectDataModel where the estimate sections are empty.
               provider.ensureSeededFromProjectData(projectData);
+              // The import replaced the unpriced template defaults —
+              // put them back (Lusaka 32 template lines).
+              provider.ensureTemplateDefaults();
             }
           });
         }
@@ -238,9 +254,6 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
 
         return ResponsiveScaffold(
           activeItemLabel: 'Cost Estimate',
-          appBarTitle: 'Cost Estimate',
-          breadcrumbPhase: 'Planning Phase',
-          breadcrumbTitle: 'Cost Estimate',
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: ScrollableSectionHeader(
             label: 'Cost Estimate',
@@ -253,6 +266,16 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // ── Page header — the same section the Development
+                    // Set Up screen shows: back chevron, centered title
+                    // and the outstanding-tasks pill ─────────────────────
+                    const PlanningPhaseHeader(
+                      title: 'Cost Estimate',
+                      breadcrumbPhase: 'Planning Phase',
+                      breadcrumbTitle: 'Cost Estimate',
+                      showExportPdf: false,
+                    ),
+                    const SizedBox(height: 12),
                     // ── World-class Section Navigator ─────────────────────
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -969,7 +992,7 @@ class _SsherCostCardState extends State<_SsherCostCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'SSHER Costs (Safety, Security, Health, Environment, Regulatory)',
+                      'SHARE Costs (Safety, Security, Health, Environmental and Regulatory)',
                       style: TextStyle(
                           color: _ink,
                           fontSize: 14,
@@ -1680,32 +1703,39 @@ class _RiskCostCardState extends State<_RiskCostCard> {
     }
   }
 
-  /// Risks that are not yet represented in the estimate (same description
-  /// + same total as an existing riskAllowance line).
-  List<RiskCostLine> get _pending {
+  /// The priced, open risks the register contributes (Lusaka 22
+  /// rules — a stated amount wins, else the P×I matrix cell).
+  List<RiskCostLine> get _candidates {
     final risks = _risks ?? const <Map<String, String>>[];
-    final candidates = collectRiskCostLines(
+    return collectRiskCostLines(
       risks: risks,
       matrixCellExposure: defaultMatrixCellExposure,
     );
-    return candidates.where((r) {
-      final already = widget.lines.any((l) =>
-          l.category == CostCategory.riskAllowance &&
-          l.description == r.description &&
-          (l.total - r.total).abs() < 0.005);
-      return !already;
-    }).toList();
   }
 
-  double get _pendingTotal => _pending.fold(0.0, (s, r) => s + r.total);
+  /// The register's combined exposure — the single number the
+  /// estimate carries (Lusaka 32: "the risk should just be one
+  /// line … just have the total amount for it").
+  double get _registerTotal =>
+      _candidates.fold(0.0, (s, r) => s + r.total);
+
+  /// Whether the estimate already carries the aggregated register
+  /// line at the register's current total. A register that has
+  /// changed since the last pull reads as not reflected, so the
+  /// next pull refreshes the line to the new total.
+  bool get _isReflected => widget.lines.any((l) =>
+      l.category == CostCategory.riskAllowance &&
+      l.subCategory == 'Risk (register)' &&
+      l.description == riskRegisterLineDescription &&
+      (l.total - _registerTotal).abs() < 0.005);
 
   Future<void> _pull() async {
-    final pending = _pending;
-    if (pending.isEmpty || _pulling) return;
+    final candidates = _candidates;
+    if (candidates.isEmpty || _pulling) return;
     setState(() => _pulling = true);
     final messenger = ScaffoldMessenger.of(context);
     final provider = context.read<CostEstimateProvider>();
-    final result = provider.pullRiskCostLines(pending);
+    final result = provider.pullRiskCostLines(candidates);
     if (!mounted) return;
     setState(() => _pulling = false);
     messenger.showSnackBar(SnackBar(
@@ -1752,10 +1782,10 @@ class _RiskCostCardState extends State<_RiskCostCard> {
     }
 
     final risks = _risks ?? const <Map<String, String>>[];
-    final pending = _pending;
-    final pendingTotal = _pendingTotal;
-    final inEstimate = risks.length - pending.length;
-    final allPulled = risks.isNotEmpty && pending.isEmpty;
+    final candidates = _candidates;
+    final registerTotal = _registerTotal;
+    final reflected = _isReflected;
+    final allPulled = risks.isNotEmpty && reflected;
     final accent =
         allPulled ? const Color(0xFF16A34A) : const Color(0xFFD97706);
     final softAccent =
@@ -1797,7 +1827,7 @@ class _RiskCostCardState extends State<_RiskCostCard> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Risks from the Risk Assessment matrix, priced at their stated amount or their probability × impact cell — a built-in calculation, no AI.',
+                      'Risks from the Risk Assessment matrix, priced at their stated amount or their probability × impact cell — pulled into the estimate as one allowance line, a built-in calculation, no AI.',
                       style: TextStyle(color: _muted, fontSize: 11.5),
                     ),
                   ],
@@ -1826,10 +1856,10 @@ class _RiskCostCardState extends State<_RiskCostCard> {
                 Expanded(
                   child: Text(
                     allPulled
-                        ? '$inEstimate of $inEstimate risks reflected in the estimate ✓'
-                        : '${pending.length} of ${risks.length} risks not yet in the estimate — '
-                            '${widget.currencySymbol}${pendingTotal.toStringAsFixed(0)} '
-                            'to add.',
+                        ? 'Register total reflected in the estimate ✓'
+                        : 'Not yet in the estimate — '
+                            '${widget.currencySymbol}${registerTotal.toStringAsFixed(0)} '
+                            'to add as one risk allowance line.',
                     style: TextStyle(
                         color: allPulled
                             ? const Color(0xFF166534)
@@ -1838,12 +1868,12 @@ class _RiskCostCardState extends State<_RiskCostCard> {
                         fontWeight: FontWeight.w600),
                   ),
                 ),
-                if (!allPulled)
+                if (!allPulled && candidates.isNotEmpty)
                   TextButton.icon(
                     onPressed: _pulling ? null : _pull,
                     icon: const Icon(Icons.arrow_downward, size: 14),
-                    label: Text('Pull ${pending.length} into Cost Estimate',
-                        style: const TextStyle(fontSize: 11)),
+                    label: const Text('Pull total into Cost Estimate',
+                        style: TextStyle(fontSize: 11)),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFFB45309),
                       backgroundColor: const Color(0xFFFFF7ED),
@@ -1860,13 +1890,9 @@ class _RiskCostCardState extends State<_RiskCostCard> {
     );
   }
 
-  /// Total value of the register (already-pulled + pending).
-  double get _estTotal => (widget.lines
-          .where((l) =>
-              l.category == CostCategory.riskAllowance &&
-              l.subCategory == 'Risk (register)')
-          .fold(0.0, (s, l) => s + l.total) +
-      _pendingTotal);
+  /// Total value of the register — its combined exposure,
+  /// whether or not it has been pulled into the estimate yet.
+  double get _estTotal => _registerTotal;
 
   static String _fmt(double value) {
     if (value >= 1000000) {
@@ -2981,6 +3007,8 @@ class _LinesByCategoryCard extends StatelessWidget {
         return const Color(0xFFFFC812); // Warranty (purple)
       case CostCategory.decommissioning:
         return const Color(0xFF64748B); // Decommissioning (slate)
+      case CostCategory.other:
+        return const Color(0xFF64748B); // Other (slate)
     }
   }
 }

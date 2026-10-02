@@ -455,8 +455,16 @@ class CostEstimateProvider extends ChangeNotifier {
       List<CostEstimateItem> costEstimateItems) {
     final estimate = _estimate;
     if (estimate == null) return false;
-    if (estimate.lines.isNotEmpty) return false;
     if (costEstimateItems.isEmpty) return false;
+    // An estimate that already carries real lines keeps them. The
+    // one exception: an estimate holding ONLY the unpriced template
+    // defaults (see [ensureTemplateDefaults]) — a late-arriving
+    // Initiation import replaces those, and the template defaults
+    // are re-seeded afterwards by the caller.
+    if (estimate.lines.isNotEmpty &&
+        !hasOnlyUnpricedTemplateLines(estimate.lines)) {
+      return false;
+    }
 
     final importedLines = <CostLine>[];
     for (final item in costEstimateItems) {
@@ -872,74 +880,94 @@ class CostEstimateProvider extends ChangeNotifier {
     return v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
   }
 
-  /// Pull the Risk Register into the Cost Estimate as plain `riskAllowance`
-  /// cost lines — no AI involved (Lusaka 22 call: "the risk also has a risk
-  /// matrix … whatever the total comes out to should show up on the cost
-  /// estimate as well").
+  /// Pull the Risk Register into the Cost Estimate as ONE
+  /// aggregated `riskAllowance` line carrying the register
+  /// total — no AI involved (Lusaka 22: "whatever the total
+  /// comes out to should show up on the cost estimate as
+  /// well"; Lusaka 32: "the risk should just be one line …
+  /// in the risk section, that's where that will be
+  /// calculated").
   ///
-  /// Selection/valuation rules live in `risk_cost_lines.dart` (pure, tested):
-  /// a risk's stated amount wins; otherwise its probability × impact matrix
-  /// cell defaults the exposure. Closed risks are skipped.
+  /// Selection/valuation rules live in `risk_cost_lines.dart`
+  /// (pure, tested): a risk's stated amount wins; otherwise its
+  /// probability × impact matrix cell defaults the exposure.
+  /// Closed risks are skipped. The calculation happens here —
+  /// the register's candidates are summed into the single line.
   ///
-  /// Idempotent: a risk already represented in the estimate as a
-  /// `riskAllowance` line with the same description AND total is never
-  /// duplicated (matches the personnel pull behaviour).
+  /// Idempotent: when the aggregated register line is already
+  /// present with the same total, nothing is created.
+  /// Otherwise any previous register lines (an older per-risk
+  /// format, or a stale aggregate from an earlier pull) are
+  /// replaced, so the estimate always carries exactly one
+  /// register line.
   RiskCostPullResult pullRiskCostLines(List<RiskCostLine> risks) {
     final estimate = _estimate;
     if (estimate == null || risks.isEmpty) {
       return RiskCostPullResult.empty;
     }
 
-    final newLines = [...estimate.lines];
-    var alreadyInEstimate = 0;
-    var addedTotal = 0.0;
+    // The register total — the one number the estimate carries.
+    final total =
+        risks.fold<double>(0, (s, r) => s + r.total);
 
-    for (final risk in risks) {
-      final description = risk.description.trim();
-      if (description.isEmpty) continue;
-      final total = risk.total;
+    final previousRegisterLines = estimate.lines
+        .where((l) =>
+            l.category == CostCategory.riskAllowance &&
+            l.subCategory == 'Risk (register)')
+        .toList();
 
-      // Already represented (same description + same total)? Skip.
-      final existing = estimate.lines.any((l) =>
-          l.category == CostCategory.riskAllowance &&
-          l.description == description &&
-          (l.total - total).abs() < 0.005);
-      if (existing) {
-        alreadyInEstimate++;
-        continue;
-      }
-
-      final probability = risk.probability.trim();
-      final impact = risk.impact.trim();
-      final matrixLabel = (probability.isNotEmpty || impact.isNotEmpty)
-          ? ' · P: ${probability.isEmpty ? '—' : probability} × I: ${impact.isEmpty ? '—' : impact}'
-          : '';
-
-      newLines.add(CostLine(
-        id: newId('line'),
-        category: CostCategory.riskAllowance,
-        subCategory: 'Risk (register)',
-        description: description,
-        quantity: null,
-        unit: 'allowance',
-        rate: null,
-        total: total,
-        inSchedule: false,
-        basisSource: CostSourceType.expertJudgment,
-        basisReference:
-            'Risk register${risk.riskId.trim().isEmpty ? '' : ' ${risk.riskId.trim()}'}$matrixLabel',
-        aiGenerated: false,
-      ));
-      addedTotal += total;
-    }
-
-    if (newLines.length == estimate.lines.length) {
+    // Already represented: the aggregated register line with
+    // the same total.
+    final alreadyRepresented = previousRegisterLines.any((l) =>
+        l.description == riskRegisterLineDescription &&
+        (l.total - total).abs() < 0.005);
+    if (alreadyRepresented) {
       return RiskCostPullResult(
         pulled: 0,
-        alreadyInEstimate: alreadyInEstimate,
+        alreadyInEstimate: risks.length,
         addedTotal: 0,
       );
     }
+
+    // Basis of record: the register ids and each risk's
+    // probability × impact position, so the single line stays
+    // traceable back to the register.
+    final ids = risks
+        .map((r) => r.riskId.trim())
+        .where((id) => id.isNotEmpty)
+        .toList();
+    final positions = risks
+        .map((r) =>
+            'P: ${r.probability.trim().isEmpty ? '—' : r.probability.trim()} × I: ${r.impact.trim().isEmpty ? '—' : r.impact.trim()}')
+        .where((p) => p != 'P: — × I: —')
+        .toList();
+    final idSummary = ids.isEmpty ? '' : ' ${ids.join(', ')}';
+    final positionSummary =
+        positions.isEmpty ? '' : ' · ${positions.join(', ')}';
+
+    final line = CostLine(
+      id: newId('line'),
+      category: CostCategory.riskAllowance,
+      subCategory: 'Risk (register)',
+      description: riskRegisterLineDescription,
+      quantity: null,
+      unit: 'allowance',
+      rate: null,
+      total: total,
+      inSchedule: false,
+      basisSource: CostSourceType.expertJudgment,
+      basisReference: 'Risk register$idSummary'
+          ' · ${risks.length} risk${risks.length == 1 ? '' : 's'}'
+          '$positionSummary',
+      aiGenerated: false,
+    );
+
+    final newLines = [
+      ...estimate.lines.where((l) =>
+          !(l.category == CostCategory.riskAllowance &&
+              l.subCategory == 'Risk (register)')),
+      line,
+    ];
 
     final totals = ComputeUtils.computeTotals(newLines);
     _estimate = estimate.copyWith(
@@ -950,9 +978,9 @@ class CostEstimateProvider extends ChangeNotifier {
     notifyListeners();
     _saveToStorage();
     return RiskCostPullResult(
-      pulled: newLines.length - estimate.lines.length,
-      alreadyInEstimate: alreadyInEstimate,
-      addedTotal: addedTotal,
+      pulled: 1,
+      alreadyInEstimate: 0,
+      addedTotal: total,
     );
   }
 
@@ -1282,6 +1310,87 @@ class CostEstimateProvider extends ChangeNotifier {
     );
     notifyListeners();
     _saveToStorage();
+  }
+
+  /// The Additional Elements categories the template seeds as
+  /// default lines (Lusaka 32: "we should have line items for
+  /// those already in here as part of the template. And if it's
+  /// not needed, you just blank it out.").
+  static const Set<CostCategory> templateDefaultCategories = {
+    CostCategory.contingency,
+    CostCategory.mgmtReserve,
+    CostCategory.escalation,
+    CostCategory.taxes,
+  };
+
+  /// Seed the Additional Elements template defaults — Contingency,
+  /// Management Reserve, Escalation & Inflation and Taxes & Duties —
+  /// as zero-total lines, so they are already part of the template
+  /// and can simply be blanked out when not needed (Lusaka 32).
+  ///
+  /// Identification is by **category only**: a category that already
+  /// has a line (imported from the Initiation Phase, pulled from a
+  /// register, or added by hand) is left untouched, so seeding never
+  /// duplicates or overwrites a real amount. The seeded lines are
+  /// ordinary editable/deletable lines in the Builder's Additional
+  /// Elements tab.
+  ///
+  /// Skipped on baselined / re-baselined estimates — seeding there
+  /// would silently change a baselined total without a variance
+  /// record.
+  void ensureTemplateDefaults() {
+    final estimate = _estimate;
+    if (estimate == null) return;
+    if (estimate.status == EstimateStatus.baselined ||
+        estimate.status == EstimateStatus.rebaselined) {
+      return;
+    }
+
+    final missing = templateDefaultCategories
+        .where(
+            (c) => !estimate.lines.any((l) => l.category == c))
+        .toList();
+    if (missing.isEmpty) return;
+
+    final newLines = [
+      ...estimate.lines,
+      for (final category in missing)
+        CostLine(
+          id: newId('line'),
+          category: category,
+          subCategory: 'Additional Elements',
+          description: category.label,
+          quantity: null,
+          unit: 'lump',
+          rate: null,
+          total: 0,
+          inSchedule: false,
+          basisSource: CostSourceType.expertJudgment,
+          aiGenerated: false,
+        ),
+    ];
+
+    final totals = ComputeUtils.computeTotals(newLines);
+    _estimate = estimate.copyWith(
+      lines: newLines,
+      totals: totals,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  /// True when the estimate's lines are exactly the unpriced
+  /// template defaults — only zero-total lines in the template
+  /// categories ([templateDefaultCategories]). Lets a late-arriving
+  /// Initiation import replace them (see
+  /// [importFromProjectCostEstimateItems]); [ensureTemplateDefaults]
+  /// then re-seeds them alongside the imported lines.
+  static bool hasOnlyUnpricedTemplateLines(List<CostLine> lines) {
+    if (lines.isEmpty) return false;
+    return lines.every((l) =>
+        templateDefaultCategories.contains(l.category) &&
+        l.total.abs() < 0.005);
   }
 
   /// Ensure non-destructive seeding of estimate content from the central

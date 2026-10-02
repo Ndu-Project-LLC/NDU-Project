@@ -123,7 +123,8 @@ enum CostCategory {
   financing,
   startup,
   warranty,
-  decommissioning;
+  decommissioning,
+  other;
 
   String get label => switch (this) {
         CostCategory.labor => 'Labor',
@@ -138,7 +139,7 @@ enum CostCategory {
         CostCategory.facilities => 'Facilities & Infrastructure',
         CostCategory.insuranceCompliance => 'Insurance & Compliance',
         CostCategory.ssher =>
-          'SSHER (Safety, Health, Env, Radiation)',
+          'Safety, Security, Health, Environmental and Regulatory',
         CostCategory.quality => 'Quality Management',
         CostCategory.riskAllowance => 'Risk Allowances',
         CostCategory.contingency => 'Contingency',
@@ -149,6 +150,7 @@ enum CostCategory {
         CostCategory.startup => 'Startup & Transition',
         CostCategory.warranty => 'Warranty & Closeout',
         CostCategory.decommissioning => 'Decommissioning & Disposal',
+        CostCategory.other => 'Other',
       };
 
   String get group => switch (this) {
@@ -192,6 +194,7 @@ enum CostCategory {
         CostCategory.startup => 'rocket_launch',
         CostCategory.warranty => 'fact_check',
         CostCategory.decommissioning => 'delete',
+        CostCategory.other => 'more_horiz',
       };
 }
 

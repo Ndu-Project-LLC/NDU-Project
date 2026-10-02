@@ -12,8 +12,6 @@ import 'package:ndu_project/widgets/front_end_planning_header.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
-import 'package:ndu_project/widgets/activity_log_panel.dart';
-
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/my_raci_assignments_panel.dart';
@@ -41,11 +39,13 @@ class ProjectActivitiesLogScreen extends StatefulWidget {
  debugPrint('Activity log checkpoint save failed: $error');
  }
  });
- }
- }
+ }    }
 
- ActivityLogPanel.open(context);
- }
+    // Navigate to the routed page rather than pushing the lightweight
+    // [ActivityLogPanel] overlay. The panel is a reduced date-grouped list
+    // with no search, filters or pagination; this screen is the full page.
+    context.push('/${AppRoutes.projectActivitiesLog}');
+  }
 
  @override
  State<ProjectActivitiesLogScreen> createState() =>

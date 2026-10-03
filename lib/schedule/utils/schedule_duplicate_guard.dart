@@ -14,6 +14,10 @@
 ///   (the copy an import produced),
 /// - same name, same external link → the same item,
 /// - same name, different external links → different items, both kept.
+///
+/// The link consulted, in order, is the WBS node, then the work package, then
+/// the agile task, sprint and release — so two work packages that happen to
+/// share a label are both kept, while the same package imported twice is not.
 library;
 
 import 'package:ndu_project/schedule/models/schedule_models.dart';
@@ -32,6 +36,7 @@ String? scheduleItemIdentity(
 }) {
   final links = <String, String?>{
     'wbs': wbsNodeId ?? activity.wbsNodeId,
+    'wp': activity.workPackageId,
     'agile': agileTaskId ?? activity.agileTaskId,
     'sprint': sprintId ?? activity.sprintId,
     'release': releaseId ?? activity.releaseId,

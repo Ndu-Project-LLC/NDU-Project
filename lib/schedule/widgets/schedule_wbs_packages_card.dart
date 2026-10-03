@@ -24,8 +24,8 @@
 ///   activities roll up to.
 /// - **It carries the timelines both ways.** "Add N to schedule" brings the
 ///   missing packages across (keeping `wbsNodeId` + the package's planned
-///   dates); "Fill schedule dates from WBS" writes a package's planned window
-///   onto its un-dated schedule rows; "Attach schedule dates to WBS" is the
+///   dates); "Fill schedule dates from WBS" splits a package's planned window
+///   between its un-dated schedule rows; "Attach schedule dates to WBS" is the
 ///   reverse, and is the action the builder also offers.
 /// - **It reads their cost, never writes it.** A package that is already costed
 ///   shows a `Costed <amount>` / `Cost item attached` pill, but cost is entered
@@ -132,11 +132,21 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
                 runSpacing: 10,
                 children: [
                   _stat('${rows.length}', 'WBS packages', _accent),
-                  _stat('$onSchedule', 'on the schedule',
-                      onSchedule == rows.length ? const Color(0xFF16A34A) : _gold),
-                  _stat('$missing', 'not scheduled yet',
-                      missing == 0 ? const Color(0xFF16A34A) : const Color(0xFFEF4444)),
-                  _stat('$priced', 'with a cost item',
+                  _stat(
+                      '$onSchedule',
+                      'on the schedule',
+                      onSchedule == rows.length
+                          ? const Color(0xFF16A34A)
+                          : _gold),
+                  _stat(
+                      '$missing',
+                      'not scheduled yet',
+                      missing == 0
+                          ? const Color(0xFF16A34A)
+                          : const Color(0xFFEF4444)),
+                  _stat(
+                      '$priced',
+                      'with a cost item',
                       priced == rows.length && rows.isNotEmpty
                           ? const Color(0xFF16A34A)
                           : _accent),
@@ -231,8 +241,7 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
                 padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
                 child: Column(
                   children: [
-                    for (final row in visible)
-                      _row(row, lines),
+                    for (final row in visible) _row(row, lines),
                     if (!_showAll &&
                         filtered.length >
                             ScheduleWbsPackagesCard.initialVisibleRows)
@@ -445,8 +454,8 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
             TextButton.icon(
               onPressed: _busy ? null : () => _addOneToSchedule(row),
               icon: const Icon(Icons.add, size: 14),
-              label: const Text('Add to schedule',
-                  style: TextStyle(fontSize: 11)),
+              label:
+                  const Text('Add to schedule', style: TextStyle(fontSize: 11)),
               style: TextButton.styleFrom(
                 foregroundColor: _accent,
                 padding:
@@ -508,8 +517,18 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
       '${d.day.toString().padLeft(2, '0')} ${_months[d.month - 1]} ${d.year}';
 
   static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   /// Money already attached to this package, walked from the estimate lines
@@ -535,7 +554,6 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
   Future<void> _addMissingToSchedule(int expected) async {
     final scheduleProvider = context.read<ScheduleProvider>();
     final wbsProvider = context.read<WBSProvider>();
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _busy = true);
     try {
       final missing = wbsPackagesMissingFromSchedule(
@@ -543,13 +561,11 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
         activities: scheduleProvider.schedule?.activities ?? const [],
       );
       final added = scheduleProvider.attachWbsPackages(missing);
-      messenger.showSnackBar(SnackBar(
-        content: Text(added == 0
-            ? 'Every WBS package is already on the schedule.'
-            : 'Added $added WBS work package${added == 1 ? '' : 's'} to the '
-                'schedule${added < expected ? ' (${expected - added} were already there)' : ''}.'),
-        behavior: SnackBarBehavior.floating,
-      ));
+      _toast(added == 0
+          ? 'Every WBS package is already on the schedule.'
+          : 'Added $added WBS work package${added == 1 ? '' : 's'} to the '
+                  'schedule${added < expected ? ' (${expected - added} were already there)' : ''}.'
+              .trim());
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -557,7 +573,6 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
 
   Future<void> _addOneToSchedule(WbsPackageRow row) async {
     final scheduleProvider = context.read<ScheduleProvider>();
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _busy = true);
     try {
       final added = scheduleProvider.attachWbsPackages([
@@ -571,12 +586,12 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
           plannedFinish: row.plannedFinish,
         ),
       ]);
-      messenger.showSnackBar(SnackBar(
-        content: Text(added == 0
+      _toast(
+        added == 0
             ? '${row.label} could not be added — the schedule is not ready yet.'
-            : '${row.label} added to the schedule.'),
-        behavior: SnackBarBehavior.floating,
-      ));
+            : '${row.label} added to the schedule.',
+        warning: added == 0,
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -585,7 +600,6 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
   Future<void> _fillScheduleDatesFromWbs() async {
     final scheduleProvider = context.read<ScheduleProvider>();
     final wbsProvider = context.read<WBSProvider>();
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _busy = true);
     try {
       final rows = buildWbsPackageRows(
@@ -598,13 +612,16 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
             row.nodeId: (start: row.plannedStart, finish: row.plannedFinish),
       };
       final filled = scheduleProvider.applyWbsPlannedDates(windows);
-      messenger.showSnackBar(SnackBar(
-        content: Text(filled == 0
+      _toast(
+        filled == 0
             ? 'Every scheduled package already has its own dates.'
-            : 'Filled the WBS planned window onto $filled schedule '
-                'row${filled == 1 ? '' : 's'}.'),
-        behavior: SnackBarBehavior.floating,
-      ));
+            // The window is split between the blank rows of each package, so
+            // the result is a run of consecutive activities, not N copies of
+            // the same span.
+            : 'Split the WBS planned window across $filled schedule '
+                'row${filled == 1 ? '' : 's'}. Adjust any row in the Activity '
+                'Tree.',
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -613,27 +630,69 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
   void _attachScheduleDatesToWbs() {
     final scheduleProvider = context.read<ScheduleProvider>();
     final wbsProvider = context.read<WBSProvider>();
-    final messenger = ScaffoldMessenger.of(context);
     final schedule = scheduleProvider.schedule;
     if (schedule == null) return;
 
+    // A package whose schedule rows cover less than the window already planned
+    // on the WBS is deliberately left alone — the attach widens, it does not
+    // truncate. Counting them lets the message say so, rather than reporting a
+    // bare "attached N packages" and leaving the rest looking untouched for no
+    // stated reason.
+    final rows = buildWbsPackageRows(
+      wbs: wbsProvider.wbs,
+      activities: schedule.activities,
+    );
+    final keptPlanned = rows.where((row) {
+      if (!row.onSchedule || !row.hasPlannedWindow || !row.hasScheduleDates) {
+        return false;
+      }
+      final startsLater = row.plannedStart != null &&
+          row.scheduledStart != null &&
+          row.scheduledStart!.isAfter(row.plannedStart!);
+      final finishesEarlier = row.plannedFinish != null &&
+          row.scheduledFinish != null &&
+          row.scheduledFinish!.isBefore(row.plannedFinish!);
+      return startsLater || finishesEarlier;
+    }).length;
+
     final timelines = collectScheduleTimelines(schedule.activities);
     if (timelines.isEmpty) {
-      messenger.showSnackBar(const SnackBar(
-        content: Text('No scheduled dates to attach yet — give the '
-            'WBS-linked rows a start and finish first.'),
-        behavior: SnackBarBehavior.floating,
-      ));
+      _toast(
+        'No scheduled dates to attach yet — give the WBS-linked rows a start '
+        'and finish first.',
+        warning: true,
+      );
       return;
     }
 
     final updated = wbsProvider.applyScheduleTimelines(timelines);
-    messenger.showSnackBar(SnackBar(
-      content: Text(updated == 0
-          ? 'WBS timelines are already up to date.'
+    final keptNote = keptPlanned == 0
+        ? ''
+        : ' $keptPlanned package${keptPlanned == 1 ? '' : 's'} '
+            '${keptPlanned == 1 ? 'is' : 'are'} planned wider on the WBS and '
+            '${keptPlanned == 1 ? 'was' : 'were'} left as planned.';
+    _toast(
+      updated == 0
+          ? 'WBS timelines are already up to date.$keptNote'
           : 'Attached scheduled dates to $updated WBS '
-              'package${updated == 1 ? '' : 's'}.'),
-      behavior: SnackBarBehavior.floating,
-    ));
+              'package${updated == 1 ? '' : 's'}.$keptNote',
+    );
+  }
+
+  /// One message, one place. Each handler clears the previous SnackBar first:
+  /// these actions are pressed repeatedly while working down a list, and
+  /// queued messages leave the last few stale and unread.
+  void _toast(String message, {bool warning = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: warning ? const Color(0xFFF59E0B) : Colors.white,
+          duration: Duration(seconds: warning ? 5 : 4),
+        ),
+      );
   }
 }

@@ -99,9 +99,8 @@ class ScheduleProvider extends ChangeNotifier {
     String projectId, {
     String? projectName,
   }) async {
-    final pid = projectId.trim().isEmpty
-        ? unattributedProjectId
-        : projectId.trim();
+    final pid =
+        projectId.trim().isEmpty ? unattributedProjectId : projectId.trim();
 
     // Wait for the constructor's bootstrap read so we don't race it.
     while (_isLoadingFromStorage) {
@@ -187,22 +186,22 @@ class ScheduleProvider extends ChangeNotifier {
   Map<String, dynamic> _statePayload() {
     final s = _schedule;
     return {
-        'state': {
-          'schedule': s != null
-              ? {
-                  'id': s.id,
-                  'projectId': s.projectId,
-                  'projectName': s.projectName,
-                  'deliveryModel': s.basis.deliveryModel,
-                  'status': s.status.name,
-                  'isLocked': s.isLocked,
-                  'basis': _basisToJson(s.basis),
-                  'estimateBasis': _estimateBasisToJson(s.estimateBasis),
-                  'activities': s.activities.map((a) => a.toJson()).toList(),
-                }
-              : null,
-          'setupComplete': _setupComplete,
-        },
+      'state': {
+        'schedule': s != null
+            ? {
+                'id': s.id,
+                'projectId': s.projectId,
+                'projectName': s.projectName,
+                'deliveryModel': s.basis.deliveryModel,
+                'status': s.status.name,
+                'isLocked': s.isLocked,
+                'basis': _basisToJson(s.basis),
+                'estimateBasis': _estimateBasisToJson(s.estimateBasis),
+                'activities': s.activities.map((a) => a.toJson()).toList(),
+              }
+            : null,
+        'setupComplete': _setupComplete,
+      },
     };
   }
 
@@ -225,7 +224,8 @@ class ScheduleProvider extends ChangeNotifier {
       }
       final estimateJson = json['estimateBasis'] as Map<String, dynamic>?;
       if (estimateJson != null) {
-        restored = restored.copyWith(estimateBasis: _estimateBasisFromJson(estimateJson));
+        restored = restored.copyWith(
+            estimateBasis: _estimateBasisFromJson(estimateJson));
       }
       return restored;
     }
@@ -241,8 +241,7 @@ class ScheduleProvider extends ChangeNotifier {
           'incrementStrategy': b.incrementStrategy,
         if (b.definitionOfReady != null)
           'definitionOfReady': b.definitionOfReady,
-        if (b.definitionOfDone != null)
-          'definitionOfDone': b.definitionOfDone,
+        if (b.definitionOfDone != null) 'definitionOfDone': b.definitionOfDone,
         'assumptions': b.assumptions,
         'constraints': b.constraints,
         'milestones': b.milestones,
@@ -289,14 +288,12 @@ class ScheduleProvider extends ChangeNotifier {
   static EstimateBasis _estimateBasisFromJson(Map<String, dynamic> json) {
     return EstimateBasis(
       scopeAlignment: json['scopeAlignment'] as String? ?? '',
-      estimationMethods:
-          (json['estimationMethods'] as List<dynamic>? ?? [])
-              .map((e) => EstimationMethod.values
-                  .byName(e.toString())
-                  // Defensive: any unknown method falls back to expert judgment.
-                  )
-              .toList()
-              .cast<EstimationMethod>(),
+      estimationMethods: (json['estimationMethods'] as List<dynamic>? ?? [])
+          .map((e) => EstimationMethod.values.byName(e.toString())
+              // Defensive: any unknown method falls back to expert judgment.
+              )
+          .toList()
+          .cast<EstimationMethod>(),
       keyAssumptions:
           Map<String, String>.from(json['keyAssumptions'] as Map? ?? {}),
       procurementConsiderations: Map<String, String>.from(
@@ -320,9 +317,8 @@ class ScheduleProvider extends ChangeNotifier {
   }) {
     // Bind the new schedule to the active project so it is persisted (and read
     // back) under that project's own key — never the shared `default` scope.
-    _activeProjectId = projectId.trim().isNotEmpty
-        ? projectId.trim()
-        : _activeProjectId;
+    _activeProjectId =
+        projectId.trim().isNotEmpty ? projectId.trim() : _activeProjectId;
     _schedule = createEmptySchedule(
       projectId: _activeProjectId,
       projectName: projectName,
@@ -419,9 +415,24 @@ class ScheduleProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
+  /// Runs a full CPM pass: recomputes early/late dates, total float and the
+  /// critical path, then writes the result back onto the tree.
+  ///
+  /// [projectStart] is the day the CPM offsets are measured from. When it is
+  /// not supplied the schedule's OWN baseline is used — the project start date
+  /// set by "Setup Timeline", else the earliest dated activity, else today.
+  /// Anchoring on `DateTime.now()` instead (the old behaviour) meant a planner
+  /// who set a baseline of 01/06/26 still had every undated activity dated
+  /// from the day they happened to press the button, so the computed finish
+  /// date silently ignored the timeline the schedule already declared.
+  ///
+  /// Pass [overwriteDates] to push the computed dates onto rows that already
+  /// carry a date. The default leaves existing dates alone and only fills in
+  /// the ones that are still empty, so re-running CPM after an edit never
+  /// discards dates the planner set by hand.
   CpmResult? computeCpm({bool overwriteDates = false, DateTime? projectStart}) {
     if (_schedule == null || _schedule!.activities.isEmpty) return null;
-    final start = projectStart ?? DateTime.now();
+    final start = projectStart ?? _cpmAnchorDate();
     final flat = ScheduleCpmService.flatten(_schedule!.activities);
     final result = ScheduleCpmService.calculate(activities: flat);
     final updated = ScheduleCpmService.applyToActivities(
@@ -437,6 +448,34 @@ class ScheduleProvider extends ChangeNotifier {
     notifyListeners();
     _saveToStorage();
     return result;
+  }
+
+  /// The day [computeCpm] measures its offsets from: the project start set by
+  /// "Setup Timeline", else the earliest date on the schedule, else today.
+  /// Exposed so the UI can report the finish date the schedule actually holds
+  /// rather than recomputing an anchor that could disagree with it.
+  DateTime? get cpmAnchorDate =>
+      _schedule == null || _schedule!.activities.isEmpty
+          ? null
+          : _cpmAnchorDate();
+
+  /// The day CPM offsets are measured from when the caller does not name one.
+  ///
+  /// Prefers the schedule's declared project start, then the earliest date on
+  /// the schedule, and only falls back to today when nothing is dated yet.
+  /// Midnight-normalised so a start time never leaks into the day arithmetic.
+  DateTime _cpmAnchorDate() {
+    final activities = _schedule!.activities;
+    final rootStart = activities.isEmpty ? null : activities.first.startDate;
+    DateTime? earliest = rootStart;
+    for (final activity in ScheduleCpmService.flatten(activities)) {
+      final start = activity.startDate;
+      if (start != null && (earliest == null || start.isBefore(earliest))) {
+        earliest = start;
+      }
+    }
+    final anchor = earliest ?? DateTime.now();
+    return DateTime(anchor.year, anchor.month, anchor.day);
   }
 
   /// Adds [activity] under [parentId] and returns its new id.
@@ -697,27 +736,59 @@ class ScheduleProvider extends ChangeNotifier {
   /// The other direction already exists (`WBSProvider.applyScheduleTimelines`
   /// stamps the schedule's dates onto the WBS). This one covers the case where
   /// the package's start and finish were agreed on the WBS first, and the
-  /// schedule row is what is blank.
+  /// schedule rows are what is blank.
   ///
-  /// Only activities with **no** dates of their own are written, so a CPM pass
-  /// or a hand-entered window is never silently overwritten. Returns the number
-  /// of activities that gained a date.
+  /// A package's window is the span of the **whole** package, so when several
+  /// of its rows are blank it is divided between them: the window is cut into
+  /// one contiguous slice per blank row, in tree order, and the slices tile it
+  /// exactly — the first row starts on the planned start, the last finishes on
+  /// the planned finish, and no day is dropped or double-counted. Writing the
+  /// same window onto every row instead (which is what this used to do) gave a
+  /// package of three rows three identical Jan 5 – Jan 30 activities, which is
+  /// not a plan and which CPM then read as three parallel 26-day tasks.
+  ///
+  /// Rows that already carry dates keep them and are excluded from the split,
+  /// so a CPM pass or a hand-entered window is never overwritten. A package with
+  /// a single blank row — or one whose window is not a range to divide — gives
+  /// that row the whole window, which is the same result as before.
+  ///
+  /// Returns the number of activities that gained a date.
   int applyWbsPlannedDates(
       Map<String, ({DateTime? start, DateTime? finish})> byNodeId) {
     if (byNodeId.isEmpty) return 0;
     final schedule = _schedule;
     if (schedule == null || schedule.activities.isEmpty) return 0;
 
+    // Which rows are blank, grouped per WBS node and held in tree order. The
+    // split is decided here, before any writing, so every row of a package gets
+    // its slice from one pass rather than from its own position in the walk.
+    final blankIdsByNode = <String, List<String>>{};
+    for (final activity in ScheduleCpmService.flatten(schedule.activities)) {
+      final nodeId = (activity.wbsNodeId ?? '').trim();
+      if (nodeId.isEmpty) continue;
+      final window = byNodeId[nodeId];
+      if (window == null || (window.start == null && window.finish == null)) {
+        continue;
+      }
+      if (activity.startDate != null || activity.endDate != null) continue;
+      blankIdsByNode.putIfAbsent(nodeId, () => []).add(activity.id);
+    }
+
+    final sliceByActivityId = <String, ({DateTime? start, DateTime? finish})>{};
+    for (final entry in blankIdsByNode.entries) {
+      final slices = _sliceWindow(byNodeId[entry.key]!, entry.value.length);
+      for (var i = 0; i < entry.value.length; i++) {
+        sliceByActivityId[entry.value[i]] = slices[i];
+      }
+    }
+    if (sliceByActivityId.isEmpty) return 0;
+
     var updated = 0;
 
     ScheduleActivity apply(ScheduleActivity activity) {
       final children = activity.children.map(apply).toList(growable: false);
-      final nodeId = (activity.wbsNodeId ?? '').trim();
-      final window = nodeId.isEmpty ? null : byNodeId[nodeId];
-      if (window == null ||
-          (window.start == null && window.finish == null) ||
-          activity.startDate != null ||
-          activity.endDate != null) {
+      final slice = sliceByActivityId[activity.id];
+      if (slice == null) {
         return children.isEmpty
             ? activity
             : activity.copyWith(children: children);
@@ -725,17 +796,16 @@ class ScheduleProvider extends ChangeNotifier {
 
       updated++;
       return activity.copyWith(
-        startDate: window.start,
-        endDate: window.finish,
-        duration: window.start != null && window.finish != null
-            ? window.finish!.difference(window.start!).inDays + 1
+        startDate: slice.start,
+        endDate: slice.finish,
+        duration: slice.start != null && slice.finish != null
+            ? slice.finish!.difference(slice.start!).inDays + 1
             : activity.duration,
         children: children,
       );
     }
 
-    final updatedRoots =
-        schedule.activities.map(apply).toList(growable: false);
+    final updatedRoots = schedule.activities.map(apply).toList(growable: false);
     if (updated == 0) return 0;
 
     _schedule = schedule.copyWith(
@@ -745,6 +815,54 @@ class ScheduleProvider extends ChangeNotifier {
     notifyListeners();
     _saveToStorage();
     return updated;
+  }
+
+  /// Cuts [window] into [count] contiguous slices, in order.
+  ///
+  /// The slices tile the window exactly: `i` starts at
+  /// `start + floor(i * days / count)` and finishes the day before
+  /// `start + floor((i + 1) * days / count)`, so the last slice ends on the
+  /// window's finish and no day is left over. Dividing by [count] rather than
+  /// by a rounded per-row length keeps the sum exact for any window that does
+  /// not divide evenly.
+  ///
+  /// Falls back to handing the whole window to every row when it cannot be cut:
+  /// no window, no start to anchor on, a single row, or a range too short to
+  /// give each row a day. When there are more rows than days the surplus rows
+  /// share a day — clamped so no row is ever handed an end date before its own
+  /// start, which is what the arithmetic alone would produce once a row's slice
+  /// rounds down to zero days.
+  static List<({DateTime? start, DateTime? finish})> _sliceWindow(
+      ({DateTime? start, DateTime? finish}) window, int count) {
+    if (count <= 0) return const [];
+    final whole = List<({DateTime? start, DateTime? finish})>.filled(
+        count, (start: window.start, finish: window.finish));
+    final start = window.start;
+    if (start == null) return whole;
+    final finish = window.finish;
+    final days = finish == null ? 0 : finish.difference(start).inDays + 1;
+    if (count == 1 || days <= 1) return whole;
+
+    return [
+      for (var i = 0; i < count; i++)
+        (
+          start: start.add(Duration(days: _sliceStartDay(i, days, count))),
+          finish: start.add(Duration(days: _sliceEndDay(i, days, count))),
+        ),
+    ];
+  }
+
+  /// Day offset, from the window's start, at which slice [i] begins.
+  static int _sliceStartDay(int i, int days, int count) {
+    final day = (i * days / count).floor();
+    return day.clamp(0, days - 1);
+  }
+
+  /// Day offset at which slice [i] finishes — never before its own start.
+  static int _sliceEndDay(int i, int days, int count) {
+    final startDay = _sliceStartDay(i, days, count);
+    final day = ((i + 1) * days / count).floor() - 1;
+    return day.clamp(startDay, days - 1);
   }
 
   /// Stamps a Cost Estimate line onto the schedule activity it prices, so the
@@ -765,11 +883,23 @@ class ScheduleProvider extends ChangeNotifier {
     return nodeId.isEmpty ? null : nodeId;
   }
 
-  /// Import AgileTask (story) records into the schedule as ScheduleActivity entries.
-  ///
-  /// Groups stories under Feature/Epic summary activities. Only operates when
+  /// Import AgileTask (story) records into the schedule as ScheduleActivity
+  /// entries, grouped under Feature/Epic summary activities. Only operates when
   /// the schedule delivery model is AGILE or HYBRID.
-  void importStoriesFromAgile({
+  ///
+  /// Idempotent by construction: a story whose `AgileTask.id` is already on the
+  /// schedule is skipped, and the epic/feature summary rows a previous import
+  /// created are reused (matched by name) instead of a second copy being
+  /// appended. Pressing "Import Agile Stories" twice therefore tops the
+  /// schedule up with whatever is new instead of doubling the whole backlog —
+  /// which is what the old append-always behaviour did.
+  ///
+  /// Story prerequisites are resolved into real finish-to-start dependencies,
+  /// so the stories are CPM-ready rather than a flat list.
+  ///
+  /// Returns what the run actually did; the caller reports those numbers
+  /// instead of guessing them from the input list.
+  AgileStoryImportSummary importStoriesFromAgile({
     required List<
             ({
               AgileTask story,
@@ -780,102 +910,228 @@ class ScheduleProvider extends ChangeNotifier {
             })>
         stories,
   }) {
-    if (_schedule == null || _schedule!.activities.isEmpty) return;
+    if (_schedule == null || _schedule!.activities.isEmpty) {
+      return const AgileStoryImportSummary();
+    }
     final dm = _schedule!.basis.deliveryModel;
-    if (dm != 'AGILE' && dm != 'HYBRID') return;
+    if (dm != 'AGILE' && dm != 'HYBRID') {
+      return const AgileStoryImportSummary();
+    }
 
     final root = _schedule!.activities[0];
 
-    // Build a map: epic title → feature title → list of stories
-    final Map<String, Map<String, List<AgileTask>>> grouped = {};
-    final Map<String, String?> sprintLabelByStoryId = {};
-    final Map<String, String?> releaseLabelByStoryId = {};
-    for (final entry in stories) {
-      grouped.putIfAbsent(entry.epicTitle, () => {});
-      grouped[entry.epicTitle]!.putIfAbsent(entry.featureTitle, () => []);
-      grouped[entry.epicTitle]![entry.featureTitle]!.add(entry.story);
-      sprintLabelByStoryId[entry.story.id] = entry.sprintLabel;
-      releaseLabelByStoryId[entry.story.id] = entry.releaseLabel;
+    // Every AgileTask id already on the schedule, plus the activity it landed
+    // on — the second map is what lets a new story depend on an old one.
+    final importedTaskIds = <String>{};
+    final activityIdByTaskId = <String, String>{};
+    for (final activity in ScheduleCpmService.flatten([root])) {
+      final taskId = (activity.agileTaskId ?? '').trim();
+      if (taskId.isEmpty) continue;
+      importedTaskIds.add(taskId);
+      activityIdByTaskId[taskId] = activity.id;
     }
 
-    // Build feature activities as children of epic activities
-    final List<ScheduleActivity> epicActivities = [];
-    for (final epicEntry in grouped.entries) {
-      final featureActivities = <ScheduleActivity>[];
+    // Group the stories this run will actually add: epic → feature → stories.
+    final pending = <String, Map<String, List<AgileTask>>>{};
+    final labels = <String, ({String? sprint, String? release})>{};
+    for (final entry in stories) {
+      labels[entry.story.id] = (
+        sprint: entry.sprintLabel,
+        release: entry.releaseLabel,
+      );
+      if (importedTaskIds.contains(entry.story.id)) continue;
+      pending.putIfAbsent(entry.epicTitle, () => {});
+      pending[entry.epicTitle]!.putIfAbsent(entry.featureTitle, () => []).add(
+            entry.story,
+          );
+    }
+
+    var storiesSkipped = 0;
+    for (final entry in stories) {
+      if (importedTaskIds.contains(entry.story.id)) storiesSkipped++;
+    }
+    if (pending.isEmpty) {
+      return AgileStoryImportSummary(storiesSkipped: storiesSkipped);
+    }
+
+    // Ids first, so a story can depend on one that is added later in the walk.
+    final pendingIds = <String, String>{};
+    for (final featureStories in pending.values) {
+      for (final storyList in featureStories.values) {
+        for (final story in storyList) {
+          pendingIds[story.id] = newSchedId('act');
+        }
+      }
+    }
+    final allStoryIds = {...activityIdByTaskId, ...pendingIds};
+
+    var epicsAdded = 0;
+    var epicsReused = 0;
+    var featuresAdded = 0;
+    var featuresReused = 0;
+    var storiesAdded = 0;
+
+    // Summary rows a previous import created hold at least one story beneath
+    // them; that is what tells them apart from a planner-authored summary that
+    // merely shares a name.
+    final reusableEpics = <String, ScheduleActivity>{};
+    for (final child in _storyBearingSummaries(root.children)) {
+      reusableEpics.putIfAbsent(itemNameKey(child.name), () => child);
+    }
+
+    var epicChildren = [...root.children];
+    for (final epicEntry in pending.entries) {
+      final existingEpic = reusableEpics[itemNameKey(epicEntry.key)];
+
+      final reusableFeatures = <String, ScheduleActivity>{};
+      if (existingEpic != null) {
+        for (final child in _storyBearingSummaries(existingEpic.children)) {
+          reusableFeatures.putIfAbsent(itemNameKey(child.name), () => child);
+        }
+      }
+
+      var featureChildren = existingEpic?.children ?? <ScheduleActivity>[];
+      var epicGrew = false;
+
       for (final featureEntry in epicEntry.value.entries) {
-        final storyActivities = featureEntry.value.map((s) {
+        final storyActivities = featureEntry.value.map((story) {
+          final labelsForStory = labels[story.id];
+          final dependencies = <ActivityDependency>[];
+          for (final prerequisiteId in story.dependencyTaskIds) {
+            final targetId = allStoryIds[prerequisiteId];
+            // A prerequisite that is not on the schedule (or is this story) is
+            // left out rather than written as a link CPM would report missing.
+            if (targetId == null || targetId == pendingIds[story.id]) continue;
+            dependencies.add(ActivityDependency(
+              activityId: targetId,
+              type: DependencyType.finishToStart,
+            ));
+          }
           return ScheduleActivity(
-            id: newSchedId('act'),
+            id: pendingIds[story.id]!,
             level: 4,
             code: '',
-            name: s.userStory,
+            name: story.userStory,
             description:
-                s.taskDescription.isNotEmpty ? s.taskDescription : null,
+                story.taskDescription.isNotEmpty ? story.taskDescription : null,
             type: ActivityType.activity,
             domain: ScheduleDomain.execution,
             duration: null,
-            dependencies: [],
-            storyPoints: s.storyPoints.toDouble(),
-            sprintId: s.plannedSprintId.isNotEmpty ? s.plannedSprintId : null,
-            releaseId:
-                s.plannedReleaseId.isNotEmpty ? s.plannedReleaseId : null,
+            dependencies: dependencies,
+            storyPoints: story.storyPoints.toDouble(),
+            sprintId:
+                story.plannedSprintId.isNotEmpty ? story.plannedSprintId : null,
+            releaseId: story.plannedReleaseId.isNotEmpty
+                ? story.plannedReleaseId
+                : null,
             agileEpicTitle: epicEntry.key,
             agileFeatureTitle: featureEntry.key,
-            sprintLabel: sprintLabelByStoryId[s.id],
-            releaseLabel: releaseLabelByStoryId[s.id],
+            sprintLabel: labelsForStory?.sprint,
+            releaseLabel: labelsForStory?.release,
             estimationMethod: EstimationMethod.storyPoints,
             aiGenerated: false,
             children: [],
-            agileTaskId: s.id,
-            wbsNodeId: s.wbsId.isNotEmpty ? s.wbsId : null,
+            agileTaskId: story.id,
+            wbsNodeId: story.wbsId.isNotEmpty ? story.wbsId : null,
             importSource: 'agile_story',
             definitionOfReady: _schedule!.basis.definitionOfReady,
             definitionOfDone: _schedule!.basis.definitionOfDone,
-            prerequisites: s.dependencyTaskIds.isEmpty
+            prerequisites: story.dependencyTaskIds.isEmpty
                 ? null
-                : List<String>.from(s.dependencyTaskIds),
+                : List<String>.from(story.dependencyTaskIds),
           );
         }).toList();
 
-        featureActivities.add(
+        storiesAdded += storyActivities.length;
+        epicGrew = true;
+
+        final existingFeature = reusableFeatures[itemNameKey(featureEntry.key)];
+        if (existingFeature != null) {
+          featureChildren = featureChildren
+              .map((child) => child.id == existingFeature.id
+                  ? child.copyWith(
+                      children: [...child.children, ...storyActivities])
+                  : child)
+              .toList();
+          featuresReused++;
+        } else {
+          featureChildren = [
+            ...featureChildren,
+            ScheduleActivity(
+              id: newSchedId('act'),
+              level: 3,
+              code: '',
+              name: featureEntry.key,
+              type: ActivityType.summary,
+              domain: ScheduleDomain.execution,
+              dependencies: [],
+              aiGenerated: false,
+              importSource: 'agile_story',
+              children: storyActivities,
+            ),
+          ];
+          featuresAdded++;
+        }
+      }
+
+      if (!epicGrew) continue;
+
+      if (existingEpic != null) {
+        epicChildren = epicChildren
+            .map((child) => child.id == existingEpic.id
+                ? child.copyWith(children: featureChildren)
+                : child)
+            .toList();
+        epicsReused++;
+      } else {
+        epicChildren = [
+          ...epicChildren,
           ScheduleActivity(
             id: newSchedId('act'),
-            level: 3,
+            level: 2,
             code: '',
-            name: featureEntry.key,
+            name: epicEntry.key,
             type: ActivityType.summary,
             domain: ScheduleDomain.execution,
             dependencies: [],
             aiGenerated: false,
-            children: storyActivities,
+            importSource: 'agile_story',
+            children: featureChildren,
           ),
-        );
+        ];
+        epicsAdded++;
       }
-
-      epicActivities.add(
-        ScheduleActivity(
-          id: newSchedId('act'),
-          level: 2,
-          code: '',
-          name: epicEntry.key,
-          type: ActivityType.summary,
-          domain: ScheduleDomain.execution,
-          dependencies: [],
-          aiGenerated: false,
-          children: featureActivities,
-        ),
-      );
     }
 
-    final updatedRoot = recalcActivityCodes(root.copyWith(
-      children: [...root.children, ...epicActivities],
-    ));
+    final updatedRoot =
+        recalcActivityCodes(root.copyWith(children: epicChildren));
     _schedule = _schedule!.copyWith(
       activities: [updatedRoot],
       updatedAt: DateTime.now(),
     );
     notifyListeners();
     _saveToStorage();
+    return AgileStoryImportSummary(
+      epicsAdded: epicsAdded,
+      epicsReused: epicsReused,
+      featuresAdded: featuresAdded,
+      featuresReused: featuresReused,
+      storiesAdded: storiesAdded,
+      storiesSkipped: storiesSkipped,
+    );
+  }
+
+  /// The summary rows among [nodes] that an agile import created — a summary
+  /// with at least one story beneath it. A summary with no stories is the
+  /// planner's own and is never claimed by an import.
+  List<ScheduleActivity> _storyBearingSummaries(List<ScheduleActivity> nodes) {
+    return nodes
+        .where((node) =>
+            node.type == ActivityType.summary &&
+            itemNameKey(node.name).isNotEmpty &&
+            ScheduleCpmService.flatten([node])
+                .any((a) => (a.agileTaskId ?? '').trim().isNotEmpty))
+        .toList();
   }
 
   // ─── Review ─────────────────────────────────────────────────────────────
@@ -1024,7 +1280,8 @@ class ScheduleProvider extends ChangeNotifier {
       final prepared = <ScheduleActivity>[];
       for (final node in nodes) {
         final children = walk(node.children);
-        prepared.add(children.isEmpty ? node : node.copyWith(children: children));
+        prepared
+            .add(children.isEmpty ? node : node.copyWith(children: children));
       }
 
       final kept = <ScheduleActivity>[];
@@ -1127,4 +1384,34 @@ class ScheduleProvider extends ChangeNotifier {
         children:
             root.children.map((c) => _swapInTree(c, id, directionUp)).toList());
   }
+}
+
+/// What one `importStoriesFromAgile` run actually did.
+///
+/// The caller shows these numbers to the user. The import used to report
+/// nothing and the screen guessed at what had happened from the input list,
+/// which is how a re-import could claim "40 already imported" moments after it
+/// had created them.
+class AgileStoryImportSummary {
+  final int epicsAdded;
+  final int epicsReused;
+  final int featuresAdded;
+  final int featuresReused;
+  final int storiesAdded;
+  final int storiesSkipped;
+
+  const AgileStoryImportSummary({
+    this.epicsAdded = 0,
+    this.epicsReused = 0,
+    this.featuresAdded = 0,
+    this.featuresReused = 0,
+    this.storiesAdded = 0,
+    this.storiesSkipped = 0,
+  });
+
+  /// True when the run had nothing to add.
+  bool get isEmpty => storiesAdded == 0;
+
+  /// Rows added to the tree by this run.
+  int get rowsAdded => epicsAdded + featuresAdded + storiesAdded;
 }

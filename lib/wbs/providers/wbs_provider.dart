@@ -515,15 +515,35 @@ class WBSProvider extends ChangeNotifier {
   /// `plannedStart` / `plannedFinish`, but nothing wrote them before this, so a
   /// work package could never show its planned timeline.
   ///
-  /// Existing dates are only overwritten when the schedule supplies a value,
-  /// so a node without a schedule date keeps whatever it had. Returns the
-  /// number of nodes whose dates actually changed.
+  /// The rollup **widens but never narrows** a node's window: it takes the
+  /// earliest start and the latest finish of the two. It has to, because
+  /// `collectScheduleTimelines` only sees the activities that actually carry a
+  /// date — a package of ten rows with one dated row would otherwise hand the
+  /// WBS that one row's window and silently truncate a baseline that may have
+  /// been agreed for the whole package. Overwriting did exactly that: a package
+  /// planned for the full year was cut to a single month by one dated activity.
+  /// A planner who genuinely needs to pull a package in edits its dates in the
+  /// WBS module, where the change is deliberate and visible.
+  ///
+  /// Returns the number of nodes whose dates actually changed.
   int applyScheduleTimelines(
       Map<String, ({DateTime? start, DateTime? finish})> byNodeId) {
     final current = _wbs;
     if (current == null || byNodeId.isEmpty) return 0;
 
     var updated = 0;
+
+    DateTime? earliest(DateTime? a, DateTime? b) {
+      if (a == null) return b;
+      if (b == null) return a;
+      return a.isBefore(b) ? a : b;
+    }
+
+    DateTime? latest(DateTime? a, DateTime? b) {
+      if (a == null) return b;
+      if (b == null) return a;
+      return a.isAfter(b) ? a : b;
+    }
 
     WBSNode apply(WBSNode node) {
       final window = byNodeId[node.id];
@@ -534,8 +554,8 @@ class WBSProvider extends ChangeNotifier {
         return next;
       }
 
-      final start = window.start ?? node.plannedStart;
-      final finish = window.finish ?? node.plannedFinish;
+      final start = earliest(window.start, node.plannedStart);
+      final finish = latest(window.finish, node.plannedFinish);
       if (start == node.plannedStart && finish == node.plannedFinish) {
         return next;
       }

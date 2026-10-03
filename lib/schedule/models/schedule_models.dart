@@ -144,11 +144,17 @@ enum TShirtSize { xs, s, m, l, xl }
 /// - [controlAccountId] — FK to `WorkPackageControl.id` so a schedule
 ///   activity can be tied to the Project Controls control account that
 ///   tracks its EVM metrics (CPI / SPI / EAC / actuals).
+/// - [workPackageId] — FK to `WorkPackage.id` (the integrated work package
+///   this row was generated from). Without it a schedule row generated from a
+///   work package is indistinguishable from one a planner typed by hand, so
+///   re-running "From Work Packages" cannot tell what it already imported and
+///   stacks a second copy of the same package on every press.
 class ScheduleActivity {
   final String id;
   final String? wbsNodeId;
   final String? wbsCode;
   final String? controlAccountId;
+  final String? workPackageId;
   final String? agileTaskId;
   final String? costLineId;
   final String? sprintId;
@@ -189,6 +195,7 @@ class ScheduleActivity {
     this.wbsNodeId,
     this.wbsCode,
     this.controlAccountId,
+    this.workPackageId,
     this.agileTaskId,
     this.costLineId,
     this.sprintId,
@@ -237,6 +244,8 @@ class ScheduleActivity {
         if (wbsCode != null && wbsCode!.isNotEmpty) 'wbsCode': wbsCode,
         if (controlAccountId != null && controlAccountId!.isNotEmpty)
           'controlAccountId': controlAccountId,
+        if (workPackageId != null && workPackageId!.isNotEmpty)
+          'workPackageId': workPackageId,
         if (agileTaskId != null) 'agileTaskId': agileTaskId,
         if (costLineId != null) 'costLineId': costLineId,
         if (sprintId != null) 'sprintId': sprintId,
@@ -280,6 +289,7 @@ class ScheduleActivity {
       wbsNodeId: json['wbsNodeId'] as String?,
       wbsCode: json['wbsCode'] as String?,
       controlAccountId: json['controlAccountId'] as String?,
+      workPackageId: json['workPackageId'] as String?,
       agileTaskId: json['agileTaskId'] as String?,
       costLineId: json['costLineId'] as String?,
       sprintId: json['sprintId'] as String?,
@@ -339,6 +349,7 @@ class ScheduleActivity {
     String? wbsNodeId,
     String? wbsCode,
     String? controlAccountId,
+    String? workPackageId,
     String? agileTaskId,
     String? costLineId,
     String? sprintId,
@@ -379,6 +390,7 @@ class ScheduleActivity {
       wbsNodeId: wbsNodeId ?? this.wbsNodeId,
       wbsCode: wbsCode ?? this.wbsCode,
       controlAccountId: controlAccountId ?? this.controlAccountId,
+      workPackageId: workPackageId ?? this.workPackageId,
       agileTaskId: agileTaskId ?? this.agileTaskId,
       costLineId: costLineId ?? this.costLineId,
       sprintId: sprintId ?? this.sprintId,

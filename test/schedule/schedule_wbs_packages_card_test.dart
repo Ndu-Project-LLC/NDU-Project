@@ -237,7 +237,8 @@ void main() {
     expect(activity.endDate, DateTime(2026, 1, 30));
   });
 
-  testWidgets('offers the WBS date fill when only some rows of a package are '
+  testWidgets(
+      'offers the WBS date fill when only some rows of a package are '
       'dated', (tester) async {
     final wbs = await newWbsProvider(tester);
     final node = wbs.addChildNode(wbs.wbs!.level0.id, 'Engineering');
@@ -337,9 +338,239 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
 
     // The WBS node now carries the window the schedule computed.
-    final attached =
-        wbs.wbs!.level0.children.singleWhere((n) => n.id == node);
+    final attached = wbs.wbs!.level0.children.singleWhere((n) => n.id == node);
     expect(attached.plannedStart, DateTime(2026, 4, 1));
     expect(attached.plannedFinish, DateTime(2026, 5, 15));
+  });
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Regression: "Attach schedule dates to WBS" used to overwrite a WBS
+  // planned window with whatever the schedule happened to know.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  testWidgets(
+      'attach never truncates a WBS window the schedule only '
+      'partly covers', (tester) async {
+    final wbs = await newWbsProvider(tester);
+    final node = wbs.addChildNode(wbs.wbs!.level0.id, 'Engineering');
+    // The package is planned for the whole year.
+    wbs.applyScheduleTimelines({
+      node: (start: DateTime(2026, 1, 1), finish: DateTime(2026, 12, 31)),
+    });
+
+    // Only ONE of its schedule rows is dated, and it covers June. The rollup
+    // sees June and used to stamp that over the year-long baseline.
+    final schedule = newScheduleProvider(children: [
+      ScheduleActivity(
+        id: 'a1',
+        level: 1,
+        code: '1',
+        name: 'Engineering',
+        type: ActivityType.task,
+        domain: ScheduleDomain.engineering,
+        wbsNodeId: node,
+        startDate: DateTime(2026, 6, 1),
+        endDate: DateTime(2026, 6, 30),
+        dependencies: const [],
+        aiGenerated: false,
+        children: const [],
+      ),
+    ]);
+
+    await pumpCard(tester, wbs: wbs, schedule: schedule);
+    await tester.ensureVisible(find.text('Attach schedule dates to WBS'));
+    await tester.tap(find.text('Attach schedule dates to WBS'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+
+    final after = wbs.wbs!.level0.children.singleWhere((n) => n.id == node);
+    expect(after.plannedStart, DateTime(2026, 1, 1));
+    expect(
+      after.plannedFinish,
+      DateTime(2026, 12, 31),
+      reason: 'a partly dated package must not shorten a committed baseline',
+    );
+  });
+
+  testWidgets('attach still widens a WBS window the schedule has overrun',
+      (tester) async {
+    final wbs = await newWbsProvider(tester);
+    final node = wbs.addChildNode(wbs.wbs!.level0.id, 'Engineering');
+    wbs.applyScheduleTimelines({
+      node: (start: DateTime(2026, 1, 1), finish: DateTime(2026, 2, 1)),
+    });
+
+    // The schedule now runs into April — the WBS should follow.
+    final schedule = newScheduleProvider(children: [
+      ScheduleActivity(
+        id: 'a1',
+        level: 1,
+        code: '1',
+        name: 'Engineering',
+        type: ActivityType.task,
+        domain: ScheduleDomain.engineering,
+        wbsNodeId: node,
+        startDate: DateTime(2026, 3, 1),
+        endDate: DateTime(2026, 4, 30),
+        dependencies: const [],
+        aiGenerated: false,
+        children: const [],
+      ),
+    ]);
+
+    await pumpCard(tester, wbs: wbs, schedule: schedule);
+    await tester.ensureVisible(find.text('Attach schedule dates to WBS'));
+    await tester.tap(find.text('Attach schedule dates to WBS'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+
+    final after = wbs.wbs!.level0.children.singleWhere((n) => n.id == node);
+    expect(after.plannedStart, DateTime(2026, 1, 1));
+    expect(after.plannedFinish, DateTime(2026, 4, 30));
+  });
+
+  testWidgets(
+      'attach says when it changed nothing, instead of claiming '
+      'work', (tester) async {
+    final wbs = await newWbsProvider(tester);
+    final node = wbs.addChildNode(wbs.wbs!.level0.id, 'Engineering');
+    final schedule = newScheduleProvider(children: [
+      ScheduleActivity(
+        id: 'a1',
+        level: 1,
+        code: '1',
+        name: 'Engineering',
+        type: ActivityType.task,
+        domain: ScheduleDomain.engineering,
+        wbsNodeId: node,
+        startDate: DateTime(2026, 4, 1),
+        endDate: DateTime(2026, 5, 15),
+        dependencies: const [],
+        aiGenerated: false,
+        children: const [],
+      ),
+    ]);
+
+    await pumpCard(tester, wbs: wbs, schedule: schedule);
+    await tester.ensureVisible(find.text('Attach schedule dates to WBS'));
+    await tester.tap(find.text('Attach schedule dates to WBS'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+
+    // Pressing it again must report the no-op, not re-announce the first run.
+    // Messages used to queue, so the stale "attached 1 package" stayed up and
+    // the second press looked like it had done the work twice.
+    await tester.tap(find.text('Attach schedule dates to WBS'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+
+    expect(find.textContaining('already up to date'), findsOneWidget);
+    expect(find.textContaining('Attached scheduled dates'), findsNothing);
+  });
+
+  testWidgets('attach reports the packages it left as planned', (tester) async {
+    final wbs = await newWbsProvider(tester);
+    final wide = wbs.addChildNode(wbs.wbs!.level0.id, 'Engineering');
+    final empty = wbs.addChildNode(wbs.wbs!.level0.id, 'Procurement');
+    wbs.applyScheduleTimelines({
+      wide: (start: DateTime(2026, 1, 1), finish: DateTime(2026, 12, 31)),
+      empty: (start: DateTime(2026, 2, 1), finish: DateTime(2026, 3, 1)),
+    });
+
+    final schedule = newScheduleProvider(children: [
+      ScheduleActivity(
+        id: 'a1',
+        level: 1,
+        code: '1',
+        name: 'Engineering',
+        type: ActivityType.task,
+        domain: ScheduleDomain.engineering,
+        wbsNodeId: wide,
+        startDate: DateTime(2026, 6, 1),
+        endDate: DateTime(2026, 6, 30),
+        dependencies: const [],
+        aiGenerated: false,
+        children: const [],
+      ),
+      ScheduleActivity(
+        id: 'a2',
+        level: 1,
+        code: '2',
+        name: 'Procurement',
+        type: ActivityType.task,
+        domain: ScheduleDomain.procurement,
+        wbsNodeId: empty,
+        startDate: DateTime(2026, 2, 1),
+        endDate: DateTime(2026, 3, 1),
+        dependencies: const [],
+        aiGenerated: false,
+        children: const [],
+      ),
+    ]);
+
+    await pumpCard(tester, wbs: wbs, schedule: schedule);
+    await tester.ensureVisible(find.text('Attach schedule dates to WBS'));
+    await tester.tap(find.text('Attach schedule dates to WBS'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+
+    // One package was written; the wide one was deliberately left alone, and
+    // the message has to say so rather than leave the user guessing.
+    expect(find.textContaining('Attached scheduled dates'), findsNothing);
+    expect(find.textContaining('left as planned'), findsOneWidget);
+  });
+
+  testWidgets('the WBS → schedule fill says what it does to each row',
+      (tester) async {
+    final wbs = await newWbsProvider(tester);
+    final node = wbs.addChildNode(wbs.wbs!.level0.id, 'Engineering');
+    wbs.applyScheduleTimelines({
+      node: (start: DateTime(2026, 1, 5), finish: DateTime(2026, 1, 30)),
+    });
+    final schedule = newScheduleProvider(children: [
+      ScheduleActivity(
+        id: 'a1',
+        level: 1,
+        code: '1',
+        name: 'Design',
+        type: ActivityType.task,
+        domain: ScheduleDomain.engineering,
+        wbsNodeId: node,
+        dependencies: const [],
+        aiGenerated: false,
+        children: const [],
+      ),
+      ScheduleActivity(
+        id: 'a2',
+        level: 1,
+        code: '2',
+        name: 'Review',
+        type: ActivityType.task,
+        domain: ScheduleDomain.engineering,
+        wbsNodeId: node,
+        dependencies: const [],
+        aiGenerated: false,
+        children: const [],
+      ),
+    ]);
+
+    await pumpCard(tester, wbs: wbs, schedule: schedule);
+    await tester.ensureVisible(find.text('Fill schedule dates from WBS'));
+    await tester.tap(find.text('Fill schedule dates from WBS'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+
+    expect(find.textContaining('Split the WBS planned window across 2'),
+        findsOneWidget);
+
+    // The window is divided between the two rows, not copied onto both.
+    final rows = schedule.schedule!.activities.first.children;
+    expect(rows.first.startDate, DateTime(2026, 1, 5));
+    expect(rows.last.endDate, DateTime(2026, 1, 30));
+    expect(
+      rows.last.startDate,
+      rows.first.endDate!.add(const Duration(days: 1)),
+      reason: 'the second row starts the day after the first ends',
+    );
   });
 }

@@ -2872,6 +2872,14 @@ Widget _dialogDropdownField({
  : (options.contains(value) ? value : options.first);
  return Padding(
  padding: const EdgeInsets.only(bottom: 12),
+ // The field's menu renders each option as a ListTile that paints its
+ // selected background on the nearest Material ancestor. The dialog body is a
+ // decorated Container (white fill, border, radius 16), so without a Material
+ // between the two that fill hides the selection colour — Flutter asserts on
+ // this in debug builds. A transparency Material costs no paint and puts the
+ // boundary where the ListTile can actually reach it.
+ child: Material(
+ type: MaterialType.transparency,
  child: DropdownButtonFormField<String>(
  initialValue: selected,
  onChanged: enabled
@@ -2892,6 +2900,7 @@ Widget _dialogDropdownField({
  )),
  ],
  decoration: InputDecoration(labelText: label),
+ ),
  ),
  );
 }

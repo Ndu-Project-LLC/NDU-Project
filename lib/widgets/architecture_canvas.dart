@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -264,7 +265,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
       orElse: () => widget.nodes.first,
     );
     final newNode = ArchitectureNode(
-      id: 'n_${DateTime.now().millisecondsSinceEpoch}',
+      id: newId('n_'),
       label: '${node.label} (copy)',
       position: node.position + const Offset(40, 40),
       nodeType: node.nodeType,

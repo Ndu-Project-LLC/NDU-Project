@@ -544,8 +544,19 @@ class NavigationRouteResolver {
   /// Returns the go_router URL for a project checkpoint so every page opened
   /// through the checkpoint resolver has a unique, shareable URL.
   static String resolveCheckpointToUrl(String? checkpoint) {
+    return tryResolveCheckpointToUrl(checkpoint) ??
+        '/${AppRoutes.initiationPhase}';
+  }
+
+  /// Same lookup as [resolveCheckpointToUrl] but returns null for an unknown
+  /// checkpoint instead of falling back to the initiation phase. Callers that
+  /// link to a user-supplied checkpoint (e.g. an activity's `sourceSection`)
+  /// use this so an unmapped value does not silently navigate somewhere
+  /// unrelated.
+  static String? tryResolveCheckpointToUrl(String? checkpoint) {
     final normalized = _normalizeCheckpoint(checkpoint ?? '');
-    return _checkpointUrls[normalized] ?? '/${AppRoutes.initiationPhase}';
+    if (normalized.isEmpty) return null;
+    return _checkpointUrls[normalized];
   }
 
   /// Checkpoint → deep-link URL map (mirrors [resolveCheckpointToScreen]).

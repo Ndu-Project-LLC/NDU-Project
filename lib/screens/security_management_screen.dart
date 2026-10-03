@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -415,7 +416,7 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
   String _newDocId(String collection) {
     final projectId = ProjectDataHelper.getData(context).projectId;
     if (projectId == null || projectId.isEmpty) {
-      return DateTime.now().millisecondsSinceEpoch.toString();
+      return newId();
     }
     return FirebaseFirestore.instance
         .collection('projects')

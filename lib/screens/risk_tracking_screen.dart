@@ -292,7 +292,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  if (signals.isNotEmpty) {
  _signals = signals.map(
  (entry) => _RiskSignal(
- id: 'SIG-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+ id: shortId('SIG-'),
  title: entry.title,
  category: 'Leading',
  severity: 'Medium',
@@ -307,7 +307,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  if (plans.isNotEmpty) {
  _plans = plans.asMap().entries.map(
  (entry) => _MitigationPlan(
- id: 'MIT-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+ id: shortId('MIT-'),
  riskId: '—',
  strategy: entry.value.title,
  owner: 'Risk Lead',
@@ -1646,7 +1646,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  if (formKey.currentState?.validate() ?? false) {
  setState(() {
  _escalations.add(_EscalationReadiness(
- id: 'ESC-${DateTime.now().millisecondsSinceEpoch.toString().substring(7, 13)}',
+ id: shortId('ESC-'),
  event: eventController.text.trim(),
  level: selectedLevel,
  triggerCondition: triggerController.text.trim(),
@@ -2611,7 +2611,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  if (formKey.currentState?.validate() ?? false) {
  setState(() {
  _signals.add(_RiskSignal(
- id: 'SIG-${DateTime.now().millisecondsSinceEpoch.toString().substring(7, 13)}',
+ id: shortId('SIG-'),
  title: titleController.text.trim(),
  category: selectedCategory,
  severity: selectedSeverity,

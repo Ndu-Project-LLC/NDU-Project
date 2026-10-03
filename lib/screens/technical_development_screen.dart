@@ -2462,8 +2462,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: const Text('Cancel')),
  FilledButton(
  onPressed: () {
- final item = _RiskSignalRow(
- id: existing?.id ?? 'custom_${DateTime.now().millisecondsSinceEpoch}',
+ final item = _RiskSignalRow(    id: existing?.id ?? newId('custom_'),
  signal: signalCtl.text.trim(),
  description: descCtl.text.trim(),
  severity: severity,

@@ -27,11 +27,9 @@
 ///   dates); "Fill schedule dates from WBS" writes a package's planned window
 ///   onto its un-dated schedule rows; "Attach schedule dates to WBS" is the
 ///   reverse, and is the action the builder also offers.
-/// - **It prices them in place.** `Attach cost item` opens the real Cost
-///   Estimate line dialog pre-pointed at the package, then stamps the saved
-///   line onto the schedule activity *and* links it to the WBS node — so the
-///   same money then shows on the schedule row, the Cost Estimate overview and
-///   Cost by WBS. Nothing here is AI-generated.
+/// - **It reads their cost, never writes it.** A package that is already costed
+///   shows a `Costed <amount>` / `Cost item attached` pill, but cost is entered
+///   only in Cost Estimate and Cost by WBS — Schedule has no add-cost action.
 library;
 
 import 'package:flutter/material.dart';
@@ -40,11 +38,9 @@ import 'package:provider/provider.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
-import 'package:ndu_project/cost_estimate/widgets/add_line_dialog.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/utils/schedule_wbs_packages.dart';
 import 'package:ndu_project/schedule/utils/schedule_wbs_timelines.dart';
-import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
@@ -442,24 +438,10 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          if (row.onSchedule)
-            TextButton.icon(
-              onPressed: _busy
-                  ? null
-                  : () => _attachCostItem(row),
-              icon: const Icon(Icons.attach_money, size: 14),
-              label: Text(row.isPriced ? 'Add cost' : 'Attach cost item',
-                  style: const TextStyle(fontSize: 11)),
-              style: TextButton.styleFrom(
-                foregroundColor: _accent,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            )
-          else
+          // Cost is entered in Cost Estimate / Cost by WBS, never here, so a
+          // scheduled package only offers the schedule action.
+          if (!row.onSchedule) ...[
+            const SizedBox(width: 8),
             TextButton.icon(
               onPressed: _busy ? null : () => _addOneToSchedule(row),
               icon: const Icon(Icons.add, size: 14),
@@ -473,6 +455,7 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
+          ],
         ],
       ),
     );
@@ -652,79 +635,5 @@ class _ScheduleWbsPackagesCardState extends State<ScheduleWbsPackagesCard> {
               'package${updated == 1 ? '' : 's'}.'),
       behavior: SnackBarBehavior.floating,
     ));
-  }
-
-  /// Opens the real Cost Estimate line dialog pointed at [row]'s package, then
-  /// stamps the saved line onto the package's schedule activity and links it to
-  /// the WBS node.
-  ///
-  /// That single act is what makes the money show up in all three places the
-  /// owner asked for: the schedule row (`costLineId`), the Cost Estimate
-  /// overview (the new line) and the WBS cost estimate (Cost by WBS reads the
-  /// node's `costLineIds`).
-  Future<void> _attachCostItem(WbsPackageRow row) async {
-    if (row.activityIds.isEmpty) return;
-    final scheduleProvider = context.read<ScheduleProvider>();
-    final wbsProvider = context.read<WBSProvider>();
-    final costProvider = context.read<CostEstimateProvider>();
-    final messenger = ScaffoldMessenger.of(context);
-    final data = ProjectDataHelper.getData(context, listen: false);
-    final projectId = (data.projectId ?? '').trim();
-    final projectName =
-        data.projectName.trim().isEmpty ? 'Project' : data.projectName.trim();
-
-    setState(() => _busy = true);
-    try {
-      await costProvider.ensureProjectLoaded(projectId,
-          projectName: projectName);
-      if (!mounted) return;
-      if (costProvider.estimate == null || !costProvider.setupComplete) {
-        costProvider.setup(
-          projectId: projectId,
-          projectName: projectName,
-          className: EstimateClass.class3,
-          deliveryModel: DeliveryModel.waterfall,
-        );
-      }
-
-      // Reuse an existing line for the package when one is already attached, so
-      // "attach" cannot silently create a duplicate.
-      CostLine? existing;
-      for (final id in row.costLineIds) {
-        for (final line in costProvider.estimate?.lines ?? const <CostLine>[]) {
-          if (line.id == id) {
-            existing = line;
-            break;
-          }
-        }
-        if (existing != null) break;
-      }
-
-      final savedId = await showDialog<String>(
-        context: context,
-        builder: (_) => AddLineDialog(
-          defaultCategory: CostCategory.materials,
-          editingLine: existing,
-          initialWbsRef: row.code.trim().isEmpty ? null : row.code.trim(),
-          initialDescription:
-              '${row.label} — ${row.activityNames.isEmpty ? 'work package' : row.activityNames.first}',
-        ),
-      );
-      if (savedId == null || savedId.isEmpty) return;
-
-      final nodeId =
-          scheduleProvider.attachCostLineToActivity(row.activityIds.first, savedId);
-      if (nodeId != null) {
-        wbsProvider.linkCostLine(nodeId, savedId);
-      }
-      messenger.showSnackBar(SnackBar(
-        content: Text(
-            'Cost item attached to ${row.label} — it now shows on the schedule, '
-            'the Cost Estimate overview and Cost by WBS.'),
-        behavior: SnackBarBehavior.floating,
-      ));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
   }
 }

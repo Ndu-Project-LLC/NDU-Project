@@ -2131,8 +2131,7 @@ showNavigationButtons: false,
  onPressed: () {
  final val = (int.tryParse(valueCtl.text.trim()) ?? 0).clamp(0, 100) / 100.0;
  final tgt = (int.tryParse(targetCtl.text.trim()) ?? 90).clamp(0, 100) / 100.0;
- final row = _KpiRow(
- id: existing?.id ?? 'custom_${DateTime.now().millisecondsSinceEpoch}',
+ final row = _KpiRow(    id: existing?.id ?? newId('custom_'),
  metric: metricCtl.text.trim(),
  value: val,
  target: tgt,

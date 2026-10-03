@@ -101,6 +101,30 @@ void main() {
     );
   });
 
+  test('no model defaults a row id to the clock', () {
+    // The exact shape behind the kanban board's duplicate cards:
+    // `id = id ?? DateTime.now().microsecondsSinceEpoch`. A default like this
+    // fires in a loop, so a batch seeded in one tick shares one id, and every
+    // list that keys rows by id (a kanban column, a design canvas, an editable
+    // table) collapses or stops responding. Mint through newId() instead.
+    final clockDefaultId = RegExp(r'id\s*\?\?\s*DateTime\s*\.\s*now\s*\(');
+    final offenders = <String>[
+      for (final entry in sources.entries)
+        if (entry.key != 'lib/utils/unique_id.dart' &&
+            clockDefaultId.hasMatch(entry.value))
+          entry.key,
+    ];
+
+    expect(
+      offenders,
+      isEmpty,
+      reason: 'A clock-derived id repeats for every row minted in the same '
+          'tick, and rows are looked up by id, so an edit lands on the wrong '
+          'row and a keyed list scrambles. Use newId() from '
+          'lib/utils/unique_id.dart.\n${offenders.join('\n')}',
+    );
+  });
+
   test('the clock-use allow-list cannot rot', () {
     final stale = <String>[
       for (final path in clockUseAllowList.keys)

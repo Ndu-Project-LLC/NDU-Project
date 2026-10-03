@@ -3,13 +3,15 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/risk_log.dart';
 import 'package:ndu_project/models/risk_assessment_signoff.dart';
-import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/cost_estimate/providers/compute_utils.dart'
+    hide newId;
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -313,7 +315,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  final newEntry = _RiskEntry(
  docId: entry?.docId ?? _newEntryId(),
  id: idController.text.trim().isEmpty
- ? 'R-${DateTime.now().millisecondsSinceEpoch}'
+ ? shortId('R-')
  : idController.text.trim(),
  description: descriptionController.text.trim(),
  category: categoryController.text.trim(),
@@ -341,8 +343,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
 
  String _newEntryId() {
  final projectId = ProjectDataHelper.getData(context).projectId;
- if (projectId == null || projectId.isEmpty) {
- return DateTime.now().millisecondsSinceEpoch.toString();
+ if (projectId == null || projectId.isEmpty) {        return newId();
  }
  return FirebaseFirestore.instance
  .collection('projects')
@@ -693,7 +694,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
 
  final newEntry = _RiskEntry(
  docId: _newEntryId(),
- id: 'R-${DateTime.now().millisecondsSinceEpoch}',
+ id: shortId('R-'),
  description: riskText,
  category:
  solutionTitle.isNotEmpty ? solutionTitle : 'Initiation risk',
@@ -890,7 +891,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
         docId: _newEntryId(),
         id: row['id']?.trim().isNotEmpty == true
             ? row['id']!.trim()
-            : 'R-${DateTime.now().millisecondsSinceEpoch + imported}',
+            : shortId('R-'),
         description: description,
         category: row['category']?.trim() ?? '',
         probability: row['probability']?.trim().isNotEmpty == true

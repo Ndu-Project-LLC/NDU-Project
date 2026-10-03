@@ -12,6 +12,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/project_controls/models/change_management_models.dart';
 import 'package:ndu_project/utils/iterable_extensions.dart';
 
@@ -194,7 +195,7 @@ class ChangeManagementProvider extends ChangeNotifier {
     List<CMImpactedDeliverable> deliverables = const [],
     List<CMAttachment> attachments = const [],
   }) {
-    final crId = 'cm_${DateTime.now().millisecondsSinceEpoch}';
+    final crId = newId('cm_');
     final cr = CMChangeRequest(
       id: crId,
       crNumber: _generateCRNumber(),
@@ -522,8 +523,7 @@ class ChangeManagementProvider extends ChangeNotifier {
       debugPrint('addApprovalStep: CR not found: $crId');
       return;
     }
-    final stepId =
-        'step_${cr.approvalSteps.length + 1}_${DateTime.now().millisecondsSinceEpoch}';
+    final stepId = newId('step_');
     final newStep = CMApprovalStep(
       id: stepId,
       roleLabel: role.label,
@@ -672,7 +672,7 @@ class ChangeManagementProvider extends ChangeNotifier {
       return;
     }
     final task = ImplementationTask(
-      id: 'task_${DateTime.now().millisecondsSinceEpoch}',
+      id: newId('task_'),
       workPackageId: workPackageId,
       workPackageName: workPackageName,
       assignee: assignee,
@@ -817,12 +817,10 @@ class ChangeManagementProvider extends ChangeNotifier {
     unawaited(_persistCR(updated));
   }
 
-  int _auditCounter = 0;
   void _addAudit(String action, String details, String? crId,
       {DateTime? timestamp}) {
-    _auditCounter++;
     final entry = CMAuditEntry(
-      id: 'audit_${timestamp?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch}_$_auditCounter',
+      id: newId('audit_'),
       user: _currentUserEmail,
       timestamp: timestamp ?? DateTime.now(),
       action: action,

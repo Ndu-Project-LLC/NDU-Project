@@ -19,7 +19,18 @@ import 'package:go_router/go_router.dart';
 /// Rendered standalone on /agile-kanban-board and embedded under
 /// the Kanban Workflow Configuration page.
 class KanbanBoardPanel extends StatefulWidget {
-  const KanbanBoardPanel({super.key, this.boardHeight = kKanbanBoardHeight});
+  const KanbanBoardPanel({
+    super.key,
+    this.boardHeight = kKanbanBoardHeight,
+    this.stories,
+  });
+
+  /// Stories to render instead of loading them from the project.
+  ///
+  /// Production callers leave this null and the board loads its own cards.
+  /// A test (or a preview) can pass a list to drive the board without
+  /// Firestore; the columns then come from the board's own defaults.
+  final List<AgileTask>? stories;
 
   /// Height of the desktop board area (the row of columns); on a narrow window
   /// the columns stack and this is ignored.
@@ -78,6 +89,20 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
   }
 
   Future<void> _loadData() async {
+    final injected = widget.stories;
+    if (injected != null) {
+      final columns = _buildColumnsFromConfig(const {});
+      if (mounted) {
+        setState(() {
+          _columns = columns;
+          _stories = List<AgileTask>.of(injected);
+          _storiesByColumn = _groupStories(columns, injected);
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
     final pid = _projectId;
     if (pid == null) {
       // No project context — still show the default workflow columns so the
@@ -103,16 +128,13 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
           featureById[feature.id] = feature;
         }
       }
-      final stories =
-          await ExecutionPhaseService.loadAgileTasks(projectId: pid);
+      // The load heals duplicate story ids; writing that repair back here (and
+      // only here, where the user is looking at the board) means the stored
+      // payload is fixed rather than re-healed on every open.
+      final stories = await ExecutionPhaseService.loadAgileTasks(
+          projectId: pid, persistRepairs: true);
       final columns = _buildColumnsFromConfig(kanbanConfig);
-      final grouped = {for (final c in columns) c.id: <AgileTask>[]};
-      for (final story in stories) {
-        final state = grouped.containsKey(story.workflowState)
-            ? story.workflowState
-            : columns.first.id;
-        grouped[state]!.add(story);
-      }
+      final grouped = _groupStories(columns, stories);
       if (!mounted) return;
       setState(() {
         _columns = columns;
@@ -126,6 +148,20 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
       debugPrint('Kanban load error: $e');
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// Groups [stories] into [columns] by workflow state, with an unrecognised
+  /// (or empty) state landing in the first column, as the board renders it.
+  Map<String, List<AgileTask>> _groupStories(
+      List<_KanbanColumn> columns, List<AgileTask> stories) {
+    final grouped = {for (final c in columns) c.id: <AgileTask>[]};
+    for (final story in stories) {
+      final state = grouped.containsKey(story.workflowState)
+          ? story.workflowState
+          : columns.first.id;
+      grouped[state]!.add(story);
+    }
+    return grouped;
   }
 
   List<_KanbanColumn> _buildColumnsFromConfig(Map<String, dynamic> data) {
@@ -509,6 +545,7 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
     final stories = _storiesByColumn[col.id] ?? [];
     final wipExceeded = stories.length > col.wipLimit && col.wipLimit < 999;
     return Container(
+      key: ValueKey('kanban_column_${col.id}'),
       decoration: inner
           ? BoxDecoration(
               border: Border(

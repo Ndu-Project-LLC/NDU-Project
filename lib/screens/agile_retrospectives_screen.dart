@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -874,7 +875,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
                 setState(() {
                   _cardsByColumn.putIfAbsent(col.id, () => []);
                   _cardsByColumn[col.id]!.add(_RetroCard(
-                    id: 'r${DateTime.now().millisecondsSinceEpoch}',
+                    id: newId('r'),
                     text: ctrl.text.trim(),
                     author: 'You',
                     votes: 0,

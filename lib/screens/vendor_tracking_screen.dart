@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/models/user_role.dart';
@@ -705,7 +706,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                         100.0;
                 final row = _KpiRow(
                   id: existing?.id ??
-                      'custom_${DateTime.now().millisecondsSinceEpoch}',
+                      newId('custom_'),
                   metric: metricCtl.text.trim(),
                   value: val,
                   target: tgt,
@@ -1170,7 +1171,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                 onPressed: () {
                   final row = _RiskSignalRow(
                     id: existing?.id ??
-                        'sig_${DateTime.now().millisecondsSinceEpoch}',
+                        newId('sig_'),
                     signal: signalCtl.text.trim(),
                     description: descCtl.text.trim(),
                     severity: severity,
@@ -1517,7 +1518,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                 onPressed: () {
                   final row = _ActionRow(
                     id: existing?.id ??
-                        'act_${DateTime.now().millisecondsSinceEpoch}',
+                        newId('act_'),
                     title: titleCtl.text.trim(),
                     priority: priority,
                     dueDate: dueCtl.text.trim(),

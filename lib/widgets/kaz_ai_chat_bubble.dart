@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
 import 'package:ndu_project/openai/openai_config.dart';
@@ -218,7 +219,7 @@ class _ChatMessage {
   }
 
   Map<String, dynamic> toMap() => {
-        'id': id.isNotEmpty ? id : timestamp.millisecondsSinceEpoch.toString(),
+        'id': id.isNotEmpty ? id : newId(),
         'text': text,
         'source': sourceKey,
         'timestamp': timestamp.toIso8601String(),
@@ -691,8 +692,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
     final desc = _ticketDescController.text.trim();
     if (subject.isEmpty) return;
 
-    final ticketId =
-        'TK-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}';
+    final ticketId = shortId('TK-');
 
     setState(() {
       _activeTicket = _SupportTicket(

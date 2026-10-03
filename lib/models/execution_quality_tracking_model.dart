@@ -3,6 +3,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 
 // ============================================================================
 // STATUS WORKFLOW ENUMS
@@ -114,7 +115,7 @@ class ExecutionQualityTrackingData {
        dashboardSnapshot = dashboardSnapshot ?? ExecutionDashboardSnapshot.empty();
 
   static String _generateId() => 
-      'eqt_${DateTime.now().millisecondsSinceEpoch}';
+      newId('eqt_');
 
   factory ExecutionQualityTrackingData.empty() => 
       ExecutionQualityTrackingData();
@@ -255,7 +256,7 @@ class ExecutionObjective {
        updatedAt = updatedAt ?? DateTime.now();
 
   static String _generateId() => 
-      'obj_${DateTime.now().millisecondsSinceEpoch}';
+      newId('obj_');
 
   factory ExecutionObjective.fromJson(Map<String, dynamic> json) {
     return ExecutionObjective(
@@ -400,7 +401,7 @@ class ExecutionInspection {
        updatedAt = updatedAt ?? DateTime.now();
 
   static String _generateId() => 
-      'insp_${DateTime.now().millisecondsSinceEpoch}';
+      newId('insp_');
 
   factory ExecutionInspection.fromJson(Map<String, dynamic> json) {
     return ExecutionInspection(
@@ -565,7 +566,7 @@ class ExecutionAudit {
        updatedAt = updatedAt ?? DateTime.now();
 
   static String _generateId() => 
-      'audit_${DateTime.now().millisecondsSinceEpoch}';
+      newId('audit_');
 
   factory ExecutionAudit.fromJson(Map<String, dynamic> json) {
     return ExecutionAudit(
@@ -713,7 +714,7 @@ class AuditFinding {
   }) : id = id ?? _generateId();
 
   static String _generateId() => 
-      'finding_${DateTime.now().millisecondsSinceEpoch}';
+      newId('finding_');
 
   factory AuditFinding.fromJson(Map<String, dynamic> json) {
     return AuditFinding(
@@ -779,7 +780,7 @@ class ExecutionKpiEntry {
        createdAt = createdAt ?? DateTime.now();
 
   static String _generateId() => 
-      'kpi_${DateTime.now().millisecondsSinceEpoch}';
+      newId('kpi_');
 
   factory ExecutionKpiEntry.fromJson(Map<String, dynamic> json) {
     return ExecutionKpiEntry(
@@ -905,7 +906,7 @@ class ExecutionCorrectiveAction {
        updatedAt = updatedAt ?? DateTime.now();
 
   static String _generateId() => 
-      'ca_${DateTime.now().millisecondsSinceEpoch}';
+      newId('ca_');
 
   factory ExecutionCorrectiveAction.fromJson(Map<String, dynamic> json) {
     return ExecutionCorrectiveAction(
@@ -1096,7 +1097,7 @@ class CoqEntry {
   }) : id = id ?? _generateId();
 
   static String _generateId() => 
-      'coq_${DateTime.now().millisecondsSinceEpoch}';
+      newId('coq_');
 
   factory CoqEntry.fromJson(Map<String, dynamic> json) {
     return CoqEntry(
@@ -1165,7 +1166,7 @@ class CalendarEvent {
        createdAt = createdAt ?? DateTime.now();
 
   static String _generateId() => 
-      'calevt_${DateTime.now().millisecondsSinceEpoch}';
+      newId('calevt_');
 
   factory CalendarEvent.fromJson(Map<String, dynamic> json) {
     return CalendarEvent(

@@ -1,4 +1,5 @@
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
@@ -314,12 +315,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  .toList();
  if (lines.isEmpty) return;
 
- final now = DateTime.now().millisecondsSinceEpoch;
  final newItems =
  lines.take(6).toList().asMap().entries.map((entry) {
  final line = entry.value;
  return DebtItem(
- id: 'TD-${now + entry.key}',
+ id: newId('TD-'),
  title: line,
  area: 'Architecture',
  owner: '',
@@ -1024,7 +1024,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  : _extractField(details, 'Status');
  final target = _extractField(details, 'Target');
  return DebtItem(
- id: 'TD-${DateTime.now().millisecondsSinceEpoch}',
+ id: newId('TD-'),
  title: entry.title.trim(),
  area: area.isNotEmpty ? area : 'Architecture',
  owner: owner,
@@ -1122,7 +1122,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final isEdit = existing != null;
  // ID is auto-generated and hidden from the UI per Task 7.
  final idController = SpellCheckTextEditingController(
- text: existing?.id ?? 'TD-${DateTime.now().millisecondsSinceEpoch}',
+ text: existing?.id ?? newId('TD-'),
  );
  final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
  final areaController = SpellCheckTextEditingController(text: existing?.area ?? '');

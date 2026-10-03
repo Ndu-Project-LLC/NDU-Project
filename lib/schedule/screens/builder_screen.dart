@@ -41,8 +41,6 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart'
     hide ScheduleActivity;
 import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
-import 'package:ndu_project/cost_estimate/widgets/add_line_dialog.dart';
-import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class BuilderScreen extends StatefulWidget {
@@ -580,8 +578,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
               // TREASURY KPI STRIP — at-a-glance schedule vitals
               // ═══════════════════════════════════════════════════════════════
               TreasuryKpiStrip(
-                kpis: _buildScheduleKpis(
-                    root, schedule, costTotal, currency, estimate),
+                kpis: _buildScheduleKpis(root, schedule),
               ),
               const SizedBox(height: 20),
               // ═══════════════════════════════════════════════════════════════
@@ -718,13 +715,11 @@ class _BuilderScreenState extends State<BuilderScreen> {
     );
   }
 
-  /// Build the 4-KPI strip for the schedule builder.
+  /// Build the KPI strip for the schedule builder. Cost lives in the Cost
+  /// Estimate module and on the "Drawing From" banner, so it has no KPI here.
   List<TreasuryKpiSpec> _buildScheduleKpis(
     ScheduleActivity root,
     Schedule schedule,
-    double costTotal,
-    String currency,
-    CostEstimate? estimate,
   ) {
     final totalActivities = _countTotalActivities(root);
     final l1Count = root.children.length;
@@ -762,14 +757,6 @@ class _BuilderScreenState extends State<BuilderScreen> {
         icon: Icons.calendar_month_rounded,
         tint: const Color(0xFFB8860B),
         tintSoft: TreasuryTokens.infoSoft,
-      ),
-      TreasuryKpiSpec(
-        label: 'Cost Budget',
-        value: estimate != null ? formatCurrency(costTotal, currency) : '—',
-        sub: estimate != null ? 'From Cost Estimate' : 'No estimate linked',
-        icon: Icons.attach_money_rounded,
-        tint: TreasuryTokens.success,
-        tintSoft: TreasuryTokens.successSoft,
       ),
       TreasuryKpiSpec(
         label: 'Top Domain',
@@ -1302,48 +1289,6 @@ class _ActivityNode extends StatelessWidget {
     required this.isLocked,
   });
 
-  /// Priced/unpriced chip shown on rows whose activity is linked to a cost
-  /// line — the visual confirmation that a pull (or manual entry) landed.
-  Widget _costStatusChip(CostLine line) {
-    final priced = isPricedCostLine(line);
-    final color = priced
-        ? const Color(0xFF16A34A)
-        : const Color(0xFFB45309);
-    final soft = priced
-        ? const Color(0xFFE7F8F0)
-        : const Color(0xFFFFF3E0);
-    final label =
-        priced ? 'Cost: \$${_fmtCostAmount(line.total)}' : 'Cost: not priced yet';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: soft,
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.attach_money, size: 12, color: color),
-          const SizedBox(width: 3),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 10.5,
-                  color: color,
-                  fontWeight: FontWeight.w700)),
-        ],
-      ),
-    );
-  }
-
-  static String _fmtCostAmount(double v) =>
-      v == v.roundToDouble() ? v.round().toString() : v.toStringAsFixed(2);
-
-  static bool isPricedCostLine(CostLine? line) =>
-      line != null &&
-      (line.total > 0 ||
-          ((line.quantity ?? 0) > 0 && (line.rate ?? 0) > 0));
-
   List<Widget> _traceabilityChips() {
     final chips = <Widget>[];
     if (activity.importSource != null &&
@@ -1411,29 +1356,13 @@ class _ActivityNode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final domainColor = Color(activity.domain.color);
-    // Linked cost line for the priced/unpriced row badge (live watch so the
-    // badge updates right after a pull or a manual price edit).
-    CostLine? linkedCostLine;
-    final linkedCostId = (activity.costLineId ?? '').trim();
-    if (linkedCostId.isNotEmpty) {
-      final estimate = context.watch<CostEstimateProvider>().estimate;
-      if (estimate != null) {
-        for (final line in estimate.lines) {
-          if (line.id == linkedCostId) {
-            linkedCostLine = line;
-            break;
-          }
-        }
-      }
-    }
     final allChips = <Widget>[
-      if (linkedCostLine != null) _costStatusChip(linkedCostLine),
       ..._traceabilityChips(),
     ];
     return GestureDetector(
       onTap: () => _showActivityEditDialog(context),
       child: Container(
-        margin: EdgeInsets.only(bottom: 8, left: isRoot ? 0 : 24),
+        margin: EdgeInsets.only(bottom: 4, left: isRoot ? 0 : 24),
         decoration: BoxDecoration(
           color: TreasuryTokens.surface,
           borderRadius: BorderRadius.circular(12),
@@ -1471,16 +1400,16 @@ class _ActivityNode extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Row(
                   children: [
             // Domain icon tile
             Container(
-              width: 30,
-              height: 30,
+              width: 26,
+              height: 26,
               decoration: BoxDecoration(
                 color: domainColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(7),
                 border: Border.all(color: domainColor.withValues(alpha: 0.28)),
               ),
               child: Icon(
@@ -1489,7 +1418,7 @@ class _ActivityNode extends StatelessWidget {
                       : (activity.type == ActivityType.summary
                           ? Icons.folder_outlined
                           : Icons.task_alt_rounded),
-                  size: 15,
+                  size: 14,
                   color: domainColor),
             ),
             const SizedBox(width: 10),
@@ -1640,13 +1569,14 @@ class _ActivityNode extends StatelessWidget {
                       fontWeight: FontWeight.w500),
                 ),
               ),
-            if (!isRoot && !isLocked) ...[..._buildCostActions(context, linkedCostLine), IconButton(
+            if (!isRoot && !isLocked)
+              IconButton(
                 icon: const Icon(Icons.delete_outline,
                     size: 14, color: Color(0xFFB91C1C)),
                 onPressed: () => provider.removeActivity(activity.id),
                 constraints: const BoxConstraints(),
                 padding: const EdgeInsets.all(4),
-              )],
+              ),
                   ],
                 ),
               ),
@@ -1812,94 +1742,6 @@ class _ActivityNode extends StatelessWidget {
         ),
       ),
     );
-  }
-  /// Cost actions for this activity row: edit an existing linked cost line,
-  /// or add a new one directly on a leaf work package (core functionality —
-  /// no AI). Returns an empty list when the row should not offer cost entry.
-  List<Widget> _buildCostActions(
-    BuildContext context,
-    CostLine? linkedLine,
-  ) {
-    return buildCostActions(
-      context,
-      activity: activity,
-      provider: provider,
-      linkedLine: linkedLine,
-    );
-  }
-
-  /// Static variant used by both the card rows and the compact table rows.
-  static List<Widget> buildCostActions(
-    BuildContext context, {
-    required ScheduleActivity activity,
-    required ScheduleProvider provider,
-    required CostLine? linkedLine,
-  }) {
-    final canAddNew = activity.children.isEmpty;
-    if (linkedLine == null && !canAddNew) return const [];
-
-    final priced = isPricedCostLine(linkedLine);
-    final color = linkedLine == null
-        ? const Color(0xFF6B7280)
-        : (priced ? const Color(0xFF16A34A) : const Color(0xFFB45309));
-    return [
-      IconButton(
-        tooltip: linkedLine != null
-            ? (priced
-                ? 'Edit cost line for this work package'
-                : 'Edit cost line (not priced yet)')
-            : 'Add cost for this work package',
-        icon: Icon(
-          linkedLine != null
-              ? Icons.paid_outlined
-              : Icons.attach_money_outlined,
-          size: 14,
-          color: color,
-        ),
-        onPressed: () => openCostDialog(
-          context,
-          activity: activity,
-          provider: provider,
-          linkedLine: linkedLine,
-        ),
-        constraints: const BoxConstraints(),
-        padding: const EdgeInsets.all(4),
-      ),
-    ];
-  }
-
-  /// Open the manual cost-line dialog for this activity. New lines are
-  /// pre-linked to the activity's WBS node (when known) and pre-described
-  /// from the activity name. After save/update the activity's `costLineId`
-  /// is stamped so the Schedule ↔ Cost link is bidirectional and repeat
-  /// pulls stay idempotent.
-  ///
-  /// Static so both the card rows and the compact table rows (Lusaka 28
-  /// follow-up) open the identical dialog.
-  static Future<void> openCostDialog(
-    BuildContext context, {
-    required ScheduleActivity activity,
-    required ScheduleProvider provider,
-    CostLine? linkedLine,
-  }) async {
-    final savedId = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AddLineDialog(
-        defaultCategory: isScheduledPurchaseActivity(activity)
-            ? CostCategory.procurement
-            : CostCategory.materials,
-        editingLine: linkedLine,
-        initialWbsRef: activity.wbsCode,
-        initialDescription: '${activity.name} — scheduled work package cost',
-      ),
-    );
-    if (savedId == null || savedId.isEmpty) return;
-    if ((activity.costLineId ?? '') != savedId) {
-      provider.updateActivity(
-        activity.id,
-        activity.copyWith(costLineId: savedId),
-      );
-    }
   }
 }
 
@@ -2248,7 +2090,7 @@ class _DrawingFromChip extends StatelessWidget {
 /// The card tree is readable but tall — one card per activity meant scrolling
 /// screen after screen on a synced schedule (89 L1 · 105 total in the review).
 /// This table keeps every column the cards carried (code, name, domain,
-/// duration, start, finish, cost status, actions) but with SMALL rows: ~30px,
+/// duration, start, finish, actions) but with SMALL rows: 26px,
 /// hairline dividers, no card chrome. Indentation preserves the tree
 /// structure and summary rows can expand/collapse their children.
 class _ActivityTreeTable extends StatefulWidget {
@@ -2267,8 +2109,8 @@ class _ActivityTreeTable extends StatefulWidget {
 }
 
 class _ActivityTreeTableState extends State<_ActivityTreeTable> {
-  static const double _indentWidth = 16;
-  static const double _rowHeight = 30;
+  static const double _indentWidth = 14;
+  static const double _rowHeight = 26;
 
   final Set<String> _collapsed = <String>{};
 
@@ -2334,7 +2176,7 @@ class _ActivityTreeTableState extends State<_ActivityTreeTable> {
     Widget cell(String text, double w, {bool right = false}) => SizedBox(
           width: w,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
             child: Text(
               text,
               textAlign: right ? TextAlign.right : TextAlign.left,
@@ -2353,13 +2195,12 @@ class _ActivityTreeTableState extends State<_ActivityTreeTable> {
       child: Row(
         children: [
           const SizedBox(width: 24), // expander gutter
-          cell('Code', 64),
+          cell('Code', 60),
           Expanded(child: cell('Activity', 0)),
           cell('Domain', 92),
           cell('Duration', 66, right: true),
           cell('Start', 74, right: true),
           cell('Finish', 74, right: true),
-          cell('Cost', 78, right: true),
           const SizedBox(width: 60), // actions gutter
         ],
       ),
@@ -2370,21 +2211,6 @@ class _ActivityTreeTableState extends State<_ActivityTreeTable> {
     final a = spec.activity;
     final domainColor = Color(a.domain.color);
     final isMilestone = a.type == ActivityType.milestone;
-
-    // Linked cost line for the priced/unpriced badge.
-    CostLine? linkedCostLine;
-    final linkedCostId = (a.costLineId ?? '').trim();
-    if (linkedCostId.isNotEmpty) {
-      final estimate = context.watch<CostEstimateProvider>().estimate;
-      if (estimate != null) {
-        for (final line in estimate.lines) {
-          if (line.id == linkedCostId) {
-            linkedCostLine = line;
-            break;
-          }
-        }
-      }
-    }
 
     final durationText =
         formatDuration(a.duration, a.durationUnit);
@@ -2428,9 +2254,9 @@ class _ActivityTreeTableState extends State<_ActivityTreeTable> {
             ),
             // Code
             SizedBox(
-              width: 64,
+              width: 60,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 7),
                 child: Text(
                   a.code,
                   style: TextStyle(
@@ -2548,29 +2374,6 @@ class _ActivityTreeTableState extends State<_ActivityTreeTable> {
                 ),
               ),
             ),
-            // Cost status
-            SizedBox(
-              width: 78,
-              child: linkedCostLine == null
-                  ? const Text('—',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                          fontSize: 10, color: TreasuryTokens.muted))
-                  : Text(
-                      _ActivityNode.isPricedCostLine(linkedCostLine)
-                          ? '\$${_fmtCost(linkedCostLine.total)}'
-                          : 'not priced',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: _ActivityNode.isPricedCostLine(linkedCostLine)
-                            ? const Color(0xFF16A34A)
-                            : const Color(0xFFB45309),
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-            ),
             // Actions
             SizedBox(
               width: 60,
@@ -2580,12 +2383,6 @@ class _ActivityTreeTableState extends State<_ActivityTreeTable> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        ..._ActivityNode.buildCostActions(
-                          context,
-                          activity: a,
-                          provider: widget.provider,
-                          linkedLine: linkedCostLine,
-                        ),
                         IconButton(
                           icon: const Icon(Icons.delete_outline,
                               size: 12, color: Color(0xFFB91C1C)),
@@ -2603,9 +2400,6 @@ class _ActivityTreeTableState extends State<_ActivityTreeTable> {
       ),
     );
   }
-
-  static String _fmtCost(double v) =>
-      v == v.roundToDouble() ? v.round().toString() : v.toStringAsFixed(2);
 }
 
 /// One visible row of [_ActivityTreeTable].

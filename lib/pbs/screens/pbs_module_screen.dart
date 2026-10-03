@@ -391,7 +391,7 @@ class _PBSModuleScreenState extends State<PBSModuleScreen> {
                       parentId: parentId,
                       code: codeCtrl.text.trim().isNotEmpty
                           ? codeCtrl.text.trim()
-                          : 'PBS.${DateTime.now().millisecondsSinceEpoch}',
+                          : shortId('PBS.'),
                       name: nameCtrl.text.trim(),
                       productType: selectedType,
                       quantity: quantity,

@@ -11,8 +11,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/services/schedule_cpm_service.dart';
+import 'package:ndu_project/schedule/utils/schedule_duplicate_guard.dart';
 import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
 import 'package:ndu_project/schedule/utils/schedule_wbs_packages.dart';
+import 'package:ndu_project/utils/item_name_key.dart';
 import 'package:ndu_project/utils/project_scoped_storage.dart';
 
 /// Project-scoped storage key prefix — see [projectScopedPrefsKey].
@@ -64,12 +66,22 @@ class ScheduleProvider extends ChangeNotifier {
   }
 
   /// Applies a decoded `{'state': {...}}` payload to this provider.
+  ///
+  /// Records duplicated by an earlier import run are collapsed on the way in,
+  /// so a project that already holds two rows with the same name stops showing
+  /// both as soon as it is loaded — the user never has to delete them by hand.
   void _applyStoredState(Map<String, dynamic> decoded) {
     final state = decoded['state'] as Map<String, dynamic>? ?? {};
     _setupComplete = state['setupComplete'] as bool? ?? false;
     final scheduleJson = state['schedule'] as Map<String, dynamic>?;
-    _schedule =
-        scheduleJson != null ? _scheduleFromJson(scheduleJson) : null;
+    if (scheduleJson == null) {
+      _schedule = null;
+      return;
+    }
+    final restored = _scheduleFromJson(scheduleJson);
+    _schedule = restored.copyWith(
+      activities: _dedupeActivityNames(restored.activities),
+    );
   }
 
   /// Makes [projectId]'s own schedule the one in memory before any caller reads
@@ -392,10 +404,15 @@ class ScheduleProvider extends ChangeNotifier {
 
   // ─── Activities ─────────────────────────────────────────────────────────
 
+  /// Writes a whole tree back, collapsing any two records that share a name.
+  ///
+  /// Every import/sync path funnels through here, so a chain generated twice —
+  /// or a payload built from a list that already held a duplicate — can never
+  /// be persisted as two rows the user would see as the same item.
   void setActivities(List<ScheduleActivity> activities) {
     if (_schedule == null) return;
     _schedule = _schedule!.copyWith(
-      activities: activities,
+      activities: _dedupeActivityNames(activities),
       updatedAt: DateTime.now(),
     );
     notifyListeners();
@@ -422,8 +439,17 @@ class ScheduleProvider extends ChangeNotifier {
     return result;
   }
 
+  /// Adds [activity] under [parentId] and returns its new id.
+  ///
+  /// If the schedule already holds an activity with the same name, nothing is
+  /// added and the existing activity's id is returned instead. Callers that
+  /// import from elsewhere therefore link to the record they already created
+  /// rather than stacking a duplicate — running the same import twice is
+  /// idempotent.
   String addActivity(String parentId, ScheduleActivity activity) {
     if (_schedule == null || _schedule!.activities.isEmpty) return '';
+    final existingId = _idOfActivityNamed(activity.name);
+    if (existingId != null) return existingId;
     final id = newSchedId('act');
     final newActivity = activity.copyWith(id: id, code: '', level: 0);
     final root = _schedule!.activities[0];
@@ -444,8 +470,15 @@ class ScheduleProvider extends ChangeNotifier {
     return id;
   }
 
+  /// Saves an edit to one activity.
+  ///
+  /// A patch that renames the activity onto a name another record already holds
+  /// is dropped (the row keeps its current name) so an edit cannot introduce the
+  /// duplicate the user would then have to clean up by hand.
   void updateActivity(String id, ScheduleActivity patch) {
     if (_schedule == null || _schedule!.activities.isEmpty) return;
+    final clashId = _idOfActivityNamed(patch.name, ignoreId: id);
+    if (clashId != null) return;
     final root = _schedule!.activities[0];
     final updatedRoot = recalcActivityCodes(
       _findAndUpdate(
@@ -978,6 +1011,79 @@ class ScheduleProvider extends ChangeNotifier {
       children:
           root.children.map((c) => _findAndUpdate(c, id, updater)).toList(),
     );
+  }
+
+  /// Collapses copies of the same activity across the whole tree, keeping the
+  /// first — see [dedupeScheduleItems] for what counts as a copy.
+  ///
+  /// A dropped copy's children are lifted onto the survivor so nothing is lost
+  /// when the copy happened to be a summary node. The project root is exempt:
+  /// it is the container, not a list item.
+  List<ScheduleActivity> _dedupeActivityNames(List<ScheduleActivity> roots) {
+    List<ScheduleActivity> walk(List<ScheduleActivity> nodes) {
+      final prepared = <ScheduleActivity>[];
+      for (final node in nodes) {
+        final children = walk(node.children);
+        prepared.add(children.isEmpty ? node : node.copyWith(children: children));
+      }
+
+      final kept = <ScheduleActivity>[];
+      for (final node in prepared) {
+        final identity = scheduleItemIdentity(node);
+        final index = kept.indexWhere((candidate) => isDuplicateScheduleItem(
+              name: candidate.name,
+              identity: scheduleItemIdentity(candidate),
+              otherName: node.name,
+              otherIdentity: identity,
+            ));
+        if (index < 0) {
+          kept.add(node);
+          continue;
+        }
+        // A copy was dropped: hand its children to the record it duplicates so
+        // no work is lost when the copy happened to be a summary node.
+        if (node.children.isNotEmpty) {
+          final survivor = kept[index];
+          kept[index] = survivor.copyWith(
+            children: [...survivor.children, ...node.children],
+          );
+        }
+      }
+      return kept;
+    }
+
+    return walk(roots);
+  }
+
+  /// The id of the activity [name] would duplicate, or null when the name is
+  /// free. Blank names never match, so unnamed rows are not folded together.
+  String? _idOfActivityNamed(String name, {String? ignoreId}) {
+    final key = itemNameKey(name);
+    if (key.isEmpty) return null;
+    String? found;
+    void walk(List<ScheduleActivity> nodes) {
+      for (final node in nodes) {
+        if (found != null) return;
+        if (node.level > 0 && node.id != ignoreId) {
+          if (isDuplicateScheduleItem(
+            name: node.name,
+            identity: scheduleItemIdentity(node),
+            otherName: name,
+            otherIdentity: null,
+          )) {
+            found = node.id;
+            return;
+          }
+        }
+        walk(node.children);
+      }
+    }
+
+    for (final root in _schedule?.activities ?? const <ScheduleActivity>[]) {
+      walk([root]);
+      if (found != null) return found;
+    }
+    return null;
   }
 
   ScheduleActivity _findAndRemove(ScheduleActivity root, String id) {

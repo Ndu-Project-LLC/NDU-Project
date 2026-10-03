@@ -8,18 +8,12 @@ library;
 /// Sub-navigation between Builder / Gantt / List View is a horizontal
 /// `TabBar` at the top of the content area (light-mode pills matching the
 /// Project Controls screen), replacing the old dark navy left rail.
-///
-/// A subtle [ContextBanner] is shown between the [SectionNavigator] and the
-/// tab content summarising upstream context (project name, WBS node count,
-/// Cost Estimate total) so the user can see what data this page is drawing
-/// from.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
-import 'package:ndu_project/widgets/context_banner.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/screens/builder_screen.dart';
@@ -29,7 +23,6 @@ import 'package:ndu_project/schedule/widgets/schedule_wbs_packages_card.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
-import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/widgets/add_line_dialog.dart';
 import 'package:ndu_project/services/planning_sync_service.dart';
@@ -364,9 +357,6 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
           );
         }
 
-        // ---- Context banner data ----
-        final projectName = schedule.projectName;
-
         // Keep the schedule's delivery model in sync with the project's
         // Project Details methodology selection (Waterfall / Agile / Hybrid)
         // so methodology-dependent views (badge, agile hints, sync imports)
@@ -385,17 +375,6 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
             }
           });
         }
-        final wbs = wbsProvider.wbs;
-        final wbsCounts = wbs != null ? countNodes(wbs) : null;
-        final wbsNodeCount = wbsCounts != null
-            ? (wbsCounts.level1 + wbsCounts.level2 + 1)
-            : 0;
-        final estimate = costProvider.estimate;
-        final currency = estimate?.currency ?? 'USD';
-        final costTotal = estimate != null
-            ? estimate.lines.fold<double>(0, (s, l) => s + effectiveLineTotal(l))
-            : 0.0;
-
         // Scheduled purchases → Cost Estimate candidates (core pull flow).
         final purchaseCandidates = schedule.activities.isEmpty
             ? const <ScheduledPurchaseCandidate>[]
@@ -429,18 +408,6 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
             countBySource(PlanningSyncService.importSourceWorkPackage);
         final syncedStories =
             countBySource(PlanningSyncService.importSourceAgileStory);
-        int syncedMstones = 0;
-        for (final a in tree) {
-          syncedMstones += _countWithSource(
-              a, PlanningSyncService.importSourceMilestone);
-        }
-        // Also count children of the Planning Milestones group
-        for (final a in tree) {
-          if (a.name == 'Planning Milestones') {
-            syncedMstones =
-                a.children.length;
-          }
-        }
 
         return ResponsiveScaffold(
           activeItemLabel: 'Schedule',
@@ -479,44 +446,6 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                         isCollapsible: true,
                         initiallyCollapsed: true,
                       ),
-                    ),
-                    // ── Context banner (drawn from WBS + Cost Estimate) ────
-                    ContextBanner(
-                      storageKey: 'schedule_module_context_banner',
-                      items: [
-                        ContextBannerItem(
-                          label: 'Project',
-                          value: projectName,
-                          icon: Icons.flag_outlined,
-                        ),
-                        if (wbs != null && wbsCounts != null)
-                          ContextBannerItem(
-                            label: 'WBS',
-                            value:
-                                '$wbsNodeCount nodes · ${wbsCounts.level1} ${wbs.framework.level1Label}',
-                            icon: Icons.account_tree_outlined,
-                          ),
-                        if (estimate != null)
-                          ContextBannerItem(
-                            label: 'Cost Estimate',
-                            value: formatCurrency(costTotal, currency),
-                            icon: Icons.attach_money,
-                          ),
-                        if (fepMilestoneCount > 0)
-                          ContextBannerItem(
-                            label: 'Planning Milestones',
-                            value:
-                                '$syncedMstones / $fepMilestoneCount synced',
-                            icon: Icons.flag_outlined,
-                          ),
-                        if (syncedPkgs > 0 || syncedStories > 0)
-                          ContextBannerItem(
-                            label: 'From Planning',
-                            value:
-                                '${syncedPkgs + syncedStories} items synced',
-                            icon: Icons.sync,
-                          ),
-                      ],
                     ),
                     // ── Resync button ──────────────────────────────────────
                     if (fepMilestoneCount > 0 ||

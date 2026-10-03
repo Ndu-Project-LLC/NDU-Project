@@ -38,7 +38,7 @@ Widget _headerApp({required double width, required Widget header}) =>
     );
 
 void main() {
-  testWidgets('desktop header lists pending assigned tasks and assignees',
+  testWidgets('desktop header lists pending assigned tasks on a full page',
       (tester) async {
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;
@@ -79,6 +79,10 @@ void main() {
     expect(find.text('Outstanding tasks (1)'), findsOneWidget);
     expect(find.text('Review test plan'), findsOneWidget);
     expect(find.text('Assigned to: Alex'), findsOneWidget);
+    // The list is a screen-filling page, not an inline dialog.
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(AppBar), findsOneWidget);
+    expect(find.text('Open activity log'), findsOneWidget);
   });
 
   testWidgets('mobile header exposes task action without a project provider',
@@ -99,7 +103,7 @@ void main() {
     expect(find.byTooltip('0 assigned outstanding tasks'), findsNothing);
   });
 
-  testWidgets('mobile header lists outstanding tasks when project data exists',
+  testWidgets('mobile header lists outstanding tasks on a full page',
       (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;

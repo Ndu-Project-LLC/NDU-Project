@@ -41,9 +41,9 @@ class ProjectActivitiesLogScreen extends StatefulWidget {
  });
  }    }
 
-    // Navigate to the routed page rather than pushing the lightweight
-    // [ActivityLogPanel] overlay. The panel is a reduced date-grouped list
-    // with no search, filters or pagination; this screen is the full page.
+    // Navigate to the routed page. Every activity-log entry point resolves
+    // here so the log is always the full page with search, filters and
+    // pagination rather than a reduced overlay.
     context.push('/${AppRoutes.projectActivitiesLog}');
   }
 

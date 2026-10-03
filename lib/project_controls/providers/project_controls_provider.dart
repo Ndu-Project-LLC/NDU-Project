@@ -5,6 +5,7 @@
 library;
 
 import 'package:flutter/foundation.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/project_controls/models/project_controls_models.dart';
 import 'package:ndu_project/project_controls/services/project_controls_firestore_service.dart';
@@ -693,7 +694,7 @@ class ProjectControlsProvider extends ChangeNotifier {
     final summary =
         summaryOverride ?? _buildDefaultReportSummary(type, start, end);
     final report = ReportRecord(
-      id: 'rpt_${DateTime.now().millisecondsSinceEpoch}',
+      id: newId('rpt_'),
       type: type,
       generatedAt: DateTime.now(),
       dateRangeStart: start,
@@ -759,7 +760,7 @@ class ProjectControlsProvider extends ChangeNotifier {
   // ─── Audit Trail ────────────────────────────────────────────────────
   void _addAudit(String field, String prev, String next, String reason) {
     final entry = AuditEntry(
-      id: 'audit_${DateTime.now().millisecondsSinceEpoch}',
+      id: newId('audit_'),
       user: _currentUser,
       timestamp: DateTime.now(),
       field: field,

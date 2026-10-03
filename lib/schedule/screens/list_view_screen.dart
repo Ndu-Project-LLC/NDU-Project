@@ -22,6 +22,7 @@ import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart'
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
+import 'package:ndu_project/schedule/utils/schedule_duplicate_guard.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
@@ -676,9 +677,17 @@ class _ListViewScreenState extends State<ListViewScreen> {
       walk(schedule.activities[0]);
     }
 
-    // Append sample rows so the view is always populated.
+    // Append sample rows so the view is always populated, then drop any row
+    // that repeats another — a live activity and a sample row reading as one
+    // item is exactly the duplicate the owner is asking to remove.
     rows.addAll(_sampleRows());
-    return rows;
+    return dedupeScheduleItems(
+      rows,
+      nameOf: (row) => row.name,
+      identityOf: (row) => row.activityId == null
+          ? null
+          : 'activity:${row.activityId}',
+    );
   }
 
   /// Writes an inline edit from the Duration / Start / Finish cells back to
@@ -1166,6 +1175,34 @@ class _TraceabilityCell extends StatelessWidget {
   final _ListRow row;
   const _TraceabilityCell({required this.row});
 
+  /// Every traceability card carries its own tint, taken from the strongest
+  /// link the row carries, so rows are told apart at a glance instead of every
+  /// card reading as the same block of white. Ordered by how specific the link
+  /// is: a release says more than a sprint, which says more than a WBS link.
+  Color get _cardColor {
+    if (row.hasRelease) return const Color(0xFFD97706);
+    if (row.hasSprint) return const Color(0xFF16A34A);
+    if (row.hasAgileStory) return const Color(0xFFB8860B);
+    if (row.hasWbs) return const Color(0xFFD4AF37);
+    if (row.importSource.isNotEmpty) return const Color(0xFF475467);
+    return const Color(0xFF9CA3AF);
+  }
+
+  /// The tinted panel that holds one row's traceability content.
+  Widget _card({required Widget child, double width = 260}) {
+    final color = _cardColor;
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final chips = <Widget>[];
@@ -1196,11 +1233,14 @@ class _TraceabilityCell extends StatelessWidget {
           '${row.prerequisiteCount} prereq', const Color(0xFF6B7280)));
     }
     if (chips.isEmpty) {
-      return const Text('—',
-          style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12));
+      return _card(
+        width: 48,
+        child: const Text('—',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+      );
     }
-    return SizedBox(
-      width: 260,
+    return _card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -622,8 +622,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
               final budget = _parseCurrency(_budgetCtrl.text);
               final existing = widget.initialItem;
               final item = ProcurementItemModel(
-                id: existing?.id ??
-                    DateTime.now().millisecondsSinceEpoch.toString(),
+                id: existing?.id ?? newId(),
                 projectId: projectId,
                 name: _nameCtrl.text.trim(),
                 description: _descCtrl.text.trim(),
@@ -1802,7 +1801,7 @@ class _CreateRfqDialogState extends State<CreateRfqDialog> {
             'project-1';
         final rfq = RfqModel(
           id: widget.initialRfq?.id ??
-              'RFQ-${DateTime.now().millisecondsSinceEpoch % 10000}',
+              shortId('RFQ-'),
           title: _titleCtrl.text.trim(),
           projectId: projectId,
           category: _category,
@@ -2227,7 +2226,7 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
         final poId = (!isEditing && selectedItemNumber != null)
             ? selectedItemNumber
             : (_idCtrl.text.trim().isEmpty
-                ? 'PO-${DateTime.now().millisecondsSinceEpoch % 10000}'
+                ? shortId('PO-')
                 : _idCtrl.text.trim());
         final projectId = widget.initialPo?.projectId ??
             ProjectDataHelper.getData(context).projectId ??
@@ -2611,7 +2610,7 @@ class _AddContractDialogState extends State<AddContractDialog> {
 
         final contract = ContractModel(
           id: widget.initialContract?.id ??
-              'CNT-${DateTime.now().millisecondsSinceEpoch % 10000}',
+              shortId('CNT-'),
           projectId: projectId,
           title: _titleCtrl.text.trim(),
           description: _descCtrl.text.trim(),

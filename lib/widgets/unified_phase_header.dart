@@ -8,6 +8,7 @@ import 'package:ndu_project/services/auth_nav.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/widgets/page_walkthrough.dart';
 import 'package:ndu_project/widgets/project_activity_header_action.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -150,6 +151,12 @@ class UnifiedPhaseHeader extends StatelessWidget {
                 _ProjectActivityHeaderActionSlot(
                   onOpenActivityLog: onOpenActivityLog ??
                       () => ProjectActivitiesLogScreen.open(context),
+                  compact: true,
+                ),
+                const SizedBox(width: 6),
+                PageWalkthroughButton(
+                  pageId: breadcrumbTitle ?? title,
+                  pageTitle: breadcrumbTitle ?? title,
                   compact: true,
                 ),
                 if (ProjectDataInherited.maybeRead(context) != null)
@@ -319,10 +326,58 @@ class UnifiedPhaseHeader extends StatelessWidget {
             onOpenActivityLog: onOpenActivityLog ??
                 () => ProjectActivitiesLogScreen.open(context),
           ),
+          // Guided tour of this page, beside Tasks (Lusaka 28). The gap lives
+          // inside the Flexible so it shrinks with the chip — a fixed gap in an
+          // at-capacity Row is what tips it into an overflow.
+          Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(width: 8),
+                Flexible(
+                  child: _WalkthroughSlot(
+                    pageId: breadcrumbTitle ?? title,
+                    pageTitle: breadcrumbTitle ?? title,
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(width: 12),
           ...trailingActions,
           if (trailingActions.isNotEmpty) const SizedBox(width: 12),
         ],
+      ),
+    );
+  }
+}
+
+/// The Walkthrough chip, which drops its label and becomes an icon when the
+/// header has no room for it.
+///
+/// The action row is a fixed [Row] that already carries Tasks, Export PDF and
+/// AI Assist, so an unconditionally labelled chip overflows it on tablet-width
+/// screens. Shrinking to an icon keeps the affordance on every page without
+/// pushing the row over.
+class _WalkthroughSlot extends StatelessWidget {
+  const _WalkthroughSlot({required this.pageId, this.pageTitle});
+
+  final String pageId;
+  final String? pageTitle;
+
+  /// Width the labelled chip needs before it starts overflowing.
+  static const _labelledWidth = 124.0;
+
+  @override
+  Widget build(BuildContext context) {
+    // Not wrapped in Flexible here: the call site already provides one, and
+    // nesting two makes both compete for the same parent data.
+    return LayoutBuilder(
+      builder: (context, constraints) => PageWalkthroughButton(
+        pageId: pageId,
+        pageTitle: pageTitle,
+        compact: constraints.maxWidth < _labelledWidth,
+        maxWidth: constraints.maxWidth,
       ),
     );
   }
@@ -486,6 +541,11 @@ class UnifiedScaffoldAppBar extends StatelessWidget
         _ProjectActivityHeaderActionSlot(
           onOpenActivityLog: onOpenActivityLog ??
               () => ProjectActivitiesLogScreen.open(context),
+          compact: true,
+        ),
+        PageWalkthroughButton(
+          pageId: title ?? 'Page',
+          pageTitle: title,
           compact: true,
         ),
         ...additionalActions,

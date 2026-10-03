@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:ndu_project/models/design_phase_models.dart';
+import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/design_phase_screen.dart';
 import 'package:ndu_project/screens/requirements_implementation_screen.dart';
@@ -58,6 +59,53 @@ Future<List<String>> collectFlutterErrors(
 /// user can still read — and these pages have always had some.
 bool _isTolerated(String message) => message.contains('overflowed');
 
+/// A project with real content in every collection these pages read.
+///
+/// The screens resolve their data through [ProjectDataInherited], NOT the
+/// `provider` package. Wiring only a `ChangeNotifierProvider` leaves them with
+/// no project at all, so the page would render its empty shell and the test
+/// would pass without touching any of the data-dependent code.
+ProjectDataModel populatedProject() {
+  List<String> many(int n, String prefix) =>
+      [for (var i = 1; i <= n; i++) '$prefix item $i with a long label'];
+
+  return ProjectDataModel(
+    projectName: 'Zala connect - Zambia Youth Agri-Fintech platform',
+    solutionTitle: 'Agri-Fintech Platform',
+    opportunities: many(40, 'Opportunity'),
+    teamMembers: [
+      for (var i = 1; i <= 20; i++)
+        TeamMember(
+          name: 'Team Member $i',
+          role: 'Role $i',
+          email: 'member$i@example.com',
+          responsibilities: 'Responsible for workstream $i.',
+        ),
+    ],
+    designManagementData: DesignManagementData(
+      applicableStandards: const ['ISO 29148', 'IEEE 830', 'PMBOK 7'],
+      inheritedRisks: many(30, 'Risk'),
+      inheritedConstraints: many(30, 'Constraint'),
+      inheritedScope: many(30, 'Scope item'),
+      specifications: [
+        for (var i = 1; i <= 40; i++)
+          DesignSpecification(description: 'Specification $i statement.'),
+      ],
+      documents: [
+        for (var i = 1; i <= 40; i++)
+          DesignDocument(
+              title: 'Design Document $i',
+              type: 'Output',
+              url: 'https://example.com/doc$i'),
+      ],
+      tools: [
+        for (var i = 1; i <= 25; i++)
+          DesignToolLink(name: 'Tool $i', url: 'https://example.com/$i'),
+      ],
+    ),
+  );
+}
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -69,10 +117,17 @@ void main() {
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.reset);
 
+        final provider = ProjectDataProvider();
+        provider.updateProjectData(populatedProject());
+
         final errors = await collectFlutterErrors(tester, () async {
+          // ProjectDataInherited, NOT ChangeNotifierProvider: these screens
+          // read their data through the inherited widget, so provider-package
+          // wiring alone leaves them with no project and the test would pass
+          // without touching any data-dependent code.
           await tester.pumpWidget(
-            ChangeNotifierProvider<ProjectDataProvider>.value(
-              value: ProjectDataProvider(),
+            ProjectDataInherited(
+              provider: provider,
               child: MaterialApp(home: Scaffold(body: entry.value)),
             ),
           );
@@ -98,6 +153,11 @@ void main() {
           findsWidgets,
           reason: 'The page body should render content, not stay empty.',
         );
+
+        // updateProjectData arms a 2s auto-save debounce; let it drain so the
+        // binding does not fail the test on a pending timer.
+        await tester.pump(const Duration(seconds: 3));
+        await provider.flushAutoSave();
       });
     }
   }

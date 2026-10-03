@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -19,6 +20,34 @@ import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class LongLeadEquipmentOrderingScreen extends StatefulWidget {
  const LongLeadEquipmentOrderingScreen({super.key});
+
+/// The canonical long-lead equipment taxonomy (Lusaka 28).
+///
+/// The category field used to be free text, so every project invented its own
+/// labels ("pumps", "Pumps", "Water pumps") and the register could not be
+/// grouped or reported on. Offering the full set keeps procurement classes
+/// consistent across projects while still covering the disciplines that
+/// actually drive long-lead schedules on site.
+static const List<String> equipmentCategoryOptions = [
+'Earthmoving & Heavy Plant',
+'Construction Equipment',
+'Material Handling',
+'Power Generation & Backup',
+'Transformers & Switchgear',
+'Solar & Renewable Energy',
+'Water Supply & Treatment',
+'Sanitation & Sewerage',
+'HVAC & Ventilation',
+'Telecom & Network Infrastructure',
+'IT, Server & Data Centre Hardware',
+'Security & Access Systems',
+'Medical & Laboratory Equipment',
+'Agricultural Machinery',
+'Vehicle Fleet & Transport',
+'Marine & Coastal Equipment',
+'Elevators & Vertical Transport',
+'Specialist Process Plant',
+];
 
  @override
  State<LongLeadEquipmentOrderingScreen> createState() =>
@@ -50,6 +79,78 @@ class _LongLeadEquipmentOrderingScreenState
  'Active',
  'Blocked',
  'Completed'
+ ];
+
+ /// Units a lead-time threshold can be expressed in. The stored value keeps
+ /// its unit ("6 weeks") so existing free-text records stay readable.
+ static const List<String> _leadTimeUnits = ['Days', 'Weeks', 'Months'];
+
+ /// Categories an equipment item may be filed under: the ones this project
+ /// has actually defined, falling back to the canonical taxonomy.
+ List<String> get _equipmentItemCategoryOptions => _categories.isEmpty
+     ? LongLeadEquipmentOrderingScreen.equipmentCategoryOptions
+     : _categories.map((entry) => entry.title).toList();
+
+ /// Registered users on the project, for the Owner dropdowns.
+ ///
+ /// Mirrors the convention already used by the Requirements Implementation
+ /// screen: team members plus the charter roles, falling back to sensible
+ /// placeholders when the project has nobody registered yet.
+ List<String> _ownerOptions() {
+ final projectData = ProjectDataHelper.getData(context);
+ final names = <String>{
+ ...projectData.teamMembers
+ .map((member) => member.name.trim())
+ .where((name) => name.isNotEmpty),
+ };
+ if (projectData.charterProjectManagerName.trim().isNotEmpty) {
+ names.add(projectData.charterProjectManagerName.trim());
+ }
+ if (projectData.charterProjectSponsorName.trim().isNotEmpty) {
+ names.add(projectData.charterProjectSponsorName.trim());
+ }
+ if (names.isEmpty) {
+ names.addAll(const [
+ 'Unassigned',
+ 'Procurement Lead',
+ 'Design Lead',
+ 'Technical Lead',
+ 'Site Manager',
+ ]);
+ }
+ final options = names.toList()..sort();
+ return options;
+ }
+
+ /// Splits a stored threshold such as "6 weeks" into its amount and unit so the
+ /// numeric field and the unit dropdown can be prefilled. Free-text values that
+ /// do not parse fall back to a blank amount and the default unit, keeping the
+ /// user's words rather than silently discarding them.
+ ({String amount, String unit}) _splitLeadTime(String raw) {
+ final text = raw.trim();
+ if (text.isEmpty) return (amount: '', unit: _leadTimeUnits.first);
+ final match = RegExp(r'^(\d+(?:\.\d+)?)\s*([A-Za-z]+)?').firstMatch(text);
+ if (match == null) return (amount: '', unit: _leadTimeUnits.first);
+ final unit = match.group(2);
+ final matchedUnit = _leadTimeUnits.firstWhere(
+ (candidate) => candidate.toLowerCase().startsWith((unit ?? '').toLowerCase()),
+ orElse: () => _leadTimeUnits.first,
+ );
+ return (amount: match.group(1) ?? '', unit: matchedUnit);
+ }
+
+ /// Rebuilds the stored "amount unit" string from the two inputs.
+ String _joinLeadTime(String amount, String unit) {
+ final trimmed = amount.trim();
+ if (trimmed.isEmpty) return '';
+ return '$trimmed $unit';
+ }
+
+ /// Digits-only so the amount field cannot accept free text — a lead time is a
+ /// quantity, and the unit is chosen separately.
+ List<TextInputFormatter> get _leadTimeAmountFormatters => [
+ FilteringTextInputFormatter.digitsOnly,
+ LengthLimitingTextInputFormatter(4),
  ];
 
  void _showExportFeedback() {
@@ -623,11 +724,13 @@ class _LongLeadEquipmentOrderingScreenState
     showDeleteSuccessSnackBar(context, itemLabel: 'Action');
  }  Future<void> _openCategoryDialog() async {
     final draft = _EquipmentCategory.empty();
-    final titleController = SpellCheckTextEditingController();
     final descriptionController = SpellCheckTextEditingController();
     final thresholdController = SpellCheckTextEditingController();
-    final ownerController = SpellCheckTextEditingController();
+    String title = LongLeadEquipmentOrderingScreen.equipmentCategoryOptions.first;
     String criticality = _criticalityOptions[1];
+    String thresholdUnit = _leadTimeUnits[1];
+    final ownerOptions = _ownerOptions();
+    String owner = ownerOptions.first;
 
     final saved = await showDialog<bool>(
       context: context,
@@ -639,8 +742,20 @@ class _LongLeadEquipmentOrderingScreenState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: titleController,
+                DropdownButtonFormField<String>(
+                  initialValue: title,
+                  isExpanded: true,
+                  items: LongLeadEquipmentOrderingScreen.equipmentCategoryOptions
+                      .map((option) => DropdownMenuItem(
+                            value: option,
+                            child: Text(option,
+                                overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setModalState(() => title = value);
+                  },
                   decoration: const InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(),
@@ -674,16 +789,62 @@ class _LongLeadEquipmentOrderingScreenState
  border: OutlineInputBorder(),
  ),
  ),                const SizedBox(height: 12),
-                TextField(
-                  controller: thresholdController,
-                  decoration: const InputDecoration(
-                    labelText: 'Lead time threshold',
-                    border: OutlineInputBorder(),
-                  ),
+                // Lead time is a quantity plus a unit, so it is a numeric
+                // field paired with a unit selector rather than free text.
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: thresholdController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: _leadTimeAmountFormatters,
+                        decoration: const InputDecoration(
+                          labelText: 'Lead time threshold',
+                          hintText: 'e.g., 6',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 140,
+                      child: DropdownButtonFormField<String>(
+                        initialValue: thresholdUnit,
+                        isExpanded: true,
+                        items: _leadTimeUnits
+                            .map((unit) => DropdownMenuItem(
+                                  value: unit,
+                                  child: Text(unit),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setModalState(() => thresholdUnit = value);
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Unit',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: ownerController,
+                DropdownButtonFormField<String>(
+                  initialValue: owner,
+                  isExpanded: true,
+                  items: ownerOptions
+                      .map((option) => DropdownMenuItem(
+                            value: option,
+                            child: Text(option,
+                                overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setModalState(() => owner = value);
+                  },
                   decoration: const InputDecoration(
                     labelText: 'Owner',
                     border: OutlineInputBorder(),
@@ -706,27 +867,35 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  );
  if (saved != true) return;
- setState(() {
- _categories.add(
- draft.copyWith(
- title: titleController.text.trim(),
+ setState(() {     _categories.add(
+      draft.copyWith(
+ title: title,
  description: descriptionController.text.trim(),
  criticality: criticality,
- leadTimeThreshold: thresholdController.text.trim(),
- owner: ownerController.text.trim(),
- ),
- );
+ leadTimeThreshold:
+     _joinLeadTime(thresholdController.text, thresholdUnit),
+ owner: owner,
+      ),
+     );
  });
  _scheduleSave();
  }  Future<void> _openEquipmentDialog() async {
     final draft = _EquipmentItem.empty();
     final nameController = SpellCheckTextEditingController();
-    final categoryController = SpellCheckTextEditingController();
     final vendorController = SpellCheckTextEditingController();
     final leadTimeController = SpellCheckTextEditingController();
     final deliveryController = SpellCheckTextEditingController();
-    final ownerController = SpellCheckTextEditingController();
     String status = _equipmentStatusOptions.first;
+
+    // An item is filed under a category the project actually defined; fall
+    // back to the canonical taxonomy until the first category is added.
+    final categoryOptions = _categories.isEmpty
+        ? LongLeadEquipmentOrderingScreen.equipmentCategoryOptions
+        : _categories.map((entry) => entry.title).toList();
+    String category = categoryOptions.first;
+    String leadTimeUnit = _leadTimeUnits[1];
+    final ownerOptions = _ownerOptions();
+    String owner = ownerOptions.first;
 
     final saved = await showDialog<bool>(
       context: context,
@@ -746,8 +915,20 @@ class _LongLeadEquipmentOrderingScreenState
                   ),
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: categoryController,
+                DropdownButtonFormField<String>(
+                  initialValue: category,
+                  isExpanded: true,
+                  items: categoryOptions
+                      .map((option) => DropdownMenuItem(
+                            value: option,
+                            child: Text(option,
+                                overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setModalState(() => category = value);
+                  },
                   decoration: const InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(),
@@ -762,12 +943,44 @@ class _LongLeadEquipmentOrderingScreenState
                   ),
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: leadTimeController,
-                  decoration: const InputDecoration(
-                    labelText: 'Lead time',
-                    border: OutlineInputBorder(),
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: leadTimeController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: _leadTimeAmountFormatters,
+                        decoration: const InputDecoration(
+                          labelText: 'Lead time',
+                          hintText: 'e.g., 12',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 140,
+                      child: DropdownButtonFormField<String>(
+                        initialValue: leadTimeUnit,
+                        isExpanded: true,
+                        items: _leadTimeUnits
+                            .map((unit) => DropdownMenuItem(
+                                  value: unit,
+                                  child: Text(unit),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setModalState(() => leadTimeUnit = value);
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Unit',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -795,8 +1008,20 @@ class _LongLeadEquipmentOrderingScreenState
  border: OutlineInputBorder(),
  ),
  ),                const SizedBox(height: 12),
-                TextField(
-                  controller: ownerController,
+                DropdownButtonFormField<String>(
+                  initialValue: owner,
+                  isExpanded: true,
+                  items: ownerOptions
+                      .map((option) => DropdownMenuItem(
+                            value: option,
+                            child: Text(option,
+                                overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setModalState(() => owner = value);
+                  },
                   decoration: const InputDecoration(
                     labelText: 'Owner',
                     border: OutlineInputBorder(),
@@ -823,12 +1048,12 @@ class _LongLeadEquipmentOrderingScreenState
  _equipmentItems.add(
  draft.copyWith(
  name: nameController.text.trim(),
- category: categoryController.text.trim(),
+ category: category,
  vendor: vendorController.text.trim(),
- leadTime: leadTimeController.text.trim(),
+ leadTime: _joinLeadTime(leadTimeController.text, leadTimeUnit),
  expectedDelivery: deliveryController.text.trim(),
  status: status,
- owner: ownerController.text.trim(),
+ owner: owner,
  ),
  );
  });
@@ -959,10 +1184,10 @@ class _LongLeadEquipmentOrderingScreenState
  key: ValueKey(entry.id),
  columns: columns,
  cells: [
- _TextCell(
+ _DropdownCell(
  value: entry.title,
  fieldKey: '${entry.id}_title',
- hintText: 'Category',
+ options: LongLeadEquipmentOrderingScreen.equipmentCategoryOptions,
  onChanged: (value) =>
  _updateCategory(entry.copyWith(title: value)),
  ),
@@ -981,17 +1206,19 @@ class _LongLeadEquipmentOrderingScreenState
  onChanged: (value) =>
  _updateCategory(entry.copyWith(criticality: value)),
  ),
- _TextCell(
+ _LeadTimeCell(
  value: entry.leadTimeThreshold,
  fieldKey: '${entry.id}_threshold',
- hintText: 'e.g., 6 weeks',
+ split: _splitLeadTime,
+ join: _joinLeadTime,
+ units: _leadTimeUnits,
  onChanged: (value) =>
  _updateCategory(entry.copyWith(leadTimeThreshold: value)),
  ),
- _TextCell(
+ _DropdownCell(
  value: entry.owner,
  fieldKey: '${entry.id}_owner',
- hintText: 'Owner',
+ options: _ownerOptions(),
  onChanged: (value) =>
  _updateCategory(entry.copyWith(owner: value)),
  ),
@@ -1008,10 +1235,10 @@ class _LongLeadEquipmentOrderingScreenState
  key: ValueKey(entry.id),
  columns: columns,
  cells: [
- _TextCell(
+ _DropdownCell(
  value: entry.title,
  fieldKey: '${entry.id}_title',
- hintText: 'Category',
+ options: LongLeadEquipmentOrderingScreen.equipmentCategoryOptions,
  onChanged: (value) =>
  _updateCategory(entry.copyWith(title: value)),
  ),
@@ -1030,17 +1257,19 @@ class _LongLeadEquipmentOrderingScreenState
  onChanged: (value) =>
  _updateCategory(entry.copyWith(criticality: value)),
  ),
- _TextCell(
+ _LeadTimeCell(
  value: entry.leadTimeThreshold,
  fieldKey: '${entry.id}_threshold',
- hintText: 'e.g., 6 weeks',
+ split: _splitLeadTime,
+ join: _joinLeadTime,
+ units: _leadTimeUnits,
  onChanged: (value) =>
  _updateCategory(entry.copyWith(leadTimeThreshold: value)),
  ),
- _TextCell(
+ _DropdownCell(
  value: entry.owner,
  fieldKey: '${entry.id}_owner',
- hintText: 'Owner',
+ options: _ownerOptions(),
  onChanged: (value) =>
  _updateCategory(entry.copyWith(owner: value)),
  ),
@@ -1088,10 +1317,10 @@ class _LongLeadEquipmentOrderingScreenState
  onChanged: (value) =>
  _updateEquipmentItem(entry.copyWith(name: value)),
  ),
- _TextCell(
+ _DropdownCell(
  value: entry.category,
  fieldKey: '${entry.id}_category',
- hintText: 'Category',
+ options: _equipmentItemCategoryOptions,
  onChanged: (value) =>
  _updateEquipmentItem(entry.copyWith(category: value)),
  ),
@@ -1102,10 +1331,12 @@ class _LongLeadEquipmentOrderingScreenState
  onChanged: (value) =>
  _updateEquipmentItem(entry.copyWith(vendor: value)),
  ),
- _TextCell(
+ _LeadTimeCell(
  value: entry.leadTime,
  fieldKey: '${entry.id}_lead',
- hintText: 'e.g., 12 weeks',
+ split: _splitLeadTime,
+ join: _joinLeadTime,
+ units: _leadTimeUnits,
  onChanged: (value) =>
  _updateEquipmentItem(entry.copyWith(leadTime: value)),
  ),
@@ -1123,10 +1354,10 @@ class _LongLeadEquipmentOrderingScreenState
  onChanged: (value) =>
  _updateEquipmentItem(entry.copyWith(status: value)),
  ),
- _TextCell(
+ _DropdownCell(
  value: entry.owner,
  fieldKey: '${entry.id}_owner',
- hintText: 'Owner',
+ options: _ownerOptions(),
  onChanged: (value) =>
  _updateEquipmentItem(entry.copyWith(owner: value)),
  ),
@@ -1150,10 +1381,10 @@ class _LongLeadEquipmentOrderingScreenState
  onChanged: (value) =>
  _updateEquipmentItem(entry.copyWith(name: value)),
  ),
- _TextCell(
+ _DropdownCell(
  value: entry.category,
  fieldKey: '${entry.id}_category',
- hintText: 'Category',
+ options: _equipmentItemCategoryOptions,
  onChanged: (value) =>
  _updateEquipmentItem(entry.copyWith(category: value)),
  ),
@@ -1164,10 +1395,12 @@ class _LongLeadEquipmentOrderingScreenState
  onChanged: (value) =>
  _updateEquipmentItem(entry.copyWith(vendor: value)),
  ),
- _TextCell(
+ _LeadTimeCell(
  value: entry.leadTime,
  fieldKey: '${entry.id}_lead',
- hintText: 'e.g., 12 weeks',
+ split: _splitLeadTime,
+ join: _joinLeadTime,
+ units: _leadTimeUnits,
  onChanged: (value) =>
  _updateEquipmentItem(entry.copyWith(leadTime: value)),
  ),
@@ -1185,10 +1418,10 @@ class _LongLeadEquipmentOrderingScreenState
  onChanged: (value) =>
  _updateEquipmentItem(entry.copyWith(status: value)),
  ),
- _TextCell(
+ _DropdownCell(
  value: entry.owner,
  fieldKey: '${entry.id}_owner',
- hintText: 'Owner',
+ options: _ownerOptions(),
  onChanged: (value) =>
  _updateEquipmentItem(entry.copyWith(owner: value)),
  ),
@@ -1234,10 +1467,10 @@ class _LongLeadEquipmentOrderingScreenState
  onChanged: (value) =>
  _updateAction(entry.copyWith(title: value)),
  ),
- _TextCell(
+ _DropdownCell(
  value: entry.owner,
  fieldKey: '${entry.id}_owner',
- hintText: 'Owner',
+ options: _ownerOptions(),
  onChanged: (value) =>
  _updateAction(entry.copyWith(owner: value)),
  ),
@@ -1283,10 +1516,10 @@ class _LongLeadEquipmentOrderingScreenState
  onChanged: (value) =>
  _updateAction(entry.copyWith(title: value)),
  ),
- _TextCell(
+ _DropdownCell(
  value: entry.owner,
  fieldKey: '${entry.id}_owner',
- hintText: 'Owner',
+ options: _ownerOptions(),
  onChanged: (value) =>
  _updateAction(entry.copyWith(owner: value)),
  ),
@@ -1484,6 +1717,90 @@ class _TableColumnDef {
 
  final String label;
  final double width;
+}
+
+/// Inline lead-time cell: a digits-only amount paired with a unit selector.
+///
+/// Stored values keep their unit ("6 weeks"), so the cell splits on display
+/// and rejoins on edit — existing free-text rows keep whatever they said while
+/// new edits are forced into the amount/unit shape.
+class _LeadTimeCell extends StatelessWidget {
+  const _LeadTimeCell({
+    required this.value,
+    required this.fieldKey,
+    required this.onChanged,
+    required this.split,
+    required this.join,
+    required this.units,
+  });
+
+  final String value;
+  final String fieldKey;
+  final ValueChanged<String> onChanged;
+  final ({String amount, String unit}) Function(String raw) split;
+  final String Function(String amount, String unit) join;
+  final List<String> units;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = split(value);
+    return Row(
+      children: [
+        Expanded(
+          child: TextFormField(
+            key: ValueKey('${fieldKey}_amount'),
+            initialValue: parts.amount,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(4),
+            ],
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: 'e.g., 6',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            ),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF111827)),
+            onChanged: (amount) => onChanged(join(amount, parts.unit)),
+          ),
+        ),
+        const SizedBox(width: 6),
+        SizedBox(
+          width: 86,
+          child: DropdownButtonFormField<String>(
+            key: ValueKey('${fieldKey}_unit'),
+            initialValue: parts.unit,
+            isExpanded: true,
+            items: units
+                .map((unit) => DropdownMenuItem(
+                      value: unit,
+                      child: Text(unit,
+                          style: const TextStyle(
+                              fontSize: 11, color: Color(0xFF111827)),
+                          overflow: TextOverflow.ellipsis),
+                    ))
+                .toList(),
+            onChanged: (unit) {
+              if (unit == null) return;
+              onChanged(join(parts.amount, unit));
+            },
+            decoration: InputDecoration(
+              isDense: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _TextCell extends StatelessWidget {

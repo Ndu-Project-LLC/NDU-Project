@@ -5,6 +5,7 @@ import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
 import 'package:ndu_project/services/auth_nav.dart';
 import 'package:ndu_project/utils/sidebar_label_match.dart';
+import 'package:ndu_project/utils/agile_hub_sections.dart';
 import 'package:ndu_project/screens/initiation_phase_screen.dart';
 import 'package:ndu_project/screens/potential_solutions_screen.dart';
 import 'package:ndu_project/screens/risk_identification_screen.dart';
@@ -311,7 +312,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     'Status Reports',
   };
 
-  static const Set<String> _executionPhaseLabels = {
+  static final Set<String> _executionPhaseLabels = {
     'Execution Phase',
     'Staff Team',
     'Team Meetings',
@@ -320,6 +321,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     'Vendor Tracking',
     'Detailed Design',
     'Agile Project Hub',
+    // The hub's own sub-pages live in this group, so the screens they open
+    // must expand Execution Phase too — otherwise the sub-page the user is on
+    // is never built and the sidebar looks dead.
+    ...agileHubSidebarLabels,
+    ...agileHubTargetLabels,
     'Scope Tracking Implementation',
     'Stakeholder Alignment',
     'Update Ops and Maintenance Plans',
@@ -354,23 +360,17 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     'Lessons Learned',
   };
 
-  static const Set<String> _agileHubLabels = {
+/// Sidebar labels that must keep the **Agile Project Hub** group highlighted
+  /// and expanded. Mirrors the 15 in-screen sections defined in
+  /// `utils/agile_hub_sections.dart` — the same list the hub's own "Module
+  /// Components" cards are built from — plus the label each sub-page's target
+  /// screen declares, because several of them (backlog governance, sprint
+  /// calendar, release plan, capacity planning) are shared with the Planning
+  /// phase and report that label rather than a hub-specific one.
+  static final Set<String> _agileHubLabels = <String>{
     'Agile Project Hub',
-    'Agile Project Hub - Agile Dashboard',
-    'Agile Project Hub - Product Backlog',
-    'Agile Project Hub - Sprint Planning',
-    'Agile Project Hub - Iteration Management',
-    'Agile Project Hub - Kanban Board',
-    'Agile Project Hub - Daily Standups',
-    'Agile Project Hub - Sprint Reviews',
-    'Agile Project Hub - Sprint Retrospectives',
-    'Agile Project Hub - Backlog Grooming',
-    'Agile Project Hub - Agile Metrics',
-    'Agile Project Hub - Release Planning',
-    'Agile Project Hub - Agile Risks',
-    'Agile Project Hub - Team Capacity',
-    'Agile Project Hub - AI Agile Coach',
-    'Agile Project Hub - Agile Roadmap',
+    ...agileHubSidebarLabels,
+    ...agileHubTargetLabels,
   };
 
   static const Set<String> _projectFinancialReviewLabels = {
@@ -3310,12 +3310,34 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         _buildSubMenuItem('Detailed Design',
             onTap: _openDetailedDesign,
             isActive: _isActiveLabel('Detailed Design')),
-        // Simplified Agile Project Hub — removed detailed sub-section list
-        // per product request. The header now navigates to the main Agile Hub
-        // landing screen when tapped.
-        _buildSubMenuItem('Agile Project Hub',
+        // Agile Project Hub — the 15 sub-pages are the "Module Components"
+        // the hub landing page breaks itself into, read from the same
+        // registry so a card and its sub-page cannot open different pages.
+        _buildSubExpandableHeader(
+          'Agile Project Hub',
+          expanded: _agileHubExpanded,
+          onTap: () => setState(() {
+            _agileHubExpanded = !_agileHubExpanded;
+            _sharedAgileHubExpanded = _agileHubExpanded;
+          }),
+          isActive: _activeIn(_agileHubLabels),
+        ),
+        if (_agileHubExpanded) ...[
+          // The hub's own landing page — the group header toggles, so the
+          // screen the group is named for needs an explicit entry.
+          _buildSubSubMenuItem(
+            'Hub Overview',
             onTap: _openAgileProjectHub,
-            isActive: _isActiveLabel('Agile Project Hub')),
+            isActive: _isActiveLabel('Agile Project Hub'),
+          ),
+          for (final section in agileHubSections)
+            _buildSubSubMenuItem(
+              section.sidebarTitle,
+              onTap: () => section.open(context),
+              isActive: _isActiveLabel(section.sidebarLabel) ||
+                  _isActiveLabel(section.activeLabel),
+            ),
+        ],
         _buildSubMenuItem('Scope Tracking Implementation',
             onTap: _openScopeTrackingImplementation,
             isActive:

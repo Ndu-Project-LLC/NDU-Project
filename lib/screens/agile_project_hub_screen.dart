@@ -1,21 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:ndu_project/screens/agile_roadmap_screen.dart';
-import 'package:ndu_project/screens/agile_dashboard_screen.dart';
-import 'package:ndu_project/screens/agile_kanban_board_screen.dart';
-import 'package:ndu_project/screens/agile_daily_standups_screen.dart';
-import 'package:ndu_project/screens/agile_sprint_reviews_screen.dart';
-import 'package:ndu_project/screens/agile_retrospectives_screen.dart';
-import 'package:ndu_project/screens/agile_metrics_screen.dart';
-import 'package:ndu_project/screens/agile_risks_screen.dart';
-import 'package:ndu_project/screens/agile_ai_coach_screen.dart';
-import 'package:ndu_project/screens/agile_iteration_management_screen.dart';
-import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/utils/agile_hub_sections.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
@@ -123,371 +114,6 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       debugPrint('Agile Hub metrics load error: $e');
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  static const List<_HubSection> _sections = [
-    _HubSection(
-      number: 1,
-      title: 'Agile Dashboard',
-      subtitle: 'Real-time delivery performance',
-      icon: Icons.dashboard_outlined,
-      gradientStart: Color(0xFFF59E0B),
-      gradientEnd: Color(0xFFD97706),
-      features: [
-        'Active sprint overview',
-        'Velocity trends',
-        'Burnup/Burndown charts',
-        'Cycle time trends',
-        'Delivery forecasts',
-        'AI delivery recommendations',
-      ],
-    ),
-    _HubSection(
-      number: 2,
-      title: 'Product Backlog',
-      subtitle: 'Central repository for all work items',
-      icon: Icons.list_alt_outlined,
-      gradientStart: Color(0xFFFFC812),
-      gradientEnd: Color(0xFFEAB308),
-      features: [
-        'User stories, Epics, Features',
-        'Story point estimation',
-        'Priority management',
-        'Business value scoring',
-        'AI story suggestions',
-        'Requirement traceability',
-      ],
-    ),
-    _HubSection(
-      number: 3,
-      title: 'Sprint / Iteration Planning',
-      subtitle: 'Plan each development iteration',
-      icon: Icons.event_note_outlined,
-      gradientStart: Color(0xFFF59E0B),
-      gradientEnd: Color(0xFFD97706),
-      features: [
-        'Sprint creation & goals',
-        'Team capacity planning',
-        'Velocity recommendations',
-        'Story selection',
-        'Definition of Ready',
-        'AI sprint planning',
-      ],
-    ),
-    _HubSection(
-      number: 4,
-      title: 'Iteration Management',
-      subtitle: 'Manage the lifecycle of each sprint',
-      icon: Icons.repeat_outlined,
-      gradientStart: Color(0xFFF59E0B),
-      gradientEnd: Color(0xFFD97706),
-      features: [
-        'Sprint kickoff',
-        'Daily progress tracking',
-        'Blocker management',
-        'Sprint completion',
-        'Velocity calculation',
-        'AI sprint summary',
-      ],
-    ),
-    _HubSection(
-      number: 5,
-      title: 'Kanban Board',
-      subtitle: 'Visual work management board',
-      icon: Icons.view_kanban_outlined,
-      gradientStart: Color(0xFFEAB308),
-      gradientEnd: Color(0xFFCA8A04),
-      features: [
-        'Standard & configurable columns',
-        'Drag-and-drop workflow',
-        'WIP limits',
-        'Cycle time tracking',
-        'Swimlanes',
-        'AI recommendations',
-      ],
-    ),
-    _HubSection(
-      number: 6,
-      title: 'Daily Standups',
-      subtitle: 'Daily Agile ceremonies',
-      icon: Icons.groups_outlined,
-      gradientStart: Color(0xFFD97706),
-      gradientEnd: Color(0xFFB45309),
-      features: [
-        'Yesterday / Today / Blockers',
-        'Team attendance',
-        'Action items',
-        'Decision log',
-        'AI standup summaries',
-        'Team sentiment',
-      ],
-    ),
-    _HubSection(
-      number: 7,
-      title: 'Sprint Reviews',
-      subtitle: 'Review completed work with stakeholders',
-      icon: Icons.rate_review_outlined,
-      gradientStart: Color(0xFFF59E0B),
-      gradientEnd: Color(0xFFD97706),
-      features: [
-        'Completed story review',
-        'Demonstrations',
-        'Stakeholder feedback',
-        'Product increment summary',
-        'Action items',
-        'AI review summary',
-      ],
-    ),
-    _HubSection(
-      number: 8,
-      title: 'Sprint Retrospectives',
-      subtitle: 'Continuous improvement',
-      icon: Icons.lightbulb_outline,
-      gradientStart: Color(0xFFF59E0B),
-      gradientEnd: Color(0xFFD97706),
-      features: [
-        'Start / Stop / Continue',
-        'Mad / Sad / Glad',
-        '4Ls & Sailboat templates',
-        'Anonymous participation',
-        'Action item tracking',
-        'AI pattern recognition',
-      ],
-    ),
-    _HubSection(
-      number: 9,
-      title: 'Backlog Grooming',
-      subtitle: 'Maintain backlog readiness',
-      icon: Icons.tune_outlined,
-      gradientStart: Color(0xFFEAB308),
-      gradientEnd: Color(0xFFCA8A04),
-      features: [
-        'Story refinement & splitting',
-        'Estimation updates',
-        'Dependency review',
-        'Duplicate detection',
-        'AI story quality scoring',
-        'Readiness assessment',
-      ],
-    ),
-    _HubSection(
-      number: 10,
-      title: 'Agile Metrics & Reporting',
-      subtitle: 'Comprehensive delivery analytics',
-      icon: Icons.analytics_outlined,
-      gradientStart: Color(0xFFF59E0B),
-      gradientEnd: Color(0xFFEAB308),
-      features: [
-        'Velocity & predictability',
-        'Burndown & Burnup',
-        'Lead time & Cycle time',
-        'Escaped defects',
-        'Sprint completion rate',
-        'Release readiness',
-      ],
-    ),
-    _HubSection(
-      number: 11,
-      title: 'Release Planning',
-      subtitle: 'Coordinate multiple sprints into releases',
-      icon: Icons.rocket_launch_outlined,
-      gradientStart: Color(0xFFF59E0B),
-      gradientEnd: Color(0xFFD97706),
-      features: [
-        'Release roadmap',
-        'Sprint-to-release mapping',
-        'Feature readiness',
-        'Release forecasting',
-        'Go-live checklist',
-        'AI release risk analysis',
-      ],
-    ),
-    _HubSection(
-      number: 12,
-      title: 'Agile Risks & Impediments',
-      subtitle: 'Track delivery blockers',
-      icon: Icons.warning_amber_outlined,
-      gradientStart: Color(0xFFD97706),
-      gradientEnd: Color(0xFFB45309),
-      features: [
-        'Blocker log',
-        'Escalation workflow',
-        'Risk register integration',
-        'Root cause tracking',
-        'Resolution SLA',
-        'AI risk prediction',
-      ],
-    ),
-    _HubSection(
-      number: 13,
-      title: 'Team Capacity & Workload',
-      subtitle: 'Support sustainable delivery',
-      icon: Icons.fitness_center_outlined,
-      gradientStart: Color(0xFFEAB308),
-      gradientEnd: Color(0xFFCA8A04),
-      features: [
-        'Capacity planning',
-        'Team allocation',
-        'Vacation & leave tracking',
-        'Skill coverage',
-        'Burnout indicators',
-        'AI workload optimization',
-      ],
-    ),
-    _HubSection(
-      number: 14,
-      title: 'AI Agile Coach',
-      subtitle: 'Embedded guidance throughout execution',
-      icon: Icons.auto_awesome,
-      gradientStart: Color(0xFFF59E0B),
-      gradientEnd: Color(0xFFD97706),
-      features: [
-        'Sprint planning recommendations',
-        'Story writing assistance',
-        'Estimation suggestions',
-        'Risk identification',
-        'Retrospective insights',
-        'Agile maturity coaching',
-      ],
-    ),
-    _HubSection(
-      number: 15,
-      title: 'Agile Roadmap',
-      subtitle: 'Strategic visual roadmap',
-      icon: Icons.map_outlined,
-      gradientStart: Color(0xFFD97706),
-      gradientEnd: Color(0xFFB45309),
-      features: [
-        'Timeline & Hierarchical views',
-        'Project progress tracking',
-        'Milestone management',
-        'Dependency mapping',
-        'Business value tracking',
-        'AI roadmap advisor',
-      ],
-    ),
-  ];
-
-  void _navigateToSection(int index) {
-    switch (index) {
-      case 0:
-        AgileDashboardScreen.open(context);
-        break;
-      case 1:
-        context.push('/agile-backlog-governance');
-        break;
-      case 2:
-        context.push('/agile-sprint-calendar');
-        break;
-      case 3:
-        AgileIterationManagementScreen.open(context);
-        break;
-      case 4:
-        AgileKanbanBoardScreen.open(context);
-        break;
-      case 5:
-        AgileDailyStandupsScreen.open(context);
-        break;
-      case 6:
-        AgileSprintReviewsScreen.open(context);
-        break;
-      case 7:
-        AgileRetrospectivesScreen.open(context);
-        break;
-      case 8:
-        context.push('/agile-backlog-governance');
-        break;
-      case 9:
-        AgileMetricsScreen.open(context);
-        break;
-      case 10:
-        context.push('/agile-release-plan');
-        break;
-      case 11:
-        AgileRisksScreen.open(context);
-        break;
-      case 12:
-        context.push('/agile-team-structure');
-        break;
-      case 13:
-        AgileAiCoachScreen.open(context);
-        break;
-      case 14:
-        AgileRoadmapScreen.open(context);
-        break;
-    }
-  }
-
-  void _showComingSoon(String sectionName) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child:
-                  const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(sectionName,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'This section is being activated as part of the Agile Project Hub rollout.',
-              style: TextStyle(
-                  fontSize: 14, color: Color(0xFF6B7280), height: 1.5),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline,
-                      size: 16, color: Color(0xFF6B7280)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Data from earlier phases (team structure, epics, sprint calendar, release plan) flows into this module automatically.',
-                      style: TextStyle(
-                          fontSize: 12, color: Colors.grey[700], height: 1.4),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            style:
-                TextButton.styleFrom(foregroundColor: const Color(0xFFF59E0B)),
-            child: const Text('Got it'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -740,9 +366,9 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
                 color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                '15 Sections',
-                style: TextStyle(
+              child: Text(
+                '${agileHubSections.length} Sections',
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFFCA8A04),
@@ -755,13 +381,13 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: _sections.length,
+          itemCount: agileHubSections.length,
           separatorBuilder: (_, __) => const SizedBox(height: 20),
           itemBuilder: (context, i) => RepaintBoundary(
             key: ValueKey('agile_hub_section_$i'),
             child: SizedBox(
               width: double.infinity,
-              child: _buildSectionCard(_sections[i]),
+              child: _buildSectionCard(agileHubSections[i]),
             ),
           ),
         ),
@@ -769,11 +395,11 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
     );
   }
 
-  Widget _buildSectionCard(_HubSection section) {
+  Widget _buildSectionCard(AgileHubSection section) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _navigateToSection(section.number - 1),
+        onTap: () => section.open(context),
         borderRadius: BorderRadius.circular(20),
         child: Container(
           decoration: BoxDecoration(
@@ -961,26 +587,6 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       ),
     );
   }
-}
-
-class _HubSection {
-  final int number;
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color gradientStart;
-  final Color gradientEnd;
-  final List<String> features;
-
-  const _HubSection({
-    required this.number,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.gradientStart,
-    required this.gradientEnd,
-    required this.features,
-  });
 }
 
 class _MetricCard extends StatelessWidget {

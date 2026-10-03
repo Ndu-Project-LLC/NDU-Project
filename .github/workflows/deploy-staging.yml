@@ -73,11 +73,13 @@ jobs:
   # workflow stops here and the build-and-deploy job is skipped — guaranteeing
   # that a triggered deployment never fails mid-flight.
   #
-  # NOTE on email notifications: analyze/test steps use `continue-on-error: true`
-  # so that a failing check does NOT mark the workflow as failed (which would
-  # trigger GitHub's auto failure-email to the actor). Pass/fail is captured
-  # via step outputs and consumed by `build-and-deploy`'s `if` condition, so
-  # the deploy safety gate is preserved — broken code still blocks the deploy.
+  # A failing check fails the step, and therefore this job. That is deliberate:
+  # the gate below (`build-and-deploy`'s `if`) means a failure anywhere in
+  # preflight skips the build, so a blocked deploy is the whole outcome. This
+  # job used to swallow the failure with `continue-on-error: true` to avoid
+  # GitHub's auto failure-email to the actor — which made a blocked deploy
+  # report as a green run, and a green run is what people check. A red X that
+  # says "preflight failed" is the honest signal.
   preflight:
     name: Preflight checks (analyze + test)
     needs: gate
@@ -94,7 +96,13 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          # Pinned, not `channel: stable`.
+          # CI installs whatever `stable` points at, so a new Flutter release
+          # can introduce a framework assertion that fails the suite mid-sprint
+          # while every machine is on an older SDK. A blocked deploy then reads
+          # as a broken change when it is only version skew. Bump this pin
+          # deliberately, together with the local toolchain.
+          flutter-version: '3.38.2'
           cache: true
 
       - name: Preflight summary
@@ -109,7 +117,6 @@ jobs:
 
       - name: Required files present
         id: required-files
-        continue-on-error: true
         run: |
           set -eu
           REQUIRED_FILES=(
@@ -140,7 +147,6 @@ jobs:
 
       - name: Flutter analyze (fatal on errors)
         id: analyze
-        continue-on-error: true
         run: |
           set -eu
           echo "── flutter analyze ──"
@@ -152,7 +158,6 @@ jobs:
 
       - name: Flutter test (unit + widget)
         id: test
-        continue-on-error: true
         run: |
           set -eu
           echo "── flutter test ──"
@@ -186,9 +191,9 @@ jobs:
     # are valid sources for staging.nduproject.com deployments.
     # (Skip on admin.nduproject.com repo.)
     # AND only if ALL preflight checks actually passed (captured via step
-    # outputs — see preflight job). The job result itself is always 'success'
-    # because the analyze/test steps use continue-on-error, so we cannot rely
-    # on needs.preflight.result here.
+    # outputs — see preflight job). The step outputs are still what decides it:
+    # they are recorded per step, so the gate reads each check's own outcome
+    # rather than the job's aggregate result.
     if: |
       needs.gate.outputs.should_skip != 'true' &&
       (github.repository == 'Ndu-Project-LLC/NDU-Project' ||
@@ -205,7 +210,10 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          # Must match the preflight job pin above: this job builds the
+          # artifact that preflight just tested, so a different SDK here would
+          # ship a build the tests never saw.
+          flutter-version: '3.38.2'
           cache: true
 
       - name: Flutter version

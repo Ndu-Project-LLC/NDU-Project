@@ -74,9 +74,9 @@ class ExecutionPlanHeader extends StatelessWidget {
     PdfExportHelper.exportScreenPdf(
       context: context,
       screenTitle: title,
-      sections: [
-        PdfSection.text(title, 'Project section export from Ndu Project.'),
-      ],
+      // No structured sections: the export captures the screen itself so the
+      // PDF contains everything actually on screen.
+      sections: const <PdfSection>[],
     );
   }
 
@@ -149,8 +149,7 @@ class _WhiteButton extends StatelessWidget {
         foregroundColor: Colors.black87,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       icon: Icon(icon, size: 18),
       label: Text(
@@ -178,8 +177,7 @@ class _AiAssistButton extends StatelessWidget {
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         elevation: 0,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       icon: Icon(icon, size: 18),
       label: Text(
@@ -225,7 +223,8 @@ class CurrentUserProfileChip extends StatelessWidget {
   String _initials(String text) {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return 'U';
-    final parts = trimmed.split(RegExp(r"\s+")).where((p) => p.isNotEmpty).toList();
+    final parts =
+        trimmed.split(RegExp(r"\s+")).where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty) return trimmed[0].toUpperCase();
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return parts[0][0].toUpperCase();
@@ -438,29 +437,29 @@ class _ExecutionPlanFormState extends State<ExecutionPlanForm> {
                       const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                 ),
           child: AiSuggestingTextField(
-          fieldLabel: widget.title,
-          hintText: widget.hintText,
-          sectionLabel: 'Execution Plan',
-          showLabel: false,
-          initialText: noteKey == null
-              ? null
-              : () {
-                  final projectData = ProjectDataHelper.getData(context);
-                  if (noteKey == 'execution_plan_outline') {
-                    return projectData
-                            .executionPhaseData?.executionPlanOutline ??
-                        projectData.planningNotes[noteKey];
-                  } else if (noteKey == 'execution_plan_strategy') {
-                    return projectData
-                            .executionPhaseData?.executionPlanStrategy ??
-                        projectData.planningNotes[noteKey];
-                  }
-                  return projectData.planningNotes[noteKey];
-                }(),
-          autoGenerate: true,
-          autoGenerateSection: widget.title,
-          onChanged: _handleChanged,
-        ),
+            fieldLabel: widget.title,
+            hintText: widget.hintText,
+            sectionLabel: 'Execution Plan',
+            showLabel: false,
+            initialText: noteKey == null
+                ? null
+                : () {
+                    final projectData = ProjectDataHelper.getData(context);
+                    if (noteKey == 'execution_plan_outline') {
+                      return projectData
+                              .executionPhaseData?.executionPlanOutline ??
+                          projectData.planningNotes[noteKey];
+                    } else if (noteKey == 'execution_plan_strategy') {
+                      return projectData
+                              .executionPhaseData?.executionPlanStrategy ??
+                          projectData.planningNotes[noteKey];
+                    }
+                    return projectData.planningNotes[noteKey];
+                  }(),
+            autoGenerate: true,
+            autoGenerateSection: widget.title,
+            onChanged: _handleChanged,
+          ),
         ),
         if (widget.showDiagram)
           AiDiagramPanel(
@@ -577,8 +576,7 @@ class AddRowButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
@@ -606,8 +604,7 @@ class AddSolutionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
@@ -665,8 +662,7 @@ class YellowActionButton extends StatelessWidget {
         foregroundColor: Colors.black,
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
         elevation: 0,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
       child: Text(
         label,

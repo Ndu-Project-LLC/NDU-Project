@@ -304,10 +304,10 @@ class UnifiedPhaseHeader extends StatelessWidget {
                     PdfExportHelper.exportScreenPdf(
                       context: context,
                       screenTitle: title,
-                      sections: [
-                        PdfSection.text(
-                            title, 'Project section export from Ndu Project.'),
-                      ],
+                      // No structured sections: the export captures the screen
+                      // itself so the PDF contains everything actually
+                      // on screen.
+                      sections: const <PdfSection>[],
                     );
                   },
             ),
@@ -394,7 +394,8 @@ class _ProjectActivityHeaderActionSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = ProjectDataInherited.maybeOf(context);      if (provider == null) return const SizedBox.shrink();
+    final provider = ProjectDataInherited.maybeOf(context);
+    if (provider == null) return const SizedBox.shrink();
     return ProjectActivityHeaderAction(
       activities: provider.projectData.projectActivities,
       compact: compact,
@@ -449,7 +450,8 @@ class _CircleNavButton extends StatelessWidget {
   const _CircleNavButton({
     required this.icon,
     required this.iconSize,
-  }) : onTap = null, enabled = true;
+  })  : onTap = null,
+        enabled = true;
 
   final IconData icon;
   final double iconSize;

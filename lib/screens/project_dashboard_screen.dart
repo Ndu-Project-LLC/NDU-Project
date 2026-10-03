@@ -751,6 +751,8 @@ class _StatusStrip extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     void openRegularProjects() {
+      // Regular Projects now lives on the Integration Dashboard's Workspaces
+      // view; the route is kept stable so this deep link stays valid.
       context.push('/regular-project-dashboard');
     }
 

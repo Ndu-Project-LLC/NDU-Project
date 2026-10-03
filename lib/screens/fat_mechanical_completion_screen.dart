@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Section 3 — FAT, Mechanical Completion & Commission Solution
@@ -203,56 +204,69 @@ class _FatMechanicalCompletionScreenState
             const SizedBox(height: 12),
             _buildIntroPanel(),
             const SizedBox(height: 16),
-            _buildInsightsHeader(),
-            const SizedBox(height: 16),
-            _buildKanbanBoard(),
-            const SizedBox(height: 16),
-            _buildSubsectionPanel(
-              title: 'Mechanical Completion',
-              description:
-                  'Track mechanical completion packages, turnover packages, equipment status, system completion, walkdowns, and work package references.',
-              items: _mechanicalCompletionItems,
-              onStatusChanged: (index, status) {
-                setState(() {
-                  _mechanicalCompletionItems[index] =
-                      _mechanicalCompletionItems[index]
-                          .copyWith(status: status);
-                });
-                _scheduleSave();
+            LaunchPhaseTableTabs(
+              overview: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInsightsHeader(),
+                  const SizedBox(height: 16),
+                  _buildKanbanBoard(),
+                  const SizedBox(height: 16),
+                  LaunchNotesSection(
+                    controller: _notesController,
+                    onChanged: (v) {},
+                  ),
+                ],
+              ),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Mechanical Completion'),
+                LaunchPhaseTableTab(label: 'FAT / SAT / Commissioning'),
+                LaunchPhaseTableTab(label: 'Final Turnover'),
+              ],
+              builders: {
+                'Mechanical Completion': () => _buildSubsectionPanel(
+                      title: 'Mechanical Completion',
+                      description:
+                          'Track mechanical completion packages, turnover packages, equipment status, system completion, walkdowns, and work package references.',
+                      items: _mechanicalCompletionItems,
+                      onStatusChanged: (index, status) {
+                        setState(() {
+                          _mechanicalCompletionItems[index] =
+                              _mechanicalCompletionItems[index]
+                                  .copyWith(status: status);
+                        });
+                        _scheduleSave();
+                      },
+                    ),
+                'FAT / SAT / Commissioning': () => _buildSubsectionPanel(
+                      title: 'FAT / SAT / Commissioning',
+                      description:
+                          'Factory Acceptance Tests, Site Acceptance Tests, commissioning activities, functional testing, integrated system testing, performance verification, and operational readiness.',
+                      items: _fatSatCommissioningItems,
+                      onStatusChanged: (index, status) {
+                        setState(() {
+                          _fatSatCommissioningItems[index] =
+                              _fatSatCommissioningItems[index]
+                                  .copyWith(status: status);
+                        });
+                        _scheduleSave();
+                      },
+                    ),
+                'Final Turnover': () => _buildSubsectionPanel(
+                      title: 'Final Turnover',
+                      description:
+                          'Punch list closeout, as-built drawings, operating manuals, equipment handover, asset registration, owner acceptance, and final certificates.',
+                      items: _finalTurnoverItems,
+                      onStatusChanged: (index, status) {
+                        setState(() {
+                          _finalTurnoverItems[index] =
+                              _finalTurnoverItems[index]
+                                  .copyWith(status: status);
+                        });
+                        _scheduleSave();
+                      },
+                    ),
               },
-            ),
-            const SizedBox(height: 16),
-            _buildSubsectionPanel(
-              title: 'FAT / SAT / Commissioning',
-              description:
-                  'Factory Acceptance Tests, Site Acceptance Tests, commissioning activities, functional testing, integrated system testing, performance verification, and operational readiness.',
-              items: _fatSatCommissioningItems,
-              onStatusChanged: (index, status) {
-                setState(() {
-                  _fatSatCommissioningItems[index] =
-                      _fatSatCommissioningItems[index].copyWith(status: status);
-                });
-                _scheduleSave();
-              },
-            ),
-            const SizedBox(height: 16),
-            _buildSubsectionPanel(
-              title: 'Final Turnover',
-              description:
-                  'Punch list closeout, as-built drawings, operating manuals, equipment handover, asset registration, owner acceptance, and final certificates.',
-              items: _finalTurnoverItems,
-              onStatusChanged: (index, status) {
-                setState(() {
-                  _finalTurnoverItems[index] =
-                      _finalTurnoverItems[index].copyWith(status: status);
-                });
-                _scheduleSave();
-              },
-            ),
-            const SizedBox(height: 16),
-            LaunchNotesSection(
-              controller: _notesController,
-              onChanged: (v) {},
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(

@@ -15,6 +15,7 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
@@ -94,20 +95,31 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
                       showExportPdf: false,
                       showAiAssist: false),
                   const SizedBox(height: 16),
-                  _buildLaunchInsights(),
-                  const SizedBox(height: 16),
-                  LaunchNotesSection(
-                    controller: _notesController,
-                    onChanged: (v) {},
+                  LaunchPhaseTableTabs(
+                    overview: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildLaunchInsights(),
+                        const SizedBox(height: 16),
+                        LaunchNotesSection(
+                          controller: _notesController,
+                          onChanged: (v) {},
+                        ),
+                      ],
+                    ),
+                    tabs: const [
+                      LaunchPhaseTableTab(label: 'Team Ramp-Down'),
+                      LaunchPhaseTableTab(label: 'Knowledge Transfer'),
+                      LaunchPhaseTableTab(label: 'Vendor Offboarding'),
+                      LaunchPhaseTableTab(label: 'Communications'),
+                    ],
+                    builders: {
+                      'Team Ramp-Down': _buildTeamRosterPanel,
+                      'Knowledge Transfer': _buildKnowledgeTransferPanel,
+                      'Vendor Offboarding': _buildVendorOffboardingPanel,
+                      'Communications': _buildCommunicationsPanel,
+                    },
                   ),
-                  const SizedBox(height: 20),
-                  _buildTeamRosterPanel(),
-                  const SizedBox(height: 16),
-                  _buildKnowledgeTransferPanel(),
-                  const SizedBox(height: 16),
-                  _buildVendorOffboardingPanel(),
-                  const SizedBox(height: 16),
-                  _buildCommunicationsPanel(),
                   const SizedBox(height: 24),
                 ],
               ),

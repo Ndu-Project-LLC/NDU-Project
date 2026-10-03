@@ -9,6 +9,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Section 9 — Benefits Realization
@@ -151,56 +152,67 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
             const SizedBox(height: 12),
             _buildIntroPanel(),
             const SizedBox(height: 16),
-            _buildBenefitsInsights(),
-            const SizedBox(height: 16),
-            _buildSubsectionCard(
-              title: 'Benefits Dashboard',
-              description:
-                  'Track planned versus actual benefits across six categories: Financial, Operational, Customer, Strategic, Sustainability, and Innovation.',
-              hintItems: const [
-                'Financial (ROI, cost savings, revenue)',
-                'Operational (cycle time, productivity, quality)',
-                'Customer (satisfaction, adoption)',
-                'Strategic (market share, compliance, capability)',
-                'Sustainability (energy, waste, emissions)',
-                'Innovation (new products, IP, process improvements)',
+            LaunchPhaseTableTabs(
+              overview: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildBenefitsInsights(),
+                  const SizedBox(height: 16),
+                  LaunchNotesSection(
+                    controller: _notesController,
+                    onChanged: (v) {},
+                  ),
+                ],
+              ),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Benefits Dashboard'),
+                LaunchPhaseTableTab(label: 'Benefits Quantification'),
+                LaunchPhaseTableTab(label: 'Continuous Tracking'),
               ],
-              controller: _dashboardController,
-            ),
-            const SizedBox(height: 16),
-            _buildSubsectionCard(
-              title: 'Benefits Quantification',
-              description:
-                  'Capture measurable value including planned value, actual value, variance, benefit realization %, benefit owner, measurement method, validation evidence, and realization timeline.',
-              hintItems: const [
-                'Planned Value',
-                'Actual Value',
-                'Variance',
-                'Benefit Realization %',
-                'Benefit Owner',
-                'Measurement Method',
-                'Validation Evidence',
-                'Realization Timeline',
-              ],
-              controller: _quantificationController,
-            ),
-            const SizedBox(height: 16),
-            _buildSubsectionCard(
-              title: 'Continuous Benefits Tracking',
-              description:
-                  'For benefits that extend beyond project completion, capture future review dates, operational KPIs, benefit sustainability, and ongoing improvement actions.',
-              hintItems: const [
-                'Future Review Dates',
-                'Operational KPIs',
-                'Benefit Sustainability',
-                'Ongoing Improvement Actions',
-              ],
-              controller: _continuousTrackingController,
-            ),
-            const SizedBox(height: 16),
-            LaunchNotesSection(
-              controller: _notesController,
-              onChanged: (v) {},
+              builders: {
+                'Benefits Dashboard': () => _buildSubsectionCard(
+                      title: 'Benefits Dashboard',
+                      description:
+                          'Track planned versus actual benefits across six categories: Financial, Operational, Customer, Strategic, Sustainability, and Innovation.',
+                      hintItems: const [
+                        'Financial (ROI, cost savings, revenue)',
+                        'Operational (cycle time, productivity, quality)',
+                        'Customer (satisfaction, adoption)',
+                        'Strategic (market share, compliance, capability)',
+                        'Sustainability (energy, waste, emissions)',
+                        'Innovation (new products, IP, process improvements)',
+                      ],
+                      controller: _dashboardController,
+                    ),
+                'Benefits Quantification': () => _buildSubsectionCard(
+                      title: 'Benefits Quantification',
+                      description:
+                          'Capture measurable value including planned value, actual value, variance, benefit realization %, benefit owner, measurement method, validation evidence, and realization timeline.',
+                      hintItems: const [
+                        'Planned Value',
+                        'Actual Value',
+                        'Variance',
+                        'Benefit Realization %',
+                        'Benefit Owner',
+                        'Measurement Method',
+                        'Validation Evidence',
+                        'Realization Timeline',
+                      ],
+                      controller: _quantificationController,
+                    ),
+                'Continuous Tracking': () => _buildSubsectionCard(
+                      title: 'Continuous Benefits Tracking',
+                      description:
+                          'For benefits that extend beyond project completion, capture future review dates, operational KPIs, benefit sustainability, and ongoing improvement actions.',
+                      hintItems: const [
+                        'Future Review Dates',
+                        'Operational KPIs',
+                        'Benefit Sustainability',
+                        'Ongoing Improvement Actions',
+                      ],
+                      controller: _continuousTrackingController,
+                    ),
+              },
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(

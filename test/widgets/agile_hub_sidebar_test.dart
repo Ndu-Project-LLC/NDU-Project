@@ -9,6 +9,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/utils/agile_hub_sections.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 
@@ -67,16 +68,25 @@ void main() {
       final routes = agileHubSections.map((s) => s.route).toList();
       expect(routes.toSet().length, routes.length,
           reason: 'two hub sections open the same page');
-    });
-
-    test('names each sub-page with the "<section> - <sub-page>" convention',
-        () {
+    });    test('names each sub-page with the "<section> - <sub-page>" convention', () {
       for (final section in agileHubSections) {
         expect(section.sidebarLabel,
             'Agile Project Hub - ${section.sidebarTitle}');
       }
       expect(agileHubSidebarLabels, hasLength(agileHubSections.length));
       expect(agileHubTargetLabels, isNotEmpty);
+    });
+
+    test('Product Backlog opens the stories & backlog breakdown', () {
+      // It is the epic → feature → story table, so it has to be the backlog
+      // screen rather than the epics list that only holds the top two levels.
+      final backlog = agileHubSections
+          .firstWhere((section) => section.sidebarTitle == 'Product Backlog');
+
+      expect(backlog.route, AppRoutes.agileStoriesBacklog);
+      expect(backlog.path, '/agile-stories-backlog');
+      expect(backlog.activeLabel,
+          'Agile Delivery Model - Stories & Backlog Breakdown');
     });
   });
 
@@ -126,6 +136,20 @@ void main() {
       expect(subPageDecoration(tester, 'Backlog Grooming').color,
           Colors.transparent,
           reason: 'an unrelated sub-page should not be highlighted');
+    });
+
+    testWidgets('highlights Product Backlog on the stories & backlog page',
+        (tester) async {
+      // That page reports a Planning-phase label and has no sidebar entry of
+      // its own there, so nothing but the hub's derived label set can light up
+      // the group when it is opened from the hub.
+      await pumpSidebar(tester, 'Agile Delivery Model - Stories & Backlog Breakdown');
+
+      expect(find.text('Agile Project Hub'), findsOneWidget);
+      expect(find.text('Product Backlog'), findsOneWidget);
+      expect(subPageDecoration(tester, 'Product Backlog').color,
+          isNot(Colors.transparent),
+          reason: 'the open sub-page is not highlighted');
     });
   });
 }

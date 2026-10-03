@@ -9,6 +9,7 @@ import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/risk_log.dart';
+import 'package:ndu_project/widgets/risk_register_cards.dart';
 import 'package:ndu_project/models/risk_assessment_signoff.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart'
     hide newId;
@@ -213,14 +214,18 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  }
 
  Future<void> _openEntryDialog(
- {_RiskEntry? entry, bool readOnly = false}) async {
- final idController = SpellCheckTextEditingController(text: entry?.id ?? '');
- final descriptionController =
- SpellCheckTextEditingController(text: entry?.description ?? '');
- final categoryController =
- SpellCheckTextEditingController(text: entry?.category ?? '');
- final scoreController = SpellCheckTextEditingController(text: entry?.score ?? '');
- final ownerController = SpellCheckTextEditingController(text: entry?.owner ?? '');
+    {_RiskEntry? entry, bool readOnly = false}) async {
+    final descriptionController =
+    SpellCheckTextEditingController(text: entry?.description ?? '');
+ // Risk ID is assigned by the app (_nextEntryId), not typed here.
+ final savedCategory = entry?.category ?? '';
+ final savedOwner = entry?.owner ?? '';
+ String selectedCategory = riskCategoryOptions.contains(savedCategory)
+ ? savedCategory
+ : _defaultCategory();
+ String selectedOwner = _ownerOptions(context).contains(savedOwner)
+ ? savedOwner
+ : '';
  String selectedProbability =
  _riskLevelOptions.contains(entry?.probability ?? '')
  ? (entry?.probability ?? _riskLevelOptions[1])
@@ -231,6 +236,14 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  String selectedStatus = _riskStatusOptions.contains(entry?.status ?? '')
  ? (entry?.status ?? _riskStatusOptions.first)
  : _riskStatusOptions.first;
+
+ // Risk Score is the overall scale, derived from Probability x Impact rather
+ // than typed by hand, so it can never disagree with the two inputs that
+ // produce it. Entries saved before it was derived keep the value they already
+ // carry instead of being silently rewritten.
+ String derivedScore() => (entry?.score.trim().isNotEmpty ?? false)
+ ? entry!.score.trim()
+ : RiskLogRow.deriveRiskLevel(selectedProbability, selectedImpact);
 
  final result = await showDialog<bool>(
  context: context,
@@ -248,18 +261,18 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  mainAxisSize: MainAxisSize.min,
  children: [
  _dialogField(
- controller: idController,
- label: 'Risk ID',
- readOnly: readOnly),
- _dialogField(
  controller: descriptionController,
  label: 'Description',
  readOnly: readOnly,
  maxLines: 2),
- _dialogField(
- controller: categoryController,
+ _dialogDropdownField(
  label: 'Category',
- readOnly: readOnly),
+ value: selectedCategory,
+ options: riskCategoryOptions,
+ enabled: !readOnly,
+ onChanged: (value) =>
+ setLocalState(() => selectedCategory = value),
+ ),
  _dialogDropdownField(
  label: 'Probability',
  value: selectedProbability,
@@ -276,14 +289,17 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  onChanged: (value) =>
  setLocalState(() => selectedImpact = value),
  ),
- _dialogField(
- controller: scoreController,
- label: 'Risk Score',
- readOnly: readOnly),
- _dialogField(
- controller: ownerController,
+ // The overall scale, recomputed live from Probability x Impact.
+ _dialogReadOnlyField(label: 'Risk Score', value: derivedScore()),
+ _dialogDropdownField(
  label: 'Owner',
- readOnly: readOnly),
+ value: selectedOwner,
+ options: _ownerOptions(context),
+ enabled: !readOnly,
+ allowEmpty: selectedOwner.isEmpty,
+ onChanged: (value) =>
+ setLocalState(() => selectedOwner = value),
+ ),
  _dialogDropdownField(
  label: 'Status',
  value: selectedStatus,
@@ -314,17 +330,17 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  if (result != true || readOnly) return;
  final newEntry = _RiskEntry(
  docId: entry?.docId ?? _newEntryId(),
- id: idController.text.trim().isEmpty
- ? shortId('R-')
- : idController.text.trim(),
+ // Risk ID is no longer typed: new entries take the next sequential number
+ // and existing entries keep the id they were given.
+ id: entry?.id ?? _nextEntryId(),
  description: descriptionController.text.trim(),
- category: categoryController.text.trim(),
+ category: selectedCategory,
  probability: selectedProbability,
  impact: selectedImpact,
- score: scoreController.text.trim(),
+ score: derivedScore(),
  discipline: '',
  role: '',
- owner: ownerController.text.trim(),
+ owner: selectedOwner,
  status: selectedStatus,
  createdAt: entry?.createdAt ?? DateTime.now(),
  updatedAt: DateTime.now(),
@@ -339,6 +355,57 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  }
  });
  await _persistEntry(newEntry, isNew: entry == null);
+ }
+
+ /// The next sequential Risk ID (R-001, R-002, ...) for a newly added risk.
+ ///
+ /// Ids are assigned by the app rather than typed, so they stay unique and in
+ /// order. Scans both this screen's entries and the carried-over risk log so
+ /// the sequence continues across the two sources.
+ String _nextEntryId() {
+ var max = 0;
+ final pattern = RegExp(r'^R-(\d+)$');
+ void consider(String raw) {
+ final match = pattern.firstMatch(raw.trim());
+ if (match == null) return;
+ final value = int.tryParse(match.group(1)!);
+ if (value != null && value > max) max = value;
+ }
+ for (final item in _entries) {
+ consider(item.id);
+ }
+ for (final row in _logRows) {
+ consider(row.id);
+ }
+ return 'R-${(max + 1).toString().padLeft(3, '0')}';
+ }
+
+ /// Everyone registered on this project who can own a risk, for the Owner
+ /// dropdown. Roles and team members are the same people the rest of the app
+ /// assigns work to, so an owner picked here always matches a real name.
+ List<String> _ownerOptions(BuildContext context) {
+ final data = ProjectDataHelper.getData(context);
+ final options = <String>{};
+ for (final role in data.projectRoles) {
+ final title = role.title.trim();
+ if (title.isNotEmpty) options.add(title);
+ }
+ for (final member in data.teamMembers) {
+ final name = member.name.trim();
+ if (name.isNotEmpty) options.add(name);
+ }
+ if (options.isEmpty) return const ['Unassigned'];
+ return options.toList()..sort((a, b) => a.compareTo(b));
+ }
+
+ /// Reuses a category already in use on this screen when it is still part of
+ /// the shared taxonomy, otherwise falls back to the first option.
+ String _defaultCategory() {
+ final existing = _entries.map((item) => item.category.trim()).toSet();
+ for (final category in riskCategoryOptions) {
+ if (existing.contains(category)) return category;
+ }
+ return riskCategoryOptions.first;
  }
 
  String _newEntryId() {
@@ -690,12 +757,10 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  if (normalizedExisting.contains(normalized) ||
  _seededRiskDescriptions.contains(normalized)) {
  continue;
- }
-
- final newEntry = _RiskEntry(
- docId: _newEntryId(),
- id: shortId('R-'),
- description: riskText,
+ }final newEntry = _RiskEntry(
+          docId: _newEntryId(),
+          id: _nextEntryId(),
+          description: riskText,
  category:
  solutionTitle.isNotEmpty ? solutionTitle : 'Initiation risk',
  probability: 'Medium',
@@ -891,7 +956,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
         docId: _newEntryId(),
         id: row['id']?.trim().isNotEmpty == true
             ? row['id']!.trim()
-            : shortId('R-'),
+            : _nextEntryId(),
         description: description,
         category: row['category']?.trim() ?? '',
         probability: row['probability']?.trim().isNotEmpty == true
@@ -2248,7 +2313,7 @@ class _MitigationPlanCard extends StatelessWidget {
  );  }
 }
 
-class _RiskRegister extends StatelessWidget {
+class _RiskRegister extends StatefulWidget {
   const _RiskRegister({
     required this.entries,
     required this.loading,
@@ -2269,8 +2334,34 @@ class _RiskRegister extends StatelessWidget {
   final ValueChanged<_RiskEntry> onView;
   final ValueChanged<_RiskEntry> onEdit;
 
+  @override
+  State<_RiskRegister> createState() => _RiskRegisterState();
+}
+
+class _RiskRegisterState extends State<_RiskRegister> {
+ /// Table is the default because it is the denser read for a register, and
+ /// because it is the view the rest of this app's registers default to.
+  RiskRegisterView _view = RiskRegisterView.table;
+
  static const List<int> _columnFlex = [4, 3, 2, 2, 2, 1, 2, 2, 2];
  static const double _actionsColumnWidth = 96;
+
+ /// Maps a card back to the entry it was built from.
+ ///
+ /// A card carries a snapshot of the fields rather than the entry itself, so
+ /// this matches on the row's stable id and falls back to the first entry, so
+ /// a tap is never swallowed.
+ _RiskEntry _entryFor(RiskCardModel card, List<_RiskEntry> entries) {
+ for (final entry in entries) {
+ if (entry.id == card.id) return entry;
+ }
+ return entries.first;
+ }
+
+ /// The controls the table body reads, which moved onto the state when this
+ /// became stateful to carry the view toggle.
+  List<_RiskEntry> get entries => widget.entries;
+  TextEditingController get searchController => widget.searchController;
 
  @override
  Widget build(BuildContext context) {
@@ -2322,19 +2413,28 @@ class _RiskRegister extends StatelessWidget {
  style: const TextStyle(fontSize: 14),
  ),
  ),        const SizedBox(width: 8),
-        _OutlinedButton(label: 'Filter', onPressed: onFilter),
+        _OutlinedButton(label: 'Filter', onPressed: widget.onFilter),
         const SizedBox(width: 8),
         CsvTableImportButton(
           tableTitle: 'Risk Register',
           columns: _RiskAssessmentScreenState._riskCsvColumns,
-          onImport: onCsvImport,
+          onImport: widget.onCsvImport,
         ),
         const SizedBox(width: 8),
-        _YellowButton(label: 'Add Risk', onPressed: onAdd),
+        _YellowButton(label: 'Add Risk', onPressed: widget.onAdd),
  ],
  ),
+ const SizedBox(height: 12),
+ // Table/Cards switch, matching the toggle the other registers use.
+ Align(
+ alignment: Alignment.centerRight,
+ child: RiskRegisterViewToggle(
+ view: _view,
+ onChanged: (next) => setState(() => _view = next),
+ ),
+ ),
  const SizedBox(height: 16),
- if (loading) ...[
+ if (widget.loading) ...[
  const Center(
  child: Padding(
  padding: EdgeInsets.symmetric(vertical: 32),
@@ -2379,6 +2479,27 @@ class _RiskRegister extends StatelessWidget {
  ),
  ),
  ] else ...[
+ if (_view == RiskRegisterView.cards)
+ RiskCardGrid(
+ risks: [
+ for (final entry in entries)
+ RiskCardModel(
+ id: entry.id,
+ description: entry.description,
+ category: entry.category,
+ probability: entry.probability,
+ impact: entry.impact,
+ score: entry.score,
+ discipline: entry.discipline,
+ role: entry.role,
+ owner: entry.owner,
+ status: entry.status,
+ ),
+ ],
+ onView: (card) => widget.onView(_entryFor(card, entries)),
+ onEdit: (card) => widget.onEdit(_entryFor(card, entries)),
+ )
+ else
  LayoutBuilder(
  builder: (context, constraints) {
  final viewportWidth =
@@ -2401,8 +2522,8 @@ class _RiskRegister extends StatelessWidget {
  entry: entry,
  columnFlex: _columnFlex,
  actionsColumnWidth: _actionsColumnWidth,
- onView: () => onView(entry),
- onEdit: () => onEdit(entry),
+ onView: () => widget.onView(entry),
+ onEdit: () => widget.onEdit(entry),
  ),
  if (!isLast)
  const Divider(
@@ -2449,7 +2570,7 @@ class _RegisterHeader extends StatelessWidget {
  ...List.generate(_labels.length, (index) {
  if (index == _labels.length - 1) {
  return const SizedBox(
- width: _RiskRegister._actionsColumnWidth); // icons
+ width: _RiskRegisterState._actionsColumnWidth); // icons
  }
  final flex = columnFlex[index];
  return Expanded(
@@ -2740,8 +2861,15 @@ Widget _dialogDropdownField({
  required List<String> options,
  required ValueChanged<String> onChanged,
  bool enabled = true,
+ bool allowEmpty = false,
 }) {
- final selected = options.contains(value) ? value : options.first;
+ // An optional dropdown still needs exactly one non-null value to select, so
+ // an unset choice is represented by a placeholder entry rather than null.
+ const emptyValue = '';
+ final hasEmpty = allowEmpty && value.isEmpty;
+ final selected = hasEmpty
+ ? emptyValue
+ : (options.contains(value) ? value : options.first);
  return Padding(
  padding: const EdgeInsets.only(bottom: 12),
  child: DropdownButtonFormField<String>(
@@ -2752,13 +2880,35 @@ Widget _dialogDropdownField({
  onChanged(next);
  }
  : null,
- items: options
- .map((option) => DropdownMenuItem<String>(
+ items: [
+ if (hasEmpty)
+ const DropdownMenuItem<String>(
+ value: emptyValue,
+ child: Text('Not assigned'),
+ ),
+ ...options.map((option) => DropdownMenuItem<String>(
  value: option,
  child: Text(option),
- ))
- .toList(),
+ )),
+ ],
  decoration: InputDecoration(labelText: label),
+ ),
+ );
+}
+
+/// A non-editable field, for values the app derives rather than the user types.
+Widget _dialogReadOnlyField({
+ required String label,
+ required String value,
+}) {
+ return Padding(
+ padding: const EdgeInsets.only(bottom: 12),
+ child: InputDecorator(
+ decoration: InputDecoration(labelText: label),
+ child: Text(
+ value.isEmpty ? '—' : value,
+ style: TextStyle(color: Colors.grey[700], fontSize: 15),
+ ),
  ),
  );
 }

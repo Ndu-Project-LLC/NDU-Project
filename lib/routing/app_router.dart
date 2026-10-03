@@ -136,7 +136,7 @@ import 'package:ndu_project/screens/ssher_screen_3.dart';
 import 'package:ndu_project/screens/ssher_screen_4.dart';
 
 // Workspace dashboards & remaining pages
-import 'package:ndu_project/screens/regular_project_dashboard_screen.dart';
+
 import 'package:ndu_project/screens/project_command_center_screen.dart';
 import 'package:ndu_project/screens/program_dashboard_mobile_screen.dart';
 import 'package:ndu_project/screens/project_baseline_screen.dart';
@@ -179,6 +179,7 @@ import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
 import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
 import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
 import 'package:ndu_project/screens/agile_epics_features_screen.dart';
+import 'package:ndu_project/screens/agile_stories_backlog_screen.dart';
 import 'package:ndu_project/screens/agile_scrum_config_screen.dart';
 import 'package:ndu_project/screens/agile_capacity_planning_screen.dart';
 import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
@@ -424,6 +425,7 @@ class AppRoutes {
   static const agileKanbanConfig = 'agile-kanban-config';
   static const agileAcceptanceCriteria = 'agile-acceptance-criteria';
   static const agileEpicsFeatures = 'agile-epics-features';
+  static const agileStoriesBacklog = 'agile-stories-backlog';
   static const agileScrumConfig = 'agile-scrum-config';
   static const agileCapacityPlanning = 'agile-capacity-planning';
   static const agileMetricsPlanning = 'agile-metrics-planning';
@@ -1013,7 +1015,11 @@ class AppRouter {
       GoRoute(
           name: AppRoutes.integrationDashboard,
           path: '/${AppRoutes.integrationDashboard}',
-          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const IntegrationDashboardScreen())),
+          pageBuilder: (c, s) => shimmerTransitionPage(
+              state: s,
+              child: const IntegrationDashboardScreen(
+                initialView: IntegrationDashboardView.baseline,
+              ))),
       GoRoute(
           name: AppRoutes.changeManagementModule,
           path: '/${AppRoutes.changeManagementModule}',
@@ -1223,10 +1229,18 @@ class AppRouter {
           path: '/${AppRoutes.termsConditions}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const TermsConditionsScreen())),
       // Workspace dashboards & remaining pages
+      // The old standalone Regular Projects dashboard now resolves to the
+      // merged Integration Dashboard, opening on the Workspaces view so
+      // existing bookmarks and the /dashboard stat card keep landing on the
+      // workspace launchpad they always did.
       GoRoute(
           name: AppRoutes.regularProjectDashboard,
           path: '/${AppRoutes.regularProjectDashboard}',
-          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const RegularProjectDashboardScreen())),
+          pageBuilder: (c, s) => shimmerTransitionPage(
+              state: s,
+              child: const IntegrationDashboardScreen(
+                initialView: IntegrationDashboardView.workspaces,
+              ))),
       GoRoute(
           name: AppRoutes.projectCommandCenter,
           path: '/${AppRoutes.projectCommandCenter}',
@@ -1432,6 +1446,14 @@ class AppRouter {
           name: AppRoutes.agileEpicsFeatures,
           path: '/${AppRoutes.agileEpicsFeatures}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileEpicsFeaturesScreen())),
+      // The Stories & Backlog breakdown is also a step in the Planning-phase
+      // flow, so it used to be reachable only from that navigator. It needs a
+      // URL of its own: the Agile Project Hub's "Product Backlog" sub-page
+      // opens it, and the hub cards and sidebar sub-pages navigate by path.
+      GoRoute(
+          name: AppRoutes.agileStoriesBacklog,
+          path: '/${AppRoutes.agileStoriesBacklog}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileStoriesBacklogScreen())),
       GoRoute(
           name: AppRoutes.agileScrumConfig,
           path: '/${AppRoutes.agileScrumConfig}',
@@ -1787,9 +1809,14 @@ class AppRouter {
     if (path == '/dashboard') return ('Project Dashboard', 'Initiation');
     if (path == '/program-dashboard') return ('Program Dashboard', 'Program');
     if (path == '/portfolio-dashboard') return ('Portfolio Dashboard', 'Portfolio');
-    if (path == '/regular-project-dashboard') return ('Regular Projects', 'Project');
+    if (path == '/regular-project-dashboard') {
+      return ('Integration Dashboard · Workspaces', 'Project');
+    }
     if (path == '/project-command-center') return ('Project Command Center', 'Project');
     if (path == '/program-dashboard-mobile') return ('Program Dashboard', 'Program');
+    if (path == '/integration-dashboard') {
+      return ('Integration Dashboard · Baseline', 'Planning');
+    }
 
     // Design phase routes
     if (path.contains('design')) return ('Design Phase', 'Design');

@@ -150,10 +150,10 @@ class _ProjectDashboardMobileShellState
 
  void _navigateToProgram() {
  context.push('/program-dashboard-mobile');
- }
-
- void _navigateToRegularProjects() {
- context.push('/regular-project-dashboard');
+ }void _navigateToRegularProjects() {
+  // Regular Projects now lives on the Integration Dashboard's Workspaces
+  // view; the route is kept stable so this deep link stays valid.
+  context.push('/regular-project-dashboard');
  }
 
  void _navigateToProjects() {

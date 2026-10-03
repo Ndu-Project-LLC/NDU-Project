@@ -24,6 +24,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class DeliverProjectClosureScreen extends StatefulWidget {
@@ -95,20 +96,31 @@ class _DeliverProjectClosureScreenState
                 showActivityLogAction: false,
                 onExportPdf: _exportPdf),
             const SizedBox(height: 12),
-            _buildLaunchInsights(),
-            const SizedBox(height: 16),
-            LaunchNotesSection(
-              controller: _notesController,
-              onChanged: (v) {},
+            LaunchPhaseTableTabs(
+              overview: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLaunchInsights(),
+                  const SizedBox(height: 16),
+                  LaunchNotesSection(
+                    controller: _notesController,
+                    onChanged: (v) {},
+                  ),
+                ],
+              ),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Scope Acceptance'),
+                LaunchPhaseTableTab(label: 'Delivery Milestones'),
+                LaunchPhaseTableTab(label: 'Outstanding Items'),
+                LaunchPhaseTableTab(label: 'Post-Delivery Risks'),
+              ],
+              builders: {
+                'Scope Acceptance': _buildScopeAcceptancePanel,
+                'Delivery Milestones': _buildMilestonesPanel,
+                'Outstanding Items': _buildOutstandingPanel,
+                'Post-Delivery Risks': _buildRiskFollowUpsPanel,
+              },
             ),
-            const SizedBox(height: 16),
-            _buildScopeAcceptancePanel(),
-            const SizedBox(height: 16),
-            _buildMilestonesPanel(),
-            const SizedBox(height: 16),
-            _buildOutstandingPanel(),
-            const SizedBox(height: 16),
-            _buildRiskFollowUpsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
               backLabel: PlanningPhaseNavigation.backLabel('deliver_project_closure'),

@@ -85,9 +85,9 @@ class PlanningPhaseHeader extends StatelessWidget {
     PdfExportHelper.exportScreenPdf(
       context: context,
       screenTitle: title,
-      sections: [
-        PdfSection.text(title, 'Project section export from Ndu Project.'),
-      ],
+      // No structured sections: the export captures the screen itself so the
+      // PDF contains everything actually on screen.
+      sections: const <PdfSection>[],
     );
   }
 

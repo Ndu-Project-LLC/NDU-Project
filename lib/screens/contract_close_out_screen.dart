@@ -15,6 +15,7 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -87,20 +88,32 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
                 showActivityLogAction: false,
                 onExportPdf: _exportPdf),
             const SizedBox(height: 16),
-            _buildLaunchInsights(),
             const SizedBox(height: 16),
-            LaunchNotesSection(
-              controller: _notesController,
-              onChanged: (v) {},
+            LaunchPhaseTableTabs(
+              overview: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLaunchInsights(),
+                  const SizedBox(height: 16),
+                  LaunchNotesSection(
+                    controller: _notesController,
+                    onChanged: (v) {},
+                  ),
+                ],
+              ),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Financial Summary'),
+                LaunchPhaseTableTab(label: 'Contracts Status'),
+                LaunchPhaseTableTab(label: 'Close-Out Steps'),
+                LaunchPhaseTableTab(label: 'Sign-Offs'),
+              ],
+              builders: {
+                'Financial Summary': _buildFinancialSummaryPanel,
+                'Contracts Status': _buildContractsPanel,
+                'Close-Out Steps': _buildCloseOutStepsPanel,
+                'Sign-Offs': _buildSignOffsPanel,
+              },
             ),
-            const SizedBox(height: 20),
-            _buildFinancialSummaryPanel(),
-            const SizedBox(height: 16),
-            _buildContractsPanel(),
-            const SizedBox(height: 16),
-            _buildCloseOutStepsPanel(),
-            const SizedBox(height: 16),
-            _buildSignOffsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
               backLabel: PlanningPhaseNavigation.backLabel('contract_close_out'),

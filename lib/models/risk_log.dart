@@ -16,6 +16,34 @@ library;
 
 import 'package:ndu_project/models/project_data_model.dart';
 
+/// The full risk category taxonomy, shared by every screen that captures a risk.
+///
+/// Living here — rather than in one screen's widget — is what makes the
+/// Category dropdown offer the *same* options everywhere a risk is entered or
+/// edited, so a risk categorised on one screen is always valid on the others.
+/// It is the standard execution-risk taxonomy plus the values already in use
+/// for mitigation plans (Integrations/Compliance/Data team/Cybersecurity/
+/// Finance/General) and risk signals (Leading/Lagging).
+const List<String> riskCategoryOptions = [
+  'Scope',
+  'Schedule',
+  'Cost',
+  'Technical',
+  'Resource',
+  'External',
+  'Compliance',
+  'Quality',
+  'Safety',
+  'Stakeholder',
+  'Integrations',
+  'Data team',
+  'Cybersecurity',
+  'Finance',
+  'General',
+  'Leading',
+  'Lagging',
+];
+
 /// One column of the risk log table.
 class RiskLogColumn {
   const RiskLogColumn(this.key, this.label);
@@ -143,8 +171,7 @@ class RiskLogRow {
       .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ',');
 
   /// The id Front End Planning shows for the row at [index] (`001`).
-  static String idForIndex(int index) =>
-      (index + 1).toString().padLeft(3, '0');
+  static String idForIndex(int index) => (index + 1).toString().padLeft(3, '0');
 
   /// `'High' | 'Medium' | 'Low'` from a free-text scale, or [fallback] when the
   /// value is blank or unrecognised.

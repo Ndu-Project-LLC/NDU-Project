@@ -110,8 +110,8 @@ const List<AgileHubSection> agileHubSections = <AgileHubSection>[
       'AI story suggestions',
       'Requirement traceability',
     ],
-    route: AppRoutes.agileEpicsFeatures,
-    activeLabel: 'Agile Delivery Model - Epics & Features',
+    route: AppRoutes.agileStoriesBacklog,
+    activeLabel: 'Agile Delivery Model - Stories & Backlog Breakdown',
   ),
   AgileHubSection(
     number: 3,

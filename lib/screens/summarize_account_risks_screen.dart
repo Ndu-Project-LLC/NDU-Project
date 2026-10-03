@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:go_router/go_router.dart';
 
@@ -83,15 +84,21 @@ class _SummarizeAccountRisksScreenState
                 showNavigationButtons: false,
                 onExportPdf: _exportPdf),
             const SizedBox(height: 20),
-            _buildPerformanceInsights(),
-            const SizedBox(height: 16),
-            _buildExecutiveSummaryPanel(),
-            const SizedBox(height: 16),
-            _buildHighlightsPanel(),
-            const SizedBox(height: 16),
-            _buildTopRisksPanel(),
-            const SizedBox(height: 16),
-            _buildNext90DaysPanel(),
+            LaunchPhaseTableTabs(
+              overview: _buildPerformanceInsights(),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Executive Summary'),
+                LaunchPhaseTableTab(label: 'Highlights & Wins'),
+                LaunchPhaseTableTab(label: 'Top Risks'),
+                LaunchPhaseTableTab(label: 'Next 90 Days'),
+              ],
+              builders: {
+                'Executive Summary': _buildExecutiveSummaryPanel,
+                'Highlights & Wins': _buildHighlightsPanel,
+                'Top Risks': _buildTopRisksPanel,
+                'Next 90 Days': _buildNext90DaysPanel,
+              },
+            ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
               backLabel: PlanningPhaseNavigation.backLabel('summarize_account_risks'),

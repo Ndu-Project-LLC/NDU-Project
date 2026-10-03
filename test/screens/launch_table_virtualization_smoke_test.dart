@@ -16,6 +16,7 @@ import 'package:ndu_project/screens/summarize_account_risks_screen.dart';
 import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
 import 'package:ndu_project/screens/vendor_account_close_out_screen.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 
 /// Every screen migrated to `LaunchDataTable(virtualizedBodyHeight:
 /// launchTableBodyCap)` must still build its table: the capped body is a nested
@@ -83,6 +84,40 @@ void main() {
         // Drain the pre-existing exception so it does not fail the test.
         tester.takeException();
       }
+
+      // The Launch Phase screens now group their tables into tabs, and a
+      // TabBarView does not build a tab it is not showing — so open a data tab
+      // before asserting the table is there. Without this the nested scroll
+      // view inside the capped body is never laid out, and the
+      // unbounded-height mistake this file exists to catch would slip through.
+      //
+      // Not every tab holds a table (a few are narrative text panels), so the
+      // tabs are walked in order until one reveals a LaunchDataTable.
+      //
+      // The controller is driven directly rather than tapped: a wide scrollable
+      // TabBar keeps later tabs off-screen, and a tap on an off-screen tab is
+      // silently dropped, which made this assertion depend on layout.
+      final tabBars =
+          find.descendant(
+          of: find.byType(LaunchPhaseTableTabs),
+          matching: find.byType(TabBar),
+        );
+      if (tabBars.evaluate().isNotEmpty) {
+        final controller = tester.widget<TabBar>(tabBars.first).controller!;
+        for (var i = 0; i < controller!.length; i++) {
+          if (find.byType(LaunchDataTable).evaluate().isNotEmpty) break;
+          controller.animateTo(i);
+          // These screens keep a loading spinner running with no Firestore
+          // behind them, so settle by frame count rather than pumpAndSettle.
+          for (var f = 0; f < 10; f++) {
+            await tester.pump(const Duration(milliseconds: 100));
+          }
+          if (preExistingExceptions.contains(entry.key)) {
+            tester.takeException();
+          }
+        }
+      }
+
       if (!tableUnreachableInTest.contains(entry.key)) {
         expect(find.byType(LaunchDataTable), findsWidgets);
       }

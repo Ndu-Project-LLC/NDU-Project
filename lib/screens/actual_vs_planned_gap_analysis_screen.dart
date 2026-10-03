@@ -14,6 +14,7 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -80,17 +81,23 @@ class _ActualVsPlannedGapAnalysisScreenState
                 showNavigationButtons: false,
                 onExportPdf: _exportPdf),
             const SizedBox(height: 16),
-            _buildLaunchInsights(),
-            const SizedBox(height: 16),
-            _buildScopeGapsPanel(),
-            const SizedBox(height: 16),
-            _buildMilestoneVariancePanel(),
-            const SizedBox(height: 16),
-            _buildBudgetVariancePanel(),
-            const SizedBox(height: 16),
-            _buildRootCausesPanel(),
-            const SizedBox(height: 16),
-            _buildFollowUpPanel(),
+            LaunchPhaseTableTabs(
+              overview: _buildLaunchInsights(),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Scope Gap Analysis'),
+                LaunchPhaseTableTab(label: 'Milestone Variance'),
+                LaunchPhaseTableTab(label: 'Budget Variance'),
+                LaunchPhaseTableTab(label: 'Root Cause Analysis'),
+                LaunchPhaseTableTab(label: 'Follow-Up Actions'),
+              ],
+              builders: {
+                'Scope Gap Analysis': _buildScopeGapsPanel,
+                'Milestone Variance': _buildMilestoneVariancePanel,
+                'Budget Variance': _buildBudgetVariancePanel,
+                'Root Cause Analysis': _buildRootCausesPanel,
+                'Follow-Up Actions': _buildFollowUpPanel,
+              },
+            ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
               backLabel: PlanningPhaseNavigation.backLabel('actual_vs_planned_gap_analysis'),

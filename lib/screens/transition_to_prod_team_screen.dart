@@ -25,6 +25,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class TransitionToProdTeamScreen extends StatefulWidget {
   const TransitionToProdTeamScreen({super.key});
@@ -92,20 +93,31 @@ class _TransitionToProdTeamScreenState
               onAiAssist: _isGenerating ? null : _populateFromAi,
             ),
             const SizedBox(height: 12),
-            _buildLaunchInsights(),
-            const SizedBox(height: 16),
-            LaunchNotesSection(
-              controller: _notesController,
-              onChanged: (v) {},
+            LaunchPhaseTableTabs(
+              overview: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLaunchInsights(),
+                  const SizedBox(height: 16),
+                  LaunchNotesSection(
+                    controller: _notesController,
+                    onChanged: (v) {},
+                  ),
+                ],
+              ),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Production Team Roster'),
+                LaunchPhaseTableTab(label: 'Handover Checklist'),
+                LaunchPhaseTableTab(label: 'Knowledge Transfer'),
+                LaunchPhaseTableTab(label: 'Ops & Client Sign-Offs'),
+              ],
+              builders: {
+                'Production Team Roster': _buildTeamRosterPanel,
+                'Handover Checklist': _buildHandoverChecklistPanel,
+                'Knowledge Transfer': _buildKnowledgeTransferPanel,
+                'Ops & Client Sign-Offs': _buildSignOffsPanel,
+              },
             ),
-            const SizedBox(height: 20),
-            _buildTeamRosterPanel(),
-            const SizedBox(height: 16),
-            _buildHandoverChecklistPanel(),
-            const SizedBox(height: 16),
-            _buildKnowledgeTransferPanel(),
-            const SizedBox(height: 16),
-            _buildSignOffsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
               backLabel: PlanningPhaseNavigation.backLabel('transition_to_prod_team'),

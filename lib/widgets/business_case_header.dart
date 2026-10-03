@@ -42,9 +42,9 @@ class BusinessCaseHeader extends StatelessWidget {
     PdfExportHelper.exportScreenPdf(
       context: context,
       screenTitle: title,
-      sections: [
-        PdfSection.text(title, 'Project section export from Ndu Project.'),
-      ],
+      // No structured sections: the export captures the screen itself so the
+      // PDF contains everything actually on screen.
+      sections: const <PdfSection>[],
     );
   }
 
@@ -116,8 +116,7 @@ class _WhiteButton extends StatelessWidget {
         foregroundColor: Colors.black87,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       icon: Icon(icon, size: 18),
       label: Text(
@@ -145,8 +144,7 @@ class _AiAssistButton extends StatelessWidget {
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         elevation: 0,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       icon: Icon(icon, size: 18),
       label: Text(

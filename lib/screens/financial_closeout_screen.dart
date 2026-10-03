@@ -9,6 +9,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Section 7 — Financial Closeout
@@ -149,57 +150,68 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
             const SizedBox(height: 12),
             _buildIntroPanel(),
             const SizedBox(height: 16),
-            _buildFinancialInsights(),
-            const SizedBox(height: 16),
-            _buildSubsectionCard(
-              title: 'Financial Summary',
-              description:
-                  'Finalize the project financial summary including approved budget, actual cost, cost variance, forecast accuracy, final cost performance, CPI, and cost breakdown.',
-              hintItems: const [
-                'Approved Budget',
-                'Actual Cost',
-                'Cost Variance',
-                'Forecast Accuracy',
-                'Final Cost Performance',
-                'CPI',
-                'Cost Breakdown',
+            LaunchPhaseTableTabs(
+              overview: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildFinancialInsights(),
+                  const SizedBox(height: 16),
+                  LaunchNotesSection(
+                    controller: _notesController,
+                    onChanged: (v) {},
+                  ),
+                ],
+              ),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Financial Summary'),
+                LaunchPhaseTableTab(label: 'Accounting Reconciliation'),
+                LaunchPhaseTableTab(label: 'Financial Analysis'),
               ],
-              controller: _summaryController,
-            ),
-            const SizedBox(height: 16),
-            _buildSubsectionCard(
-              title: 'Accounting Reconciliation',
-              description:
-                  'Reconcile all accounting records including invoice status, purchase orders, capitalization, expense reconciliation, GL coding, accounting approval, and audit package.',
-              hintItems: const [
-                'Invoice Status',
-                'Purchase Orders',
-                'Capitalization',
-                'Expense Reconciliation',
-                'GL Coding',
-                'Accounting Approval',
-                'Audit Package',
-              ],
-              controller: _reconciliationController,
-            ),
-            const SizedBox(height: 16),
-            _buildSubsectionCard(
-              title: 'Financial Analysis',
-              description:
-                  'Capture the final financial analysis including earned value summary, ROI, cash flow summary, budget utilization, and financial lessons learned.',
-              hintItems: const [
-                'Earned Value Summary',
-                'ROI',
-                'Cash Flow Summary',
-                'Budget Utilization',
-                'Financial Lessons Learned',
-              ],
-              controller: _analysisController,
-            ),
-            const SizedBox(height: 16),
-            LaunchNotesSection(
-              controller: _notesController,
-              onChanged: (v) {},
+              builders: {
+                'Financial Summary': () => _buildSubsectionCard(
+                      title: 'Financial Summary',
+                      description:
+                          'Finalize the project financial summary including approved budget, actual cost, cost variance, forecast accuracy, final cost performance, CPI, and cost breakdown.',
+                      hintItems: const [
+                        'Approved Budget',
+                        'Actual Cost',
+                        'Cost Variance',
+                        'Forecast Accuracy',
+                        'Final Cost Performance',
+                        'CPI',
+                        'Cost Breakdown',
+                      ],
+                      controller: _summaryController,
+                    ),
+                'Accounting Reconciliation': () => _buildSubsectionCard(
+                      title: 'Accounting Reconciliation',
+                      description:
+                          'Reconcile all accounting records including invoice status, purchase orders, capitalization, expense reconciliation, GL coding, accounting approval, and audit package.',
+                      hintItems: const [
+                        'Invoice Status',
+                        'Purchase Orders',
+                        'Capitalization',
+                        'Expense Reconciliation',
+                        'GL Coding',
+                        'Accounting Approval',
+                        'Audit Package',
+                      ],
+                      controller: _reconciliationController,
+                    ),
+                'Financial Analysis': () => _buildSubsectionCard(
+                      title: 'Financial Analysis',
+                      description:
+                          'Capture the final financial analysis including earned value summary, ROI, cash flow summary, budget utilization, and financial lessons learned.',
+                      hintItems: const [
+                        'Earned Value Summary',
+                        'ROI',
+                        'Cash Flow Summary',
+                        'Budget Utilization',
+                        'Financial Lessons Learned',
+                      ],
+                      controller: _analysisController,
+                    ),
+              },
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(

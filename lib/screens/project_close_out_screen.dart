@@ -22,6 +22,7 @@ import 'package:printing/printing.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ProjectCloseOutScreen extends StatefulWidget {
@@ -141,21 +142,34 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            LaunchNotesSection(
-              controller: _notesController,
-              onChanged: (v) {},
+            LaunchPhaseTableTabs(
+              overview: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LaunchNotesSection(
+                    controller: _notesController,
+                    onChanged: (v) {},
+                  ),
+                  const SizedBox(height: 16),
+                  if (_selectedView == _CloseOutView.longForm)
+                    _buildChecklistPanel()
+                  else
+                    ..._buildSummarizedView(),
+                ],
+              ),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Close-Out Checklist'),
+                LaunchPhaseTableTab(label: 'Final Approvals'),
+                LaunchPhaseTableTab(label: 'Archive & Access'),
+                LaunchPhaseTableTab(label: 'Lessons Learned'),
+              ],
+              builders: {
+                'Close-Out Checklist': _buildChecklistPanel,
+                'Final Approvals': _buildApprovalsPanel,
+                'Archive & Access': _buildArchivePanel,
+                'Lessons Learned': _buildLessonsLearnedPanel,
+              },
             ),
-            const SizedBox(height: 20),
-            if (_selectedView == _CloseOutView.longForm) ...[
-              _buildChecklistPanel(),
-              const SizedBox(height: 16),
-              _buildApprovalsPanel(),
-              const SizedBox(height: 16),
-              _buildArchivePanel(),
-              const SizedBox(height: 16),
-              _buildLessonsLearnedPanel(),
-            ] else
-              ..._buildSummarizedView(),
             const SizedBox(height: 24),
             _buildNavigation(),
             const SizedBox(height: 48),

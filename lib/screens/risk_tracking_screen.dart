@@ -1,4 +1,5 @@
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/models/risk_log.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
@@ -204,31 +205,9 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  bool _autoGenerationTriggered = false;
  bool _isAutoGenerating = false;
 
- String _newId() => newId();
-
- /// Risk category options: the standard execution-risk taxonomy plus the
- /// category values already present in this screen's data (mitigation plans
- /// use Integrations/Compliance/Data team/Cybersecurity/Finance/General and
- /// risk signals use Leading/Lagging).
- static const List<String> _riskCategoryOptions = [
-   'Scope',
-   'Schedule',
-   'Cost',
-   'Technical',
-   'Resource',
-   'External',
-   'Compliance',
-   'Quality',
-   'Safety',
-   'Stakeholder',
-   'Integrations',
-   'Data team',
-   'Cybersecurity',
-   'Finance',
-   'General',
-   'Leading',
-   'Lagging',
- ];
+ String _newId() => newId();/// Risk category options live in `models/risk_log.dart` as
+ /// `riskCategoryOptions`, so every screen that captures a risk offers the
+ /// same taxonomy.
 
  /// Auto-assigns the next sequential risk id (R-001, R-002, ...) by scanning
  /// the numeric suffixes of the risk ids already in the register.
@@ -1942,7 +1921,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
  initialValue: selectedCategory,
- items: _riskCategoryOptions
+ items: riskCategoryOptions
  .map((category) => DropdownMenuItem(
  value: category, child: Text(category)))
  .toList(),
@@ -2069,7 +2048,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  var selectedImpact = risk.impact;
  var selectedStatus = risk.status;
  var selectedCategory =
-     _riskCategoryOptions.contains(risk.category)
+     riskCategoryOptions.contains(risk.category)
          ? risk.category
          : 'Technical';
 
@@ -2123,7 +2102,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
  initialValue: selectedCategory,
- items: _riskCategoryOptions
+ items: riskCategoryOptions
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
  onChanged: (v) { if (v != null) setDialogState(() => selectedCategory = v); },

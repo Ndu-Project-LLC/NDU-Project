@@ -294,7 +294,7 @@ List<DataRow> nduZebraRows(
       color: row.color ??
           WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return isDark ? const Color(0xFF1F2937) : const Color(0xFFEFF6FF);
+              return isDark ? const Color(0xFF1F2937) : const Color(0xFFFFF8E1);
             }
             return index.isOdd ? resolvedOdd : resolvedEven;
           }),
@@ -309,9 +309,9 @@ DataTable buildNduDataTable({
   required List<DataRow> rows,
   double columnSpacing = 18,
   double horizontalMargin = 14,
-  double headingRowHeight = 52,
-  double dataRowMinHeight = 60,
-  double dataRowMaxHeight = 220,
+  double headingRowHeight = 44,
+  double dataRowMinHeight = 48,
+  double dataRowMaxHeight = 120,
   TableBorder? border,
   bool zebra = true,
   Color? headingRowColor,
@@ -444,9 +444,9 @@ Widget buildNduTableWithExpand({
   String? title,
   double columnSpacing = 18,
   double horizontalMargin = 14,
-  double headingRowHeight = 52,
-  double dataRowMinHeight = 60,
-  double dataRowMaxHeight = 220,
+  double headingRowHeight = 44,
+  double dataRowMinHeight = 48,
+  double dataRowMaxHeight = 120,
   TableBorder? border,
   bool zebra = true,
   bool showCheckboxColumn = false,
@@ -487,9 +487,9 @@ Widget buildNduTableWithExpand({
       rows: rows,
       columnSpacing: columnSpacing + 6,
       horizontalMargin: horizontalMargin + 6,
-      headingRowHeight: headingRowHeight + 8,
-      dataRowMinHeight: dataRowMinHeight + 8,
-      dataRowMaxHeight: dataRowMaxHeight + 80,
+      headingRowHeight: headingRowHeight + 4,
+      dataRowMinHeight: dataRowMinHeight + 4,
+      dataRowMaxHeight: dataRowMaxHeight + 40,
       border: border,
       zebra: zebra,
       showCheckboxColumn: showCheckboxColumn,

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/app_logo.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// A popup dialog for signing in — shown on the landing page instead of
 /// navigating to the full `/sign-in` route. Keeps the user on the current
@@ -25,11 +27,29 @@ class SignInDialog extends StatefulWidget {
 }
 
 class _SignInDialogState extends State<SignInDialog> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailController = SpellCheckTextEditingController();
+  final _passwordController = SpellCheckTextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStoredCredentials();
+  }
+
+  /// Prefill with the last used email and the remember-me preference so
+  /// returning users are one tap away from signing in.
+  Future<void> _loadStoredCredentials() async {
+    final email = await FirebaseAuthService.getLastEmail();
+    final rememberMe = await FirebaseAuthService.getRememberMe();
+    if (!mounted) return;
+    setState(() {
+      if (email.isNotEmpty) _emailController.text = email;
+      _rememberMe = rememberMe;
+    });
+  }
 
   @override
   void dispose() {
@@ -53,6 +73,8 @@ class _SignInDialogState extends State<SignInDialog> {
         rememberMe: _rememberMe,
       );
       if (!mounted) return;
+      // Remember this device's email for the next launch.
+      await FirebaseAuthService.setLastEmail(_emailController.text.trim());
       await cred.user?.reload();
       if (!mounted) return;
       _navigateAfterSignIn();
@@ -170,7 +192,7 @@ class _SignInDialogState extends State<SignInDialog> {
     }
 
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       clipBehavior: Clip.antiAlias,
@@ -185,16 +207,12 @@ class _SignInDialogState extends State<SignInDialog> {
               // ── Header ──
               Row(
                 children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                          colors: [Color(0xFFFBBF24), Color(0xFFD97706)]),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.trending_up,
-                        color: Color(0xFF0A0E1A), size: 20),
+                  // Canonical NDU squircle logo (white dialog surface —
+                  // no dark treatment needed).
+                  const AppLogo(
+                    height: 40,
+                    enableTapToDashboard: false,
+                    semanticLabel: 'NDU Project',
                   ),
                   const SizedBox(width: 12),
                   const Expanded(
@@ -249,7 +267,7 @@ class _SignInDialogState extends State<SignInDialog> {
                     side: const BorderSide(color: fieldBorder, width: 1.5),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
-                    backgroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   ),
                 ),
               ),

@@ -17,6 +17,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -25,7 +26,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Execution Plan Details',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -142,7 +143,7 @@ class _ExecutionPlanDetailsScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: widget.activeItemLabel,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -166,7 +167,7 @@ class _ExecutionPlanDetailsScreenState
             if (widget.showPlanDetails) ...[
               const SectionIntro(title: 'Execution Plan Details'),
               const SizedBox(height: 28),
-              ExecutionPlanForm(
+              const ExecutionPlanForm(
                 title: 'Execution Plan Details',
                 hintText: 'Input your notes here...',
                 noteKey: 'execution_plan_details',
@@ -242,7 +243,7 @@ class _EarlyWorksSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Early Works',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'tool',
                       label: 'Execution Tool',
@@ -302,7 +303,7 @@ class _EarlyWorksSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileEarlyWorksActions()
+          const _MobileEarlyWorksActions()
         else
           const _DesktopEarlyWorksActions(),
       ],
@@ -408,13 +409,13 @@ class _EarlyWorksTable extends StatelessWidget {
   static void _showToolDialog(
       BuildContext context, ExecutionToolModel? tool, String projectId) {
     final isEdit = tool != null;
-    final toolController = TextEditingController(text: tool?.tool ?? '');
+    final toolController = SpellCheckTextEditingController(text: tool?.tool ?? '');
     final descriptionController =
-        TextEditingController(text: tool?.description ?? '');
-    final sourceController = TextEditingController(text: tool?.source ?? '');
-    final costController = TextEditingController(text: tool?.cost ?? '');
+        SpellCheckTextEditingController(text: tool?.description ?? '');
+    final sourceController = SpellCheckTextEditingController(text: tool?.source ?? '');
+    final costController = SpellCheckTextEditingController(text: tool?.cost ?? '');
     final commentsController =
-        TextEditingController(text: tool?.comments ?? '');
+        SpellCheckTextEditingController(text: tool?.comments ?? '');
 
     showDialog(
       context: context,

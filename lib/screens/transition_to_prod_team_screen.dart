@@ -1,6 +1,6 @@
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
-import 'package:ndu_project/widgets/launch_notes_section.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:convert';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
@@ -11,14 +11,11 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'package:ndu_project/models/launch_phase_models.dart';
-import 'package:ndu_project/screens/contract_close_out_screen.dart';
-import 'package:ndu_project/screens/deliver_project_closure_screen.dart';
-import 'package:ndu_project/screens/fat_mechanical_completion_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
@@ -28,6 +25,8 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class TransitionToProdTeamScreen extends StatefulWidget {
   const TransitionToProdTeamScreen({super.key});
 
@@ -42,7 +41,7 @@ class TransitionToProdTeamScreen extends StatefulWidget {
 
 class _TransitionToProdTeamScreenState
     extends State<TransitionToProdTeamScreen> {
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   List<LaunchTeamMember> _teamRoster = [];
   List<LaunchHandoverItem> _handoverChecklist = [];
   List<LaunchKnowledgeTransfer> _knowledgeTransfers = [];
@@ -74,7 +73,7 @@ class _TransitionToProdTeamScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: '2. Deployment Transfer, Certification & Release',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -94,27 +93,37 @@ class _TransitionToProdTeamScreenState
               onAiAssist: _isGenerating ? null : _populateFromAi,
             ),
             const SizedBox(height: 12),
-            _buildLaunchInsights(),
-            const SizedBox(height: 16),
-            LaunchNotesSection(
-              controller: _notesController,
-              onChanged: (v) {},
+            LaunchPhaseTableTabs(
+              overview: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLaunchInsights(),
+                  const SizedBox(height: 16),
+                  LaunchNotesSection(
+                    controller: _notesController,
+                    onChanged: (v) {},
+                  ),
+                ],
+              ),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Production Team Roster'),
+                LaunchPhaseTableTab(label: 'Handover Checklist'),
+                LaunchPhaseTableTab(label: 'Knowledge Transfer'),
+                LaunchPhaseTableTab(label: 'Ops & Client Sign-Offs'),
+              ],
+              builders: {
+                'Production Team Roster': _buildTeamRosterPanel,
+                'Handover Checklist': _buildHandoverChecklistPanel,
+                'Knowledge Transfer': _buildKnowledgeTransferPanel,
+                'Ops & Client Sign-Offs': _buildSignOffsPanel,
+              },
             ),
-            const SizedBox(height: 20),
-            _buildTeamRosterPanel(),
-            const SizedBox(height: 16),
-            _buildHandoverChecklistPanel(),
-            const SizedBox(height: 16),
-            _buildKnowledgeTransferPanel(),
-            const SizedBox(height: 16),
-            _buildSignOffsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Launch Readiness Assessment',
-              nextLabel:
-                  'Next: FAT, Mechanical Completion & Commission Solution',
-              onBack: () => DeliverProjectClosureScreen.open(context),
-              onNext: () => FatMechanicalCompletionScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('transition_to_prod_team'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('transition_to_prod_team'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'transition_to_prod_team'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'transition_to_prod_team'),
             ),
             const SizedBox(height: 48),
           ],
@@ -125,6 +134,7 @@ class _TransitionToProdTeamScreenState
 
   Widget _buildTeamRosterPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Production Team Roster',
       subtitle: 'Members receiving the handover from the project team.',
       columns: const [
@@ -257,6 +267,7 @@ class _TransitionToProdTeamScreenState
 
   Widget _buildHandoverChecklistPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Handover Checklist',
       subtitle:
           'Structured items to transfer to production: docs, access, monitoring, training, runbooks.',
@@ -394,6 +405,7 @@ class _TransitionToProdTeamScreenState
 
   Widget _buildKnowledgeTransferPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Knowledge Transfer',
       subtitle: 'Track sessions, artifacts, and owners for knowledge capture.',
       columns: const [
@@ -527,6 +539,7 @@ class _TransitionToProdTeamScreenState
 
   Widget _buildSignOffsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Ops & Client Sign-Offs',
       subtitle: 'Track who needs to approve the handover and their status.',
       columns: const [
@@ -918,7 +931,7 @@ class _TransitionToProdTeamScreenState
             pw.Text(
                 '$projectName — Generated ${now.toLocal().toIso8601String()}',
                 style:
-                    pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                    const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
             pw.SizedBox(height: 16),
 
             // Team Roster
@@ -934,7 +947,7 @@ class _TransitionToProdTeamScreenState
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -954,7 +967,7 @@ class _TransitionToProdTeamScreenState
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -975,7 +988,7 @@ class _TransitionToProdTeamScreenState
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -995,7 +1008,7 @@ class _TransitionToProdTeamScreenState
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1034,7 +1047,7 @@ class _TransitionToProdTeamScreenState
   pw.Widget _pdfCell(String text) {
     return pw.Padding(
         padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(text, style: pw.TextStyle(fontSize: 9)));
+        child: pw.Text(text, style: const pw.TextStyle(fontSize: 9)));
   }
 
   // ── KAZ AI Row Regeneration ─────────────────────────────────────────────
@@ -1076,7 +1089,7 @@ class _TransitionToProdTeamScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1122,7 +1135,7 @@ class _TransitionToProdTeamScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1170,7 +1183,7 @@ class _TransitionToProdTeamScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1212,7 +1225,7 @@ class _TransitionToProdTeamScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1294,7 +1307,7 @@ class _TransitionToProdTeamScreenState
       sectionSubtitle:
           'Certification, release readiness, and production handoff',
       sectionIcon: Icons.send_outlined,
-      sectionColor: const Color(0xFF2563EB),
+      sectionColor: const Color(0xFFFFC812),
       completionPercent: completionPct,
       completionLabel: 'TRANSFERRED',
       completionCaption:
@@ -1304,7 +1317,7 @@ class _TransitionToProdTeamScreenState
           label: 'Team Members',
           value: '${projectData.teamMembers.length}',
           icon: Icons.people_outline,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'assigned to project',
         ),
         LaunchKpiTile(
@@ -1318,7 +1331,7 @@ class _TransitionToProdTeamScreenState
           label: 'Vendors',
           value: '${projectData.vendors.length}',
           icon: Icons.inventory_2_outlined,
-          color: const Color(0xFF7C3AED),
+          color: const Color(0xFFB8860B),
           delta: 'in supply chain',
         ),
         LaunchKpiTile(

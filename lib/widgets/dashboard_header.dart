@@ -47,6 +47,7 @@ class DashboardHeader extends StatefulWidget {
     required this.isBasicPlan,
     this.crumbLabel,
     this.billingRoute,
+    this.modeTitle,
   });
 
   /// Primary CTA — opens the project creation flow (Initiation phase).
@@ -63,6 +64,11 @@ class DashboardHeader extends StatefulWidget {
   /// Optional override for the route the Billing CTA navigates to. Defaults
   /// to the settings screen with `from=dashboard`.
   final String? billingRoute;
+
+  /// Optional override for the second line under the greeting (the workspace
+  /// mode title). Defaults to the plan-tier copy. The Integration Dashboard
+  /// uses this because it serves two audiences from one screen.
+  final String? modeTitle;
 
   @override
   State<DashboardHeader> createState() => _DashboardHeaderState();
@@ -176,9 +182,10 @@ class _DashboardHeaderState extends State<DashboardHeader> {
         : hour < 17
             ? 'Good afternoon'
             : 'Good evening';
-    final modeTitle = widget.isBasicPlan
-        ? 'Regular Projects · Basic plan workspace'
-        : 'Project workspace overview · Standard plan';
+    final modeTitle = widget.modeTitle ??
+        (widget.isBasicPlan
+            ? 'Regular Projects · Basic plan workspace'
+            : 'Project workspace overview · Standard plan');
     final crumbText = widget.crumbLabel ?? 'Project workspace overview';
 
     return Container(
@@ -582,11 +589,12 @@ class _DashboardHeaderState extends State<DashboardHeader> {
   }
 
   static String _initials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return name.isNotEmpty ? name[0].toUpperCase() : 'U';
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return 'U';
+    final parts = trimmed.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+    if (parts.isEmpty) return trimmed[0].toUpperCase();
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
   }
 }
 

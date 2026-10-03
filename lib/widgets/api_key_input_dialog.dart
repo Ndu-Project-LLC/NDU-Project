@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ApiKeyInputDialog extends StatefulWidget {
   const ApiKeyInputDialog({super.key});
@@ -12,7 +13,7 @@ class ApiKeyInputDialog extends StatefulWidget {
 }
 
 class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
-  final TextEditingController _apiKeyController = TextEditingController();
+  final TextEditingController _apiKeyController = SpellCheckTextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _isObscured = true;
   bool _isLoading = false;
@@ -44,7 +45,7 @@ class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
     return AlertDialog(
       title: const Row(
         children: [
-          Icon(Icons.security, color: Colors.blue),
+          Icon(Icons.security, color: Color(0xFFFFC812)),
           SizedBox(width: 8),
           Text('Configure OpenAI API Key'),
         ],
@@ -123,7 +124,7 @@ class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
+                color: const Color(0xFFFFC812).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Column(
@@ -131,7 +132,7 @@ class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline, size: 16, color: Colors.blue),
+                      Icon(Icons.info_outline, size: 16, color: Color(0xFFFFC812)),
                       SizedBox(width: 8),
                       Text('How to get your API key:',
                           style: TextStyle(fontWeight: FontWeight.bold)),

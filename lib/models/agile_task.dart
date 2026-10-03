@@ -1,4 +1,6 @@
 /// Model for an agile task/user story in Agile Development Iterations page
+import 'package:ndu_project/utils/unique_id.dart';
+
 class AgileTask {
   final String id;
   String userStory; // User Story/Task name
@@ -42,7 +44,7 @@ class AgileTask {
     List<String>? milestoneIds,
   })  : dependencyTaskIds = dependencyTaskIds ?? [],
         milestoneIds = milestoneIds ?? [],
-        id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+        id = id ?? newId();
 
   AgileTask copyWith({
     String? userStory,
@@ -118,7 +120,7 @@ class AgileTask {
 
     return AgileTask(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       userStory: json['userStory']?.toString() ?? '',
       assignedRole: json['assignedRole']?.toString() ?? '',
       storyPoints: parseStoryPoints(json['storyPoints']),

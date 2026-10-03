@@ -11,7 +11,10 @@ import 'package:ndu_project/widgets/user_access_chip.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 /// Front End Planning – Summary screen
 /// Mirrors the provided layout with shared workspace chrome,
 /// large notes area, summary text panel, and AI hint + Next controls.
@@ -35,15 +38,15 @@ class _FrontEndPlanningSummaryEndScreenState extends State<FrontEndPlanningSumma
  screenTitle: 'Front End Planning Summary End',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
  ],
  );
  }
 
- final TextEditingController _notes = TextEditingController();
- final TextEditingController _summaryNotes = TextEditingController();
+ final TextEditingController _notes = SpellCheckTextEditingController();
+ final TextEditingController _summaryNotes = SpellCheckTextEditingController();
 
  @override
  void dispose() {
@@ -54,8 +57,14 @@ class _FrontEndPlanningSummaryEndScreenState extends State<FrontEndPlanningSumma
 
  @override
  Widget build(BuildContext context) {
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,12 +86,24 @@ class _FrontEndPlanningSummaryEndScreenState extends State<FrontEndPlanningSumma
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _roundedField(controller: _notes, hint: 'Input your notes here...', minLines: 3),
+ CharterLockBanner(visible: charterLocked),
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ CollapsibleNotesSection(
+ title: 'Notes',
+ child: _roundedField(controller: _notes, hint: 'Input your notes here...', minLines: 3),
+ ),
  const SizedBox(height: 24),
  const _SectionTitle(),
  const SizedBox(height: 18),
  _SummaryPanel(controller: _summaryNotes),
  const SizedBox(height: 140),
+ ],
+ ),
+ ),
  ],
  ),
  ),
@@ -223,42 +244,10 @@ class _BottomOverlay extends StatelessWidget {
  child: Stack(
  children: [
  Positioned(
- left: 24,
- bottom: 24,
- child: Container(
- width: 48,
- height: 48,
- decoration: const BoxDecoration(color: Color(0xFFB3D9FF), shape: BoxShape.circle),
- child: const Icon(Icons.info_outline, color: Colors.white),
- ),
- ),
- Positioned(
  right: 24,
  bottom: 24,
  child: Row(
  children: [
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
- decoration: BoxDecoration(
- color: const Color(0xFFE6F1FF),
- borderRadius: BorderRadius.circular(14),
- border: Border.all(color: const Color(0xFFD7E5FF)),
- ),
- child: const Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
- SizedBox(width: 10),
- Text('AI', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
- SizedBox(width: 12),
- Text(
- 'Generate a summary of all front end planning activities.',
- style: TextStyle(color: Color(0xFF1F2937)),
- ),
- ],
- ),
- ),
- const SizedBox(width: 16),
  ElevatedButton(
  onPressed: () => ProjectFrameworkScreen.open(context), 
  style: ElevatedButton.styleFrom(

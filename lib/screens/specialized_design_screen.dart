@@ -1,11 +1,11 @@
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 // ignore_for_file: unused_element
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:ndu_project/screens/long_lead_equipment_ordering_screen.dart';
-import 'package:ndu_project/screens/technical_development_screen.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -21,7 +21,9 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class SpecializedDesignScreen extends StatefulWidget {
  const SpecializedDesignScreen({super.key});
@@ -116,7 +118,7 @@ class _SpecializedDesignScreenState extends State<SpecializedDesignScreen> {
  screenTitle: 'Specialized Design',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['specialized_design_screen'] ?? 'No data recorded.'),
  ],
@@ -284,7 +286,7 @@ class _SpecializedDesignScreenState extends State<SpecializedDesignScreen> {
  ];
  }
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();
 
  // ─── Build ────────────────────────────────────────────────────────
 
@@ -294,7 +296,7 @@ class _SpecializedDesignScreenState extends State<SpecializedDesignScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Specialized Design',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [
@@ -324,9 +326,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildReviewGatesPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Technical Development',
- nextLabel: 'Next: Long Lead Equipment Ordering',
- onBack: () => context.push('/technical-development'),onNext: () => context.push('/long-lead-equipment-ordering')),
+ backLabel: PlanningPhaseNavigation.backLabel('specialized_design'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('specialized_design'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'specialized_design'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'specialized_design'),
+ ),
  ],
  ),
  ),
@@ -407,7 +411,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF6B7280), height: 1.5),
  ),
  const SizedBox(height: 18),
- _buildGuideCard(Icons.shield_outlined, 'Security & Access Control', 'Implement defense-in-depth with Zero Trust architecture, encryption at rest and in transit, MFA enforcement, and continuous audit logging. Align with NIST SP 800-207 and CIS Controls v8.', const Color(0xFF2563EB)),
+ _buildGuideCard(Icons.shield_outlined, 'Security & Access Control', 'Implement defense-in-depth with Zero Trust architecture, encryption at rest and in transit, MFA enforcement, and continuous audit logging. Align with NIST SP 800-207 and CIS Controls v8.', const Color(0xFFFFC812)),
  const SizedBox(height: 12),
  _buildGuideCard(Icons.speed_outlined, 'Performance & Scalability', 'Define SLA targets, implement caching strategies, optimize database queries, and establish auto-scaling thresholds. Validate under load testing with p95/p99 latency benchmarks.', const Color(0xFF10B981)),
  const SizedBox(height: 12),
@@ -486,8 +490,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Color color;
  switch (status) {
  case 'Ready': color = const Color(0xFF10B981); break;
- case 'In review': color = const Color(0xFF0EA5E9); break;
- case 'In progress': color = const Color(0xFF8B5CF6); break;
+ case 'In review': color = const Color(0xFFFFC812); break;
+ case 'In progress': color = const Color(0xFFB8860B); break;
  case 'Draft': case 'Pending': color = const Color(0xFFF59E0B); break;
  case 'Deprecated': color = const Color(0xFF9CA3AF); break;
  default: color = const Color(0xFF6B7280);
@@ -513,7 +517,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  switch (status) {
  case 'Compliant': color = const Color(0xFF10B981); break;
  case 'Non-compliant': color = const Color(0xFFEF4444); break;
- case 'In progress': color = const Color(0xFF0EA5E9); break;
+ case 'In progress': color = const Color(0xFFFFC812); break;
  case 'Partial': color = const Color(0xFFF59E0B); break;
  case 'Not assessed': color = const Color(0xFF9CA3AF); break;
  default: color = const Color(0xFF6B7280);
@@ -526,10 +530,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Color color;
  switch (status) {
  case 'Approved': color = const Color(0xFF10B981); break;
- case 'In Review': color = const Color(0xFF0EA5E9); break;
+ case 'In Review': color = const Color(0xFFFFC812); break;
  case 'Pending': color = const Color(0xFFF59E0B); break;
  case 'Rejected': color = const Color(0xFFEF4444); break;
- case 'Waived': color = const Color(0xFF8B5CF6); break;
+ case 'Waived': color = const Color(0xFFB8860B); break;
  case 'Not Started': color = const Color(0xFF9CA3AF); break;
  default: color = const Color(0xFF6B7280);
  }
@@ -567,7 +571,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  debugPrint('KAZ AI field generation failed: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failed: $e'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  }
@@ -717,7 +721,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _buildTableRow(isLast: i == _performanceRows.length - 1, cells: [
  Expanded(flex: 3, child: Text(row.hotspot, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF111827)))),
  Expanded(flex: 5, child: Text(row.focus, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280), height: 1.4))),
- SizedBox(width: 130, child: Text(row.sla, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0EA5E9)))),
+ SizedBox(width: 130, child: Text(row.sla, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFFFC812)))),
  SizedBox(width: 130, child: _buildStatusTag(row.status)),
  _crudButtons(() => _showPerformanceDialog(existing: row), () => _confirmDelete(() { setState(() => _performanceRows.remove(row)); _scheduleSave(); })),
  ]);
@@ -919,9 +923,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── CRUD Dialogs ─────────────────────────────────────────────────
 
  Future<void> _showSecurityDialog({SecurityPatternRow? existing}) async {
- final patternCtrl = TextEditingController(text: existing?.pattern ?? '');
- final decisionCtrl = TextEditingController(text: existing?.decision ?? '');
- final ownerCtrl = TextEditingController(text: existing?.owner ?? '');
+ final patternCtrl = SpellCheckTextEditingController(text: existing?.pattern ?? '');
+ final decisionCtrl = SpellCheckTextEditingController(text: existing?.decision ?? '');
+ final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String status = existing?.status ?? 'Draft';
 
  final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
@@ -962,9 +966,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showPerformanceDialog({PerformancePatternRow? existing}) async {
- final hotspotCtrl = TextEditingController(text: existing?.hotspot ?? '');
- final focusCtrl = TextEditingController(text: existing?.focus ?? '');
- final slaCtrl = TextEditingController(text: existing?.sla ?? '');
+ final hotspotCtrl = SpellCheckTextEditingController(text: existing?.hotspot ?? '');
+ final focusCtrl = SpellCheckTextEditingController(text: existing?.focus ?? '');
+ final slaCtrl = SpellCheckTextEditingController(text: existing?.sla ?? '');
  String status = existing?.status ?? 'Draft';
 
  final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
@@ -1005,9 +1009,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showIntegrationDialog({IntegrationFlowRow? existing}) async {
- final flowCtrl = TextEditingController(text: existing?.flow ?? '');
- final systemCtrl = TextEditingController(text: existing?.system ?? '');
- final ownerCtrl = TextEditingController(text: existing?.owner ?? '');
+ final flowCtrl = SpellCheckTextEditingController(text: existing?.flow ?? '');
+ final systemCtrl = SpellCheckTextEditingController(text: existing?.system ?? '');
+ final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String status = existing?.status ?? 'Draft';
 
  final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
@@ -1048,10 +1052,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showComplianceDialog({_ComplianceRow? existing}) async {
- final standardCtrl = TextEditingController(text: existing?.standard ?? '');
- final descCtrl = TextEditingController(text: existing?.description ?? '');
- final ownerCtrl = TextEditingController(text: existing?.owner ?? '');
- final evidenceCtrl = TextEditingController(text: existing?.evidence ?? '');
+ final standardCtrl = SpellCheckTextEditingController(text: existing?.standard ?? '');
+ final descCtrl = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+ final evidenceCtrl = SpellCheckTextEditingController(text: existing?.evidence ?? '');
  String status = existing?.status ?? 'Not assessed';
 
  final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
@@ -1095,10 +1099,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _showReviewGateDialog({_ReviewGateRow? existing}) async {
- final gateCtrl = TextEditingController(text: existing?.gate ?? '');
- final descCtrl = TextEditingController(text: existing?.description ?? '');
- final approverCtrl = TextEditingController(text: existing?.approver ?? '');
- final deptCtrl = TextEditingController(text: existing?.department ?? '');
+ final gateCtrl = SpellCheckTextEditingController(text: existing?.gate ?? '');
+ final descCtrl = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final approverCtrl = SpellCheckTextEditingController(text: existing?.approver ?? '');
+ final deptCtrl = SpellCheckTextEditingController(text: existing?.department ?? '');
  String priority = existing?.priority ?? 'High';
  String status = existing?.status ?? 'Pending';
 

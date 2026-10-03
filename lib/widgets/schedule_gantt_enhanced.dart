@@ -404,7 +404,7 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
       children: [
         _legendItem(const Color(0xFFEF4444), 'Critical Path'),
         const SizedBox(width: 12),
-        _legendItem(const Color(0xFF3B82F6), 'Normal'),
+        _legendItem(const Color(0xFFFFC812), 'Normal'),
         const SizedBox(width: 12),
         _legendItem(const Color(0xFFF59E0B), 'Milestone'),
       ],
@@ -504,7 +504,7 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
         ? const Color(0xFFF59E0B)
         : item.isCriticalPath
             ? const Color(0xFFEF4444)
-            : const Color(0xFF3B82F6);
+            : const Color(0xFFFFC812);
 
     return Positioned(
       left: 0,

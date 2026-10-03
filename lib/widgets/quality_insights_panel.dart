@@ -65,7 +65,7 @@ class QualityInsightsPanel extends StatelessWidget {
             context,
             title: '📊 Gaps Detected',
             icon: Icons.find_in_page_outlined,
-            color: const Color(0xFF8B5CF6),
+            color: const Color(0xFFB8860B),
             items: report.acceptanceCriteriaGaps.take(maxItemsPerCategory).toList(),
           ),
           const SizedBox(height: 12),
@@ -119,7 +119,7 @@ class QualityInsightsPanel extends StatelessWidget {
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+              colors: [Color(0xFFB8860B), Color(0xFFB8860B)],
             ),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -238,7 +238,7 @@ class QualityInsightsPanel extends StatelessWidget {
           title: 'Activities to Add',
           value: report.recommendedActivities.length.toString(),
           icon: Icons.add_task_outlined,
-          color: const Color(0xFF3B82F6),
+          color: const Color(0xFFFFC812),
         ),
         _SummaryCard(
           title: 'Standards to Review',
@@ -281,7 +281,7 @@ class _RecommendationCard extends StatelessWidget {
       case Priority.high:
         return const Color(0xFFFEF3C7);
       case Priority.medium:
-        return const Color(0xFFE0E7FF);
+        return const Color(0xFFFFF8E1);
       case Priority.low:
         return const Color(0xFFF0FDF4);
     }
@@ -294,7 +294,7 @@ class _RecommendationCard extends StatelessWidget {
       case Priority.high:
         return const Color(0xFFD97706);
       case Priority.medium:
-        return const Color(0xFF6366F1);
+        return const Color(0xFFB8860B);
       case Priority.low:
         return const Color(0xFF059669);
     }
@@ -330,7 +330,7 @@ class _RecommendationCard extends StatelessWidget {
           padding: EdgeInsets.all(compact ? 10 : 12),
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
-            color: _priorityColor.withOpacity(0.5),
+            color: _priorityColor.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: _priorityColor),
           ),
@@ -372,7 +372,7 @@ class _RecommendationCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -405,7 +405,7 @@ class _PriorityChip extends StatelessWidget {
     final (label, bgColor, textColor) = switch (priority) {
       Priority.critical => ('CRITICAL', Color(0xFEF2F2), Color(0xFFDC2626)),
       Priority.high => ('HIGH', Color(0xFFFFFBEB), Color(0xFFD97706)),
-      Priority.medium => ('MEDIUM', Color(0xFFEFF6FF), Color(0xFF3B82F6)),
+      Priority.medium => ('MEDIUM', Color(0xFFFFF8E1), Color(0xFFFFC812)),
       Priority.low => ('LOW', Color(0xFFF0FDF4), Color(0xFF059669)),
     };
 
@@ -445,9 +445,9 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -468,7 +468,7 @@ class _SummaryCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w500,
-              color: color.withOpacity(0.8),
+              color: color.withValues(alpha: 0.8),
             ),
           ),
         ],
@@ -529,7 +529,7 @@ class _DialogTitleBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.indigo[50]!, Colors.purple[50]!],
+          colors: [Color(0xFFFFF8E1), Color(0xFFFFF8E1)],
         ),
       ),
       child: Row(
@@ -538,7 +538,7 @@ class _DialogTitleBar extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                colors: [Color(0xFFB8860B), Color(0xFFB8860B)],
               ),
               shape: BoxShape.circle,
             ),

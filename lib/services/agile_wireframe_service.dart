@@ -3,9 +3,60 @@ import 'package:flutter/foundation.dart';
 import 'package:ndu_project/models/acceptance_criteria.dart';
 import 'package:ndu_project/models/agile_release_plan.dart';
 import 'package:ndu_project/services/agile_cache_service.dart';
+import 'package:ndu_project/utils/agile_gate_definitions.dart';
 
 class AgileWireframeService {
   static final _firestore = FirebaseFirestore.instance;
+
+  // ── Shared-document key contract ─────────────────────────────────────────
+  //
+  // Every Agile Planning screen persists into the SAME `agile_wireframe`
+  // document, each under its own sub-map and always with `merge: true`. That
+  // only works while the keys stay distinct: if two screens ever pointed at one
+  // key, the second save would blank the first screen's fields. The review read
+  // Metrics Planning and Backlog Governance as duplicates, and the owner's
+  // verdict was to keep both — so the separation is pinned here and checked by
+  // `test/services/agile_wireframe_config_keys_test.dart`.
+
+  /// Sub-map key Metrics Planning owns.
+  static const String metricsConfigKey = 'metricsConfig';
+
+  /// Sub-map key Backlog Governance owns.
+  static const String backlogGovernanceKey = 'backlogGovernance';
+
+  /// The body Metrics Planning persists inside [metricsConfigKey], and the only
+  /// place those keys are written.
+  static Map<String, dynamic> metricsConfigData({
+    required Iterable<String> selectedMetrics,
+    required String notes,
+  }) =>
+      <String, dynamic>{
+        'selectedMetrics': selectedMetrics.toList(),
+        'notes': notes,
+      };
+
+  /// The body Backlog Governance persists inside [backlogGovernanceKey], and
+  /// the only place those keys are written.
+  static Map<String, dynamic> backlogGovernanceData({
+    required Map<String, String> fields,
+    required String readyProse,
+    required String doneProse,
+    required List<Map<String, dynamic>> readyChecklist,
+    required List<Map<String, dynamic>> doneChecklist,
+    required List<Map<String, dynamic>> workingAgreements,
+    required bool readyChecklistMode,
+    required bool doneChecklistMode,
+  }) =>
+      <String, dynamic>{
+        ...fields,
+        AgileGateDefinitions.readyFreeTextKey: readyProse,
+        AgileGateDefinitions.doneFreeTextKey: doneProse,
+        AgileGateDefinitions.readyChecklistKey: readyChecklist,
+        AgileGateDefinitions.doneChecklistKey: doneChecklist,
+        'working_agreements': workingAgreements,
+        AgileGateDefinitions.readyChecklistModeKey: readyChecklistMode,
+        AgileGateDefinitions.doneChecklistModeKey: doneChecklistMode,
+      };
 
   static DocumentReference<Map<String, dynamic>> _agileDoc(String projectId) {
     return _firestore
@@ -127,7 +178,7 @@ class AgileWireframeService {
     try {
       final doc = await _loadDoc(projectId);
       if (doc == null) return {};
-      return (doc['backlogGovernance'] as Map<String, dynamic>?) ?? {};
+      return (doc[backlogGovernanceKey] as Map<String, dynamic>?) ?? {};
     } catch (error) {
       debugPrint('AgileWireframeService.loadBacklogGovernance error: $error');
       return {};
@@ -140,7 +191,7 @@ class AgileWireframeService {
   }) async {
     try {
       await _agileDoc(projectId).set({
-        'backlogGovernance': data,
+        backlogGovernanceKey: data,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       _invalidate(projectId);
@@ -299,7 +350,7 @@ class AgileWireframeService {
     try {
       final doc = await _loadDoc(projectId);
       if (doc == null) return {};
-      return (doc['metricsConfig'] as Map<String, dynamic>?) ?? {};
+      return (doc[metricsConfigKey] as Map<String, dynamic>?) ?? {};
     } catch (error) {
       debugPrint('AgileWireframeService.loadMetricsConfig error: $error');
       return {};
@@ -312,7 +363,7 @@ class AgileWireframeService {
   }) async {
     try {
       await _agileDoc(projectId).set({
-        'metricsConfig': data,
+        metricsConfigKey: data,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       _invalidate(projectId);

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,16 +15,22 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/contract_service.dart';
 import 'package:ndu_project/services/planning_contracting_service.dart';
 import 'package:ndu_project/services/procurement_service.dart';
+import 'package:ndu_project/models/contract_log.dart';
+import 'package:ndu_project/models/design_phase_models.dart' show RequirementRow;
+import 'package:ndu_project/services/design_phase_service.dart';
+import 'package:ndu_project/models/contract_rfp_cycle.dart';
 import 'package:ndu_project/models/planning_contracting_models.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart'
- as procurement_models;
+    as procurement_models;
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/screens/planning_procurement_screen.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBrandYellow = Color(0xFFFFC812);
 const Color _kFabYellow = Color(0xFFFBBF24);
@@ -107,19 +114,46 @@ class PlanningContractingScreen extends StatefulWidget {
  _PlanningContractingScreenState();
 }
 
-class _PlanningContractingScreenState extends State<PlanningContractingScreen> {
- int _selectedTab = 0;
+/// One entry in the contracting tab strip.
+class _ContractTabDef {
+  const _ContractTabDef(this.label, this.builder);
 
- static const _tabLabels = [
- 'Overview',
- 'Packages',
- 'Tender Setup',
- 'Evaluation',
- 'Negotiation',
- 'Admin Controls',
- 'Commercial & Forecast',
- 'Handoff',
- ];
+  final String label;
+  final Widget Function() builder;
+}
+
+/// Lusaka 27: "Can you click on any one of these instead of negotiation? …
+/// please just hide it. Just hide it fully, don't delete it, just hide it."
+///
+/// The Negotiation planner stays in the codebase (and in the route table) but
+/// is left out of the strip. Flip this to `true` to bring the tab back.
+bool get _showNegotiationTab => false;
+
+class _PlanningContractingScreenState extends State<PlanningContractingScreen> {
+  int _selectedTab = 0;
+
+  /// The tabs, in order. The old "Packages" tab is now the Contracts tab: it
+  /// carries the contract log as its default view — "that table needs to be
+  /// here. As a default view … This is where they have to go through the
+  /// process of building it out" — with the package cards as the secondary
+  /// view.
+  List<_ContractTabDef> get _tabs => <_ContractTabDef>[
+        _ContractTabDef(
+          'Overview',
+          () => _OverviewTab(
+            onOpenContractLog: () => setState(() => _selectedTab = 1),
+          ),
+        ),
+        const _ContractTabDef('Contracts', _ContractsTab.new),
+        const _ContractTabDef('Tender Setup', _TenderSetupTab.new),
+        const _ContractTabDef('Evaluation', _EvaluationTab.new),
+        if (_showNegotiationTab)
+          const _ContractTabDef('Negotiation', _NegotiationTab.new),
+        const _ContractTabDef('Admin Controls', _AdminTab.new),
+        const _ContractTabDef('Commercial & Forecast', _CommercialForecastTab.new),
+        const _ContractTabDef('Handoff', _HandoffTab.new),
+      ];
+
 
  @override
  Widget build(BuildContext context) {
@@ -127,7 +161,7 @@ class _PlanningContractingScreenState extends State<PlanningContractingScreen> {
  final hPad = isMobile ? 20.0 : 40.0;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,10 +193,9 @@ class _PlanningContractingScreenState extends State<PlanningContractingScreen> {
  ),
  SizedBox(height: isMobile ? 18 : 28),
  _TabBar(
- labels: _tabLabels,
+ labels: _tabs.map((tab) => tab.label).toList(),
  selectedIndex: _selectedTab,
- onSelected: (i) =>
- setState(() => _selectedTab = i),
+ onSelected: (i) => setState(() => _selectedTab = i),
  ),
  SizedBox(height: isMobile ? 18 : 28),
  _buildTabContent(),
@@ -187,30 +220,13 @@ class _PlanningContractingScreenState extends State<PlanningContractingScreen> {
  ),
  ),
  );
- }
-
- Widget _buildTabContent() {
- switch (_selectedTab) {
- case 0:
- return const _OverviewTab();
- case 1:
- return const _PackagesTab();
- case 2:
- return const _TenderSetupTab();
- case 3:
- return const _EvaluationTab();
- case 4:
- return const _NegotiationTab();
- case 5:
- return const _AdminTab();
- case 6:
- return const _CommercialForecastTab();
- case 7:
- return const _HandoffTab();
- default:
- return const SizedBox.shrink();
- }
- }
+ }  Widget _buildTabContent() {
+    final tabs = _tabs;
+    if (_selectedTab < 0 || _selectedTab >= tabs.length) {
+      return const SizedBox.shrink();
+    }
+    return tabs[_selectedTab].builder();
+  }
 
  void _openProcurement() {
  context.push('/planning-procurement');
@@ -218,15 +234,35 @@ class _PlanningContractingScreenState extends State<PlanningContractingScreen> {
 
  Future<void> _exportPdf() async {
  final projectData = ProjectDataHelper.getData(context);
+ // The Contract Log itself, so the export shows the table the owner was
+ // looking at instead of exporting nothing (Lusaka 27). The rows come from
+ // the same model the on-screen log draws, so the two cannot drift.
+ final projectId = projectData.projectId?.trim() ?? '';
+ var contracts = const <ContractModel>[];
+ if (projectId.isNotEmpty) {
+ try {
+ contracts = await ContractService.streamContracts(projectId).first;
+ } catch (_) {
+ // Nothing readable: export the rest rather than failing the export.
+ contracts = const <ContractModel>[];
+ }
+ }
+ if (!mounted) return;
  await PdfExportHelper.exportScreenPdf(
  context: context,
  screenTitle: 'Planning Contracting',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_contracting_notes'] ?? 'No data recorded.'),
+ if (contracts.isNotEmpty)
+ PdfSection.table(
+ 'Contract Log',
+ headers: contractLogExportHeaders(),
+ rows: contractLogExportRows(contracts),
+ ),
  ],
  );
  }
@@ -529,127 +565,87 @@ class _StatusChip extends StatelessWidget {
 // ─── OVERVIEW TAB ────────────────────────────────────────────────────────────
 
 class _OverviewTab extends StatefulWidget {
- const _OverviewTab();
- @override
- State<_OverviewTab> createState() => _OverviewTabState();
+  const _OverviewTab({this.onOpenContractLog});
+
+  /// Jumps to the Contracts tab, where the log and the per-contract strategy
+  /// live. Null when the overview is rendered outside the tab strip.
+  final VoidCallback? onOpenContractLog;
+
+  @override
+  State<_OverviewTab> createState() => _OverviewTabState();
 }
 
 class _OverviewTabState extends State<_OverviewTab> {
- String _awardStrategy = 'Sole Source';
- String _contractType = 'Not Sure';
+  static const _tabNoteKey = 'planning_contract_plan';
 
- static const _tabNoteKey = 'planning_contract_plan';
+  @override
+  Widget build(BuildContext context) {
+    final projectData = ProjectDataHelper.getData(context);
+    final projectId = projectData.projectId;
 
- @override
- void initState() {
- super.initState();
- WidgetsBinding.instance.addPostFrameCallback((_) => _loadStrategy());
- }
-
- Future<void> _loadStrategy() async {
- final provider = ProjectDataHelper.getProvider(context);
- final projectId = provider.projectData.projectId;
- if (projectId == null || projectId.isEmpty) return;
- try {
- final doc = await FirebaseFirestore.instance
- .collection('projects')
- .doc(projectId)
- .collection('contracting')
- .doc('strategy')
- .get();
- if (doc.exists && mounted) {
- final d = doc.data() ?? {};
- setState(() {
- _awardStrategy = (d['awardStrategy'] ?? _awardStrategy).toString();
- _contractType = (d['contractType'] ?? _contractType).toString();
- });
- }
- } catch (e) { debugPrint('Error: $e'); }
- }
-
- Future<void> _persistStrategy() async {
- final provider = ProjectDataHelper.getProvider(context);
- final projectId = provider.projectData.projectId;
- if (projectId == null || projectId.isEmpty) return;
- try {
- await FirebaseFirestore.instance
- .collection('projects')
- .doc(projectId)
- .collection('contracting')
- .doc('strategy')
- .set({
- 'awardStrategy': _awardStrategy,
- 'contractType': _contractType,
- 'updatedAt': FieldValue.serverTimestamp(),
- }, SetOptions(merge: true));
- } catch (e) { debugPrint('Error: $e'); }
- }
-
- @override
- Widget build(BuildContext context) {
- final projectData = ProjectDataHelper.getData(context);
- final projectId = projectData.projectId;
-
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- StreamBuilder<List<ContractModel>>(
- stream: projectId != null && projectId.isNotEmpty
- ? ContractService.streamContracts(projectId)
- : Stream.value(const []),
- builder: (context, snap) {
- final contracts = snap.data ?? const [];
- final totalValue =
- contracts.fold<double>(0.0, (t, c) => t + c.estimatedValue);
- return Wrap(
- spacing: 12,
- runSpacing: 12,
- children: [
- _StatCard(
- value: contracts.length.toString(),
- label: 'Contracts',
- color: _kBrandYellow,
- supporting: 'Pre-award list'),
- _StatCard(
- value: contracts.isEmpty
- ? 'TBD'
- : '\$${_formatCurrency(totalValue)}',
- label: 'Total Estimated',
- color: const Color(0xFF059669),
- supporting: 'Budget alignment'),
- _StatCard(
- value:
- _contractType == 'Not Sure' ? 'Not set' : _contractType,
- label: 'Contract Type',
- color: const Color(0xFFF59E0B),
- supporting: 'From strategy'),
- _StatCard(
- value: _awardStrategy,
- label: 'Award Strategy',
- color: const Color(0xFF7C3AED),
- supporting: 'From strategy'),
- ],
- );
- },
- ),
- const SizedBox(height: 20),
- _SectionCard(
- title: 'Contract Planning Strategy',
- subtitle: 'Define the package, award, and approval approach for this project',
- child: _StrategySection(
- awardStrategy: _awardStrategy,
- contractType: _contractType,
- onAwardChanged: (v) {
- setState(() => _awardStrategy = v);
- _persistStrategy();
- },
- onContractTypeChanged: (v) {
- setState(() => _contractType = v);
- _persistStrategy();
- },
- ),
- ),
- _SectionCard(
+    return StreamBuilder<List<ContractModel>>(
+      stream: projectId != null && projectId.isNotEmpty
+          ? ContractService.streamContracts(projectId)
+          : Stream.value(const []),
+      builder: (context, snap) {
+        final contracts = snap.data ?? const [];
+        final totalValue =
+            contracts.fold<double>(0.0, (t, c) => t + c.estimatedValue);
+        final withoutCycle =
+            contracts.where((c) => c.rfpCycle == null).length;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _StatCard(
+                  value: contracts.length.toString(),
+                  label: 'Contracts',
+                  color: _kBrandYellow,
+                  supporting: 'Pre-award list'),
+                _StatCard(
+                  value: contracts.isEmpty
+                      ? 'TBD'
+                      : '\$${_formatCurrency(totalValue)}',
+                  label: 'Total Estimated',
+                  color: const Color(0xFF059669),
+                  supporting: 'Budget alignment'),
+                _StatCard(
+                  value: strategySummaryLabel(contracts),
+                  label: 'Award Strategies',
+                  color: const Color(0xFFF59E0B),
+                  supporting: 'Set per contract'),
+                _StatCard(
+                  value: contracts.isEmpty
+                      ? 'TBD'
+                      : (withoutCycle == 0
+                          ? 'All set'
+                          : '$withoutCycle to set'),
+                  label: 'RFP Cycles',
+                  color: const Color(0xFFB8860B),
+                  supporting: 'Set per contract'),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _SectionCard(
+              title: 'Contract Strategy',
+              subtitle:
+                  'The award strategy, contract type and RFP cycle are set on each '
+                  'contract, not for the project as a whole.',
+              trailing: widget.onOpenContractLog == null
+                  ? null
+                  : TextButton.icon(
+                      onPressed: widget.onOpenContractLog,
+                      icon: const Icon(Icons.table_chart_outlined, size: 16),
+                      label: const Text('Open the contract log'),
+                      style: TextButton.styleFrom(
+                          foregroundColor: _kBrandYellow),
+                    ),
+              child: _ContractStrategySummary(contracts: contracts),
+            ),
+            _SectionCard(
  title: 'Contract Planning Narrative',
  subtitle:
  'AI drafts the planning narrative using initiation inputs and planning context. Edit it to match your package strategy.',
@@ -684,66 +680,94 @@ class _OverviewTabState extends State<_OverviewTab> {
  );
  },
  ),
- ),
- const _SectionCard(
- title: 'Approval Gates',
- subtitle:
- 'Every package must complete PM review before sponsor approval and handoff.',
- child: _ApprovalGateSummary(),
- ),
- ],
- );
- }
+ ),            const _SectionCard(
+              title: 'Approval Gates',
+              subtitle:
+                  'Every contract must complete PM review before sponsor approval and handoff.',
+              child: _ApprovalGateSummary(),
+            ),
+            const SizedBox(height: 60),
+          ],
+        );
+      },
+    );
+  }
 }
 
-class _StrategySection extends StatelessWidget {
- const _StrategySection({
- required this.awardStrategy,
- required this.contractType,
- required this.onAwardChanged,
- required this.onContractTypeChanged,
- });
- final String awardStrategy;
- final String contractType;
- final ValueChanged<String> onAwardChanged;
- final ValueChanged<String> onContractTypeChanged;
+/// The per-contract strategies at a glance: what each contract is going to
+/// market with, and whether its RFP cycle is set yet. Read-only — the values are
+/// edited on the contract itself (Lusaka 27: "the contract price is going to be
+/// by contract basis … we can't have one story for the entire project").
+class _ContractStrategySummary extends StatelessWidget {
+  const _ContractStrategySummary({required this.contracts});
 
- @override
- Widget build(BuildContext context) {
- return LayoutBuilder(
- builder: (context, constraints) {
- final narrow = constraints.maxWidth < 780;
- final children = [
- Expanded(
- child: _RadioGroup(
- title: 'Award Strategy',
- options: const ['Sole Source', 'Competitive Bidding', 'Not Sure'],
- selected: awardStrategy,
- onChanged: onAwardChanged,
- ),
- ),
- SizedBox(width: narrow ? 0 : 28, height: narrow ? 20 : 0),
- Expanded(
- child: _RadioGroup(
- title: 'Contract Type',
- options: const [
- 'Reimbursable (Time & Materials)',
- 'Lump Sum (Fixed Price)',
- 'Not Sure'
- ],
- selected: contractType,
- onChanged: onContractTypeChanged,
- ),
- ),
- ];
- if (narrow) {
- return Column(children: children);
- }
- return Row(
- crossAxisAlignment: CrossAxisAlignment.start, children: children);
- },
- );
- }
+  final List<ContractModel> contracts;
+
+  @override
+  Widget build(BuildContext context) {
+    if (contracts.isEmpty) {
+      return const _EmptyPanel(
+          'No contracts yet. Add a contract to set its strategy and RFP cycle.');
+    }
+    return Column(
+      children: [
+        for (final contract in contracts)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Text(contract.name,
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600)),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                      (contract.awardStrategy ?? '').trim().isEmpty
+                          ? 'Not set'
+                          : contract.awardStrategy!,
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF4B5563))),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                      contract.contractType.trim().isEmpty
+                          ? 'Not set'
+                          : contract.contractType,
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF4B5563))),
+                ),
+                Expanded(
+                  flex: 4,
+                  child: _StatusChip(
+                    label: contract.rfpCycle == null
+                        ? 'RFP cycle not set'
+                        : contract.rfpCycle!.summary,
+                    color: contract.rfpCycle == null
+                        ? const Color(0xFF64748B)
+                        : _kBrandYellow,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// `2 in use` / `Not set` — how many distinct award strategies the contracts
+/// use, for the overview stat card.
+String strategySummaryLabel(List<ContractModel> contracts) {
+  final strategies = contracts
+      .map((c) => (c.awardStrategy ?? '').trim())
+      .where((s) => s.isNotEmpty && s != 'Not Sure')
+      .toSet();
+  if (strategies.isEmpty) return 'Not set';
+  return '${strategies.length} in use';
 }
 
 class _ApprovalGateSummary extends StatelessWidget {
@@ -763,7 +787,7 @@ class _ApprovalGateSummary extends StatelessWidget {
  _InlineInfoCard(
  title: 'Sponsor Approval',
  detail: 'Required for every package before execution handoff.',
- color: Color(0xFF7C3AED),
+ color: Color(0xFFB8860B),
  ),
  _InlineInfoCard(
  title: 'Schedule Sync',
@@ -810,166 +834,7 @@ class _InlineInfoCard extends StatelessWidget {
  ),
  );
  }
-}
-
-class _RadioGroup extends StatelessWidget {
- const _RadioGroup({
- required this.title,
- required this.options,
- required this.selected,
- required this.onChanged,
- });
- final String title;
- final List<String> options;
- final String selected;
- final ValueChanged<String> onChanged;
-
- @override
- Widget build(BuildContext context) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(title,
- style: const TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w600,
- color: Color(0xFF111827))),
- const SizedBox(height: 12),
- ...options.map(
- (o) => InkWell(
- onTap: () => onChanged(o),
- child: Padding(
- padding: const EdgeInsets.symmetric(vertical: 6),
- child: Row(
- children: [
- Radio<String>(
- value: o,
- groupValue: selected,
- onChanged: (_) => onChanged(o),
- activeColor: _kBrandYellow,
- materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
- ),
- const SizedBox(width: 4),
- Expanded(
- child: Text(o,
- style: TextStyle(
- fontSize: 13,
- color: o == selected
- ? const Color(0xFF111827)
- : const Color(0xFF4B5563),
- )),
- ),
- ],
- ),
- ),
- ),
- ),
- ],
- );
- }
-}
-
-class _FepScopesPreview extends StatelessWidget {
- const _FepScopesPreview({this.projectId});
- final String? projectId;
-
- @override
- Widget build(BuildContext context) {
- if (projectId == null || projectId!.isEmpty) {
- return const _EmptyPanel('No project selected.');
- }
- final scopeOptions =
- _planningScopeOptionsFromData(ProjectDataHelper.getData(context));
- if (scopeOptions.isEmpty) {
- return const _EmptyPanel(
- 'No FEP scopes found. Add within-scope items or contractor scopes in Initiation.');
- }
- return Column(
- children: scopeOptions
- .map((scope) => _FepScopeRow(
- name: scope.label,
- type: scope.type,
- value: scope.value,
- status: scope.status,
- ))
- .toList(),
- );
- }
-}
-
-class _FepScopeRow extends StatelessWidget {
- const _FepScopeRow({
- required this.name,
- required this.type,
- required this.value,
- required this.status,
- });
- final String name;
- final String type;
- final double value;
- final String status;
-
- @override
- Widget build(BuildContext context) {
- return Padding(
- padding: const EdgeInsets.symmetric(vertical: 8),
- child: Row(
- children: [
- Expanded(
- flex: 3,
- child: Text(name,
- style: const TextStyle(
- fontSize: 13, fontWeight: FontWeight.w500))),
- Expanded(
- flex: 2,
- child: Text(type,
- style:
- const TextStyle(fontSize: 12, color: Color(0xFF6B7280)))),
- Expanded(
- flex: 2,
- child: Text(value > 0 ? '\$${_formatCurrency(value)}' : 'TBD',
- style: const TextStyle(fontSize: 12))),
- Expanded(
- flex: 2,
- child: _StatusChip(
- label: status.isEmpty ? 'Identified' : status,
- color: _statusColor(status.isEmpty ? 'identified' : status),
- ),
- ),
- ],
- ),
- );
- }
-}
-
-class _ContractsPreview extends StatelessWidget {
- const _ContractsPreview({this.projectId});
- final String? projectId;
-
- @override
- Widget build(BuildContext context) {
- if (projectId == null || projectId!.isEmpty) {
- return const _EmptyPanel('No project selected.');
- }
- return StreamBuilder<List<ContractModel>>(
- stream: ContractService.streamContracts(projectId!),
- builder: (context, snap) {
- final contracts = snap.data ?? const [];
- if (contracts.isEmpty) {
- return const _EmptyPanel(
- 'No contracts yet. Click "Add Contract" to get started.');
- }
- return Column(
- children: contracts
- .map((c) => _PackagePlanningCard(contract: c))
- .toList(),
- );
- },
- );
- }
-}
-
-class _PackagePlanningCard extends StatelessWidget {
+}class _PackagePlanningCard extends StatelessWidget {
  const _PackagePlanningCard({required this.contract});
  final ContractModel contract;
 
@@ -1205,12 +1070,12 @@ Color _statusColor(String status) {
 
 void _showCreateContractDialog(BuildContext context, String? projectId) {
  if (projectId == null || projectId.isEmpty) return;
- final nameCtrl = TextEditingController();
- final descCtrl = TextEditingController();
- final valueCtrl = TextEditingController();
- final scopeCtrl = TextEditingController();
- final disciplineCtrl = TextEditingController();
- final contractorCtrl = TextEditingController();
+ final nameCtrl = SpellCheckTextEditingController();
+ final descCtrl = SpellCheckTextEditingController();
+ final valueCtrl = SpellCheckTextEditingController();
+ final scopeCtrl = SpellCheckTextEditingController();
+ final disciplineCtrl = SpellCheckTextEditingController();
+ final contractorCtrl = SpellCheckTextEditingController();
  String contractType = 'Not Sure';
  String paymentType = 'TBD';
  String contractStartPhase = 'Not Sure';
@@ -1430,11 +1295,11 @@ Future<void> _showEditPackageDialog(
  final projectData = ProjectDataHelper.getData(context);
  final scopeOptions = _planningScopeOptionsFromData(projectData);
  final summaryCtrl =
- TextEditingController(text: contract.packageSummary ?? contract.description);
- final engineerEstimateCtrl = TextEditingController(
+ SpellCheckTextEditingController(text: contract.packageSummary ?? contract.description);
+ final engineerEstimateCtrl = SpellCheckTextEditingController(
  text: contract.engineerEstimate?.toStringAsFixed(0) ?? '');
  final plannedValueCtrl =
- TextEditingController(text: contract.estimatedValue.toStringAsFixed(0));
+ SpellCheckTextEditingController(text: contract.estimatedValue.toStringAsFixed(0));
  String selectedAwardStrategy = contract.awardStrategy ?? 'Sole Source';
  String selectedContractType =
  contract.contractType.isNotEmpty ? contract.contractType : 'Not Sure';
@@ -1749,40 +1614,809 @@ Future<void> _showEditPackageDialog(
  },
  ),
  );
+}/// The Contracts tab: the contract log first, package cards second
+/// (Lusaka 27).
+///
+/// The old "FEP Scope Inputs" card is gone — "FEP scope input, that does not
+/// make sense to me. So if you have like the contract, and the contract name,
+/// the scope, the potential value … then you can do it there" — and the FEP
+/// scopes are now an action: *Add from FEP* pre-fills one contract per
+/// unlinked initiation scope.
+class _ContractsTab extends StatefulWidget {
+  const _ContractsTab();
+
+  @override
+  State<_ContractsTab> createState() => _ContractsTabState();
 }
 
-class _PackagesTab extends StatelessWidget {
- const _PackagesTab();
+class _ContractsTabState extends State<_ContractsTab> {
+  @override
+  Widget build(BuildContext context) {
+    final projectId = ProjectDataHelper.getData(context).projectId;
+    return StreamBuilder<List<ContractModel>>(
+      stream: projectId != null && projectId.isNotEmpty
+          ? ContractService.streamContracts(projectId)
+          : Stream.value(const []),
+      builder: (context, snap) {
+        final contracts = snap.data ?? const [];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _ContractLogSection(
+              projectId: projectId,
+              contracts: contracts,
+              onAddFromFep: () => _showAddFromFepDialog(context, projectId),
+              onImportContractors: () =>
+                  _showContractorImportDialog(context, projectId),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
 
- @override
- Widget build(BuildContext context) {
- final projectId = ProjectDataHelper.getData(context).projectId;
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- _SectionCard(
- title: 'FEP Scope Inputs',
- subtitle:
- 'Review initiation scopes that should become contract packages in planning.',
- child: _FepScopesPreview(projectId: projectId),
- ),
- _SectionCard(
- title: 'Contract Packages',
- subtitle:
- 'Define package-level records that will feed evaluation, approvals, procurement, schedule, and execution handoff.',
- trailing: TextButton.icon(
- onPressed: () => _showCreateContractDialog(context, projectId),
- icon: const Icon(Icons.add, size: 16),
- label: const Text('Add Package',
- style: TextStyle(fontWeight: FontWeight.w600)),
- style:
- TextButton.styleFrom(foregroundColor: _kBrandYellow),
- ),
- child: _ContractsPreview(projectId: projectId),
- ),
- ],
- );
- }
+/// The contract log: numbered rows, table first, cards as the secondary view,
+/// expandable to full screen. Rows carry the per-contract strategy, type and
+/// RFP cycle.
+class _ContractLogSection extends StatelessWidget {
+  const _ContractLogSection({
+    required this.projectId,
+    required this.contracts,
+    required this.onAddFromFep,
+    required this.onImportContractors,
+  });
+
+  final String? projectId;
+  final List<ContractModel> contracts;
+  final VoidCallback onAddFromFep;
+  final VoidCallback onImportContractors;
+
+  List<ContractLogRow> get _rows => <ContractLogRow>[
+        for (var i = 0; i < contracts.length; i++)
+          ContractLogRow.fromContract(contracts[i], number: i + 1),
+      ];
+
+  static bool _matches(dynamic item, String query) {
+    if (item is! ContractLogRow) return false;
+    return item.matches(query);
+  }
+
+  List<ContractLogRow> _matching(String query) {
+    if (query.trim().isEmpty) return _rows;
+    return _rows.where((row) => row.matches(query)).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (projectId == null || projectId!.isEmpty) {
+      return const _EmptyPanel('No project selected.');
+    }
+    if (contracts.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Align(
+              alignment: Alignment.centerRight,
+              child: _headerActions(context)),
+          const _SectionCard(
+            title: 'Contract Log',
+            subtitle: 'Every contract, its scope, potential value, strategy and '
+                'RFP cycle.',
+            child: const _EmptyPanel(
+                'No contracts yet. Add a contract, pull one from a FEP scope, or import your contractor list.'),
+          ),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+            alignment: Alignment.centerRight, child: _headerActions(context)),
+        SearchableTableSection(
+          title: 'Contract Log',
+          subtitle: 'Every contract, its scope, potential value, strategy and '
+              'RFP cycle. Strategy, type and cycle are set on each contract — '
+              'tap a contract or its cycle to edit.',
+          items: _rows,
+          searchHint: 'Search the contract log...',
+          searchFilter: _matches,
+          tableBuilder: (context, query) =>
+              _buildTable(context, _matching(query)),
+          cardBuilder: (context, query) =>
+              _buildCards(context, _matching(query)),
+        ),
+      ],
+    );
+  }
+
+  Widget _headerActions(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        TextButton.icon(
+          onPressed: () => _showCreateContractDialog(context, projectId),
+          icon: const Icon(Icons.add, size: 16),
+          label: const Text('Add Contract',
+              style: TextStyle(fontWeight: FontWeight.w600)),
+          style: TextButton.styleFrom(foregroundColor: _kBrandYellow),
+        ),
+        TextButton.icon(
+          onPressed: onAddFromFep,
+          icon: const Icon(Icons.sync_alt, size: 16),
+          label: const Text('Add from FEP'),
+          style: TextButton.styleFrom(foregroundColor: _kBrandYellow),
+        ),
+        TextButton.icon(
+          onPressed: onImportContractors,
+          icon: const Icon(Icons.upload_file_outlined, size: 16),
+          label: const Text('Import contractors'),
+          style: TextButton.styleFrom(foregroundColor: _kBrandYellow),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTable(BuildContext context, List<ContractLogRow> visible) {
+    if (visible.isEmpty) {
+      return buildNduTableEmptyState(context,
+          message: 'No contracts match this search.');
+    }
+    return buildNduTableWithExpand(
+      context: context,
+      title: 'Contract Log',
+      minWidth: 1500,
+      columnSpacing: 16,
+      columns: <DataColumn>[
+        for (final column in contractLogColumns)
+          DataColumn(label: Text(column.label)),
+      ],
+      rows: <DataRow>[
+        for (final row in visible)
+          DataRow(cells: <DataCell>[
+            for (final column in contractLogColumns)
+              DataCell(_cell(context, column.key, row)),
+          ]),
+      ],
+    );
+  }
+
+  Widget _cell(BuildContext context, String key, ContractLogRow row) {
+    final value = row.valueFor(key);
+    final contract = _contractFor(row.id);
+    switch (key) {
+      case 'name':
+        return InkWell(
+          onTap: contract == null
+              ? null
+              : () => _showEditPackageDialog(context, contract),
+          child: WrappedText(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1D4ED8),
+            ),
+          ),
+        );
+      case 'scope':
+        return WrappedText(value,
+            maxLines: 3, overflow: TextOverflow.ellipsis);
+      case 'value':
+        return Text(value,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF059669)));
+      case 'cycle':
+        // One tappable cell rather than a chip plus a button: a DataCell must
+        // never need more width than its column.
+        return Tooltip(
+          message: row.hasRfpCycle
+              ? 'Tap to edit the RFP cycle'
+              : 'Tap to set the RFP cycle',
+          child: InkWell(
+            onTap: contract == null
+                ? null
+                : () => _showRfpCycleDialog(context, contract),
+            child: WrappedText(
+              value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: row.hasRfpCycle
+                    ? const Color(0xFF92400E)
+                    : const Color(0xFF6B7280),
+              ),
+            ),
+          ),
+        );
+      case 'status':
+        return _StatusChip(label: value, color: _statusColor(value));
+      default:
+        return WrappedText(value, maxLines: 2, overflow: TextOverflow.ellipsis);
+    }
+  }
+
+  ContractModel? _contractFor(String id) {
+    for (final contract in contracts) {
+      if (contract.id == id) return contract;
+    }
+    return null;
+  }
+
+  Widget _buildCards(BuildContext context, List<ContractLogRow> visible) {
+    if (visible.isEmpty) {
+      return buildNduTableEmptyState(context,
+          message: 'No contracts match this search.');
+    }
+    return Column(
+      children: <Widget>[
+        for (final row in visible)
+          if (_contractFor(row.id) != null)
+            _PackagePlanningCard(contract: _contractFor(row.id)!),
+      ],
+    );
+  }
+}
+
+/// "if you already have a list of contractors, they can just import it and
+/// utilize it" — pulls the initiation contractor list into the contract log.
+Future<void> _showContractorImportDialog(
+    BuildContext context, String? projectId) async {
+  if (projectId == null || projectId.isEmpty) return;
+  final data = ProjectDataHelper.getData(context);
+  final contractors = data.contractors
+      .where((c) => c.name.trim().isNotEmpty || c.service.trim().isNotEmpty)
+      .toList();
+  if (contractors.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+            'No contractors are on the initiation contractor list yet.'),
+        backgroundColor: Color(0xFFB45309),
+      ),
+    );
+    return;
+  }
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dCtx) => AlertDialog(
+      title: const Text('Import contractors'),
+      content: SizedBox(
+        width: 480,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${contractors.length} contractor'
+              '${contractors.length == 1 ? '' : 's'} from the initiation list will '
+              'become contracts in this log. Contractors already in the log are '
+              'left alone.',
+              style: const TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            for (final contractor in contractors.take(8))
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Text(
+                  '· ${contractor.name.trim().isEmpty ? contractor.service : contractor.name}',
+                  style: const TextStyle(
+                      fontSize: 12, color: Color(0xFF4B5563)),
+                ),
+              ),
+            if (contractors.length > 8)
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Text('· +${contractors.length - 8} more',
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF6B7280))),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dCtx).pop(false),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(dCtx).pop(true),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: _kBrandYellow,
+              foregroundColor: Colors.white),
+          child: const Text('Import'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true || !context.mounted) return;
+  final imported = await _importContractorsAsContracts(context, projectId);
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(imported == 0
+          ? 'Every listed contractor is already in the contract log.'
+          : 'Imported $imported contractor${imported == 1 ? '' : 's'} into the contract log.'),
+      backgroundColor: const Color(0xFF16A34A),
+    ),
+  );
+}
+
+/// Creates one contract per contractor on the initiation list that is not in
+/// the log yet. Returns how many were created.
+Future<int> _importContractorsAsContracts(
+    BuildContext context, String projectId) async {
+  final data = ProjectDataHelper.getData(context);
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return 0;
+  final contractors = data.contractors
+      .where((c) => c.name.trim().isNotEmpty || c.service.trim().isNotEmpty)
+      .toList();
+  final existing = await ContractService.streamContracts(projectId).first;
+  final existingNames = existing
+      .map((c) => c.contractorName.trim().toLowerCase())
+      .where((name) => name.isNotEmpty)
+      .toSet();
+  final now = DateTime.now();
+  var created = 0;
+  for (final contractor in contractors) {
+    final name = contractor.name.trim().isNotEmpty
+        ? contractor.name.trim()
+        : contractor.service.trim();
+    if (name.isEmpty || existingNames.contains(name.toLowerCase())) continue;
+    final service = contractor.service.trim();
+    await ContractService.createContract(
+      projectId: projectId,
+      name: name,
+      description: service.isNotEmpty ? service : 'Imported from initiation',
+      contractType: 'Not Sure',
+      paymentType: 'TBD',
+      status: contractor.status.trim().isNotEmpty
+          ? contractor.status.trim()
+          : 'Not Started',
+      estimatedValue: contractor.estimatedCost,
+      startDate: now,
+      endDate: now.add(const Duration(days: 30)),
+      scope: service,
+      discipline: service.isNotEmpty ? service : 'General',
+      contractorName: name,
+      notes: 'Imported from the initiation contractor list.',
+      createdById: user.uid,
+      createdByEmail: user.email ?? '',
+      createdByName: user.displayName ?? '',
+    );
+    created++;
+  }
+  return created;
+}
+
+/// "then you can do it there" — one contract per unlinked FEP scope.
+Future<void> _showAddFromFepDialog(
+    BuildContext context, String? projectId) async {
+  if (projectId == null || projectId.isEmpty) return;
+  final options = _planningScopeOptionsFromData(ProjectDataHelper.getData(context));
+  final existing = await ContractService.streamContracts(projectId).first;
+  final linked = existing
+      .map((c) => (c.linkedFepScopeId ?? '').trim())
+      .where((id) => id.isNotEmpty)
+      .toSet();
+  final available =
+      options.where((option) => !linked.contains(option.id)).toList();
+  if (!context.mounted) return;
+  if (available.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+            'Every FEP scope already has a contract in the log. Add a scope in Initiation, or create the contract manually.'),
+        backgroundColor: Color(0xFFB45309),
+      ),
+    );
+    return;
+  }
+  final selected = <String>{};
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dCtx) => StatefulBuilder(
+      builder: (dCtx, setDialog) => AlertDialog(
+        title: const Text('Add contracts from FEP scopes'),
+        content: SizedBox(
+          width: 560,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Each selected scope becomes a contract pre-filled with the '
+                  'scope name, the scope of work and the potential value.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
+                ),
+                const SizedBox(height: 12),
+                for (final option in available)
+                  CheckboxListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    value: selected.contains(option.id),
+                    activeColor: _kBrandYellow,
+                    onChanged: (value) => setDialog(() {
+                      if (value == true) {
+                        selected.add(option.id);
+                      } else {
+                        selected.remove(option.id);
+                      }
+                    }),
+                    title: Text(option.label,
+                        style: const TextStyle(fontSize: 13)),
+                    subtitle: Text(
+                      '${option.type} · '
+                      '${option.value > 0 ? '\$${_formatCurrency(option.value)}' : 'TBD'} · ${option.status}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dCtx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: selected.isEmpty
+                ? null
+                : () => Navigator.of(dCtx).pop(true),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: _kBrandYellow,
+                foregroundColor: Colors.white),
+            child: Text('Add ${selected.length}'),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (confirmed != true || !context.mounted) return;
+  await _createContractsFromFepScopes(context, projectId,
+      available.where((option) => selected.contains(option.id)).toList());
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+          'Added ${selected.length} contract${selected.length == 1 ? '' : 's'} from FEP scopes.'),
+      backgroundColor: const Color(0xFF16A34A),
+    ),
+  );
+}
+
+Future<void> _createContractsFromFepScopes(
+  BuildContext context,
+  String projectId,
+  List<_PlanningScopeOption> options,
+) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+  final now = DateTime.now();
+  for (final option in options) {
+    await ContractService.createContract(
+      projectId: projectId,
+      name: option.label,
+      description: 'Carried over from the FEP scope: ${option.label}',
+      contractType: 'Not Sure',
+      paymentType: 'TBD',
+      status: 'Not Started',
+      estimatedValue: option.value,
+      startDate: now,
+      endDate: now.add(const Duration(days: 30)),
+      scope: option.label,
+      discipline: option.type,
+      contractorName: option.type == 'Contractor Scope' ? option.label : '',
+      notes: 'Created from the FEP scope ${option.id}.',
+      createdById: user.uid,
+      createdByEmail: user.email ?? '',
+      createdByName: user.displayName ?? '',
+    );
+  }
+}
+
+/// The per-contract RFP cycle popup: "a button where you click on it and it can
+/// pop up and it can show you where the cycle [is] and you can choose which is
+/// going to be where you are going to send out the [RFP]".
+Future<void> _showRfpCycleDialog(
+    BuildContext context, ContractModel contract) async {
+  final projectId = ProjectDataHelper.getData(context).projectId;
+  if (projectId == null || projectId.isEmpty) return;
+  var cycle = contract.rfpCycle ??
+      (contract.targetAwardDate != null
+          ? ContractRfpCycle.backPlanFromAwardDate(contract.targetAwardDate!)
+          : ContractRfpCycle.withDefaults(DateTime.now()));
+  var isSaving = false;
+
+  Future<DateTime?> pickDate(DateTime current) => showDatePicker(
+        context: context,
+        initialDate: current,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2100),
+      );
+
+  await showDialog<void>(
+    context: context,
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (dialogContext, setDialog) {
+        final isSkipped = cycle.isSkipped;
+        return AlertDialog(
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          title: Text('RFP Cycle: ${contract.name}'),
+          content: SizedBox(
+            width: MediaQuery.of(dialogContext).size.width > 720
+                ? 640
+                : double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SegmentedButton<bool>(
+                    segments: const <ButtonSegment<bool>>[
+                      ButtonSegment<bool>(
+                          value: false, label: Text('Full RFP cycle')),
+                      ButtonSegment<bool>(
+                          value: true, label: Text('Skip the cycle')),
+                    ],
+                    selected: <bool>{isSkipped},
+                    onSelectionChanged: (selection) => setDialog(() {
+                      cycle = selection.first
+                          ? cycle.asSkipped(
+                              cycle.skipReason.trim().isEmpty
+                                  ? kRfpCycleSkipReasons.first
+                                  : cycle.skipReason)
+                          : cycle.asCompetitive();
+                    }),
+                  ),
+                  const SizedBox(height: 16),
+                  if (isSkipped) ...[
+                    const Text(
+                      'A small contract can be awarded without running the whole '
+                      'process — say sole source or award.',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF4B5563)),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: kRfpCycleSkipReasons
+                              .contains(cycle.skipReason)
+                          ? cycle.skipReason
+                          : kRfpCycleSkipReasons.first,
+                      isExpanded: true,
+                      items: kRfpCycleSkipReasons
+                          .map((reason) => DropdownMenuItem<String>(
+                              value: reason, child: Text(reason)))
+                          .toList(),
+                      onChanged: (value) => setDialog(() => cycle =
+                          cycle.asSkipped(value ?? kRfpCycleSkipReasons.first)),
+                      decoration: const InputDecoration(
+                        labelText: 'Reason',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _CycleDateRow(
+                      label: 'Direct award date',
+                      date: cycle.awardDate,
+                      onPick: () async {
+                        final picked = await pickDate(cycle.awardDate);
+                        if (picked != null) {
+                          setDialog(
+                              () => cycle = cycle.withStartDate(picked));
+                        }
+                      },
+                    ),
+                  ] else ...[
+                    _CycleDateRow(
+                      label: 'Scope out to bidders',
+                      date: cycle.startDate,
+                      onPick: () async {
+                        final picked = await pickDate(cycle.startDate);
+                        if (picked != null) {
+                          setDialog(
+                              () => cycle = cycle.withStartDate(picked));
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    const Text('Stage durations',
+                        style: TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 6),
+                    for (final stage in ContractRfpCycle.adjustableStages)
+                      _CycleWeeksRow(
+                        stage: stage,
+                        weeks: cycle.weeksFor(stage),
+                        onChanged: (weeks) => setDialog(() =>
+                            cycle = cycle.withStageWeeks(stage, weeks)),
+                      ),
+                    const SizedBox(height: 14),
+                    const Text('The cycle',
+                        style: TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 6),
+                    for (final window in cycle.windows())
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: Text(window.stage.label,
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                window.isMilestone
+                                    ? formatCycleDate(window.start)
+                                    : '${formatCycleDate(window.start)} → '
+                                        '${formatCycleDate(window.end)}',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF4B5563)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 10),
+                    _StatusChip(
+                      label: 'Award ${formatCycleDate(cycle.awardDate)}',
+                      color: _kBrandYellow,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isSaving
+                  ? null
+                : () async {
+                    final error = cycle.validate();
+                    final messenger = ScaffoldMessenger.of(context);
+                    if (error != null) {
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(error),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    setDialog(() => isSaving = true);
+                    final awardDate = cycle.awardDate;
+                    await ContractService.updatePlanningFields(
+                      projectId: projectId,
+                      contractId: contract.id,
+                      rfpCycle: cycle,
+                      targetAwardDate: awardDate,
+                    );
+                    if (!dialogContext.mounted) return;
+                    await _upsertScheduleMilestoneActivity(
+                      context: dialogContext,
+                      milestoneId:
+                          _scheduleMilestoneId(contract.id, 'award'),
+                      title: '${contract.name} Award',
+                      date: awardDate,
+                    );
+                    if (dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    }
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                            'Saved the RFP cycle for ${contract.name}.'),
+                        backgroundColor: const Color(0xFF16A34A),
+                      ),
+                    );
+                  },
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: _kBrandYellow,
+                  foregroundColor: Colors.white),
+              child: const Text('Save Cycle'),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+class _CycleDateRow extends StatelessWidget {
+  const _CycleDateRow({
+    required this.label,
+    required this.date,
+    required this.onPick,
+  });
+
+  final String label;
+  final DateTime date;
+  final Future<void> Function() onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(label,
+              style: const TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w600)),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => onPick(),
+          icon: const Icon(Icons.event, size: 16),
+          label: Text(formatCycleDate(date)),
+          style: OutlinedButton.styleFrom(foregroundColor: _kBrandYellow),
+        ),
+      ],
+    );
+  }
+}
+
+class _CycleWeeksRow extends StatelessWidget {
+  const _CycleWeeksRow({
+    required this.stage,
+    required this.weeks,
+    required this.onChanged,
+  });
+
+  final RfpCycleStage stage;
+  final int weeks;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(stage.label,
+                style: const TextStyle(
+                    fontSize: 12, color: Color(0xFF4B5563))),
+          ),
+          IconButton(
+            onPressed: weeks > 0 ? () => onChanged(weeks - 1) : null,
+            icon: const Icon(Icons.remove_circle_outline, size: 18),
+            tooltip: 'One week less',
+          ),
+          SizedBox(
+            width: 60,
+            child: Text('$weeks wk',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w600)),
+          ),
+          IconButton(
+            onPressed: weeks < 52 ? () => onChanged(weeks + 1) : null,
+            icon: const Icon(Icons.add_circle_outline, size: 18),
+            tooltip: 'One week more',
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _TenderSetupTab extends StatelessWidget {
@@ -1917,7 +2551,7 @@ class _HandoffTab extends StatelessWidget {
  ? 'TBD'
  : '\$${_formatCurrency(procurementIssuedValue)}',
  label: 'Issued To Procurement',
- color: const Color(0xFF7C3AED),
+ color: const Color(0xFFB8860B),
  supporting: '${procurementIssuedContracts.length} packages'),
  ],
  ),
@@ -2048,15 +2682,33 @@ Future<void> _issuePackageToProcurement(
  procurementIssuedAt: now,
  procurementRfqId: procurementRfqId,
  );
-}
-
+}/// Pre-award compliance items, in Admin Controls.
+///
+/// Lusaka 27: "warranty has to be included in one of those in admin controls
+/// where you had your legal registration … instead before contract award".
 const List<String> _defaultComplianceChecklist = [
- 'Legal Registration',
- 'Tax Clearance',
- 'Insurance',
- 'Bond / Guarantee',
- 'Signed Forms',
- 'HSE Documentation',
+  'Legal Registration',
+  'Warranty',
+  'Key Dates',
+  'Tax Clearance',
+  'Insurance',
+  'Bond / Guarantee',
+  'Signed Forms',
+  'HSE Documentation',
+];
+
+/// Pre-award warranty periods, in months.
+const List<int> _warrantyMonthOptions = <int>[0, 6, 12, 24, 36];
+
+/// "add warranty/key dates/taxes as evaluation factors" — the default criteria
+/// for a new RFP, still summing to 100.
+final List<EvaluationCriteria> _defaultEvaluationCriteria = <EvaluationCriteria>[
+  EvaluationCriteria(name: 'Technical Compliance', weight: 30, category: 'Technical'),
+  EvaluationCriteria(name: 'Commercial Offer', weight: 25, category: 'Commercial'),
+  EvaluationCriteria(name: 'Delivery Plan', weight: 15, category: 'Commercial'),
+  EvaluationCriteria(name: 'Warranty Terms', weight: 15, category: 'Commercial'),
+  EvaluationCriteria(name: 'Key Dates', weight: 10, category: 'Schedule'),
+  EvaluationCriteria(name: 'Taxes & Duties', weight: 5, category: 'Commercial'),
 ];
 
 class _HandoffChecklist extends StatelessWidget {
@@ -2467,6 +3119,14 @@ class _RfqRow extends StatelessWidget {
  child: Text(rfq.title,
  style: const TextStyle(
  fontSize: 13, fontWeight: FontWeight.w700))),
+ // The RFP package, downloaded to send out (Lusaka 27 follow-up:
+ // "that page could be downloaded where you can download it and send
+ // it out to the folks. You could just email from here").
+ IconButton(
+ onPressed: () => _exportRfpPackage(context, rfq),
+ icon: const Icon(Icons.download_outlined, size: 18),
+ tooltip: 'Download RFP package (PDF)',
+ ),
  IconButton(
  onPressed: () =>
  _showRfpDialog(context, projectId, existingRfq: rfq),
@@ -2524,13 +3184,114 @@ class _RfqRow extends StatelessWidget {
  }
 }
 
+/// The RFP package as one downloadable PDF (Lusaka 27 follow-up).
+///
+/// The owner's framing: the package carries "this is the RFP, this is all the
+/// details, this is all the code and technology it has to meet, and this is
+/// the scope of work" — scope, the requirements mapped to codes/standards for
+/// the linked scope, invited bidders, evaluation criteria and the key dates —
+/// so it can be saved and emailed to bidders without retyping anything.
+Future<void> _exportRfpPackage(BuildContext context, PlanningRfq rfq) async {
+ final data = ProjectDataHelper.getData(context);
+ final project = data.projectName.isEmpty ? 'Project' : data.projectName;
+
+ // Requirements + codes/standards: the design-phase requirement rows whose
+ // mapped scope matches the RFP's linked scope; when the RFP has no linked
+ // scope, every mapped requirement (the owner: "whatever that scope is, all
+ // requirements associated with that scope needs to be here").
+ final requirements = <RequirementRow>[];
+ try {
+ final impl = await DesignPhaseService.instance
+ .loadRequirementsImplementation(rfq.projectId);
+ final rows = (impl['requirements'] as List?)
+ ?.map((e) =>
+ RequirementRow.fromMap(Map<String, dynamic>.from(e as Map)))
+ .toList() ??
+ const <RequirementRow>[];
+ final linked = rfq.linkedScopeId.trim().toLowerCase();
+ for (final row in rows) {
+ final mapped = row.validationStatus.toLowerCase() != 'unmapped';
+ if (!mapped) continue;
+ if (linked.isEmpty ||
+ (row.designArtifactLabel.toLowerCase().contains(linked)) ||
+ row.title.toLowerCase().contains(linked)) {
+ requirements.add(row);
+ }
+ }
+ } catch (e) {
+ debugPrint('RFP package requirement load failed: $e');
+ }
+
+ final dateFormat = DateFormat('MMM dd, yyyy');
+ await PdfExportHelper.exportScreenPdf(
+ context: context,
+ screenTitle: 'RFP Package — ${rfq.title}',
+ filenamePrefix: 'rfp_package',
+ sections: [
+ PdfSection.keyValue('RFP Details', [
+ {'RFP': rfq.title},
+ {'Status': rfq.status},
+ {'Project': project},
+ {
+ 'Scope of Work':
+ rfq.scopeOfWork.isEmpty ? 'Not recorded.' : rfq.scopeOfWork
+ },
+ ]),
+ PdfSection.keyValue('Key Dates', [
+ {
+ 'Submissions Due': rfq.submissionDeadline == null
+ ? 'No deadline'
+ : dateFormat.format(rfq.submissionDeadline!),
+ },
+ {
+ 'Pre-Bid Meeting': rfq.prebidMeetingDate == null
+ ? 'Not set'
+ : dateFormat.format(rfq.prebidMeetingDate!),
+ },
+ ]),
+ PdfSection.keyValue('Invited Bidders', [
+ for (final bidder in rfq.invitedContractors) {'Bidder': bidder},
+ if (rfq.invitedContractors.isEmpty) {'Bidders': 'None invited yet.'},
+ ]),
+ if (requirements.isNotEmpty)
+ PdfSection.table(
+ 'Requirements & Codes/Standards',
+ headers: const ['ID', 'Requirement', 'Type', 'Codes/Standards'],
+ rows: [
+ for (final row in requirements)
+ [
+ row.requirementId.isEmpty ? row.id : row.requirementId,
+ row.title,
+ row.requirementType,
+ row.sourceDocument.isEmpty
+ ? row.designArtifactLabel
+ : row.sourceDocument,
+ ],
+ ],
+ ),
+ if (rfq.evaluationCriteria.isNotEmpty)
+ PdfSection.table(
+ 'Evaluation Criteria',
+ headers: const ['Criterion', 'Weight'],
+ rows: [
+ for (final criteria in rfq.evaluationCriteria)
+ [criteria.name, '${criteria.weight}'],
+ ],
+ ),
+ PdfSection.text(
+ 'Notes',
+ rfq.notes.isEmpty ? 'No notes recorded.' : rfq.notes),
+ ],
+ );
+}
+
 Color _rfqStatusColor(String s) {
  final l = s.toLowerCase();
  if (l.contains('award') || l.contains('complete')) {
  return const Color(0xFF22C55E);
  }
  if (l.contains('publish') || l.contains('active')) {
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  }
  if (l.contains('evaluat')) return const Color(0xFFF59E0B);
  return const Color(0xFF64748B);
@@ -2541,24 +3302,18 @@ void _showRfpDialog(
  String projectId, {
  PlanningRfq? existingRfq,
 }) {
- final titleCtrl = TextEditingController(text: existingRfq?.title ?? '');
+ final titleCtrl = SpellCheckTextEditingController(text: existingRfq?.title ?? '');
  final scopeCtrl =
- TextEditingController(text: existingRfq?.scopeOfWork ?? '');
- final notesCtrl = TextEditingController(text: existingRfq?.notes ?? '');
- final vendorsCtrl = TextEditingController(
+ SpellCheckTextEditingController(text: existingRfq?.scopeOfWork ?? '');
+ final notesCtrl = SpellCheckTextEditingController(text: existingRfq?.notes ?? '');
+ final vendorsCtrl = SpellCheckTextEditingController(
  text: (existingRfq?.invitedContractors ?? const []).join(', '));
  String linkedPackageId = existingRfq?.linkedScopeId ?? '';
  String rfqStatus = existingRfq?.status ?? 'Draft';
  DateTime? submissionDeadline = existingRfq?.submissionDeadline;
- DateTime? preBidMeetingDate = existingRfq?.prebidMeetingDate;
-
- List<EvaluationCriteria> criteria = existingRfq != null
- ? List<EvaluationCriteria>.from(existingRfq.evaluationCriteria)
- : [
- EvaluationCriteria(name: 'Technical Compliance', weight: 40, category: 'Technical'),
- EvaluationCriteria(name: 'Commercial Offer', weight: 35, category: 'Commercial'),
- EvaluationCriteria(name: 'Delivery Plan', weight: 25, category: 'Commercial'),
- ];
+ DateTime? preBidMeetingDate = existingRfq?.prebidMeetingDate;  List<EvaluationCriteria> criteria = existingRfq != null
+      ? List<EvaluationCriteria>.from(existingRfq.evaluationCriteria)
+      : List<EvaluationCriteria>.from(_defaultEvaluationCriteria);
 
  bool isSaving = false;
 
@@ -3143,21 +3898,21 @@ Future<void> _showEvaluationDialog(
  List<PlanningRfq> rfqs,
 ) async {
  final vendorCtrl =
- TextEditingController(text: contract.recommendedVendor ?? '');
- final awardValueCtrl = TextEditingController(
+ SpellCheckTextEditingController(text: contract.recommendedVendor ?? '');
+ final awardValueCtrl = SpellCheckTextEditingController(
  text: contract.recommendedAwardValue?.toStringAsFixed(0) ?? '');
  final comparisonCtrl =
- TextEditingController(text: contract.vendorComparisonSummary ?? '');
+ SpellCheckTextEditingController(text: contract.vendorComparisonSummary ?? '');
  final technicalNotesCtrl =
- TextEditingController(text: contract.technicalGateNotes ?? '');
+ SpellCheckTextEditingController(text: contract.technicalGateNotes ?? '');
  String selectedRfqId =
  _selectedRfqForContract(contract, rfqs)?.id ?? '';
  final initialCriteria = _selectedRfqForContract(contract, rfqs)?.evaluationCriteria ??
  const <EvaluationCriteria>[];
- final criteriaCtrl = TextEditingController(
+ final criteriaCtrl = SpellCheckTextEditingController(
  text: _formatCriteriaEditor(initialCriteria),
  );
- final vendorListCtrl = TextEditingController(
+ final vendorListCtrl = SpellCheckTextEditingController(
  text: _vendorCandidatesForEvaluation(
  contract,
  _selectedRfqForContract(contract, rfqs),
@@ -3926,7 +4681,7 @@ class _PaymentSummaryCards extends StatelessWidget {
  _StatCard(
  value: '$paidCount/${allMilestones.length}',
  label: 'Paid Milestones',
- color: const Color(0xFF7C3AED)),
+ color: const Color(0xFFB8860B)),
  ],
  );
  }
@@ -4007,7 +4762,7 @@ class _PaymentContractExpansion extends StatelessWidget {
 Color _paymentStatusColor(String s) {
  final l = s.toLowerCase();
  if (l == 'paid') return const Color(0xFF22C55E);
- if (l == 'approved') return const Color(0xFF7C3AED);
+ if (l == 'approved') return const Color(0xFFB8860B);
  if (l == 'submitted') return _kBrandYellow;
  if (l == 'due') return const Color(0xFFF59E0B);
  return const Color(0xFF64748B);
@@ -4104,20 +4859,29 @@ class _AdminContractCardState extends State<_AdminContractCard> {
  value: c.reportingFrequency ?? 'Not Set',
  options: const ['Weekly', 'Bi-weekly', 'Monthly', 'Not Set'],
  onChanged: (v) => _updateField(reportingFrequency: v),
- ),
- const SizedBox(height: 18),
- const Align(
- alignment: Alignment.centerLeft,
- child: Text(
- 'Pre-Award Compliance Checklist',
- style: TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827),
- ),
- ),
- ),
- const SizedBox(height: 10),
+ ),            const SizedBox(height: 18),
+            _WarrantyBlock(
+              contract: c,
+              onChanged: ({warrantyMonths, warrantyExpiryDate, keyDatesNotes}) =>
+                  _updateField(
+                    warrantyMonths: warrantyMonths,
+                    warrantyExpiryDate: warrantyExpiryDate,
+                    keyDatesNotes: keyDatesNotes,
+                  ),
+            ),
+            const SizedBox(height: 18),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Pre-Award Compliance Checklist',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
  Wrap(
  spacing: 12,
  runSpacing: 12,
@@ -4144,27 +4908,203 @@ class _AdminContractCardState extends State<_AdminContractCard> {
  ],
  ),
  );
- }
+ }  Future<void> _updateField({
+    String? contractManagerName,
+    String? changeOrderProcedure,
+    String? disputeResolution,
+    String? reportingFrequency,
+    List<String>? complianceChecklist,
+    int? warrantyMonths,
+    DateTime? warrantyExpiryDate,
+    String? keyDatesNotes,
+  }) async {
+    final projectId = ProjectDataHelper.getData(context).projectId;
+    if (projectId == null) return;
+    await ContractService.updatePlanningFields(
+      projectId: projectId,
+      contractId: widget.contract.id,
+      contractManagerName: contractManagerName,
+      changeOrderProcedure: changeOrderProcedure,
+      disputeResolution: disputeResolution,
+      reportingFrequency: reportingFrequency,
+      complianceChecklist: complianceChecklist,
+      warrantyMonths: warrantyMonths,
+      warrantyExpiryDate: warrantyExpiryDate,
+      keyDatesNotes: keyDatesNotes,
+    );
+  }
+}
 
- Future<void> _updateField({
- String? contractManagerName,
- String? changeOrderProcedure,
- String? disputeResolution,
- String? reportingFrequency,
- List<String>? complianceChecklist,
- }) async {
- final projectId = ProjectDataHelper.getData(context).projectId;
- if (projectId == null) return;
- await ContractService.updatePlanningFields(
- projectId: projectId,
- contractId: widget.contract.id,
- contractManagerName: contractManagerName,
- changeOrderProcedure: changeOrderProcedure,
- disputeResolution: disputeResolution,
- reportingFrequency: reportingFrequency,
- complianceChecklist: complianceChecklist,
- );
- }
+/// Warranty and key dates, captured in Admin Controls **before** award so the
+/// terms are known when bids are scored against the warranty/key-date factors.
+class _WarrantyBlock extends StatefulWidget {
+  const _WarrantyBlock({required this.contract, required this.onChanged});
+
+  final ContractModel contract;
+  final Future<void> Function({
+    int? warrantyMonths,
+    DateTime? warrantyExpiryDate,
+    String? keyDatesNotes,
+  }) onChanged;
+
+  @override
+  State<_WarrantyBlock> createState() => _WarrantyBlockState();
+}
+
+class _WarrantyBlockState extends State<_WarrantyBlock> {
+  late final TextEditingController _keyDatesController =
+      SpellCheckTextEditingController(text: widget.contract.keyDatesNotes ?? '');
+
+  @override
+  void dispose() {
+    _keyDatesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final months = widget.contract.warrantyMonths ?? 0;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Warranty & Key Dates (before award)',
+            style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827)),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Set the warranty period and the dates a bidder must commit to '
+            'before the contract is awarded.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const SizedBox(
+                width: 180,
+                child: Text('Warranty period',
+                    style: TextStyle(
+                        fontSize: 13, color: Color(0xFF374151))),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _AdminDropdown<int>(
+                  value: months,
+                  options: _warrantyMonthOptions,
+                  labelFor: (value) =>
+                      value == 0 ? 'No warranty' : '$value months',
+                  onChanged: (value) => widget.onChanged(
+                    warrantyMonths: value,
+                    warrantyExpiryDate: _expiryFor(
+                        value, widget.contract.targetAwardDate),
+                    keyDatesNotes: _keyDatesController.text.trim(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const SizedBox(
+                width: 180,
+                child: Text('Warranty expires',
+                    style: TextStyle(
+                        fontSize: 13, color: Color(0xFF374151))),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  months == 0 || widget.contract.warrantyExpiryDate == null
+                      ? (months == 0
+                          ? 'No warranty recorded'
+                          : 'Set the award date to derive this')
+                      : DateFormat('MMM dd, yyyy')
+                          .format(widget.contract.warrantyExpiryDate!),
+                  style:
+                      const TextStyle(fontSize: 13, color: Color(0xFF111827)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          VoiceTextField(
+            controller: _keyDatesController,
+            maxLines: 2,
+            decoration: const InputDecoration(
+              labelText: 'Key dates',
+              hintText:
+                  'Milestones and dates a bidder must commit to (mobilisation, '
+                  'delivery, handover)',
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (value) => widget.onChanged(
+              keyDatesNotes: value.trim(),
+              warrantyMonths: months,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// The warranty end date, derived from the award date plus the period.
+  static DateTime? _expiryFor(int months, DateTime? awardDate) {
+    if (months <= 0) return null;
+    final anchor = awardDate ?? DateTime.now();
+    return DateTime(anchor.year, anchor.month + months, anchor.day);
+  }
+}
+
+/// A small typed dropdown used by the admin controls.
+class _AdminDropdown<T> extends StatelessWidget {
+  const _AdminDropdown({
+    required this.value,
+    required this.options,
+    required this.labelFor,
+    required this.onChanged,
+  });
+
+  final T value;
+  final List<T> options;
+  final String Function(T value) labelFor;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: DropdownButton<T>(
+        value: options.contains(value) ? value : options.first,
+        items: options
+            .map((option) => DropdownMenuItem<T>(
+                value: option, child: Text(labelFor(option))))
+            .toList(),
+        onChanged: (next) {
+          if (next != null) onChanged(next);
+        },
+        underline: const SizedBox.shrink(),
+        isDense: true,
+        isExpanded: true,
+        icon: const Icon(Icons.keyboard_arrow_down, size: 18),
+      ),
+    );
+  }
 }
 
 class _ComplianceToggle extends StatelessWidget {
@@ -4402,8 +5342,8 @@ Future<void> _showNegotiationDialog(
  ContractModel contract,
 ) async {
  final objectivesCtrl =
- TextEditingController(text: contract.negotiationObjectives ?? '');
- final itemsCtrl = TextEditingController(
+ SpellCheckTextEditingController(text: contract.negotiationObjectives ?? '');
+ final itemsCtrl = SpellCheckTextEditingController(
  text: (contract.negotiationItems ?? const [])
  .map((item) =>
  '${item.item}|${item.ourPosition}|${item.theirPosition}|${item.status}')
@@ -4617,7 +5557,7 @@ class _BudgetTabState extends State<_BudgetTab> {
  _StatCard(
  value: allContracts.length.toString(),
  label: 'Contracts',
- color: const Color(0xFF7C3AED)),
+ color: const Color(0xFFB8860B)),
  ],
  ),
  const SizedBox(height: 20),
@@ -4718,18 +5658,198 @@ class _BudgetEditableTable extends StatelessWidget {
  final List<ContractModel> contracts;
  final String projectId;
 
+ void _showEditModal(BuildContext context, ContractModel contract) {
+ final baseController = SpellCheckTextEditingController(
+ text: contract.estimatedValue.toStringAsFixed(0));
+ final pctController = SpellCheckTextEditingController(
+ text: (contract.contingencyPercent ?? 0).toStringAsFixed(0));
+
+ showDialog(
+ context: context,
+ builder: (ctx) => StatefulBuilder(
+ builder: (ctx, setDialogState) {
+ final base = double.tryParse(baseController.text) ?? 0;
+ final pct = double.tryParse(pctController.text) ?? 0;
+ final contAmt = base * pct / 100;
+ final total = base + contAmt;
+
+ return AlertDialog(
+ title: Text('Edit: ${contract.name}'),
+ content: SizedBox(
+ width: 420,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ TextField(
+ controller: baseController,
+ keyboardType: TextInputType.number,
+ decoration: const InputDecoration(
+ labelText: 'Base Value (\$)',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ onChanged: (_) => setDialogState(() {}),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: pctController,
+ keyboardType: TextInputType.number,
+ decoration: const InputDecoration(
+ labelText: 'Contingency (%)',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ onChanged: (_) => setDialogState(() {}),
+ ),
+ const SizedBox(height: 16),
+ Row(
+ mainAxisAlignment: MainAxisAlignment.spaceBetween,
+ children: [
+ Text('Contingency: \$${contAmt.toStringAsFixed(0)}',
+ style: const TextStyle(fontSize: 13, color: Color(0xFFF59E0B))),
+ Text('Total: \$${total.toStringAsFixed(0)}',
+ style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF059669))),
+ ],
+ ),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+ ElevatedButton(
+ onPressed: () {
+ final newBase = double.tryParse(baseController.text) ?? 0;
+ final newPct = (double.tryParse(pctController.text) ?? 0).clamp(0.0, 100.0);
+ onChangedBaseValue(projectId, contract.id, newBase);
+ onChangedContingencyPercent(projectId, contract.id, newBase, newPct);
+ Navigator.pop(ctx);
+ },
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFFD97706),
+ foregroundColor: Colors.white,
+ ),
+ child: const Text('Save'),
+ ),
+ ],
+ );
+ },
+ ),
+ );
+ }
+
+ void _showAddModal(BuildContext context) {
+ final nameController = SpellCheckTextEditingController();
+ final baseController = SpellCheckTextEditingController(text: '0');
+ final pctController = SpellCheckTextEditingController(text: '0');
+
+ showDialog(
+ context: context,
+ builder: (ctx) => AlertDialog(
+ title: const Text('Add Contract Budget'),
+ content: SizedBox(
+ width: 420,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ TextField(
+ controller: nameController,
+ decoration: const InputDecoration(
+ labelText: 'Contract Name *',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: baseController,
+ keyboardType: TextInputType.number,
+ decoration: const InputDecoration(
+ labelText: 'Base Value (\$)',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: pctController,
+ keyboardType: TextInputType.number,
+ decoration: const InputDecoration(
+ labelText: 'Contingency (%)',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+ ElevatedButton(
+ onPressed: () async {
+ if (nameController.text.trim().isEmpty) return;
+ final base = double.tryParse(baseController.text) ?? 0;
+ final pct = (double.tryParse(pctController.text) ?? 0).clamp(0.0, 100.0);
+ final contAmt = base * pct / 100;
+ await ContractService.createContract(
+ projectId: projectId,
+ name: nameController.text.trim(),
+ description: '',
+ contractType: 'fixed_price',
+ paymentType: 'milestone',
+ status: 'draft',
+ estimatedValue: base,
+ scope: '',
+ discipline: '',
+ createdById: '',
+ createdByEmail: '',
+ createdByName: '',
+ );
+ Navigator.pop(ctx);
+ },
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFFD97706),
+ foregroundColor: Colors.white,
+ ),
+ child: const Text('Add'),
+ ),
+ ],
+ ),
+ );
+ }
+
  @override
  Widget build(BuildContext context) {
  final columns = [
- const _TableColumnDef('#', 60),
- const _TableColumnDef('Contract', 180),
+ const _TableColumnDef('#', 50),
+ const _TableColumnDef('Contract', 200),
  const _TableColumnDef('Base Value', 120),
  const _TableColumnDef('Contingency %', 100),
- const _TableColumnDef('Contingency', 120),
- const _TableColumnDef('Total', 120),
+ const _TableColumnDef('Contingency', 110),
+ const _TableColumnDef('Total', 110),
+ const _TableColumnDef('', 60),
  ];
 
- return _EditableTable(
+ return Column(
+ children: [
+ // Add button
+ Align(
+ alignment: Alignment.centerRight,
+ child: Padding(
+ padding: const EdgeInsets.only(bottom: 12),
+ child: OutlinedButton.icon(
+ onPressed: () => _showAddModal(context),
+ icon: const Icon(Icons.add, size: 16),
+ label: const Text('Add Contract', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+ style: OutlinedButton.styleFrom(
+ foregroundColor: const Color(0xFF475569),
+ side: const BorderSide(color: Color(0xFFE2E8F0)),
+ padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+ shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+ ),
+ ),
+ ),
+ ),
+ _EditableTable(
  columns: columns,
  rows: [
  for (int index = 0; index < contracts.length; index++)
@@ -4738,6 +5858,9 @@ class _BudgetEditableTable extends StatelessWidget {
  columns: columns,
  contract: contracts[index],
  index: index,
+ onEdit: () => _showEditModal(context, contracts[index]),
+ ),
+ ],
  ),
  ],
  );
@@ -4750,11 +5873,13 @@ class _BudgetEditableRow extends StatelessWidget {
  required this.columns,
  required this.contract,
  required this.index,
+ this.onEdit,
  });
 
  final List<_TableColumnDef> columns;
  final ContractModel contract;
  final int index;
+ final VoidCallback? onEdit;
 
  String get projectId => contract.projectId;
 
@@ -4798,27 +5923,18 @@ class _BudgetEditableRow extends StatelessWidget {
  SizedBox(
  width: columns[2].width,
  child: _TableFieldShell(
- child: _NumberInputCell(
- value: base,
- fieldKey: '${contract.id}_baseValue',
- prefix: '\$',
- onChanged: (value) {
- onChangedBaseValue(projectId, contract.id, value);
- },
+ child: Text(
+ '\$${_formatCurrency(base)}',
+ style: const TextStyle(fontSize: 12),
  ),
  ),
  ),
  SizedBox(
  width: columns[3].width,
  child: _TableFieldShell(
- child: _NumberInputCell(
- value: contPct,
- fieldKey: '${contract.id}_contPct',
- suffix: '%',
- onChanged: (value) {
- final newPct = value.clamp(0.0, 100.0);
- onChangedContingencyPercent(projectId, contract.id, base, newPct);
- },
+ child: Text(
+ '${contPct.toStringAsFixed(0)}%',
+ style: const TextStyle(fontSize: 12),
  ),
  ),
  ),
@@ -4847,6 +5963,18 @@ class _BudgetEditableRow extends StatelessWidget {
  ),
  ),
  ),
+ SizedBox(
+ width: columns[6].width,
+ child: _TableFieldShell(
+ child: IconButton(
+ icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF9CA3AF)),
+ onPressed: onEdit,
+ tooltip: 'Edit budget',
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(),
+ ),
+ ),
+ ),
  ],
  );
  }
@@ -4857,9 +5985,7 @@ class _NumberInputCell extends StatefulWidget {
  required this.value,
  required this.fieldKey,
  required this.onChanged,
- this.prefix,
- this.suffix,
- });
+ }) : prefix = null, suffix = null;
 
  final double value;
  final String fieldKey;
@@ -4877,7 +6003,7 @@ class _NumberInputCellState extends State<_NumberInputCell> {
  @override
  void initState() {
  super.initState();
- _controller = TextEditingController(text: widget.value.toStringAsFixed(0));
+ _controller = SpellCheckTextEditingController(text: widget.value.toStringAsFixed(0));
  }
 
  @override
@@ -5178,8 +6304,8 @@ class _CriteriaRowState extends State<_CriteriaRow> {
  @override
  void initState() {
  super.initState();
- _nameController = TextEditingController(text: widget.criterion.name);
- _weightController = TextEditingController(
+ _nameController = SpellCheckTextEditingController(text: widget.criterion.name);
+ _weightController = SpellCheckTextEditingController(
  text: widget.criterion.weight.toStringAsFixed(0));
  }
 

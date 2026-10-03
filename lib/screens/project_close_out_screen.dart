@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -5,8 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/models/launch_phase_models.dart';
-import 'package:ndu_project/screens/actual_vs_planned_gap_analysis_screen.dart';
-import 'package:ndu_project/screens/demobilize_team_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/utils/download_helper.dart' as download_helper;
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
@@ -23,6 +22,8 @@ import 'package:printing/printing.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ProjectCloseOutScreen extends StatefulWidget {
   const ProjectCloseOutScreen({
@@ -51,7 +52,7 @@ class ProjectCloseOutScreen extends StatefulWidget {
 
 class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
   List<LaunchCloseOutCheckItem> _closeOutChecklist = [];
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   List<LaunchApproval> _approvals = [];
   List<LaunchArchiveItem> _archive = [];
   LaunchClosureNotes _lessonsLearned = LaunchClosureNotes();
@@ -85,7 +86,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: widget.activeItemLabel,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -141,21 +142,34 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            LaunchNotesSection(
-              controller: _notesController,
-              onChanged: (v) {},
+            LaunchPhaseTableTabs(
+              overview: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LaunchNotesSection(
+                    controller: _notesController,
+                    onChanged: (v) {},
+                  ),
+                  const SizedBox(height: 16),
+                  if (_selectedView == _CloseOutView.longForm)
+                    _buildChecklistPanel()
+                  else
+                    ..._buildSummarizedView(),
+                ],
+              ),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Close-Out Checklist'),
+                LaunchPhaseTableTab(label: 'Final Approvals'),
+                LaunchPhaseTableTab(label: 'Archive & Access'),
+                LaunchPhaseTableTab(label: 'Lessons Learned'),
+              ],
+              builders: {
+                'Close-Out Checklist': _buildChecklistPanel,
+                'Final Approvals': _buildApprovalsPanel,
+                'Archive & Access': _buildArchivePanel,
+                'Lessons Learned': _buildLessonsLearnedPanel,
+              },
             ),
-            const SizedBox(height: 20),
-            if (_selectedView == _CloseOutView.longForm) ...[
-              _buildChecklistPanel(),
-              const SizedBox(height: 16),
-              _buildApprovalsPanel(),
-              const SizedBox(height: 16),
-              _buildArchivePanel(),
-              const SizedBox(height: 16),
-              _buildLessonsLearnedPanel(),
-            ] else
-              ..._buildSummarizedView(),
             const SizedBox(height: 24),
             _buildNavigation(),
             const SizedBox(height: 48),
@@ -167,6 +181,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
 
   Widget _buildChecklistPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Close-Out Checklist',
       subtitle:
           'Verify all items are addressed before formally closing the project.',
@@ -303,6 +318,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
 
   Widget _buildApprovalsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Final Approvals',
       subtitle:
           'Stakeholders who must sign off before the project is formally closed.',
@@ -445,6 +461,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
 
   Widget _buildArchivePanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Archive & Access',
       subtitle:
           'Document repositories, code, and access changes required for closure.',
@@ -652,7 +669,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Color(0xFFE5E7EB)),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -684,7 +701,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
         collapsible: true,
         initiallyExpanded: false,
         headerIcon: Icons.fact_check_outlined,
-        headerIconColor: const Color(0xFF6366F1),
+        headerIconColor: const Color(0xFFB8860B),
         child: _approvals.isEmpty
             ? const Text('No approvals captured yet.',
                 style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)))
@@ -714,9 +731,9 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
 
   Widget _buildNavigation() {
     return LaunchPhaseNavigation(
-      backLabel: 'Back: Team Demobilization & Operations/Production Transition',
+      backLabel: PlanningPhaseNavigation.backLabel('project_close_out'),
       nextLabel: 'Finalize & Close Project',
-      onBack: () => DemobilizeTeamScreen.open(context),
+      onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'project_close_out'),
       onNext: () {
         Navigator.of(context).maybePop();
       },
@@ -996,7 +1013,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Close-Out Checklist'),
@@ -1004,14 +1021,14 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
             if (_closeOutChecklist.isEmpty)
               pw.Text('No checklist items.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1032,14 +1049,14 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
             if (_approvals.isEmpty)
               pw.Text('No approval records.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1067,14 +1084,14 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
             if (_archive.isEmpty)
               pw.Text('No archive items.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1103,7 +1120,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
               _lessonsLearned.notes.trim().isEmpty
                   ? 'No lessons learned recorded.'
                   : _lessonsLearned.notes.trim(),
-              style: pw.TextStyle(fontSize: 9),
+              style: const pw.TextStyle(fontSize: 9),
             ),
           ],
         ),
@@ -1205,7 +1222,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
           label: 'Milestones',
           value: '${projectData.keyMilestones.length}',
           icon: Icons.flag_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta:
               '${projectData.keyMilestones.where((m) => m.comments.toLowerCase().contains('complete') || m.comments.toLowerCase().contains('done')).length} done',
         ),

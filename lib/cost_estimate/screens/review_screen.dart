@@ -21,6 +21,7 @@ import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart'
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ReviewScreen extends StatelessWidget {
   const ReviewScreen({super.key});
@@ -149,7 +150,7 @@ class ReviewScreen extends StatelessWidget {
                       value: '${estimate.stakeholders.length}',
                       sub: 'To be notified',
                       icon: Icons.people_outline_rounded,
-                      tint: const Color(0xFF6366F1),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFEEF0FF),
                     ),
                     TreasuryKpiSpec(
@@ -158,7 +159,7 @@ class ReviewScreen extends StatelessWidget {
                           '${estimate.baseline?.rebaselineRemaining ?? 2} / 2',
                       sub: 'Available after lock',
                       icon: Icons.refresh_rounded,
-                      tint: const Color(0xFF8B5CF6),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFF4EEFF),
                     ),
                   ],
@@ -260,9 +261,9 @@ class ReviewScreen extends StatelessWidget {
       ...estimate.stakeholders.map((s) => s.email),
       ...estimate.access.map((a) => a.userEmail),
     }.toList();
-    final subjectCtrl = TextEditingController(
+    final subjectCtrl = SpellCheckTextEditingController(
         text: 'Cost Estimate Review Required — ${estimate.projectName}');
-    final bodyCtrl = TextEditingController(text: '''Hello,
+    final bodyCtrl = SpellCheckTextEditingController(text: '''Hello,
 
 A cost estimate for ${estimate.projectName} is ready for review.
 
@@ -371,7 +372,7 @@ class _BaselinedLockedBanner extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Re-baselines remaining: $remaining. Scope changes will trigger variance entries.',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: TreasuryTokens.muted,
                   ),
@@ -410,11 +411,11 @@ class _SchedulePromptCard extends StatelessWidget {
                 color: TreasuryTokens.brand.withValues(alpha: 0.30),
               ),
             ),
-            child: Icon(Icons.calendar_month_rounded,
+            child: const Icon(Icons.calendar_month_rounded,
                 size: 20, color: TreasuryTokens.brandDeep),
           ),
           const SizedBox(width: 14),
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -426,7 +427,7 @@ class _SchedulePromptCard extends StatelessWidget {
                     color: TreasuryTokens.ink,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   'Sends to all stakeholders with view access. The acceptance gate opens after the meeting is scheduled.',
                   style: TextStyle(
@@ -519,7 +520,7 @@ class _AcceptanceStepRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
                     color: TreasuryTokens.ink,
@@ -528,7 +529,7 @@ class _AcceptanceStepRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   desc,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: TreasuryTokens.muted,
                     height: 1.45,
@@ -574,7 +575,7 @@ class _TreasuryEmailDialog extends StatelessWidget {
               color: TreasuryTokens.brandSoft,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.mail_rounded,
+            child: const Icon(Icons.mail_rounded,
                 size: 16, color: TreasuryTokens.brandDeep),
           ),
           const SizedBox(width: 10),
@@ -603,7 +604,7 @@ class _TreasuryEmailDialog extends StatelessWidget {
                 child: Row(
                   children: [
                     Text('TO:'.toUpperCase(),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.8,
@@ -612,7 +613,7 @@ class _TreasuryEmailDialog extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(recipients.join(', '),
-                          style: TextStyle(
+                          style: const TextStyle(
                               color: TreasuryTokens.inkSoft,
                               fontSize: 11.5),
                           overflow: TextOverflow.ellipsis),
@@ -627,7 +628,7 @@ class _TreasuryEmailDialog extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: 'Subject',
                 labelStyle:
-                    TextStyle(color: TreasuryTokens.muted, fontSize: 12),
+                    const TextStyle(color: TreasuryTokens.muted, fontSize: 12),
                 filled: true,
                 fillColor: TreasuryTokens.surface,
                 contentPadding: const EdgeInsets.symmetric(
@@ -638,7 +639,7 @@ class _TreasuryEmailDialog extends StatelessWidget {
                         const BorderSide(color: TreasuryTokens.hairline)),
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                         color: TreasuryTokens.brandDeep, width: 1.6)),
                 enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -655,7 +656,7 @@ class _TreasuryEmailDialog extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: 'Message',
                 labelStyle:
-                    TextStyle(color: TreasuryTokens.muted, fontSize: 12),
+                    const TextStyle(color: TreasuryTokens.muted, fontSize: 12),
                 filled: true,
                 fillColor: TreasuryTokens.surface,
                 contentPadding: const EdgeInsets.symmetric(
@@ -666,7 +667,7 @@ class _TreasuryEmailDialog extends StatelessWidget {
                         const BorderSide(color: TreasuryTokens.hairline)),
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                         color: TreasuryTokens.brandDeep, width: 1.6)),
                 enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -682,7 +683,7 @@ class _TreasuryEmailDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Cancel',
+          child: const Text('Cancel',
               style:
                   TextStyle(color: TreasuryTokens.muted, fontSize: 13)),
         ),
@@ -732,7 +733,7 @@ class _AcceptanceGateDialogState extends State<_AcceptanceGateDialog> {
               color: TreasuryTokens.brandSoft,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.shield_rounded,
+            child: const Icon(Icons.shield_rounded,
                 size: 16, color: TreasuryTokens.brandDeep),
           ),
           const SizedBox(width: 10),
@@ -748,7 +749,7 @@ class _AcceptanceGateDialogState extends State<_AcceptanceGateDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            const Text(
               'Two confirmations are required to lock the baseline.',
               style:
                   TextStyle(color: TreasuryTokens.inkSoft, fontSize: 13),
@@ -788,7 +789,7 @@ class _AcceptanceGateDialogState extends State<_AcceptanceGateDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Close',
+          child: const Text('Close',
               style:
                   TextStyle(color: TreasuryTokens.muted, fontSize: 13)),
         ),
@@ -871,7 +872,7 @@ class _AcceptanceStep extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(title,
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: TreasuryTokens.ink,
                         fontSize: 14,
                         fontWeight: FontWeight.w700)),
@@ -880,7 +881,7 @@ class _AcceptanceStep extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(desc,
-              style: TextStyle(
+              style: const TextStyle(
                   color: TreasuryTokens.inkSoft, fontSize: 13, height: 1.45)),
           if (isWarning && costBaseline != null) ...[
             const SizedBox(height: 10),
@@ -896,13 +897,13 @@ class _AcceptanceStep extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded,
+                  const Icon(Icons.warning_amber_rounded,
                       size: 14, color: TreasuryTokens.warning),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Cost baseline: $costBaseline · Delivery model: ${changeProcess ?? ""}',
-                      style: TextStyle(
+                      style: const TextStyle(
                           color: TreasuryTokens.inkSoft, fontSize: 12),
                     ),
                   ),
@@ -926,14 +927,14 @@ class _AcceptanceStep extends StatelessWidget {
               ),
             )
           else
-            Row(
+            const Row(
               children: [
                 Icon(Icons.check_circle_rounded,
-                    size: 14, color: const Color(0xFF10B981)),
-                const SizedBox(width: 6),
+                    size: 14, color: Color(0xFF10B981)),
+                SizedBox(width: 6),
                 Text('Confirmed',
                     style: TextStyle(
-                        color: const Color(0xFF047857),
+                        color: Color(0xFF047857),
                         fontSize: 12,
                         fontWeight: FontWeight.w700)),
               ],

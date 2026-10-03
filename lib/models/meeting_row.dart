@@ -1,4 +1,6 @@
 /// Model for a meeting row in the Team Meetings page
+import 'package:ndu_project/utils/unique_id.dart';
+
 class MeetingRow {
   final String id;
   String
@@ -23,7 +25,7 @@ class MeetingRow {
     this.notes = '',
     this.nextScheduledDate,
     this.status = 'Scheduled',
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         keyParticipants = keyParticipants ?? [];
 
   /// Calculate total hours for this meeting type (duration × frequency multiplier)
@@ -84,7 +86,7 @@ class MeetingRow {
   factory MeetingRow.fromJson(Map<String, dynamic> json) {
     return MeetingRow(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       meetingType: json['meetingType']?.toString() ?? '',
       frequency: json['frequency']?.toString() ?? '',
       keyParticipants: (json['keyParticipants'] as List?)

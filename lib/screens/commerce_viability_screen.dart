@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:convert';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
@@ -8,9 +9,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'package:ndu_project/models/launch_phase_models.dart';
-import 'package:ndu_project/screens/actual_vs_planned_gap_analysis_screen.dart';
-import 'package:ndu_project/screens/financial_closeout_screen.dart';
-import 'package:ndu_project/screens/summarize_account_risks_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -18,12 +16,14 @@ import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:go_router/go_router.dart';
 
@@ -68,7 +68,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: '6. Hypercare & Warranty Support',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -84,25 +84,36 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                 showNavigationButtons: false,
                 onExportPdf: _exportPdf),
             const SizedBox(height: 20),
-            _buildLaunchInsights(),
-            const SizedBox(height: 16),
-            _buildMetricsRow(),
-            const SizedBox(height: 20),
-            _buildFinancialMetricsPanel(),
-            const SizedBox(height: 16),
-            _buildWarrantiesPanel(),
-            const SizedBox(height: 16),
-            _buildOpsCostsPanel(),
-            const SizedBox(height: 16),
-            _buildDecisionPanel(),
-            const SizedBox(height: 16),
-            _buildRecommendationsPanel(),
+            LaunchPhaseTableTabs(
+              overview: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLaunchInsights(),
+                  const SizedBox(height: 16),
+                  _buildMetricsRow(),
+                ],
+              ),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Financial Metrics'),
+                LaunchPhaseTableTab(label: 'Warranty Tracker'),
+                LaunchPhaseTableTab(label: 'Operations Cost'),
+                LaunchPhaseTableTab(label: 'Commercial Decision'),
+                LaunchPhaseTableTab(label: 'Recommendations'),
+              ],
+              builders: {
+                'Financial Metrics': _buildFinancialMetricsPanel,
+                'Warranty Tracker': _buildWarrantiesPanel,
+                'Operations Cost': _buildOpsCostsPanel,
+                'Commercial Decision': _buildDecisionPanel,
+                'Recommendations': _buildRecommendationsPanel,
+              },
+            ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Scope & Deliverable Reconciliation',
-              nextLabel: 'Next: Financial Closeout',
-              onBack: () => ActualVsPlannedGapAnalysisScreen.open(context),
-              onNext: () => FinancialCloseoutScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('commerce_viability'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('commerce_viability'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'commerce_viability'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'commerce_viability'),
             ),
             const SizedBox(height: 48),
           ],
@@ -126,7 +137,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             label: 'Active Warranties',
             value: '$activeWarranties',
             icon: Icons.verified_user_outlined,
-            emphasisColor: const Color(0xFF2563EB)),
+            emphasisColor: const Color(0xFFFFC812)),
         ExecutionMetricData(
             label: 'Monthly Ops Cost',
             value:
@@ -137,7 +148,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             label: 'Financial Metrics',
             value: '${_financialMetrics.length}',
             icon: Icons.analytics_outlined,
-            emphasisColor: const Color(0xFF8B5CF6)),
+            emphasisColor: const Color(0xFFB8860B)),
         ExecutionMetricData(
             label: 'Recommendations',
             value: '${_recommendations.length}',
@@ -149,6 +160,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
 
   Widget _buildFinancialMetricsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Financial Metrics',
       subtitle: 'ROI, payback period, total investment, and projected returns.',
       columns: const [
@@ -247,6 +259,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
 
   Widget _buildWarrantiesPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Warranty Tracker',
       subtitle:
           'Track warranty coverage for deliverables, equipment, and services.',
@@ -403,6 +416,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
 
   Widget _buildOpsCostsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Operations Cost Projection',
       subtitle: 'Monthly and annual ongoing costs post-launch.',
       columns: const [
@@ -557,6 +571,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
 
   Widget _buildRecommendationsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Recommendations',
       subtitle: 'Key actions for commercial sustainability.',
       columns: const [
@@ -700,7 +715,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -745,7 +760,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -789,7 +804,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -832,7 +847,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1115,7 +1130,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             pw.Text(
                 '$projectName — Generated ${now.toLocal().toIso8601String()}',
                 style:
-                    pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                    const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
             pw.SizedBox(height: 16),
 
             // Financial Metrics
@@ -1131,7 +1146,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1151,7 +1166,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1172,7 +1187,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1192,7 +1207,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
                     .toList(),
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: pw.TextStyle(fontSize: 9),
+                cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1231,7 +1246,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
   pw.Widget _pdfCell(String text) {
     return pw.Padding(
         padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(text, style: pw.TextStyle(fontSize: 9)));
+        child: pw.Text(text, style: const pw.TextStyle(fontSize: 9)));
   }
 
   String _s(dynamic v) => (v ?? '').toString().trim();
@@ -1259,7 +1274,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
           label: 'Vendors',
           value: '${projectData.vendors.length}',
           icon: Icons.inventory_2_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'under warranty',
         ),
         LaunchKpiTile(
@@ -1273,7 +1288,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
           label: 'Allowances',
           value: '${projectData.frontEndPlanning.allowanceItems.length}',
           icon: Icons.savings_outlined,
-          color: const Color(0xFF7C3AED),
+          color: const Color(0xFFB8860B),
           delta: 'contingency tracked',
         ),
         LaunchKpiTile(

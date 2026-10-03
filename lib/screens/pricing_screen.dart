@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/routing/app_router.dart';
-import 'package:ndu_project/screens/basic_plan_dashboard_screen.dart';
-import 'package:ndu_project/screens/program_dashboard_screen.dart';
-import 'package:ndu_project/screens/portfolio_dashboard_screen.dart';
-import 'package:ndu_project/screens/project_dashboard_screen.dart';
 import 'package:ndu_project/services/subscription_service.dart';
 import 'package:ndu_project/services/subscription_pricing_service.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
@@ -249,6 +245,11 @@ class _PricingScreenState extends State<PricingScreen> {
                       const SizedBox(height: 24),
                       _buildTrustStrip(),
                       const SizedBox(height: 28),
+                      // NDU Project Logo
+                      const Center(
+                        child: _NduProjectLogo(),
+                      ),
+                      const SizedBox(height: 24),
                       _buildPositioningSection(
                         isDesktop: isDesktop,
                         isTablet: isTablet,
@@ -1419,7 +1420,7 @@ class _PlanColumn extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: accent, width: 1.4),
+                  side: const BorderSide(color: accent, width: 1.4),
                 ),
                 textStyle:
                     const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
@@ -1922,6 +1923,69 @@ class _PlanPrice {
   final String period;
   final String? note;
   final String? originalPrice;
+}
+
+class _NduProjectLogo extends StatelessWidget {
+  const _NduProjectLogo();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.trending_up_rounded,
+                color: _themeColor,
+                size: 28,
+              ),
+              SizedBox(width: 6),
+              Text.rich(
+                TextSpan(
+                  text: 'NDU',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'PROJECT',
+                      style: TextStyle(
+                        color: _themeColor,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Navigate. Deliver. Upgrade',
+            style: TextStyle(
+              color: Color(0xFF909096),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 2.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 enum _PlanTier { basicProject, project, program, portfolio }

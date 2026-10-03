@@ -1,6 +1,7 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/models/risk_log.dart';
 import 'package:flutter/material.dart';
-import 'package:ndu_project/screens/launch_checklist_screen.dart';
-import 'package:ndu_project/screens/scope_completion_screen.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -17,6 +18,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class RiskTrackingScreen extends StatefulWidget {
   const RiskTrackingScreen({super.key});
 
@@ -203,7 +205,23 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  bool _autoGenerationTriggered = false;
  bool _isAutoGenerating = false;
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();/// Risk category options live in `models/risk_log.dart` as
+ /// `riskCategoryOptions`, so every screen that captures a risk offers the
+ /// same taxonomy.
+
+ /// Auto-assigns the next sequential risk id (R-001, R-002, ...) by scanning
+ /// the numeric suffixes of the risk ids already in the register.
+ String _nextRiskId() {
+   var max = 0;
+   for (final r in _risks) {
+     final m = RegExp(r'^R-(\d+)$').firstMatch(r.id.trim());
+     if (m != null) {
+       final v = int.tryParse(m.group(1)!);
+       if (v != null && v > max) max = v;
+     }
+   }
+   return 'R-${(max + 1).toString().padLeft(3, '0')}';
+ }
 
  @override
  void initState() {
@@ -253,7 +271,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  if (signals.isNotEmpty) {
  _signals = signals.map(
  (entry) => _RiskSignal(
- id: 'SIG-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+ id: shortId('SIG-'),
  title: entry.title,
  category: 'Leading',
  severity: 'Medium',
@@ -268,7 +286,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  if (plans.isNotEmpty) {
  _plans = plans.asMap().entries.map(
  (entry) => _MitigationPlan(
- id: 'MIT-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+ id: shortId('MIT-'),
  riskId: '—',
  strategy: entry.value.title,
  owner: 'Risk Lead',
@@ -289,54 +307,51 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  } finally {
  _isAutoGenerating = false;
  }
- }
+ }  @override
+  Widget build(BuildContext context) {
+    final isNarrow = MediaQuery.sizeOf(context).width < 980;
+    final padding = AppBreakpoints.pagePadding(context);
 
- @override
- Widget build(BuildContext context) {
- final isNarrow = MediaQuery.sizeOf(context).width < 980;
- final padding = AppBreakpoints.pagePadding(context);
-
- return ResponsiveScaffold(
- activeItemLabel: 'Risk Tracking',
- backgroundColor: Colors.white,
- floatingActionButton: const KazAiChatBubble(positioned: false),
- body: SingleChildScrollView(
- padding: EdgeInsets.all(padding),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- PlanningPhaseHeader(
- title: 'Risk Tracking',
-showNavigationButtons: false, onExportPdf: _exportPdf),
- const SizedBox(height: 16),
- _buildHeader(isNarrow),
- const SizedBox(height: 20),
- _buildStatsRow(isNarrow),
- const SizedBox(height: 24),
- Column(
- crossAxisAlignment: CrossAxisAlignment.stretch,
- children: [
- _buildRiskRegister(),
- const SizedBox(height: 20),
- _buildMitigationPanel(),
- const SizedBox(height: 20),
- _buildSignalsPanel(),
- const SizedBox(height: 20),
- _buildEscalationPanel(),
- ],
- ),
- const SizedBox(height: 24),
- LaunchPhaseNavigation(
- backLabel: 'Back: Start-up / Launch Checklist',
- nextLabel: 'Next: Scope Completion',
- onBack: () => LaunchChecklistScreen.open(context),
- onNext: () => ScopeCompletionScreen.open(context),
- ),
- ],
- ),
- ),
- );
- }
+    return ResponsiveScaffold(
+      activeItemLabel: 'Risk Tracking',
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      floatingActionButton: const KazAiChatBubble(positioned: false),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 0, vertical: padding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              child: PlanningPhaseHeader(
+                title: 'Risk Tracking',
+                showNavigationButtons: false, onExportPdf: _exportPdf),
+            ),            const SizedBox(height: 16),
+            // "EXECUTION SAFETY / Risk Tracking" hero header and the
+            // four stat cards (Active risks / Mitigation coverage /
+            // Escalations / Exposure score) removed per user request.
+            const SizedBox(height: 8),            _buildRiskRegister(),
+            const SizedBox(height: 20),
+            _buildMitigationPanel(),
+            const SizedBox(height: 20),
+            _buildSignalsPanel(),
+            const SizedBox(height: 20),
+            _buildEscalationPanel(),
+            const SizedBox(height: 24),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              child: LaunchPhaseNavigation(
+                backLabel: PlanningPhaseNavigation.backLabel('risk_tracking'),
+                nextLabel: PlanningPhaseNavigation.nextLabel('risk_tracking'),
+                onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'risk_tracking'),
+                onNext: () => PlanningPhaseNavigation.goToNext(context, 'risk_tracking'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
  // ─── Header ───────────────────────────────────────────────────────────────
 
@@ -357,9 +372,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  ),
  const SizedBox(height: 10),
- Row(
+ const Row(
  children: [
- const Expanded(
+ Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -650,8 +665,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
   }
   return FullScreenTableWrapper(
    title: 'Risk register',
-   child: buildTable(bc),
    tableBuilder: buildTable,
+   child: buildTable(bc),
   );
  })
  );
@@ -789,7 +804,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return DataRow(cells: [
  DataCell(Text(plan.riskId,
  style: const TextStyle(
- fontSize: 12, color: Color(0xFF6366F1)))),
+ fontSize: 12, color: Color(0xFFB8860B)))),
  DataCell(SizedBox(
  width: 220,
  child: Text(plan.strategy,
@@ -820,8 +835,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
   }
   return FullScreenTableWrapper(
    title: 'Mitigation coverage',
-   child: buildTable(bc),
    tableBuilder: buildTable,
+   child: buildTable(bc),
   );
  })
  );
@@ -885,7 +900,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Color _coverageColor(int pct) {
  if (pct >= 75) return const Color(0xFF10B981);
- if (pct >= 50) return const Color(0xFF0EA5E9);
+ if (pct >= 50) return const Color(0xFFFFC812);
  if (pct >= 25) return const Color(0xFFF59E0B);
  return const Color(0xFFEF4444);
  }
@@ -925,8 +940,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final (color, icon) = switch (status) {
  'On track' => (const Color(0xFF10B981), Icons.check_circle_outline),
  'At risk' => (const Color(0xFFEF4444), Icons.warning_amber),
- 'In progress' => (const Color(0xFF0EA5E9), Icons.sync),
- 'Completed' => (const Color(0xFF6366F1), Icons.task_alt),
+ 'In progress' => (const Color(0xFFFFC812), Icons.sync),
+ 'Completed' => (const Color(0xFFB8860B), Icons.task_alt),
  'Not started' => (const Color(0xFF94A3B8), Icons.radio_button_unchecked),
  _ => (const Color(0xFF64748B), Icons.help_outline),
  };
@@ -1073,7 +1088,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  )),
  DataCell(Text(signal.linkedRisk,
  style: const TextStyle(
- fontSize: 11, color: Color(0xFF6366F1), fontWeight: FontWeight.w600))),
+ fontSize: 11, color: Color(0xFFB8860B), fontWeight: FontWeight.w600))),
  DataCell(_trendChip(signal.trend)),
  DataCell(Text(signal.detectedDate,
  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
@@ -1091,8 +1106,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
   }
   return FullScreenTableWrapper(
    title: 'Risk signals',
-   child: buildTable(bc),
    tableBuilder: buildTable,
+   child: buildTable(bc),
   );
  })
  );
@@ -1130,7 +1145,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _signalCategoryChip(String category) {
  final isLeading = category == 'Leading';
- final color = isLeading ? const Color(0xFF0EA5E9) : const Color(0xFF8B5CF6);
+ final color = isLeading ? const Color(0xFFFFC812) : const Color(0xFFB8860B);
  final icon = isLeading ? Icons.trending_up : Icons.history;
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1200,7 +1215,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final (color, icon) = switch (trend) {
  'Increasing' => (const Color(0xFFEF4444), Icons.arrow_upward),
  'Decreasing' => (const Color(0xFF10B981), Icons.arrow_downward),
- 'Stable' => (const Color(0xFF0EA5E9), Icons.horizontal_rule),
+ 'Stable' => (const Color(0xFFFFC812), Icons.horizontal_rule),
  _ => (const Color(0xFF64748B), Icons.remove),
  };
  return Container(
@@ -1317,7 +1332,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  DataCell(Text(esc.responsibleParty,
  style: const TextStyle(fontSize: 12, color: Color(0xFF374151)))),
  DataCell(Text(esc.escalationTarget,
- style: const TextStyle(fontSize: 11, color: Color(0xFF6366F1), fontWeight: FontWeight.w600))),
+ style: const TextStyle(fontSize: 11, color: Color(0xFFB8860B), fontWeight: FontWeight.w600))),
  DataCell(_escalationStatusChip(esc.status)),
  DataCell(_buildEscalationReadinessCell(esc)),
  DataCell(_responseWindowChip(esc.responseWindow)),
@@ -1344,8 +1359,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
   }
   return FullScreenTableWrapper(
    title: 'Escalation readiness',
-   child: buildTable(bc),
    tableBuilder: buildTable,
+   child: buildTable(bc),
   );
  })
  );
@@ -1409,7 +1424,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Color _readinessColor(int pct) {
  if (pct >= 80) return const Color(0xFF10B981);
- if (pct >= 60) return const Color(0xFF0EA5E9);
+ if (pct >= 60) return const Color(0xFFFFC812);
  if (pct >= 40) return const Color(0xFFF59E0B);
  return const Color(0xFFEF4444);
  }
@@ -1417,7 +1432,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _escalationLevelChip(String level) {
  final (color, icon) = switch (level) {
  'L1-Operational' => (const Color(0xFF10B981), Icons.support_agent),
- 'L2-Management' => (const Color(0xFF0EA5E9), Icons.manage_accounts),
+ 'L2-Management' => (const Color(0xFFFFC812), Icons.manage_accounts),
  'L3-Executive' => (const Color(0xFFF59E0B), Icons.business_center),
  'L4-Board/C-Suite' => (const Color(0xFFEF4444), Icons.account_balance),
  _ => (const Color(0xFF64748B), Icons.help_outline),
@@ -1445,7 +1460,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final (color, icon) = switch (status) {
  'Ready' => (const Color(0xFF10B981), Icons.check_circle_outline),
  'Pending' => (const Color(0xFFF59E0B), Icons.schedule),
- 'In progress' => (const Color(0xFF0EA5E9), Icons.sync),
+ 'In progress' => (const Color(0xFFFFC812), Icons.sync),
  'Escalated' => (const Color(0xFFEF4444), Icons.notifications_active),
  'Deferred' => (const Color(0xFF94A3B8), Icons.pause_circle_outline),
  _ => (const Color(0xFF64748B), Icons.help_outline),
@@ -1475,7 +1490,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ? const Color(0xFFEF4444)
  : hrs <= 12
  ? const Color(0xFFF59E0B)
- : const Color(0xFF0EA5E9);
+ : const Color(0xFFFFC812);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
@@ -1498,12 +1513,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── CRUD: Escalation Readiness ────────────────────────────────────────────
 
  void _openAddEscalationDialog() {
- final eventController = TextEditingController();
- final triggerController = TextEditingController();
- final responsibleController = TextEditingController();
- final targetController = TextEditingController();
- final windowController = TextEditingController();
- final decisionController = TextEditingController();
+ final eventController = SpellCheckTextEditingController();
+ final triggerController = SpellCheckTextEditingController();
+ final responsibleController = SpellCheckTextEditingController();
+ final targetController = SpellCheckTextEditingController();
+ final windowController = SpellCheckTextEditingController();
+ final decisionController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
  var selectedLevel = 'L2-Management';
  var selectedStatus = 'Pending';
@@ -1610,7 +1625,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (formKey.currentState?.validate() ?? false) {
  setState(() {
  _escalations.add(_EscalationReadiness(
- id: 'ESC-${DateTime.now().millisecondsSinceEpoch.toString().substring(7, 13)}',
+ id: shortId('ESC-'),
  event: eventController.text.trim(),
  level: selectedLevel,
  triggerCondition: triggerController.text.trim(),
@@ -1644,12 +1659,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _openEditEscalationDialog(_EscalationReadiness esc) {
- final eventController = TextEditingController(text: esc.event);
- final triggerController = TextEditingController(text: esc.triggerCondition);
- final responsibleController = TextEditingController(text: esc.responsibleParty);
- final targetController = TextEditingController(text: esc.escalationTarget);
- final windowController = TextEditingController(text: esc.responseWindow);
- final decisionController = TextEditingController(text: esc.decisionRequired);
+ final eventController = SpellCheckTextEditingController(text: esc.event);
+ final triggerController = SpellCheckTextEditingController(text: esc.triggerCondition);
+ final responsibleController = SpellCheckTextEditingController(text: esc.responsibleParty);
+ final targetController = SpellCheckTextEditingController(text: esc.escalationTarget);
+ final windowController = SpellCheckTextEditingController(text: esc.responseWindow);
+ final decisionController = SpellCheckTextEditingController(text: esc.decisionRequired);
  final formKey = GlobalKey<FormState>();
  var selectedLevel = esc.level;
  var selectedStatus = esc.status;
@@ -1830,7 +1845,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final color = label == 'Escalated'
  ? const Color(0xFFEF4444)
  : label == 'Mitigating'
- ? const Color(0xFF0EA5E9)
+ ? const Color(0xFFFFC812)
  : label == 'Monitoring'
  ? const Color(0xFFF59E0B)
  : const Color(0xFF10B981);
@@ -1867,14 +1882,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── CRUD: Risk Register ─────────────────────────────────────────────────
 
  void _openAddRiskDialog() {
- final idController = TextEditingController();
- final titleController = TextEditingController();
- final ownerController = TextEditingController();
- final probabilityController = TextEditingController();
- final nextReviewController = TextEditingController();
+ final titleController = SpellCheckTextEditingController();
+ final ownerController = SpellCheckTextEditingController();
+ final probabilityController = SpellCheckTextEditingController();
+ final nextReviewController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
  var selectedImpact = 'High';
  var selectedStatus = 'Mitigating';
+ var selectedCategory = 'Technical';
 
  showDialog(
  context: context,
@@ -1890,16 +1905,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  mainAxisSize: MainAxisSize.min,
  children: [
  VoiceTextFormField(
- controller: idController,
- decoration: const InputDecoration(
- labelText: 'Risk ID', hintText: 'e.g., R-050'),
- validator: (value) =>
- value == null || value.trim().isEmpty
- ? 'Enter an ID'
- : null,
- ),
- const SizedBox(height: 12),
- VoiceTextFormField(
  controller: titleController,
  decoration:
  const InputDecoration(labelText: 'Risk title'),
@@ -1912,6 +1917,21 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  VoiceTextFormField(
  controller: ownerController,
  decoration: const InputDecoration(labelText: 'Owner'),
+ ),
+ const SizedBox(height: 12),
+ DropdownButtonFormField<String>(
+ initialValue: selectedCategory,
+ items: riskCategoryOptions
+ .map((category) => DropdownMenuItem(
+ value: category, child: Text(category)))
+ .toList(),
+ onChanged: (value) {
+ if (value != null) {
+ setDialogState(() => selectedCategory = value);
+ }
+ },
+ decoration:
+ const InputDecoration(labelText: 'Category'),
  ),
  const SizedBox(height: 12),
  VoiceTextFormField(
@@ -1975,7 +1995,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() {
  _risks.add(
  _RiskItem(
- idController.text.trim(),
+ // Risk ids are auto-assigned internally (R-001, R-002, ...).
+ _nextRiskId(),
  titleController.text.trim(),
  ownerController.text.trim().isEmpty
  ? 'TBD'
@@ -1988,9 +2009,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  nextReviewController.text.trim().isEmpty
  ? 'TBD'
  : nextReviewController.text.trim(),
+ selectedCategory,
  ),
  );
  });
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text('Risk added successfully.'),
+ behavior: SnackBarBehavior.floating,
+ backgroundColor: Color(0xFF111827),
+ duration: Duration(seconds: 3),
+ ),
+ );
  Navigator.of(context).pop();
  }
  },
@@ -2002,7 +2032,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  },
  ).then((_) {
- idController.dispose();
  titleController.dispose();
  ownerController.dispose();
  probabilityController.dispose();
@@ -2011,13 +2040,17 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _openEditRiskDialog(_RiskItem risk) {
- final titleController = TextEditingController(text: risk.title);
- final ownerController = TextEditingController(text: risk.owner);
- final probabilityController = TextEditingController(text: risk.probability);
- final nextReviewController = TextEditingController(text: risk.nextReview);
+ final titleController = SpellCheckTextEditingController(text: risk.title);
+ final ownerController = SpellCheckTextEditingController(text: risk.owner);
+ final probabilityController = SpellCheckTextEditingController(text: risk.probability);
+ final nextReviewController = SpellCheckTextEditingController(text: risk.nextReview);
  final formKey = GlobalKey<FormState>();
  var selectedImpact = risk.impact;
  var selectedStatus = risk.status;
+ var selectedCategory =
+     riskCategoryOptions.contains(risk.category)
+         ? risk.category
+         : 'Technical';
 
  showDialog(
  context: context,
@@ -2067,6 +2100,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  decoration: const InputDecoration(labelText: 'Status'),
  ),
  const SizedBox(height: 12),
+ DropdownButtonFormField<String>(
+ initialValue: selectedCategory,
+ items: riskCategoryOptions
+ .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+ .toList(),
+ onChanged: (v) { if (v != null) setDialogState(() => selectedCategory = v); },
+ decoration: const InputDecoration(labelText: 'Category'),
+ ),
+ const SizedBox(height: 12),
  VoiceTextFormField(
  controller: nextReviewController,
  decoration: const InputDecoration(labelText: 'Next review'),
@@ -2091,6 +2133,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  selectedImpact,
  selectedStatus,
  nextReviewController.text.trim(),
+ selectedCategory,
  );
  }
  });
@@ -2137,11 +2180,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── CRUD: Mitigation Plans ───────────────────────────────────────────────
 
  void _openAddMitigationDialog() {
- final idController = TextEditingController();
- final riskIdController = TextEditingController();
- final strategyController = TextEditingController();
- final ownerController = TextEditingController();
- final targetDateController = TextEditingController();
+ final idController = SpellCheckTextEditingController();
+ final riskIdController = SpellCheckTextEditingController();
+ final strategyController = SpellCheckTextEditingController();
+ final ownerController = SpellCheckTextEditingController();
+ final targetDateController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
  var selectedCategory = 'General';
  var selectedStatus = 'Not started';
@@ -2293,9 +2336,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _openEditMitigationDialog(_MitigationPlan plan) {
- final strategyController = TextEditingController(text: plan.strategy);
- final ownerController = TextEditingController(text: plan.owner);
- final targetDateController = TextEditingController(text: plan.targetDate);
+ final strategyController = SpellCheckTextEditingController(text: plan.strategy);
+ final ownerController = SpellCheckTextEditingController(text: plan.owner);
+ final targetDateController = SpellCheckTextEditingController(text: plan.targetDate);
  final formKey = GlobalKey<FormState>();
  var selectedCategory = plan.category;
  var selectedStatus = plan.status;
@@ -2457,9 +2500,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── CRUD: Risk Signals ──────────────────────────────────────────────────
 
  void _openAddSignalDialog() {
- final titleController = TextEditingController();
- final descriptionController = TextEditingController();
- final linkedRiskController = TextEditingController();
+ final titleController = SpellCheckTextEditingController();
+ final descriptionController = SpellCheckTextEditingController();
+ final linkedRiskController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
  var selectedCategory = 'Leading';
  var selectedSeverity = 'Medium';
@@ -2547,7 +2590,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (formKey.currentState?.validate() ?? false) {
  setState(() {
  _signals.add(_RiskSignal(
- id: 'SIG-${DateTime.now().millisecondsSinceEpoch.toString().substring(7, 13)}',
+ id: shortId('SIG-'),
  title: titleController.text.trim(),
  category: selectedCategory,
  severity: selectedSeverity,
@@ -2576,9 +2619,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _openEditSignalDialog(_RiskSignal signal) {
- final titleController = TextEditingController(text: signal.title);
- final descriptionController = TextEditingController(text: signal.description);
- final linkedRiskController = TextEditingController(text: signal.linkedRisk);
+ final titleController = SpellCheckTextEditingController(text: signal.title);
+ final descriptionController = SpellCheckTextEditingController(text: signal.description);
+ final linkedRiskController = SpellCheckTextEditingController(text: signal.linkedRisk);
  final formKey = GlobalKey<FormState>();
  var selectedCategory = signal.category;
  var selectedSeverity = signal.severity;
@@ -2725,8 +2768,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  screenTitle: 'Risk Tracking',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_risk_tracking_notes'] ?? 'No data recorded.'),
  ],
@@ -2756,7 +2799,7 @@ class _PanelShell extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2822,7 +2865,8 @@ class _EscalationReadiness {
 
 class _RiskItem {
   const _RiskItem(this.id, this.title, this.owner, this.probability,
-      this.impact, this.status, this.nextReview);
+      this.impact, this.status, this.nextReview,
+      [this.category = 'Technical']);
 
   final String id;
   final String title;
@@ -2831,6 +2875,10 @@ class _RiskItem {
   final String impact;
   final String status;
   final String nextReview;
+
+  /// Standard risk taxonomy (Scope/Schedule/Cost/...) used by the
+  /// add/edit dialogs; defaults to 'Technical'.
+  final String category;
 }
 
 class _RiskSignal {

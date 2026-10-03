@@ -12,6 +12,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class ExecutionPlanAgileDeliveryPlanScreen extends StatelessWidget {
   const ExecutionPlanAgileDeliveryPlanScreen({super.key});
@@ -27,7 +28,7 @@ class ExecutionPlanAgileDeliveryPlanScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Agile Delivery Plan',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -58,7 +59,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Agile Delivery Plan',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
     ],
   );
@@ -188,7 +189,7 @@ class PlanDecisionSectionState extends State<PlanDecisionSection> {
   void initState() {
     super.initState();
     for (final field in widget.fields) {
-      _controllers[field.keyName] = TextEditingController();
+      _controllers[field.keyName] = SpellCheckTextEditingController();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadFromFirestore());
   }
@@ -200,7 +201,7 @@ class PlanDecisionSectionState extends State<PlanDecisionSection> {
       screenTitle: 'Agile Delivery Plan',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text(
             'Notes',
@@ -482,7 +483,7 @@ class _PlanDecisionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
       decoration: BoxDecoration(
-        color: Color(0xFFBDBDBD),
+        color: const Color(0xFFBDBDBD),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -579,8 +580,8 @@ class _PlanInputCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0F000000), blurRadius: 12, offset: Offset(0, 6)),
         ],

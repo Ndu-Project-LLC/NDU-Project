@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// TEAM HANDOVER CHECKLIST
@@ -33,13 +34,13 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
 
   // Checklist items: category -> list of items (each item: {text, checked})
   final Map<String, List<_ChecklistItem>> _checklist = {};
-  final TextEditingController _summaryController = TextEditingController();
-  final TextEditingController _teamMemberController = TextEditingController();
+  final TextEditingController _summaryController = SpellCheckTextEditingController();
+  final TextEditingController _teamMemberController = SpellCheckTextEditingController();
   final TextEditingController _receivingMemberController =
-      TextEditingController();
+      SpellCheckTextEditingController();
   final TextEditingController _projectManagerController =
-      TextEditingController();
-  final TextEditingController _dateController = TextEditingController();
+      SpellCheckTextEditingController();
+  final TextEditingController _dateController = SpellCheckTextEditingController();
 
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
 
@@ -211,7 +212,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
     final double horizontalPadding = isMobile ? 18 : 32;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,7 +279,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFF9A8D4)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,11 +289,11 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEC4899).withValues(alpha: 0.15),
+                  color: const Color(0xFFD97706).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.swap_horiz,
-                    color: Color(0xFFDB2777), size: 22),
+                    color: Color(0xFFD97706), size: 22),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -374,7 +375,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
               valueColor: AlwaysStoppedAnimation<Color>(
                 percent == 100
                     ? const Color(0xFF10B981)
-                    : const Color(0xFFEC4899),
+                    : const Color(0xFFD97706),
               ),
             ),
           ),
@@ -550,7 +551,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Color(0xFFEC4899)),
+                borderSide: BorderSide(color: Color(0xFFD97706)),
               ),
               contentPadding: EdgeInsets.all(12),
             ),
@@ -568,7 +569,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFFCD34D)),
+        border: Border.all(color: const Color(0xFFFCD34D)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

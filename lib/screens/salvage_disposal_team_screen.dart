@@ -1,7 +1,6 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ndu_project/screens/deliver_project_closure_screen.dart';
-import 'package:ndu_project/screens/identify_staff_ops_team_screen.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
@@ -18,8 +17,8 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
-import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class SalvageDisposalTeamScreen extends StatefulWidget {
   const SalvageDisposalTeamScreen({super.key});
@@ -63,40 +62,40 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
  bool _isLoadingCompliance = false;
 
  static const List<_StatItem> _defaultOverviewStats = [
- _StatItem('Team Members', '5 active', Icons.people, Colors.blue),
- _StatItem('Assets Pending', '12 items', Icons.inventory, Colors.orange),
+ _StatItem('Team Members', '5 active', Icons.people, Color(0xFFF59E0B)),
+ _StatItem('Assets Pending', '12 items', Icons.inventory, Color(0xFFF59E0B)),
  _StatItem(
- 'Total Salvage Value', '\$73,350', Icons.attach_money, Colors.green),
- _StatItem('Disposal Progress', '68%', Icons.pie_chart, Color(0xFF8B5CF6)),
- _StatItem('Compliance Score', '94/100', Icons.verified, Colors.teal),
+ 'Total Salvage Value', '\$73,350', Icons.attach_money, Color(0xFFF59E0B)),
+ _StatItem('Disposal Progress', '68%', Icons.pie_chart, Color(0xFFF59E0B)),
+ _StatItem('Compliance Score', '94/100', Icons.verified, Color(0xFFF59E0B)),
  ];
 
  static const List<_StatItem> _defaultInventoryStats = [
  _StatItem(
- 'Tracked Assets', '86', Icons.inventory_2_outlined, Color(0xFF0284C7)),
+ 'Tracked Assets', '86', Icons.inventory_2_outlined, Color(0xFFFFC812)),
  _StatItem('Ready for Disposal', '24', Icons.fact_check_outlined,
  Color(0xFF10B981)),
  _StatItem('Estimated Value', '\$128.4K', Icons.savings_outlined,
  Color(0xFF16A34A)),
- _StatItem('Reuse Potential', '41%', Icons.autorenew, Color(0xFF7C3AED)),
+ _StatItem('Reuse Potential', '41%', Icons.autorenew, Color(0xFFB8860B)),
  ];
 
  static const List<_StatItem> _defaultQueueStats = [
- _StatItem('Queue Items', '18', Icons.list_alt_outlined, Color(0xFF0EA5E9)),
+ _StatItem('Queue Items', '18', Icons.list_alt_outlined, Color(0xFFFFC812)),
  _StatItem('High Priority', '6', Icons.priority_high, Color(0xFFEF4444)),
  _StatItem(
  'Auction Value', '\$52.7K', Icons.sell_outlined, Color(0xFFF59E0B)),
  _StatItem(
- 'Compliance Ready', '82%', Icons.verified_outlined, Color(0xFF14B8A6)),
+ 'Compliance Ready', '82%', Icons.verified_outlined, Color(0xFFD97706)),
  ];
 
  static const List<_StatItem> _defaultAllocationStats = [
  _StatItem(
- 'Active Specialists', '12', Icons.groups_outlined, Color(0xFF0EA5E9)),
+ 'Active Specialists', '12', Icons.groups_outlined, Color(0xFFFFC812)),
  _StatItem(
- 'Utilization', '74%', Icons.donut_large_outlined, Color(0xFF6366F1)),
+ 'Utilization', '74%', Icons.donut_large_outlined, Color(0xFFB8860B)),
  _StatItem(
- 'Open Roles', '3', Icons.person_search_outlined, Color(0xFFFB7185)),
+ 'Open Roles', '3', Icons.person_search_outlined, Color(0xFFFBBF24)),
  _StatItem('Training Due', '2', Icons.school_outlined, Color(0xFFF59E0B)),
  ];
 
@@ -119,7 +118,7 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
  _InventoryItem('SVG-023', 'Operations Console', 'Hardware', 'Good',
  'Control Room', 'Pending', '\$6,750', Colors.orange),
  _InventoryItem('SVG-031', 'Hazmat Storage', 'Safety', 'Good', 'Warehouse B',
- 'Review', '\$4,200', Colors.blue),
+ 'Review', '\$4,200', Color(0xFFFFC812)),
  _InventoryItem('SVG-044', 'Generator Unit', 'Power', 'Fair', 'Substation',
  'Flagged', '\$12,300', Colors.red),
  _InventoryItem('SVG-052', 'Network Switches', 'Electronics', 'Excellent',
@@ -165,10 +164,10 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
  ];
 
  static const List<_CapacityItem> _defaultCapacityItems = [
- _CapacityItem('Field Ops', 0.78, Colors.blue),
+ _CapacityItem('Field Ops', 0.78, Color(0xFFFFC812)),
  _CapacityItem('Compliance', 0.64, Colors.green),
  _CapacityItem('Logistics', 0.52, Colors.orange),
- _CapacityItem('Reporting', 0.83, Colors.purple),
+ _CapacityItem('Reporting', 0.83, Color(0xFFB8860B)),
  ];
 
  static const List<_ComplianceRegulationRow> _defaultComplianceRows = [
@@ -384,7 +383,7 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
  screenTitle: 'Salvage & Disposal Team',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['salvage_disposal_team_screen'] ?? 'No data recorded.'),
  ],
@@ -892,7 +891,7 @@ void _applyDefaults() {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Salvage and/or Disposal Plan',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
  padding: EdgeInsets.all(padding),
@@ -910,10 +909,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildTabContent(isNarrow),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Identify & Staff Ops Team',
- nextLabel: 'Next: Deliver Project Closure',
- onBack: () => IdentifyStaffOpsTeamScreen.open(context),
- onNext: () => DeliverProjectClosureScreen.open(context),
+ backLabel: PlanningPhaseNavigation.backLabel('salvage_disposal_team'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('salvage_disposal_team'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'salvage_disposal_team'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'salvage_disposal_team'),
  ),
  ],
  ),
@@ -988,7 +987,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
  decoration: BoxDecoration(
  color:
- isSelected ? const Color(0xFF0EA5E9) : Colors.transparent,
+ isSelected ? const Color(0xFFFFC812) : Colors.transparent,
  borderRadius: BorderRadius.circular(20),
  border: isSelected
  ? null
@@ -1160,7 +1159,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
  decoration: BoxDecoration(
- color: const Color(0xFF0EA5E9),
+ color: const Color(0xFFFFC812),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -1323,8 +1322,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(10),
  ),
- foregroundColor: const Color(0xFF2563EB),
- side: const BorderSide(color: Color(0xFF93C5FD)),
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFFC812)),
  ),
  ),
  ],
@@ -1437,7 +1436,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  statusColor = Colors.red;
  break;
  default:
- statusColor = Colors.blue;
+ statusColor = const Color(0xFFFFC812);
  }
 
  return DataRow(
@@ -1557,7 +1556,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  statusColor = Colors.red;
  break;
  default:
- statusColor = Colors.blue;
+ statusColor = const Color(0xFFFFC812);
  }
 
  return DataRow(
@@ -1622,20 +1621,20 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final projectId = _getProjectId();
  if (projectId == null) return;
 
- final assetIdController = TextEditingController(text: item.assetId);
- final nameController = TextEditingController(text: item.name);
- final categoryController = TextEditingController(text: item.category);
- final conditionController = TextEditingController(text: item.condition);
- final locationController = TextEditingController(text: item.location);
- final statusController = TextEditingController(text: item.status);
- final valueController = TextEditingController(text: item.estimatedValue);
+ final assetIdController = SpellCheckTextEditingController(text: item.assetId);
+ final nameController = SpellCheckTextEditingController(text: item.name);
+ final categoryController = SpellCheckTextEditingController(text: item.category);
+ final conditionController = SpellCheckTextEditingController(text: item.condition);
+ final locationController = SpellCheckTextEditingController(text: item.location);
+ final statusController = SpellCheckTextEditingController(text: item.status);
+ final valueController = SpellCheckTextEditingController(text: item.estimatedValue);
 
  showDialog(
  context: context,
  barrierDismissible: true,
  builder: (ctx) => LaunchModalShell(
  icon: Icons.edit_rounded,
- accent: const Color(0xFF0EA5E9),
+ accent: const Color(0xFFFFC812),
  title: 'Edit Inventory Item',
  subtitle: 'Update the salvage inventory item details.',
  body: Column(
@@ -1753,20 +1752,20 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return;
  }
 
- final assetIdController = TextEditingController();
- final nameController = TextEditingController();
- final categoryController = TextEditingController();
- final conditionController = TextEditingController();
- final locationController = TextEditingController();
- final statusController = TextEditingController(text: 'Pending');
- final valueController = TextEditingController();
+ final assetIdController = SpellCheckTextEditingController();
+ final nameController = SpellCheckTextEditingController();
+ final categoryController = SpellCheckTextEditingController();
+ final conditionController = SpellCheckTextEditingController();
+ final locationController = SpellCheckTextEditingController();
+ final statusController = SpellCheckTextEditingController(text: 'Pending');
+ final valueController = SpellCheckTextEditingController();
 
  showDialog(
  context: context,
  barrierDismissible: true,
  builder: (ctx) => LaunchModalShell(
  icon: Icons.inventory_2_rounded,
- accent: const Color(0xFF0EA5E9),
+ accent: const Color(0xFFFFC812),
  title: 'Add Inventory Item',
  subtitle: 'Capture a new salvageable inventory item.',
  body: Column(
@@ -1954,7 +1953,7 @@ Execution snapshot:
  barrierDismissible: true,
  builder: (dialogContext) => LaunchModalShell(
  icon: Icons.insights_rounded,
- accent: const Color(0xFF0EA5E9),
+ accent: const Color(0xFFFFC812),
  title: 'Salvage & Disposal Snapshot',
  subtitle: 'A quick summary of execution readiness.',
  body: Text(
@@ -1998,11 +1997,11 @@ Execution snapshot:
  }
 
  final isEdit = member != null;
- final nameController = TextEditingController(text: member?.name ?? '');
- final roleController = TextEditingController(text: member?.role ?? '');
- final emailController = TextEditingController(text: member?.email ?? '');
+ final nameController = SpellCheckTextEditingController(text: member?.name ?? '');
+ final roleController = SpellCheckTextEditingController(text: member?.role ?? '');
+ final emailController = SpellCheckTextEditingController(text: member?.email ?? '');
  final itemsHandledController =
- TextEditingController(text: (member?.itemsHandled ?? 0).toString());
+ SpellCheckTextEditingController(text: (member?.itemsHandled ?? 0).toString());
  var selectedStatus = member?.status ?? 'Active';
 
  showDialog<void>(
@@ -2208,22 +2207,22 @@ Execution snapshot:
  }
 
  final isEdit = item != null;
- final assetIdController = TextEditingController(text: item?.assetId ?? '');
- final nameController = TextEditingController(text: item?.name ?? '');
+ final assetIdController = SpellCheckTextEditingController(text: item?.assetId ?? '');
+ final nameController = SpellCheckTextEditingController(text: item?.name ?? '');
  final categoryController =
- TextEditingController(text: item?.category ?? '');
+ SpellCheckTextEditingController(text: item?.category ?? '');
  final conditionController =
- TextEditingController(text: item?.condition ?? '');
+ SpellCheckTextEditingController(text: item?.condition ?? '');
  final locationController =
- TextEditingController(text: item?.location ?? '');
+ SpellCheckTextEditingController(text: item?.location ?? '');
  final valueController =
- TextEditingController(text: item?.estimatedValue ?? '');
+ SpellCheckTextEditingController(text: item?.estimatedValue ?? '');
  final disposalCostController =
- TextEditingController(text: item?.disposalCost ?? '');
+ SpellCheckTextEditingController(text: item?.disposalCost ?? '');
  final assignedToController =
- TextEditingController(text: item?.assignedTo ?? '');
+ SpellCheckTextEditingController(text: item?.assignedTo ?? '');
  final targetDateController =
- TextEditingController(text: item?.targetDate ?? '');
+ SpellCheckTextEditingController(text: item?.targetDate ?? '');
  var selectedStatus = item?.status ?? 'Pending Review';
  var selectedPriority = item?.priority ?? 'Medium';
  var selectedDisposalMethod = item?.disposalMethod.isNotEmpty == true ? item!.disposalMethod : 'Auction';
@@ -2234,7 +2233,7 @@ Execution snapshot:
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => LaunchModalShell(
  icon: isEdit ? Icons.edit_rounded : Icons.recycling_rounded,
- accent: const Color(0xFF0EA5E9),
+ accent: const Color(0xFFFFC812),
  title: isEdit ? 'Edit Disposal Item' : 'Add Disposal Item',
  subtitle: isEdit
  ? 'Update the disposal queue item details.'
@@ -2467,7 +2466,7 @@ Execution snapshot:
  ? 'Disposal item updated successfully.'
  : 'Disposal item added successfully.',
  ),
- backgroundColor: const Color(0xFF0EA5E9),
+ backgroundColor: const Color(0xFFFFC812),
  behavior: SnackBarBehavior.floating,
  ),
  );
@@ -2547,11 +2546,11 @@ Execution snapshot:
  child: const Column(
  children: [
  _SignalBar(
- label: 'Electronics', value: 0.42, color: Color(0xFF0EA5E9)),
+ label: 'Electronics', value: 0.42, color: Color(0xFFFFC812)),
  _SignalBar(
  label: 'Infrastructure',
  value: 0.28,
- color: Color(0xFF6366F1)),
+ color: Color(0xFFB8860B)),
  _SignalBar(
  label: 'Safety', value: 0.16, color: Color(0xFFF59E0B)),
  _SignalBar(
@@ -2655,7 +2654,7 @@ Execution snapshot:
  final isStacked = constraints.maxWidth < 700;
  final lanes = [
  _buildQueueLane('Review', const Color(0xFFFDE68A), items),
- _buildQueueLane('Approved', const Color(0xFFBFDBFE), items),
+ _buildQueueLane('Approved', const Color(0xFFFDE68A), items),
  _buildQueueLane('Auction', const Color(0xFFBBF7D0), items),
  ];
 
@@ -2747,7 +2746,7 @@ Execution snapshot:
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w600,
- color: Color(0xFF0EA5E9))),
+ color: Color(0xFFFFC812))),
  const SizedBox(height: 4),
  Text(item.title,
  style:
@@ -2855,8 +2854,8 @@ Execution snapshot:
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(10),
  ),
- foregroundColor: const Color(0xFF2563EB),
- side: const BorderSide(color: Color(0xFF93C5FD)),
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFFC812)),
  ),
  ),
  ],
@@ -3154,7 +3153,7 @@ Execution snapshot:
  style: TextStyle(fontSize: 12, color: Colors.grey[600])),
  const SizedBox(height: 16),
  _buildCoverageRow(
- 'Field Ops', 'Mon - Thu', 'On-site', const Color(0xFF38BDF8)),
+ 'Field Ops', 'Mon - Thu', 'On-site', const Color(0xFFFFC812)),
  _buildCoverageRow(
  'Compliance', 'Tue - Fri', 'Remote', const Color(0xFF34D399)),
  _buildCoverageRow(
@@ -3361,14 +3360,14 @@ Execution snapshot:
  children: [
  CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFF0EA5E9)
+ backgroundColor: const Color(0xFFFFC812)
  .withValues(alpha: 0.1),
  child: Text(
  initial,
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: Color(0xFF0EA5E9),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -3491,14 +3490,14 @@ Execution snapshot:
  children: [
  CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFF0EA5E9)
- .withOpacity(0.1),
+ backgroundColor: const Color(0xFFFFC812)
+ .withValues(alpha: 0.1),
  child: Text(
  initial,
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: Color(0xFF0EA5E9),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -3745,7 +3744,7 @@ Execution snapshot:
  _showDisposalItemDetailDialog(context, item),
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
- color: const Color(0xFF0EA5E9),
+ color: const Color(0xFFFFC812),
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, size: 16),
@@ -3802,10 +3801,10 @@ Execution snapshot:
  rows: items.isEmpty
  ? [
  DataRow(cells: [
- DataCell(Text(
+ const DataCell(Text(
  'No disposal items added yet.',
  style: TextStyle(
- color: const Color(0xFF64748B),
+ color: Color(0xFF64748B),
  fontStyle: FontStyle.italic))),
  for (var i = 0; i < 11; i++) const DataCell(SizedBox()),
  ]),
@@ -3864,7 +3863,7 @@ Execution snapshot:
  _showDisposalItemDetailDialog(context, item),
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
- color: const Color(0xFF0EA5E9),
+ color: const Color(0xFFFFC812),
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, size: 16),
@@ -3914,7 +3913,7 @@ Execution snapshot:
  case 'excellent':
  bg = const Color(0xFFF0FDF4); fg = const Color(0xFF16A34A); break;
  case 'good':
- bg = const Color(0xFFDBEAFE); fg = const Color(0xFF2563EB); break;
+ bg = const Color(0xFFFEF3C7); fg = const Color(0xFFFFC812); break;
  case 'fair':
  bg = const Color(0xFFFFFBEB); fg = const Color(0xFFD97706); break;
  case 'poor':
@@ -3936,17 +3935,17 @@ Execution snapshot:
  Color bg; Color fg; IconData icon;
  switch (method.toLowerCase()) {
  case 'auction':
- bg = const Color(0xFFFDF4FF); fg = const Color(0xFF9333EA); icon = Icons.gavel; break;
+ bg = const Color(0xFFFFF8E1); fg = const Color(0xFFB8860B); icon = Icons.gavel; break;
  case 'recycle':
  bg = const Color(0xFFF0FDF4); fg = const Color(0xFF16A34A); icon = Icons.recycling; break;
  case 'donate':
- bg = const Color(0xFFEFF6FF); fg = const Color(0xFF2563EB); icon = Icons.volunteer_activism; break;
+ bg = const Color(0xFFFFF8E1); fg = const Color(0xFFFFC812); icon = Icons.volunteer_activism; break;
  case 'scrap':
  bg = const Color(0xFFFEF2F2); fg = const Color(0xFFDC2626); icon = Icons.delete_forever; break;
  case 'resell':
  bg = const Color(0xFFFFFBEB); fg = const Color(0xFFD97706); icon = Icons.sell; break;
  case 'trade-in':
- bg = const Color(0xFFE0F2FE); fg = const Color(0xFF0284C7); icon = Icons.swap_horiz; break;
+ bg = const Color(0xFFFFF8E1); fg = const Color(0xFFFFC812); icon = Icons.swap_horiz; break;
  case 'transfer':
  bg = const Color(0xFFF1F5F9); fg = const Color(0xFF475569); icon = Icons.forward; break;
  default:
@@ -3970,7 +3969,7 @@ Execution snapshot:
  barrierDismissible: true,
  builder: (ctx) => LaunchModalShell(
  icon: Icons.inventory_2_outlined,
- accent: const Color(0xFF0EA5E9),
+ accent: const Color(0xFFFFC812),
  title: item.name,
  subtitle: 'Disposal item details and audit trail.',
  body: Column(
@@ -4084,10 +4083,10 @@ Execution snapshot:
  _complianceMetric(label: 'Compliant', value: '$compliantCount', color: const Color(0xFF22C55E)),
  _complianceMetric(label: 'Non-Compliant', value: '$nonCompliantCount', color: const Color(0xFFEF4444)),
  _complianceMetric(label: 'Renewal Due', value: '$renewalDueCount', color: const Color(0xFFF59E0B)),
- _complianceMetric(label: 'Pending', value: '$pendingCount', color: const Color(0xFF0EA5E9)),
- _complianceMetric(label: 'Avg Score', value: '${avgScore.toStringAsFixed(0)}%', color: const Color(0xFF7C3AED)),
+ _complianceMetric(label: 'Pending', value: '$pendingCount', color: const Color(0xFFFFC812)),
+ _complianceMetric(label: 'Avg Score', value: '${avgScore.toStringAsFixed(0)}%', color: const Color(0xFFB8860B)),
  _complianceMetric(label: 'Open Findings', value: '$totalFindings', color: const Color(0xFFEA580C)),
- _complianceMetric(label: 'Corrective Actions', value: '$totalCorrective', color: const Color(0xFF0284C7)),
+ _complianceMetric(label: 'Corrective Actions', value: '$totalCorrective', color: const Color(0xFFFFC812)),
  _complianceMetric(label: 'Critical/High Risk', value: '$criticalRiskCount', color: const Color(0xFFEF4444)),
  _complianceMetric(label: 'Expiring Soon', value: '$expiringSoon', color: const Color(0xFFF59E0B)),
  if (expired > 0) _complianceMetric(label: 'Expired', value: '$expired', color: const Color(0xFFDC2626)),
@@ -4099,7 +4098,7 @@ Execution snapshot:
  style: FilledButton.styleFrom(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
- backgroundColor: const Color(0xFF0EA5E9),
+ backgroundColor: const Color(0xFFFFC812),
  ),
  ),
  ],
@@ -4210,7 +4209,7 @@ Execution snapshot:
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor: AlwaysStoppedAnimation(
  row.complianceScore >= 90 ? const Color(0xFF22C55E) :
- row.complianceScore >= 70 ? const Color(0xFF2563EB) :
+ row.complianceScore >= 70 ? const Color(0xFFFFC812) :
  row.complianceScore >= 50 ? const Color(0xFFF59E0B) :
  const Color(0xFFEF4444),
  ),
@@ -4222,7 +4221,7 @@ Execution snapshot:
  Text('${row.complianceScore}', style: TextStyle(
  fontWeight: FontWeight.w700, fontSize: 11,
  color: row.complianceScore >= 90 ? const Color(0xFF22C55E) :
- row.complianceScore >= 70 ? const Color(0xFF2563EB) :
+ row.complianceScore >= 70 ? const Color(0xFFFFC812) :
  row.complianceScore >= 50 ? const Color(0xFFF59E0B) :
  const Color(0xFFEF4444),
  )),
@@ -4263,7 +4262,7 @@ Execution snapshot:
  DataCell(Text('${row.correctiveActions}', style: TextStyle(
  fontWeight: FontWeight.w700,
  color: row.correctiveActions > 3 ? const Color(0xFFEF4444) :
- row.correctiveActions > 0 ? const Color(0xFF2563EB) :
+ row.correctiveActions > 0 ? const Color(0xFFFFC812) :
  const Color(0xFF22C55E),
  ))),
  DataCell(_buildCompliancePriorityChip(row.priority)),
@@ -4359,7 +4358,7 @@ Execution snapshot:
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor: AlwaysStoppedAnimation(
  row.complianceScore >= 90 ? const Color(0xFF22C55E) :
- row.complianceScore >= 70 ? const Color(0xFF2563EB) :
+ row.complianceScore >= 70 ? const Color(0xFFFFC812) :
  row.complianceScore >= 50 ? const Color(0xFFF59E0B) :
  const Color(0xFFEF4444),
  ),
@@ -4371,7 +4370,7 @@ Execution snapshot:
  Text('${row.complianceScore}', style: TextStyle(
  fontWeight: FontWeight.w700, fontSize: 11,
  color: row.complianceScore >= 90 ? const Color(0xFF22C55E) :
- row.complianceScore >= 70 ? const Color(0xFF2563EB) :
+ row.complianceScore >= 70 ? const Color(0xFFFFC812) :
  row.complianceScore >= 50 ? const Color(0xFFF59E0B) :
  const Color(0xFFEF4444),
  )),
@@ -4412,7 +4411,7 @@ Execution snapshot:
  DataCell(Text('${row.correctiveActions}', style: TextStyle(
  fontWeight: FontWeight.w700,
  color: row.correctiveActions > 3 ? const Color(0xFFEF4444) :
- row.correctiveActions > 0 ? const Color(0xFF2563EB) :
+ row.correctiveActions > 0 ? const Color(0xFFFFC812) :
  const Color(0xFF22C55E),
  ))),
  DataCell(_buildCompliancePriorityChip(row.priority)),
@@ -4480,13 +4479,13 @@ Execution snapshot:
  case 'safety':
  bg = const Color(0xFFFEF2F2); fg = const Color(0xFFDC2626); break;
  case 'health':
- bg = const Color(0xFFEFF6FF); fg = const Color(0xFF2563EB); break;
+ bg = const Color(0xFFFFF8E1); fg = const Color(0xFFFFC812); break;
  case 'legal':
- bg = const Color(0xFFF5F3FF); fg = const Color(0xFF7C3AED); break;
+ bg = const Color(0xFFFFF8E1); fg = const Color(0xFFB8860B); break;
  case 'financial':
  bg = const Color(0xFFFFFBEB); fg = const Color(0xFFD97706); break;
  case 'quality':
- bg = const Color(0xFFF0F9FF); fg = const Color(0xFF0284C7); break;
+ bg = const Color(0xFFFFF8E1); fg = const Color(0xFFFFC812); break;
  default:
  bg = const Color(0xFFF1F5F9); fg = const Color(0xFF475569);
  }
@@ -4509,7 +4508,7 @@ Execution snapshot:
  case 'renewal due':
  bg = const Color(0xFFFFFBEB); fg = const Color(0xFFEA580C); break;
  case 'pending':
- bg = const Color(0xFFEFF6FF); fg = const Color(0xFF2563EB); break;
+ bg = const Color(0xFFFFF8E1); fg = const Color(0xFFFFC812); break;
  case 'expired':
  bg = const Color(0xFFFEF2F2); fg = const Color(0xFF991B1B); break;
  default:
@@ -4588,15 +4587,15 @@ Execution snapshot:
  void _showComplianceRegulationDialog(BuildContext context, {int? editIndex}) {
  final isEdit = editIndex != null;
  final existing = isEdit ? _complianceRows[editIndex] : null;
- final regulationCtrl = TextEditingController(text: existing?.regulation ?? '');
- final lastAuditCtrl = TextEditingController(text: existing?.lastAuditDate ?? '');
- final nextAuditCtrl = TextEditingController(text: existing?.nextAuditDue ?? '');
- final daysToExpiryCtrl = TextEditingController(text: existing != null ? '${existing.daysToExpiry}' : '90');
- final responsibleCtrl = TextEditingController(text: existing?.responsibleParty ?? '');
- final findingsCtrl = TextEditingController(text: existing != null ? '${existing.findings}' : '0');
- final correctiveCtrl = TextEditingController(text: existing != null ? '${existing.correctiveActions}' : '0');
- final scoreCtrl = TextEditingController(text: existing != null ? '${existing.complianceScore}' : '100');
- final lastUpdatedCtrl = TextEditingController(text: existing?.lastUpdated ?? 'Just now');
+ final regulationCtrl = SpellCheckTextEditingController(text: existing?.regulation ?? '');
+ final lastAuditCtrl = SpellCheckTextEditingController(text: existing?.lastAuditDate ?? '');
+ final nextAuditCtrl = SpellCheckTextEditingController(text: existing?.nextAuditDue ?? '');
+ final daysToExpiryCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.daysToExpiry}' : '90');
+ final responsibleCtrl = SpellCheckTextEditingController(text: existing?.responsibleParty ?? '');
+ final findingsCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.findings}' : '0');
+ final correctiveCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.correctiveActions}' : '0');
+ final scoreCtrl = SpellCheckTextEditingController(text: existing != null ? '${existing.complianceScore}' : '100');
+ final lastUpdatedCtrl = SpellCheckTextEditingController(text: existing?.lastUpdated ?? 'Just now');
  String category = existing?.category ?? 'Environmental';
  String complianceStatus = existing?.complianceStatus ?? 'Compliant';
  String riskLevel = existing?.riskLevel ?? 'Low';
@@ -4609,7 +4608,7 @@ Execution snapshot:
  builder: (ctx) => StatefulBuilder(
  builder: (ctx, setDialogState) => LaunchModalShell(
  icon: isEdit ? Icons.edit_rounded : Icons.gavel_rounded,
- accent: const Color(0xFF0EA5E9),
+ accent: const Color(0xFFFFC812),
  title: isEdit ? 'Edit Regulation' : 'Add Regulation',
  subtitle: isEdit
  ? 'Update the compliance regulation record.'
@@ -4797,7 +4796,7 @@ Execution snapshot:
  Navigator.pop(ctx);
  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
  content: Text(isEdit ? 'Regulation updated successfully.' : 'Regulation added successfully.'),
- backgroundColor: const Color(0xFF0EA5E9),
+ backgroundColor: const Color(0xFFFFC812),
  behavior: SnackBarBehavior.floating,
  ));
  },
@@ -4989,7 +4988,7 @@ Execution snapshot:
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor: AlwaysStoppedAnimation(
  item.progress >= 100 ? const Color(0xFF22C55E) :
- item.progress >= 50 ? const Color(0xFF2563EB) :
+ item.progress >= 50 ? const Color(0xFFFFC812) :
  const Color(0xFFF59E0B),
  ),
  minHeight: 4,
@@ -5001,7 +5000,7 @@ Execution snapshot:
  style: TextStyle(
  fontWeight: FontWeight.w700, fontSize: 10,
  color: item.progress >= 100 ? const Color(0xFF22C55E) :
- item.progress >= 50 ? const Color(0xFF2563EB) :
+ item.progress >= 50 ? const Color(0xFFFFC812) :
  const Color(0xFFF59E0B),
  )),
  ],
@@ -5119,7 +5118,7 @@ Execution snapshot:
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor: AlwaysStoppedAnimation(
  item.progress >= 100 ? const Color(0xFF22C55E) :
- item.progress >= 50 ? const Color(0xFF2563EB) :
+ item.progress >= 50 ? const Color(0xFFFFC812) :
  const Color(0xFFF59E0B),
  ),
  minHeight: 4,
@@ -5131,7 +5130,7 @@ Execution snapshot:
  style: TextStyle(
  fontWeight: FontWeight.w700, fontSize: 10,
  color: item.progress >= 100 ? const Color(0xFF22C55E) :
- item.progress >= 50 ? const Color(0xFF2563EB) :
+ item.progress >= 50 ? const Color(0xFFFFC812) :
  const Color(0xFFF59E0B),
  )),
  ],
@@ -5266,11 +5265,11 @@ Execution snapshot:
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: const Color(0xFFE0F2FE),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(4),
  ),
  child: const Text('Upcoming',
- style: TextStyle(fontSize: 10, color: Color(0xFF0284C7))),
+ style: TextStyle(fontSize: 10, color: Color(0xFFFFC812))),
  ),
  ],
  ),
@@ -5292,11 +5291,11 @@ Execution snapshot:
  Color bg; Color fg;
  switch (phase.toLowerCase()) {
  case 'planning':
- bg = const Color(0xFFEFF6FF); fg = const Color(0xFF2563EB); break;
+ bg = const Color(0xFFFFF8E1); fg = const Color(0xFFFFC812); break;
  case 'execution':
  bg = const Color(0xFFFFFBEB); fg = const Color(0xFFD97706); break;
  case 'review':
- bg = const Color(0xFFF5F3FF); fg = const Color(0xFF7C3AED); break;
+ bg = const Color(0xFFFFF8E1); fg = const Color(0xFFB8860B); break;
  case 'closure':
  bg = const Color(0xFFF0FDF4); fg = const Color(0xFF16A34A); break;
  default:
@@ -5315,7 +5314,7 @@ Execution snapshot:
  case 'completed':
  bg = const Color(0xFFF0FDF4); fg = const Color(0xFF16A34A); break;
  case 'in progress':
- bg = const Color(0xFFDBEAFE); fg = const Color(0xFF2563EB); break;
+ bg = const Color(0xFFFEF3C7); fg = const Color(0xFFFFC812); break;
  case 'overdue':
  bg = const Color(0xFFFEF2F2); fg = const Color(0xFFDC2626); break;
  case 'on hold':
@@ -5352,13 +5351,13 @@ Execution snapshot:
  }
 
  final isEdit = item != null;
- final milestoneController = TextEditingController(text: item?.milestone ?? '');
- final descriptionController = TextEditingController(text: item?.description ?? '');
- final ownerController = TextEditingController(text: item?.owner ?? '');
- final startDateController = TextEditingController(text: item?.startDate ?? '');
- final dueDateController = TextEditingController(text: item?.dueDate ?? '');
- final dependenciesController = TextEditingController(text: item?.dependencies ?? '');
- final notesController = TextEditingController(text: item?.notes ?? '');
+ final milestoneController = SpellCheckTextEditingController(text: item?.milestone ?? '');
+ final descriptionController = SpellCheckTextEditingController(text: item?.description ?? '');
+ final ownerController = SpellCheckTextEditingController(text: item?.owner ?? '');
+ final startDateController = SpellCheckTextEditingController(text: item?.startDate ?? '');
+ final dueDateController = SpellCheckTextEditingController(text: item?.dueDate ?? '');
+ final dependenciesController = SpellCheckTextEditingController(text: item?.dependencies ?? '');
+ final notesController = SpellCheckTextEditingController(text: item?.notes ?? '');
  var selectedPhase = item?.phase ?? 'Planning';
  var selectedStatus = item?.status ?? 'Not Started';
  var selectedPriority = item?.priority ?? 'Medium';
@@ -5370,7 +5369,7 @@ Execution snapshot:
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => LaunchModalShell(
  icon: isEdit ? Icons.edit_rounded : Icons.flag_rounded,
- accent: const Color(0xFF0EA5E9),
+ accent: const Color(0xFFFFC812),
  title: isEdit ? 'Edit Milestone' : 'Add Milestone',
  subtitle: isEdit
  ? 'Update the disposal timeline milestone.'
@@ -5580,7 +5579,7 @@ Execution snapshot:
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
  content: Text(isEdit ? 'Milestone updated successfully.' : 'Milestone added successfully.'),
- backgroundColor: const Color(0xFF0EA5E9),
+ backgroundColor: const Color(0xFFFFC812),
  behavior: SnackBarBehavior.floating,
  ),
  );
@@ -5661,15 +5660,15 @@ Execution snapshot:
  '\$58,200',
  'Based on current market valuations for salvageable assets.',
  Icons.trending_up,
- Colors.green),
+ Color(0xFFF59E0B)),
  const _InsightCard(
  'Environmental Impact',
  '12.5 tons',
  'CO2 emissions avoided through proper recycling.',
  Icons.eco,
- Colors.teal),
+ Color(0xFFF59E0B)),
  const _InsightCard('Average Disposal Time', '18 days',
- '23% faster than industry benchmark.', Icons.speed, Colors.blue),
+ '23% faster than industry benchmark.', Icons.speed, Color(0xFFF59E0B)),
  ];
 
  if (isNarrow) {
@@ -5784,8 +5783,8 @@ Execution snapshot:
  textColor = const Color(0xFF059669);
  break;
  case 'In Progress':
- bgColor = const Color(0xFFDBEAFE);
- textColor = const Color(0xFF2563EB);
+ bgColor = const Color(0xFFFEF3C7);
+ textColor = const Color(0xFFFFC812);
  break;
  case 'Pending Auction':
  case 'Pending Disposal':
@@ -5793,12 +5792,12 @@ Execution snapshot:
  textColor = const Color(0xFFD97706);
  break;
  case 'Approved':
- bgColor = const Color(0xFFE0E7FF);
+ bgColor = const Color(0xFFFFF8E1);
  textColor = const Color(0xFF4F46E5);
  break;
  case 'On Hold':
- bgColor = const Color(0xFFF5F3FF);
- textColor = const Color(0xFF7C3AED);
+ bgColor = const Color(0xFFFFF8E1);
+ textColor = const Color(0xFFB8860B);
  break;
  case 'Cancelled':
  bgColor = const Color(0xFFF1F5F9);

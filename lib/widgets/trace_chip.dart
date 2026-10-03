@@ -39,7 +39,7 @@ class TraceChip extends StatelessWidget {
 
   /// Pill colour. Suggested palettes:
   /// - Indigo `Color(0xFF4F46E5)` for WBS links
-  /// - Teal `Color(0xFF0D9488)` for Schedule links
+  /// - Teal `Color(0xFFD97706)` for Schedule links
   /// - Amber `Color(0xFFD97706)` for Project Controls links
   final Color color;
 
@@ -114,8 +114,8 @@ class TraceChipPalette {
   TraceChipPalette._();
 
   static const Color wbs = Color(0xFF4F46E5); // indigo
-  static const Color schedule = Color(0xFF0D9488); // teal
+  static const Color schedule = Color(0xFFD97706); // teal
   static const Color projectControls = Color(0xFFD97706); // amber
-  static const Color costEstimate = Color(0xFF7C3AED); // purple
+  static const Color costEstimate = Color(0xFFB8860B); // purple
   static const Color procurement = Color(0xFFDC2626); // red
 }

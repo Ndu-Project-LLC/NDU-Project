@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 
@@ -27,6 +29,7 @@ class _TextFormattingToolbarState extends State<TextFormattingToolbar> {
   bool _isUndoAvailable = false;
   bool _isExpanded = false;
   bool _manuallyExpanded = false;
+  Timer? _historyDebounce;
 
   bool get _showHeadingButtons =>
       widget.controller is! AutoBulletTextController;
@@ -42,6 +45,7 @@ class _TextFormattingToolbarState extends State<TextFormattingToolbar> {
 
   @override
   void dispose() {
+    _historyDebounce?.cancel();
     widget.controller.removeListener(_onTextChanged);
     FocusManager.instance.removeListener(_handleFocusChange);
     super.dispose();
@@ -49,11 +53,16 @@ class _TextFormattingToolbarState extends State<TextFormattingToolbar> {
 
   void _onTextChanged() {
     _syncToolbarVisibility();
-    // Save to history on significant changes (debounced)
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted &&
-          widget.controller.text !=
-              (_undoHistory.isEmpty ? '' : _undoHistory.last)) {
+    // Save to history once typing pauses. This used to schedule a
+    // `Future.delayed` per keystroke, so a burst of typing queued one callback
+    // per character and every one of them ran `_saveToHistory` -> `setState`
+    // (rebuilding the whole toolbar) as the burst ended. One debounced timer
+    // replaces that.
+    _historyDebounce?.cancel();
+    _historyDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      if (widget.controller.text !=
+          (_undoHistory.isEmpty ? '' : _undoHistory.last)) {
         _saveToHistory();
       }
     });

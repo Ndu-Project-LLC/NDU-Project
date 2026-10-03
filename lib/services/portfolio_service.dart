@@ -6,10 +6,23 @@ class PortfolioService {
   static final CollectionReference<Map<String, dynamic>> _portfoliosCol =
       FirebaseFirestore.instance.collection('portfolios');
 
+  /// Creates a new portfolio.
+  ///
+  /// [name] — portfolio display name (required).
+  /// [projectIds] — Firestore project doc IDs grouped into this portfolio.
+  /// [ownerId] — Firebase Auth uid of the portfolio owner (account owner).
+  /// [managerId] — optional Firebase Auth uid of the assigned portfolio
+  /// manager. Picked from the account's registered users via the
+  /// create-portfolio modal's dropdown.
+  /// [managerName] / [managerEmail] — denormalized manager fields so the
+  /// dashboard card doesn't have to join against the users collection.
   static Future<String> createPortfolio({
     required String name,
     required List<String> projectIds,
     required String ownerId,
+    String managerId = '',
+    String managerName = '',
+    String managerEmail = '',
   }) async {
     try {
       final docRef = await _portfoliosCol.add({
@@ -19,6 +32,9 @@ class PortfolioService {
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
         'status': 'Active',
+        if (managerId.isNotEmpty) 'managerId': managerId,
+        if (managerName.isNotEmpty) 'managerName': managerName,
+        if (managerEmail.isNotEmpty) 'managerEmail': managerEmail,
       });
       debugPrint('✅ Portfolio created with ID: ${docRef.id}');
       return docRef.id;
@@ -70,6 +86,32 @@ class PortfolioService {
       debugPrint('✅ Portfolio updated: $portfolioId');
     } catch (e) {
       debugPrint('❌ Error updating portfolio: $e');
+      rethrow;
+    }
+  }
+
+  /// Assigns a portfolio manager to the given portfolio.
+  ///
+  /// Used by the create-portfolio modal (Task 13) — the user picks a
+  /// registered user from a dropdown of account members, and we write
+  /// their uid + denormalized name + email so the dashboard card can
+  /// display the assignment without joining collections.
+  static Future<void> assignManager({
+    required String portfolioId,
+    required String managerId,
+    required String managerName,
+    required String managerEmail,
+  }) async {
+    try {
+      await _portfoliosCol.doc(portfolioId).update({
+        'managerId': managerId,
+        'managerName': managerName,
+        'managerEmail': managerEmail,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      debugPrint('✅ Portfolio manager assigned: $portfolioId → $managerName');
+    } catch (e) {
+      debugPrint('❌ Error assigning portfolio manager: $e');
       rethrow;
     }
   }

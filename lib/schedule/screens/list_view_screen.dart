@@ -4,14 +4,26 @@ library;
 ///
 /// Rendered inside the parent module's `ResponsiveScaffold` body — no
 /// per-screen Scaffold wrapper. Includes summary cards (Total / Critical /
-/// % Complete), a search box, domain filter chips, and a sample dataset so the
-/// view is always populated.
+/// % Complete), a search box, domain filter chips.
+///
+/// The Duration / Start / Finish cells are EDITABLE INLINE (Lusaka 28): when
+/// you are building a schedule you must be able to type in dates and durations
+/// across many rows without opening each item's editor. Milestone rows also
+/// surface a date-mismatch warning when the activity's finish lands after a
+/// FEP milestone it feeds (or before it starts after it).
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
+import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
+import 'package:ndu_project/schedule/utils/schedule_duplicate_guard.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 class ListViewScreen extends StatefulWidget {
@@ -31,7 +43,27 @@ class _ListViewScreenState extends State<ListViewScreen> {
   Widget build(BuildContext context) {
     return Consumer<ScheduleProvider>(
       builder: (context, provider, _) {
-        final schedule = provider.schedule!;
+        final schedule = provider.schedule;
+        if (schedule == null) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(48),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(LightModeColors.accent),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading schedule...',
+                    style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         final rows = _buildRows(schedule);
         final filtered = _applyFilters(rows);
         final criticalCount = rows.where((r) => r.isCritical).length;
@@ -76,7 +108,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       label: 'Total Activities',
                       value: '${rows.length}',
                       icon: Icons.list_alt,
-                      color: const Color(0xFF3B82F6),
+                      color: const Color(0xFFFFC812),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -124,7 +156,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                         style: const TextStyle(
                             color: Color(0xFF1A1D1F), fontSize: 13),
                         decoration: InputDecoration(
-                          hintText: 'Search by name, code, or owner…',
+                          hintText: 'Search by name, code, cost, or status…',
                           hintStyle: const TextStyle(
                               color: Color(0xFF9CA3AF), fontSize: 13),
                           prefixIcon: const Icon(Icons.search,
@@ -243,12 +275,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
                               onSort: (c, asc) => _onSort(_SortBy.finish, asc),
                             ),
                             DataColumn(
-                              label: const Text('Owner',
+                              label: const Text('Cost',
                                   style: TextStyle(
                                       color: Color(0xFF6B7280),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.owner, asc),
+                              onSort: (c, asc) => _onSort(_SortBy.cost, asc),
                             ),
                             DataColumn(
                               label: const Text('Status',
@@ -295,24 +327,55 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                         style: const TextStyle(
                                             color: Color(0xFF495057),
                                             fontSize: 12))),
-                                    DataCell(Text(r.duration,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 12))),
-                                    DataCell(Text(r.start,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 12))),
-                                    DataCell(Text(r.finish,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 12))),
-                                    DataCell(Text(r.owner,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 12))),
+                                    // Lusaka 28: Duration / Start / Finish are
+                                    // editable inline — mass-populate a schedule
+                                    // without opening each item's editor.
+                                    DataCell(_InlineDurationCell(
+                                      value: r.sortDuration,
+                                      unit: r.durationUnit,
+                                      enabled: r.activityId != null,
+                                      onChanged: (days) => _updateActivityDates(
+                                          r, durationDays: days),
+                                    )),
+                                    DataCell(_InlineDateCell(
+                                      value: r.sortStart == 0
+                                          ? null
+                                          : DateTime
+                                              .fromMillisecondsSinceEpoch(
+                                                  r.sortStart),
+                                      enabled: r.activityId != null,
+                                      onChanged: (date) => _updateActivityDates(
+                                          r, start: date),
+                                    )),
+                                    DataCell(_InlineDateCell(
+                                      value: r.sortFinish == 0
+                                          ? null
+                                          : DateTime
+                                              .fromMillisecondsSinceEpoch(
+                                                  r.sortFinish),
+                                      enabled: r.activityId != null,
+                                      onChanged: (date) => _updateActivityDates(
+                                          r, finish: date),
+                                    )),
+                                    // Lusaka 32: cost is the headline
+                                    // number per work package — bold and
+                                    // dark when linked, muted when not.
+                                    DataCell(Text(r.cost,
+                                        style: TextStyle(
+                                            color: r.sortCost == null
+                                                ? const Color(0xFF9CA3AF)
+                                                : const Color(0xFF1A1D1F),
+                                            fontSize: 13,
+                                            fontWeight: r.sortCost == null
+                                                ? FontWeight.w400
+                                                : FontWeight.w800))),
                                     DataCell(_StatusBadge(status: r.status)),
-                                    DataCell(_TraceabilityCell(row: r)),
+                                    DataCell(r.dateMismatchMessage.isEmpty
+                                        ? _TraceabilityCell(row: r)
+                                        : _MilestoneMismatchCell(
+                                            message: r.dateMismatchMessage,
+                                            child: _TraceabilityCell(row: r),
+                                          )),
                                   ]))
                               .toList(),
                         ),
@@ -379,12 +442,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
                               onSort: (c, asc) => _onSort(_SortBy.finish, asc),
                             ),
                             DataColumn(
-                              label: const Text('Owner',
+                              label: const Text('Cost',
                                   style: TextStyle(
                                       color: Color(0xFF6B7280),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.owner, asc),
+                              onSort: (c, asc) => _onSort(_SortBy.cost, asc),
                             ),
                             DataColumn(
                               label: const Text('Status',
@@ -431,24 +494,55 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                         style: const TextStyle(
                                             color: Color(0xFF495057),
                                             fontSize: 12))),
-                                    DataCell(Text(r.duration,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 12))),
-                                    DataCell(Text(r.start,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 12))),
-                                    DataCell(Text(r.finish,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 12))),
-                                    DataCell(Text(r.owner,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 12))),
+                                    // Lusaka 28: Duration / Start / Finish are
+                                    // editable inline — mass-populate a schedule
+                                    // without opening each item's editor.
+                                    DataCell(_InlineDurationCell(
+                                      value: r.sortDuration,
+                                      unit: r.durationUnit,
+                                      enabled: r.activityId != null,
+                                      onChanged: (days) => _updateActivityDates(
+                                          r, durationDays: days),
+                                    )),
+                                    DataCell(_InlineDateCell(
+                                      value: r.sortStart == 0
+                                          ? null
+                                          : DateTime
+                                              .fromMillisecondsSinceEpoch(
+                                                  r.sortStart),
+                                      enabled: r.activityId != null,
+                                      onChanged: (date) => _updateActivityDates(
+                                          r, start: date),
+                                    )),
+                                    DataCell(_InlineDateCell(
+                                      value: r.sortFinish == 0
+                                          ? null
+                                          : DateTime
+                                              .fromMillisecondsSinceEpoch(
+                                                  r.sortFinish),
+                                      enabled: r.activityId != null,
+                                      onChanged: (date) => _updateActivityDates(
+                                          r, finish: date),
+                                    )),
+                                    // Lusaka 32: cost is the headline
+                                    // number per work package — bold and
+                                    // dark when linked, muted when not.
+                                    DataCell(Text(r.cost,
+                                        style: TextStyle(
+                                            color: r.sortCost == null
+                                                ? const Color(0xFF9CA3AF)
+                                                : const Color(0xFF1A1D1F),
+                                            fontSize: 13,
+                                            fontWeight: r.sortCost == null
+                                                ? FontWeight.w400
+                                                : FontWeight.w800))),
                                     DataCell(_StatusBadge(status: r.status)),
-                                    DataCell(_TraceabilityCell(row: r)),
+                                    DataCell(r.dateMismatchMessage.isEmpty
+                                        ? _TraceabilityCell(row: r)
+                                        : _MilestoneMismatchCell(
+                                            message: r.dateMismatchMessage,
+                                            child: _TraceabilityCell(row: r),
+                                          )),
                                   ]))
                               .toList(),
                         ),
@@ -456,16 +550,17 @@ class _ListViewScreenState extends State<ListViewScreen> {
                     ),
               ),
               const SizedBox(height: 12),
-              // Footer note
-              Row(
+              // Footer note (wraps on narrow windows)
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text('${filtered.length} of ${rows.length} activities',
                       style: const TextStyle(
                           color: Color(0xFF6B7280), fontSize: 12)),
-                  const SizedBox(width: 8),
                   const Text('·',
                       style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
-                  const SizedBox(width: 8),
                   const Text(
                       'Sample data shown alongside live activities added via the Builder tab.',
                       style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
@@ -493,9 +588,54 @@ class _ListViewScreenState extends State<ListViewScreen> {
     // Combine: live provider activities + sample demo data
     final rows = <_ListRow>[];
 
+    // Lusaka 28: milestone date-mismatch warnings — a schedule item whose
+    // finish lands after a FEP milestone's due date (or starts after it)
+    // carries a visible warning so the crew can discuss and fix the dates.
+    // Milestone rows themselves compare their due date against the
+    // committed FEP milestone date from Goals & Milestones.
+    final fepMilestones = ProjectDataHelper.getData(context, listen: false)
+        .keyMilestones
+        .where((m) => m.name.trim().isNotEmpty)
+        .toList();
+
+    String? mismatchFor(ScheduleActivity node) {
+      final finish = node.endDate;
+      if (finish == null) return null;
+      if (node.type == ActivityType.milestone) {
+        for (final m in fepMilestones) {
+          final due = DateTime.tryParse(m.dueDate);
+          if (due == null) continue;
+          final same = finish.year == due.year &&
+              finish.month == due.month &&
+              finish.day == due.day;
+          if (!same) {
+            final committed = DateFormat('MMM d, y').format(due);
+            return 'Milestone date differs from the committed date in Goals & Milestones ($committed).';
+          }
+        }
+        return null;
+      }
+      for (final m in fepMilestones) {
+        final due = DateTime.tryParse(m.dueDate);
+        if (due == null) continue;
+        if (finish.isAfter(due)) {
+          final committed = DateFormat('MMM d, y').format(due);
+          return 'Finishes ${DateFormat('MMM d, y').format(finish)} — after the committed milestone date ($committed).';
+        }
+        if (node.startDate != null && node.startDate!.isAfter(due)) {
+          final committed = DateFormat('MMM d, y').format(due);
+          return 'Starts ${DateFormat('MMM d, y').format(node.startDate!)} — after the committed milestone date ($committed).';
+        }
+      }
+      return null;
+    }
+
     // Live activities from the provider (skip the root project node).
     void walk(ScheduleActivity node) {
       if (node.level > 0) {
+        // Lusaka 32: cost per work package, resolved from the
+        // cost estimate so the schedule table shows real numbers.
+        final cost = _costFor(node);
         rows.add(_ListRow(
           code: node.code,
           name: node.name,
@@ -504,9 +644,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
           duration: formatDuration(node.duration, node.durationUnit),
           start: formatDate(node.startDate),
           finish: formatDate(node.endDate),
-          owner: node.owner ?? '—',
+          cost: cost.text,
+          sortCost: cost.amount,
           status: node.status ?? 'Not Started',
           isCritical: node.isCriticalPath,
+          activityId: node.id,
+          isSummary: node.children.isNotEmpty,
+          durationUnit: node.durationUnit ?? 'day',
+          dateMismatchMessage: mismatchFor(node) ?? '',
           hasWbs: node.wbsNodeId != null && node.wbsNodeId!.isNotEmpty,
           hasAgileStory:
               node.agileTaskId != null && node.agileTaskId!.isNotEmpty,
@@ -532,9 +677,135 @@ class _ListViewScreenState extends State<ListViewScreen> {
       walk(schedule.activities[0]);
     }
 
-    // Append sample rows so the view is always populated.
+    // Append sample rows so the view is always populated, then drop any row
+    // that repeats another — a live activity and a sample row reading as one
+    // item is exactly the duplicate the owner is asking to remove.
     rows.addAll(_sampleRows());
-    return rows;
+    return dedupeScheduleItems(
+      rows,
+      nameOf: (row) => row.name,
+      identityOf: (row) => row.activityId == null
+          ? null
+          : 'activity:${row.activityId}',
+    );
+  }
+
+  /// Writes an inline edit from the Duration / Start / Finish cells back to
+  /// the provider (and storage). Lusaka 28: building a schedule has to be a
+  /// mass-edit flow, not open-card → edit → save per row.
+  void _updateActivityDates(
+    _ListRow row, {
+    double? durationDays,
+    DateTime? start,
+    DateTime? finish,
+  }) {
+    final id = row.activityId;
+    if (id == null || id.isEmpty) return;
+    final provider = context.read<ScheduleProvider>();
+    final schedule = provider.schedule;
+    if (schedule == null) return;
+    ScheduleActivity? current;
+    void find(List<ScheduleActivity> nodes) {
+      for (final n in nodes) {
+        if (current != null) return;
+        if (n.id == id) {
+          current = n;
+          return;
+        }
+        find(n.children);
+      }
+    }
+
+    find(schedule.activities);
+    if (current == null) return;
+    final a = current!;
+
+    double? nextDuration = durationDays ?? a.duration;
+    var nextStart = start ?? a.startDate;
+    var nextFinish = finish ?? a.endDate;
+
+    // Keep the other end of the window consistent with the typed value, the
+    // same way the Gantt places single-dated activities.
+    if (durationDays != null) {
+      if (nextStart != null) {
+        nextFinish =
+            nextStart.add(Duration(days: durationDays.round().clamp(0, 3650)));
+      } else if (nextFinish != null) {
+        nextStart = nextFinish
+            .subtract(Duration(days: durationDays.round().clamp(0, 3650)));
+      }
+    } else if (start != null) {
+      if (nextFinish != null && nextFinish.isBefore(start)) {
+        nextFinish = start;
+      }
+      if ((a.duration ?? 0) <= 0 && nextFinish != null) {
+        nextDuration =
+            nextFinish.difference(start).inDays.clamp(0, 3650).toDouble();
+      }
+    } else if (finish != null) {
+      if (nextStart != null && finish.isBefore(nextStart)) {
+        nextStart = finish;
+      }
+      if ((a.duration ?? 0) <= 0 && nextStart != null) {
+        nextDuration =
+            finish.difference(nextStart).inDays.clamp(0, 3650).toDouble();
+      }
+    }
+
+    provider.updateActivity(
+      id,
+      a.copyWith(
+        duration: nextDuration,
+        startDate: nextStart,
+        endDate: nextFinish,
+      ),
+    );
+  }
+
+  /// Lusaka 32: resolve the cost a work package carries in the Cost
+  /// Estimate — "the cost needs to be very clear … obvious and
+  /// jumping out".
+  ///
+  /// The Builder stamps `ScheduleActivity.costLineId` when a line is
+  /// created or pulled from the schedule, so that link wins. If it
+  /// was never stamped (or the line was pulled by an older build),
+  /// fall back to in-schedule estimate lines that carry the same WBS
+  /// code, then the same name. Returns a muted "—" when the activity
+  /// has no cost line yet.
+  ///
+  /// The CostEstimateProvider is optional here — the list view is
+  /// also hosted in tests that only wire the schedule — so a missing
+  /// provider just leaves the cost column blank.
+  ({String text, double? amount}) _costFor(ScheduleActivity node) {
+    final List<CostLine> lines;
+    try {
+      lines =
+          context.read<CostEstimateProvider>().estimate?.lines ?? const [];
+    } catch (_) {
+      return (text: '—', amount: null);
+    }
+    final linkedId = node.costLineId;
+    if (linkedId != null && linkedId.isNotEmpty) {
+      for (final l in lines) {
+        if (l.id == linkedId) {
+          return (text: formatCurrency(l.total), amount: l.total);
+        }
+      }
+    }
+    final wbsCode = node.wbsCode;
+    CostLine? fallback;
+    for (final l in lines) {
+      if (!l.inSchedule) continue;
+      if (wbsCode != null && wbsCode.isNotEmpty && l.wbsRef == wbsCode) {
+        fallback = l;
+        break;
+      }
+      if (fallback == null && l.description == node.name) {
+        fallback = l;
+      }
+    }
+    if (fallback == null) return (text: '—', amount: null);
+    return (text: formatCurrency(fallback.total), amount: fallback.total);
   }
 
   List<_ListRow> _sampleRows() {
@@ -547,7 +818,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '20 d',
         start: '01/06/26',
         finish: '01/30/26',
-        owner: 'Process Eng',
+        cost: '\$185,000',
+        sortCost: 185000,
         status: 'Complete',
         isCritical: false,
         sortStart: DateTime(2026, 1, 6).millisecondsSinceEpoch,
@@ -562,7 +834,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '45 d',
         start: '02/02/26',
         finish: '03/20/26',
-        owner: 'Buyer',
+        cost: '\$1,240,000',
+        sortCost: 1240000,
         status: 'In Progress',
         isCritical: true,
         sortStart: DateTime(2026, 2, 2).millisecondsSinceEpoch,
@@ -577,7 +850,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '60 d',
         start: '03/23/26',
         finish: '05/22/26',
-        owner: 'Fab Shop',
+        cost: '\$860,000',
+        sortCost: 860000,
         status: 'Not Started',
         isCritical: true,
         sortStart: DateTime(2026, 3, 23).millisecondsSinceEpoch,
@@ -592,7 +866,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '10 d',
         start: '05/25/26',
         finish: '06/05/26',
-        owner: 'Site Sup',
+        cost: '\$95,000',
+        sortCost: 95000,
         status: 'Not Started',
         isCritical: false,
         sortStart: DateTime(2026, 5, 25).millisecondsSinceEpoch,
@@ -607,7 +882,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '35 d',
         start: '06/08/26',
         finish: '07/17/26',
-        owner: 'Mech Crew',
+        cost: '\$410,000',
+        sortCost: 410000,
         status: 'Not Started',
         isCritical: true,
         sortStart: DateTime(2026, 6, 8).millisecondsSinceEpoch,
@@ -622,7 +898,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '15 d',
         start: '07/20/26',
         finish: '08/07/26',
-        owner: 'Commissioning Eng',
+        cost: '\$60,000',
+        sortCost: 60000,
         status: 'Not Started',
         isCritical: true,
         sortStart: DateTime(2026, 7, 20).millisecondsSinceEpoch,
@@ -637,7 +914,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         duration: '12 d',
         start: '08/10/26',
         finish: '08/22/26',
-        owner: 'Commissioning Eng',
+        cost: '\$75,000',
+        sortCost: 75000,
         status: 'Not Started',
         isCritical: true,
         sortStart: DateTime(2026, 8, 10).millisecondsSinceEpoch,
@@ -657,7 +935,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
       out = out.where((r) {
         return r.name.toLowerCase().contains(q) ||
             r.code.toLowerCase().contains(q) ||
-            r.owner.toLowerCase().contains(q) ||
+            r.cost.toLowerCase().contains(q) ||
             r.status.toLowerCase().contains(q);
       }).toList();
     }
@@ -683,8 +961,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
         case _SortBy.finish:
           cmp = a.sortFinish.compareTo(b.sortFinish);
           break;
-        case _SortBy.owner:
-          cmp = a.owner.toLowerCase().compareTo(b.owner.toLowerCase());
+        case _SortBy.cost:
+          cmp = (a.sortCost ?? -1).compareTo(b.sortCost ?? -1);
           break;
         case _SortBy.status:
           cmp = a.status.compareTo(b.status);
@@ -696,7 +974,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
   }
 }
 
-enum _SortBy { code, name, domain, duration, start, finish, owner, status }
+enum _SortBy { code, name, domain, duration, start, finish, cost, status }
 
 class _ListRow {
   final String code;
@@ -706,9 +984,22 @@ class _ListRow {
   final String duration;
   final String start;
   final String finish;
-  final String owner;
+
+  /// Lusaka 32: the cost associated with this work package, resolved
+  /// from the cost estimate. `sortCost` is null when nothing is
+  /// linked, so unlinked rows sort first and render a muted "—".
+  final String cost;
+  final double? sortCost;
   final String status;
   final bool isCritical;
+
+  /// Lusaka 28: live provider linkage + inline-edit support. `activityId` is
+  /// null for demo rows, so their cells render read-only text.
+  final String? activityId;
+  final bool isSummary;
+  final String durationUnit;
+  final String dateMismatchMessage;
+
   final bool hasWbs;
   final bool hasAgileStory;
   final bool hasSprint;
@@ -731,9 +1022,14 @@ class _ListRow {
     required this.duration,
     required this.start,
     required this.finish,
-    required this.owner,
+    required this.cost,
+    this.sortCost,
     required this.status,
     required this.isCritical,
+    this.activityId,
+    this.isSummary = false,
+    this.durationUnit = 'day',
+    this.dateMismatchMessage = '',
     this.hasWbs = false,
     this.hasAgileStory = false,
     this.hasSprint = false,
@@ -879,6 +1175,34 @@ class _TraceabilityCell extends StatelessWidget {
   final _ListRow row;
   const _TraceabilityCell({required this.row});
 
+  /// Every traceability card carries its own tint, taken from the strongest
+  /// link the row carries, so rows are told apart at a glance instead of every
+  /// card reading as the same block of white. Ordered by how specific the link
+  /// is: a release says more than a sprint, which says more than a WBS link.
+  Color get _cardColor {
+    if (row.hasRelease) return const Color(0xFFD97706);
+    if (row.hasSprint) return const Color(0xFF16A34A);
+    if (row.hasAgileStory) return const Color(0xFFB8860B);
+    if (row.hasWbs) return const Color(0xFFD4AF37);
+    if (row.importSource.isNotEmpty) return const Color(0xFF475467);
+    return const Color(0xFF9CA3AF);
+  }
+
+  /// The tinted panel that holds one row's traceability content.
+  Widget _card({required Widget child, double width = 260}) {
+    final color = _cardColor;
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final chips = <Widget>[];
@@ -887,12 +1211,12 @@ class _TraceabilityCell extends StatelessWidget {
           _miniChip(_sourceLabel(row.importSource), const Color(0xFF475467)));
     }
     if (row.hasWbs) {
-      chips.add(_miniChip('WBS', const Color(0xFF0EA5E9)));
+      chips.add(_miniChip('WBS', const Color(0xFFFFC812)));
     }
     if (row.hasAgileStory) {
       chips.add(_miniChip(
           row.agileFeatureTitle.isNotEmpty ? row.agileFeatureTitle : 'Story',
-          const Color(0xFF8B5CF6)));
+          const Color(0xFFB8860B)));
     }
     if (row.hasSprint) {
       chips.add(_miniChip(
@@ -909,12 +1233,16 @@ class _TraceabilityCell extends StatelessWidget {
           '${row.prerequisiteCount} prereq', const Color(0xFF6B7280)));
     }
     if (chips.isEmpty) {
-      return const Text('—',
-          style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12));
+      return _card(
+        width: 48,
+        child: const Text('—',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+      );
     }
-    return SizedBox(
-      width: 260,
+    return _card(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (row.agileEpicTitle.isNotEmpty)
@@ -1033,6 +1361,256 @@ class _EmptyState extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Inline duration editor for the Duration column (Lusaka 28).
+///
+/// Renders as plain text until tapped; commits on submit / focus loss. Demo
+/// rows (enabled = false) render as read-only text.
+class _InlineDurationCell extends StatefulWidget {
+  const _InlineDurationCell({
+    required this.value,
+    required this.unit,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final double value;
+  final String unit;
+  final bool enabled;
+  final ValueChanged<double> onChanged;
+
+  @override
+  State<_InlineDurationCell> createState() => _InlineDurationCellState();
+}
+
+class _InlineDurationCellState extends State<_InlineDurationCell> {
+  late final TextEditingController _controller;
+  late final FocusNode _focus;
+  bool _editing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+        text: widget.value > 0 ? widget.value.round().toString() : '');
+    _focus = FocusNode();
+    _focus.addListener(() {
+      if (!_focus.hasFocus && _editing) {
+        _commit();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _InlineDurationCell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_editing && widget.value != oldWidget.value) {
+      _controller.text =
+          widget.value > 0 ? widget.value.round().toString() : '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  void _commit() {
+    _editing = false;
+    final parsed = double.tryParse(_controller.text.trim());
+    if (parsed != null && parsed >= 0 && parsed != widget.value) {
+      widget.onChanged(parsed);
+    }
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.enabled) {
+      return _PlainTextCell(
+        text: _display,
+      );
+    }
+    return SizedBox(
+        width: 84,
+        child: _editing
+            ? TextField(
+                controller: _controller,
+                focusNode: _focus,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
+                style: const TextStyle(fontSize: 12, color: Color(0xFF1A1D1F)),
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                ),
+                onSubmitted: (_) => _commit(),
+              )
+            : InkWell(
+                onTap: () => setState(() => _editing = true),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _display,
+                        style: const TextStyle(
+                            color: Color(0xFF495057), fontSize: 12),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(Icons.edit_outlined,
+                          size: 12, color: Colors.grey.shade400),
+                    ],
+                  ),
+                ),
+              ),
+    );
+  }
+
+  String get _display {
+    if (widget.value <= 0) return '—';
+    final unit = widget.unit == 'day' || widget.unit == 'days'
+        ? 'd'
+        : widget.unit;
+    return '${widget.value.round()} $unit';
+  }
+}
+
+/// Inline date editor for the Start / Finish columns (Lusaka 28).
+///
+/// Renders as plain text; tapping opens a date picker and commits immediately.
+class _InlineDateCell extends StatelessWidget {
+  const _InlineDateCell({
+    required this.value,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final DateTime? value;
+  final bool enabled;
+  final ValueChanged<DateTime> onChanged;
+
+  String get _formatted {
+    if (value == null) return '—';
+    return DateFormat('MM/dd/yy').format(value!);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) {
+      return _PlainTextCell(text: _formatted);
+    }
+    return InkWell(
+        onTap: () async {
+          final picked = await showDatePicker(
+            context: context,
+            initialDate: value ?? DateTime.now(),
+            firstDate: DateTime(2000),
+            lastDate: DateTime(2100),
+          );
+          if (picked != null) {
+            onChanged(DateTime(picked.year, picked.month, picked.day));
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _formatted,
+                style: TextStyle(
+                  color: value == null
+                      ? const Color(0xFF9CA3AF)
+                      : const Color(0xFF495057),
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.edit_calendar_outlined,
+                  size: 12, color: Colors.grey.shade400),
+            ],
+          ),
+        ),
+    );
+  }
+}
+
+/// Plain-text stand-in used by non-editable (demo / sample) rows so they keep
+/// the same table look as editable ones.
+class _PlainTextCell extends StatelessWidget {
+  const _PlainTextCell({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      child: Text(
+        text,
+        style: const TextStyle(color: Color(0xFF495057), fontSize: 12),
+      ),
+    );
+  }
+}
+
+/// Warning cell wrapper for milestone date mismatches (Lusaka 28).
+///
+/// Shows the traceability cell content plus an amber warning chip; tapping it
+/// explains which committed milestone date conflicts.
+class _MilestoneMismatchCell extends StatelessWidget {
+  const _MilestoneMismatchCell({
+    required this.message,
+    required this.child,
+  });
+
+  final String message;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: message,
+      triggerMode: TooltipTriggerMode.tap,
+      showDuration: const Duration(seconds: 4),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          child,
+          Positioned(
+            right: -2,
+            top: -2,
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFFBEB),
+                shape: BoxShape.circle,
+                border: Border.fromBorderSide(
+                  BorderSide(color: Color(0xFFF59E0B)),
+                ),
+              ),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                size: 11,
+                color: Color(0xFFB45309),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

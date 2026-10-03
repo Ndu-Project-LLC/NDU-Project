@@ -1,0 +1,1952 @@
+1
+00:00:00,000 --> 00:00:19,000
+ I'm going to close the sidebar system, and what's the view?
+
+2
+00:00:19,000 --> 00:00:25,000
+ The sidebar on the list.
+
+3
+00:00:25,000 --> 00:00:37,720
+ So, this is a schedule, a fixed part of it allows you to do any other things that the
+
+4
+00:00:37,720 --> 00:00:50,680
+ say WBS that could have noticed in, like, um, showing him that I saw you in one of these,
+
+5
+00:00:50,680 --> 00:00:55,120
+ but I thought it would allow you to take hope. And then you can also see him.
+
+6
+00:00:55,120 --> 00:01:01,960
+ Oh, private, private, do you mind, um, showing the sidebar? So for procurement, you guys
+
+7
+00:01:01,960 --> 00:01:13,440
+ Okay, and the way you need next is to schedule. So just pressing that pops up when you go
+
+8
+00:01:13,440 --> 00:01:25,240
+ to schedule. Yes. So when you go to schedule, this is what pops up. Yes, this is the pressing
+
+9
+00:01:25,240 --> 00:01:37,880
+ Okay so did this pull in all the packages from the IDOC delivery section?
+
+10
+00:01:37,880 --> 00:01:43,660
+ Yes, I mean if you could put down some of these in the audiobook and uh...
+
+11
+00:01:43,660 --> 00:01:46,540
+ So he's falling down or scrolling up?
+
+12
+00:01:46,540 --> 00:01:48,560
+ Uh, scrolling down.
+
+13
+00:01:48,560 --> 00:01:54,840
+ What does it feel like he's falling in?
+
+14
+00:01:54,840 --> 00:02:06,200
+ So like with package one, like 1.0, and then it has like 1.1, 1.3, 1.7, because it break
+
+15
+00:02:06,200 --> 00:02:07,200
+ down.
+
+16
+00:02:07,200 --> 00:02:11,600
+ Also like the second with package node, which it's opening, it's.
+
+17
+00:02:11,600 --> 00:02:12,600
+ Okay.
+
+18
+00:02:12,600 --> 00:02:21,000
+ Is there a reason why this view is also, I think, the number of times I've had for a
+
+19
+00:02:21,000 --> 00:02:22,000
+ table view.
+
+20
+00:02:22,000 --> 00:02:27,280
+ like this is not working for somebody going to put in their dates and they're going to click on
+
+21
+00:02:27,280 --> 00:02:32,160
+ which one open it up full and then print the information for it is that do you walk me through
+
+22
+00:02:32,160 --> 00:02:39,200
+ how you protect the schedule please okay so kind of like close the side but
+
+23
+00:02:46,400 --> 00:02:56,400
+ So if there is no date, it allows you just a key where you can see the time dates, where you can at the date.
+
+24
+00:02:56,400 --> 00:03:06,400
+ Meaning if it's not linked to the database, it will kind of show you.
+
+25
+00:03:06,400 --> 00:03:18,400
+ So, try to explain the data with the code script, so you think most of them did and then most of them didn't do.
+
+26
+00:03:23,400 --> 00:03:33,400
+ So, when you came together for the first time, it also showed all the current epics and features within those epics?
+
+27
+00:03:34,400 --> 00:03:38,980
+ This is not free and time for those, but what did this time come from?
+
+28
+00:03:38,980 --> 00:03:42,280
+ So you went in and clicked on each one and changed the date?
+
+29
+00:03:42,280 --> 00:03:43,280
+ Yes.
+
+30
+00:03:43,280 --> 00:03:51,240
+ So, when you do the WBF, there's no aspect to it like you, but I did the dates and the
+
+31
+00:03:51,240 --> 00:03:52,240
+ time now.
+
+32
+00:03:52,240 --> 00:04:01,800
+ So, welcome to your picture, so you can just show it to you, and I'll come to you.
+
+33
+00:04:31,660 --> 00:04:48,560
+ Can you hear him because I can't see him too long.
+
+34
+00:04:48,560 --> 00:04:49,560
+ He was cutting back.
+
+35
+00:04:49,560 --> 00:04:58,560
+ Not all packages, so this page was still being worked on, and there are still also some other actors that are still being pushed on it.
+
+36
+00:05:09,560 --> 00:05:11,560
+ Did you get me?
+
+37
+00:05:12,560 --> 00:05:16,120
+ So you were breaking out, but I think I had to say you
+
+38
+00:05:16,840 --> 00:05:21,400
+ You added dates to some but not some but I'm wondering which one did you add the dates to?
+
+39
+00:05:22,400 --> 00:05:25,800
+ So just the best ones because the page was to be worked on
+
+40
+00:05:26,800 --> 00:05:28,800
+ if you
+
+41
+00:05:35,360 --> 00:05:38,080
+ So that this you added was that effective
+
+42
+00:05:38,800 --> 00:05:45,000
+ Comment through each each card. So let me guess you you go through it and then you hit edit or you double click on it
+
+43
+00:05:45,400 --> 00:05:47,400
+ To add the date and duration
+
+44
+00:05:48,440 --> 00:05:50,440
+ Yes
+
+45
+00:05:57,920 --> 00:05:59,920
+ And I work for you
+
+46
+00:06:03,440 --> 00:06:05,440
+ Yes, so like they were being like added
+
+47
+00:06:06,120 --> 00:06:08,120
+ Just to be down
+
+48
+00:06:08,800 --> 00:06:18,800
+ The only thing that I couldn't get to see in the officiate was the gun shop to make sure that now these are populated in the gun shop.
+
+49
+00:06:23,800 --> 00:06:24,800
+ Thank you.
+
+50
+00:06:33,800 --> 00:06:58,800
+ I think this still has some bugs but it's showing the same, if you can see this is the one that's repeating itself.
+
+51
+00:06:58,800 --> 00:07:10,440
+ yes and so the actual bug that was there was that whenever I'm changing
+
+52
+00:07:10,440 --> 00:07:15,820
+ something on the section and then I put it here it wouldn't check if the stuff
+
+53
+00:07:15,820 --> 00:07:20,420
+ is already existing and so I can put the same content into the like schedule you
+
+54
+00:07:20,420 --> 00:07:25,100
+ know over I mean I actually could put it to like same content over and over and
+
+55
+00:07:25,100 --> 00:07:31,760
+ over until we had fixed it back and so now this happened because like we had put the
+
+56
+00:07:31,760 --> 00:07:36,020
+ same content over and over and over so it has the same name same name the same name
+
+57
+00:07:36,020 --> 00:07:44,160
+ so like that's that's actually part of what the fix is meant to cure so that when you're
+
+58
+00:07:44,160 --> 00:07:46,620
+ - I'm trying to-- - Can I just hit you?
+
+59
+00:07:46,620 --> 00:07:48,120
+ - Okay, let me see.
+
+60
+00:08:14,160 --> 00:08:20,980
+ Okay, so the list view needs to be the default, and the same comments I have with the other
+
+61
+00:08:20,980 --> 00:08:21,980
+ table.
+
+62
+00:08:21,980 --> 00:08:24,020
+ I mean, it's a lot of space, but I'm sure you can see them.
+
+63
+00:08:24,020 --> 00:08:25,020
+ Right?
+
+64
+00:08:25,020 --> 00:08:30,020
+ So it has a spacing, and it has to be editable here, where they can put in the duration,
+
+65
+00:08:30,020 --> 00:08:34,940
+ they can put in the start date, and the end date here, without having to click edit.
+
+66
+00:08:34,940 --> 00:08:39,500
+ At least the first round, this has to be very user friendly.
+
+67
+00:08:39,500 --> 00:08:45,660
+ now from I guess that's it from that cloud view, it didn't look user friendly, but with
+
+68
+00:08:45,660 --> 00:08:53,340
+ this list view it looks a bit more user friendly, but it does have to have the ability to mask
+
+69
+00:08:53,340 --> 00:08:59,340
+ or date. A way of creating a schedule, you could you have 10 line items, you could have 50, you
+
+70
+00:08:59,340 --> 00:09:05,900
+ could have 200. Nobody's going to be able to go double click, open air date, then put in and then
+
+71
+00:09:06,620 --> 00:09:15,100
+ some things are connected to others right like the start to finish the the the linkage of this one
+
+72
+00:09:15,100 --> 00:09:23,100
+ item to that one item so it's sometimes it helps where you can actually see everything in one go
+
+73
+00:09:23,100 --> 00:09:28,540
+ or most of the things in one go and you can put in the information and and if something is linked
+
+74
+00:09:28,540 --> 00:09:33,820
+ to something else you should be able to maybe drag and drop it there or something to that effect so
+
+75
+00:09:33,820 --> 00:09:35,760
+ So, you know, okay, that's the clearance.
+
+76
+00:09:35,760 --> 00:09:37,020
+ And this is gonna have to,
+
+77
+00:09:37,020 --> 00:09:39,440
+ this cannot be done before this one is done.
+
+78
+00:09:39,440 --> 00:09:41,040
+ So, the schedule needs some more.
+
+79
+00:09:42,580 --> 00:09:47,260
+ The downcharge view is, of course, the most important.
+
+80
+00:09:47,260 --> 00:09:49,180
+ When you're gonna view the schedule,
+
+81
+00:09:49,180 --> 00:09:50,760
+ not after you built it, right?
+
+82
+00:09:50,760 --> 00:09:54,140
+ So, this view has to be the person that,
+
+83
+00:09:54,140 --> 00:09:57,020
+ and it has to be able to be a detailed mask,
+
+84
+00:09:57,020 --> 00:10:01,160
+ where as you go down the line,
+
+85
+00:10:01,160 --> 00:10:04,080
+ You are seeing everything, you are presenting the dates,
+
+86
+00:10:04,080 --> 00:10:05,880
+ you are comparing the dates,
+
+87
+00:10:05,880 --> 00:10:08,480
+ and you're able to just walk very freely.
+
+88
+00:10:08,480 --> 00:10:11,080
+ The way it is now, it's almost like you expect somebody
+
+89
+00:10:11,080 --> 00:10:14,240
+ to come and double click into each of this or go to edit
+
+90
+00:10:14,240 --> 00:10:15,600
+ to then edit your own things.
+
+91
+00:10:15,600 --> 00:10:17,600
+ When you're building a schedule, you have to,
+
+92
+00:10:17,600 --> 00:10:20,080
+ especially in the beginning part,
+
+93
+00:10:20,080 --> 00:10:22,920
+ you have to be able to mass provide information,
+
+94
+00:10:22,920 --> 00:10:27,560
+ put in the dates or whatever it is and adjust things
+
+95
+00:10:27,560 --> 00:10:31,080
+ as you go see what is related to the other,
+
+96
+00:10:31,080 --> 00:10:36,860
+ maybe drag some stuff across or on top like say okay this one is gonna be this
+
+97
+00:10:36,860 --> 00:10:42,500
+ this is right after this happen after this this is all under the design that is
+
+98
+00:10:42,500 --> 00:10:47,940
+ under that contract so it has to be user friendly where they can easily navigate
+
+99
+00:10:47,940 --> 00:10:52,660
+ and create an actual schedule right now it does not look like that ability is
+
+100
+00:10:52,660 --> 00:10:54,960
+ there
+
+101
+00:11:01,080 --> 00:11:30,080
+ Did you get that chump? Yes, yes, yes. Thanks a lot. I'm going to try to drop down the chump.
+
+102
+00:11:30,080 --> 00:11:46,660
+ So, the builder is where he had the card view, but the builder should have the list to him.
+
+103
+00:11:46,660 --> 00:11:53,480
+ So, that is where you actually build the theorem, and you should have the ability to move things
+
+104
+00:11:53,480 --> 00:11:55,520
+ and tie them to what is valid.
+
+105
+00:11:55,520 --> 00:12:00,920
+ So if you go back to the card view, I think you had a start to finish and the relationships
+
+106
+00:12:00,920 --> 00:12:08,440
+ and stuff like that, that needs to be something that is available in the field and that should
+
+107
+00:12:08,440 --> 00:12:09,440
+ be in this view.
+
+108
+00:12:09,440 --> 00:12:14,080
+ So you should be able to open it big and see quite a few line items at the same time, and
+
+109
+00:12:14,080 --> 00:12:16,080
+ also need to reflect, tie, whatever.
+
+110
+00:12:16,080 --> 00:12:20,320
+ So I will leave it up to you on how you want to reflect what is tied towards.
+
+111
+00:12:20,320 --> 00:12:26,980
+ So either they can drag and drop it or they can send link to this parent issue and maybe
+
+112
+00:12:26,980 --> 00:12:29,700
+ be able to search for the issue and add it to that.
+
+113
+00:12:29,700 --> 00:12:36,980
+ So but it has to be fluid where if somebody is walking on a schedule, they're able to
+
+114
+00:12:36,980 --> 00:12:40,560
+ see everything they need to see and just easily move forward to the other.
+
+115
+00:12:40,560 --> 00:12:46,900
+ They won't finish this save, then go hit edit, open another card, put information, hit save,
+
+116
+00:12:46,900 --> 00:12:51,900
+ Oh, we're trying to get the tattoo, but every time you scroll up and down, up and down, you will go, man.
+
+117
+00:12:51,900 --> 00:12:52,900
+ Mm-hmm.
+
+118
+00:12:59,900 --> 00:13:00,900
+ Yeah.
+
+119
+00:13:10,900 --> 00:13:19,380
+ So, some of the scheduled items that are not yet assigned to a cost, it would also try
+
+120
+00:13:19,380 --> 00:13:24,140
+ to, like, try to place there where it says $4.20 to cost estimate.
+
+121
+00:13:24,140 --> 00:13:29,020
+ Okay, so why you say scheduled items are not assigned to a cost?
+
+122
+00:13:29,020 --> 00:13:30,020
+ That is not accurate.
+
+123
+00:13:30,020 --> 00:13:34,940
+ You clear the schedule before you clear the cost.
+
+124
+00:13:34,940 --> 00:13:39,500
+ So, at this point, I mean, yes, you can have an idea of what's possible.
+
+125
+00:13:39,500 --> 00:13:45,660
+ So you see this view, this is the VBS package view, so this is on the computer, right?
+
+126
+00:13:45,660 --> 00:13:49,980
+ So this is where you can apply the, this is the VBS, I don't know if you're trying to
+
+127
+00:13:49,980 --> 00:13:53,540
+ say the schedule items that are not on the top VBS, but there shouldn't be any schedule
+
+128
+00:13:53,540 --> 00:13:57,620
+ item, not on every item that the VBS should be tied to a schedule.
+
+129
+00:13:57,620 --> 00:14:05,260
+ So this has to be continuous where they shouldn't be tagged up, but say if somebody say add
+
+130
+00:14:05,260 --> 00:14:11,140
+ item and they might add something to the schedule like oh they just add this
+
+131
+00:14:11,140 --> 00:14:19,400
+ milestone right so they say let's add a milestone then it needs to be clear on
+
+132
+00:14:19,400 --> 00:14:25,860
+ which the video is a milestone type stuff like that but you can have
+
+133
+00:14:25,860 --> 00:14:31,740
+ milestones the schedule right now all these work packages have the requirements
+
+134
+00:14:31,740 --> 00:14:35,620
+ that they're tied to, the code and content they're tied to,
+
+135
+00:14:35,620 --> 00:14:40,620
+ and what milestones those topics or goals we are tied to.
+
+136
+00:14:40,780 --> 00:14:44,460
+ So those milestones are gonna guide kind of the schedule
+
+137
+00:14:44,460 --> 00:14:47,660
+ on as they're putting information on something
+
+138
+00:14:47,660 --> 00:14:52,340
+ related to what, there should be an inbuilt
+
+139
+00:14:52,340 --> 00:14:56,820
+ at the code level, like code red if the schedule item
+
+140
+00:14:56,820 --> 00:14:59,940
+ is going past the milestone that identifies for us.
+
+141
+00:14:59,940 --> 00:15:05,460
+ that way it is clear that hey, we've put this in the schedule, we have since started this and that
+
+142
+00:15:06,340 --> 00:15:12,340
+ milestone that this is to feed is supposed to have been two months before or a week before.
+
+143
+00:15:12,340 --> 00:15:20,020
+ So that way they can make informed decisions on how they are building the schedule. But
+
+144
+00:15:20,020 --> 00:15:31,220
+ Build your schedule takes time usually and requires fluid movements and stuff so it needs to be
+
+145
+00:15:35,220 --> 00:15:41,220
+ it needs to be a process where it's going to be easy for them to actually build in the building.
+
+146
+00:15:50,020 --> 00:16:16,160
+ So those muscles have to be clear, um, on the schedule in the, for the, for the grand
+
+147
+00:16:16,160 --> 00:16:17,160
+ chat as well.
+
+148
+00:16:17,160 --> 00:16:27,420
+ there has to be some level of color coding, it doesn't have to be, you don't, the buyers
+
+149
+00:16:27,420 --> 00:16:32,420
+ have to have a certain level of color coding that's associated with being children.
+
+150
+00:16:32,420 --> 00:16:37,740
+ So and I'm not, there's nothing, I don't have any specific colors in my like color coding
+
+151
+00:16:37,740 --> 00:16:42,500
+ idea in my mind, but the third process is, there has to be a way to tell the difference
+
+152
+00:16:42,500 --> 00:16:49,620
+ between like the difference, right, so maybe for EP-1 you have a certain color code, EP-2, EP-3,
+
+153
+00:16:49,620 --> 00:16:52,740
+ come up with a structure to everything that fits
+
+154
+00:16:54,020 --> 00:16:58,820
+ goal one might all be this specific color, anything that fits goal two, goal three,
+
+155
+00:16:59,780 --> 00:17:05,060
+ and then within them, that is going to make it easy to like catch things, like say oh wait isn't
+
+156
+00:17:05,060 --> 00:17:09,300
+ that goal one, right, so everything is just yellow, it's not going to be very easy to move things
+
+157
+00:17:09,300 --> 00:17:16,300
+ So the promise is to make it usable and effective for those that are actually using it.
+
+158
+00:17:39,300 --> 00:17:49,260
+ Okay, so I got from a schedule perspective and what I saw last time, this is a bit different
+
+159
+00:17:49,260 --> 00:17:50,260
+ from that.
+
+160
+00:17:50,260 --> 00:17:54,640
+ So, it sounds like they're still working on this page, but I would really like to see
+
+161
+00:17:54,640 --> 00:18:08,540
+ the schedule actually functional, reflecting the WBS, reflecting the word you call it.
+
+162
+00:18:08,540 --> 00:18:18,940
+ They have to, depending on how the WPS is broken down, so it needs to reflect out.
+
+163
+00:18:18,940 --> 00:18:22,500
+ I mean, this is agile, so you'll probably go straight, straight forward.
+
+164
+00:18:22,500 --> 00:18:27,900
+ But if you were broken down by area or whatever it is, you cannot see the schedule associated
+
+165
+00:18:27,900 --> 00:18:28,900
+ with each one.
+
+166
+00:18:28,900 --> 00:18:36,220
+ The gank gen view also has to be rolled, like you can roll it up where you can see it at
+
+167
+00:18:36,220 --> 00:18:47,200
+ The very detailed level that if you click on, this is B6, no, 86, 87, 88, 89, but it's
+
+168
+00:18:47,200 --> 00:18:52,340
+ all at the same time, but it was go one and you sit down and go one and you just sit and
+
+169
+00:18:52,340 --> 00:18:55,100
+ go one, go one, go two, go three.
+
+170
+00:18:55,100 --> 00:18:57,980
+ On the schedule you can kind of see where all those things go.
+
+171
+00:18:57,980 --> 00:19:03,660
+ If you put them and minimize it, you can just see where go one, go two, and go three.
+
+172
+00:19:03,660 --> 00:19:12,780
+ how gone there is right. If you so everything has to time and then also for the contract and
+
+173
+00:19:12,780 --> 00:19:19,180
+ procurement I think they already have like a tracking and what's associated with those ones
+
+174
+00:19:19,180 --> 00:19:25,420
+ but those need to be tied in with the schedule of course so the WVAS is that are impacting the
+
+175
+00:19:25,420 --> 00:19:32,140
+ contract procurement which we're able to see okay the contract we're going to talk about where the
+
+176
+00:19:32,140 --> 00:19:35,980
+ contract dashboard that shows okay this is everything that we can contract and this is where
+
+177
+00:19:35,980 --> 00:19:41,260
+ they are. Those of the BPS's have to then be linked through to the schedule. So that way the
+
+178
+00:19:41,260 --> 00:19:46,060
+ schedule will be the one source of truth of where everything is. Anything that is now keeping the
+
+179
+00:19:46,060 --> 00:19:52,540
+ procurement or the contract tracking will be from the schedule because the schedule is what's going
+
+180
+00:19:52,540 --> 00:19:58,140
+ to be in the project controls where you then map the schedule to the cost and so the schedule is
+
+181
+00:19:58,140 --> 00:20:00,860
+ He's going to show you what the project really is.
+
+182
+00:20:00,860 --> 00:20:04,380
+ Get a list of what is being done.
+
+183
+00:20:18,540 --> 00:20:22,820
+ The schedule is going to be what you drive the cost,
+
+184
+00:20:22,820 --> 00:20:24,620
+ like the starting point for the cost,
+
+185
+00:20:24,620 --> 00:20:27,020
+ and are there any additional costs?
+
+186
+00:20:27,020 --> 00:20:32,340
+ And the project controls is literally gonna be the schedule items, besides the cost items,
+
+187
+00:20:32,340 --> 00:20:36,260
+ and then tracking the actual, um, um, plan.
+
+188
+00:20:36,260 --> 00:20:41,580
+ That's the project controls is gonna be telling you, okay, you said it was gonna take one
+
+189
+00:20:41,580 --> 00:20:49,980
+ week to get this, this work done for two weeks, but we are at two weeks and you spent one
+
+190
+00:20:49,980 --> 00:20:52,140
+ dollar and we're not done.
+
+191
+00:20:52,140 --> 00:20:56,180
+ So it's gonna give you like that update of, okay, for this work, this is what it was supposed
+
+192
+00:20:56,180 --> 00:21:01,300
+ be this is what it what it is right right right right now this is the very last and that way
+
+193
+00:21:01,300 --> 00:21:04,580
+ you kind of know where to focus and to get things going.
+
+194
+00:21:12,020 --> 00:21:17,220
+ I'm just seeing this integration button is it a new case?
+
+195
+00:21:55,540 --> 00:21:58,540
+ (keyboard clicking)
+
+196
+00:22:25,540 --> 00:22:36,900
+ Yes, I think this pit has been there for about a week or two.
+
+197
+00:22:36,900 --> 00:22:42,620
+ It just amalgamates all the information, but I guess the issue is just looking at what
+
+198
+00:22:42,620 --> 00:22:43,620
+ to place it.
+
+199
+00:22:43,620 --> 00:22:44,620
+ Maybe it would be better placed inside.
+
+200
+00:22:44,620 --> 00:22:45,620
+ I think maybe Chin can advise.
+
+201
+00:22:45,620 --> 00:22:46,620
+ So, I think this dashboard is kind of what I talked to.
+
+202
+00:22:46,620 --> 00:22:47,620
+ I think Anthony, was it Anthony?
+
+203
+00:22:47,620 --> 00:22:48,620
+ Yes.
+
+204
+00:22:48,620 --> 00:22:55,080
+ So, I think this dashboard is kind of what I talked to. I think Anthony. Was it Anthony
+
+205
+00:22:55,080 --> 00:23:02,960
+ or Michael? Yes, yes, yes. Who was Michael? Yeah. Yeah. So, because overall, so this was
+
+206
+00:23:02,960 --> 00:23:11,000
+ like, I think in June or July, but overall, what was being focused on with the dashboard
+
+207
+00:23:11,000 --> 00:23:19,240
+ was the program dashboard and the portfolio dashboard. But every project needs to have
+
+208
+00:23:19,240 --> 00:23:24,920
+ its own dashboard that has this key information. That's the information that will then feed the
+
+209
+00:23:24,920 --> 00:23:30,200
+ program dashboard and the portfolio dashboard. Does that make sense? So I think this is going
+
+210
+00:23:30,200 --> 00:23:35,400
+ to work. He came up to it or I don't know if it was you that did this show. But the third process was
+
+211
+00:23:36,280 --> 00:23:41,640
+ this would be like the main dashboard for that each product will have its own product dashboard
+
+212
+00:23:41,640 --> 00:23:47,320
+ that gives you its own updates. The one is the program that's where that program gets all the
+
+213
+00:23:47,320 --> 00:23:52,680
+ information that most of the information that feeds the program and the portfolio it just takes
+
+214
+00:23:52,680 --> 00:23:59,720
+ it from the programs. So that's what I believe this is um this is in the planning phase and yes
+
+215
+00:23:59,720 --> 00:24:02,320
+ I'm saying this for the first time too, today.
+
+216
+00:24:02,320 --> 00:24:04,080
+ I didn't see it through yesterday.
+
+217
+00:24:09,480 --> 00:24:11,320
+ The third process here is 'cause in planning,
+
+218
+00:24:11,320 --> 00:24:13,500
+ you might still have some work that is moving forward.
+
+219
+00:24:13,500 --> 00:24:15,840
+ So the dashboard, I mean, there's no information
+
+220
+00:24:15,840 --> 00:24:17,580
+ that will not have anything from everything,
+
+221
+00:24:17,580 --> 00:24:20,400
+ it will be zero, like in progress, whatever it is.
+
+222
+00:24:20,400 --> 00:24:23,840
+ But when information starts becoming available,
+
+223
+00:24:23,840 --> 00:24:26,320
+ and it starts showing up here, all right.
+
+224
+00:24:26,320 --> 00:24:33,640
+ So in planning, I would say that from the usability
+
+225
+00:24:33,640 --> 00:24:36,520
+ perspective, that should not be between the cost of schedule.
+
+226
+00:24:36,520 --> 00:24:38,880
+ After the schedule, you need to go to cost.
+
+227
+00:24:38,880 --> 00:24:42,240
+ So it's definitely in the wrong place there.
+
+228
+00:24:42,240 --> 00:24:46,360
+ I feel like maybe the guide work can go towards the bottom.
+
+229
+00:24:46,360 --> 00:24:49,800
+ And all of this is filled out, because in this case,
+
+230
+00:24:49,800 --> 00:24:53,200
+ where we are trying to build out what the work is going to be,
+
+231
+00:24:53,200 --> 00:24:55,480
+ so there really shouldn't be anything for anybody
+
+232
+00:24:55,480 --> 00:24:57,120
+ to be viewed right now.
+
+233
+00:24:57,120 --> 00:25:01,880
+ But yes, this is supposedly so good with the project
+
+234
+00:25:01,880 --> 00:25:05,080
+ because the way our current system is,
+
+235
+00:25:05,080 --> 00:25:07,080
+ you have your personal dash, dash, dash.
+
+236
+00:25:07,080 --> 00:25:08,480
+ Well, that's where you run.
+
+237
+00:25:09,680 --> 00:25:11,960
+ So your personal dash will show you your projects,
+
+238
+00:25:11,960 --> 00:25:14,040
+ your program to portfolio,
+
+239
+00:25:14,040 --> 00:25:15,000
+ shows you that it works,
+
+240
+00:25:15,000 --> 00:25:16,920
+ that you're pending and stuff like that.
+
+241
+00:25:16,920 --> 00:25:18,720
+ And gives you some information.
+
+242
+00:25:18,720 --> 00:25:21,440
+ So, but then you see your project.
+
+243
+00:25:21,440 --> 00:25:22,640
+ So when you click on project,
+
+244
+00:25:22,640 --> 00:25:24,760
+ you just click on the project and that's it.
+
+245
+00:25:24,760 --> 00:25:31,000
+ takes you to the project. When you click on program then you go to the program dashboard
+
+246
+00:25:31,000 --> 00:25:36,680
+ so it shows you all the programs and then all the information for the programs but for the
+
+247
+00:25:36,680 --> 00:25:40,760
+ descent it shows you all the information so it's just projects that brings you directly into the
+
+248
+00:25:40,760 --> 00:25:49,720
+ project. So the third process is I think this dashboard actually needs to be very accessible.
+
+249
+00:25:49,720 --> 00:25:56,520
+ right now I'm not seeing that product activities list but the dashboard itself and the activities
+
+250
+00:25:56,520 --> 00:26:02,680
+ list need to be almost in the top right we need to have the product activity did you remove that
+
+251
+00:26:02,680 --> 00:26:12,600
+ from there or what's going on not necessarily like let me look at it so for example on a page like
+
+252
+00:26:14,120 --> 00:26:19,480
+ let me look at the page like this so it shows us like this so so like this is the first level
+
+253
+00:26:20,600 --> 00:26:25,160
+ where it shows you always assigned to something and then when you click on it it shows you advance
+
+254
+00:26:25,160 --> 00:26:33,960
+ view okay again this guard view i've talked about this so many times you cannot have a card view
+
+255
+00:26:33,960 --> 00:26:39,560
+ that has to be a table view but we talked about that i believe like two months ago for the
+
+256
+00:26:39,560 --> 00:26:41,240
+ the activities log.
+
+257
+00:26:41,240 --> 00:26:43,120
+ So I know you're working on a few things.
+
+258
+00:26:43,120 --> 00:26:45,920
+ If you can just take that comment and implement it,
+
+259
+00:26:45,920 --> 00:26:48,880
+ the card view is not what it is.
+
+260
+00:26:48,880 --> 00:26:50,600
+ I mean, some people might wanna see a card view
+
+261
+00:26:50,600 --> 00:26:53,540
+ and search and find what they're looking for.
+
+262
+00:26:53,540 --> 00:26:56,320
+ But also when you have that listable view,
+
+263
+00:26:56,320 --> 00:26:59,040
+ they're able to see way more information, scroll right,
+
+264
+00:26:59,040 --> 00:27:03,040
+ and see everything associated with that thing in one glance.
+
+265
+00:27:03,040 --> 00:27:08,040
+ So the product activities log is something that needs to be
+
+266
+00:27:09,560 --> 00:27:15,740
+ There, so when you have the outstanding task, is this outstanding task for the person or
+
+267
+00:27:15,740 --> 00:27:20,820
+ for their discipline or for their role, right?
+
+268
+00:27:20,820 --> 00:27:27,020
+ So I don't mind this, it's just, I think the dashboard and the activity log needs to
+
+269
+00:27:27,020 --> 00:27:33,580
+ be easily accessible anywhere you are on the site, so that way, but in this planning section,
+
+270
+00:27:33,580 --> 00:27:38,660
+ I do believe that if there's anything that they need to update in the activity log, they
+
+271
+00:27:38,660 --> 00:27:43,540
+ can do that if there's any options that they need to implement they can do that in this planning
+
+272
+00:27:43,540 --> 00:27:51,380
+ phase but the dashboard needs to be readily available so that way if you come in you can
+
+273
+00:27:51,380 --> 00:27:57,540
+ just see okay this is where we are recording kind of got a status of update on how far things are
+
+274
+00:27:57,540 --> 00:28:02,420
+ going on the project what what the developers are pending and stuff like that what is late what what
+
+275
+00:28:02,420 --> 00:28:08,980
+ risks have not been toyed and stuff like that. So that dashboard needs to be readily accessible
+
+276
+00:28:08,980 --> 00:28:14,260
+ once you get on into the project. You can tell that we program on portfolio but the
+
+277
+00:28:14,260 --> 00:28:19,700
+ project on is the one that I believe Michael and I were discussing that it has had an easily
+
+278
+00:28:19,700 --> 00:28:25,380
+ accessible dashboard for rate and that's what will feed the program on portfolio as well.
+
+279
+00:28:25,380 --> 00:28:29,460
+ Because right now in program and portfolio I do not know how they are getting the information.
+
+280
+00:28:29,460 --> 00:28:30,860
+ And I think you guys were grabbing it
+
+281
+00:28:30,860 --> 00:28:32,620
+ from the different sections.
+
+282
+00:28:32,620 --> 00:28:34,760
+ But make sense that something is rolling up, rolling up,
+
+283
+00:28:34,760 --> 00:28:35,860
+ rolling in, right?
+
+284
+00:28:35,860 --> 00:28:39,100
+ So at the particular level, you have this dashboard.
+
+285
+00:28:39,100 --> 00:28:40,500
+ And that information from it as well
+
+286
+00:28:40,500 --> 00:28:42,580
+ feeds the program and then the portfolio.
+
+287
+00:28:57,820 --> 00:28:59,620
+ >> Okay, so I think those are my key comments.
+
+288
+00:28:59,620 --> 00:29:01,220
+ Was there anything else?
+
+289
+00:29:01,220 --> 00:29:03,100
+ Like, because I feel like this schedule needs to be --
+
+290
+00:29:03,100 --> 00:29:06,660
+ I don't know if we can't talk about it first,
+
+291
+00:29:06,660 --> 00:29:09,220
+ if the schedule is not done.
+
+292
+00:29:09,220 --> 00:29:12,860
+ Right now, the schedule doesn't really reflect the schedule.
+
+293
+00:29:12,860 --> 00:29:15,540
+ To some extent, like, the least viewed does,
+
+294
+00:29:15,540 --> 00:29:19,620
+ but it does not sound like --
+
+295
+00:29:19,620 --> 00:29:20,860
+ and for work, like I said,
+
+296
+00:29:20,860 --> 00:29:23,300
+ it's great that the WBL did pull in here.
+
+297
+00:29:23,300 --> 00:29:26,180
+ Now, the milestones pull in there, right?
+
+298
+00:29:26,180 --> 00:29:28,840
+ So did he show those milestones that he selected?
+
+299
+00:29:28,840 --> 00:29:30,320
+ Is there anything tied to those milestones?
+
+300
+00:29:30,320 --> 00:29:34,840
+ There's those epics that we linked to milestones.
+
+301
+00:29:34,840 --> 00:29:37,400
+ Are we showing here that, hey, this are the dates for it.
+
+302
+00:29:37,400 --> 00:29:40,580
+ So those dates at a good level should also show here.
+
+303
+00:29:40,580 --> 00:29:42,840
+ But it should also kind of give that information
+
+304
+00:29:42,840 --> 00:29:45,880
+ of, okay, this is, these are the key things.
+
+305
+00:29:45,880 --> 00:29:49,960
+ If you said, oh, we need this contract, this certain date,
+
+306
+00:29:49,960 --> 00:29:54,080
+ the work packages that are associated with that contract
+
+307
+00:29:54,080 --> 00:30:00,240
+ to have that date as a date as the back end for it but this has to be fully tied in together. This
+
+308
+00:30:00,240 --> 00:30:05,280
+ is not just going to be a new this thing where I mean it is good that it's already coding the
+
+309
+00:30:05,280 --> 00:30:11,680
+ packages um the work packages but the most important thing is you need to reflect the dates
+
+310
+00:30:11,680 --> 00:30:17,280
+ that have been committed to so if we put any mouse on dates you know due by dates whatever it is
+
+311
+00:30:17,280 --> 00:30:23,200
+ anywhere on the side. At the core level we shoot all those to reflect on the schedule
+
+312
+00:30:23,200 --> 00:30:26,000
+ and then you can start moving things around and stuff like that.
+
+313
+00:30:28,000 --> 00:30:35,680
+ And there should be that that that error or warning sign that shows if you said this this
+
+314
+00:30:35,680 --> 00:30:40,880
+ is going to be due on June 1st and when you're putting it in full what is linked to it and
+
+315
+00:30:40,880 --> 00:30:43,220
+ The Latin is coming on June 8th.
+
+316
+00:30:43,220 --> 00:30:46,420
+ There should be some kind of name, like, hey,
+
+317
+00:30:46,420 --> 00:30:47,780
+ these days don't match.
+
+318
+00:30:47,780 --> 00:30:52,020
+ And then people have to discuss and override a date.
+
+319
+00:30:52,020 --> 00:30:54,540
+ And also, that should be tracked, where, okay,
+
+320
+00:30:54,540 --> 00:30:56,500
+ these are all the decisions being made,
+
+321
+00:30:56,500 --> 00:30:58,460
+ and these are things that are removed.
+
+322
+00:30:58,460 --> 00:31:03,460
+ So that way, people know why dates are out there.
+
+323
+00:31:10,880 --> 00:31:19,460
+ Uh, did you get that deal with the down? The same. Excuse me, things like, um, yes,
+
+324
+00:31:19,480 --> 00:31:22,180
+ one question questions because it's you.
+
+325
+00:31:23,180 --> 00:31:23,880
+ Yes, actually.
+
+326
+00:31:37,780 --> 00:31:40,780
+ I'm sorry. Did he say he had the question? He's he said
+
+327
+00:31:40,780 --> 00:31:49,100
+ got it. I got the answer. I wasn't sure what the answer was for. No, I followed. All right, cool.
+
+328
+00:31:49,100 --> 00:31:53,740
+ So was there anything else for today? Because I don't think, I think we are at an end where
+
+329
+00:31:54,540 --> 00:32:00,060
+ this has to be fully implemented. And I think the, the, the, the content and the
+
+330
+00:32:00,060 --> 00:32:03,900
+ procurement pages need to be updated. I think we need to measure that information
+
+331
+00:32:03,900 --> 00:32:07,900
+ because we've kind of gone through some of these sections. We've talked about what they need to be.
+
+332
+00:32:07,900 --> 00:32:13,180
+ I know you said that you've been making some of those changes, and I know in the interest of time,
+
+333
+00:32:13,180 --> 00:32:18,780
+ we are kind of getting through so we can get through everything, but that continuity is very
+
+334
+00:32:18,780 --> 00:32:26,060
+ important. So I need you to confirm, you know, that at least the milestones, the linkage, and all of
+
+335
+00:32:26,060 --> 00:32:32,380
+ that have made it to the schedule. So we do have to go through the schedule again to confirm that.
+
+336
+00:32:32,380 --> 00:32:39,660
+ So once you got made the update and your idea and internal review, the thought process would
+
+337
+00:32:39,660 --> 00:32:47,660
+ be to ensure that that continuity is there. So again, you have the wall breakdown structure,
+
+338
+00:32:47,660 --> 00:32:53,260
+ you have, and we went to the go safety school option, but I am repeating this again, so we're
+
+339
+00:32:53,260 --> 00:33:00,940
+ very clear. If you scroll all the way up on the sidebar, sorry. So the cyber planning, sorry,
+
+340
+00:33:00,940 --> 00:33:07,580
+ come back to the planning phase. The planning phase we had to protect these details. We
+
+341
+00:33:07,580 --> 00:33:11,820
+ had to work with them so they went to the goals and milestones. So we came into the goals and
+
+342
+00:33:11,820 --> 00:33:19,900
+ milestones. So we went to the goals and milestones. The thought process was to tie the goals to every
+
+343
+00:33:20,940 --> 00:33:26,540
+ milestones, the deep milestones for the goals. Can you scroll down please on the
+
+344
+00:33:26,540 --> 00:33:31,580
+ milestone section. So the third process was anything that was that had like a specific
+
+345
+00:33:31,580 --> 00:33:36,940
+ milestone and it's not so we first of all had the milestones that were then identified in the FEP
+
+346
+00:33:36,940 --> 00:33:43,980
+ but have been started by this get this license by days start start off the invitation stream by
+
+347
+00:33:43,980 --> 00:33:54,700
+ by by this get the delivery um delivery API into into whatever date so you have like those days
+
+348
+00:33:54,700 --> 00:33:59,740
+ that it could has two milestones. The FEP-1 pull down here, it does this change itself,
+
+349
+00:33:59,740 --> 00:34:06,060
+ you kind of implement that. Now you have mapped those milestones to the work breakdown structure,
+
+350
+00:34:06,060 --> 00:34:12,540
+ so the VBS elements of, okay, this one has to be done here. This is where you do that mapping.
+
+351
+00:34:12,540 --> 00:34:16,700
+ Once you've mapped those milestones, you know when you need to get stuck down.
+
+352
+00:34:16,700 --> 00:34:20,620
+ So this needs to be understood, it needs to be reflected on the schedule, because those
+
+353
+00:34:20,620 --> 00:34:26,060
+ work with our structure and go to the different levels say if it was in relations now like this
+
+354
+00:34:27,500 --> 00:34:33,260
+ in that stuff again maybe together line this particular one has to stick to that mouse
+
+355
+00:34:33,260 --> 00:34:37,660
+ mouse stone because it's going to be the person purchasing it but this one is just for somebody
+
+356
+00:34:37,660 --> 00:34:42,780
+ to go and dig the ground and they can dig the ground anytime you want right before it gets there
+
+357
+00:34:42,780 --> 00:34:46,860
+ so that one might not be tied to that mouse stone so it's on the sudden there are activities that
+
+358
+00:34:46,860 --> 00:34:48,200
+ that are related and unlocked.
+
+359
+00:34:48,200 --> 00:34:50,800
+ And that's where the schedule is gonna help flush out.
+
+360
+00:34:50,800 --> 00:34:51,960
+ So the reason I'm saying this is,
+
+361
+00:34:51,960 --> 00:34:53,720
+ this has to be reflected on the schedule.
+
+362
+00:34:53,720 --> 00:34:55,720
+ That schedule has to start off with like,
+
+363
+00:34:55,720 --> 00:34:57,360
+ you have to have kind of a timeline.
+
+364
+00:34:57,360 --> 00:34:58,760
+ And with the schedule right now,
+
+365
+00:34:58,760 --> 00:35:03,180
+ I see it just shows like, I think two weeks or two months.
+
+366
+00:35:03,180 --> 00:35:04,480
+ I don't know what it is.
+
+367
+00:35:04,480 --> 00:35:06,040
+ But the schedule has to be big enough
+
+368
+00:35:06,040 --> 00:35:07,920
+ where it can show like months, right?
+
+369
+00:35:07,920 --> 00:35:09,840
+ And then of course, if you wanna zoom in
+
+370
+00:35:09,840 --> 00:35:11,520
+ to like one month, you can do that.
+
+371
+00:35:11,520 --> 00:35:13,880
+ But when you have time in your schedule,
+
+372
+00:35:13,880 --> 00:35:15,680
+ you have to be able to see the schedule.
+
+373
+00:35:15,680 --> 00:35:22,000
+ could be quarterly, it could be weekly, it could be monthly, right, where you can kind of change
+
+374
+00:35:22,000 --> 00:35:26,800
+ that view where if you want to just, if the product is going to be a 16 month project, you want to
+
+375
+00:35:26,800 --> 00:35:32,000
+ be able to zoom out where you can see in 16 months, this is kind of what it will look like. But of
+
+376
+00:35:32,000 --> 00:35:36,080
+ course, as you're building each element, you want to be closer, so it could be, oh, this week, this month,
+
+377
+00:35:36,080 --> 00:35:43,440
+ this quarter, this year, right? So that, so I think that the key thing that it has to be usable
+
+378
+00:35:44,080 --> 00:35:48,320
+ overall. So now you've done the goals I'm asking, can you please click on the requirements?
+
+379
+00:35:53,840 --> 00:35:59,440
+ Now for the requirements, you've kind of looked at the requirements and like confirming all the
+
+380
+00:35:59,440 --> 00:36:04,640
+ all the requirements that are required to actually get the work done so you can import it or export
+
+381
+00:36:04,640 --> 00:36:09,920
+ it. I know you guys were still working on the template and all of that actually if that's
+
+382
+00:36:09,920 --> 00:36:14,160
+ finalized because we've talked about it a few times but so confirm that that's also
+
+383
+00:36:14,160 --> 00:36:20,400
+ functional right so you have requirements awarded in parts um can you scroll right on the
+
+384
+00:36:20,400 --> 00:36:25,760
+ front but i don't know if you ended up tying the requirements to the the previous elements here
+
+385
+00:36:25,760 --> 00:36:31,200
+ i see something we just see for design planning things go to the right are you able to scroll to
+
+386
+00:36:31,200 --> 00:36:38,000
+ the right all right so requirements so it's coming we're coming link so this just and the phase so
+
+387
+00:36:38,000 --> 00:36:39,240
+ So this just talk about the trades.
+
+388
+00:36:39,240 --> 00:36:41,860
+ It doesn't talk about the WBS element
+
+389
+00:36:41,860 --> 00:36:44,380
+ that the requirement is tied to.
+
+390
+00:36:44,380 --> 00:36:46,260
+ But that's okay because in design planning,
+
+391
+00:36:46,260 --> 00:36:50,540
+ it does talk about not the requirements to do.
+
+392
+00:36:50,540 --> 00:36:53,620
+ So we didn't tie the requirements to any WBS element.
+
+393
+00:36:57,300 --> 00:36:58,420
+ Can you go back left?
+
+394
+00:37:00,300 --> 00:37:05,300
+ The requirements, comments, person, rule, discipline, time.
+
+395
+00:37:07,180 --> 00:37:09,080
+ - Oh, okay.
+
+396
+00:37:09,080 --> 00:37:09,920
+ So...
+
+397
+00:37:37,180 --> 00:38:03,300
+ Yeah, so the requirements were supposed to be tied to the WBS elements at the second
+
+398
+00:38:03,300 --> 00:38:16,700
+ level. So you must write again. So do you remember tying this to any WBS element? I
+
+399
+00:38:16,700 --> 00:38:21,220
+ know we were spending a lot of time trying to do the upload and download so we didn't
+
+400
+00:38:21,220 --> 00:38:29,180
+ quite get into this. No. So actually thinking about right now. So I think the thing that
+
+401
+00:38:29,180 --> 00:38:37,540
+ We're tied to the W should be the it should be the most of the goals of most of the requirements. No
+
+402
+00:38:59,180 --> 00:39:16,100
+ what's been on the phone. I think we can't I think we can't act because the
+
+403
+00:39:16,100 --> 00:39:35,960
+ chatter was approved or something because oh it's oh so I'm pressing yeah
+
+404
+00:39:46,100 --> 00:39:49,940
+ (speaking in foreign language)
+
+405
+00:39:59,660 --> 00:40:02,060
+ - Yeah, so the requirements,
+
+406
+00:40:02,060 --> 00:40:05,100
+ I'm not sure how that's a little bit,
+
+407
+00:40:05,100 --> 00:40:09,860
+ but the requirements is supposed to be tied to a WBS element,
+
+408
+00:40:09,860 --> 00:40:12,440
+ so the second level of the WBS.
+
+409
+00:40:16,100 --> 00:40:36,460
+ So it's not triggering the problem, I have to check, what's going on.
+
+410
+00:40:36,460 --> 00:40:54,460
+ Because they manually added some of the requirements they put from the FAP.
+
+411
+00:40:54,460 --> 00:41:02,460
+ So Chumu, can you scroll left on the sidebar?
+
+412
+00:41:02,460 --> 00:41:04,460
+ On the sidebar?
+
+413
+00:41:04,460 --> 00:41:09,860
+ yes I know we are in the station I want to sit down in all right so we have
+
+414
+00:41:09,860 --> 00:41:14,240
+ requirements so if you didn't mark the requirements to the biggest we mark the
+
+415
+00:41:14,240 --> 00:41:19,280
+ goals and the milestones so we're supposed to mark them to the requirements
+
+416
+00:41:19,280 --> 00:41:22,340
+ but I think in the requirements session we spent all the time talking about
+
+417
+00:41:22,340 --> 00:41:28,100
+ important that is the only thing I remember about this conversation was
+
+418
+00:41:28,100 --> 00:41:41,540
+ The requirements are supposed to be mapped to those back to the second level with the WPS.
+
+419
+00:41:42,420 --> 00:41:47,300
+ That's why it's actually like right beside the WPS was to make sure that
+
+420
+00:41:48,340 --> 00:41:53,860
+ the requirements like what do they apply to? Like what are they going to impact on the project?
+
+421
+00:41:55,140 --> 00:42:03,060
+ So I think we might need to either ditch one of the columns or to restrict the goal or to,
+
+422
+00:42:03,060 --> 00:42:06,020
+ because I feel like there's already a lot of columns. And we still, can you explain,
+
+423
+00:42:06,020 --> 00:42:11,300
+ can you hit that screen? I see the expander from there. I was going to say we still can expand,
+
+424
+00:42:11,300 --> 00:42:18,260
+ but I see the expander from there. So I'm going to hit that. But it doesn't fill the screen,
+
+425
+00:42:18,260 --> 00:42:22,260
+ do you see that? Can you do this? Because we still can't. Yes. So when they expand,
+
+426
+00:42:22,260 --> 00:42:27,140
+ because fill up the screen with it. It's basically the whole screen with it.
+
+427
+00:42:30,660 --> 00:42:38,500
+ Okay, all right and then so we go through the requirement discipline, the type that's needed.
+
+428
+00:42:39,060 --> 00:42:47,700
+ The discipline is required. The rule, the person, the phase. What phase requirement applies to the
+
+429
+00:42:47,700 --> 00:42:53,620
+ that. The source, okay, maybe we can get more comments on the source link that is required.
+
+430
+00:42:54,180 --> 00:43:05,140
+ Now the person, who is responsible, the rules, and then the discipline. So what is the thing
+
+431
+00:43:05,140 --> 00:43:15,460
+ that this requirement impacts? Who should steal this requirement? So we might need to add a tile.
+
+432
+00:43:17,700 --> 00:43:30,500
+ a column for the impact of what's called the B.S. name, right, the BBS element.
+
+433
+00:43:31,460 --> 00:43:38,020
+ So what the impact of the BBS element, like it's not here for sure. So
+
+434
+00:43:39,540 --> 00:43:45,140
+ I think that is one key thing that is needed for this requirement is to know which, so when I was
+
+435
+00:43:45,140 --> 00:43:50,740
+ talking about the contract and procurement and I was saying the requirement also is tied to the WBS
+
+436
+00:43:50,740 --> 00:43:56,820
+ so if it's this work packet then you know all the requirements associated with it and those
+
+437
+00:43:56,820 --> 00:44:02,900
+ requirements of course have really been linked to the code and the standards in the design planning
+
+438
+00:44:02,900 --> 00:44:13,140
+ section. So that step is missing here is the linkage of the requirements to the WBS technical level.
+
+439
+00:44:15,140 --> 00:44:25,140
+ So it will be almost similar to mapping the milestones to the goals.
+
+440
+00:44:25,140 --> 00:44:31,140
+ This way you are mapping the goals to the requirements.
+
+441
+00:44:31,140 --> 00:44:34,140
+ It could be more than one goal, it could be all the goals.
+
+442
+00:44:34,140 --> 00:44:37,140
+ See the entire project, you will see the entire project.
+
+443
+00:44:37,140 --> 00:44:44,140
+ If it's just one of those goals, it will just say that goal.
+
+444
+00:44:45,140 --> 00:44:52,020
+ and then be so good so let me please go left again because i'm surprised this is not her
+
+445
+00:44:53,780 --> 00:44:59,460
+ so if i'm in type discipline so what is the place in parts we're all those on the project
+
+446
+00:45:00,340 --> 00:45:06,580
+ the person who is actually going to be responsible for it
+
+447
+00:45:08,900 --> 00:45:13,140
+ and then yeah we need wbs
+
+448
+00:45:15,140 --> 00:45:31,140
+ I don't want to miss guide you and I don't want it to be lost, so I'm going to send an
+
+449
+00:45:31,140 --> 00:45:41,140
+ email on your own because that's how you can tie the WBS to the--
+
+450
+00:45:41,140 --> 00:45:48,980
+ to the requirements here. So when I was talking about point talking yesterday, I was like,
+
+451
+00:45:48,980 --> 00:45:53,860
+ once you have those requirements, the WPSA, you know what requirements, fix it, and then
+
+452
+00:45:53,860 --> 00:45:58,360
+ we think the requirements to the cause and standard. That's how everything stays combined
+
+453
+00:46:58,360 --> 00:47:08,360
+ [BLANK_AUDIO]
+
+454
+00:47:28,360 --> 00:47:36,260
+ [BLANK_AUDIO]
+
+455
+00:47:36,260 --> 00:47:36,820
+ >> Hello?
+
+456
+00:47:36,820 --> 00:47:39,080
+ [BLANK_AUDIO]
+
+457
+00:47:39,080 --> 00:47:41,060
+ >> I'm here, I'm sending you the email.
+
+458
+00:47:41,060 --> 00:47:41,560
+ >> Okay.
+
+459
+00:47:41,560 --> 00:47:45,980
+ [BLANK_AUDIO]
+
+460
+00:47:45,980 --> 00:47:50,740
+ >> Why wasn't Elliot Kipchoge's sub two hour marathon officially recognized by
+
+461
+00:47:50,740 --> 00:47:51,660
+ world athletics?
+
+462
+00:47:51,660 --> 00:47:56,540
+ First, he had 41 world class pacemakers split into six rotating groups,
+
+463
+00:47:56,540 --> 00:48:01,940
+ Forming a human wall that blocked more than 85% of the wind, something you'd never see in a real marathon.
+
+464
+00:48:01,940 --> 00:48:09,120
+ Second, a pace car drove in front of him, projecting a green laser line to mark the ideal racing path and maintain the perfect pace.
+
+465
+00:48:09,120 --> 00:48:16,240
+ Third, a custom carbon-plated shoes far beyond the rules allowed, estimated to save over 5% of his energy.
+
+466
+00:48:16,240 --> 00:48:21,240
+ (background noise drowns out other sounds)
+
+467
+00:48:46,240 --> 00:48:50,560
+ okay so i'm saying i just sent you the email you can really make sure that you understand
+
+468
+00:48:51,680 --> 00:49:00,080
+ um but this this needs to be um this is missing
+
+469
+00:49:02,240 --> 00:49:07,280
+ and i'm not sure how i missed the question but i do remember i was more obsessed with the
+
+470
+00:49:08,560 --> 00:49:14,480
+ important on it. So functionality versus without.
+
+471
+00:49:17,840 --> 00:49:22,240
+ So since it has an email with that I said two columns so the first column is going to be the
+
+472
+00:49:22,240 --> 00:49:29,760
+ previous element so that first level it could be you know go 1 go 2 go 3 or go 2 and 3 or whatever
+
+473
+00:49:29,760 --> 00:49:34,720
+ it is or it could be all if you can partner their projects. Then the second column beside
+
+474
+00:49:34,720 --> 00:49:39,760
+ it's going to be like this sub goal. So say if it was a goal 2, it would be, so which of these
+
+475
+00:49:39,760 --> 00:49:47,200
+ elements in goal 2 though, this requirement and estimate is it 2.1 or 2.4 or 2.1, 2.9 or 2.7.
+
+476
+00:49:47,200 --> 00:49:52,000
+ So those can be highlighted. And the third process is to make sure that
+
+477
+00:49:52,560 --> 00:49:58,480
+ that follows it all the way through to the final boss talk for it.
+
+478
+00:50:02,400 --> 00:50:03,520
+ so did that make sense
+
+479
+00:50:08,400 --> 00:50:13,840
+ i think it's clear on my side all right so so do you guys have any additional questions
+
+480
+00:50:13,840 --> 00:50:19,280
+ or anything else i know we are almost an hour in and this has to be done before we move forward
+
+481
+00:50:19,280 --> 00:50:24,640
+ just to make sure that that initial continuity already exists when we go to the cost
+
+482
+00:50:27,120 --> 00:50:31,360
+ okay and so and so actually implement and then you can touch base on this second tomorrow
+
+483
+00:50:32,400 --> 00:50:33,400
+ All right.
+
+484
+00:50:33,400 --> 00:50:34,400
+ Thank you.
+
+485
+00:50:34,400 --> 00:50:35,400
+ All right.
+
+486
+00:50:35,400 --> 00:50:36,400
+ Thank you.
+
+487
+00:50:36,400 --> 00:50:37,400
+ Okay.
+
+488
+00:50:37,400 --> 00:50:37,400
+ Okay.
+

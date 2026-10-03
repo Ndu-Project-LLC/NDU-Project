@@ -2,8 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ndu_project/services/agile_wireframe_service.dart';
+import 'package:ndu_project/utils/agile_metrics_catalog.dart';
 import 'package:ndu_project/utils/agile_project_context_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/agile_tracked_metrics_strip.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -30,7 +33,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
   static const Color _kAccent = Color(0xFFF59E0B);
   static const Color _kAccentLight = Color(0xFFFFC812);
   static const Color _kAccentBg = Color(0xFFFEF3C7);
-  static const Color _kBackground = Color(0xFFF8FAFC);
+  static const Color _kBackground = Colors.white;
   static const Color _kSurface = Colors.white;
   static const Color _kBorder = Color(0xFFE5E7EB);
   static const Color _kHeadline = Color(0xFF111827);
@@ -48,6 +51,10 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
   int _storiesTotal = 24;
   int _teamCapacity = 88;
   double _sprintCompletion = 0.72;
+
+  /// What this page reports, read from Metrics Planning rather than assumed.
+  List<AgileMetric> _trackedMetrics = const [];
+  bool _metricsUsingDefaults = false;
 
   // Burn-down data (story points remaining per day)
   final List<double> _burnDown = [48, 44, 41, 38, 34, 30, 26, 21, 16, 10];
@@ -77,11 +84,11 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
     const _ActivityItem('Sarah Chen', 'completed', 'NDU-1042: Login validation',
         '12m ago', Icons.check_circle, Colors.green),
     const _ActivityItem('Marcus Reed', 'moved', 'NDU-1038: API rate limiting',
-        '34m ago', Icons.swap_horiz, Colors.blue),
+        '34m ago', Icons.swap_horiz, Color(0xFFFFC812)),
     const _ActivityItem('Kaz AI', 'flagged', 'Velocity drift detected on Sprint 24',
         '1h ago', Icons.auto_awesome, _kAccent),
     const _ActivityItem('Priya Nair', 'commented on', 'NDU-1031: Dashboard widgets',
-        '2h ago', Icons.chat_bubble_outline, Colors.purple),
+        '2h ago', Icons.chat_bubble_outline, Color(0xFFB8860B)),
     const _ActivityItem('James Okoro', 'blocked', 'NDU-1029: SSO integration',
         '3h ago', Icons.block, Colors.red),
     const _ActivityItem('Lena Park', 'started', 'NDU-1045: Reporting module',
@@ -101,7 +108,15 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
     final projectData = ProjectDataHelper.getData(context);
     if (pid == null) {
       _seedFromProjectContext(projectData);
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          // No project to read a selection from, so report the default set
+          // rather than an empty strip.
+          _trackedMetrics = AgileMetricsCatalog.trackedMetrics(const {});
+          _metricsUsingDefaults = true;
+          _isLoading = false;
+        });
+      }
       return;
     }
     setState(() => _isLoading = true);
@@ -116,8 +131,14 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
       if (data.isEmpty) {
         _seedFromProjectContext(projectData);
       }
+      // The tracked set comes from Metrics Planning, so this page reports what
+      // the project said it would track instead of a fixed card list.
+      final metricsConfig = await AgileWireframeService.loadMetricsConfig(pid);
       if (mounted) {
         setState(() {
+          _trackedMetrics = AgileMetricsCatalog.trackedMetrics(metricsConfig);
+          _metricsUsingDefaults =
+              AgileMetricsCatalog.usesDefaultTrackedSet(metricsConfig);
           _activeSprint = data['activeSprint'] as String? ?? _activeSprint;
           _sprintDay = (data['sprintDay'] as num?)?.toInt() ?? _sprintDay;
           _sprintTotalDays =
@@ -326,6 +347,11 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
                         if (_isLoading)
                           const _LoadingStrip()
                         else ...[
+                          AgileTrackedMetricsStrip(
+                            metrics: _trackedMetrics,
+                            usingDefaults: _metricsUsingDefaults,
+                          ),
+                          const SizedBox(height: 16),
                           _buildMetricsRow(isMobile),
                           const SizedBox(height: 24),
                           _buildSprintProgressCard(),
@@ -426,24 +452,26 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
         accentBg: const Color(0xFFD1FAE5),
         trend: '+5%',
         trendUp: true,
+        metricKey: 'velocity',
       ),
       _MetricCard(
         title: 'Stories Completed',
         value: '$_storiesCompleted / $_storiesTotal',
         sublabel: '${(_sprintCompletion * 100).toInt()}% of sprint goal',
         icon: Icons.task_alt,
-        accent: Colors.blue,
-        accentBg: const Color(0xFFDBEAFE),
+        accent: const Color(0xFFFFC812),
+        accentBg: const Color(0xFFFEF3C7),
         trend: '6 in progress',
         trendUp: true,
+        metricKey: 'throughput',
       ),
       _MetricCard(
         title: 'Team Capacity',
         value: '$_teamCapacity%',
         sublabel: '7 of 8 members active',
         icon: Icons.groups,
-        accent: Colors.purple,
-        accentBg: const Color(0xFFEDE9FE),
+        accent: const Color(0xFFB8860B),
+        accentBg: const Color(0xFFFFF8E1),
         trend: 'Healthy',
         trendUp: true,
       ),
@@ -530,9 +558,26 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
             ],
           ),
           const SizedBox(height: 14),
-          Text(c.title,
-              style: const TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w500, color: _kMuted)),
+          Row(
+            children: [
+              Flexible(
+                child: Text(c.title,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: _kMuted)),
+              ),
+              if (c.metricKey != null) ...[
+                const SizedBox(width: 6),
+                const Tooltip(
+                  message: 'Reported because Metrics Planning tracks it',
+                  child: Icon(Icons.check_circle,
+                      size: 12, color: Color(0xFF059669)),
+                ),
+              ],
+            ],
+          ),
           const SizedBox(height: 4),
           Text(c.value,
               style: const TextStyle(
@@ -602,7 +647,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
               const SizedBox(width: 8),
               _chip('${_storiesTotal - _storiesCompleted} Remaining', _kAccent),
               const SizedBox(width: 8),
-              _chip('Day $_sprintDay/$_sprintTotalDays', Colors.blue),
+              _chip('Day $_sprintDay/$_sprintTotalDays', const Color(0xFFFFC812)),
               const Spacer(),
               Text(
                   'ETA: ${DateTime.now().add(Duration(days: _sprintTotalDays - _sprintDay)).day}/${DateTime.now().month}',
@@ -889,6 +934,13 @@ class _MetricCard {
   final Color accentBg;
   final String trend;
   final bool trendUp;
+
+  /// The Metrics Planning key this card reports, when it reports one at all.
+  /// Cards without a key (sprint context, team capacity) are context, not
+  /// tracked metrics — the review's "it does not look like it's driving any
+  /// certain output" was about tiles nobody could trace back to a metric.
+  final String? metricKey;
+
   const _MetricCard({
     required this.title,
     required this.value,
@@ -898,6 +950,7 @@ class _MetricCard {
     required this.accentBg,
     required this.trend,
     required this.trendUp,
+    this.metricKey,
   });
 }
 

@@ -4,9 +4,8 @@
 // Once a preferred solution is locked (preferredSolutionId != null OR
 // frontEndPlanning.businessCaseLocked == true), all Business Case sections
 // become read-only — the user can view them but cannot run AI generation
-// or edit their content. The dedicated IT Considerations /
-// Infrastructure Considerations pages remain editable because they belong
-// to the FEP, not the Business Case.
+// or edit their content. This includes Risk Identification, IT
+// Considerations, Infrastructure Considerations and Core Stakeholders.
 //
 // This helper centralises the lock-state check and provides:
 //   - isBusinessCaseLocked(projectData) → bool
@@ -25,7 +24,8 @@ class BusinessCaseLockHelper {
   /// True once a preferred solution has been chosen OR the
   /// `businessCaseLocked` flag has been explicitly set. In this state,
   /// every Business Case screen (Scope Statement, Potential Solutions,
-  /// Risk Identification, Core Stakeholders, Initial Cost Estimate,
+  /// Risk Identification, IT Considerations, Infrastructure
+  /// Considerations, Core Stakeholders, Initial Cost Estimate,
   /// Preferred Solution Analysis) is view-only — no AI generation, no
   /// inline edits.
   static bool isBusinessCaseLocked(ProjectDataModel? data) {
@@ -46,8 +46,8 @@ class BusinessCaseLockHelper {
         content: Text(
           'Business Case is locked. A preferred solution has been selected, '
           'so Business Case sections are view-only and can no longer be '
-          '${verb}ed. IT Considerations and Infrastructure Considerations '
-          'remain editable from their dedicated pages.',
+          '${verb}ed — including Risks, IT Considerations, Infrastructure '
+          'Considerations and Core Stakeholders.',
         ),
         backgroundColor: const Color(0xFFD97706),
         behavior: SnackBarBehavior.floating,
@@ -74,16 +74,16 @@ class BusinessCaseLockHelper {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFD97706), width: 1),
       ),
-      child: Row(
+      child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.lock_outline,
+          Icon(Icons.lock_outline,
               size: 18, color: Color(0xFFD97706)),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Business Case is locked',
                   style: TextStyle(
@@ -96,9 +96,9 @@ class BusinessCaseLockHelper {
                 Text(
                   'A preferred solution has been selected. Business Case '
                   'sections are now view-only — you can review them but '
-                  'cannot run AI generation or edit their content. IT and '
-                  'Infrastructure Considerations remain editable from '
-                  'their dedicated pages.',
+                  'cannot run AI generation or edit their content, including '
+                  'Risks, IT Considerations, Infrastructure Considerations '
+                  'and Core Stakeholders.',
                   style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFF92400E),

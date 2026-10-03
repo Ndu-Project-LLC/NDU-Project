@@ -10,9 +10,19 @@ service firebase.storage {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
+    // Cross-service lookup into Cloud Firestore.
+    //
+    // Storage rules MUST namespace these as `firestore.get()` /
+    // `firestore.exists()` and MUST use the literal `(default)` database —
+    // unlike Firestore rules, Storage rules have no `$(database)` wildcard,
+    // and the bare `get()` / `exists()` helpers only exist in Firestore
+    // rules. The previous version used bare `get()`/`exists()` with
+    // `$(database)`, which is invalid here, so this helper could not be
+    // relied on by the rules that call it.
     function isAdmin() {
       return isAuthenticated()
-        && firebasestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+        && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true;
     }
 
     // User profile images - users can upload their own, admins can access all
@@ -21,9 +31,48 @@ service firebase.storage {
       allow write: if isUserId(userId) || isAdmin();
     }
 
-    // Project files - only project members can access
+    // Change-request attachments.
+    //
+    // Written by the change-request dialog
+    // (`lib/widgets/new_change_request_dialog.dart`) to
+    //   change_requests/{projectId|general}/{timestamp}_{fileName}
+    // Previously there was no rule for this path, so the catch-all below
+    // denied every upload and "Add file" always failed. Sign-in is required
+    // to write; any signed-in reviewer can read the evidence pack. Size is
+    // capped so a single attachment cannot exhaust project storage.
+    match /change_requests/{projectId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated()
+        && request.resource.size < 25 * 1024 * 1024;
+      allow delete: if isAuthenticated();
+    }
+
+    // True when the caller owns [projectId], is listed in its
+    // `teamMemberEmails`, or is an admin — mirrors the Firestore helper
+    // `isProjectOwner()` / `isProjectMember()` in firestore.rules.
+    function isProjectMember(projectId) {
+      return isAuthenticated()
+        && firestore.exists(/databases/(default)/documents/projects/$(projectId))
+        && (
+          request.auth.uid == firestore.get(/databases/(default)/documents/projects/$(projectId)).data.ownerId
+          || request.auth.token.email in firestore.get(/databases/(default)/documents/projects/$(projectId)).data.get('teamMemberEmails', [])
+        )
+        || isAdmin();
+    }
+
+    // Project files.
+    //
+    // Every document upload in the app goes through
+    // `FileUploadHelper.pickAndUpload`, which writes to
+    //   projects/{projectId}/{folder}/{timestamp}_{fileName}
+    // This block used to deny all reads and writes, which silently broke
+    // "Add Document" / "Add Tool" in the design and backend-design modules.
+    // Access is now limited to project members (or admins).
     match /projects/{projectId}/{allPaths=**} {
-      allow read, write: if false; // Deny by default, enable per-use-case
+      allow read: if isProjectMember(projectId);
+      allow create, update: if isProjectMember(projectId)
+        && request.resource.size < 25 * 1024 * 1024;
+      allow delete: if isProjectMember(projectId);
     }
 
     // Default deny all

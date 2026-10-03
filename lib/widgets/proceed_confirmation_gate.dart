@@ -39,7 +39,7 @@ Future<bool> showProceedWithoutReviewDialog(
             actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             title: Row(
               children: [
-                const Icon(Icons.fact_check_rounded, color: Color(0xFF1D4ED8)),
+                const Icon(Icons.fact_check_rounded, color: Color(0xFFFFC812)),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -127,7 +127,7 @@ Future<bool> showProceedWithoutReviewDialog(
   return result ?? false;
 }
 
-class ProceedConfirmationGate extends StatefulWidget {
+class ProceedConfirmationGate extends StatelessWidget {
   const ProceedConfirmationGate({
     super.key,
     required this.value,
@@ -138,67 +138,21 @@ class ProceedConfirmationGate extends StatefulWidget {
 
   final bool value;
   final ValueChanged<bool> onChanged;
+
+  /// Kept for API compatibility. The gate used to hide itself until the
+  /// underlying content was scrolled to the bottom, but that behaviour made
+  /// the checkbox flicker at the bottom boundary and unmount itself right
+  /// when the user tapped it (the tick appeared to never register). The
+  /// checkbox is now permanently visible so it always ticks reliably.
   final ScrollController? scrollController;
   final EdgeInsetsGeometry padding;
 
   @override
-  State<ProceedConfirmationGate> createState() =>
-      _ProceedConfirmationGateState();
-}
-
-class _ProceedConfirmationGateState extends State<ProceedConfirmationGate> {
-  bool _showGate = true;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.scrollController?.addListener(_handleScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _handleScroll());
-  }
-
-  @override
-  void didUpdateWidget(covariant ProceedConfirmationGate oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.scrollController != widget.scrollController) {
-      oldWidget.scrollController?.removeListener(_handleScroll);
-      widget.scrollController?.addListener(_handleScroll);
-      _handleScroll();
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.scrollController?.removeListener(_handleScroll);
-    super.dispose();
-  }
-
-  void _handleScroll() {
-    final controller = widget.scrollController;
-    if (controller == null || !controller.hasClients) {
-      if (!_showGate) {
-        setState(() => _showGate = true);
-      }
-      return;
-    }
-
-    final max = controller.position.maxScrollExtent;
-    final atBottom = controller.offset >= (max - 4);
-    final shouldShow = max <= 0 ? true : atBottom;
-    if (shouldShow != _showGate) {
-      setState(() => _showGate = shouldShow);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (!_showGate) {
-      return const SizedBox.shrink();
-    }
-
     return ReviewConfirmationCheckbox(
-      value: widget.value,
-      onChanged: widget.onChanged,
-      padding: widget.padding,
+      value: value,
+      onChanged: onChanged,
+      padding: padding,
     );
   }
 }

@@ -1,6 +1,5 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
-import 'package:ndu_project/screens/scope_tracking_implementation_screen.dart';
-import 'package:ndu_project/screens/update_ops_maintenance_plans_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -21,6 +20,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class StakeholderAlignmentScreen extends StatefulWidget {
   const StakeholderAlignmentScreen({super.key});
@@ -155,7 +155,7 @@ class _StakeholderAlignmentScreenState
     final double horizontalPadding = isMobile ? 18 : 32;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,8 +191,8 @@ class _StakeholderAlignmentScreenState
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Stakeholder Alignment',
                     ),
                   ),
@@ -214,7 +214,7 @@ class _StakeholderAlignmentScreenState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Color(0xFFFFC812),
+            color: const Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(4),
           ),
           child: const Text(
@@ -317,7 +317,7 @@ class _StakeholderAlignmentScreenState
           label: const Text('Add Stakeholder',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF0EA5E9),
+            backgroundColor: const Color(0xFFFFC812),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             shape: RoundedRectangleBorder(
@@ -371,7 +371,7 @@ class _StakeholderAlignmentScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,9 +407,9 @@ class _StakeholderAlignmentScreenState
   }
 
   Future<void> _showAddStakeholderDialog() async {
-    final nameController = TextEditingController();
-    final roleController = TextEditingController();
-    final feedbackController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
+    final roleController = SpellCheckTextEditingController();
+    final feedbackController = SpellCheckTextEditingController();
     final engagementStrategyController = AutoBulletTextController();
 
     String? selectedStakeholder;
@@ -428,7 +428,7 @@ class _StakeholderAlignmentScreenState
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
-                      value: selectedStakeholder,
+                      initialValue: selectedStakeholder,
                       decoration: const InputDecoration(
                         labelText: 'Stakeholder Name/Role',
                         hintText: 'Select from Core Stakeholders or enter new',
@@ -478,7 +478,7 @@ class _StakeholderAlignmentScreenState
                       ),
                     ],
                     DropdownButtonFormField<String>(
-                      value: selectedStatus,
+                      initialValue: selectedStatus,
                       decoration:
                           const InputDecoration(labelText: 'Alignment Status'),
                       items: ['Aligned', 'Neutral', 'Concerned', 'Resistent']
@@ -494,7 +494,7 @@ class _StakeholderAlignmentScreenState
                       },
                     ),
                     DropdownButtonFormField<String>(
-                      value: selectedKeyInterest,
+                      initialValue: selectedKeyInterest,
                       decoration: const InputDecoration(
                           labelText: 'Key Interest/Value'),
                       items: [
@@ -676,10 +676,10 @@ class _StakeholderAlignmentScreenState
 
   Widget _buildFooterNavigation(BuildContext context) {
     return LaunchPhaseNavigation(
-      backLabel: 'Back: Scope Tracking Implementation',
-      nextLabel: 'Next: Update Ops & Maintenance Plans',
-      onBack: () => ScopeTrackingImplementationScreen.open(context),
-      onNext: () => UpdateOpsMaintenancePlansScreen.open(context),
+      backLabel: PlanningPhaseNavigation.backLabel('stakeholder_alignment'),
+      nextLabel: PlanningPhaseNavigation.nextLabel('stakeholder_alignment'),
+      onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'stakeholder_alignment'),
+      onNext: () => PlanningPhaseNavigation.goToNext(context, 'stakeholder_alignment'),
     );
   }
 

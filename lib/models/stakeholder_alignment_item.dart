@@ -1,4 +1,6 @@
 /// Model for a stakeholder alignment item in Stakeholder Alignment page
+import 'package:ndu_project/utils/unique_id.dart';
+
 class StakeholderAlignmentItem {
   final String id;
   String stakeholderName; // Pre-populated from Core Stakeholders
@@ -19,7 +21,7 @@ class StakeholderAlignmentItem {
     this.feedbackSummary = '',
     this.engagementStrategy = '',
     this.lastEngagementDate,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   StakeholderAlignmentItem copyWith({
     String? stakeholderName,
@@ -56,7 +58,7 @@ class StakeholderAlignmentItem {
   factory StakeholderAlignmentItem.fromJson(Map<String, dynamic> json) {
     return StakeholderAlignmentItem(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       stakeholderName: json['stakeholderName']?.toString() ?? '',
       stakeholderRole: json['stakeholderRole']?.toString() ?? '',
       alignmentStatus: json['alignmentStatus']?.toString() ?? 'Neutral',

@@ -4,6 +4,10 @@ import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 
+/// Bottom padding reserved for the floating chat bubble FAB
+/// (the floating Save pill was removed per user request).
+const double kFloatingBottomReservedHeight = 96.0;
+
 /// A responsive scaffold that adapts sidebar behavior based on screen size.
 /// - Desktop/Tablet: Shows sidebar in a Row layout with draggable handle
 /// - Mobile: Hides sidebar and uses a Drawer, with a menu button in the app bar
@@ -142,9 +146,21 @@ class _MobileScaffold extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
+            // Body is padded at the bottom by [kFloatingBottomReservedHeight]
+            // so the floating Save pill + chat bubble FAB never overlap or
+            // cut off body content. Scrollable bodies simply gain extra
+            // scroll space at the bottom; fixed-layout bodies shrink slightly.
             Positioned.fill(
-              child: body,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  bottom: kFloatingBottomReservedHeight,
+                ),
+                child: body,
+              ),
             ),
+            // Global Save pill removed per user request — the floating pill
+            // took up screen space. Auto-save (2s debounce) + flush-on-navigate
+            // keep persistence working without it.
             // NOTE: Activity Log button removed from here — it's already
             // rendered by PlanningPhaseHeader/UnifiedPhaseHeader. Having
             // both caused a duplicate Activity Log button on every screen.
@@ -193,9 +209,19 @@ class _DesktopScaffold extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
+                  // Body is padded at the bottom by
+                  // [kFloatingBottomReservedHeight] so the floating Save
+                  // pill + chat bubble FAB never overlap body content.
                   Positioned.fill(
-                    child: body,
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        bottom: kFloatingBottomReservedHeight,
+                      ),
+                      child: body,
+                    ),
                   ),
+                  // Global Save pill removed per user request — auto-save
+                  // keeps persistence working without it.
                   // NOTE: Activity Log button removed from here — it's
                   // already rendered by PlanningPhaseHeader/
                   // UnifiedPhaseHeader. Having both caused a duplicate

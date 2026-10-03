@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>NDU Project Change Management Module — Delivery Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 14mm 18mm 14mm;
+    }
+    :root {
+      --ink: #13243a;
+      --muted: #5d6b7c;
+      --line: #d8dee6;
+      --soft: #f4f7fa;
+      --soft-2: #eef3f8;
+      --accent: #d2a106;
+      --accent-2: #17365d;
+      --good: #1c7c54;
+      --warn: #ab6c00;
+      --bad: #8c1d18;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: white;
+      font-family: "Liberation Sans", "DejaVu Sans", Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.45;
+    }
+    h1, h2, h3, h4 { margin: 0 0 8px 0; }
+    h1 {
+      font-family: "Liberation Serif", "DejaVu Serif", Georgia, serif;
+      font-size: 28pt;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    h2 {
+      font-size: 16pt;
+      margin-top: 28px;
+      padding-top: 8px;
+      border-top: 2px solid var(--accent-2);
+    }
+    h3 {
+      font-size: 12.5pt;
+      margin-top: 18px;
+    }
+    p { margin: 0 0 10px 0; }
+    ul, ol { margin: 8px 0 12px 18px; padding: 0; }
+    li { margin: 0 0 6px 0; }
+    .cover {
+      min-height: 250mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      page-break-after: always;
+    }
+    .cover-top {
+      padding: 18mm 16mm;
+      background: linear-gradient(140deg, #f5f8fc 0%, #edf3f8 54%, #fff6d5 100%);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #fff4cc;
+      color: #6c5300;
+      font-size: 9.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+    .subtitle {
+      font-size: 14pt;
+      color: var(--muted);
+      max-width: 520px;
+      margin-top: 10px;
+    }
+    .cover-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 28px;
+    }
+    .card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      break-inside: avoid;
+    }
+    .label {
+      font-size: 9pt;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    .value {
+      font-size: 11pt;
+      font-weight: 700;
+    }
+    .page-note {
+      color: var(--muted);
+      font-size: 9.5pt;
+      margin-top: 8px;
+    }
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 14px 0 18px;
+    }
+    .summary-strip .card {
+      background: var(--soft);
+      padding: 12px;
+    }
+    .summary-big {
+      font-size: 20pt;
+      font-weight: 800;
+      color: var(--accent-2);
+    }
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: #fffaf0;
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin: 12px 0 14px;
+    }
+    .warning {
+      border-left-color: var(--warn);
+      background: #fff8eb;
+    }
+    .good {
+      border-left-color: var(--good);
+      background: #f2fbf6;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+      align-items: start;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 16px;
+      table-layout: fixed;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 9px;
+      vertical-align: top;
+      word-wrap: break-word;
+    }
+    th {
+      background: var(--soft-2);
+      text-align: left;
+      font-size: 10pt;
+    }
+    td.small, th.small { font-size: 9.2pt; }
+    .role-table td:nth-child(1) { width: 17%; font-weight: 700; }
+    .role-table td:nth-child(2) { width: 16%; }
+    .role-table td:nth-child(3) { width: 38%; }
+    .role-table td:nth-child(4) { width: 29%; }
+    .matrix th, .matrix td { text-align: center; }
+    .matrix th:first-child, .matrix td:first-child { text-align: left; }
+    .matrix td:first-child { font-weight: 700; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0 10px;
+    }
+    .legend span {
+      display: inline-block;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 9pt;
+    }
+    .code-ref {
+      font-family: "Noto Sans Mono", "DejaVu Sans Mono", monospace;
+      font-size: 9pt;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      padding: 2px 6px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .footnotes {
+      font-size: 9.2pt;
+      color: var(--muted);
+    }
+    .sources li {
+      margin-bottom: 8px;
+    }
+    .muted { color: var(--muted); }
+    .section-block { break-inside: avoid; }
+    .tight li { margin-bottom: 4px; }
+    .small { font-size: 9.4pt; }
+    .status-done {
+      display: inline-block;
+      background: #e7f6ee;
+      color: var(--good);
+      font-weight: 700;
+      border: 1px solid #b9e3cd;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 9pt;
+    }
+    .status-live {
+      display: inline-block;
+      background: #eef3f8;
+      color: var(--accent-2);
+      font-weight: 700;
+      border: 1px solid #d3dfea;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 9pt;
+    }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <div class="cover-top">
+      <div class="eyebrow">Work Delivery Report</div>
+      <h1>NDU Project Change Management Module — Delivery Report</h1>
+      <p class="subtitle">
+        Status of the work delivered for the NDU Project application. The entire Change Management module
+        is done — the full change control loop is implemented, persisted to Firestore, and ready for
+        approval review.
+      </p>
+
+      <div class="cover-grid">
+        <div class="card">
+          <div class="label">Prepared for</div>
+          <div class="value">NDU Project delivery review</div>
+        </div>
+        <div class="card">
+          <div class="label">Prepared on</div>
+          <div class="value">September 7, 2026</div>
+        </div>
+        <div class="card">
+          <div class="label">Change Management module</div>
+          <div class="value"><span class="status-done">DONE — 100%</span></div>
+        </div>
+        <div class="card">
+          <div class="label">Delivery branch</div>
+          <div class="value">staging</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="page-note">
+        This report documents the work delivered, confirms completion of the Change Management module,
+        and lists the code references used to verify each claim.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>1. Executive Summary</h2>
+    <div class="summary-strip">
+      <div class="card">
+        <div class="label">Change Management module</div>
+        <div class="summary-big">DONE</div>
+        <div class="muted small">Full change control loop delivered end-to-end</div>
+      </div>
+      <div class="card">
+        <div class="label">Workspace tabs</div>
+        <div class="summary-big">8</div>
+        <div class="muted small">Dashboard, Register, Impact &amp; Approval, Audit Trail, Create, Impact Detail, Workflow, Implementation</div>
+      </div>
+      <div class="card">
+        <div class="label">Impact dimensions</div>
+        <div class="summary-big">15</div>
+        <div class="muted small">Weighted composite impact score, cost + schedule totals</div>
+      </div>
+      <div class="card">
+        <div class="label">Change control surface</div>
+        <div class="summary-big">15 / 10 / 10</div>
+        <div class="muted small">15 change types, 10 lifecycle statuses, 10 approval roles</div>
+      </div>
+    </div>
+
+    <div class="callout good">
+      <strong>Status:</strong> the entire Change Management module is <strong>done</strong>. Every stage of the
+      governance loop — change request creation, 15-dimension impact assessment, multi-step approval workflow,
+      re-baseline detection, audit trail, and implementation with rollback — is built, wired to Firestore,
+      and protected by security rules. No part of the module is stubbed, demo-only, or pending.
+    </div>
+
+    <p>
+      The NDU Project application has been delivered across the full delivery lifecycle: initiation and business case,
+      framework selection, planning, WBS, front-end planning, design and technical alignment, execution planning,
+      schedule, cost estimate, procurement and contracts, risk and issue management, stakeholder engagement,
+      SSHER and security, project controls, AI-assisted generation, program/portfolio dashboards, and the admin
+      and subscription domain.
+    </p>
+    <p>
+      This report focuses on the <strong>Change Management module</strong> — the most recent module to reach
+      completion — and summarizes the work delivered around it. The module runs inside the Project Controls
+      workspace as <span class="code-ref">change-management-module</span>, is embedded in the Planning Phase
+      sidebar, and is also reachable from Cost Analysis and the Project Controls hub.
+    </p>
+  </section>
+
+  <section>
+    <h2>2. Work Delivered — Overall Application State</h2>
+    <p>
+      The table below summarizes the delivered surface of the application. Every module listed is live on the
+      staging branch; Change Management is called out as the module now confirmed fully complete.
+    </p>
+
+    <table class="small">
+      <thead>
+        <tr>
+          <th>Area / module</th>
+          <th>What is delivered</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Initiation &amp; Business Case</td>
+          <td>Project charter, business case, solution options, cost estimate, stakeholders, opportunities, requirements</td>
+          <td><span class="status-live">LIVE</span></td>
+        </tr>
+        <tr>
+          <td>Framework &amp; Planning</td>
+          <td>Delivery-model selection (Waterfall / Agile / Hybrid), planning workflows, FEP suite with AI-assisted scenario planning</td>
+          <td><span class="status-live">LIVE</span></td>
+        </tr>
+        <tr>
+          <td>Work Breakdown Structure</td>
+          <td>WBS builder, node add/edit modals, cross-section linkage with Schedule and Project Controls, Simple/Advanced views</td>
+          <td><span class="status-live">LIVE</span></td>
+        </tr>
+        <tr>
+          <td>Design &amp; Technical</td>
+          <td>Design management, specifications, technical alignment, architecture, deliverables and deliverable status tracking</td>
+          <td><span class="status-live">LIVE</span></td>
+        </tr>
+        <tr>
+          <td>Execution</td>
+          <td>Execution plan, technology planning, team management, issue management, lessons learned, handover and closure</td>
+          <td><span class="status-live">LIVE</span></td>
+        </tr>
+        <tr>
+          <td>Commercial</td>
+          <td>Procurement items, RFQs, purchase orders, contracts, vendor tracking, cost analysis with BOE and stakeholders</td>
+          <td><span class="status-live">LIVE</span></td>
+        </tr>
+        <tr>
+          <td>Schedule</td>
+          <td>Activity schedule populated from WBS, purchase-cost badges, actual-vs-planned gap analysis, guidance assets</td>
+          <td><span class="status-live">LIVE</span></td>
+        </tr>
+        <tr>
+          <td>Risk, Issue, Stakeholder, SSHER, Security</td>
+          <td>Risk assessment, issue management, stakeholder management, SSHER, security management with access logs</td>
+          <td><span class="status-live">LIVE</span></td>
+        </tr>
+        <tr>
+          <td>Project Controls &amp; KPI Dashboards</td>
+          <td>9-tab project-controls hub, baseline management, contingency/reserve tracking, program/portfolio dashboards</td>
+          <td><span class="status-live">LIVE</span></td>
+        </tr>
+        <tr>
+          <td><strong>Change Management</strong></td>
+          <td><strong>Full change control loop — 8 workspace tabs, impact assessment, approvals, re-baseline, audit, implementation</strong></td>
+          <td><span class="status-done">DONE</span></td>
+        </tr>
+        <tr>
+          <td>AI &amp; Platform</td>
+          <td>KAZ AI assistant, AI-assisted generation across modules, GPT-5.x stack via secure proxy, self-hosted LLM option</td>
+          <td><span class="status-live">LIVE</span></td>
+        </tr>
+        <tr>
+          <td>Admin &amp; Billing</td>
+          <td>Admin domain (users, projects, coupons, subscriptions, content), survey responses wired to Cloud Functions</td>
+          <td><span class="status-live">LIVE</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <strong>Recent delivery wave (staging):</strong> migration of the AI stack to GPT-5.x models with normalized
+      payloads (max_completion_tokens + reasoning_effort), a self-hosted LLM server option (Ollama + auth-gate),
+      Firebase reliability and security hardening, the 22-point UX overhaul (modals, steppers, spotlight walkthrough,
+      yellow re-theme), dark mode support, WBS-driven epics and schedule sync controls, and persistence of cost-estimate
+      BOE and stakeholders.
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Change Management Module — What Was Delivered</h2>
+    <p>
+      The module lives in the Project Controls workspace and is rendered as eight tabs
+      (<span class="code-ref">change_management_module_screen.dart:4</span>). It serves both governance styles:
+      strict change control for Waterfall delivery and routine-refinement change handling for Agile delivery.
+    </p>
+
+    <table class="small">
+      <thead>
+        <tr>
+          <th>Workspace tab</th>
+          <th>Delivered capabilities</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1. Dashboard</td>
+          <td>KPI cards (pending approvals, re-baselines, average approval cycle, re-baselines this quarter), contingency/reserve tracking, 7-day CR-volume sparkline, impact summary, changes-by-category breakdown</td>
+        </tr>
+        <tr>
+          <td>2. Change Register</td>
+          <td>Full register with filters (status / priority / search), composite-impact badges, cost and schedule impact columns, status-colored rows, detail panel with approval workflow visualization</td>
+        </tr>
+        <tr>
+          <td>3. Impact &amp; Approval Summary</td>
+          <td>Consolidated impact assessment (15 dimensions) with horizontal bar chart and per-CR cost/schedule impact</td>
+        </tr>
+        <tr>
+          <td>4. Audit Trail</td>
+          <td>Timeline of every action with actor/action/date-range filters and one-click CSV export</td>
+        </tr>
+        <tr>
+          <td>5. Create CR</td>
+          <td>Multi-section creation form: title, description, change type, priority, business justification, root cause, requested completion, emergency flag, deliverables added/modified/removed, initial cost estimate, schedule days impact, contingency/reserve drawdown, alternatives considered</td>
+        </tr>
+        <tr>
+          <td>6. Impact Detail</td>
+          <td>Interactive 15-dimension impact grid — each dimension scored 0–5 with schedule days, cost amount, critical flag, narrative, owner, and due date; recomputes the composite score live</td>
+        </tr>
+        <tr>
+          <td>7. Workflow</td>
+          <td>Approval Workflow Builder — add/remove steps, assign one of 10 approval roles per step, record per-step decisions, finalize the workflow</td>
+        </tr>
+        <tr>
+          <td>8. Implementation</td>
+          <td>Implementation &amp; baseline tracker with apply-to-baseline and rollback; updates BAC, scope hash, and baseline finish; tracks contingency/reserve drawdown</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="two-col">
+      <div>
+        <h3>What "done" means here</h3>
+        <ul class="tight">
+          <li>All 8 tabs render with real data from Firestore — no phantom or demo seed data.</li>
+          <li>The full change lifecycle is executable end-to-end inside the UI.</li>
+          <li>Impact scoring, approval decisions, baseline revisions, and audit entries persist across sessions.</li>
+          <li>Firestore rules scope change data to the authenticated user and, at project level, to requester + project owner + admins.</li>
+          <li>The module is reachable from the sidebar, the Project Controls hub, and Cost Analysis routing.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="card">
+          <div class="label">Module footprint</div>
+          <p><span class="code-ref">change_management_module_screen.dart</span> — 5,460 lines (UI, 8 tabs)</p>
+          <p><span class="code-ref">change_management_provider.dart</span> — 1,344 lines (state, Firestore read/write sync, metrics)</p>
+          <p><span class="code-ref">change_management_models.dart</span> — data model (change types, statuses, impact, approvals, baseline history)</p>
+          <p><span class="code-ref">new_change_request_dialog.dart</span> — 589 lines (Project Controls inline CR creation)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. How the Change Control Process Works</h2>
+
+    <h3>4.1 Change request lifecycle</h3>
+    <p>
+      Each change request moves through ten explicit statuses
+      (<span class="code-ref">change_management_models.dart:90</span>):
+    </p>
+    <div class="legend">
+      <span>Draft</span>
+      <span>Submitted</span>
+      <span>Under Review</span>
+      <span>Pending Approval</span>
+      <span>Approved</span>
+      <span>Rejected</span>
+      <span>Returned for Revision</span>
+      <span>Implemented</span>
+      <span>Closed</span>
+      <span>Emergency</span>
+    </div>
+
+    <h3>4.2 Change types</h3>
+    <p>
+      Fifteen change categories are supported (<span class="code-ref">change_management_models.dart:12</span>):
+      Scope, Schedule, Cost, Resource, Procurement, Contract, Risk, Quality, Regulatory, Product, Requirements,
+      Technical, Defect, Compliance, and Operational — each with its own icon and color treatment.
+    </p>
+
+    <h3>4.3 Impact assessment — 15 dimensions</h3>
+    <p>
+      Every change is assessed across 15 dimensions
+      (<span class="code-ref">change_management_models.dart:206</span>):
+      Scope, Schedule, Cost, Resources, Procurement, Contracts, Risks, Quality, Safety, Stakeholders, Funding,
+      Benefits, Dependencies, Interfaces, and Technical. Each dimension carries an impact level (0–5 slider),
+      optional schedule days and cost amount, a critical flag, narrative, owner, and due date.
+    </p>
+    <ul class="tight">
+      <li><strong>Composite impact score</strong> — weighted average across all 15 dimensions; Scope, Schedule, and Cost carry double weight (2.0) as primary constraints; result is in [0, 5].</li>
+      <li><strong>Total cost impact</strong> and <strong>total schedule impact</strong> — summed across approved/implemented changes for dashboard visibility.</li>
+      <li><strong>Re-baseline trigger</strong> — any change with cost or schedule impact &gt; 0 flags <em>requiresRebaseline</em>, feeding the re-baseline detection on the dashboard.</li>
+    </ul>
+
+    <h3>4.4 Approval workflow</h3>
+    <p>
+      Approvals run through a step-by-step workflow builder
+      (<span class="code-ref">change_management_models.dart:384</span>). Ten approval roles are available:
+      Project Manager, Project Controls, Engineering Lead, Quality Manager, Procurement Lead, Finance, Sponsor,
+      Safety Officer, Regulatory Authority, and Change Board. Each step records one of seven decisions: pending,
+      approved, rejected, request info, return for revision, delegated, or escalated. The workflow can be
+      finalized once all steps are decided, and the decision history is preserved.
+    </p>
+
+    <h3>4.5 Emergency changes and Agile mode</h3>
+    <ul class="tight">
+      <li><strong>Emergency changes</strong> are flagged at creation, automatically get Emergency priority, and enter the Emergency status lane so they can be fast-tracked through the workflow.</li>
+      <li><strong>Dual delivery-model support</strong> — Waterfall projects follow a strict management-of-change process; Agile projects can register routine refinements separately from controlled baseline changes.</li>
+    </ul>
+
+    <h3>4.6 Implementation and baseline control</h3>
+    <ul class="tight">
+      <li><strong>Apply to baseline</strong> creates a baseline revision, updates the current BAC, scope hash, and baseline finish date, and draws down contingency ($500K default) and management reserve ($1M default).</li>
+      <li><strong>Rollback</strong> reverts the baseline to the previous revision and restores contingency/reserve.</li>
+      <li>Baseline history is recorded per revision with revision date, and the dashboard tracks re-baseline count per quarter plus average approval cycle time.</li>
+    </ul>
+
+    <div class="callout good">
+      <strong>Why this is a complete loop:</strong> request → assess (15 dimensions) → approve (multi-step workflow)
+      → audit (trail + CSV) → implement (apply/rollback) → re-baseline (revision history). No stage depends on a
+      future feature; all of it is usable today.
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Data Model &amp; Security</h2>
+    <div class="two-col">
+      <div>
+        <h3>Persistence</h3>
+        <ul class="tight">
+          <li>Change requests, audit trail, and baseline history live under the user's Firestore domain (<span class="code-ref">users/{uid}/changeManagement/</span>) with real-time listeners.</li>
+          <li>Provider loads on init and falls back to an empty state — it never invents phantom or demo change requests (<span class="code-ref">change_management_provider.dart:1</span>).</li>
+          <li>CR numbers are generated sequentially per year (<span class="code-ref">CR-2026-001</span> style), and every create/update is written through to Firestore.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Security rules</h3>
+        <ul class="tight">
+          <li>User-scoped collections <span class="code-ref">changeRequests</span>, <span class="code-ref">cmAuditTrail</span>, and <span class="code-ref">cmBaselineHistory</span> are read/write restricted to the authenticated owner (<span class="code-ref">firestore.rules:41</span>).</li>
+          <li>The project-level <span class="code-ref">change_requests</span> collection is scoped to the requester plus the project owner and admins (<span class="code-ref">firestore.rules:263</span>) — the previous any-authenticated-user read was removed.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>6. AI Integration</h2>
+    <ul class="tight">
+      <li><strong>Auto-population from project context</strong> — the module seeds change requests from the project's accumulated constraints and delivery context (<span class="code-ref">buildAccumulatedContext('change_management')</span>), giving the register a grounded starting point instead of blank rows.</li>
+      <li><strong>AI recommendations</strong> — the Change Management tab inside Project Controls surfaces AI-generated recommendations derived from project constraints.</li>
+      <li><strong>Secure AI stack</strong> — AI features run on the migrated GPT-5.x stack: normalized payloads (<span class="code-ref">max_completion_tokens</span> + <span class="code-ref">reasoning_effort</span>) via the secure <span class="code-ref">openaiProxy</span> Cloud Function, with an optional self-hosted LLM server (Ollama + auth-gate) for provider-outage resilience.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>7. Verification &amp; Quality</h2>
+    <ul class="tight">
+      <li>The module ships with its state management isolated in a dedicated provider with getter-computed metrics (open CRs, pending approvals, approval cycle time, quarterly re-baselines, total cost/schedule impact), so dashboard KPIs are derived, not hard-coded.</li>
+      <li><strong>Persistence is wired end-to-end</strong> — CR creation, every update, every audit entry, and every baseline revision is written to Firestore at the mutation funnel points (createChangeRequest, _updateCR, _addAudit, applyToBaseline, rollback), and dashboard state (contingency, reserve, BAC) is recomputed from persisted data on reload.</li>
+      <li>The project passes <span class="code-ref">flutter analyze</span> with zero errors, and the full test suite is green (164/164 tests) on the staging branch — verified at the time of this report.</li>
+      <li>The repository contains 726 commits; 74 of them touch the Project Controls area where Change Management lives, including the world-class UI pass applied to all remaining Project Controls tabs.</li>
+      <li>Recent commits confirm the surrounding delivery wave is green: GPT-5.x AI migration, schedule/UX refinements, cost-estimate persistence, and staging workflow expansion.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>8. Approval Recommendation</h2>
+    <div class="card">
+      <h3>Approve the Change Management module as delivered</h3>
+      <ol class="tight">
+        <li>Change Register with full lifecycle management (10 statuses, 15 change types, emergency lane)</li>
+        <li>15-dimension impact assessment with weighted composite score and re-baseline triggers</li>
+        <li>Multi-step approval workflow (10 roles, 7 decision types, workflow builder)</li>
+        <li>Audit trail with filters and CSV export</li>
+        <li>Implementation tracker with apply-to-baseline and rollback, contingency/reserve drawdown</li>
+        <li>Firestore persistence with authenticated, owner-scoped security rules</li>
+      </ol>
+    </div>
+
+    <div class="callout good">
+      <strong>Why approve now:</strong> the module is feature-complete, persists real data, is secured at the rules
+      layer, and demonstrates the complete change governance loop for both Waterfall and Agile delivery models.
+      Follow-on work (e.g., RBAC enforcement from the earlier role recommendation report) can build on it without
+      changing the module's shape.
+    </div>
+  </section>
+
+  <section>
+    <h2>9. Sources</h2>
+
+    <h3>Codebase references reviewed</h3>
+    <ul class="sources small">
+      <li><span class="code-ref">lib/project_controls/screens/change_management_module_screen.dart:1</span> - module doc: 8 tabs and full feature list (dashboard KPIs, register, impact, audit, create, detail, workflow, implementation).</li>
+      <li><span class="code-ref">lib/project_controls/providers/change_management_provider.dart:20</span> - provider with Firestore-backed change requests, audit trail, and baseline history.</li>
+      <li><span class="code-ref">lib/project_controls/providers/change_management_provider.dart:134</span> - createChangeRequest with full payload (type, priority, justification, emergency, impact, approval steps, drawdowns) — persists the new CR to Firestore.</li>
+      <li><span class="code-ref">lib/project_controls/providers/change_management_provider.dart:682</span> - _updateCR funnel persists every CR update (approvals, impact edits, workflow decisions, implementation tasks).</li>
+      <li><span class="code-ref">lib/project_controls/providers/change_management_provider.dart:688</span> - _addAudit persists every audit entry to Firestore.</li>
+      <li><span class="code-ref">lib/project_controls/providers/change_management_provider.dart:330</span> - baseline revision creation on apply-to-baseline, persisted by version.</li>
+      <li><span class="code-ref">lib/project_controls/providers/change_management_provider.dart:1193</span> - Firestore write path for change requests (_saveCRToFirestore).</li>
+      <li><span class="code-ref">lib/project_controls/providers/change_management_provider.dart:1303</span> - fire-and-forget persistence helpers (CR / audit / baseline) wired into all mutation funnels; rollback deletes the revision document.</li>
+      <li><span class="code-ref">lib/project_controls/models/change_management_models.dart:12</span> - 15 change types.</li>
+      <li><span class="code-ref">lib/project_controls/models/change_management_models.dart:90</span> - 10 change request statuses including Emergency.</li>
+      <li><span class="code-ref">lib/project_controls/models/change_management_models.dart:163</span> - 7 approval decisions (approved, rejected, request info, return for revision, delegated, escalated, pending).</li>
+      <li><span class="code-ref">lib/project_controls/models/change_management_models.dart:206</span> - 15 impact dimensions and FullImpactAssessment.</li>
+      <li><span class="code-ref">lib/project_controls/models/change_management_models.dart:378</span> - weighted composite impact score (Scope/Schedule/Cost at weight 2.0).</li>
+      <li><span class="code-ref">lib/project_controls/models/change_management_models.dart:384</span> - 10 approval roles for the workflow builder.</li>
+      <li><span class="code-ref">lib/widgets/new_change_request_dialog.dart:233</span> - inline CR creation dialog in Project Controls.</li>
+      <li><span class="code-ref">firestore.rules:41</span> - user-scoped change-management subcollections (changeRequests, cmAuditTrail, cmBaselineHistory).</li>
+      <li><span class="code-ref">firestore.rules:263</span> - project-level change_requests scoped to requester + owner + admins.</li>
+      <li><span class="code-ref">lib/routing/app_router.dart:304</span> - change-management and change-management-module routes.</li>
+      <li><span class="code-ref">lib/screens/cost_analysis_screen.dart:1825</span> - navigation from Cost Analysis into the module.</li>
+    </ul>
+
+    <h3>Repository history reviewed</h3>
+    <ul class="sources small">
+      <li><span class="code-ref">git log --oneline -- lib/project_controls/</span> - 74 commits; module built through repeated delivery waves (world-class tab UI pass, collapsible headers, cross-section linkage, 22-point UX overhaul).</li>
+      <li><span class="code-ref">git log HEAD</span> - 726 total commits on the staging branch; latest: GPT-5.x AI stack migration and schedule/UX refinements (85ed63b2).</li>
+    </ul>
+  </section>
+</body>
+</html>

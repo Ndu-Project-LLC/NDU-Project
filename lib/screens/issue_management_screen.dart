@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'package:ndu_project/models/issue_log.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -15,10 +16,13 @@ import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class IssueManagementScreen extends StatefulWidget {
  const IssueManagementScreen({super.key});
 
@@ -71,7 +75,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  final seed = seedIssueManagement(data);
  if (seed.isNotEmpty) {
  final newItems = seed.rows.map((r) => IssueLogItem(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  title: (r['title'] ?? '').toString(),
  description: (r['description'] ?? '').toString(),
  type: (r['type'] ?? '').toString(),
@@ -139,6 +143,35 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  );
  }
 
+ Future<void> _handleDeleteIssue(IssueLogItem entry) async {
+ final confirmed = await showDialog<bool>(
+ context: context,
+ builder: (_) => AlertDialog(
+ title: const Text('Delete issue?'),
+ content: const Text('This will permanently remove the issue.'),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.of(context).pop(false),
+ child: const Text('Cancel')),
+ ElevatedButton(
+ onPressed: () => Navigator.of(context).pop(true),
+ child: const Text('Delete')),
+ ],
+ ),
+ );
+ if (!mounted) return;
+ if (confirmed != true) return;
+ await ProjectDataHelper.updateAndSave(
+ context: context,
+ checkpoint: 'issue_management',
+ dataUpdater: (data) => data.copyWith(
+ issueLogItems: data.issueLogItems
+ .where((i) => i.id != entry.id)
+ .toList(),
+ ),
+ );
+ }
+
  List<IssueLogItem> _filterIssues(List<IssueLogItem> items) {
  return items.where((i) {
  // Filter by status
@@ -167,17 +200,11 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
 
  List<IssueLogItem> _searchIssues(List<IssueLogItem> items) {
  if (_searchQuery.isEmpty) return items;
- final query = _searchQuery.toLowerCase();
- return items.where((i) {
- return i.id.toLowerCase().contains(query) ||
- i.title.toLowerCase().contains(query) ||
- i.description.toLowerCase().contains(query) ||
- i.assignee.toLowerCase().contains(query) ||
- i.milestone.toLowerCase().contains(query) ||
- i.type.toLowerCase().contains(query) ||
- i.severity.toLowerCase().contains(query) ||
- i.status.toLowerCase().contains(query);
- }).toList();
+ // The log row owns the searchable fields, so the box and the table cannot
+ // drift apart.
+ return items
+ .where((i) => IssueLogRow.fromItem(i, number: 1).matches(_searchQuery))
+ .toList();
  }
 
  @override
@@ -187,27 +214,24 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  final issueItems =
  ProjectDataHelper.getDataListening(context).issueLogItems;
 
- // Build metrics from all issue items (not filtered)
+ // Build metrics from all issue items (not filtered). The counts come from
+ // the same log rows the table renders, so the overview and the issue log
+ // cannot disagree (Lusaka 27).
+ final issueSummary = IssueLogSummary.fromItems(issueItems);
  _metrics = [
  _IssueMetric(
  label: 'Open',
- value: issueItems.where((i) => i.status == 'Open').length.toString(),
+ value: issueSummary.open.toString(),
  icon: Icons.report_problem_outlined,
  color: Colors.orange),
  _IssueMetric(
  label: 'In Progress',
- value: issueItems
- .where((i) => i.status == 'In Progress')
- .length
- .toString(),
+ value: issueSummary.inProgress.toString(),
  icon: Icons.autorenew,
- color: Colors.blue),
+ color: const Color(0xFFFFC812)),
  _IssueMetric(
  label: 'Resolved',
- value: issueItems
- .where((i) => i.status == 'Resolved' || i.status == 'Closed')
- .length
- .toString(),
+ value: issueSummary.resolved.toString(),
  icon: Icons.check_circle_outline,
  color: Colors.green),
  ];
@@ -237,7 +261,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  final searchedIssues = _searchIssues(issueItems);
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,16 +282,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  children: [
  PlanningPhaseHeader(title: 'Issue Management', onExportPdf: _exportPdf),
  const SizedBox(height: 24),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'issue_management',
- contextText: _carriedContext!,
- ),
- ),
+
  const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Issue Management',
@@ -291,13 +306,14 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  onSeverityFilterChanged: (value) =>
  setState(() => _selectedSeverityFilter = value),
  ),
- const SizedBox(height: 24),
- _ProjectIssuesLogCard(
+ const SizedBox(height: 24),  _IssueLogCard(
  entries: searchedIssues,
  searchQuery: _searchQuery,
  onSearchChanged: (value) =>
  setState(() => _searchQuery = value),
+ onAdd: _handleNewIssue,
  onEdit: _handleEditIssue,
+ onDelete: _handleDeleteIssue,
  ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
@@ -314,8 +330,8 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Issue Management',
  ),
  ),
@@ -336,10 +352,19 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  screenTitle: 'Issue Management',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_issue_management_notes'] ?? 'No data recorded.'),
+ // The issue log itself, so the export shows the table the owner was
+ // looking at instead of exporting nothing (Lusaka 27). The rows come from
+ // the same model the on-screen table draws, so the two cannot drift.
+ if (projectData.issueLogItems.isNotEmpty)
+ PdfSection.table(
+ 'Issue Log',
+ headers: issueLogExportHeaders(),
+ rows: issueLogExportRows(projectData.issueLogItems),
+ ),
  ],
  );
  }
@@ -432,7 +457,7 @@ class _MetricCard extends StatelessWidget {
  width: 42,
  height: 42,
  decoration: BoxDecoration(
- color: metric.color.withOpacity(0.12),
+ color: metric.color.withValues(alpha: 0.12),
  shape: BoxShape.circle,
  ),
  child: Icon(metric.icon, size: 22, color: metric.color),
@@ -453,7 +478,7 @@ class _MetricCard extends StatelessWidget {
  metric.label,
  style: TextStyle(
  fontSize: 13,
- color: metric.color.withOpacity(0.8),
+ color: metric.color.withValues(alpha: 0.8),
  fontWeight: FontWeight.w500),
  ),
  ],
@@ -644,23 +669,37 @@ class _IssuesByMilestoneCard extends StatelessWidget {
  }
 }
 
-class _ProjectIssuesLogCard extends StatelessWidget {
- const _ProjectIssuesLogCard({
+/// The issue log (Lusaka 27): the same numbered, expandable table the
+/// procurement and contract logs use — "the issues management table can be
+/// called an issues log", "all our tables should be numbered", and "the same
+/// comment I have with this entire site is to be expandable … you can cover the
+/// screen".
+class _IssueLogCard extends StatelessWidget {
+ const _IssueLogCard({
  required this.entries,
  required this.searchQuery,
  required this.onSearchChanged,
+ required this.onAdd,
  required this.onEdit,
+ required this.onDelete,
  });
 
  final List<IssueLogItem> entries;
  final String searchQuery;
  final ValueChanged<String> onSearchChanged;
+ final VoidCallback onAdd;
  final void Function(IssueLogItem) onEdit;
+ final void Function(IssueLogItem) onDelete;
 
- static const List<int> _columnFlex = [2, 3, 2, 2, 2, 2, 2, 2];
+ /// One numbered row per logged issue.
+ List<IssueLogRow> get _rows => <IssueLogRow>[
+ for (var i = 0; i < entries.length; i++)
+ IssueLogRow.fromItem(entries[i], number: i + 1),
+ ];
 
  @override
  Widget build(BuildContext context) {
+ final rows = _rows;
  return Container(
  width: double.infinity,
  padding: const EdgeInsets.all(24),
@@ -671,20 +710,20 @@ class _ProjectIssuesLogCard extends StatelessWidget {
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
+ children: [  Row(
  children: [
  const Text(
- 'Project Issues Log',
+ 'Issue Log',
  style: TextStyle(
  fontSize: 18,
  fontWeight: FontWeight.w600,
  color: Color(0xFF111827)),
  ),
  const Spacer(),
- SizedBox(
- width: 260,
- child: VoiceTextField(
+ Flexible(
+ child: ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 260),
+ child: TextField(
  onChanged: onSearchChanged,
  decoration: InputDecoration(
  hintText: 'Search issues...',
@@ -707,6 +746,13 @@ class _ProjectIssuesLogCard extends StatelessWidget {
  ),
  ),
  ),
+ ),
+ const SizedBox(width: 12),
+ FilledButton.icon(
+ onPressed: onAdd,
+ icon: const Icon(Icons.add, size: 18),
+ label: const Text('Add issue'),
+ ),
  ],
  ),
  const SizedBox(height: 22),
@@ -717,227 +763,101 @@ class _ProjectIssuesLogCard extends StatelessWidget {
  icon: Icons.list_alt_outlined,
  )
  else
- Container(
- decoration: BoxDecoration(
- color: const Color(0xFFF9FAFB),
- borderRadius: BorderRadius.circular(16),
- ),
- child: Column(
- children: [
- Padding(
- padding: const EdgeInsets.symmetric(
- horizontal: 22, vertical: 16),
- child: Row(
- children: [
- _tableHeaderCell('ID', flex: _columnFlex[0]),
- _tableHeaderCell('Title', flex: _columnFlex[1]),
- _tableHeaderCell('Type', flex: _columnFlex[2]),
- _tableHeaderCell('Severity', flex: _columnFlex[3]),
- _tableHeaderCell('Status', flex: _columnFlex[4]),
- _tableHeaderCell('Assignee', flex: _columnFlex[5]),
- _tableHeaderCell('Due Date', flex: _columnFlex[6]),
- _tableHeaderCell('Milestone', flex: _columnFlex[7]),
- const SizedBox(
- width: 80,
- child: Text('Actions',
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: Color(0xFF6B7280)))),
- ],
- ),
- ),
- const Divider(
- height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
- ...entries.map((entry) => _IssueLogRow(
- entry: entry,
- columnFlex: _columnFlex,
- onEdit: () => onEdit(entry),
- onDelete: () async {
- final confirmed = await showDialog<bool>(
+ buildNduTableWithExpand(
  context: context,
- builder: (_) => AlertDialog(
- title: const Text('Delete issue?'),
- content: const Text(
- 'This will permanently remove the issue.'),
- actions: [
- TextButton(
- onPressed: () =>
- Navigator.of(context).pop(false),
- child: const Text('Cancel')),
- ElevatedButton(
- onPressed: () =>
- Navigator.of(context).pop(true),
- child: const Text('Delete')),
+ title: 'Issue Log',
+ minWidth: 1320,
+ columnSpacing: 16,
+ columns: <DataColumn>[
+ for (final column in issueLogColumns)
+ DataColumn(label: Text(column.label)),
+ const DataColumn(label: Text('')),
  ],
- ));
- if (!context.mounted) return;
- if (confirmed == true) {
- await ProjectDataHelper.updateAndSave(
- context: context,
- checkpoint: 'issue_management',
- dataUpdater: (data) => data.copyWith(
- issueLogItems: data.issueLogItems
- .where((i) => i.id != entry.id)
- .toList()));
- }
- },
- )),
+ rows: <DataRow>[
+ for (var i = 0; i < rows.length; i++)
+ DataRow(cells: <DataCell>[
+ for (final column in issueLogColumns)
+ DataCell(_cell(column.key, rows[i])),
+ DataCell(_actions(entries[i])),
+ ]),
  ],
- ),
  ),
  ],
  ),
  );
  }
 
- Widget _tableHeaderCell(String label, {required int flex}) {
- return Expanded(
- flex: flex,
- child: Text(
- label,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: Color(0xFF6B7280)),
- ),
- );
- }
-}
-
-class _IssueLogRow extends StatelessWidget {
- const _IssueLogRow(
- {required this.entry,
- required this.columnFlex,
- this.onEdit,
- this.onDelete});
-
- final IssueLogItem entry;
- final List<int> columnFlex;
- final VoidCallback? onEdit;
- final VoidCallback? onDelete;
-
- @override
- Widget build(BuildContext context) {
- return Padding(
- padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
- child: Row(
- crossAxisAlignment: CrossAxisAlignment.center,
- children: [
- Expanded(
- flex: columnFlex[0],
- child: Text(
- entry.id,
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: Color(0xFF111827)),
- ),
- ),
- Expanded(
- flex: columnFlex[1],
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- entry.title,
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: Color(0xFF111827)),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- const SizedBox(height: 4),
- Text(
- entry.description,
- style:
- const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- ],
- ),
- ),
- Expanded(
- flex: columnFlex[2],
- child: Align(
- alignment: Alignment.centerLeft,
- child: _StatusPill(
- label: entry.type,
- background: const Color(0xFFEFF6FF),
- foreground: const Color(0xFF2563EB),
- ),
- ),
- ),
- Expanded(
- flex: columnFlex[3],
- child: Align(
- alignment: Alignment.centerLeft,
- child: _StatusPill(
- label: entry.severity,
- background: const Color(0xFFFFF7ED),
- foreground: const Color(0xFFEA580C),
- ),
- ),
- ),
- Expanded(
- flex: columnFlex[4],
- child: Align(
- alignment: Alignment.centerLeft,
- child: _StatusPill(
- label: entry.status,
- background: const Color(0xFFFFF7E6),
- foreground: const Color(0xFFB45309),
- ),
- ),
- ),
- Expanded(
- flex: columnFlex[5],
- child: Text(
- entry.assignee,
- style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
- ),
- ),
- Expanded(
- flex: columnFlex[6],
- child: Text(
- entry.dueDate,
- style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
- ),
- ),
- Expanded(
- flex: columnFlex[7],
- child: Text(
- entry.milestone,
- style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
- ),
- ),
- SizedBox(
- width: 80,
- child: Row(
- mainAxisAlignment: MainAxisAlignment.center,
+ /// Edit / delete — the two controls a log row carries.
+ Widget _actions(IssueLogItem entry) {
+ return Row(
+ mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(
- onPressed: onEdit,
+ onPressed: () => onEdit(entry),
  icon: const Icon(Icons.edit_outlined,
  size: 18, color: Color(0xFF6B7280)),
  splashRadius: 18,
  tooltip: 'Edit',
  ),
  IconButton(
- onPressed: onDelete,
+ onPressed: () => onDelete(entry),
  icon: const Icon(Icons.delete_outline,
  size: 18, color: Color(0xFFEF4444)),
  splashRadius: 18,
  tooltip: 'Delete',
  ),
  ],
- ),
- ),
- ],
- ),
  );
+ }
+
+ Widget _cell(String key, IssueLogRow row) {
+ final value = row.valueFor(key);
+ switch (key) {
+ case 'number':
+ return Text(
+ value,
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF64748B)),
+ );
+ case 'title':
+ return WrappedText(
+ value,
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis,
+ style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+ );
+ case 'id':
+ return Text(
+ value,
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF111827)),
+ );
+ case 'type':
+ return _StatusPill(
+ label: value,
+ background: const Color(0xFFFFF8E1),
+ foreground: const Color(0xFFFFC812),
+ );
+ case 'severity':
+ return _StatusPill(
+ label: value,
+ background: const Color(0xFFFFF7ED),
+ foreground: const Color(0xFFEA580C),
+ );
+ case 'status':
+ return _StatusPill(
+ label: value,
+ background: const Color(0xFFFFF7E6),
+ foreground: const Color(0xFFB45309),
+ );
+ default:
+ return WrappedText(value,
+ maxLines: 2, overflow: TextOverflow.ellipsis);
+ }
  }
 }
 
@@ -1004,11 +924,11 @@ class _NewIssueDialog extends StatefulWidget {
 
 class _NewIssueDialogState extends State<_NewIssueDialog> {
  final _formKey = GlobalKey<FormState>();
- final TextEditingController _titleCtrl = TextEditingController();
- final TextEditingController _descriptionCtrl = TextEditingController();
- final TextEditingController _assigneeCtrl = TextEditingController();
- final TextEditingController _dueDateCtrl = TextEditingController();
- final TextEditingController _milestoneCtrl = TextEditingController();
+ final TextEditingController _titleCtrl = SpellCheckTextEditingController();
+ final TextEditingController _descriptionCtrl = SpellCheckTextEditingController();
+ final TextEditingController _assigneeCtrl = SpellCheckTextEditingController();
+ final TextEditingController _dueDateCtrl = SpellCheckTextEditingController();
+ final TextEditingController _milestoneCtrl = SpellCheckTextEditingController();
 
  final List<String> _types = const [
  'Scope',
@@ -1079,12 +999,10 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  String _formatDate(DateTime date) {
  String two(int value) => value.toString().padLeft(2, '0');
  return '${date.year}-${two(date.month)}-${two(date.day)}';
- }
-
- String _generateId() {
- final seed = DateTime.now().microsecondsSinceEpoch.toString();
- return 'ISS-${seed.substring(seed.length - 4)}';
- }
+ }  String _generateId() {
+    // Two issues logged in the same microsecond used to get the same code.
+    return shortId('ISS-');
+  }
 
  void _submit() {
  if (!(_formKey.currentState?.validate() ?? false)) return;
@@ -1112,10 +1030,10 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
  border: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: BorderSide(color: Colors.grey.withOpacity(0.35))),
+ borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
  enabledBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: BorderSide(color: Colors.grey.withOpacity(0.35))),
+ borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
  borderSide: const BorderSide(color: Color(0xFFFFD54F), width: 1.6)),
@@ -1144,7 +1062,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _selectedType,
+ initialValue: _selectedType,
  items: _types
  .map((type) =>
  DropdownMenuItem(value: type, child: Text(type)))
@@ -1155,7 +1073,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _selectedSeverity,
+ initialValue: _selectedSeverity,
  items: _severities
  .map((severity) => DropdownMenuItem(
  value: severity, child: Text(severity)))
@@ -1166,7 +1084,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _selectedStatus,
+ initialValue: _selectedStatus,
  items: _statuses
  .map((status) =>
  DropdownMenuItem(value: status, child: Text(status)))
@@ -1302,7 +1220,7 @@ class _UserChip extends StatelessWidget {
 }
 
 class _YellowButton extends StatelessWidget {
- const _YellowButton({required this.label, this.onPressed});
+ const _YellowButton({required this.label}) : onPressed = null;
 
  final String label;
  final VoidCallback? onPressed;

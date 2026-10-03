@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -13,10 +15,11 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
+import 'package:ndu_project/widgets/launch_modal.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -37,7 +40,7 @@ class TeamRow {
     this.role = '',
     this.count = '1',
     this.skills = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 }
 
 class AgileTeamStructureScreen extends StatefulWidget {
@@ -122,7 +125,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
       _teamControllers.clear();
       // Dispose and recreate notes controller
       _noteControllers['notes']?.dispose();
-      final notesCtrl = TextEditingController(text: notesText);
+      final notesCtrl = SpellCheckTextEditingController(text: notesText);
       _noteControllers['notes'] = notesCtrl;
       setState(() {
         _teams = rows;
@@ -222,7 +225,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI regeneration failed: $e')),
+          SnackBar(content: Text('AI regeneration failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -259,19 +262,19 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
-                  color: Color(0xFFE0F2FE),
+                  color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.auto_awesome, size: 9, color: Color(0xFF0284C7)),
+                    Icon(Icons.auto_awesome, size: 9, color: Color(0xFFFFC812)),
                     SizedBox(width: 2),
                     Text('AI',
                         style: TextStyle(
                             fontSize: 8,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF0284C7))),
+                            color: Color(0xFFFFC812))),
                   ],
                 ),
               ),
@@ -374,8 +377,103 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
     );
   }
 
-  void _addTeam() {
-    setState(() => _teams.add(TeamRow()));
+  Future<void> _addTeam() async {
+    final nameController = SpellCheckTextEditingController();
+    final countController = SpellCheckTextEditingController(text: '1');
+    final roleController = SpellCheckTextEditingController();
+    final skillsController = SpellCheckTextEditingController();
+    String? nameError;
+
+    final team = await showDialog<TeamRow>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => LaunchModalShell(
+          icon: Icons.groups_outlined,
+          accent: _kAccent,
+          title: 'Add Squad / Team',
+          subtitle: 'Define the squad’s purpose, size, and capabilities.',
+          body: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LaunchModalTextField(
+                label: 'Squad / Team Name',
+                controller: nameController,
+                hint: 'e.g. Product Discovery Squad',
+                suffixIcon: nameError == null
+                    ? null
+                    : const Icon(Icons.error_outline,
+                        color: Colors.red, size: 18),
+              ),
+              if (nameError != null) ...[
+                const SizedBox(height: 4),
+                Text(nameError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12)),
+              ],
+              const LaunchModalFieldGap(),
+              LaunchModalTextField(
+                label: 'Count',
+                controller: countController,
+                keyboardType: TextInputType.number,
+                hint: 'e.g. 6',
+              ),
+              const LaunchModalFieldGap(),
+              LaunchModalTextField(
+                label: 'Primary Role / Focus',
+                controller: roleController,
+                maxLines: 2,
+                hint: 'What does this squad own?',
+              ),
+              const LaunchModalFieldGap(),
+              LaunchModalTextField(
+                label: 'Key Skills / Cross-functional Coverage',
+                controller: skillsController,
+                maxLines: 3,
+                hint: 'List the capabilities needed by this squad.',
+              ),
+            ],
+          ),
+          actions: [
+            LaunchModalCancelButton(
+              label: 'Cancel',
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
+            LaunchModalPrimaryButton(
+              label: 'Add Team',
+              icon: Icons.add,
+              onPressed: () {
+                final name = nameController.text.trim();
+                if (name.isEmpty) {
+                  setDialogState(
+                      () => nameError = 'Enter a squad or team name.');
+                  return;
+                }
+                Navigator.pop(
+                  dialogContext,
+                  TeamRow(
+                    name: name,
+                    count: countController.text.trim().isEmpty
+                        ? '1'
+                        : countController.text.trim(),
+                    role: roleController.text.trim(),
+                    skills: skillsController.text.trim(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+
+    nameController.dispose();
+    countController.dispose();
+    roleController.dispose();
+    skillsController.dispose();
+
+    if (!mounted || team == null) return;
+    setState(() => _teams.add(team));
     _scheduleAutoSave();
   }
 
@@ -423,7 +521,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI generation failed: ${e.toString()}')),
+          SnackBar(content: Text('AI generation failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -592,10 +690,10 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
   List<TextEditingController> _controllersForTeam(TeamRow team) {
     if (!_teamControllers.containsKey(team.id)) {
       _teamControllers[team.id] = [
-        TextEditingController(text: team.name),
-        TextEditingController(text: team.count),
-        TextEditingController(text: team.role),
-        TextEditingController(text: team.skills),
+        SpellCheckTextEditingController(text: team.name),
+        SpellCheckTextEditingController(text: team.count),
+        SpellCheckTextEditingController(text: team.role),
+        SpellCheckTextEditingController(text: team.skills),
       ];
       // Sync controller text back to the TeamRow on change
       _teamControllers[team.id]![0].addListener(() {
@@ -620,7 +718,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: _kBorder),
+        side: const BorderSide(color: _kBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -675,7 +773,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
   }
 
   Widget _buildNotesSection() {
-    _noteControllers.putIfAbsent('notes', () => TextEditingController());
+    _noteControllers.putIfAbsent('notes', () => SpellCheckTextEditingController());
     return _buildEnhancedField(
       key: 'notes',
       label: 'Additional Notes',
@@ -720,8 +818,8 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
       screenTitle: 'Agile Team Structure',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',

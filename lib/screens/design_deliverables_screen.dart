@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -7,19 +9,16 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
-import 'package:ndu_project/screens/specialized_design_screen.dart';
-import 'package:ndu_project/screens/staff_team_screen.dart';
 import 'package:ndu_project/services/activity_log_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/models/user_role.dart';
-import 'package:ndu_project/providers/user_role_provider.dart';
 import 'package:ndu_project/services/design_phase_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 // firebase_auth removed - unused
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -145,7 +144,7 @@ class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
  screenTitle: 'Design Deliverables',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['design_deliverables_screen'] ?? 'No data recorded.'),
  ],
@@ -550,7 +549,7 @@ class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
  );
  }
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();
 
  // ── Default data generators ──────────────────────────────────────────────
 
@@ -736,7 +735,7 @@ class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Design Deliverables',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [
@@ -768,10 +767,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildDependenciesPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Specialized Design',
- nextLabel: 'Next: Staff Team',
- onBack: () => context.pushReplacement('/specialized-design'),
- onNext: () => StaffTeamScreen.open(context),
+ backLabel: PlanningPhaseNavigation.backLabel('design_deliverables'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('design_deliverables'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'design_deliverables'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'design_deliverables'),
  ),
  const SizedBox(height: 40),
  ],
@@ -922,7 +921,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Draft \u2192 Review \u2192 Approved \u2192 Baselined \u2192 Handed Off. '
  'Track every deliverable from authoring through acceptance with version control at each transition. '
  'Set review milestones at 90/60/30-day intervals aligned to phase gates.',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -1430,6 +1429,41 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _showDeliverableDialog(null, -1);
  }
 
+ /// Parses a Due/Gate value into a DateTime for the date picker.
+ /// Accepts 'd MMM yyyy' (e.g. '12 Sep 2026') and ISO 'yyyy-MM-dd'.
+ /// Returns null for gate labels like 'Gate 1' (picker then defaults to today).
+ static DateTime? _tryParseDialogDate(String value) {
+ final text = value.trim();
+ if (text.isEmpty) return null;
+ final iso = DateTime.tryParse(text);
+ if (iso != null) return iso;
+ const months = [
+ 'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+ 'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
+ ];
+ final parts = text.split(RegExp(r'[\s\-\/]+'));
+ if (parts.length != 3) return null;
+ final monthIdx = months.indexOf(parts[1].toLowerCase().substring(0, 3));
+ if (monthIdx == -1) return null;
+ final day = int.tryParse(parts[0]);
+ final year = int.tryParse(parts[2]);
+ if (day == null || year == null) return null;
+ try {
+ return DateTime(year, monthIdx + 1, day);
+ } catch (_) {
+ return null;
+ }
+ }
+
+ /// Formats a picked date as 'd MMM yyyy' for the Due/Gate field.
+ static String _formatDialogDate(DateTime date) {
+ const months = [
+ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+ 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+ ];
+ return '${date.day} ${months[date.month - 1]} ${date.year}';
+ }
+
  void _showEditDeliverableDialog(
  DesignDeliverableRegisterItem row, int index) {
  _showDeliverableDialog(row, index);
@@ -1437,8 +1471,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showDeliverableDialog(
  DesignDeliverableRegisterItem? existing, int editIndex) {
- final nameCtl = TextEditingController(text: existing?.name ?? '');
- final dueCtl = TextEditingController(text: existing?.due ?? '');
+ final nameCtl = SpellCheckTextEditingController(text: existing?.name ?? '');
+ final dueCtl = SpellCheckTextEditingController(text: existing?.due ?? '');
  String owner = existing?.owner ?? 'Design Lead';
  String status = existing?.status ?? 'In progress';
  String risk = existing?.risk ?? 'Medium';
@@ -1487,10 +1521,27 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  decoration: const InputDecoration(labelText: 'Status'),
  ),
  const SizedBox(height: 16),
- VoiceTextField(
+ TextFormField(
  controller: dueCtl,
- decoration:
- const InputDecoration(labelText: 'Due / Gate'),
+ readOnly: true,
+ decoration: const InputDecoration(
+ labelText: 'Due / Gate',
+ hintText: 'Pick a date',
+ suffixIcon: Icon(Icons.calendar_today_outlined),
+ ),
+ onTap: () async {
+ final picked = await showDatePicker(
+ context: ctx,
+ initialDate: _tryParseDialogDate(dueCtl.text) ??
+ DateTime.now(),
+ firstDate: DateTime(2000),
+ lastDate: DateTime(2100),
+ );
+ if (picked != null) {
+ setModalState(() => dueCtl.text =
+ _formatDialogDate(picked));
+ }
+ },
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(
@@ -1571,15 +1622,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  void _showAcceptanceEvidenceEditor(
  {_AcceptanceEvidenceRow? entry, int? index}) {
  final areaCtl =
- TextEditingController(text: entry?.evidenceArea ?? '');
+ SpellCheckTextEditingController(text: entry?.evidenceArea ?? '');
  final whatCtl =
- TextEditingController(text: entry?.whatMustBeCaptured ?? '');
+ SpellCheckTextEditingController(text: entry?.whatMustBeCaptured ?? '');
  final verCtl =
- TextEditingController(text: entry?.verificationMethod ?? '');
+ SpellCheckTextEditingController(text: entry?.verificationMethod ?? '');
  final ownCtl =
- TextEditingController(text: entry?.approvalOwner ?? '');
+ SpellCheckTextEditingController(text: entry?.approvalOwner ?? '');
  final riskCtl =
- TextEditingController(text: entry?.riskIfMissing ?? '');
+ SpellCheckTextEditingController(text: entry?.riskIfMissing ?? '');
 
  showDialog(
  context: context,
@@ -1678,13 +1729,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showHandoffGovernanceEditor(
  {_HandoffGovernanceRow? entry, int? index}) {
- final ctrlCtl = TextEditingController(text: entry?.control ?? '');
+ final ctrlCtl = SpellCheckTextEditingController(text: entry?.control ?? '');
  final pracCtl =
- TextEditingController(text: entry?.industryStandardPractice ?? '');
+ SpellCheckTextEditingController(text: entry?.industryStandardPractice ?? '');
  final wfCtl =
- TextEditingController(text: entry?.waterfallEvidence ?? '');
+ SpellCheckTextEditingController(text: entry?.waterfallEvidence ?? '');
  final agileCtl =
- TextEditingController(text: entry?.agileHybridEvidence ?? '');
+ SpellCheckTextEditingController(text: entry?.agileHybridEvidence ?? '');
  String decision = entry?.decision ?? 'Required';
 
  showDialog(
@@ -1798,12 +1849,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showApprovalGateEditor(
  {_ApprovalGateRow? entry, int? index}) {
- final gateCtl = TextEditingController(text: entry?.gate ?? '');
- final descCtl = TextEditingController(text: entry?.description ?? '');
- final apprCtl = TextEditingController(text: entry?.approver ?? '');
+ final gateCtl = SpellCheckTextEditingController(text: entry?.gate ?? '');
+ final descCtl = SpellCheckTextEditingController(text: entry?.description ?? '');
+ final apprCtl = SpellCheckTextEditingController(text: entry?.approver ?? '');
  String priority = entry?.priority ?? 'High';
  String status = entry?.status ?? 'Pending';
- final dateCtl = TextEditingController(text: entry?.targetDate ?? 'TBD');
+ final dateCtl = SpellCheckTextEditingController(text: entry?.targetDate ?? 'TBD');
 
  showDialog(
  context: context,
@@ -1936,11 +1987,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _showPermissionSnackBar('edit dependencies');
  return;
  }
- final descCtl = TextEditingController(text: entry?.description ?? '');
- final ownerCtl = TextEditingController(text: entry?.owner ?? '');
+ final descCtl = SpellCheckTextEditingController(text: entry?.description ?? '');
+ final ownerCtl = SpellCheckTextEditingController(text: entry?.owner ?? '');
  String priority = entry?.priority ?? 'Medium';
  String status = entry?.status ?? 'Open';
- final dateCtl = TextEditingController(text: entry?.dueDate ?? 'TBD');
+ final dateCtl = SpellCheckTextEditingController(text: entry?.dueDate ?? 'TBD');
 
  showDialog(
  context: context,
@@ -2084,7 +2135,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _showPermissionSnackBar('add pipeline items');
  return;
  }
- final labelCtl = TextEditingController();
+ final labelCtl = SpellCheckTextEditingController();
  String status = 'In progress';
 
  showDialog(
@@ -2147,7 +2198,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showEditPipelineDialog(
  DesignDeliverablePipelineItem item, int index) {
- final labelCtl = TextEditingController(text: item.label);
+ final labelCtl = SpellCheckTextEditingController(text: item.label);
  String status = item.status;
 
  showDialog(
@@ -2442,7 +2493,7 @@ Color _statusColor(String status) {
  case 'in review':
  return const Color(0xFFF59E0B);
  case 'in progress':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case 'not started':
  return const Color(0xFF9CA3AF);
  case 'blocked':
@@ -2485,7 +2536,7 @@ Color _dependencyStatusColor(String status) {
  case 'resolved':
  return const Color(0xFF10B981);
  case 'in progress':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case 'open':
  return const Color(0xFFF59E0B);
  case 'blocked':

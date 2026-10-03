@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/unified_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class AdminHintsScreen extends StatefulWidget {
   const AdminHintsScreen({super.key});
@@ -19,7 +20,7 @@ class AdminHintsScreen extends StatefulWidget {
 }
 
 class _AdminHintsScreenState extends State<AdminHintsScreen> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
 
   String _statusFilter = 'all';
   String _categoryFilter = 'all';
@@ -427,7 +428,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
         label: 'Customized',
         value: '$customizedCount',
         icon: Icons.auto_fix_high_outlined,
-        color: const Color(0xFF7C3AED),
+        color: const Color(0xFFB8860B),
       ),
     ];
 
@@ -763,7 +764,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
           selected: selected == option,
           onSelected: (_) => onSelected(option),
           selectedColor: _colorForCategory(option).withValues(alpha: 0.14),
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           side: BorderSide(
             color: selected == option
                 ? _colorForCategory(option).withValues(alpha: 0.35)
@@ -1108,13 +1109,13 @@ class _HintEditorDialogState extends State<_HintEditorDialog> {
   @override
   void initState() {
     super.initState();
-    _pageIdController = TextEditingController(text: widget.hint.pageId);
-    _pageLabelController = TextEditingController(text: widget.hint.pageLabel);
-    _categoryController = TextEditingController(text: widget.hint.category);
-    _titleController = TextEditingController(text: widget.hint.title);
+    _pageIdController = SpellCheckTextEditingController(text: widget.hint.pageId);
+    _pageLabelController = SpellCheckTextEditingController(text: widget.hint.pageLabel);
+    _categoryController = SpellCheckTextEditingController(text: widget.hint.category);
+    _titleController = SpellCheckTextEditingController(text: widget.hint.title);
     _descriptionController =
-        TextEditingController(text: widget.hint.description ?? '');
-    _messageController = TextEditingController(text: widget.hint.message);
+        SpellCheckTextEditingController(text: widget.hint.description ?? '');
+    _messageController = SpellCheckTextEditingController(text: widget.hint.message);
     _enabled = widget.hint.enabled;
   }
 
@@ -1813,8 +1814,8 @@ Color _colorForCategory(String category) {
   final normalized = category.trim().toLowerCase();
   if (normalized.contains('init')) return const Color(0xFF4F46E5);
   if (normalized.contains('risk')) return const Color(0xFFDC2626);
-  if (normalized.contains('arch')) return const Color(0xFF0EA5E9);
-  if (normalized.contains('decision')) return const Color(0xFF7C3AED);
+  if (normalized.contains('arch')) return const Color(0xFFFFC812);
+  if (normalized.contains('decision')) return const Color(0xFFB8860B);
   if (normalized.contains('plan')) return const Color(0xFF16A34A);
   if (normalized.contains('new')) return const Color(0xFF4F46E5);
   if (normalized.contains('disabled')) return const Color(0xFFF59E0B);

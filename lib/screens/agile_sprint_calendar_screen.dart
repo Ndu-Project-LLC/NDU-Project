@@ -24,6 +24,9 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -45,9 +48,9 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
   String? _storyCacheProjectId;
   bool _isLoading = true;
   bool _isGenerating = false;
-  TextEditingController _ceremonyController = TextEditingController();
+  TextEditingController _ceremonyController = SpellCheckTextEditingController();
   String _searchQuery = '';
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   Timer? _saveDebounce;
 
   final DateFormat _dateFormat = DateFormat('MMM dd, yyyy');
@@ -96,7 +99,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
       final features = await EpicFeatureService.loadAllFeatures(pid);
       if (!mounted) return;
       _ceremonyController.dispose();
-      _ceremonyController = TextEditingController(
+      _ceremonyController = SpellCheckTextEditingController(
           text: calendarData['ceremonies'] as String? ?? '');
       setState(() {
         _sprints = sprints;
@@ -252,8 +255,9 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
     final updatedList = [..._sprints];
     updatedList.removeAt(index);
     await RoadmapService.saveSprints(projectId: pid, sprints: updatedList);
+    if (!mounted) return;
     setState(() => _sprints = updatedList);
-      showDeleteSuccessSnackBar(context, itemLabel: 'Sprint');
+    showDeleteSuccessSnackBar(context, itemLabel: 'Sprint');
   }
 
   @override
@@ -262,6 +266,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
     final double hp = isMobile ? 20 : 40;
 
     return Scaffold(
+      floatingActionButton: const KazAiChatBubble(positioned: false),
       backgroundColor: _kBackground,
       body: SafeArea(
         child: Row(
@@ -314,12 +319,15 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
                             ? 'No sprints match "$_searchQuery".'
                             : 'No sprints defined. Create your first sprint.')
                       else
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _filteredSprints.length,
-                          itemBuilder: (context, i) =>
-                              _buildSprintCard(i, _filteredSprints[i]),
+                        Column(
+                          children: _filteredSprints
+                              .asMap()
+                              .entries
+                              .map((entry) => RepaintBoundary(
+                                    child: _buildSprintCard(
+                                        entry.key, entry.value),
+                                  ))
+                              .toList(growable: false),
                         ),
                       const SizedBox(height: 16),
                       Row(
@@ -494,6 +502,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
     final assigned = _features.where((f) => f.sprintId == sprint.id).toList();
     final unassigned = _features.where((f) => f.sprintId != sprint.id).toList();
 
+    if (!mounted) return;
     await showDialog(
       context: context,
       builder: (ctx) => _AssignFeaturesDialog(
@@ -543,7 +552,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: _kBorder),
+        side: const BorderSide(color: _kBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -685,13 +694,8 @@ class _AssignFeaturesDialogState extends State<_AssignFeaturesDialog> {
                       fontWeight: FontWeight.w600,
                       color: _kHeadline)),
               const SizedBox(height: 8),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: widget.assigned.length,
-                itemBuilder: (context, i) =>
-                    _buildFeatureTile(widget.assigned[i], true),
-              ),
+              ...widget.assigned
+                  .map((feature) => _buildFeatureTile(feature, true)),
               const Divider(height: 24),
             ],
             if (widget.unassigned.isNotEmpty) ...[
@@ -701,13 +705,8 @@ class _AssignFeaturesDialogState extends State<_AssignFeaturesDialog> {
                       fontWeight: FontWeight.w600,
                       color: _kHeadline)),
               const SizedBox(height: 8),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: widget.unassigned.length,
-                itemBuilder: (context, i) =>
-                    _buildFeatureTile(widget.unassigned[i], false),
-              ),
+              ...widget.unassigned
+                  .map((feature) => _buildFeatureTile(feature, false)),
             ],
             if (widget.unassigned.isEmpty && widget.assigned.isEmpty)
               const Padding(
@@ -804,14 +803,14 @@ class _SprintEditDialogState extends State<_SprintEditDialog> {
   void initState() {
     super.initState();
     final e = widget.existing;
-    _nameCtrl = TextEditingController(text: e?.name ?? '');
-    _goalCtrl = TextEditingController(text: e?.goal ?? '');
+    _nameCtrl = SpellCheckTextEditingController(text: e?.name ?? '');
+    _goalCtrl = SpellCheckTextEditingController(text: e?.goal ?? '');
     _orderCtrl =
-        TextEditingController(text: (e?.order ?? _nextOrder()).toString());
+        SpellCheckTextEditingController(text: (e?.order ?? _nextOrder()).toString());
     _capacityCtrl =
-        TextEditingController(text: (e?.capacityPoints ?? 0).toString());
-    _focusCtrl = TextEditingController(text: (e?.focusFactor ?? 1).toString());
-    _squadCtrl = TextEditingController(text: e?.squadName ?? '');
+        SpellCheckTextEditingController(text: (e?.capacityPoints ?? 0).toString());
+    _focusCtrl = SpellCheckTextEditingController(text: (e?.focusFactor ?? 1).toString());
+    _squadCtrl = SpellCheckTextEditingController(text: e?.squadName ?? '');
     _startDate = e?.startDate;
     _endDate = e?.endDate;
   }

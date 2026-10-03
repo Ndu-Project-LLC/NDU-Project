@@ -1,5 +1,4 @@
 import 'package:ndu_project/widgets/launch_notes_section.dart';
-import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -14,6 +13,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
@@ -23,6 +23,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class VendorAccountCloseOutScreen extends StatefulWidget {
   const VendorAccountCloseOutScreen({super.key});
@@ -38,7 +39,7 @@ class VendorAccountCloseOutScreen extends StatefulWidget {
 
 class _VendorAccountCloseOutScreenState
     extends State<VendorAccountCloseOutScreen> {
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   List<LaunchVendorItem> _vendors = [];
   List<LaunchAccessItem> _accessItems = [];
   List<LaunchFollowUpItem> _obligations = [];
@@ -72,7 +73,7 @@ class _VendorAccountCloseOutScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: 'Vendor Account Close Out',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -134,7 +135,7 @@ class _VendorAccountCloseOutScreenState
           label: 'Vendors',
           value: '${_vendors.length}',
           icon: Icons.business_outlined,
-          emphasisColor: const Color(0xFF2563EB),
+          emphasisColor: const Color(0xFFFFC812),
           helper: '$active active, $closed closed',
         ),
         ExecutionMetricData(
@@ -159,7 +160,7 @@ class _VendorAccountCloseOutScreenState
           value:
               '${_closureChecklist.where((c) => c.status == 'Complete').length} / ${_closureChecklist.length}',
           icon: Icons.checklist_outlined,
-          emphasisColor: const Color(0xFF8B5CF6),
+          emphasisColor: const Color(0xFFB8860B),
         ),
       ],
     );
@@ -167,6 +168,7 @@ class _VendorAccountCloseOutScreenState
 
   Widget _buildVendorsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Vendor Close-Out Table',
       subtitle: 'Track each vendor\'s account status and outstanding items.',
       columns: const [
@@ -310,6 +312,7 @@ class _VendorAccountCloseOutScreenState
 
   Widget _buildAccessPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Access Revocation',
       subtitle:
           'Track system/tool access that needs to be revoked for each vendor.',
@@ -454,6 +457,7 @@ class _VendorAccountCloseOutScreenState
 
   Widget _buildObligationsPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Outstanding Obligations',
       subtitle:
           'Pending payments, deliverables, SLAs, or warranties requiring resolution.',
@@ -582,6 +586,7 @@ class _VendorAccountCloseOutScreenState
 
   Widget _buildClosureChecklistPanel() {
     return LaunchDataTable(
+      virtualizedBodyHeight: launchTableBodyCap,
       title: 'Account Closure Checklist',
       subtitle:
           'Standardized steps to verify each vendor account is fully closed.',
@@ -977,7 +982,7 @@ class _VendorAccountCloseOutScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1023,7 +1028,7 @@ class _VendorAccountCloseOutScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1067,7 +1072,7 @@ class _VendorAccountCloseOutScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1112,7 +1117,7 @@ class _VendorAccountCloseOutScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+            .showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
       }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
@@ -1148,7 +1153,7 @@ class _VendorAccountCloseOutScreenState
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Vendor Close-Out Table'),
@@ -1156,14 +1161,14 @@ class _VendorAccountCloseOutScreenState
             if (_vendors.isEmpty)
               pw.Text('No vendors.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1191,14 +1196,14 @@ class _VendorAccountCloseOutScreenState
             if (_accessItems.isEmpty)
               pw.Text('No access items.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1226,14 +1231,14 @@ class _VendorAccountCloseOutScreenState
             if (_obligations.isEmpty)
               pw.Text('No obligations.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1254,14 +1259,14 @@ class _VendorAccountCloseOutScreenState
             if (_closureChecklist.isEmpty)
               pw.Text('No checklist items.',
                   style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: pw.TextStyle(fontSize: 8.5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:

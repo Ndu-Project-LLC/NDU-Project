@@ -16,7 +16,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/project_charter_sections.dart';
-import 'package:ndu_project/theme.dart';
 
 class CharterLockHelper {
   /// Returns true if the FEP is locked because the charter has been

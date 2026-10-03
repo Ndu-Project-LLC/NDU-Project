@@ -5,6 +5,7 @@ import 'package:ndu_project/widgets/permission_aware_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// World-class User Management Screen for admins and owners
 /// Comprehensive user and role management interface
@@ -21,7 +22,7 @@ class UserManagementScreen extends StatefulWidget {
 
 class _UserManagementScreenState extends State<UserManagementScreen> {
   final PermissionService _permissionService = PermissionService.instance;
-  final _searchController = TextEditingController();
+  final _searchController = SpellCheckTextEditingController();
   final _scrollController = ScrollController();
 
   SiteRole? _selectedRoleFilter;
@@ -38,9 +39,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
@@ -62,7 +63,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Add User'),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
+                backgroundColor: const Color(0xFFB8860B),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               ),
@@ -100,8 +101,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color(0xFF6366F1),
-                      Color(0xFF8B5CF6),
+                      Color(0xFFB8860B),
+                      Color(0xFFB8860B),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -480,9 +481,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       case SiteRole.owner:
         return [const Color(0xFFDC2626), const Color(0xFFEF4444)];
       case SiteRole.admin:
-        return [const Color(0xFF7C3AED), const Color(0xFF8B5CF6)];
+        return [const Color(0xFFB8860B), const Color(0xFFB8860B)];
       case SiteRole.editor:
-        return [const Color(0xFF2563EB), const Color(0xFF3B82F6)];
+        return [const Color(0xFFFFC812), const Color(0xFFFFC812)];
       case SiteRole.user:
         return [const Color(0xFF059669), const Color(0xFF10B981)];
       case SiteRole.guest:
@@ -623,8 +624,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   }
 
   Future<void> _showAddUserDialog() async {
-    final emailController = TextEditingController();
-    final nameController = TextEditingController();
+    final emailController = SpellCheckTextEditingController();
+    final nameController = SpellCheckTextEditingController();
     SiteRole selectedRole = SiteRole.user;
 
     final result = await showDialog<bool>(
@@ -733,13 +734,13 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   }
 
   Future<void> _showEditUserDialog(UserProfile user) async {
-    final nameController = TextEditingController(text: user.displayName);
-    final titleController = TextEditingController(text: user.jobTitle ?? '');
+    final nameController = SpellCheckTextEditingController(text: user.displayName);
+    final titleController = SpellCheckTextEditingController(text: user.jobTitle ?? '');
     final departmentController =
-        TextEditingController(text: user.department ?? '');
-    final phoneController = TextEditingController(text: user.phoneNumber ?? '');
+        SpellCheckTextEditingController(text: user.department ?? '');
+    final phoneController = SpellCheckTextEditingController(text: user.phoneNumber ?? '');
     final organizationController =
-        TextEditingController(text: user.organization ?? '');
+        SpellCheckTextEditingController(text: user.organization ?? '');
 
     final result = await showDialog<bool>(
       context: context,

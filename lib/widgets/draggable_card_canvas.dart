@@ -206,14 +206,13 @@ class _DraggableCardState extends State<DraggableCard> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: _kCardShadowColor.withOpacity(_isDragging ? 0.4 : 0.15),
+                color: _kCardShadowColor.withValues(alpha: _isDragging ? 0.4 : 0.15),
                 blurRadius: _isDragging ? 24 : 10,
                 offset: Offset(0, _isDragging ? 12 : 4),
               ),
-            ],
-            border: Border.all(
+            ],              border: Border.all(
               color: _isDragging
-                  ? _kDragHandleActiveColor.withOpacity(0.6)
+                  ? _kDragHandleActiveColor.withValues(alpha: 0.6)
                   : Colors.transparent,
               width: _isDragging ? 2 : 0,
             ),
@@ -232,10 +231,10 @@ class _DraggableCardState extends State<DraggableCard> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
-                      color: _kDragHandleColor.withOpacity(0.18),
+                      color: _kDragHandleColor.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                          color: _kDragHandleColor.withOpacity(0.4)),
+                          color: _kDragHandleColor.withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -266,7 +265,7 @@ class _DraggableCardState extends State<DraggableCard> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
-                      color: _kCanvasBgColor.withOpacity(0.85),
+                      color: _kCanvasBgColor.withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -398,10 +397,10 @@ class _FreeformCardCanvasState extends State<FreeformCardCanvas> {
       width: double.infinity,
       height: 600, // generous canvas height
       decoration: BoxDecoration(
-        color: _kCanvasBgColor.withOpacity(0.04),
+        color: _kCanvasBgColor.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: _kDragHandleColor.withOpacity(0.3),
+          color: _kDragHandleColor.withValues(alpha: 0.3),
           width: 1.5,
           style: BorderStyle.solid,
         ),
@@ -420,10 +419,10 @@ class _FreeformCardCanvasState extends State<FreeformCardCanvas> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: _kDragHandleColor.withOpacity(0.12),
+                color: _kDragHandleColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                    color: _kDragHandleColor.withOpacity(0.3)),
+                    color: _kDragHandleColor.withValues(alpha: 0.3)),
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
@@ -498,7 +497,7 @@ class _DotGridPainter extends CustomPainter {
     const spacing = 24.0;
     const dotRadius = 1.5;
     final paint = Paint()
-      ..color = const Color(0xFF64748B).withOpacity(0.25)
+      ..color = const Color(0xFF64748B).withValues(alpha: 0.25)
       ..style = PaintingStyle.fill;
     for (var x = spacing / 2; x < size.width; x += spacing) {
       for (var y = spacing / 2; y < size.height; y += spacing) {
@@ -540,10 +539,10 @@ class DragModeToggle extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444).withOpacity(0.1),
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                      color: const Color(0xFFEF4444).withOpacity(0.3)),
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -580,12 +579,12 @@ class DragModeToggle extends StatelessWidget {
                   horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: isFreeform
-                    ? _kDragHandleColor.withOpacity(0.18)
+                    ? _kDragHandleColor.withValues(alpha: 0.18)
                     : const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: isFreeform
-                      ? _kDragHandleColor.withOpacity(0.6)
+                      ? _kDragHandleColor.withValues(alpha: 0.6)
                       : const Color(0xFFD1D5DB),
                 ),
               ),

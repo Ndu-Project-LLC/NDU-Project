@@ -2,6 +2,8 @@
 ///
 /// Aligns with IEEE 1016-2009 (Software Design Description), ISO/IEC/IEEE 12207,
 /// and industry best practices for waterfall, hybrid, and agile methodologies.
+import 'package:ndu_project/utils/unique_id.dart';
+
 class DesignComponent {
   final String id;
 
@@ -59,7 +61,7 @@ class DesignComponent {
     this.traceability = '',
     this.status = 'Draft',
     this.designNotes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   DesignComponent copyWith({
     String? specId,
@@ -111,7 +113,7 @@ class DesignComponent {
   factory DesignComponent.fromJson(Map<String, dynamic> json) {
     return DesignComponent(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       specId: json['specId']?.toString() ?? '',
       componentName: json['componentName']?.toString() ?? '',
       specificationType: json['specificationType']?.toString() ??

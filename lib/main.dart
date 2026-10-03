@@ -28,6 +28,7 @@ import 'package:ndu_project/providers/theme_provider.dart';
 import 'package:ndu_project/providers/display_preferences_provider.dart';
 import 'package:ndu_project/widgets/no_animation_page_transitions_builder.dart';
 import 'package:ndu_project/widgets/speech_to_text_overlay.dart';
+import 'package:ndu_project/utils/screen_capture.dart';
 import 'package:ndu_project/platform/webview_platform_setup.dart';
 import 'package:ndu_project/utils/browser_route_normalizer.dart';
 
@@ -348,19 +349,43 @@ class _MyAppState extends State<MyApp> {
                         type: MaterialType.transparency,
                         child: Column(
                           children: [
-                            // Make it unmistakable that no AI provider is being
-                            // contacted — otherwise generated content looks like
-                            // live model output.
-                            if (AiMode.isLocal) const LocalAiBanner(),
-                            // Persistent warning when Firebase failed to start —
-                            // without it, broken sign-in looks like a bug to users.
-                            if (!_firebaseReady)
-                              _FirebaseOutageBanner(
-                                  onRetry: _retryFirebaseInit),
-                            Expanded(
-                              child: SpeechToTextOverlay(
-                                child: child ?? const SizedBox.shrink(),
+                            // Wrap the whole app in a repaint boundary so
+                            // ScreenCapture can rasterise what is on
+                            // screen into PDF pages. The boundary
+                            // deliberately excludes the export progress
+                            // bar below, which would otherwise appear in
+                            // its own capture.
+                            RepaintBoundary(
+                              key: ScreenCapture.rootBoundaryKey,
+                              child: Expanded(
+                                child: Column(
+                                  children: [
+                                    // Make it unmistakable that no AI provider is
+                                    // being contacted — otherwise generated content
+                                    // looks like live model output.
+                                    if (AiMode.isLocal) const LocalAiBanner(),
+                                    // Persistent warning when Firebase failed to
+                                    // start — without it, broken sign-in looks like a
+                                    // bug to users.
+                                    if (!_firebaseReady)
+                                      _FirebaseOutageBanner(
+                                          onRetry: _retryFirebaseInit),
+                                    Expanded(
+                                      child: SpeechToTextOverlay(
+                                        child: child ?? const SizedBox.shrink(),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
+                            ),
+                            // Rendered outside the capture boundary so the
+                            // export progress indicator is never captured.
+                            ValueListenableBuilder<bool>(
+                              valueListenable: ScreenCapture.busy,
+                              builder: (context, isBusy, _) => isBusy
+                                  ? const LinearProgressIndicator(minHeight: 3)
+                                  : const SizedBox.shrink(),
                             ),
                           ],
                         ),

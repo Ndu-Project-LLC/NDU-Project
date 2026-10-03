@@ -803,64 +803,58 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
                 ]),
                 const SizedBox(height: 18),
                 LayoutBuilder(builder: (context, constraints) {
-                  final stacked = constraints.maxWidth < 720;
-                  final row = [
-                    Expanded(
-                        child: _field(
-                            label: 'Requirement ID',
-                            value: selected.requirementId,
-                            fieldKey: '${selected.source.id}-reqid',
-                            onChanged: (v) => onUpdateSelectedRequirement(
-                                (c) => c.copyWith(requirementId: v.trim())))),
-                    const SizedBox(width: 14, height: 14),
-                    Expanded(
-                        child: _dropdown(
-                            label: 'Owner',
-                            value: selected.source.owner,
-                            items: ownerOptions,
-                            onChanged: (v) => onUpdateSelectedRequirement(
-                                (c) => c.copyWith(owner: v)))),
-                    const SizedBox(width: 14, height: 14),
-                    Expanded(
-                        child: _dropdown(
-                            label: 'Requirement Type',
-                            value: selected.type,
-                            items: const ['Functional', 'Non-Functional'],
-                            onChanged: (v) => onUpdateSelectedRequirement((c) =>
-                                c.copyWith(
-                                    requirementType: v,
-                                    designArtifactType: v == 'Non-Functional'
-                                        ? 'PDF'
-                                        : 'Figma')))),
-                  ];
-                  return stacked ? Column(children: row) : Row(children: row);
+                  return _rowOrStack(
+                    constraints.maxWidth < 720,
+                    [
+                      _field(
+                          label: 'Requirement ID',
+                          value: selected.requirementId,
+                          fieldKey: '${selected.source.id}-reqid',
+                          onChanged: (v) => onUpdateSelectedRequirement(
+                              (c) => c.copyWith(requirementId: v.trim()))),
+                      _dropdown(
+                          label: 'Owner',
+                          value: selected.source.owner,
+                          items: ownerOptions,
+                          onChanged: (v) => onUpdateSelectedRequirement(
+                              (c) => c.copyWith(owner: v))),
+                      _dropdown(
+                          label: 'Requirement Type',
+                          value: selected.type,
+                          items: const ['Functional', 'Non-Functional'],
+                          onChanged: (v) => onUpdateSelectedRequirement((c) =>
+                              c.copyWith(
+                                  requirementType: v,
+                                  designArtifactType: v == 'Non-Functional'
+                                      ? 'PDF'
+                                      : 'Figma'))),
+                    ],
+                  );
                 }),
                 const SizedBox(height: 14),
                 LayoutBuilder(builder: (context, constraints) {
-                  final stacked = constraints.maxWidth < 720;
-                  final row = [
-                    Expanded(
-                        child: _dropdown(
-                            label: 'Source',
-                            value: selected.source.ruleType,
-                            items: const ['Internal', 'External'],
-                            onChanged: (v) => onUpdateSelectedRequirement(
-                                (c) => c.copyWith(ruleType: v)))),
-                    const SizedBox(width: 14, height: 14),
-                    Expanded(
-                        child: _dropdown(
-                            label: 'Source Type',
-                            value: selected.source.sourceType,
-                            items: const [
-                              'Contract',
-                              'Vendor',
-                              'Regulatory',
-                              'Standard'
-                            ],
-                            onChanged: (v) => onUpdateSelectedRequirement(
-                                (c) => c.copyWith(sourceType: v)))),
-                  ];
-                  return stacked ? Column(children: row) : Row(children: row);
+                  return _rowOrStack(
+                    constraints.maxWidth < 720,
+                    [
+                      _dropdown(
+                          label: 'Source',
+                          value: selected.source.ruleType,
+                          items: const ['Internal', 'External'],
+                          onChanged: (v) => onUpdateSelectedRequirement(
+                              (c) => c.copyWith(ruleType: v))),
+                      _dropdown(
+                          label: 'Source Type',
+                          value: selected.source.sourceType,
+                          items: const [
+                            'Contract',
+                            'Vendor',
+                            'Regulatory',
+                            'Standard'
+                          ],
+                          onChanged: (v) => onUpdateSelectedRequirement(
+                              (c) => c.copyWith(sourceType: v))),
+                    ],
+                  );
                 }),
                 const SizedBox(height: 14),
                 _field(
@@ -880,11 +874,10 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
                         (c) => c.copyWith(definition: v))),
                 const SizedBox(height: 14),
                 LayoutBuilder(builder: (context, constraints) {
-                  final stacked = constraints.maxWidth < 720;
-                  final row = [
-                    Expanded(
-                      flex: 2,
-                      child: _field(
+                  return _rowOrStack(
+                    constraints.maxWidth < 720,
+                    [
+                      _field(
                         label: 'Design Artifact',
                         value: selected.artifactLabel,
                         fieldKey: '${selected.source.id}-artifact',
@@ -898,27 +891,25 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
                                       : c.validationStatus,
                                 )),
                       ),
-                    ),
-                    const SizedBox(width: 14, height: 14),
-                    Expanded(
-                        child: _dropdown(
-                            label: 'Artifact Type',
-                            value: selected.artifactType,
-                            items: const ['Figma', 'PDF'],
-                            onChanged: (v) => onUpdateSelectedRequirement(
-                                (c) => c.copyWith(designArtifactType: v)))),
-                    const SizedBox(width: 14, height: 14),
-                    Expanded(
-                        child: _dropdown(
-                            label: 'Validation Status',
-                            value: selected.validationStatus,
-                            items: const ['Mapped', 'Unmapped'],
-                            onChanged: (v) => onUpdateSelectedRequirement((c) =>
-                                c.copyWith(
-                                    validationStatus:
-                                        c.isOutOfScope ? 'Unmapped' : v)))),
-                  ];
-                  return stacked ? Column(children: row) : Row(children: row);
+                      _dropdown(
+                          label: 'Artifact Type',
+                          value: selected.artifactType,
+                          items: const ['Figma', 'PDF'],
+                          onChanged: (v) => onUpdateSelectedRequirement(
+                              (c) => c.copyWith(designArtifactType: v))),
+                      _dropdown(
+                          label: 'Validation Status',
+                          value: selected.validationStatus,
+                          items: const ['Mapped', 'Unmapped'],
+                          onChanged: (v) => onUpdateSelectedRequirement((c) =>
+                              c.copyWith(
+                                  validationStatus:
+                                      c.isOutOfScope ? 'Unmapped' : v))),
+                    ],
+                    // The artifact field wants twice the room of the two
+                    // dropdowns beside it.
+                    flexes: const [2, 1, 1],
+                  );
                 }),
                 const SizedBox(height: 14),
                 _field(
@@ -1207,6 +1198,42 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF475569))),
       ]);
+
+  /// Lays [children] out as a share-the-width [Row], or as a vertical stack
+  /// when [stacked].
+  ///
+  /// The two branches must not share a pre-built child list: an [Expanded] is
+  /// only legal inside a flex parent whose main axis is bounded. The dashboard
+  /// body lives in a vertical scroll view, so the [Column] branch gets
+  /// unbounded height and reusing the row's `Expanded` children there throws
+  /// "RenderFlex children have non-zero flex but incoming height constraints
+  /// are unbounded" — which blanks the entire page body.
+  Widget _rowOrStack(bool stacked, List<Widget> children,
+      {List<int> flexes = const []}) {
+    if (stacked) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) const SizedBox(height: 14),
+            children[i],
+          ],
+        ],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < children.length; i++) ...[
+          if (i > 0) const SizedBox(width: 14),
+          Expanded(
+            flex: i < flexes.length ? flexes[i] : 1,
+            child: children[i],
+          ),
+        ],
+      ],
+    );
+  }
 
   Widget _field(
           {required String label,

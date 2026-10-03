@@ -166,6 +166,33 @@ class _GanttScreenState extends State<GanttScreen> {
         final cellCount = cellStarts.length;
         final timelineStart = cellStarts.first;
 
+        // The Gantt has to fill the width it is given. The timeline used to
+        // shrink-wrap to `leftColWidth + cellCount * cellWidth`, so a short
+        // project (a few week cells) left most of the screen empty and the
+        // chart looked broken rather than narrow. Stretching the cells to reach
+        // the viewport keeps the whole grid edge-to-edge; when there are enough
+        // cells to overflow, the per-scale minimum still applies and the table
+        // scrolls horizontally as before.
+        const leftColWidth = 280.0;
+        final tableWidth = LayoutBuilder(
+          builder: (context, constraints) {
+            final available = constraints.maxWidth;
+            final stretchedCellWidth = cellCount == 0
+                ? cellWidth
+                : ((available - leftColWidth) / cellCount)
+                    .clamp(cellWidth, double.infinity);
+            return _GanttTable(
+              cellLabels: cellLabels,
+              cellStarts: cellStarts,
+              rows: rows,
+              timelineStart: timelineStart,
+              scale: _scale,
+              cellWidth: stretchedCellWidth,
+              leftColWidth: leftColWidth,
+            );
+          },
+        );
+
         final criticalCount = rows.where((r) => r.isCritical).length;
         final milestoneCount = rows.where((r) => r.isMilestone).length;
         final goalCount = rows
@@ -204,6 +231,16 @@ class _GanttScreenState extends State<GanttScreen> {
                         .toList(),
                     selected: {_scale},
                     showSelectedIcon: false,
+                    // Brand yellow, matching the rest of the schedule module.
+                    // Without this the control falls back to the Material
+                    // seed colour (blue), which reads as a different product.
+                    style: SegmentedButton.styleFrom(
+                      selectedBackgroundColor: LightModeColors.accent,
+                      selectedForegroundColor: const Color(0xFF1A1D1F),
+                      foregroundColor: const Color(0xFF495057),
+                      side: const BorderSide(color: Color(0xFFE4E7EC)),
+                      visualDensity: VisualDensity.compact,
+                    ),
                     onSelectionChanged: (selection) {
                       setState(() => _scale = selection.first);
                     },
@@ -265,45 +302,7 @@ class _GanttScreenState extends State<GanttScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE4E7EC)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Padding(
-                    padding: const EdgeInsets.all(0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _GanttHeaderRow(
-                            cellLabels: cellLabels,
-                            leftColWidth: 280,
-                            cellWidth: cellWidth),
-                        const Divider(
-                            color: Color(0xFFE4E7EC), height: 1, thickness: 1),
-                        ...rows.map((r) => _GanttRow(
-                              row: r,
-                              timelineStart: timelineStart,
-                              cellStarts: cellStarts,
-                              scale: _scale,
-                              cellWidth: cellWidth,
-                              leftColWidth: 280,
-                            )),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              tableWidth,
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -498,6 +497,71 @@ class _GanttScreenState extends State<GanttScreen> {
     if (goalKey.isEmpty) return Color(domainColor);
     final idx = goalKey.hashCode.abs() % _goalPalette.length;
     return Color(_goalPalette[idx]);
+  }
+}
+
+/// The Gantt grid card: header row plus one row per activity, in a horizontal
+/// scroll view so a long timeline can still be panned.
+///
+/// Split out of [_GanttScreenState] so the width calculation lives in a
+/// `LayoutBuilder` with a bounded parent. The cell width is already resolved by
+/// the caller; this widget just lays the grid out at it.
+class _GanttTable extends StatelessWidget {
+  final List<String> cellLabels;
+  final List<DateTime> cellStarts;
+  final List<_GanttRowData> rows;
+  final DateTime timelineStart;
+  final _GanttScale scale;
+  final double cellWidth;
+  final double leftColWidth;
+
+  const _GanttTable({
+    required this.cellLabels,
+    required this.cellStarts,
+    required this.rows,
+    required this.timelineStart,
+    required this.scale,
+    required this.cellWidth,
+    required this.leftColWidth,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE4E7EC)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _GanttHeaderRow(
+                cellLabels: cellLabels,
+                leftColWidth: leftColWidth,
+                cellWidth: cellWidth),
+            const Divider(color: Color(0xFFE4E7EC), height: 1, thickness: 1),
+            ...rows.map((r) => _GanttRow(
+                  row: r,
+                  timelineStart: timelineStart,
+                  cellStarts: cellStarts,
+                  scale: scale,
+                  cellWidth: cellWidth,
+                  leftColWidth: leftColWidth,
+                )),
+          ],
+        ),
+      ),
+    );
   }
 }
 

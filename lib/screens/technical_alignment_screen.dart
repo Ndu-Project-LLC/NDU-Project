@@ -3085,30 +3085,33 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
           LayoutBuilder(
             builder: (context, constraints) {
               final stacked = constraints.maxWidth < 860;
-              final titleBlock = Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Feasibility & Constraints Hub',
-                      style: TextStyle(
-                        fontSize: isMobile ? 24 : 28,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        height: 1.1,
-                      ),
+              // NOTE: the title block is built unexpanded and only wrapped in
+              // [Expanded] for the row branch. Reusing an `Expanded` in the
+              // stacked `Column` throws "RenderFlex children have non-zero
+              // flex but incoming height constraints are unbounded", because
+              // the hero sits in a vertical scroll view with unbounded height.
+              final titleBlock = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Feasibility & Constraints Hub',
+                    style: TextStyle(
+                      fontSize: isMobile ? 24 : 28,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      height: 1.1,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Technical Alignment for ${snapshot.projectLabel}. This dashboard checks the design concept against real systems, legacy dependencies, venue conditions, security obligations, and operational workarounds.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.84),
-                        height: 1.5,
-                      ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Technical Alignment for ${snapshot.projectLabel}. This dashboard checks the design concept against real systems, legacy dependencies, venue conditions, security obligations, and operational workarounds.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.84),
+                      height: 1.5,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               );
               final actions = Wrap(
                 spacing: 12,
@@ -3130,7 +3133,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  titleBlock,
+                  Expanded(child: titleBlock),
                   const SizedBox(width: 16),
                   actions,
                 ],
@@ -3397,40 +3400,42 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final stacked = constraints.maxWidth < 520;
-                    final details = Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.feature,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
-                            ),
+                    // Built unexpanded; only the row branch wraps it. An
+                    // `Expanded` reused in the stacked `Column` throws because
+                    // this card list lives in a vertical scroll view, which
+                    // gives its children unbounded height.
+                    final details = Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.feature,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
                           ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Constraint: ${item.constraint}',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: Color(0xFF334155),
+                            height: 1.45,
+                          ),
+                        ),
+                        if (item.note.trim().isNotEmpty) ...[
                           const SizedBox(height: 6),
                           Text(
-                            'Constraint: ${item.constraint}',
+                            item.note,
                             style: const TextStyle(
-                              fontSize: 12.5,
-                              color: Color(0xFF334155),
+                              fontSize: 12,
+                              color: Color(0xFF64748B),
                               height: 1.45,
                             ),
                           ),
-                          if (item.note.trim().isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              item.note,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF64748B),
-                                height: 1.45,
-                              ),
-                            ),
-                          ],
                         ],
-                      ),
+                      ],
                     );
                     final gauge = SizedBox(
                       width: stacked ? double.infinity : 170,
@@ -3451,7 +3456,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        details,
+                        Expanded(child: details),
                         const SizedBox(width: 16),
                         gauge,
                       ],

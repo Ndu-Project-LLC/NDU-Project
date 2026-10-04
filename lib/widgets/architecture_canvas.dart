@@ -191,7 +191,6 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
   String? _hoveredNodeId;
   bool _showGrid = true;
   Offset? _connectionDragEnd;
-  final bool _isPanning = false;
 
   @override
   void initState() {
@@ -422,41 +421,6 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
       labelController.dispose();
       descController.dispose();
       techController.dispose();
-    }
-  }
-
-  Future<void> _openEdgeEditor(ArchitectureEdge edge) async {
-    final controller = SpellCheckTextEditingController(text: edge.label);
-    try {
-      final result = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Edit Connection'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Connection Label',
-              hintText: 'e.g., HTTP/REST, gRPC, WebSocket...',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Save'),
-            ),
-          ],
-        ),
-      );
-      if (result != true) return;
-      edge.label = controller.text.trim();
-      widget.onEdgesChanged(List.of(widget.edges));
-    } finally {
-      controller.dispose();
     }
   }
 

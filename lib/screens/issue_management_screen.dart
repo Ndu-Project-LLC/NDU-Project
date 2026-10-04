@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/unique_id.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:ndu_project/models/issue_log.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -10,8 +9,6 @@ import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
-import 'package:ndu_project/services/firebase_auth_service.dart';
-import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
@@ -43,7 +40,6 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  List<_IssueMetric> _metrics = [];
  bool _autoPopulated = false;
  bool _isAutoPopulating = false;
- String? _carriedContext;
 
  @override
  void initState() {
@@ -64,10 +60,6 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  if (mounted) setState(() => _isAutoPopulating = false);
  return;
  }
-
- // Pull real carried context for display in the banner.
- final carried = await buildAccumulatedContext(context, 'issue_management');
- if (mounted) setState(() => _carriedContext = carried);
 
  // Deterministic seed from real prior-phase data — never invents issues.
  // Seed pulls from risk register + planning issue log (NOT the current
@@ -1140,104 +1132,6 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
  child: const Text('Save'),
  ),
  ],
- );
- }
-}
-
-class _UserChip extends StatelessWidget {
- const _UserChip({required this.name, required this.role});
-
- final String name;
- final String role;
-
- @override
- Widget build(BuildContext context) {
- final user = FirebaseAuth.instance.currentUser;
- final displayName = FirebaseAuthService.displayNameOrEmail(
- fallback: name.isNotEmpty ? name : 'User');
- final email = user?.email ?? '';
- final primary = displayName.isNotEmpty
- ? displayName
- : (email.isNotEmpty ? email : name);
- final photoUrl = user?.photoURL ?? '';
-
- return StreamBuilder<bool>(
- stream: UserService.watchAdminStatus(),
- builder: (context, snapshot) {
- final isAdmin = snapshot.data ?? UserService.isAdminEmail(email);
- final resolvedRole = isAdmin ? 'Admin' : 'Member';
- final roleText = role.isNotEmpty ? role : resolvedRole;
-
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(999),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- CircleAvatar(
- radius: 16,
- backgroundColor: const Color(0xFFE5E7EB),
- backgroundImage:
- photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
- child: photoUrl.isEmpty
- ? Text(
- primary.isNotEmpty ? primary[0].toUpperCase() : 'U',
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: Color(0xFF374151)),
- )
- : null,
- ),
- const SizedBox(width: 10),
- Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- primary,
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: Color(0xFF111827)),
- ),
- Text(
- roleText,
- style:
- const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
- ),
- ],
- ),
- ],
- ),
- );
- },
- );
- }
-}
-
-class _YellowButton extends StatelessWidget {
- const _YellowButton({required this.label}) : onPressed = null;
-
- final String label;
- final VoidCallback? onPressed;
-
- @override
- Widget build(BuildContext context) {
- return ElevatedButton(
- onPressed: onPressed,
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFFFD54F),
- foregroundColor: const Color(0xFF111827),
- elevation: 0,
- padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
- textStyle: const TextStyle(fontWeight: FontWeight.w600),
- ),
- child: Text(label),
  );
  }
 }

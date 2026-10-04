@@ -527,32 +527,6 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return ExecutionPageHeader(
-      badge: 'Execution Progress',
-      title: 'Progress Tracking Command Center',
-      description:
-          'Monitor execution health, track deliverables, manage recurring operating work, and shape stakeholder-ready status reporting from one connected workspace.',
-      trailing: ExecutionActionBar(
-        actions: [
-          ExecutionActionItem(
-            label: 'Add item',
-            icon: Icons.add,
-            tone: ExecutionActionTone.primary,
-            onPressed: _loading ? null : _addBlankItemForActiveView,
-          ),
-          ExecutionActionItem(
-            label: 'Add AI draft',
-            icon: Icons.auto_awesome_outlined,
-            tone: ExecutionActionTone.ai,
-            isLoading: _isAutoGenerating,
-            onPressed: _loading ? null : _addAiDraftsForActiveView,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildViewChip({
     required _ProgressWorkspaceView view,
     required String label,

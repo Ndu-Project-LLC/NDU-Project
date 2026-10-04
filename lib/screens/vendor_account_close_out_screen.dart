@@ -47,11 +47,10 @@ class _VendorAccountCloseOutScreenState
 
   bool _isLoading = true;
   bool _isGenerating = false;
-  bool _isExporting = false;
   bool _hasLoaded = false;
   bool _suspendSave = false;
   final Map<String, bool> _kazAiRegenerating = {};
-  final String _selectedView = 'full'; // 'full' or 'summary'
+ // 'full' or 'summary'
 
   @override
   void initState() {
@@ -712,25 +711,6 @@ class _VendorAccountCloseOutScreenState
     );
   }
 
-  Future<void> _importVendors() async {
-    if (_projectId == null) return;
-    final imported = await LaunchPhaseService.loadExecutionVendors(_projectId!);
-    if (imported.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No vendors found to import.')));
-      }
-      return;
-    }
-    setState(() {
-      final existing = _vendors.map((v) => v.vendorName).toSet();
-      for (final v in imported) {
-        if (!existing.contains(v.vendorName)) _vendors.add(v);
-      }
-    });
-    _save();
-  }
-
   void _save() {
     if (_suspendSave || !_hasLoaded) return;
     Future.microtask(() {
@@ -1128,7 +1108,6 @@ class _VendorAccountCloseOutScreenState
   String _ns(dynamic v, String fb) => _s(v).isEmpty ? fb : _s(v);
 
   Future<void> _exportPdf() async {
-    setState(() => _isExporting = true);
     try {
       final projectData = ProjectDataHelper.getData(context);
       final projectName = projectData.projectName;
@@ -1306,7 +1285,6 @@ class _VendorAccountCloseOutScreenState
         );
       }
     }
-    if (mounted) setState(() => _isExporting = false);
   }
 
   pw.Widget _pdfSectionTitle(String title) {

@@ -182,7 +182,7 @@ void main() {
 
     test('an existing manual line is preserved alongside the pulled ones', () {
       final ce = readyEstimate();
-      ce.addLine(CostLine(
+      ce.addLine(const CostLine(
         id: 'manual',
         category: CostCategory.materials,
         subCategory: '',
@@ -216,7 +216,7 @@ void main() {
     test('an identical line outside the schedule does not count as represented',
         () {
       final ce = readyEstimate();
-      ce.addLine(CostLine(
+      ce.addLine(const CostLine(
         id: 'manual',
         category: CostCategory.labor,
         subCategory: '',

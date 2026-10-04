@@ -23,6 +23,8 @@
 /// A single checklist item in a team member's mobilization checklist.
 /// When all items are checked, the team member is "mobilized" for the
 /// Execution phase.
+library;
+
 import 'package:ndu_project/utils/unique_id.dart';
 
 class MobilizationChecklistItem {

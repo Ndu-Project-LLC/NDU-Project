@@ -45,11 +45,10 @@ class _ActualVsPlannedGapAnalysisScreenState
 
   bool _isLoading = true;
   bool _isGenerating = false;
-  bool _isExporting = false;
   bool _hasLoaded = false;
   bool _suspendSave = false;
   final Map<String, bool> _kazAiRegenerating = {};
-  final String _selectedView = 'full'; // 'full' or 'summary'
+ // 'full' or 'summary'
 
   @override
   void initState() {
@@ -1310,7 +1309,6 @@ class _ActualVsPlannedGapAnalysisScreenState
   String _ns(dynamic v, String fb) => _s(v).isEmpty ? fb : _s(v);
 
   Future<void> _exportPdf() async {
-    setState(() => _isExporting = true);
     try {
       final projectData = ProjectDataHelper.getData(context);
       final projectName = projectData.projectName;
@@ -1523,7 +1521,6 @@ class _ActualVsPlannedGapAnalysisScreenState
         );
       }
     }
-    if (mounted) setState(() => _isExporting = false);
   }
 
   pw.Widget _pdfSectionTitle(String title) {

@@ -267,18 +267,6 @@ class _SupportTicket {
         'agentName': agentName,
         'lastMessage': lastMessage,
       };
-
-  static _SupportTicket fromMap(Map<String, dynamic> map) => _SupportTicket(
-        id: map['id']?.toString() ?? '',
-        subject: map['subject']?.toString() ?? '',
-        status: map['status']?.toString() ?? 'open',
-        createdAt: map['createdAt'] is Timestamp
-            ? (map['createdAt'] as Timestamp).toDate()
-            : DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
-                DateTime.now(),
-        agentName: map['agentName']?.toString() ?? '',
-        lastMessage: map['lastMessage']?.toString() ?? '',
-      );
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

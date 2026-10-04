@@ -94,23 +94,6 @@ class _InterfaceManagementPlanForm extends StatefulWidget {
 
 class _InterfaceManagementPlanFormState
     extends State<_InterfaceManagementPlanForm> {
-  Future<void> _exportPdf() async {
-    final projectData = ProjectDataHelper.getData(context);
-    await PdfExportHelper.exportScreenPdf(
-      context: context,
-      screenTitle: 'Interface Management Plan',
-      sections: [
-        PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
-        ]),
-        PdfSection.text(
-            'Notes',
-            projectData.planningNotes[
-                    'execution_plan_interface_management_plan_screen'] ??
-                'No data recorded.'),
-      ],
-    );
-  }
 
   final _responsibilityMatrixController = SpellCheckTextEditingController();
   final _escalationProceduresController = SpellCheckTextEditingController();

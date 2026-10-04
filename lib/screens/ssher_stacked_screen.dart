@@ -72,10 +72,8 @@ class _Palette {
  static const Color error = Color(0xFFBA1A1A);
  static const Color errorContainer = Color(0xFFFFDAD6);
  static const Color onErrorContainer = Color(0xFF93000A);
- static const Color primaryFixed = Color(0xFFD6E3FF);
  static const Color secondaryContainer = Color(0xFFE8DEF8);
  static const Color onSecondaryContainer = Color(0xFF1D192B);
- static const Color headerBg = Color(0xFF1C1B1B);
 }
 
 class SsherStackedScreen extends StatefulWidget {
@@ -121,8 +119,6 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  // Legacy single SSHER summary retained for backward compatibility but no
  // longer the primary summary shown to the user — each category now has its
  // own plan summary above its items list.
- String _aiPlanSummary = '';
- bool _isGeneratingSummary = false;
  bool _summaryLoaded = false;
  bool _entriesGenerated = false;
  bool _isGeneratingEntries = false;
@@ -299,7 +295,6 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  final existingSummary = projectData.ssherData.screen1Data.trim();
  if (existingSummary.isNotEmpty) {
  setState(() {
- _aiPlanSummary = existingSummary;
  _summaryLoaded = true;
  });
  return;
@@ -312,7 +307,6 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  return;
  }
 
- setState(() => _isGeneratingSummary = true);
 
  String summary = '';
  try {
@@ -320,18 +314,14 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  .generateSsherPlanSummary(context: contextText);
  } catch (error) {
  debugPrint('SSHER summary AI call failed: $error');
- }
+ }  if (!mounted) return;
 
- if (!mounted) return;
+  final trimmedSummary = summary.trim();
+  setState(() {
+    _summaryLoaded = true;
+  });
 
- final trimmedSummary = summary.trim();
- setState(() {
- _aiPlanSummary = trimmedSummary;
- _isGeneratingSummary = false;
- _summaryLoaded = true;
- });
-
- if (trimmedSummary.isEmpty) return;
+  if (trimmedSummary.isEmpty) return;
  await ProjectDataHelper.updateAndSave(
  context: context,
  checkpoint: 'ssher',
@@ -340,15 +330,6 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  ssherData: data.ssherData.copyWith(screen1Data: trimmedSummary),
  ),
  );
- }
-
- Future<void> _retrySummaryGeneration() async {
- if (_isGeneratingSummary) return;
- setState(() {
- _summaryLoaded = false;
- _aiPlanSummary = '';
- });
- await _populateSsherSummaryFromAi();
  }
 
  // ── Per-category plan summary (Safety Plan / Security Plan / etc.) ──
@@ -553,44 +534,6 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  await _ensureCategoryPlanGenerated(cat);
  }
 
- String _buildSummaryPlaceholderText() {
- final entries = _allEntries();
- if (entries.isEmpty) {
- return 'No AI summary has been generated yet. Add SSHER notes or at least one item in any category, then tap "Try Generate Again".';
- }
-
- final categoryCoverage = <String>[
- if (_safetyEntries.isNotEmpty) 'Safety (${_safetyEntries.length})',
- if (_securityEntries.isNotEmpty) 'Security (${_securityEntries.length})',
- if (_healthEntries.isNotEmpty) 'Health (${_healthEntries.length})',
- if (_environmentEntries.isNotEmpty)
- 'Environment (${_environmentEntries.length})',
- if (_regulatoryEntries.isNotEmpty)
- 'Regulatory (${_regulatoryEntries.length})',
- ];
-
- final highRiskCount = entries
- .where((entry) => entry.riskLevel.trim().toLowerCase() == 'high')
- .length;
- final mediumRiskCount = entries
- .where((entry) => entry.riskLevel.trim().toLowerCase() == 'medium')
- .length;
- final topConcerns = entries
- .map((entry) => entry.concern.trim())
- .where((concern) => concern.isNotEmpty)
- .take(2)
- .toList();
- final coverageText = categoryCoverage.isEmpty
- ? 'tracked SSHER categories'
- : categoryCoverage.join(', ');
-
- final concernText = topConcerns.isEmpty
- ? ''
- : ' Current concerns: ${topConcerns.join(' | ')}.';
-
- return 'No AI summary has been generated yet. You currently have ${entries.length} SSHER items across $coverageText with $highRiskCount high-risk and $mediumRiskCount medium-risk entries.$concernText';
- }
-
  /// Defaults to the table — the owner asked for it explicitly, and a table is
  /// the only view that stays readable once a category has a dozen items.
  _SsherViewMode _viewMode = _SsherViewMode.table;
@@ -668,7 +611,8 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  });
  await _saveEntries();
  }
-    showDeleteSuccessSnackBar(context, itemLabel: 'Ssher Entry');
+if (!mounted) return;
+        showDeleteSuccessSnackBar(context, itemLabel: 'Ssher Entry');
  }
 
  Future<void> _editEntry(SsherEntry entry) async {

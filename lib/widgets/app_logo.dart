@@ -52,7 +52,6 @@ class AppLogo extends StatefulWidget {
 }
 
 class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
-  bool _isHovering = false;
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
@@ -79,7 +78,6 @@ class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
   }
 
   void _onHoverChange(bool hovering) {
-    setState(() => _isHovering = hovering);
     if (hovering) {
       _controller.forward();
     } else {

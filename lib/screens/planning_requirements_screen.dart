@@ -893,7 +893,8 @@ $requirementsList
  if (!continueAnyway) return;
 
  final requirementItems = _buildRequirementItems();
- if (requirementItems.isEmpty) {
+if (!mounted) return;
+  if (requirementItems.isEmpty) {
  ScaffoldMessenger.of(context).showSnackBar(
  const SnackBar(
  content: Text('Add at least one requirement before submitting.'),
@@ -917,7 +918,8 @@ $requirementsList
  }
  }
 
- if (missingAssignmentRows.isNotEmpty) {
+if (!mounted) return;
+  if (missingAssignmentRows.isNotEmpty) {
  await showDialog<void>(
  context: context,
  builder: (dialogContext) => AlertDialog(
@@ -936,7 +938,8 @@ $requirementsList
  return;
  }
 
- if (missingPhaseRows.isNotEmpty) {
+if (!mounted) return;
+  if (missingPhaseRows.isNotEmpty) {
  await showDialog<void>(
  context: context,
  builder: (dialogContext) => AlertDialog(

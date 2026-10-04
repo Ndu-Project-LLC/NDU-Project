@@ -269,7 +269,6 @@ class _ScopeTrackingImplementationScreenState
   Widget build(BuildContext context) {
     final bool isMobile = AppBreakpoints.isMobile(context);
     final double horizontalPadding = isMobile ? 18 : 32;
-    final isNarrow = MediaQuery.sizeOf(context).width < 980;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -500,141 +499,6 @@ class _ScopeTrackingImplementationScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Imported ${imported.length} scope tracking row(s).'),
-      ),
-    );
-  }
-
-  Widget _buildFilterChips(BuildContext context) {
-    const filters = [
-      'All',
-      'Not Started',
-      'In-Progress',
-      'Verified',
-      'Out-of-Scope'
-    ];
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: filters.map((filter) {
-        final selected = _selectedFilters.contains(filter);
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedFilters.clear();
-              _selectedFilters.add(filter);
-            });
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: selected ? const Color(0xFF111827) : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: Text(
-              filter,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : const Color(0xFF475569),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildStatsRow(bool isNarrow) {
-    // Calculate metrics
-    final totalItems = _items.length;
-    final inProgressOrVerified = _items
-        .where((item) =>
-            item.implementationStatus == 'In-Progress' ||
-            item.implementationStatus == 'Verified')
-        .length;
-    final scopeAdherence = totalItems > 0
-        ? ((inProgressOrVerified / totalItems) * 100).round()
-        : 0;
-
-    // Count items not in original scope (scope creep)
-    final originalScopeItems = _scopeStatementDeliverables.toSet();
-    final identifiedCreep = _items
-        .where((item) => !originalScopeItems.contains(item.scopeItem))
-        .length;
-
-    // Count original items not started
-    final trackedItems = _items.map((item) => item.scopeItem).toSet();
-    final implementationGap = _scopeStatementDeliverables
-        .where((deliverable) => !trackedItems.contains(deliverable))
-        .length;
-
-    final stats = [
-      _StatCardData(
-        'Scope Adherence',
-        '$scopeAdherence%',
-        '$inProgressOrVerified of $totalItems items',
-        const Color(0xFFFFC812),
-      ),
-      _StatCardData(
-        'Identified Creep',
-        '$identifiedCreep',
-        'Items added outside scope',
-        const Color(0xFFF59E0B),
-      ),
-      _StatCardData(
-        'Implementation Gap',
-        '$implementationGap',
-        'Original items not started',
-        const Color(0xFFEF4444),
-      ),
-    ];
-
-    if (isNarrow) {
-      return Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        children: stats.map((stat) => _buildStatCard(stat)).toList(),
-      );
-    }
-    return Row(
-      children: stats
-          .map((stat) => Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: _buildStatCard(stat),
-                ),
-              ))
-          .toList(),
-    );
-  }
-
-  Widget _buildStatCard(_StatCardData data) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            data.value,
-            style: TextStyle(
-                fontSize: 20, fontWeight: FontWeight.w700, color: data.color),
-          ),
-          const SizedBox(height: 6),
-          Text(data.label,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-          const SizedBox(height: 6),
-          Text(data.supporting,
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: data.color)),
-        ],
       ),
     );
   }
@@ -1037,13 +901,4 @@ class _ScopeTrackingImplementationScreenState
       ],
     );
   }
-}
-
-class _StatCardData {
-  const _StatCardData(this.label, this.value, this.supporting, this.color);
-
-  final String label;
-  final String value;
-  final String supporting;
-  final Color color;
 }

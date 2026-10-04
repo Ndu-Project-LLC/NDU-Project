@@ -474,7 +474,7 @@ class _KanbanCardSlot extends StatelessWidget {
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
             transform: isHoverTarget
-                ? (Matrix4.identity()..scale(1.015))
+                ? (Matrix4.identity()..scaleByDouble(1.015, 1.015, 1.0, 1.0))
                 : Matrix4.identity(),
             transformAlignment: Alignment.topCenter,
             decoration: BoxDecoration(

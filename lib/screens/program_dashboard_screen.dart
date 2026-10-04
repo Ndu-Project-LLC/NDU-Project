@@ -448,14 +448,14 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  // Total budget = sum of investmentMillions across all relevant projects
  final totalBudget = relevantProjects.fold<double>(
  0,
- (sum, p) => sum + (p.investmentMillions.isNaN ? 0 : p.investmentMillions),
+ (total, p) => total + (p.investmentMillions.isNaN ? 0 : p.investmentMillions),
  );
 
  // Expended = budget * avg progress (proxy for actual spend)
  final avgProgress = relevantProjects.isEmpty
  ? 0.0
  : relevantProjects.fold<double>(0,
- (sum, p) => sum + (p.progress.isNaN ? 0 : p.progress.clamp(0, 1))) /
+ (total, p) => total + (p.progress.isNaN ? 0 : p.progress.clamp(0, 1))) /
  relevantProjects.length;
  final expended = totalBudget * avgProgress;
  final expendedPercent = totalBudget > 0 ? (expended / totalBudget) : 0.0;
@@ -968,14 +968,14 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
           // Compute portfolio metrics
           final totalBudget = portfolioProjects.fold<double>(
             0,
-            (sum, p) => sum + (p.investmentMillions.isNaN ? 0 : p.investmentMillions),
+            (total, p) => total + (p.investmentMillions.isNaN ? 0 : p.investmentMillions),
           );
           
           final avgProgress = portfolioProjects.isEmpty
               ? 0.0
               : portfolioProjects.fold<double>(
                   0,
-                  (sum, p) => sum + (p.progress.isNaN ? 0 : p.progress.clamp(0, 1)),
+                  (total, p) => total + (p.progress.isNaN ? 0 : p.progress.clamp(0, 1)),
                 ) / portfolioProjects.length;
           
           final healthyCount = portfolioProjects.where((p) {

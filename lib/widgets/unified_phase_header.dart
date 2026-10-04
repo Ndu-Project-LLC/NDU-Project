@@ -19,7 +19,6 @@ import 'package:ndu_project/widgets/responsive.dart';
 // Brand design tokens (matching the HTML source / Material You spec)
 // ─────────────────────────────────────────────────────────────────────────────
 class _Tokens {
-  static const background = Color(0xFFF7F9FB);
   static const surface = Color(0xFFFFFFFF);
   static const onSurface = Color(0xFF191C1E);
   static const onSurfaceVariant = Color(0xFF414754);
@@ -27,7 +26,6 @@ class _Tokens {
   static const outlineVariant = Color(0xFFC0C6D6);
   static const primary = Color(0xFFFFC812);
   static const tertiaryFixedDim = Color(0xFFFABD00);
-  static const tertiary = Color(0xFF755700);
 }
 
 class UnifiedPhaseHeader extends StatelessWidget {
@@ -446,42 +444,6 @@ class _BreadcrumbNavButton extends StatelessWidget {
 }
 
 // ─── Legacy circle nav button (kept for backward compatibility) ───────────
-class _CircleNavButton extends StatelessWidget {
-  const _CircleNavButton({
-    required this.icon,
-    required this.iconSize,
-  })  : onTap = null,
-        enabled = true;
-
-  final IconData icon;
-  final double iconSize;
-  final VoidCallback? onTap;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: const Color(0xFFE2E8F0),
-          ),
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          icon,
-          size: iconSize,
-          color: enabled ? const Color(0xFF374151) : const Color(0xFFCBD5E0),
-        ),
-      ),
-    );
-  }
-}
 
 // ─── UnifiedScaffoldAppBar — AppBar wrapper for screens needing Scaffold.appBar ─
 class UnifiedScaffoldAppBar extends StatelessWidget

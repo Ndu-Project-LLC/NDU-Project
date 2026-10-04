@@ -1105,7 +1105,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  final reqController = SpellCheckTextEditingController();
  final descController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
- final result = await showDialog<bool>(
+ await showDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Add Role Requirement'),
@@ -1185,7 +1185,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  final notesController = SpellCheckTextEditingController();
  final actionsController = SpellCheckTextEditingController();
  final assetsController = SpellCheckTextEditingController();
- final result = await showDialog<bool>(
+ await showDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Create Handover Record'),

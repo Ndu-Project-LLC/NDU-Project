@@ -2630,13 +2630,13 @@ class _ContinuityStrip extends StatelessWidget {
  runSpacing: 8,
  crossAxisAlignment: WrapCrossAlignment.center,
  children: [
- Row(
+ const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(Icons.link_outlined,
+ Icon(Icons.link_outlined,
  size: 16, color: Color(0xFFB45309)),
- const SizedBox(width: 8),
- const Text(
+ SizedBox(width: 8),
+ Text(
  'Continuing from Front-End Planning',
  style: TextStyle(
  fontSize: 13,

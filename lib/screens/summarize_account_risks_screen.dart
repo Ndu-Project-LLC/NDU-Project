@@ -48,11 +48,10 @@ class _SummarizeAccountRisksScreenState
 
   bool _isLoading = true;
   bool _isGenerating = false;
-  bool _isExporting = false;
   bool _hasLoaded = false;
   bool _suspendSave = false;
   final Map<String, bool> _kazAiRegenerating = {};
-  final String _selectedView = 'full'; // 'full' or 'summary'
+ // 'full' or 'summary'
 
   @override
   void initState() {
@@ -1039,10 +1038,9 @@ class _SummarizeAccountRisksScreenState
   }
 
   Future<void> _exportPdf() async {
-    setState(() => _isExporting = true);
     try {
       final projectData = ProjectDataHelper.getData(context);
-      final projectName = projectData.projectName ?? 'Project';
+      final projectName = projectData.projectName;
       final now = DateTime.now();
       final stamp =
           '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
@@ -1072,7 +1070,7 @@ class _SummarizeAccountRisksScreenState
             if (_highlights.isEmpty)
               _pdfCell('No highlights recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Title', 'Details'],
                 data: _highlights.map((h) => [h.title, h.details]).toList(),
                 headerStyle: pw.TextStyle(
@@ -1090,7 +1088,7 @@ class _SummarizeAccountRisksScreenState
             if (_topRisks.isEmpty)
               _pdfCell('No risks recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Risk', 'Details', 'Owner', 'Status'],
                 data: _topRisks
                     .map((r) => [r.title, r.details, r.owner, r.status])
@@ -1110,7 +1108,7 @@ class _SummarizeAccountRisksScreenState
             if (_next90Days.isEmpty)
               _pdfCell('No next actions recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Priority', 'Details', 'Owner', 'Status'],
                 data: _next90Days
                     .map((n) => [n.title, n.details, n.owner, n.status])
@@ -1134,8 +1132,6 @@ class _SummarizeAccountRisksScreenState
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('PDF export failed: ${e.toString()}')));
       }
-    } finally {
-      if (mounted) setState(() => _isExporting = false);
     }
   }
 

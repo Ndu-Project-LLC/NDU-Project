@@ -1801,7 +1801,8 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
  onTap: widget.onTap,
  child: AnimatedContainer(
  duration: const Duration(milliseconds: 150),
- transform: Matrix4.identity()..scale(_press ? 0.96 : 1.0),
+ transform:
+     Matrix4.identity()..scaleByDouble(_press ? 0.96 : 1.0, _press ? 0.96 : 1.0, 1.0, 1.0),
  transformAlignment: Alignment.center,
  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
  decoration: BoxDecoration(

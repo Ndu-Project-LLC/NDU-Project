@@ -423,81 +423,6 @@ class _AgileDevelopmentIterationsScreenState
     );
   }
 
-  Widget _buildStatsRow(bool isNarrow) {
-    // Calculate metrics from tasks
-    final totalTasks = _tasks.length;
-    final completedTasks = _tasks.where((t) => t.status == 'Done').length;
-    final iterationProgress =
-        totalTasks > 0 ? ((completedTasks / totalTasks) * 100).round() : 0;
-    final sprintVelocity =
-        _tasks.fold<int>(0, (sum, task) => sum + task.storyPoints);
-    final activeBlockers = _tasks
-        .where((t) => t.status == 'To-Do' && t.priority == 'Critical')
-        .length;
-
-    final stats = [
-      _StatCardData('Iteration Progress', '$iterationProgress%',
-          '$completedTasks/$totalTasks tasks', const Color(0xFFFFC812)),
-      _StatCardData('Sprint Velocity', '$sprintVelocity', 'Total story points',
-          const Color(0xFFB8860B)),
-      _StatCardData('Active Blockers', '$activeBlockers',
-          'Critical tasks pending', const Color(0xFFEF4444)),
-    ];
-
-    if (isNarrow) {
-      return Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        children: stats.map((stat) => _buildStatCard(stat)).toList(),
-      );
-    }
-
-    return Row(
-      children: stats
-          .map((stat) => Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: _buildStatCard(stat),
-                ),
-              ))
-          .toList(),
-    );
-  }
-
-  Widget _buildStatCard(_StatCardData data) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            data.label,
-            style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF64748B),
-                fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            data.value,
-            style: TextStyle(
-                fontSize: 24, fontWeight: FontWeight.w700, color: data.color),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            data.subtitle,
-            style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _epicTitleForTask(AgileTask task) {
     final epic = _epics.where((e) => e.id == task.epicId);
     return epic.isNotEmpty ? epic.first.title : 'Unassigned';
@@ -688,7 +613,8 @@ class _AgileDevelopmentIterationsScreenState
       );
     }
 
-    try {
+if (!mounted) return;
+        try {
       await showDialog(
         context: context,
         builder: (dialogContext) => StatefulBuilder(
@@ -861,6 +787,7 @@ class _AgileDevelopmentIterationsScreenState
                       onPick: () async {
                         final data = await _loadMilestonesForPicker();
                         if (data == null) return;
+                        if (!context.mounted) return;
                         final picked = await showDialog<List<String>>(
                           context: dialogContext,
                           builder: (ctx) => MilestonePickerDialog(
@@ -1012,15 +939,6 @@ class _AgileDevelopmentIterationsScreenState
     }
     return milestones;
   }
-}
-
-class _StatCardData {
-  const _StatCardData(this.label, this.value, this.subtitle, this.color);
-
-  final String label;
-  final String value;
-  final String subtitle;
-  final Color color;
 }
 
 class _MilestoneLinkButton extends StatelessWidget {

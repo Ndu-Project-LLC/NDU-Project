@@ -3,6 +3,7 @@
 /// P3.4: Added CBS/OBS/ControlAccount linkage for budget↔cost account
 /// traceability, enabling budget rows to roll up into CBS hierarchy and
 /// contribute to control account EVM calculations.
+library;
 import 'package:ndu_project/utils/unique_id.dart';
 
 class BudgetRow {

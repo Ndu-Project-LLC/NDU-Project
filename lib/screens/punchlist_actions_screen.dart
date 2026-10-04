@@ -278,8 +278,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Widget _buildDistributionCard() {
- final grandOpen = _distributionRows.fold<int>(0, (sum, r) => sum + r.openItems);
- final grandClosed = _distributionRows.fold<int>(0, (sum, r) => sum + r.closed);
+ final grandOpen = _distributionRows.fold<int>(0, (total, r) => total + r.openItems);
+ final grandClosed = _distributionRows.fold<int>(0, (total, r) => total + r.closed);
  final grandTotal = grandOpen + grandClosed;
  final grandPct = grandTotal > 0 ? (grandClosed / grandTotal * 100) : 0.0;
  return _panel(
@@ -460,13 +460,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Widget _buildActionVelocityCard() {
- final totalOpen = _velocityRows.fold<int>(0, (sum, r) => sum + r.openItems);
- final totalClosed = _velocityRows.fold<int>(0, (sum, r) => sum + r.closedThisSprint);
+ final totalOpen = _velocityRows.fold<int>(0, (total, r) => total + r.openItems);
+ final totalClosed = _velocityRows.fold<int>(0, (total, r) => total + r.closedThisSprint);
  final avgVelocity = _velocityRows.isNotEmpty
- ? _velocityRows.fold<int>(0, (sum, r) => sum + r.velocity) / _velocityRows.length
+ ? _velocityRows.fold<int>(0, (total, r) => total + r.velocity) / _velocityRows.length
  : 0.0;
  final avgCycle = _velocityRows.isNotEmpty
- ? _velocityRows.fold<double>(0.0, (sum, r) => sum + r.avgCycleTime) / _velocityRows.length
+ ? _velocityRows.fold<double>(0.0, (total, r) => total + r.avgCycleTime) / _velocityRows.length
  : 0.0;
  return _panel(
  title: 'Action velocity',

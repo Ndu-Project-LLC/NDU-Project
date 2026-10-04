@@ -210,8 +210,8 @@ class LaunchPhaseAiSeed {
     final missingAreas = <String>[];
 
     // Check base project data
-    final projectName = projectData.projectName ?? '';
-    final projectDescription = projectData.projectDescription ?? '';
+    final projectName = projectData.projectName;
+    final projectDescription = projectData.projectDescription;
     if (projectName.isEmpty && projectDescription.isEmpty) {
       missingAreas.add('Project name and description');
     }
@@ -329,6 +329,13 @@ class LaunchPhaseAiSeed {
       sectionLabel: sectionLabel,
     );
 
+    if (!context.mounted) {
+      return const LaunchAiResult(
+        entries: {},
+        isContextSufficient: false,
+        missingAreas: [],
+      );
+    }
     final contextText = await buildFullPhaseDependencyContext(
       context,
       sectionLabel: sectionLabel,

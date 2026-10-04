@@ -64,7 +64,6 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  // KAZ AI regeneration tracking
  final Map<String, bool> _kazAiRegenerating = {};
  // KAZ AI field-level generation tracking (for dialogs)
- final Map<String, bool> _kazFieldGenerating = {};
 
  static const List<String> _journeyStatusOptions = [
  'Mapped',
@@ -2468,7 +2467,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  controller.selection = TextSelection.fromPosition(TextPosition(offset: cleaned.length));
  }
  } catch (e) {
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
+ if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}')));
  }
  isGeneratingNotifier.value = false;
  },

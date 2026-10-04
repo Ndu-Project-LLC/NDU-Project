@@ -9,7 +9,6 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 
 class StartUpPlanningScreen extends StatefulWidget {
  const StartUpPlanningScreen({super.key});
@@ -19,7 +18,6 @@ class StartUpPlanningScreen extends StatefulWidget {
 }
 
 class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
- String? _carriedContext;
  bool _isAutoPopulating = false;
  bool _autoPopulated = false;
 
@@ -35,14 +33,7 @@ class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
  _isAutoPopulating = true;
  if (mounted) setState(() {});
 
- try {
- final carried = await buildAccumulatedContext(context, 'startup_planning');
- if (mounted) setState(() => _carriedContext = carried);
- } catch (e) {
- debugPrint('StartUpPlanning auto-populate error: $e');
- } finally {
  if (mounted) setState(() => _isAutoPopulating = false);
- }
  }
 
  @override

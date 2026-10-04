@@ -70,7 +70,6 @@ class _AgileDeliveryPlanSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = AppBreakpoints.isMobile(context);
 
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,24 +191,6 @@ class PlanDecisionSectionState extends State<PlanDecisionSection> {
       _controllers[field.keyName] = SpellCheckTextEditingController();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadFromFirestore());
-  }
-
-  Future<void> _exportPdf() async {
-    final projectData = ProjectDataHelper.getData(context);
-    await PdfExportHelper.exportScreenPdf(
-      context: context,
-      screenTitle: 'Agile Delivery Plan',
-      sections: [
-        PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
-        ]),
-        PdfSection.text(
-            'Notes',
-            projectData.planningNotes[
-                    'execution_plan_agile_delivery_plan_screen'] ??
-                'No data recorded.'),
-      ],
-    );
   }
 
   @override

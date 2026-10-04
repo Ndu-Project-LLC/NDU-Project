@@ -8,8 +8,6 @@ import 'package:flutter/material.dart';
 class DocumentReviewService {
   DocumentReviewService._();
   static final DocumentReviewService instance = DocumentReviewService._();
-
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
   /// Collection reference for document review items

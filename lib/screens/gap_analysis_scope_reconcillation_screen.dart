@@ -500,25 +500,6 @@ class _GapAnalysisScopeReconcillationScreenState
     });
     _schedulePersist();
   }
-
-  Future<void> _exportPdf() async {
-    final projectData = ProjectDataHelper.getData(context);
-    await PdfExportHelper.exportScreenPdf(
-      context: context,
-      screenTitle: 'Gap Analysis & Scope Reconciliation',
-      sections: [
-        PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
-          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
-        ]),
-        PdfSection.text(
-            'Notes',
-            projectData.planningNotes[
-                    'planning_gap_analysis_scope_reconcillation_notes'] ??
-                'No data recorded.'),
-      ],
-    );
-  }
 }
 
 class _PageHeader extends StatelessWidget {

@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/unique_id.dart';
-import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/screens/front_end_planning_contract_vendor_quotes_screen.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -106,7 +105,7 @@ class _FrontEndPlanningOpportunitiesScreenState
         PdfSection.keyValue('Project Info', [
           {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
-        PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+        PdfSection.text('Notes', fep.requirementsNotes),
       ],
     );
   }
@@ -122,12 +121,6 @@ class _FrontEndPlanningOpportunitiesScreenState
       _hasAttemptedInitialAutofill = true;
       _generateOpportunitiesFromContext(autoTriggered: true);
     }
-  }
-
-  bool _shouldAutofillInitialOpportunities() {
-    if (_hasAttemptedInitialAutofill) return false;
-    if (_isGeneratingOpportunities) return false;
-    return _rows.where((r) => r.opportunity.trim().isNotEmpty).isEmpty;
   }
 
   void _loadSavedOpportunities(ProjectDataModel data) {

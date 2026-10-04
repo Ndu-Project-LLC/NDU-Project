@@ -355,9 +355,16 @@ class _MyAppState extends State<MyApp> {
                             // deliberately excludes the export progress
                             // bar below, which would otherwise appear in
                             // its own capture.
-                            RepaintBoundary(
-                              key: ScreenCapture.rootBoundaryKey,
-                              child: Expanded(
+                            // The Expanded must be a direct child of this
+                            // Column: non-flex children of a Column receive
+                            // unbounded height, so the capture boundary inside
+                            // would otherwise get infinite constraints and its
+                            // inner Expanded would throw. With the Expanded
+                            // here, the boundary has a finite size to lay out
+                            // and rasterise.
+                            Expanded(
+                              child: RepaintBoundary(
+                                key: ScreenCapture.rootBoundaryKey,
                                 child: Column(
                                   children: [
                                     // Make it unmistakable that no AI provider is

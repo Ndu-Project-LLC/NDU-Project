@@ -455,7 +455,8 @@ void _applyDefaults() {
  }
 
  Map<String, List<LaunchEntry>> generated = {};
- try {
+if (!mounted) return;
+  try {
  generated = await ExecutionPhaseAiSeed.generateEntries(
  context: context,
  section: 'Salvage & Disposal',
@@ -1104,26 +1105,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- Widget _buildActionButtons() {
- return Wrap(
- spacing: 12,
- runSpacing: 8,
- children: [
- _buildActionButton(Icons.person_add, 'Add Team Member', onTap: () {
- _showAddTeamMemberDialog(context);
- }),
- _buildActionButton(Icons.inventory_2, 'New Asset Entry', onTap: () {
- _showAddInventoryDialog(context);
- }),
- _buildActionButton(Icons.assessment, 'Generate Report',
- onTap: _showSnapshotReport),
- _buildPrimaryActionButton('Start Disposal Process', onTap: () {
- setState(() => _selectedTab = 2);
- }),
- ],
- );
- }
-
  Widget _buildActionButton(IconData icon, String label,
  {VoidCallback? onTap}) {
  return InkWell(
@@ -1146,32 +1127,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  fontSize: 13,
  fontWeight: FontWeight.w500,
  color: Color(0xFF64748B))),
- ],
- ),
- ),
- );
- }
-
- Widget _buildPrimaryActionButton(String label, {VoidCallback? onTap}) {
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(8),
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
- decoration: BoxDecoration(
- color: const Color(0xFFFFC812),
- borderRadius: BorderRadius.circular(8),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- const Icon(Icons.play_arrow, size: 16, color: Colors.white),
- const SizedBox(width: 8),
- Text(label,
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: Colors.white)),
  ],
  ),
  ),
@@ -1937,45 +1892,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _showSnapshotReport() {
- final teamCount = _allocationItems.length;
- final inventoryStatCount = _inventoryStats.length;
- final queueCount = _queueBoardItems.length;
- final report = '''
-Execution snapshot:
-- Team allocation rows: $teamCount
-- Inventory stat cards: $inventoryStatCount
-- Disposal queue cards visible: $queueCount
-- Disposal progress indicator: 67%
-''';
- showDialog<void>(
- context: context,
- barrierDismissible: true,
- builder: (dialogContext) => LaunchModalShell(
- icon: Icons.insights_rounded,
- accent: const Color(0xFFFFC812),
- title: 'Salvage & Disposal Snapshot',
- subtitle: 'A quick summary of execution readiness.',
- body: Text(
- report.trim(),
- style: const TextStyle(
- fontSize: 13,
- color: Color(0xFF4B5563),
- height: 1.6,
- fontFamily: 'monospace',
- ),
- ),
- actions: [
- LaunchModalPrimaryButton(
- label: 'Close',
- icon: Icons.check_rounded,
- onPressed: () => Navigator.of(dialogContext).pop(),
- ),
- ],
- ),
- );
- }
-
  void _showAddTeamMemberDialog(BuildContext context) {
  _showTeamMemberDialog(context, null);
  }
@@ -2532,80 +2448,6 @@ Execution snapshot:
  }
  },
  ),
- ],
- ),
- );
- }
-
- Widget _buildInventorySignalsPanel() {
- return Column(
- children: [
- _buildSignalCard(
- title: 'Category Mix',
- subtitle: 'Distribution of assets by category',
- child: const Column(
- children: [
- _SignalBar(
- label: 'Electronics', value: 0.42, color: Color(0xFFFFC812)),
- _SignalBar(
- label: 'Infrastructure',
- value: 0.28,
- color: Color(0xFFB8860B)),
- _SignalBar(
- label: 'Safety', value: 0.16, color: Color(0xFFF59E0B)),
- _SignalBar(
- label: 'Vehicles', value: 0.14, color: Color(0xFF22C55E)),
- ],
- ),
- ),
- const SizedBox(height: 20),
- _buildSignalCard(
- title: 'Condition Snapshot',
- subtitle: 'Asset readiness by condition',
- child: const Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- _ConditionItem(
- label: 'Excellent',
- count: '28 assets',
- color: Color(0xFF22C55E)),
- _ConditionItem(
- label: 'Good', count: '34 assets', color: Color(0xFF10B981)),
- _ConditionItem(
- label: 'Fair', count: '18 assets', color: Color(0xFFF59E0B)),
- _ConditionItem(
- label: 'Needs Review',
- count: '6 assets',
- color: Color(0xFFEF4444)),
- ],
- ),
- ),
- ],
- );
- }
-
- Widget _buildSignalCard(
- {required String title,
- required String subtitle,
- required Widget child}) {
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(title,
- style:
- const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
- const SizedBox(height: 4),
- Text(subtitle,
- style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
- const SizedBox(height: 16),
- child,
  ],
  ),
  );
@@ -4040,9 +3882,9 @@ Execution snapshot:
  final renewalDueCount = _complianceRows.where((r) => r.complianceStatus == 'Renewal Due').length;
  final pendingCount = _complianceRows.where((r) => r.complianceStatus == 'Pending').length;
  final criticalRiskCount = _complianceRows.where((r) => r.riskLevel == 'Critical' || r.riskLevel == 'High').length;
- final avgScore = totalRegs > 0 ? _complianceRows.fold<int>(0, (sum, r) => sum + r.complianceScore) / totalRegs : 0.0;
- final totalFindings = _complianceRows.fold<int>(0, (sum, r) => sum + r.findings);
- final totalCorrective = _complianceRows.fold<int>(0, (sum, r) => sum + r.correctiveActions);
+ final avgScore = totalRegs > 0 ? _complianceRows.fold<int>(0, (total, r) => total + r.complianceScore) / totalRegs : 0.0;
+ final totalFindings = _complianceRows.fold<int>(0, (total, r) => total + r.findings);
+ final totalCorrective = _complianceRows.fold<int>(0, (total, r) => total + r.correctiveActions);
  final expiringSoon = _complianceRows.where((r) => r.daysToExpiry >= 0 && r.daysToExpiry <= 30).length;
  final expired = _complianceRows.where((r) => r.daysToExpiry < 0).length;
 
@@ -5876,79 +5718,6 @@ class _InsightCard {
 
   const _InsightCard(
       this.title, this.value, this.description, this.icon, this.color);
-}
-
-class _SignalBar extends StatelessWidget {
-  const _SignalBar(
-      {required this.label, required this.value, required this.color});
-
-  final String label;
-  final double value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                  child: Text(label,
-                      style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w600))),
-              Text('${(value * 100).round()}%',
-                  style:
-                      const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: value,
-              minHeight: 8,
-              backgroundColor: const Color(0xFFE2E8F0),
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ConditionItem extends StatelessWidget {
-  const _ConditionItem(
-      {required this.label, required this.count, required this.color});
-
-  final String label;
-  final String count;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 10),
-          Expanded(
-              child: Text(label,
-                  style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.w600))),
-          Text(count,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-        ],
-      ),
-    );
-  }
 }
 
 class _CapacityBar extends StatelessWidget {

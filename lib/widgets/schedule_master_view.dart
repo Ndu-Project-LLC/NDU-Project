@@ -33,25 +33,6 @@ class _ScheduleMasterViewState extends State<ScheduleMasterView> {
     super.dispose();
   }
 
-  /// Normalize status strings: treat 'complete' and 'completed' the same.
-  Color _statusColor(String status) {
-    final normalized = status.toLowerCase();
-    switch (normalized) {
-      case 'in_progress':
-        return const Color(0xFFFFC812);
-      case 'complete':
-      case 'completed':
-        return const Color(0xFF10B981);
-      case 'blocked':
-      case 'on_hold':
-        return const Color(0xFFEF4444);
-      case 'overdue':
-        return const Color(0xFFEF4444);
-      default:
-        return const Color(0xFFF59E0B);
-    }
-  }
-
   bool _matchesSearch(WorkPackage wp) {
     if (_searchQuery.isEmpty) return true;
     final q = _searchQuery.toLowerCase();

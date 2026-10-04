@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -133,7 +132,8 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
     if (projectId == null || projectId.isEmpty) return;
  if (!mounted) return;
  setState(() => _loadingEntries = true);
- try {
+if (!mounted) return;
+  try {
  final snapshot = await FirebaseFirestore.instance
  .collection('projects')
  .doc(projectId)
@@ -142,6 +142,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  .get();
  final firestoreEntries =
  snapshot.docs.map((doc) => _RiskEntry.fromFirestore(doc)).toList();
+  if (!mounted) return;
  final provider = ProjectDataHelper.getProvider(context);
  final projectData = provider.projectData;
  final mergedEntries = await _mergeEntriesWithSolutionRisks(
@@ -645,88 +646,6 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  ),
  ),
  ],
- ),
- );
- }
-
- Widget _buildMobileHeader() {
- final user = FirebaseAuth.instance.currentUser;
- final photoUrl = user?.photoURL;
-
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
- decoration: const BoxDecoration(
- color: Colors.white,
- border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
- ),
- child: SafeArea(
- bottom: false,
- child: Row(
- children: [
- // Hamburger menu button
- InkWell(
- onTap: () {
- final scaffold = Scaffold.maybeOf(context);
- if (scaffold != null && scaffold.hasDrawer) {
- scaffold.openDrawer();
- }
- },
- borderRadius: BorderRadius.circular(8),
- child: const Padding(
- padding: EdgeInsets.all(4),
- child: Icon(Icons.menu, size: 24, color: Color(0xFF1F2937)),
- ),
- ),
- const SizedBox(width: 12),
- // Back/Forward chevrons + title
- _circleIcon(
- icon: Icons.chevron_left_rounded,
- onTap: () => PlanningPhaseNavigation.goToPrevious(
- context, 'risk_assessment'),
- ),
- const SizedBox(width: 8),
- _circleIcon(
- icon: Icons.chevron_right_rounded,
- onTap: _handleForward,
- ),
- const SizedBox(width: 12),
- const Expanded(
- child: Text(
- 'Risk Mitigation',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w600,
- color: Color(0xFF111827)),
- ),
- ),
- // Avatar
- CircleAvatar(
- radius: 18,
- backgroundColor: const Color(0xFFE5E7EB),
- backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
- child: photoUrl == null
- ? const Icon(Icons.person, size: 18, color: Color(0xFF374151))
- : null,
- ),
- ],
- ),
- ),
- );
- }
-
- Widget _circleIcon({required IconData icon, VoidCallback? onTap}) {
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(999),
- child: Container(
- width: 36,
- height: 36,
- decoration: BoxDecoration(
- color: Colors.white,
- shape: BoxShape.circle,
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
  ),
  );
  }

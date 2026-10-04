@@ -187,23 +187,6 @@ class _PlanningInfrastructureCostSection extends StatefulWidget {
 
 class _PlanningInfrastructureCostSectionState
     extends State<_PlanningInfrastructureCostSection> {
-  Future<void> _exportPdf() async {
-    final projectData = ProjectDataHelper.getData(context);
-    await PdfExportHelper.exportScreenPdf(
-      context: context,
-      screenTitle: 'Infrastructure Plan',
-      sections: [
-        PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
-        ]),
-        PdfSection.text(
-            'Notes',
-            projectData.planningNotes[
-                    'execution_plan_infrastructure_plan_screen'] ??
-                'No data recorded.'),
-      ],
-    );
-  }
 
   Future<void> _editItem({
     InfrastructurePlanningItem? existing,
@@ -347,7 +330,8 @@ class _PlanningInfrastructureCostSectionState
       (data) => data.copyWith(planningInfrastructureItems: current),
     );
     await provider.saveToFirebase(checkpoint: 'execution_infrastructure_plan');
-      showDeleteSuccessSnackBar(context, itemLabel: 'Item');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Item');
   }
 
   @override

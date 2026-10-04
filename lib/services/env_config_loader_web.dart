@@ -28,8 +28,10 @@ external NduEnv? get _nduEnv;
 class NduEnv {}
 
 extension NduEnvExt on NduEnv {
-  external String? get FIREBASE_API_KEY;
-  external String? get BUILD_STAMP;
+  @JS('FIREBASE_API_KEY')
+  external String? get firebaseApiKey;
+  @JS('BUILD_STAMP')
+  external String? get buildStamp;
 }
 
 /// Reads `window.__NDU_ENV` on web. Safe to call on any platform — on non-web
@@ -48,8 +50,8 @@ class EnvConfigLoader {
     try {
       final env = _nduEnv;
       if (env != null) {
-        _firebaseApiKey = _readString(env.FIREBASE_API_KEY);
-        _buildStamp = _readString(env.BUILD_STAMP);
+        _firebaseApiKey = _readString(env.firebaseApiKey);
+        _buildStamp = _readString(env.buildStamp);
       }
       debugPrint(
         'EnvConfigLoader: loaded __NDU_ENV '

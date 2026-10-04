@@ -60,7 +60,6 @@ class _DeliverProjectClosureScreenState
 
   bool _isLoading = true;
   bool _isGenerating = false;
-  bool _isExporting = false;
   bool _hasLoaded = false;
   bool _suspendSave = false;
   final Map<String, bool> _kazAiRegenerating = {};
@@ -701,27 +700,6 @@ class _DeliverProjectClosureScreenState
     return merged.values.toList();
   }
 
-  Future<void> _importScope() async {
-    if (_projectId == null) return;
-    final imported =
-        await LaunchPhaseService.loadScopeTrackingItems(_projectId!);
-    if (imported.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No scope items found to import.')),
-        );
-      }
-      return;
-    }
-    setState(() {
-      final existing = _scopeItems.map((s) => s.deliverable).toSet();
-      for (final s in imported) {
-        if (!existing.contains(s.deliverable)) _scopeItems.add(s);
-      }
-    });
-    _scheduleSave();
-  }
-
   Future<void> _confirmDeleteScope(int idx) async {
     final confirmed =
         await launchConfirmDelete(context, itemName: 'scope item');
@@ -1305,7 +1283,6 @@ class _DeliverProjectClosureScreenState
   }
 
   Future<void> _exportPdf() async {
-    setState(() => _isExporting = true);
     try {
       final projectData = ProjectDataHelper.getData(context);
       final projectName =
@@ -1452,8 +1429,6 @@ class _DeliverProjectClosureScreenState
           SnackBar(content: Text('PDF export failed: ${e.toString()}')),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isExporting = false);
     }
   }
 

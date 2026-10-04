@@ -94,7 +94,7 @@ class _FrontEndPlanningSummaryScreenState
  PdfSection.keyValue('Project Info', [
  {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
  ],
  );
  }
@@ -654,22 +654,6 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
  // preferred card arrangement survives reloads. Order in this list is
  // the *default* order; the KanbanCardGrid overrides it once the user
  // drags cards around.
- static const String _kCardObjectives = 'project_objectives';
- static const String _kCardCriteria = 'success_criteria';
- static const String _kCardScope = 'within_scope';
- static const String _kCardOut = 'out_of_scope';
- static const String _kCardAssumptions = 'assumptions';
- static const String _kCardConstraints = 'constraints';
-
- static const String _kKanbanSection = 'fep_summary';
- static const List<String> _kDefaultCardOrder = [
-   _kCardObjectives,
-   _kCardCriteria,
-   _kCardScope,
-   _kCardOut,
-   _kCardAssumptions,
-   _kCardConstraints,
- ];
 
  String _canonicalListKey(String listKey) {
  switch (listKey) {
@@ -974,9 +958,6 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
  // Project identifier used as the SharedPreferences key namespace for
  // the user's preferred card order. Falls back to 'default' when no
  // project is loaded (e.g. preview/test harness).
- final projectId = (data.projectId ?? '').trim().isEmpty
- ? 'default'
- : (data.projectId!).trim();
 
  // Cross-section item drag-and-drop callback
  void onItemMovedBetweenSections(
@@ -1141,7 +1122,7 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
  context: projectContext,
  );
 
- if (!context.mounted) return;
+  if (!context.mounted) return;
 
  if (newItems.isNotEmpty) {
  final resolvedListKey = _canonicalListKey(listKey ?? loadingKey);
@@ -1258,7 +1239,8 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
 
  // Persist both
  await _updateList(context, sourceSectionKey, updatedSource);
- await _updateList(context, targetSectionKey, updatedTarget);
+if (!context.mounted) return;
+  await _updateList(context, targetSectionKey, updatedTarget);
 
  if (context.mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
@@ -1374,7 +1356,7 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
  context: projectContext,
  );
 
- if (!context.mounted) return;
+  if (!context.mounted) return;
 
  if (newItems.isNotEmpty) {
  final newGoals = newItems
@@ -1428,7 +1410,7 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
  PlanningDashboardItem(title: item.name, description: item.description);
  final editedItem = await _showItemDialog(context,
  title: 'Edit Goal', existingItem: itemAsDashboard);
- if (!context.mounted) return;
+  if (!context.mounted) return;
 
  if (editedItem != null) {
  final updatedList = List<ProjectGoal>.from(currentList);

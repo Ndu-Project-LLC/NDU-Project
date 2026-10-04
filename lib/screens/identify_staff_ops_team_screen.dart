@@ -15,8 +15,6 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/csv_import_dialog.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -160,39 +158,6 @@ class _IdentifyStaffOpsTeamScreenState
     );
   }
 
-  Widget _buildHeaderActions() {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        _actionButton(Icons.upload_file_outlined, 'Import CSV',
-            onPressed: () async {
-          final rows = await showCsvImportDialog(context,
-              tableTitle: 'Ops Team',
-              columns: [
-                const CsvColumnSpec(
-                    key: 'name', label: 'Member Name', sampleValue: 'John Doe'),
-                const CsvColumnSpec(
-                    key: 'role', label: 'Role', sampleValue: 'Operations Lead'),
-                const CsvColumnSpec(
-                    key: 'email',
-                    label: 'Email',
-                    sampleValue: 'john@company.com'),
-              ]);
-          if (rows == null || !mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('${rows.length} members imported from CSV'),
-              backgroundColor: Colors.green));
-        }),
-        _actionButton(Icons.person_add_alt_1, 'Add role',
-            onPressed: () => _showAddMemberDialog(context)),
-        _actionButton(Icons.assignment_ind_outlined, 'Assign member'),
-        _actionButton(Icons.description_outlined, 'Export roster'),
-        _primaryButton('Publish handoff'),
-      ],
-    );
-  }
-
   Widget _actionButton(IconData icon, String label, {VoidCallback? onPressed}) {
     return OutlinedButton.icon(
       onPressed: onPressed ?? () {},
@@ -205,28 +170,6 @@ class _IdentifyStaffOpsTeamScreenState
       style: OutlinedButton.styleFrom(
         side: const BorderSide(color: Color(0xFFE2E8F0)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
-
-  Widget _primaryButton(String label) {
-    return ElevatedButton.icon(
-      onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  'Ops handoff published. Continue updating checklist completion as evidence.')),
-        );
-      },
-      icon: const Icon(Icons.check_circle_outline, size: 18),
-      label: Text(label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFFFC812),
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10)),
       ),
@@ -262,7 +205,8 @@ class _IdentifyStaffOpsTeamScreenState
     }
 
     Map<String, List<LaunchEntry>> generated = {};
-    try {
+if (!mounted) return;
+        try {
       generated = await ExecutionPhaseAiSeed.generateEntries(
         context: context,
         section: 'Identify & Staff Ops Team',
@@ -643,7 +587,7 @@ class _IdentifyStaffOpsTeamScreenState
                   notes: values['Notes'] ?? '',
                 );
               } catch (e) {
-                if (mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Error adding item: $e')),
                   );
@@ -666,7 +610,7 @@ class _IdentifyStaffOpsTeamScreenState
                       itemId: item.id,
                     );
                   } catch (e) {
-                    if (mounted) {
+                    if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error deleting item: $e')),
                       );

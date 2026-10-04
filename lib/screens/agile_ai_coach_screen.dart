@@ -326,15 +326,15 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
     final people = AgileProjectContextHelper.people(projectData, limit: 6);
     final totalPoints = workItems.fold<int>(
       0,
-      (sum, item) =>
-          sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
+      (total, item) =>
+          total + AgileProjectContextHelper.estimateStoryPoints(item.title),
     );
     final completedPoints = workItems
         .where((item) => item.status == 'Done' || item.status == 'In Review')
         .fold<int>(
           0,
-          (sum, item) =>
-              sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
+          (total, item) =>
+              total + AgileProjectContextHelper.estimateStoryPoints(item.title),
         );
     final lower = input.toLowerCase();
     if (lower.contains('velocity')) {

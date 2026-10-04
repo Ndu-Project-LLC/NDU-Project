@@ -1027,77 +1027,8 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
 
 
  // ── Helper: summary KPI chip ──
- Widget _summaryChip(String label, String value, Color color) {
-   return Container(
-     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-     decoration: BoxDecoration(
-       color: color.withValues(alpha: 0.08),
-       borderRadius: BorderRadius.circular(10),
-       border: Border.all(color: color.withValues(alpha: 0.15)),
-     ),
-     child: Row(
-       mainAxisSize: MainAxisSize.min,
-       children: [
-         Text(
-           value,
-           style: TextStyle(
-             fontWeight: FontWeight.w800,
-             fontSize: 14,
-             color: color,
-             fontFamily: appFontFamily,
-           ),
-         ),
-         const SizedBox(width: 6),
-         Text(
-           label,
-           style: TextStyle(
-             fontSize: 10,
-             fontWeight: FontWeight.w600,
-             color: color.withValues(alpha: 0.8),
-             fontFamily: appFontFamily,
-           ),
-         ),
-       ],
-     ),
-   );
- }
 
  // ── Helper: numeric cell with subtle ratio indicator ──
- Widget _cellMetric(String text, {required double ratio}) {
-   final numericColor = ratio >= 0.8
-       ? _emerald
-       : ratio >= 0.5
-           ? _amber
-           : ratio > 0
-               ? _crimson
-               : _muted;
-   return Center(
-     child: Column(
-       mainAxisSize: MainAxisSize.min,
-       children: [
-         Text(
-           text,
-           style: const TextStyle(
-             fontWeight: FontWeight.w700,
-             fontSize: 13,
-             color: _onSurface,
-             fontFamily: appFontFamily,
-           ),
-         ),
-         const SizedBox(height: 3),
-         ClipRRect(
-           borderRadius: BorderRadius.circular(2),
-           child: LinearProgressIndicator(
-             value: ratio,
-             minHeight: 3,
-             backgroundColor: _surfaceHighest.withValues(alpha: 0.4),
-             valueColor: AlwaysStoppedAnimation<Color>(numericColor),
-           ),
-         ),
-       ],
-     ),
-   );
- }
 
  // ── Portfolio Table — REAL PROJECTS ──
  Widget _portfolioTable() {
@@ -1855,14 +1786,6 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  ),
  );
  }
-
- Widget _dot(Color c, {double size = 8}) => Container(
- width: size,
- height: size,
- decoration: BoxDecoration(
- color: c,
- shape: BoxShape.circle,
- boxShadow: [BoxShadow(color: c.withValues(alpha: 0.5), blurRadius: 6)]));
 
  Widget _badge(String count, {bool high = false}) => Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),

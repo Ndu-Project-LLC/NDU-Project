@@ -83,26 +83,6 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
     });
   }
 
-  void _openMobileMenu() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        final height = MediaQuery.sizeOf(context).height * 0.92;
-        return SafeArea(
-          child: SizedBox(
-            height: height,
-            child: widget.child,
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // On mobile: take zero horizontal space so content extends full-width.

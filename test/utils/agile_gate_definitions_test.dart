@@ -49,7 +49,7 @@ void main() {
     });
 
     test('acceptance criteria sits above definition of done', () {
-      final order = AgileGateDefinitions.order;
+      const order = AgileGateDefinitions.order;
       expect(
         order.indexOf(AgileGateStage.acceptanceCriteria),
         lessThan(order.indexOf(AgileGateStage.definitionOfDone)),

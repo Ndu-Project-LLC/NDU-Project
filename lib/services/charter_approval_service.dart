@@ -376,7 +376,7 @@ class CharterApprovalService {
       );
     }
 
-    final projectName = data.projectName ?? 'Untitled Project';
+    final projectName = data.projectName;
     final subject = 'Action Required: Approve Project Charter — $projectName';
     final body = _buildEmailBody(
       projectName: projectName,

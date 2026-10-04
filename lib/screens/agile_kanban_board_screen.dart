@@ -66,7 +66,6 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
   static const Color _kAccent = Color(0xFFF59E0B);
   static const Color _kAccentLight = Color(0xFFFFC812);
   static const Color _kAccentBg = Color(0xFFFEF3C7);
-  static const Color _kBackground = Colors.white;
   static const Color _kSurface = Colors.white;
   static const Color _kBorder = Color(0xFFE5E7EB);
   static const Color _kHeadline = Color(0xFF111827);
@@ -422,35 +421,6 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
         _buildBoard(isMobile),
         const SizedBox(height: 24),
         _buildActionBar(),
-      ],
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Row(
-      children: [
-        Image.asset('assets/images/Logo.png',
-            height: 36,
-            cacheWidth: (MediaQuery.devicePixelRatioOf(context) * 150).round()),
-        const SizedBox(width: 12),
-        const Text('Ndu Project',
-            style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.w800, color: _kHeadline)),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: _kAccentBg,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _kAccent.withValues(alpha: 0.3)),
-          ),
-          child: const Text('KANBAN FLOW',
-              style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: _kAccent,
-                  letterSpacing: 1.1)),
-        ),
       ],
     );
   }
@@ -942,8 +912,6 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
   static const Color _kScreenAccent = Color(0xFFF59E0B);
   static const Color _kScreenAccentBg = Color(0xFFFEF3C7);
   static const Color _kScreenHeadline = Color(0xFF111827);
-
-  String? get _projectId => ProjectDataHelper.getData(context).projectId;
 
   @override
   Widget build(BuildContext context) {

@@ -12,8 +12,6 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/subscription_service.dart';
 
 import 'package:ndu_project/services/security_services.dart';
-import 'package:ndu_project/screens/project_dashboard_screen.dart';
-import 'package:ndu_project/screens/pricing_screen.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
@@ -318,19 +316,6 @@ class _SignInScreenState extends State<SignInScreen> {
       if (!mounted) return;
       context.go(target);
     });
-  }
-
-  Widget _buildFallbackScreen(String target) {
-    // Map route paths to screens for fallback navigation.
-    // Kept for future use; currently navigation goes through GoRouter.
-    switch (target) {
-      case '/dashboard':
-        return const ProjectDashboardScreen();
-      case '/pricing':
-        return const PricingScreen();
-      default:
-        return const ProjectDashboardScreen();
-    }
   }
 
   bool _shouldDeferToAuthWrapper() {

@@ -10,7 +10,6 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/download_helper.dart' as download_helper;
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -79,7 +78,6 @@ class _StartUpPlanningDetailScreenState
   _PlanningPageState _state = _PlanningPageState.empty();
   bool _autoPopulated = false;
   bool _isAutoPopulating = false;
-  String? _carriedContext;
 
   @override
   void initState() {
@@ -149,20 +147,7 @@ class _StartUpPlanningDetailScreenState
     _isAutoPopulating = true;
     if (mounted) setState(() {});
 
-    try {
-      final checkpoint = widget.config.checkpoint;
-      // Pull real carried context for the banner. The deterministic seeding
-      // is already handled by the _PlanningPageState.forConfig() factory
-      // (which uses _OperationsData.seed, _HypercareData.seed, etc.), so we
-      // don't need to duplicate that logic here.
-      final carried = await buildAccumulatedContext(context, checkpoint);
-      if (mounted) setState(() => _carriedContext = carried);
-    } catch (e) {
-      debugPrint(
-          'StartUpPlanning[$widget.config.checkpoint] carried-context error: $e');
-    } finally {
-      if (mounted) setState(() => _isAutoPopulating = false);
-    }
+    if (mounted) setState(() => _isAutoPopulating = false);
   }
 
   Future<void> _save({bool showToast = false}) async {
@@ -218,12 +203,13 @@ class _StartUpPlanningDetailScreenState
     try {
       final result = await FilePicker.pickFiles(
         type: FileType.any,
-        withData: true,
       );
       if (result == null || result.files.isEmpty) return;
       final file = result.files.first;
-      final bytes = file.bytes;
-      if (bytes == null) {
+      final Uint8List bytes;
+      try {
+        bytes = await file.readAsBytes();
+      } catch (_) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Unable to read file bytes.')),

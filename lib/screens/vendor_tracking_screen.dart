@@ -1628,7 +1628,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
     } catch (e) {
       debugPrint('Error loading contracts: $e');
     }
-    if (!context.mounted) return;
+    if (!mounted) return;
 
     // Load infrastructure data for vendor suggestions
     List<String> infrastructureSuggestions = [];
@@ -1658,6 +1658,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
       }
     }
 
+    if (!context.mounted) return;
     try {
       await showDialog(
         context: context,

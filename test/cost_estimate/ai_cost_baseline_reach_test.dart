@@ -183,7 +183,7 @@ void main() {
 
   group('computeTotals has no AI guard at all', () {
     test('an explicitly AI-generated line still counts in the baseline', () {
-      final aiLine = CostLine(
+      const aiLine = CostLine(
         id: 'ai',
         category: CostCategory.labor,
         subCategory: '',

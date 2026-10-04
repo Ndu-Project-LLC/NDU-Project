@@ -68,15 +68,12 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
   static const _surfaceAlt = Color(0xFFF3F4F8);
   static const _surfaceDeep = Color(0xFF241A00);
   static const _outline = Color(0xFFE2E8F0);
-  static const _outlineSoft = Color(0xFFEEF1F6);
   static const _ink = Color(0xFF0B1220);
   static const _inkSoft = Color(0xFF1E293B);
   static const _muted = Color(0xFF64748B);
   static const _mutedSoft = Color(0xFF94A3B8);
   static const _blue = Color(0xFFF4B400);
-  static const _blueDeep = Color(0xFFD97706);
   static const _blueSoft = Color(0xFFFEF3C7);
-  static const _indigo = Color(0xFFF59E0B);
   static const _violet = Color(0xFFB8860B);
   static const _emerald = Color(0xFF059669);
   static const _amber = Color(0xFFD97706);

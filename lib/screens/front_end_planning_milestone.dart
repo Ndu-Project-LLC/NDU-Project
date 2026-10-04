@@ -127,7 +127,7 @@ class _FrontEndPlanningMilestoneScreenState
  PdfSection.keyValue('Project Info', [
  {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
  ],
  );
  }
@@ -306,26 +306,6 @@ void _loadMilestoneData() {
  FrontEndPlanningNavigation.goToNext(context, 'fep_milestone');
  }
 
- Future<void> _autoFillMilestoneRequirements(
- FormValidationResult validation,
- ) async {
- final needsDates = validation.issues.any((issue) =>
- issue.id == 'project_start_date' ||
- issue.id == 'project_end_date' ||
- issue.id.startsWith('milestone_date_'));
- final needsMilestones = validation.issues.any((issue) =>
- issue.id == 'key_milestones' ||
- issue.id.startsWith('milestone_name_') ||
- issue.id.startsWith('milestone_date_'));
-
- if (needsDates) {
- await _generateDatesWithAI(silent: true);
- }
- if (needsMilestones) {
- await _generateMilestonesWithAI(silent: true);
- }
- }
-
  Future<void> _handleSaveAndContinue() async {
  final validation = _validateMilestoneSection();
  if (!validation.isValid) {
@@ -415,30 +395,6 @@ void _loadMilestoneData() {
  _endDateStr = _dateFormat.format(picked);
  final nextErrors = Map<String, String>.from(_validationErrors);
  nextErrors.remove('project_end_date');
- _validationErrors = nextErrors;
- });
- _syncToProvider();
- }
- }
-
- Future<void> _selectMilestoneDate(int index) async {
- final milestone = _milestones[index];
- final currentDate = _parseDate(milestone.dueDate);
- final startDate = _parseDate(_startDateStr);
- final endDate = _parseDate(_endDateStr);
-
- final picked = await showDatePicker(
- context: context,
- initialDate: currentDate ?? (startDate ?? DateTime.now()),
- firstDate: startDate ?? DateTime(2020),
- lastDate: endDate ?? DateTime(2035),
- helpText: 'Select Milestone Date',
- );
- if (picked != null) {
- setState(() {
- _milestones[index].dueDate = _dateFormat.format(picked);
- final nextErrors = Map<String, String>.from(_validationErrors);
- nextErrors.remove('milestone_date_$index');
  _validationErrors = nextErrors;
  });
  _syncToProvider();
@@ -666,7 +622,6 @@ void _loadMilestoneData() {
 
    try {
      final data = ProjectDataHelper.getData(context);
-     final projectContext = ProjectDataHelper.buildFepContext(data);
      final prompt = '''
 You are a senior project planner. Refine this single project milestone so the
 name is crisp (max 8 words) and the notes capture acceptance criteria,
@@ -793,26 +748,6 @@ markdown. The notes field must be plain text (max ~80 words).
  );
  if (!confirmed) return;
  _removeMilestone(index);
- }
-
- void _updateMilestoneField(int index, String field, String value) {
- setState(() {
- final nextErrors = Map<String, String>.from(_validationErrors);
- switch (field) {
- case 'name':
- _milestones[index].name = value;
- nextErrors.remove('milestone_name_$index');
- break;
- case 'discipline':
- _milestones[index].discipline = value;
- break;
- case 'comments':
- _milestones[index].comments = value;
- break;
- }
- _validationErrors = nextErrors;
- });
- _syncToProvider();
  }
 
  /// Task 9.9 — Toggle one of the two SME verification steps for a milestone.
@@ -1746,15 +1681,6 @@ Consider typical project timelines and ensure end date is after start date.''';
  );
  }
 
- OutlineInputBorder _milestoneFieldBorder(bool hasError) {
- return OutlineInputBorder(
- borderRadius: BorderRadius.circular(8),
- borderSide: BorderSide(
- color: hasError ? const Color(0xFFEF4444) : const Color(0xFFE5E7EB),
- ),
- );
- }
-
  Widget _buildMilestonesTable() {
          return SearchableTableSection(
                  title: 'Milestones',
@@ -1884,8 +1810,6 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  ...List.generate(rowsSource.length, (index) {
  final milestone = rowsSource[index];
- final nameError =
-         _validationErrors['milestone_name_$index'];
  final dateError =
          _validationErrors['milestone_date_$index'];
  return TableRow(

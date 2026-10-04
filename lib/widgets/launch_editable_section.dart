@@ -86,7 +86,6 @@ class _LaunchEditableSectionState extends State<LaunchEditableSection> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool useWideLayout = constraints.maxWidth >= 760;
 
         return ExecutionPanelShell(
           title: widget.title,
@@ -220,7 +219,7 @@ class _LaunchEditableSectionState extends State<LaunchEditableSection> {
     final columns = _buildColumnSpecs();
     final rows = await TableImportHelper.showImportDialogSpec(context, tableTitle: widget.title, columns: columns);
     if (rows == null || rows.isEmpty) return;
-    for (final parts in rows) {
+    for (final _ in rows) {
       widget.onAdd();
     }
   }

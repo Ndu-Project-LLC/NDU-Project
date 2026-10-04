@@ -266,16 +266,6 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
     setState(() {});
   }
 
-  void _saveBeforeUndo() {
-    if (_isInitiationLocked) return;
-    final provider = ProjectDataHelper.getProvider(context);
-    provider.updateInitiationData(
-      notes: _notesController.text.trim(),
-      businessCase: _businessCaseController.text.trim(),
-    );
-    provider.saveToFirebase(checkpoint: 'business_case');
-  }
-
   int _wordCount(String text) {
     final words =
         text.trim().split(RegExp(r'\s+')).where((word) => word.isNotEmpty);
@@ -558,25 +548,6 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
     } else {
       FrontEndPlanningSummaryScreen.open(context);
     }
-  }
-
-  /// Manual entry point for opening the Skip Business Case dialog from
-  /// other UI surfaces (e.g. an action button in the header). Persists
-  /// any in-progress notes/scope statement text first so the dialog's
-  /// pre-fill logic sees the latest content.
-  Future<void> _openSkipBusinessCaseDialog() async {
-    FocusScope.of(context).unfocus();
-    if (!mounted) return;
-
-    final provider = ProjectDataHelper.getProvider(context);
-    provider.updateInitiationData(
-      notes: _notesController.text.trim(),
-      businessCase: _businessCaseController.text.trim(),
-    );
-
-    final skipped = await SkipBusinessCaseDialog.show(context);
-    if (!mounted || !skipped) return;
-    await _handleSkipBusinessCasePressed();
   }
 
   Future<void> _handleNextPressed() async {

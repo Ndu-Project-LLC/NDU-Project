@@ -30,7 +30,6 @@ class _CollapsibleSectionState extends State<CollapsibleSection>
     with SingleTickerProviderStateMixin {
   late bool _isExpanded;
   late AnimationController _controller;
-  late Animation<double> _animation;
 
   @override
   void initState() {
@@ -39,10 +38,6 @@ class _CollapsibleSectionState extends State<CollapsibleSection>
     _controller = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
-    );
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
     );
     if (_isExpanded) {
       _controller.value = 1.0;

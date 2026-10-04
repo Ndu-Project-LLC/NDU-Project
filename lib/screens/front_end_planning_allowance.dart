@@ -126,7 +126,7 @@ class _FrontEndPlanningAllowanceScreenState
  PdfSection.keyValue('Project Info', [
  {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
  ],
  );
  }
@@ -308,7 +308,8 @@ class _FrontEndPlanningAllowanceScreenState
  _allowanceItems.removeWhere((item) => item.id == id);
  });
  _syncItemsToProvider();
-    showDeleteSuccessSnackBar(context, itemLabel: 'Item');
+if (!mounted) return;
+        showDeleteSuccessSnackBar(context, itemLabel: 'Item');
  }
 
  String _nextFlowDestinationLabel() {

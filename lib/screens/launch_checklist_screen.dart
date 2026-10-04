@@ -319,7 +319,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
     setState(() => _isExporting = true);
     try {
       final projectData = ProjectDataHelper.getData(context);
-      final projectName = projectData.projectName ?? 'Project';
+      final projectName = projectData.projectName;
       final now = DateTime.now();
       final stamp =
           '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
@@ -349,7 +349,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
             if (_checklistItems.isEmpty)
               _pdfCell('No checklist items recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Task', 'Detail', 'Owner', 'Due', 'Status'],
                 data: _checklistItems
                     .map((c) => [c.title, c.detail, c.owner, c.due, c.status])
@@ -369,7 +369,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
             if (_approvals.isEmpty)
               _pdfCell('No approvals recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Approval', 'Detail', 'Approver', 'Status'],
                 data: _approvals
                     .map((a) => [a.label, a.detail, a.approver, a.status])
@@ -389,7 +389,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
             if (_milestones.isEmpty)
               _pdfCell('No milestones recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Milestone', 'Detail', 'Due', 'Status'],
                 data: _milestones
                     .map((m) => [m.title, m.detail, m.due, m.status])
@@ -409,7 +409,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
             if (_timelineStages.isEmpty)
               _pdfCell('No timeline stages recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Stage', 'Detail', 'Date', 'Status'],
                 data: _timelineStages
                     .map((t) => [t.label, t.detail, t.date, t.status])
@@ -442,14 +442,6 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
     return pw.Text(title,
         style:
             pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold));
-  }
-
-  pw.Widget _pdfHeaderCell(String text) {
-    return pw.Padding(
-        padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(text,
-            style: pw.TextStyle(
-                fontSize: 9, fontWeight: pw.FontWeight.bold)));
   }
 
   pw.Widget _pdfCell(String text) {

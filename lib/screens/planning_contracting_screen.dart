@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -1579,12 +1578,14 @@ Future<void> _showEditPackageDialog(
  ],
  ),
  );
+ if (!context.mounted) return;
  await _upsertScheduleMilestoneActivity(
  context: context,
  milestoneId: _scheduleMilestoneId(contract.id, 'award'),
  title: '${contract.name} Award',
  date: targetAwardDate,
  );
+ if (!context.mounted) return;
  await _upsertScheduleMilestoneActivity(
  context: context,
  milestoneId: _scheduleMilestoneId(contract.id, 'execution_start'),
@@ -1597,6 +1598,7 @@ Future<void> _showEditPackageDialog(
  if (dialogContext.mounted) {
  Navigator.of(dialogContext).pop();
  }
+ if (!context.mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
  content: Text('Saved package updates for ${contract.name}.'),
@@ -1703,7 +1705,7 @@ class _ContractLogSection extends StatelessWidget {
             title: 'Contract Log',
             subtitle: 'Every contract, its scope, potential value, strategy and '
                 'RFP cycle.',
-            child: const _EmptyPanel(
+            child: _EmptyPanel(
                 'No contracts yet. Add a contract, pull one from a FEP scope, or import your contractor list.'),
           ),
         ],
@@ -3223,6 +3225,7 @@ Future<void> _exportRfpPackage(BuildContext context, PlanningRfq rfq) async {
  }
 
  final dateFormat = DateFormat('MMM dd, yyyy');
+ if (!context.mounted) return;
  await PdfExportHelper.exportScreenPdf(
  context: context,
  screenTitle: 'RFP Package — ${rfq.title}',
@@ -3533,6 +3536,7 @@ void _showRfpDialog(
  ],
  ),
  );
+ if (!context.mounted) return;
  await _upsertScheduleMilestoneActivity(
  context: context,
  milestoneId:
@@ -3540,6 +3544,7 @@ void _showRfpDialog(
  title: '${titleCtrl.text.trim()} Pre-Bid Meeting',
  date: preBidMeetingDate,
  );
+ if (!context.mounted) return;
  await _upsertScheduleMilestoneActivity(
  context: context,
  milestoneId: _scheduleMilestoneId(linkedPackageId, 'bid_due'),
@@ -3556,6 +3561,7 @@ void _showRfpDialog(
  if (dCtx.mounted) {
  Navigator.pop(dCtx);
  }
+ if (!context.mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
  content: Text(existingRfq == null
@@ -3566,6 +3572,7 @@ void _showRfpDialog(
  );
  } catch (e) {
  if (dCtx.mounted) setDialog(() => isSaving = false);
+ if (!context.mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
  content: Text('Unable to save RFP: $e'),
@@ -4240,6 +4247,7 @@ Future<void> _showEvaluationDialog(
  ],
  ),
  );
+ if (!context.mounted) return;
  await _upsertScheduleMilestoneActivity(
  context: context,
  milestoneId: _scheduleMilestoneId(contract.id, 'pm_review'),
@@ -4247,6 +4255,7 @@ Future<void> _showEvaluationDialog(
  date: normalizedPmReview == 'Approved' ? now : null,
  predecessorIds: const [],
  );
+ if (!context.mounted) return;
  await _upsertScheduleMilestoneActivity(
  context: context,
  milestoneId:
@@ -4260,6 +4269,7 @@ Future<void> _showEvaluationDialog(
  if (dialogContext.mounted) {
  Navigator.of(dialogContext).pop();
  }
+ if (!context.mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
  content: Text('Saved evaluation updates for ${contract.name}.'),
@@ -5473,6 +5483,7 @@ Future<void> _showNegotiationDialog(
  if (dialogContext.mounted) {
  Navigator.of(dialogContext).pop();
  }
+ if (!context.mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
  content:
@@ -5742,7 +5753,8 @@ class _BudgetEditableTable extends StatelessWidget {
  final baseController = SpellCheckTextEditingController(text: '0');
  final pctController = SpellCheckTextEditingController(text: '0');
 
- showDialog(
+if (!context.mounted) return;
+  showDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Add Contract Budget'),
@@ -5788,8 +5800,6 @@ class _BudgetEditableTable extends StatelessWidget {
  onPressed: () async {
  if (nameController.text.trim().isEmpty) return;
  final base = double.tryParse(baseController.text) ?? 0;
- final pct = (double.tryParse(pctController.text) ?? 0).clamp(0.0, 100.0);
- final contAmt = base * pct / 100;
  await ContractService.createContract(
  projectId: projectId,
  name: nameController.text.trim(),
@@ -5804,6 +5814,7 @@ class _BudgetEditableTable extends StatelessWidget {
  createdByEmail: '',
  createdByName: '',
  );
+ if (!ctx.mounted) return;
  Navigator.pop(ctx);
  },
  style: ElevatedButton.styleFrom(
@@ -6275,7 +6286,7 @@ class _EvaluationCriteriaBuilder extends StatelessWidget {
  }
 
  double _sumWeights(List<EvaluationCriteria> list) {
- return list.fold(0.0, (sum, c) => sum + c.weight);
+ return list.fold(0.0, (total, c) => total + c.weight);
  }
 }
 

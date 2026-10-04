@@ -396,20 +396,28 @@ class DashboardMetricsService {
     final programStatuses = <ProjectStatusRollup>[];
     final portfolioStatuses = <ProjectStatusRollup>[];
 
+    // Returns null instead of throwing when a collection read fails, so a
+    // Firestore outage degrades to missing rollups rather than a failed load.
+    Future<QuerySnapshot<Map<String, dynamic>>?> safeGet(
+      Query<Map<String, dynamic>> query,
+    ) async {
+      try {
+        return await query.get();
+      } catch (_) {
+        return null;
+      }
+    }
+
     final results = await Future.wait([
-      _firestore
+      safeGet(_firestore
           .collection('programs')
-          .where('ownerId', isEqualTo: user.uid)
-          .get()
-          .catchError((_) => null),
-      _firestore
+          .where('ownerId', isEqualTo: user.uid)),
+      safeGet(_firestore
           .collection('portfolios')
-          .where('ownerId', isEqualTo: user.uid)
-          .get()
-          .catchError((_) => null),
+          .where('ownerId', isEqualTo: user.uid)),
     ]);
 
-    final progSnap = results[0] as QuerySnapshot<Map<String, dynamic>>?;
+    final progSnap = results[0];
     if (progSnap != null) {
       for (final doc in progSnap.docs) {
         final d = doc.data();
@@ -426,7 +434,7 @@ class DashboardMetricsService {
       }
     }
 
-    final portSnap = results[1] as QuerySnapshot<Map<String, dynamic>>?;
+    final portSnap = results[1];
     if (portSnap != null) {
       for (final doc in portSnap.docs) {
         final d = doc.data();

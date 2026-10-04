@@ -42,7 +42,6 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
   // ── Theme tokens (match Portfolio dashboard) ──
   static const _bg = Color(0xFFFFFFFF);
   static const _surface = Color(0xFFF8FAFC);
-  static const _surfaceHigh = Color(0xFFF1F5F9);
   static const _surfaceHighest = Color(0xFFE2E8F0);
   static const _onSurface = Color(0xFF0F172A);
   static const _muted = Color(0xFF64748B);
@@ -109,7 +108,8 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
     }
     UserModel? selectedManager;
 
-    final portfolioName = await showDialog<String>(
+if (!mounted) return;
+        final portfolioName = await showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {

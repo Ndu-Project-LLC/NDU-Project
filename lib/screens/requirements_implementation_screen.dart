@@ -429,7 +429,8 @@ class _RequirementsImplementationScreenState
  }
  });
  _scheduleSave();
-    showDeleteSuccessSnackBar(context, itemLabel: 'Requirement');
+if (!mounted) return;
+        showDeleteSuccessSnackBar(context, itemLabel: 'Requirement');
  }
 
  void _showArtifactMessage(RequirementRow row) {
@@ -493,7 +494,6 @@ class _RequirementsImplementationScreenState
  try {
  final result = await FilePicker.pickFiles(
  type: FileType.custom,
- withData: true,
  allowedExtensions: const [
  'pdf',
  'doc',
@@ -511,8 +511,10 @@ class _RequirementsImplementationScreenState
  );
  if (result == null || result.files.isEmpty) return null;
  final file = result.files.first;
- final Uint8List? bytes = file.bytes;
- if (bytes == null) {
+ final Uint8List bytes;
+ try {
+ bytes = await file.readAsBytes();
+ } catch (_) {
  messenger.showSnackBar(
  const SnackBar(content: Text('Unable to read selected file.')),
  );
@@ -1845,7 +1847,6 @@ class _RequirementsImplementationScreenState
  const SizedBox(height: 10),
  LayoutBuilder(
  builder: (context, constraints) {
- final compact = constraints.maxWidth < 1040;
  const titleBlock = Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -4415,9 +4416,9 @@ class _VerificationPopupDialogState extends State<_VerificationPopupDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text(
+ const Text(
  'Acceptance criteria & verification',
- style: const TextStyle(
+ style: TextStyle(
  fontSize: 16,
  fontWeight: FontWeight.w800,
  color: Color(0xFF111827),

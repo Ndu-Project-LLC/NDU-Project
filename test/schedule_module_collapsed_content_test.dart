@@ -16,14 +16,11 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    late TabController tabController;
 
     // Use a StatefulWidget to create the TabController with a proper TickerProvider.
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(const MaterialApp(
       home: Scaffold(
-        body: _TestHarness(
-          onReady: (tc) => tabController = tc,
-        ),
+        body: _TestHarness(),
       ),
     ));
     await tester.pumpAndSettle();
@@ -52,8 +49,7 @@ void main() {
 
 /// Harness that creates a TabController with the proper TickerProvider.
 class _TestHarness extends StatefulWidget {
-  const _TestHarness({required this.onReady});
-  final ValueChanged<TabController> onReady;
+  const _TestHarness();
 
   @override
   State<_TestHarness> createState() => _TestHarnessState();
@@ -67,9 +63,6 @@ class _TestHarnessState extends State<_TestHarness>
   void initState() {
     super.initState();
     _controller = TabController(length: 3, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.onReady(_controller);
-    });
   }
 
   @override

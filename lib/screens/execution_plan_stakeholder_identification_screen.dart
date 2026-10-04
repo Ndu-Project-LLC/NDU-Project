@@ -93,23 +93,6 @@ class _StakeholderIdentificationSection extends StatefulWidget {
 
 class _StakeholderIdentificationSectionState
     extends State<_StakeholderIdentificationSection> {
-  Future<void> _exportPdf() async {
-    final projectData = ProjectDataHelper.getData(context);
-    await PdfExportHelper.exportScreenPdf(
-      context: context,
-      screenTitle: 'Stakeholder Identification',
-      sections: [
-        PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
-        ]),
-        PdfSection.text(
-            'Notes',
-            projectData.planningNotes[
-                    'execution_plan_stakeholder_identification_screen'] ??
-                'No data recorded.'),
-      ],
-    );
-  }
 
   final List<Map<String, String>> _rows = [];
   bool _didHydrateRows = false;
@@ -377,7 +360,7 @@ class _StakeholderIdentificationSectionState
                   }
                   if (imported > 0) {
                     await _persistRows();
-                    if (mounted) {
+                    if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                             content: Text(

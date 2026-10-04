@@ -315,7 +315,8 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
       setState(() {});
       _showInfo('Work package deleted.');
     }
-      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
   }
 
   Future<void> _showWorkPackageDetail(WorkPackage wp) async {
@@ -348,13 +349,13 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
               dataUpdater: (data) => data.copyWith(workPackages: updated),
               showSnackbar: false,
             );
-            if (mounted) {
+            if (context.mounted) {
               setState(() {});
               _showInfo('EWP "${wp.title}" released for execution.');
             }
           } on StateError catch (e) {
-            Navigator.of(context).pop();
-            if (mounted) {
+            if (context.mounted) Navigator.of(context).pop();
+            if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(e.message),

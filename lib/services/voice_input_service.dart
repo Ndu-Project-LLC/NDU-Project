@@ -305,11 +305,13 @@ class VoiceInputService {
       // error status instead of a "Stop" pill that can never transcribe.
       await _speech!.listen(
         onResult: _onNativeResult,
-        listenFor: const Duration(seconds: 60),
-        pauseFor: const Duration(seconds: 4),
-        localeId: localeId,
-        partialResults: true,
-        cancelOnError: true,
+        listenOptions: stt.SpeechListenOptions(
+          listenFor: const Duration(seconds: 60),
+          pauseFor: const Duration(seconds: 4),
+          localeId: localeId,
+          partialResults: true,
+          cancelOnError: true,
+        ),
       );
       return true;
     } catch (e) {

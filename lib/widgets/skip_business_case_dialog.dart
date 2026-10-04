@@ -417,7 +417,7 @@ class _SkipBusinessCaseDialogState extends State<_SkipBusinessCaseDialog> {
                     deliverables: _deliverablesController.text,
                     stakeholders: _stakeholdersController.text,
                   ));
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   setState(() => _saving = false);
                   if (ok) {
                     Navigator.of(context).pop(true);

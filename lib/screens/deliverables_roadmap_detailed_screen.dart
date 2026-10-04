@@ -589,36 +589,6 @@ class _DeliverablesRoadmapDetailedScreenState
     );
   }
 
-  Widget _buildStatusIcon(RoadmapDeliverableStatus status) {
-    IconData icon;
-    Color color;
-
-    switch (status) {
-      case RoadmapDeliverableStatus.completed:
-        icon = Icons.check_circle;
-        color = Colors.green;
-        break;
-      case RoadmapDeliverableStatus.inProgress:
-        icon = Icons.sync;
-        color = Colors.orange;
-        break;
-      case RoadmapDeliverableStatus.notStarted:
-        icon = Icons.circle_outlined;
-        color = Colors.grey;
-        break;
-      case RoadmapDeliverableStatus.atRisk:
-        icon = Icons.warning;
-        color = Colors.orange;
-        break;
-      case RoadmapDeliverableStatus.blocked:
-        icon = Icons.block;
-        color = Colors.red;
-        break;
-    }
-
-    return Icon(icon, color: color, size: 18);
-  }
-
   Widget _buildPhaseChip(DeliverablePhase phase) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -761,29 +731,6 @@ class _DeliverablesRoadmapDetailedScreenState
     }
   }
 
-  String _getCategoryLabel(DeliverableCategory category) {
-    switch (category) {
-      case DeliverableCategory.governance:
-        return 'Governance';
-      case DeliverableCategory.requirements:
-        return 'Requirements';
-      case DeliverableCategory.riskCompliance:
-        return 'Risk & Compliance';
-      case DeliverableCategory.execution:
-        return 'Execution';
-      case DeliverableCategory.technical:
-        return 'Technical';
-      case DeliverableCategory.quality:
-        return 'Quality';
-      case DeliverableCategory.contractsProcurement:
-        return 'Contracts & Procurement';
-      case DeliverableCategory.scheduleCost:
-        return 'Schedule & Cost';
-      case DeliverableCategory.teamStakeholders:
-        return 'Team & Stakeholders';
-    }
-  }
-
   void _showAddDeliverableDialog() {
     showDialog(
       context: context,
@@ -803,7 +750,7 @@ class _DeliverablesRoadmapDetailedScreenState
               priority: deliverable['priority'],
             );
             _loadData();
-            if (mounted) Navigator.of(context).pop();
+            if (context.mounted) Navigator.of(context).pop();
           } catch (e) {
             debugPrint('Error adding deliverable: $e');
           }
@@ -829,7 +776,7 @@ class _DeliverablesRoadmapDetailedScreenState
               context: context,
             );
             _loadData();
-            if (mounted) Navigator.of(context).pop();
+            if (context.mounted) Navigator.of(context).pop();
           } catch (e) {
             debugPrint('Error updating deliverable: $e');
           }

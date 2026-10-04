@@ -1433,7 +1433,6 @@ class _TeamTrainingAndBuildingScreenState
     try {
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
-        withData: true,
         allowedExtensions: const [
           'pdf',
           'doc',
@@ -1453,8 +1452,10 @@ class _TeamTrainingAndBuildingScreenState
       if (result == null || result.files.isEmpty) return null;
 
       final file = result.files.first;
-      final Uint8List? bytes = file.bytes;
-      if (bytes == null) {
+      final Uint8List bytes;
+      try {
+        bytes = await file.readAsBytes();
+      } catch (_) {
         if (!context.mounted) return null;
         messenger.showSnackBar(
           const SnackBar(content: Text('Unable to read file bytes.')),
@@ -1492,7 +1493,7 @@ class _TeamTrainingAndBuildingScreenState
     final messenger = ScaffoldMessenger.of(context);
     final cleanUrl = (url ?? '').trim();
     if (cleanUrl.isEmpty) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       messenger.showSnackBar(
         const SnackBar(content: Text('No downloadable file linked.')),
       );
@@ -1501,7 +1502,7 @@ class _TeamTrainingAndBuildingScreenState
 
     final uri = Uri.tryParse(cleanUrl);
     if (uri == null) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       messenger.showSnackBar(
         const SnackBar(content: Text('Invalid download URL.')),
       );
@@ -1509,7 +1510,7 @@ class _TeamTrainingAndBuildingScreenState
     }
 
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!context.mounted) return;
+    if (!mounted) return;
     if (!launched) {
       messenger.showSnackBar(
         const SnackBar(content: Text('Could not open attachment URL.')),
@@ -1575,12 +1576,12 @@ class _TeamTrainingAndBuildingScreenState
         await Printing.sharePdf(bytes: bytes, filename: filename);
       }
 
-      if (!context.mounted) return;
+      if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(content: Text('Template PDF ready: $filename')),
       );
     } catch (error) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(content: Text('Failed to create PDF: $error')),
       );

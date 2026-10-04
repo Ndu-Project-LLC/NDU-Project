@@ -33,7 +33,6 @@ import 'package:printing/printing.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
 import 'package:ndu_project/utils/section_flow_gate.dart';
-import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
@@ -53,7 +52,6 @@ const Color _kGray400 = Color(0xFF9CA3AF);
 const Color _kGray500 = Color(0xFF6B7280);
 const Color _kGray700 = Color(0xFF374151);
 const Color _kGray900 = Color(0xFF111827);
-const Color _kBlue600 = Color(0xFFFFC812);
 const String _kSectionProgressNotesKey = 'planning_design_section_progress';
 
 enum _SectionProgressState { pending, complete, notApplicable }
@@ -476,7 +474,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
               ? 'Complete prior sections first.'
               : 'Finish "$blocking" first — it feeds this section.'),
           action: SnackBarAction(
-            label: 'Go to ${blocking == null ? 'start' : blocking}',
+            label: 'Go to ${blocking ?? 'start'}',
             onPressed: () => _activateSection(blockingId),
           ),
         ),
@@ -779,8 +777,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
         final designManagementData = mappedMethodology == null
             ? current.designManagementData
             : (current.designManagementData ?? DesignManagementData()).copyWith(
-                methodology: mappedMethodology ??
-                    current.designManagementData?.methodology,
+                methodology: mappedMethodology,
               );
 
         return current.copyWith(
@@ -1461,7 +1458,6 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
     try {
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
-        withData: true,
         allowedExtensions: const [
           'pdf',
           'doc',
@@ -1479,8 +1475,10 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
       );
       if (result == null || result.files.isEmpty) return null;
       final file = result.files.first;
-      final Uint8List? bytes = file.bytes;
-      if (bytes == null) {
+      final Uint8List bytes;
+      try {
+        bytes = await file.readAsBytes();
+      } catch (_) {
         _showToast('Unable to read selected file.');
         return null;
       }
@@ -2008,7 +2006,6 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   Widget build(BuildContext context) {
     final projectData = ProjectDataHelper.getData(context);
     final owners = _ownerOptions(projectData);
-    final isMobile = AppBreakpoints.isMobile(context);
 
     return ResponsiveScaffold(
       activeItemLabel: widget.activeItemLabel ?? 'Design Planning',
@@ -2026,80 +2023,6 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
             ),
           ),
           _buildBottomBar(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMobileHeader(ProjectDataModel data) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: _kBorder)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: _kBrandDark,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            alignment: Alignment.center,
-            child: const Text(
-              'NDU',
-              style: TextStyle(
-                color: _kBrandYellow,
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'PROJECT',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: _kGray900,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const Spacer(),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_outlined, size: 22),
-            color: _kGray500,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              color: _kBlue600,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: const Text(
-              'C',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -4824,9 +4747,9 @@ class _ArchitectureModuleExplainer extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFFDE68A)),
       ),
-      child: Row(
+      child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           Icon(Icons.info_outline, size: 16, color: Color(0xFFB45309)),
           SizedBox(width: 10),
           Expanded(

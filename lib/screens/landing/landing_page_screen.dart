@@ -33,16 +33,13 @@ const _blueLight = Color(0xFFFFC812);
 const _purple = Color(0xFFB8860B);
 const _purpleLight = Color(0xFFFFC812);
 const _green = Color(0xFF10B981);
-const _greenLight = Color(0xFF34D399);
 const _gold = Color(0xFFFBBF24);
 const _goldDeep = Color(0xFFD97706);
 const _red = Color(0xFFEF4444);
 
 // Phase-specific unique colors for "How It Works" section
 const _teal = Color(0xFFD97706);      // For Design phase
-const _tealLight = Color(0xFFFBBF24);
 const _orange = Color(0xFFF97316);     // For Execution phase
-const _orangeLight = Color(0xFFFB923C);
 
 class LandingPageScreen extends StatefulWidget {
   const LandingPageScreen({super.key});

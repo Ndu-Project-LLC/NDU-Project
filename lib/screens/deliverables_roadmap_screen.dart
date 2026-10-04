@@ -84,7 +84,6 @@ class _DeliverablesRoadmapBodyState extends State<_DeliverablesRoadmapBody> {
  Timer? _saveDebounce;
  bool _autoPopulated = false;
  bool _isAutoPopulating = false;
- String? _carriedContext;
 
  String? get _projectId {
  try {
@@ -156,10 +155,6 @@ class _DeliverablesRoadmapBodyState extends State<_DeliverablesRoadmapBody> {
 
  try {
  final projectId = _projectId;
- // Pull real carried context for the banner.
- final carried = await buildAccumulatedContext(context, 'deliverables_roadmap');
- if (mounted) setState(() => _carriedContext = carried);
-
  if (projectId == null || projectId.isEmpty) {
  if (mounted) setState(() => _isAutoPopulating = false);
  return;
@@ -417,10 +412,6 @@ class _DeliverablesRoadmapBodyState extends State<_DeliverablesRoadmapBody> {
 
  @override
  Widget build(BuildContext context) {
- final user = FirebaseAuth.instance.currentUser;
- final displayName = _displayName(user);
- final subtitle = _displaySubtitle(user);
- final initials = _initialsFor(displayName);
 
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 36),
@@ -1689,28 +1680,4 @@ String _priorityLabel(RoadmapDeliverablePriority priority) {
  case RoadmapDeliverablePriority.low:
  return 'Low';
  }
-}
-
-String _displayName(User? user) {
- final name = user?.displayName?.trim();
- if (name != null && name.isNotEmpty) return name;
- final email = user?.email?.trim();
- if (email != null && email.isNotEmpty) return email;
- return 'Guest';
-}
-
-String _displaySubtitle(User? user) {
- final email = user?.email?.trim();
- if (email != null && email.isNotEmpty) return email;
- return 'Signed in';
-}
-
-String _initialsFor(String value) {
- final trimmed = value.trim();
- if (trimmed.isEmpty) return 'U';
- final parts = trimmed.split(RegExp(r'\s+'));
- if (parts.length == 1) return parts.first.characters.first.toUpperCase();
- final first = parts.first.characters.first.toUpperCase();
- final last = parts.last.characters.first.toUpperCase();
- return '$first$last';
 }

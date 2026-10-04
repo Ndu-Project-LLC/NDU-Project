@@ -12,6 +12,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
+import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart' as cost_models;
 import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
 
@@ -247,7 +248,8 @@ class BaselineScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMetadataCard(baseline, snap) {
+  Widget _buildMetadataCard(
+      cost_models.Baseline baseline, cost_models.BaselineSnapshot snap) {
     return TreasurySectionCard(
       title: 'Snapshot Metadata',
       subtitle: 'Audit trail for this baseline version',

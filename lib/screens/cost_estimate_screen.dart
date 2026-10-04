@@ -791,7 +791,8 @@ Current Cost Items: ${pd.costEstimateItems.map((e) => "${e.title} (${e.costType}
           .doc(item.id)
           .delete();
     }
-      showDeleteSuccessSnackBar(context, itemLabel: 'Item');
+if (!context.mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Item');
   }
 
   Future<void> _autoPopulateFromInitiationIfNeeded() async {
@@ -2576,55 +2577,6 @@ Current Cost Items: ${pd.costEstimateItems.map((e) => "${e.title} (${e.costType}
             projectData.planningNotes['planning_cost_estimate_notes'] ??
                 'No data recorded.'),
       ],
-    );
-  }
-}
-
-class _HeroBanner extends StatelessWidget {
-  const _HeroBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFB200),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFFB200).withValues(alpha: 0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 16),
-          ),
-        ],
-      ),
-      child: const Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Project Cost Estimate',
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Comprehensive breakdown of all project costs by category.',
-                  style: TextStyle(fontSize: 14, color: Colors.white),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 32),
-          Icon(Icons.stacked_bar_chart_rounded,
-              color: Colors.white, size: 46),
-        ],
-      ),
     );
   }
 }
@@ -5443,6 +5395,7 @@ class _SectionHeader extends StatelessWidget {
                               key: 'cost', label: 'Cost', sampleValue: '50000'),
                         ]);
 
+                    if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text(
                             '${rows?.length ?? 0} cost items imported from CSV'),

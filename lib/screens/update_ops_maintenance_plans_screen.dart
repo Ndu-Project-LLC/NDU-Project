@@ -1342,17 +1342,6 @@ class _UpdateOpsMaintenancePlansScreenState
     }
   }
 
-  InputDecoration _inlineFieldDecoration(String hint) {
-    return const InputDecoration(
-      isDense: true,
-      border: InputBorder.none,
-      contentPadding: EdgeInsets.zero,
-    ).copyWith(
-      hintText: hint,
-      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
-    );
-  }
-
   Future<void> _confirmDeletePlan(String projectId, OpsPlanItem plan) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1707,13 +1696,6 @@ class _UpdateOpsMaintenancePlansScreenState
 
   // ─── Data Mutations ──────────────────────────────────────────────────────
 
-  void _updateStat(_StatCardData data) {
-    final index = _stats.indexWhere((item) => item.id == data.id);
-    if (index == -1) return;
-    setState(() => _stats[index] = data);
-    _scheduleSave();
-  }
-
   void _addCoverageItem() {
     setState(() {
       _coverage.add(
@@ -1758,29 +1740,6 @@ class _UpdateOpsMaintenancePlansScreenState
     setState(() => _signals.removeWhere((item) => item.id == id));
     _scheduleSave();
       showDeleteSuccessSnackBar(context, itemLabel: 'Signal');
-  }
-
-  void _addMaintenanceWindow() {
-    setState(() {
-      _maintenanceWindows.add(
-        _MaintenanceWindowItem(id: _newId(), title: '', time: '', status: ''),
-      );
-    });
-    _scheduleSave();
-  }
-
-  void _updateMaintenance(_MaintenanceWindowItem item) {
-    final index =
-        _maintenanceWindows.indexWhere((entry) => entry.id == item.id);
-    if (index == -1) return;
-    setState(() => _maintenanceWindows[index] = item);
-    _scheduleSave();
-  }
-
-  void _deleteMaintenance(String id) {
-    setState(() => _maintenanceWindows.removeWhere((item) => item.id == id));
-    _scheduleSave();
-      showDeleteSuccessSnackBar(context, itemLabel: 'Maintenance');
   }
 }
 

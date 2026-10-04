@@ -2,6 +2,7 @@
 ///
 /// Aligns with IEEE 1016-2009 (Software Design Description), ISO/IEC/IEEE 12207,
 /// and industry best practices for waterfall, hybrid, and agile methodologies.
+library;
 import 'package:ndu_project/utils/unique_id.dart';
 
 class DesignComponent {

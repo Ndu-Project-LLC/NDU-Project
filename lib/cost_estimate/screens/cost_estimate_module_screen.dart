@@ -41,7 +41,6 @@ import 'package:ndu_project/cost_estimate/screens/review_screen.dart';
 import 'package:ndu_project/cost_estimate/screens/baseline_screen.dart';
 import 'package:ndu_project/cost_estimate/screens/variance_screen.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
-import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/staffing_row.dart';
@@ -243,14 +242,6 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
             }
           });
         }
-        final projectName = (projectData.projectName).trim().isNotEmpty
-            ? projectData.projectName
-            : estimate.projectName;
-        final solutionsCount = projectData.potentialSolutions.length;
-        final wbs = wbsProvider.wbs;
-        final wbsCounts = wbs != null ? countNodes(wbs) : null;
-        final wbsFrameworkLabel = wbs?.framework.label;
-        final wbsDeliverableWord = wbs?.framework.level1Label ?? 'deliverables';
 
         return ResponsiveScaffold(
           activeItemLabel: 'Cost Estimate',
@@ -399,12 +390,6 @@ class _CostDashboardTab extends StatelessWidget {
     final currencySymbol = UserPreferencesService.currencySymbolSync;
     final lineCount = lines.length;
     final avgPerLine = lineCount > 0 ? t.costBaseline / lineCount : 0.0;
-    final isBaselined = estimate.status == EstimateStatus.baselined ||
-        estimate.status == EstimateStatus.rebaselined;
-    final statusLabel = isBaselined
-        ? 'Baselined v${estimate.baseline?.version ?? 1}'
-        : 'Draft — not baselined';
-    final className = estimate.className.label;
 
     // Category breakdown (top-level summary categories)
     final categories = <_CatData>[
@@ -1403,11 +1388,12 @@ class _PersonnelCostCardState extends State<_PersonnelCostCard> {
       });
     } catch (e) {
       debugPrint('_PersonnelCostCard load error: $e');
-      if (mounted)
+      if (mounted) {
         setState(() {
           _rows = [];
           _loading = false;
         });
+      }
     }
   }
 
@@ -1908,339 +1894,6 @@ class _RiskCostCardState extends State<_RiskCostCard> {
 // ═══════════════════════════════════════════════════════════════════════════
 // 1. HERO COMMAND BAND
 // ═══════════════════════════════════════════════════════════════════════════
-
-class _HeroBand extends StatelessWidget {
-  const _HeroBand({
-    required this.eyebrow,
-    required this.title,
-    required this.subtitle,
-    required this.statusLabel,
-    required this.statusLive,
-    required this.contextChips,
-    required this.actions,
-  });
-
-  final String eyebrow;
-  final String title;
-  final String subtitle;
-  final String statusLabel;
-  final bool statusLive;
-  final List<_HeroChip> contextChips;
-  final List<_HeroAction> actions;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFC812), Color(0xFFFABD00), Color(0xFFD97706)],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD97706).withValues(alpha: 0.30),
-            blurRadius: 28,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Decorative grid
-          Positioned.fill(
-            child: CustomPaint(painter: _HeroGridPainter()),
-          ),
-          // Soft glow orb
-          Positioned(
-            right: -70,
-            top: -70,
-            child: Container(
-              width: 240,
-              height: 240,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    Colors.white.withValues(alpha: 0.38),
-                    Colors.white.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(26, 22, 26, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Top row: eyebrow + status chip
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A1D1F).withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color:
-                              const Color(0xFF1A1D1F).withValues(alpha: 0.18),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.dashboard_rounded,
-                              size: 13,
-                              color: const Color(0xFF1A1D1F)
-                                  .withValues(alpha: 0.8)),
-                          const SizedBox(width: 6),
-                          Text(
-                            eyebrow,
-                            style: const TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.1,
-                              color: Color(0xFF1A1D1F),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 9, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusLive
-                            ? const Color(0xFF059669).withValues(alpha: 0.16)
-                            : const Color(0xFF1A1D1F).withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: statusLive
-                              ? const Color(0xFF059669).withValues(alpha: 0.55)
-                              : const Color(0xFF1A1D1F).withValues(alpha: 0.30),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: statusLive
-                                  ? const Color(0xFF059669)
-                                  : const Color(0xFF1A1D1F)
-                                      .withValues(alpha: 0.5),
-                              shape: BoxShape.circle,
-                              boxShadow: statusLive
-                                  ? const [
-                                      BoxShadow(
-                                        color: Color(0xFF059669),
-                                        blurRadius: 6,
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            statusLabel.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.8,
-                              color: statusLive
-                                  ? const Color(0xFF047857)
-                                  : const Color(0xFF1A1D1F)
-                                      .withValues(alpha: 0.78),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
-                    ...actions,
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Title
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.6,
-                    height: 1.05,
-                    color: Color(0xFF1A1D1F),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: const Color(0xFF1A1D1F).withValues(alpha: 0.72),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroChip extends StatelessWidget {
-  const _HeroChip({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.38)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon,
-              size: 14, color: const Color(0xFF1A1D1F).withValues(alpha: 0.78)),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                  color: const Color(0xFF1A1D1F).withValues(alpha: 0.62),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1D1F),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroAction extends StatelessWidget {
-  const _HeroAction({
-    required this.icon,
-    required this.label,
-    required this.primary,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String label;
-  final bool primary;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    if (primary) {
-      return Material(
-        color: const Color(0xFF1A1D1F),
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF1A1D1F).withValues(alpha: 0.30),
-                  blurRadius: 12,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 15, color: const Color(0xFFFFC812)),
-                const SizedBox(width: 7),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 14, color: const Color(0xFF1A1D1F)),
-      label: Text(label,
-          style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1D1F))),
-      style: OutlinedButton.styleFrom(
-        backgroundColor: Colors.white.withValues(alpha: 0.18),
-        side:
-            BorderSide(color: const Color(0xFF1A1D1F).withValues(alpha: 0.32)),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-}
-
-class _HeroGridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.10)
-      ..strokeWidth = 0.7;
-    const spacing = 32.0;
-    for (var x = 0.0; x < size.width; x += spacing) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-    for (var y = 0.0; y < size.height; y += spacing) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 2. PREMIUM KPI TILE

@@ -8,7 +8,6 @@ import 'package:ndu_project/project_controls/screens/change_management_module_sc
 
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
-import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/quality_metrics_calculator.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -91,29 +90,6 @@ String _qualityTabLabel(_QualityTab tab) {
       return 'Quality Register';
     case _QualityTab.costOfQuality:
       return 'Cost of Quality';
-  }
-}
-
-/// Get the field on QualityManagementData that stores the AI-generated plan
-/// for a given tab.
-String _planFieldFor(_QualityTab tab) {
-  switch (tab) {
-    case _QualityTab.plan:
-      return 'qualityManagementPlan';
-    case _QualityTab.targets:
-      return 'qualityObjectivesSummary';
-    case _QualityTab.qaTracking:
-      return 'inspectionTestPlan';
-    case _QualityTab.qcTracking:
-      return 'qualityAuditPlanSummary';
-    case _QualityTab.metrics:
-      return 'qualityMetricsSummary';
-    case _QualityTab.register:
-      return 'qualityRegisterLog';
-    case _QualityTab.costOfQuality:
-      // The Cost of Quality tab is a structured capture, not AI prose, so it
-      // has no generated plan field.
-      return 'costOfQualitySummary';
   }
 }
 
@@ -441,14 +417,6 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
         visitedSections: [...data.visitedSections, id],
       ),
     );
-  }
-
-  Widget _buildNavigationHint() {
-    // Removed: InnerPageNavigationHint modal is no longer rendered on this
-    // page (or any other page). The _TabStrip above provides full navigation
-    // between quality management sections. Kept as a no-op stub in case any
-    // callers were not updated; returns an empty SizedBox.
-    return const SizedBox.shrink();
   }
 
   @override
@@ -1788,7 +1756,7 @@ class _TrackInExecutionBannerState extends State<_TrackInExecutionBanner> {
           await _syncAuditsToTeamCalendar(projectId, projectData);
         }
       } catch (e) {
-        if (context.mounted) {
+      if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content:
@@ -1799,7 +1767,7 @@ class _TrackInExecutionBannerState extends State<_TrackInExecutionBanner> {
         }
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to track in execution: $e'),
@@ -1957,14 +1925,6 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
   final Map<String, List<String>> _fieldHistories = {};
   final Map<String, int> _fieldHistoryIndices = {};
   final Map<String, bool> _fieldIsAiGenerated = {};
-  final Map<String, bool> _fieldIsRegenerating = {};
-
-  static const _fieldKeys = {
-    'quality_narrative': 'Quality Narrative',
-    'review_cadence': 'Review Cadence',
-    'escalation_path': 'Escalation Path',
-    'change_control': 'Change Control Process',
-  };
 
   void _onFieldChanged() {
     _saveDebounce?.cancel();
@@ -2054,78 +2014,7 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
     if (isAi) _fieldIsAiGenerated[key] = true;
   }
 
-  bool _canUndoField(String key) => (_fieldHistoryIndices[key] ?? -1) > 0;
-
-  bool _canRedoField(String key) {
-    final idx = _fieldHistoryIndices[key] ?? -1;
-    final history = _fieldHistories[key] ?? [];
-    return idx >= 0 && idx < history.length - 1;
-  }
-
-  void _undoField(String key, TextEditingController controller) {
-    if (!_canUndoField(key)) return;
-    final idx = _fieldHistoryIndices[key]! - 1;
-    _fieldHistoryIndices[key] = idx;
-    controller.text = _fieldHistories[key]![idx];
-    _onFieldChanged();
-  }
-
-  void _redoField(String key, TextEditingController controller) {
-    if (!_canRedoField(key)) return;
-    final idx = _fieldHistoryIndices[key]! + 1;
-    _fieldHistoryIndices[key] = idx;
-    controller.text = _fieldHistories[key]![idx];
-    _onFieldChanged();
-  }
-
   // ── Per-field AI regeneration ────────────────────────────────────────
-  Future<void> _regenerateField(String key, String label) async {
-    setState(() => _fieldIsRegenerating[key] = true);
-    try {
-      final project = ProjectDataHelper.getData(context);
-      final contextText =
-          ProjectDataHelper.buildFepContext(project, sectionLabel: label);
-      final ai = OpenAiServiceSecure();
-      final result = await ai.generateCompletion(
-        'Based on this project context, regenerate the "$label" section.\n\n'
-        'Context:\n$contextText\n\n'
-        'Provide 2-3 sentences of specific, actionable recommendations. '
-        'Return ONLY the text content (no JSON, no markdown headers).',
-        maxTokens: 300,
-        temperature: 0.6,
-      );
-      final cleaned = result.trim();
-      if (cleaned.isNotEmpty) {
-        final controller = _controllerForKey(key);
-        controller.text = cleaned;
-        _recordFieldHistory(key, cleaned, isAi: true);
-        _onFieldChanged();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('AI regeneration failed: ${aiErrorMessage(e)}')),
-        );
-      }
-    }
-    if (mounted) setState(() => _fieldIsRegenerating[key] = false);
-  }
-
-  TextEditingController _controllerForKey(String key) {
-    switch (key) {
-      case 'quality_narrative':
-        return _planController;
-      case 'review_cadence':
-        return _reviewCadenceController;
-      case 'escalation_path':
-        return _escalationPathController;
-      case 'change_control':
-        return _changeControlController;
-      default:
-        return _planController;
-    }
-  }
 
   // ── Build a field with KAZ AI + clear + formatting toolbar ───────────
   Widget _buildEnhancedField({
@@ -2477,7 +2366,8 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
                               label: 'Category',
                               sampleValue: 'Quality'),
                         ]);
-                    if (rows == null || !mounted) return;
+                    if (rows == null) return;
+                    if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content:
                             Text('${rows.length} standards imported from CSV'),
@@ -6521,20 +6411,6 @@ class _MetricSummaryData {
   final String changeLabel;
   final String changeContext;
   final _MetricTrend trend;
-}
-
-class _QaTechnique {
-  const _QaTechnique({
-    required this.name,
-    required this.description,
-    required this.frequency,
-    required this.standards,
-  });
-
-  final String name;
-  final String description;
-  final String frequency;
-  final String standards;
 }
 
 class _MetricSummaryCard extends StatelessWidget {

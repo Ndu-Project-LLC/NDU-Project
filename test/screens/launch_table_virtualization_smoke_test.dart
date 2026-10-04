@@ -104,7 +104,7 @@ void main() {
         );
       if (tabBars.evaluate().isNotEmpty) {
         final controller = tester.widget<TabBar>(tabBars.first).controller!;
-        for (var i = 0; i < controller!.length; i++) {
+        for (var i = 0; i < controller.length; i++) {
           if (find.byType(LaunchDataTable).evaluate().isNotEmpty) break;
           controller.animateTo(i);
           // These screens keep a loading spinner running with no Firestore

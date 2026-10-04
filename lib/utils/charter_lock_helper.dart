@@ -23,7 +23,7 @@ class CharterLockHelper {
   static bool isFepLocked(ProjectDataModel? data) {
     if (data == null) return false;
     return data.charterApprovalDate != null ||
-        (data.frontEndPlanning.charterApproved ?? false);
+        (data.frontEndPlanning.charterApproved);
   }
 
   /// Returns the approval timestamp (prefers `frontEndPlanning

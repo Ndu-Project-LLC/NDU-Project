@@ -293,7 +293,7 @@ class VarianceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVarianceByCategory(variance, String currencySymbol) {
+  Widget _buildVarianceByCategory(VarianceSummary variance, String currencySymbol) {
     final cats = variance.byCategory
         .where((c) => c.baseline > 0 || c.current > 0 || c.delta != 0)
         .toList();

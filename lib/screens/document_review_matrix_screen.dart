@@ -16,7 +16,6 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const Color _kBackground = Color(0xFFF7F8FC);
-const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
 const Color _kMuted = Color(0xFF6B7280);
 const Color _kCardBorder = Color(0xFFE4E7EC);
@@ -688,40 +687,6 @@ class _DocumentReviewMatrixScreenState
     );
   }
 
-  Widget _buildStatusIcon(ReviewStatus status) {
-    IconData icon;
-    Color color;
-
-    switch (status) {
-      case ReviewStatus.approved:
-        icon = Icons.check_circle;
-        color = Colors.green;
-        break;
-      case ReviewStatus.underReview:
-        icon = Icons.rate_review;
-        color = const Color(0xFFFFC812);
-        break;
-      case ReviewStatus.pendingReview:
-        icon = Icons.pending;
-        color = Colors.orange;
-        break;
-      case ReviewStatus.changesRequested:
-        icon = Icons.edit_note;
-        color = Colors.orange;
-        break;
-      case ReviewStatus.rejected:
-        icon = Icons.cancel;
-        color = Colors.red;
-        break;
-      case ReviewStatus.notStarted:
-        icon = Icons.circle_outlined;
-        color = Colors.grey;
-        break;
-    }
-
-    return Icon(icon, color: color, size: 18);
-  }
-
   Widget _buildStatusChip(ReviewStatus status) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -827,7 +792,7 @@ class _DocumentReviewMatrixScreenState
 
           if (success) {
             _loadData();
-            if (mounted) Navigator.of(context).pop();
+            if (context.mounted) Navigator.of(context).pop();
           }
         },
       ),
@@ -948,7 +913,7 @@ class _DocumentReviewMatrixScreenState
             onPressed: () async {
               final success = await onSubmit(
                   controller.text.isEmpty ? null : controller.text);
-              if (success && mounted) {
+              if (success && context.mounted) {
                 _loadData();
                 Navigator.of(context).pop();
               }

@@ -7,7 +7,6 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -38,7 +37,6 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  bool _isGenerating = false;
  bool _autoPopulated = false;
  bool _isAutoPopulating = false;
- String? _carriedContext;
 
  String _projectName = '';
  DateTime? _baselineStartDate;
@@ -75,14 +73,7 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  _isAutoPopulating = true;
  if (mounted) setState(() {});
 
- try {
- final carried = await buildAccumulatedContext(context, 'project_baseline');
- if (mounted) setState(() => _carriedContext = carried);
- } catch (e) {
- debugPrint('ProjectBaseline carried-context error: $e');
- } finally {
  if (mounted) setState(() => _isAutoPopulating = false);
- }
  }
 
  void _loadData() {

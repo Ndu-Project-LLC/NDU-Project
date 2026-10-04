@@ -309,7 +309,6 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  }
  }  @override
   Widget build(BuildContext context) {
-    final isNarrow = MediaQuery.sizeOf(context).width < 980;
     final padding = AppBreakpoints.pagePadding(context);
 
     return ResponsiveScaffold(
@@ -355,81 +354,6 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
 
  // ─── Header ───────────────────────────────────────────────────────────────
 
- Widget _buildHeader(bool isNarrow) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
- decoration: BoxDecoration(
- color: const Color(0xFFFFC812),
- borderRadius: BorderRadius.circular(6),
- ),
- child: const Text(
- 'EXECUTION SAFETY',
- style: TextStyle(
- fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black),
- ),
- ),
- const SizedBox(height: 10),
- const Row(
- children: [
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Risk Tracking',
- style: TextStyle(
- fontSize: 24,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827)),
- ),
- SizedBox(height: 6),
- Text(
- 'Monitor active risks, mitigation coverage, and escalation readiness across execution.',
- style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
- ),
- ],
- ),
- ),
- ],
- ),
- ],
- );
- }
-
- Widget _buildHeaderActions() {
- return Wrap(
- spacing: 10,
- runSpacing: 10,
- children: [
- _actionButton(Icons.add, 'Add risk', onPressed: _openAddRiskDialog),
- _actionButton(Icons.download_outlined, 'Import risk log',
- onPressed: () {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text(
- 'Risk log import is queued. You can add risks manually now using Add risk.')),
- );
- }),
- _actionButton(Icons.description_outlined, 'Export report',
- onPressed: () {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text(
- 'Risk report export is queued while report templates are finalized.')),
- );
- }),
- _actionButton(Icons.play_arrow, 'Run weekly review', onPressed: () {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Weekly review started.')),
- );
- }),
- ],
- );
- }
-
  Widget _actionButton(IconData icon, String label, {VoidCallback? onPressed}) {
  return OutlinedButton.icon(
  onPressed: onPressed ?? () {},
@@ -449,132 +373,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
 
  // ─── Stats Row ────────────────────────────────────────────────────────────
 
- Widget _buildStatsRow(bool isNarrow) {
- // Use project theme accent (yellow/gold #FFC107) consistently across
- // all four summary cards — per Task 5 directive. Cards remain visually
- // distinct via their iconography and labels, not via mismatched hues.
- const themeAccent = Color(0xFFFFC107);
- final stats = [
- _StatCardData(
- 'Active risks',
- '$_activeRiskCount',
- '$_criticalRiskCount critical',
- themeAccent,
- ),
- _StatCardData(
- 'Mitigation coverage',
- '${(_mitigationCoverageRate * 100).round()}%',
- _risks.isEmpty
- ? 'Add risks to start tracking'
- : '$_mitigatedRiskCount of $_activeRiskCount mitigated',
- themeAccent,
- ),
- _StatCardData(
- 'Escalations',
- '$_escalationCount',
- _escalationCount > 0 ? 'Exec sync scheduled' : 'None',
- themeAccent,
- ),
- _StatCardData(
- 'Exposure score',
- _risks.isEmpty ? '—' : '$_exposureScore/100',
- _risks.isEmpty ? 'Add risks to compute' : _exposureStatus,
- themeAccent,
- ),
- ];
-
- if (isNarrow) {
- return Wrap(
- spacing: 12,
- runSpacing: 12,
- children: stats.map((stat) => _buildStatCard(stat)).toList(),
- );
- }
-
- return Row(
- children: stats
- .map((stat) => Expanded(
- child: Padding(
- padding: const EdgeInsets.only(right: 12),
- child: _buildStatCard(stat),
- ),
- ))
- .toList(),
- );
- }
-
- Widget _buildStatCard(_StatCardData data) {
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(data.value,
- style: TextStyle(
- fontSize: 20,
- fontWeight: FontWeight.w700,
- color: data.color)),
- const SizedBox(height: 6),
- Text(data.label,
- style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
- const SizedBox(height: 6),
- Text(data.supporting,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: data.color)),
- ],
- ),
- );
- }
-
  // ─── Computed Properties ──────────────────────────────────────────────────
-
- int get _activeRiskCount => _risks.length;
-
- int get _criticalRiskCount =>
- _risks.where((risk) => risk.impact == 'High').length;
-
- int get _mitigatedRiskCount =>
- _risks.where((risk) => _isMitigatingStatus(risk.status)).length;
-
- double get _mitigationCoverageRate =>
- _risks.isEmpty ? 0 : _mitigatedRiskCount / _activeRiskCount;
-
- int get _escalationCount =>
- _risks.where((risk) => risk.status == 'Escalated').length;
-
- double get _averageProbability => _risks.isEmpty
- ? 0
- : _risks
- .map((risk) => _safeProbability(risk.probability))
- .reduce((a, b) => a + b) /
- _activeRiskCount;
-
- int get _exposureScore => _risks.isEmpty
- ? 0
- : ((1 - _averageProbability).clamp(0.0, 1.0) * 100).round();
-
- String get _exposureStatus => _exposureScore >= 70
- ? 'Stable'
- : _exposureScore >= 40
- ? 'Caution'
- : 'At risk';
-
- double _safeProbability(String value) {
- return (double.tryParse(value) ?? 0).clamp(0.0, 1.0);
- }
-
- bool _isMitigatingStatus(String status) {
- return status == 'Mitigating' ||
- status == 'Monitoring' ||
- status == 'Accepted';
- }
 
  // ─── Risk Register ────────────────────────────────────────────────────────
 
@@ -2930,13 +2729,4 @@ class _MitigationPlan {
   final String targetDate;
   final String effectiveness; // High | Medium | Low
   final String residualRisk; // Low | Medium | High
-}
-
-class _StatCardData {
-  const _StatCardData(this.label, this.value, this.supporting, this.color);
-
-  final String label;
-  final String value;
-  final String supporting;
-  final Color color;
 }

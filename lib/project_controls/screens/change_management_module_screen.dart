@@ -65,7 +65,6 @@ class _ChangeManagementModuleScreenState
   String? _selectedCRId;
   bool _autoPopulated = false;
   bool _isAutoPopulating = false;
-  String? _carriedContext;
   // Per Task 21: Change Management Navigation header (tab strip + page route
   // stepper) is collapsible to free up vertical space for tab content.
   bool _navCollapsed = false;
@@ -91,11 +90,6 @@ class _ChangeManagementModuleScreenState
 
     try {
       final data = ProjectDataHelper.getData(context);
-
-      // Pull real carried context for the banner.
-      final carried =
-          await buildAccumulatedContext(context, 'change_management');
-      if (mounted) setState(() => _carriedContext = carried);
 
       final provider = context.read<ChangeManagementProvider>();
       // If the provider already has CRs, do nothing.

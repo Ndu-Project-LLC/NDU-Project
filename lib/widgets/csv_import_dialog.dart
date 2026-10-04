@@ -54,8 +54,6 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
-
-  String? _csvText;
   CsvValidationResult? _result;
   final bool _isDragging = false;
   bool _showPreview = false;
@@ -85,7 +83,6 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
 
   void _processCsv(String text) {
     setState(() {
-      _csvText = text;
       _result = CsvImportHelper.importFromText(text, widget.columns);
       _showPreview = false;
     });
@@ -192,17 +189,17 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
       final result = await fp.FilePicker.pickFiles(
         type: fp.FileType.custom,
         allowedExtensions: ['csv', 'xlsx'],
-        withData: true,
       );
 
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.first;
-        if (file.bytes != null && file.bytes!.isNotEmpty) {
+        final bytes = await file.readAsBytes();
+        if (bytes.isNotEmpty) {
           final fileName = file.name.toLowerCase();
           if (fileName.endsWith('.xlsx')) {
-            _processExcel(file.bytes!);
+            _processExcel(bytes);
           } else {
-            final text = utf8.decode(file.bytes!);
+            final text = utf8.decode(bytes);
             _processCsv(text);
             _pasteController.text = text;
           }
@@ -629,7 +626,6 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
               _processCsv(val.trim());
             } else {
               setState(() {
-                _csvText = null;
                 _result = null;
               });
             }
@@ -804,7 +800,8 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
                   headingRowColor:
                       WidgetStateProperty.all(const Color(0xFFF8FAFC)),
                   headingRowHeight: 40,
-                  dataRowHeight: 36,
+                  dataRowMinHeight: 36,
+                  dataRowMaxHeight: 36,
                   columnSpacing: 16,
                   horizontalMargin: 12,
                   columns: widget.columns

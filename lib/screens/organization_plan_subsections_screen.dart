@@ -1,6 +1,5 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -179,11 +178,13 @@ class _OrganizationStaffingPlanScreenState
       ),
     );
     if (result == null) return;
-    final updated = [
+if (!context.mounted) return;
+        final updated = [
       ...ProjectDataHelper.getData(context).staffingRequirements,
       result,
     ];
-    await _saveStaffing(context, updated);
+if (!mounted) return;
+        await _saveStaffing(context, updated);
   }
 
   Future<void> _editStaffing(
@@ -209,7 +210,8 @@ class _OrganizationStaffingPlanScreenState
     if (index >= 0 && index < updated.length) {
       updated[index] = result;
     }
-    await _saveStaffing(context, updated);
+if (!context.mounted) return;
+        await _saveStaffing(context, updated);
   }
 
   Future<void> _deleteStaffing(BuildContext context, int index) async {
@@ -235,13 +237,16 @@ class _OrganizationStaffingPlanScreenState
       ),
     );
     if (confirmed != true) return;
-    final updated = List<StaffingRequirement>.from(
+if (!context.mounted) return;
+        final updated = List<StaffingRequirement>.from(
         ProjectDataHelper.getData(context).staffingRequirements);
     if (index >= 0 && index < updated.length) {
       updated.removeAt(index);
     }
-    await _saveStaffing(context, updated);
-      showDeleteSuccessSnackBar(context, itemLabel: 'Staffing');
+if (!context.mounted) return;
+        await _saveStaffing(context, updated);
+if (!context.mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Staffing');
   }
 
   Future<void> _toggleNduAccess(BuildContext context, int index, bool value) async {
@@ -364,7 +369,8 @@ class _OrganizationStaffingPlanScreenState
         updated[idx] = updated[idx].copyWith(nduProjectAccess: true);
       }
     }
-    await _saveStaffing(context, updated);
+if (!context.mounted) return;
+        await _saveStaffing(context, updated);
   }
 
   /// Canonical starter set of staffing positions for a tier when the user
@@ -486,7 +492,7 @@ class _OrganizationStaffingPlanScreenState
     final staffing = projectData.staffingRequirements;
 
     if (staffing.isEmpty) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -632,7 +638,7 @@ class _OrganizationStaffingPlanScreenState
     }
 
     if (suggestions.isEmpty) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -643,7 +649,7 @@ class _OrganizationStaffingPlanScreenState
       return;
     }
 
-    if (!context.mounted) return;
+    if (!mounted) return;
     final accepted = await showDialog<Set<int>>(
       context: context,
       builder: (dialogContext) => _AiSuggestDatesDialog(
@@ -670,7 +676,8 @@ class _OrganizationStaffingPlanScreenState
             : updated[idx].endDate,
       );
     }
-    await _saveStaffing(context, updated);
+if (!context.mounted) return;
+        await _saveStaffing(context, updated);
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -5811,98 +5818,6 @@ class _TopHeader extends StatelessWidget {
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12)),
         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-      ),
-    );
-  }
-}
-
-class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon}) : onTap = null;
-
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
-      ),
-    );
-  }
-}
-
-class _UserChip extends StatelessWidget {
-  const _UserChip();
-
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = user?.displayName ?? user?.email ?? 'User';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: const Color(0xFFE5E7EB),
-            backgroundImage:
-                user?.photoURL != null ? NetworkImage(user!.photoURL!) : null,
-            child: user?.photoURL == null
-                ? Text(
-                    displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
-                    style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF374151)),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 8),
-          RepaintBoundary(
-            child: StreamBuilder<bool>(
-              stream: UserService.watchAdminStatus(),
-              builder: (context, snapshot) {
-                final email = user?.email ?? '';
-                final isAdmin =
-                    snapshot.data ?? UserService.isAdminEmail(email);
-                final role = isAdmin ? 'Admin' : 'Member';
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(displayName,
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w600)),
-                    Text(role,
-                        style: const TextStyle(
-                            fontSize: 10, color: Color(0xFF6B7280))),
-                  ],
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 6),
-          const Icon(Icons.keyboard_arrow_down,
-              size: 18, color: Color(0xFF9CA3AF)),
-        ],
       ),
     );
   }

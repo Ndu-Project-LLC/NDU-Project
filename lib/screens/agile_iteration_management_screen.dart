@@ -209,15 +209,15 @@ class _AgileIterationManagementScreenState
     _currentSprint = AgileProjectContextHelper.activeSprintLabel(projectData);
     _committedPoints = workItems.fold<int>(
       0,
-      (sum, item) =>
-          sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
+      (total, item) =>
+          total + AgileProjectContextHelper.estimateStoryPoints(item.title),
     );
     _completedPoints = workItems
         .where((item) => item.status == 'Done' || item.status == 'In Review')
         .fold<int>(
           0,
-          (sum, item) =>
-              sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
+          (total, item) =>
+              total + AgileProjectContextHelper.estimateStoryPoints(item.title),
         );
     _carryover
       ..clear()

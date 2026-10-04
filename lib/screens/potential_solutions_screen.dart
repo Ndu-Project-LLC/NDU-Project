@@ -1518,7 +1518,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: TextButton.icon(
  onPressed: () async {
  final skipped = await SkipBusinessCaseDialog.show(context);
- if (skipped && mounted) {
+ if (skipped && context.mounted) {
  setState(() {});
  ScaffoldMessenger.of(context).showSnackBar(
  const SnackBar(

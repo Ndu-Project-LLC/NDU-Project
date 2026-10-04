@@ -83,7 +83,7 @@ void main() {
     }
   }
 
-  Future<void> _runAddFlow(WidgetTester tester) async {
+  Future<void> runAddFlow(WidgetTester tester) async {
     expect(takeAllExceptions(tester), isEmpty);
 
     // Empty register to begin with.
@@ -127,14 +127,14 @@ void main() {
       'saving the Add Interface modal inserts the row into the register table',
       (tester) async {
     await pumpScreen(tester);
-    await _runAddFlow(tester);
+    await runAddFlow(tester);
   });
 
   testWidgets(
       'saving works on a narrow window where the table scrolls horizontally',
       (tester) async {
     await pumpScreen(tester, size: const Size(1000, 900));
-    await _runAddFlow(tester);
+    await runAddFlow(tester);
   });
 
   testWidgets('the Add Interface modal stays a sensible size on desktop',

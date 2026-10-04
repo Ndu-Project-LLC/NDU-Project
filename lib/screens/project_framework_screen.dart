@@ -34,13 +34,11 @@ class _Tokens {
 
  // Surface
  static const surface = Colors.white;
- static const surfaceDim = Color(0xFFD8DADC);
  static const surfaceBright = Color(0xFFFFFFFF);
  static const surfaceContainerLowest = Color(0xFFFFFFFF);
  static const surfaceContainerLow = Color(0xFFF2F4F6);
  static const surfaceContainer = Color(0xFFEBEDEF);
  static const surfaceContainerHigh = Color(0xFFE6E8EA);
- static const surfaceContainerHighest = Color(0xFFE0E2E4);
 
  // On-Surface
  static const onSurface = Color(0xFF191C1D);
@@ -49,20 +47,14 @@ class _Tokens {
  // Primary (Yellow)
  static const primary = Color(0xFFFFCC00);
  static const primaryOn = Color(0xFF000000);
- static const primaryContainer = Color(0xFFFFE480);
- static const primaryOnContainer = Color(0xFF1A1400);
 
  // Outline
- static const outline = Color(0xFF71787D);
  static const outlineVariant = Color(0xFFC0C7CD);
 
  // Error
  static const error = Color(0xFFBA1A1A);
 
  // Text
- static const textDark = Color(0xFF191C1D);
- static const textMuted = Color(0xFF40484C);
- static const textLight = Color(0xFF71787D);
 }
 
 class ProjectFrameworkScreen extends StatefulWidget {

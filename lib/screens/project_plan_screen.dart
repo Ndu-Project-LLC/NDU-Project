@@ -99,7 +99,6 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
 
   bool _autoPopulated = false;
   bool _isAutoPopulating = false;
-  String? _carriedContext;
 
   static const String _kOverviewInitialized =
       'project_plan_overview_initialized';
@@ -155,10 +154,6 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
     if (mounted) setState(() {});
 
     try {
-      // Pull real carried context for the banner.
-      final carried = await buildAccumulatedContext(context, 'project_plan');
-      if (mounted) setState(() => _carriedContext = carried);
-
       // If overview already has content, don't seed.
       if (_overviewObjectives.isNotEmpty ||
           _overviewScope.isNotEmpty ||
@@ -5222,17 +5217,6 @@ class _MilestoneEntry {
   final String owner;
   final String status;
   final String notes;
-
-  factory _MilestoneEntry.empty() {
-    return _MilestoneEntry(
-      id: newId(),
-      title: '',
-      targetDate: '',
-      owner: '',
-      status: 'Planned',
-      notes: '',
-    );
-  }
 
   _MilestoneEntry copyWith({
     String? title,

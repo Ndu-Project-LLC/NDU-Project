@@ -376,7 +376,6 @@ class _OverviewAiEditor extends StatefulWidget {
 class _OverviewAiEditorState extends State<_OverviewAiEditor> {
   String _current = '';
   Timer? _saveDebounce;
-  DateTime? _lastSavedAt;
 
   @override
   void dispose() {
@@ -389,7 +388,7 @@ class _OverviewAiEditorState extends State<_OverviewAiEditor> {
     _saveDebounce?.cancel();
     _saveDebounce = Timer(const Duration(milliseconds: 700), () async {
       final trimmed = value.trim();
-      final success = await ProjectDataHelper.updateAndSave(
+      await ProjectDataHelper.updateAndSave(
         context: context,
         checkpoint: 'execution_plan_interface_management_overview',
         dataUpdater: (data) => data.copyWith(
@@ -400,9 +399,6 @@ class _OverviewAiEditorState extends State<_OverviewAiEditor> {
         ),
         showSnackbar: false,
       );
-      if (mounted && success) {
-        setState(() => _lastSavedAt = DateTime.now());
-      }
     });
   }
 

@@ -3,13 +3,11 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
-import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/planning_requirements_screen.dart';
@@ -541,102 +539,6 @@ class _ProjectFrameworkNextScreenState
   }
 
   // ─── Mobile Header ──────────────────────────────────────────────
-  Widget _buildMobileHeader() {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName =
-        FirebaseAuthService.displayNameOrEmail(fallback: 'User');
-    final userInitial =
-        displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
-    final email = user?.email ?? '';
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: _kBorderColor)),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                InkWell(
-                  onTap: () => PlanningPhaseNavigation.goToPrevious(
-                      context, 'project_goals_milestones'),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.chevron_left,
-                        size: 22, color: _kSecondaryText),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'Planning Phase',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: _kPrimaryText,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (!AppBreakpoints.isMobile(context))
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Text(email,
-                        style: const TextStyle(
-                            fontSize: 13, color: _kSecondaryText)),
-                  ),
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: const BoxDecoration(
-                    color: _kLightYellow,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(userInitial,
-                      style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: _kAccentColor)),
-                ),
-              ],
-            ),
-          ),
-          // Breadcrumb
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: const BoxDecoration(
-              color: _kLightGray,
-              border: Border(top: BorderSide(color: _kBorderColor)),
-            ),
-            child: const Row(
-              children: [
-                Text('Planning Phase',
-                    style: TextStyle(fontSize: 12, color: _kSecondaryText)),
-                SizedBox(width: 4),
-                Icon(Icons.chevron_right,
-                    size: 14, color: _kSecondaryText),
-                SizedBox(width: 4),
-                Text('Project Goals & Milestones',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: _kPrimaryText)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ─── Notes Section ──────────────────────────────────────────────
   Widget _buildNotesSection() {

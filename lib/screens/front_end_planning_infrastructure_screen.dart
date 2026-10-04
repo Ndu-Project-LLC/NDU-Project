@@ -65,7 +65,7 @@ class _FrontEndPlanningInfrastructureScreenState
  PdfSection.keyValue('Project Info', [
  {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
  ],
  );
  }
@@ -351,7 +351,8 @@ class _FrontEndPlanningInfrastructureScreenState
  }).toList();
  });
  _syncItemsToProvider();
-    showDeleteSuccessSnackBar(context, itemLabel: 'Infrastructure Planning Item');
+if (!mounted) return;
+        showDeleteSuccessSnackBar(context, itemLabel: 'Infrastructure Planning Item');
  }
 
  double get _infrastructureTotal => _items.fold<double>(

@@ -8,9 +8,6 @@ import 'package:xml/xml.dart' as xml;
 
 // Conditional import: dart:io on native targets, no-op stub on web.
 // On web, PlatformFile.bytes is always populated so we never invoke this.
-import 'dart:io'
-    if (dart.library.html) 'package:ndu_project/services/_io_stub.dart'
-    as io;
 
 /// Result of a successful document import.
 class DocxImportResult {
@@ -72,10 +69,8 @@ class DocxImportError extends DocxImportOutcome {
 /// supported text document (.txt, .md, .csv, .rtf) and extracts its plain-text
 /// content for filling into a [TextField].
 ///
-/// On web, [PlatformFile.bytes] is populated by file_picker and is the only
-/// reliable way to read the file content (no file system path). On mobile
-/// platforms, [PlatformFile.path] is used when available, falling back to
-/// [PlatformFile.bytes].
+/// On every platform the picked file's content is read via
+/// [PlatformFile.readAsBytes] (blob on web, file path on mobile).
 ///
 /// The .docx parser uses the `archive` + `xml` packages (already available
 /// transitively via `pdf`) to unzip the OOXML package and extract paragraph
@@ -118,7 +113,6 @@ class DocxImportService {
         dialogTitle: dialogTitle,
         type: FileType.custom,
         allowedExtensions: allowedExtensions,
-        withData: true, // ensure bytes are populated on web
       );
     } catch (e) {
       debugPrint('[DocxImportService] FilePicker error: $e');
@@ -140,23 +134,17 @@ class DocxImportService {
       );
     }
 
-    final bytes = file.bytes;
-    if (bytes == null) {
-      // Native-only path — read from file.path
-      if (file.path == null) {
-        return const DocxImportError(
-          DocxImportFailure.parseError,
-          'Could not read the picked file (no bytes and no path).',
-        );
-      }
-      try {
-        final fileObj = io.File(file.path!);
-        final rawBytes = await fileObj.readAsBytes();
-        return _extractFromBytes(
-            Uint8List.fromList(rawBytes), fileName, ext);
-      } catch (e) {
-        return DocxImportError(DocxImportFailure.parseError, e.toString());
-      }
+    // PlatformFile.readAsBytes() reads from the picked file on every
+    // platform (path on native, blob on web), replacing the deprecated
+    // `withData` + `bytes` accessor pair.
+    final Uint8List bytes;
+    try {
+      bytes = await file.readAsBytes();
+    } catch (e) {
+      return DocxImportError(
+        DocxImportFailure.parseError,
+        'Could not read the picked file: $e',
+      );
     }
 
     if (bytes.lengthInBytes > maxFileBytes) {

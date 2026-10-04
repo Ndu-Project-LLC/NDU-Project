@@ -228,14 +228,17 @@ class TableImportHelper {
       dialogTitle: 'Import data from file',
       type: FileType.custom,
       allowedExtensions: ['csv', 'txt', 'xlsx', 'xls'],
-      withData: true,
     );
 
     if (result == null || result.files.isEmpty) return null;
 
     final file = result.files.first;
-    final bytes = file.bytes;
-    if (bytes == null) return null;
+    final Uint8List bytes;
+    try {
+      bytes = await file.readAsBytes();
+    } catch (_) {
+      return null;
+    }
 
     String content;
     try {

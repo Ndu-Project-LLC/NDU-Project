@@ -621,7 +621,6 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
 
  @override
  Widget build(BuildContext context) {
- final isNarrow = MediaQuery.sizeOf(context).width < 980;
  final padding = AppBreakpoints.pagePadding(context);
 
  return ResponsiveScaffold(
@@ -748,30 +747,6 @@ showNavigationButtons: false,
  );
  }
 
- Widget _buildHeaderActions() {
- final policy = _crudPolicy;
- return Wrap(
- spacing: 10,
- runSpacing: 10,
- children: [
- _actionButton(Icons.add, 'Add tool',
- onPressed: policy.canCreate ? () => _showIntegrationDialog() : null),
- _actionButton(Icons.upload_outlined, 'Export inventory', onPressed: () {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Inventory export queued. All integration records will be included.')),
- );
- }),
- _actionButton(Icons.health_and_safety_outlined, 'Start health check', onPressed: () {
- _refreshIntegrationStatuses();
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Health check initiated. All integration statuses are being refreshed.')),
- );
- }),
- _primaryButton('Run manual sync'),
- ],
- );
- }
-
  Widget _actionButton(IconData icon, String label, {VoidCallback? onPressed}) {
  final enabled = onPressed != null;
  return OutlinedButton.icon(
@@ -790,210 +765,17 @@ showNavigationButtons: false,
  );
  }
 
- Widget _primaryButton(String label) {
- return ElevatedButton.icon(
- onPressed: () {
- _refreshIntegrationStatuses();
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Manual sync triggered. Refreshing all integration statuses.')),
- );
- },
- icon: const Icon(Icons.sync, size: 18),
- label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFFFC812),
- foregroundColor: Colors.white,
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
- ),
- );
- }
-
  // ---------------------------------------------------------------------------
  // Filter chips
  // ---------------------------------------------------------------------------
-
- Widget _buildFilterChips() {
- const filters = ['All tools', 'Connected', 'Degraded', 'Not connected', 'Expired'];
- return Wrap(
- spacing: 10,
- runSpacing: 10,
- children: filters.map((filter) {
- final selected = _selectedFilters.contains(filter);
- return GestureDetector(
- onTap: () {
- setState(() {
- if (filter == 'All tools') {
- _selectedFilters
- ..clear()
- ..add(filter);
- } else {
- if (selected) {
- _selectedFilters.remove(filter);
- } else {
- _selectedFilters
- ..remove('All tools')
- ..add(filter);
- }
- if (_selectedFilters.isEmpty) _selectedFilters.add('All tools');
- }
- });
- },
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
- decoration: BoxDecoration(
- color: selected ? const Color(0xFF111827) : Colors.white,
- borderRadius: BorderRadius.circular(20),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Text(
- filter,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: selected ? Colors.white : const Color(0xFF475569),
- ),
- ),
- ),
- );
- }).toList(),
- );
- }
 
  // ---------------------------------------------------------------------------
  // Governance strip
  // ---------------------------------------------------------------------------
 
- Widget _buildGovernanceStrip() {
- final policy = _crudPolicy;
- final items = [
- _GovernanceItem(Icons.verified_user_outlined, 'Access', policy.roleLabel, policy.roleColor),
- _GovernanceItem(Icons.add_circle_outline, 'Create',
- policy.canCreate ? 'Enabled' : 'Restricted',
- policy.canCreate ? const Color(0xFF10B981) : const Color(0xFF94A3B8)),
- _GovernanceItem(Icons.edit_outlined, 'Update',
- policy.canUpdate ? 'Enabled' : 'Read-only',
- policy.canUpdate ? const Color(0xFFFFC812) : const Color(0xFF94A3B8)),
- _GovernanceItem(Icons.delete_outline, 'Delete',
- policy.canDelete ? 'Admin only' : 'Restricted',
- policy.canDelete ? const Color(0xFFEF4444) : const Color(0xFF94A3B8)),
- ];
-
- return Container(
- width: double.infinity,
- padding: const EdgeInsets.all(14),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE2E8F0)),
- ),
- child: Wrap(
- spacing: 10,
- runSpacing: 10,
- alignment: WrapAlignment.spaceBetween,
- children: [
- ...items.map(_buildGovernancePill),
- Text(
- policy.hasProject
- ? 'Integration, scope, health, risk, and action controls are separated by access level per ISO 27001 A.9.'
- : 'Open a project to enable tools integration governance controls.',
- style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
- ),
- ],
- ),
- );
- }
-
- Widget _buildGovernancePill(_GovernanceItem item) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
- decoration: BoxDecoration(
- color: item.color.withValues(alpha: 0.08),
- borderRadius: BorderRadius.circular(10),
- border: Border.all(color: item.color.withValues(alpha: 0.18)),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(item.icon, size: 16, color: item.color),
- const SizedBox(width: 8),
- Text('${item.label}: ',
- style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
- Text(item.value,
- style: TextStyle(fontSize: 12, color: item.color, fontWeight: FontWeight.w700)),
- ],
- ),
- );
- }
-
  // ---------------------------------------------------------------------------
  // Stats row
  // ---------------------------------------------------------------------------
-
- Widget _buildStatsRow(bool isNarrow) {
- final connected = _integrations.where((i) => i.status == 'Connected').length;
- final degraded = _integrations.where((i) => i.status == 'Degraded').length;
- final notConnected = _integrations.where((i) => i.status == 'Not connected').length;
- final total = _integrations.length;
-
- final healthScore = total == 0 ? 0 : ((connected / total) * 100).round();
- final syncStatus = notConnected > 0 ? '$notConnected pending' : 'All synced';
- final openIssues = degraded + _riskSignals.where((s) => s.status == 'Open').length;
-
- final stats = [
- _StatCardData('$connected', 'Connected Tools',
- '$total total · $degraded degraded', const Color(0xFFFFC812)),
- _StatCardData('$healthScore%', 'Health Score',
- healthScore >= 80 ? 'Above threshold' : 'Below 80% target', healthScore >= 80 ? const Color(0xFF10B981) : const Color(0xFFF59E0B)),
- _StatCardData(syncStatus, 'Data Sync Status',
- notConnected == 0 ? 'All integrations synced' : '$notConnected not connected',
- notConnected == 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444)),
- _StatCardData('$openIssues', 'Open Issues',
- openIssues > 0 ? 'Require attention' : 'All clear',
- openIssues > 0 ? const Color(0xFFB8860B) : const Color(0xFF10B981)),
- ];
-
- if (isNarrow) {
- return Wrap(
- spacing: 12,
- runSpacing: 12,
- children: stats.map(_buildStatCard).toList(),
- );
- }
-
- return Row(
- children: stats
- .map((stat) => Expanded(
- child: Padding(
- padding: const EdgeInsets.only(right: 12),
- child: _buildStatCard(stat),
- )))
- .toList(),
- );
- }
-
- Widget _buildStatCard(_StatCardData data) {
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE2E8F0)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(data.value,
- style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: data.color)),
- const SizedBox(height: 6),
- Text(data.label, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
- const SizedBox(height: 6),
- Text(data.supporting,
- style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: data.color)),
- ],
- ),
- );
- }
 
  // ---------------------------------------------------------------------------
  // Framework guide
@@ -3390,22 +3172,6 @@ class _DataFlowRow {
  );
  }).whereType<_DataFlowRow>().toList();
  }
-}
-
-class _StatCardData {
- final String value;
- final String label;
- final String supporting;
- final Color color;
- const _StatCardData(this.value, this.label, this.supporting, this.color);
-}
-
-class _GovernanceItem {
- final IconData icon;
- final String label;
- final String value;
- final Color color;
- const _GovernanceItem(this.icon, this.label, this.value, this.color);
 }
 
 class _ToolsCrudPolicy {

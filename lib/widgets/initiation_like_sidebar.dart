@@ -37,7 +37,6 @@ import 'package:ndu_project/screens/execution_enabling_work_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_best_practices_screen.dart';
 import 'package:ndu_project/screens/execution_plan_construction_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_infrastructure_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_agile_delivery_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_screen.dart';
 import 'package:ndu_project/screens/execution_plan_communication_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_plan_screen.dart';
@@ -53,7 +52,6 @@ import 'package:ndu_project/screens/project_baseline_screen.dart';
 import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
 import 'package:ndu_project/screens/agile_team_structure_screen.dart';
 import 'package:ndu_project/screens/agile_epics_features_screen.dart';
-import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
 import 'package:ndu_project/screens/agile_release_plan_screen.dart';
 import 'package:ndu_project/screens/agile_project_baseline_screen.dart';
 import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
@@ -105,7 +103,6 @@ import 'package:ndu_project/screens/deliver_project_closure_screen.dart';
 import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
 import 'package:ndu_project/screens/fat_mechanical_completion_screen.dart';
 import 'package:ndu_project/screens/contract_close_out_screen.dart';
-import 'package:ndu_project/screens/vendor_account_close_out_screen.dart';
 import 'package:ndu_project/screens/ui_ux_design_screen.dart';
 import 'package:ndu_project/screens/development_set_up_screen.dart';
 import 'package:ndu_project/screens/project_close_out_screen.dart';
@@ -119,7 +116,6 @@ import 'package:ndu_project/screens/technical_development_screen.dart';
 import 'package:ndu_project/screens/summarize_account_risks_screen.dart';
 import 'package:ndu_project/screens/financial_closeout_screen.dart';
 import 'package:ndu_project/screens/benefits_realization_screen.dart';
-import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
 import 'package:ndu_project/screens/agile_project_hub_screen.dart';
 import 'package:ndu_project/screens/agile_roadmap_screen.dart';
 import 'package:ndu_project/screens/project_team_activities_screen.dart';
@@ -667,34 +663,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     final item = SidebarNavigationService.instance.findItemByLabel(label);
     if (item == null) return false;
     return SidebarNavigationService.instance.isItemLocked(item, true);
-  }
-
-  /// Check if a checkpoint has been reached based on Firestore project progress
-  /// Returns false if the checkpoint is before the current checkpoint in sidebar order
-  bool _isCheckpointReached(String checkpointName) {
-    final provider = ProjectDataInherited.maybeOf(context);
-    final currentCheckpoint = provider?.projectData.currentCheckpoint;
-
-    if (currentCheckpoint == null || currentCheckpoint.isEmpty) {
-      return false; // No progress yet
-    }
-
-    // Use SidebarNavigationService to check if checkpoint is reached
-    return SidebarNavigationService.instance.isCheckpointReached(
-      checkpointName,
-      currentCheckpoint,
-    );
-  }
-
-  /// Enhanced locking that checks both Basic Plan restrictions and checkpoint progress
-  bool _isItemLocked(String label, String checkpointName) {
-    // Check Basic Plan restrictions first
-    if (_isBasicPlanLocked(label)) {
-      return true;
-    }
-
-    // Check if checkpoint has been reached
-    return !_isCheckpointReached(checkpointName);
   }
 
   @override
@@ -1306,11 +1274,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         const ExecutionPlanInfrastructurePlanScreen());
   }
 
-  void _openExecutionPlanAgileDeliveryPlan() {
-    _navigateWithCheckpoint('execution_plan_agile_delivery_plan',
-        const ExecutionPlanAgileDeliveryPlanScreen());
-  }
-
   // ignore: unused_element
   void _openExecutionPlanInterfaceManagement() {
     _navigateWithCheckpoint('execution_plan_interface_management',
@@ -1364,11 +1327,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   void _openAgileEpicsFeatures() {
     _navigateWithCheckpoint(
         'agile_epics_features', const AgileEpicsFeaturesScreen());
-  }
-
-  void _openAgileSprintCalendar() {
-    _navigateWithCheckpoint(
-        'agile_sprint_calendar', const AgileSprintCalendarScreen());
   }
 
   void _openAgileMapOut() {
@@ -1628,11 +1586,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'contract_close_out', const ContractCloseOutScreen());
   }
 
-  void _openVendorAccountCloseOut() {
-    _navigateWithCheckpoint(
-        'vendor_account_close_out', const VendorAccountCloseOutScreen());
-  }
-
   void _openUiUxDesign() {
     _navigateWithCheckpoint('ui_ux_design', const UiUxDesignScreen());
   }
@@ -1691,16 +1644,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     );
   }
 
-  void _openProjectCloseOutSummarized() {
-    _navigateWithCheckpoint(
-      'project_close_out',
-      const ProjectCloseOutScreen(
-        summarized: true,
-        activeItemLabel: 'Project Close Out - Summarized Form',
-      ),
-    );
-  }
-
   void _openDemobilizeTeam() {
     _navigateWithCheckpoint('demobilize_team', const DemobilizeTeamScreen());
   }
@@ -1708,15 +1651,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   void _openActualVsPlannedGapAnalysis() {
     _navigateWithCheckpoint('actual_vs_planned_gap_analysis',
         const ActualVsPlannedGapAnalysisScreen());
-  }
-
-  void _openActualVsPlannedScopeReconcillation() {
-    _navigateWithCheckpoint(
-      'actual_vs_planned_gap_analysis',
-      const GapAnalysisScopeReconcillationScreen(
-        activeItemLabel: 'Project Financial Review - Scope Reconcillation',
-      ),
-    );
   }
 
   void _openCommerceViability() {
@@ -1744,57 +1678,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'benefits_realization', const BenefitsRealizationScreen());
   }
 
-  void _openAgileDevelopmentIterations() {
-    _navigateWithCheckpoint('agile_development_iterations',
-        const AgileDevelopmentIterationsScreen());
-  }
-
   void _openAgileProjectHub() {
     _navigateWithCheckpoint(
         'agile_development_iterations', const AgileProjectHubScreen());
-  }
-
-  void _showAgileComingSoon(String sectionName) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFB8860B), Color(0xFFB8860B)],
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child:
-                  const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-                child: Text(sectionName,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w700))),
-          ],
-        ),
-        content: const Text(
-          'This section is being activated as part of the Agile Project Hub rollout. '
-          'Data from earlier phases flows into this module automatically.',
-          style: TextStyle(fontSize: 14, color: Color(0xFF6B7280), height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            style:
-                TextButton.styleFrom(foregroundColor: const Color(0xFFB8860B)),
-            child: const Text('Got it'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _openScopeCompletion() {
@@ -1855,11 +1741,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   void _openDeliverableRoadmap() {
     _navigateWithCheckpoint(
         'deliverable_roadmap', const DeliverablesRoadmapScreen());
-  }
-
-  void _openDeliverableRoadmapAgileMapOut() {
-    _navigateWithCheckpoint(
-        'agile_map_out', const DeliverableRoadmapAgileMapOutScreen());
   }
 
   Future<void> _openExecutiveSummary() async {

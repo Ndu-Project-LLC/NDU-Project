@@ -48,11 +48,10 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
 
   bool _isLoading = true;
   bool _isGenerating = false;
-  bool _isExporting = false;
   bool _hasLoaded = false;
   bool _suspendSave = false;
   final Map<String, bool> _kazAiRegenerating = {};
-  final String _selectedView = 'full'; // 'full' or 'summary'
+ // 'full' or 'summary'
 
   @override
   void initState() {
@@ -1106,10 +1105,9 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
   }
 
   Future<void> _exportPdf() async {
-    setState(() => _isExporting = true);
     try {
       final projectData = ProjectDataHelper.getData(context);
-      final projectName = projectData.projectName ?? 'Project';
+      final projectName = projectData.projectName;
       final now = DateTime.now();
       final stamp =
           '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
@@ -1139,7 +1137,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             if (_financialMetrics.isEmpty)
               _pdfCell('No financial metrics recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Metric', 'Value', 'Notes'],
                 data: _financialMetrics
                     .map((m) => [m.label, m.value, m.notes])
@@ -1159,7 +1157,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             if (_warranties.isEmpty)
               _pdfCell('No warranties recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Item', 'Vendor', 'Type', 'Status'],
                 data: _warranties
                     .map((w) => [w.item, w.vendor, w.warrantyType, w.status])
@@ -1179,7 +1177,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             if (_opsCosts.isEmpty)
               _pdfCell('No ops costs recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Category', 'Monthly', 'Annual', 'Notes'],
                 data: _opsCosts
                     .map((c) =>
@@ -1200,7 +1198,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             if (_recommendations.isEmpty)
               _pdfCell('No recommendations recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Recommendation', 'Details', 'Status'],
                 data: _recommendations
                     .map((r) => [r.title, r.details, r.status])
@@ -1224,8 +1222,6 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('PDF export failed: ${e.toString()}')));
       }
-    } finally {
-      if (mounted) setState(() => _isExporting = false);
     }
   }
 
@@ -1233,14 +1229,6 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
     return pw.Text(title,
         style:
             pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold));
-  }
-
-  pw.Widget _pdfHeaderCell(String text) {
-    return pw.Padding(
-        padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(text,
-            style: pw.TextStyle(
-                fontSize: 9, fontWeight: pw.FontWeight.bold)));
   }
 
   pw.Widget _pdfCell(String text) {

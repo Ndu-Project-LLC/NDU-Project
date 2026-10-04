@@ -39,7 +39,6 @@ class _ExecutionWorkPackagesScreenState
   String _activeTab = 'all'; // all | ewp | procurement | cwp | precomm | comm
   List<ContractModel> _contracts = [];
   List<ProcurementItemModel> _procurementItems = [];
-  bool _loadingLinked = false;
 
   @override
   void initState() {
@@ -54,7 +53,6 @@ class _ExecutionWorkPackagesScreenState
   }
 
   Future<void> _loadLinkedData() async {
-    setState(() => _loadingLinked = true);
     try {
       final data = ProjectDataHelper.getData(context, listen: false);
       final pid = data.projectName.isNotEmpty ? data.projectName : 'default';
@@ -70,8 +68,6 @@ class _ExecutionWorkPackagesScreenState
       }
     } catch (_) {
       // Silently fail — linked data is non-critical
-    } finally {
-      if (mounted) setState(() => _loadingLinked = false);
     }
   }
 
@@ -164,10 +160,6 @@ class _ExecutionWorkPackagesScreenState
 
   Color _classificationColor(String cls) {
     return _classificationColorMap[cls] ?? const Color(0xFF6B7280);
-  }
-
-  String _classificationLabel(String cls) {
-    return _classificationDisplayLabel(cls);
   }
 
   String _classificationFullLabel(String cls) {
@@ -507,15 +499,15 @@ class _ExecutionWorkPackagesScreenState
       );
       setState(() {});
       _showInfo('Work package deleted.');
-    }      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
+      if (!mounted) return;
+      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
+    }
   }
 
   Future<void> _showWorkPackageDetail(WorkPackage wp) async {
     final data = _getData();
     final activities =
         data.scheduleActivities.where((a) => a.workPackageId == wp.id).toList();
-    final contracts = _contractsForPackage(wp);
-    final procItems = _procurementItemsForPackage(wp);
 
     if (!mounted) return;
     await showDialog(
@@ -542,12 +534,12 @@ class _ExecutionWorkPackagesScreenState
               dataUpdater: (d) => d.copyWith(workPackages: updated),
               showSnackbar: false,
             );
-            if (mounted) {
+            if (ctx.mounted) {
               setState(() {});
               _showInfo('EWP "${wp.title}" released for execution.');
             }
           } on StateError catch (e) {
-            Navigator.of(ctx).pop();
+            if (ctx.mounted) Navigator.of(ctx).pop();
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(e.message), backgroundColor: Colors.red),
@@ -570,7 +562,7 @@ class _ExecutionWorkPackagesScreenState
     String contractType = 'Fixed Price';
     String paymentType = 'Lump Sum';
 
-    final result = await showDialog<bool>(
+    await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Link Contract to Work Package'),
@@ -687,12 +679,12 @@ class _ExecutionWorkPackagesScreenState
                     dataUpdater: (d) => d.copyWith(workPackages: updated),
                     showSnackbar: false,
                   );
-                  if (mounted) {
+                  if (ctx.mounted) {
                     setState(() {});
                     _loadLinkedData();
                   }
                 }
-                Navigator.of(ctx).pop(true);
+                if (ctx.mounted) Navigator.of(ctx).pop(true);
                 _showInfo('Contract "$name" created and linked.');
               } catch (e) {
                 if (mounted) {

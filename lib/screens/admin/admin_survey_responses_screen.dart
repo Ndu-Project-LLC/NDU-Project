@@ -53,11 +53,6 @@ class _AdminSurveyResponsesScreenState
   /// Free-text search across email / display name / position / country.
   String _searchQuery = '';
 
-  /// Cached snapshot of the most recent Cloud Function response. Used by
-  /// the CSV export bar so the admin can export the currently-filtered
-  /// rows without re-fetching.
-  List<_SurveyRow> _lastAllRows = const [];
-
   /// The active fetch future. Replaced by [_refresh] when the admin
   /// clicks the refresh button.
   late Future<List<_SurveyRow>> _fetchFuture;
@@ -95,7 +90,6 @@ class _AdminSurveyResponsesScreenState
       if (tb == null) return -1;
       return tb.compareTo(ta);
     });
-    _lastAllRows = rows;
     return rows;
   }
 

@@ -23,7 +23,7 @@ void main() {
   });
 
   group('collectRiskCostLines', () {
-    final exposure = defaultMatrixCellExposure;
+    const exposure = defaultMatrixCellExposure;
 
     test('stated amount wins over the matrix cell', () {
       final lines = collectRiskCostLines(

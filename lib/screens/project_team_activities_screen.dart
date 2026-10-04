@@ -40,7 +40,6 @@ class _ProjectTeamActivitiesScreenState
   int _totalStaff = 0;
   int _totalRoles = 0;
   int _upcomingMeetings = 0;
-  final int _activeTrainings = 0;
 
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
 

@@ -147,15 +147,15 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
 
     final totalPoints = workItems.fold<int>(
       0,
-      (sum, item) =>
-          sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
+      (total, item) =>
+          total + AgileProjectContextHelper.estimateStoryPoints(item.title),
     );
     final completedPoints = workItems
         .where((item) => item.status == 'Done' || item.status == 'In Review')
         .fold<int>(
           0,
-          (sum, item) =>
-              sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
+          (total, item) =>
+              total + AgileProjectContextHelper.estimateStoryPoints(item.title),
         );
     _predictability = totalPoints == 0 ? 0.75 : completedPoints / totalPoints;
     _leadTime = math.max(2, workItems.length / 2).toDouble();

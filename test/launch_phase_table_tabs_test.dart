@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/contract_close_out_screen.dart';
-import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 
 /// Hosts [LaunchPhaseTableTabs] at a desktop viewport and records which bodies

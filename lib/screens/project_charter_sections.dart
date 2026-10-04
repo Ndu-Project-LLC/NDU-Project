@@ -755,7 +755,8 @@ class CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  if (result == null) return;
 
  // Persist the sponsor assignment to Firestore via ProjectDataHelper
- try {
+if (!mounted) return;
+  try {
  await ProjectDataHelper.updateAndSave(
  context: context,
  checkpoint: 'project_charter',
@@ -812,7 +813,7 @@ class CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
          .limit(200)
          .get();
      allUsers = snap.docs.map((d) => UserModel.fromJson(d.data())).toList();
-     final existingEmail = (data.charterEmail ?? '').trim().toLowerCase();
+     final existingEmail = (data.charterEmail).trim().toLowerCase();
      final existingName = data.charterProjectManagerName.trim();
      if (existingEmail.isNotEmpty && existingName.isNotEmpty) {
        final invSnap = await FirebaseFirestore.instance
@@ -826,7 +827,8 @@ class CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
      debugPrint('Manager users load failed: $e');
    }
 
-   final result = await showDialog<Map<String, String>>(
+if (!mounted) return;
+      final result = await showDialog<Map<String, String>>(
      context: context,
      builder: (dialogContext) {
        return StatefulBuilder(
@@ -876,13 +878,13 @@ class CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
                        if (q.isEmpty) return allUsers;
                        return allUsers.where((u) {
                          final name = u.displayName.toLowerCase();
-                         final email = (u.email ?? '').toLowerCase();
+                         final email = (u.email).toLowerCase();
                          return name.contains(q) || email.contains(q);
                        });
                      },
                      onSelected: (selection) {
                        nameController.text = selection.displayName;
-                       emailController.text = selection.email ?? '';
+                       emailController.text = selection.email;
                        setDialogState(() {});
                      },
                      fieldViewBuilder:
@@ -942,7 +944,7 @@ class CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
                                      ),
                                    ),
                                    title: Text(u.displayName),
-                                   subtitle: Text(u.email ?? ''),
+                                   subtitle: Text(u.email),
                                    onTap: () => onSelected(u),
                                  );
                                },
@@ -1037,7 +1039,7 @@ class CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
                              'toEmail': emailController.text.trim(),
                              'toName': nameController.text.trim(),
                              'managerName': nameController.text.trim(),
-                             'projectName': data.projectName ?? '',
+                             'projectName': data.projectName,
                              'projectId': (data.projectId ?? '').trim(),
                              'resend': wasPreviouslyInvited,
                            });
@@ -1060,6 +1062,7 @@ class CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
                      } catch (e) {
                        if (!dialogContext.mounted) return;
                        Navigator.of(dialogContext).pop();
+                       if (!mounted) return;
                        ScaffoldMessenger.of(context).showSnackBar(
                          SnackBar(
                            content: Text('Failed to assign manager: $e'),
@@ -1436,7 +1439,7 @@ class CharterFinancialOverview extends StatelessWidget {
  }
 
  final total =
- segments.fold<double>(0.0, (sum, segment) => sum + segment.amount);
+ segments.fold<double>(0.0, (total, segment) => total + segment.amount);
  final currency =
  NumberFormat.compactSimpleCurrency(name: data.costBenefitCurrency);
 
@@ -1543,11 +1546,11 @@ class CharterFinancialOverview extends StatelessWidget {
 
  final categoryTotals = <String, double>{
  'Allowances': data.frontEndPlanning.allowanceItems
- .fold<double>(0.0, (sum, item) => sum + item.amount),
+ .fold<double>(0.0, (total, item) => total + item.amount),
  'Contracting': data.contractors
- .fold<double>(0.0, (sum, item) => sum + item.estimatedCost),
+ .fold<double>(0.0, (total, item) => total + item.estimatedCost),
  'Procurement': data.vendors
- .fold<double>(0.0, (sum, item) => sum + item.estimatedPrice),
+ .fold<double>(0.0, (total, item) => total + item.estimatedPrice),
  };
 
  var colorIndex = 0;
@@ -1564,8 +1567,8 @@ class CharterFinancialOverview extends StatelessWidget {
 
  final costAnalysisTotal = data.costAnalysisData?.solutionCosts.fold<double>(
  0.0,
- (sum, solution) =>
- sum +
+ (total, solution) =>
+ total +
  solution.costRows.fold<double>(0.0,
  (rowSum, row) => rowSum + (double.tryParse(row.cost) ?? 0.0)),
  ) ??
@@ -3208,7 +3211,7 @@ class _CharterFloatingApprovalBarState
     final data = widget.data;
     if (data == null) return null;
     final isApproved = data.charterApprovalDate != null ||
-        (data.frontEndPlanning.charterApproved ?? false);
+        (data.frontEndPlanning.charterApproved);
     if (isApproved) return null;
 
     final hasApproverEmail = _resolved.hasEmail;

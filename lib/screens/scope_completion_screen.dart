@@ -3154,10 +3154,6 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
   }
 
-  void _addCheckpoint() {
-    _showCheckpointDialog();
-  }
-
   void _updateCheckpoint(_CheckpointItem item, {bool notify = false}) {
     final index =
         _acceptanceCheckpoints.indexWhere((entry) => entry.id == item.id);
@@ -3176,10 +3172,6 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       showDeleteSuccessSnackBar(context, itemLabel: 'Checkpoint');
   }
 
-  void _addAcceptanceTag() {
-    _showAcceptanceTagDialog();
-  }
-
   void _updateAcceptanceTag(_AcceptanceTagItem item, {bool notify = false}) {
     final index = _acceptanceTags.indexWhere((entry) => entry.id == item.id);
     if (index == -1) return;
@@ -3194,10 +3186,6 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
     setState(() => _acceptanceTags.removeWhere((entry) => entry.id == id));
     _scheduleSave();
       showDeleteSuccessSnackBar(context, itemLabel: 'Acceptance Tag');
-  }
-
-  void _addScopeChange() {
-    _showScopeChangeDialog();
   }
 
   void _updateScopeChange(_ScopeChangeItem item, {bool notify = false}) {

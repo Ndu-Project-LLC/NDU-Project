@@ -55,7 +55,7 @@ class CsvValidationResult {
     required this.validRows,
   });
 
-  /// Parsed row data as List of Map<columnKey, stringValue>
+  /// Parsed row data as List of `Map<columnKey, stringValue>`
   final List<Map<String, String>> rows;
 
   /// Validation errors — each has row index and message

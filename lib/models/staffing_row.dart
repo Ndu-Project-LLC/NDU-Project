@@ -1,4 +1,5 @@
 /// Model for a staffing requirement row in the Staff Team Orchestration page
+library;
 import 'package:ndu_project/utils/unique_id.dart';
 
 class StaffingRow {

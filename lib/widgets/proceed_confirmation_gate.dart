@@ -25,6 +25,7 @@ Future<bool> showProceedWithoutReviewDialog(
   bool confirmChecked = false;
   bool skipFuture = false;
 
+  if (!context.mounted) return false;
   final result = await showDialog<bool>(
     context: context,
     barrierDismissible: false,

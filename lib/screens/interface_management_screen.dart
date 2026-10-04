@@ -1193,7 +1193,8 @@ class _InterfaceRegisterRow extends StatelessWidget {
     );
     if (confirm != true) return;
 
-    final data = ProjectDataHelper.getData(context);
+        if (!context.mounted) return;
+        final data = ProjectDataHelper.getData(context);
     final entryToDelete = data.interfaceEntries.where((e) => e.id == id).firstOrNull;
 if (entryToDelete == null) return;
 final entries = data.interfaceEntries.where((e) => e.id != id).toList();
@@ -1208,7 +1209,8 @@ final entries = data.interfaceEntries.where((e) => e.id != id).toList();
       oldValue: entryToDelete.boundary,
       changedAt: DateTime.now().toIso8601String(),
     ));
-    await ProjectDataHelper.updateAndSave(
+        if (!context.mounted) return;
+        await ProjectDataHelper.updateAndSave(
       context: context,
       checkpoint: 'interface_management',
       dataUpdater: (d) => d.copyWith(
@@ -1217,7 +1219,8 @@ final entries = data.interfaceEntries.where((e) => e.id != id).toList();
       ),
       showSnackbar: false,
     );
-      showDeleteSuccessSnackBar(context, itemLabel: 'Entry');
+            if (!context.mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Entry');
   }
 }
 
@@ -1234,7 +1237,9 @@ class _InterfaceEntryDialog extends StatefulWidget {
 
   static void show(
       BuildContext context, InterfaceEntry? initial, List<String> suggested) {
-    showDialog<InterfaceEntry>(
+        if (!context.mounted) return;
+        if (!context.mounted) return;
+        showDialog<InterfaceEntry>(
       context: context,
       builder: (_) => _InterfaceEntryDialog(
         initial: initial,
@@ -1242,6 +1247,7 @@ class _InterfaceEntryDialog extends StatefulWidget {
       ),
     ).then((result) {
       if (result == null) return;
+      if (!context.mounted) return;
       final data = ProjectDataHelper.getData(context);
       final entries = List<InterfaceEntry>.from(data.interfaceEntries);
       final logEntries =
@@ -1296,6 +1302,7 @@ class _InterfaceEntryDialog extends StatefulWidget {
           }
         }
       }
+      if (!context.mounted) return;
       ProjectDataHelper.updateAndSave(
         context: context,
         checkpoint: 'interface_management',
@@ -4053,31 +4060,6 @@ class _SectionSubcard extends StatelessWidget {
           const SizedBox(height: 12),
           child,
         ],
-      ),
-    );
-  }
-}
-
-class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon}) : onTap = null;
-
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
       ),
     );
   }

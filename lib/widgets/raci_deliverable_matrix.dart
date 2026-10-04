@@ -98,10 +98,6 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
     return out;
   }
 
-  String _personFor(ProjectDataModel data, String roleTitle) {
-    return RaciAssignmentService.personForRole(roleTitle, data.staffingRequirements);
-  }
-
   // ─── Mutations ─────────────────────────────────────────────────────
   Future<void> _seedMatrix(BuildContext context) async {
     setState(() => _isSeeding = true);
@@ -114,7 +110,7 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
         dataUpdater: (d) => d.copyWith(raciDeliverableRows: rows),
         showSnackbar: false,
       );
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -140,7 +136,7 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
         dataUpdater: (d) => d.copyWith(raciDeliverableRows: rows),
         showSnackbar: false,
       );
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -169,7 +165,7 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
         dataUpdater: (d) => d.copyWith(raciDeliverableRows: rows),
         showSnackbar: false,
       );
-      if (mounted) {
+      if (context.mounted) {
         final roleCount = _columns(data).length;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -267,13 +263,15 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
       ),
     );
     if (confirmed != true) return;
-    final data = _data(context);
+if (!context.mounted) return;
+        final data = _data(context);
     final rows = List<RaciDeliverableRow>.from(data.raciDeliverableRows);
     final idx = rows.indexWhere((r) => r.id == row.id);
     if (idx == -1) return;
     rows[idx] = rows[idx].copyWith(assignments: <String, String>{});
     final approval = data.raciApprovalStatus.copyWith(isApproved: false);
-    await ProjectDataHelper.updateAndSave(
+if (!context.mounted) return;
+        await ProjectDataHelper.updateAndSave(
       context: context,
       checkpoint: 'organization_raci_matrix',
       dataUpdater: (d) => d.copyWith(
@@ -428,13 +426,14 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
       approvedAt: DateTime.now(),
       confirmationText: approval.confirmationText,
     );
-    await ProjectDataHelper.updateAndSave(
+if (!context.mounted) return;
+        await ProjectDataHelper.updateAndSave(
       context: context,
       checkpoint: 'organization_raci_matrix',
       dataUpdater: (d) => d.copyWith(raciApprovalStatus: newApproval),
       showSnackbar: false,
     );
-    if (mounted) {
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -469,10 +468,12 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
       ),
     );
     if (confirmed != true) return;
-    final data = _data(context);
+if (!context.mounted) return;
+        final data = _data(context);
     final newApproval =
         data.raciApprovalStatus.copyWith(isApproved: false);
-    await ProjectDataHelper.updateAndSave(
+if (!context.mounted) return;
+        await ProjectDataHelper.updateAndSave(
       context: context,
       checkpoint: 'organization_raci_matrix',
       dataUpdater: (d) => d.copyWith(raciApprovalStatus: newApproval),
@@ -905,7 +906,8 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
       ),
     );
     if (result == null) return;
-    await _setCell(context, row, roleKey, result);
+if (!context.mounted) return;
+        await _setCell(context, row, roleKey, result);
   }
 
   Future<void> _showRowMenu(
@@ -952,9 +954,13 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
         ),
       ),
     );
-    if (action == 'bulk') {
+if (!mounted) return;
+    if (!mounted) return;
+    if (!context.mounted) return;
+        if (action == 'bulk') {
       final designation = await _pickDesignationForBulk(context);
       if (designation == null) return;
+      if (!context.mounted) return;
       await _setRowDesignation(context, row, designation);
     } else if (action == 'clear') {
       await _clearRow(context, row);

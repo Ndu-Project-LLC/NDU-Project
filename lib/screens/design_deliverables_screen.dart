@@ -42,7 +42,6 @@ class DesignDeliverablesScreen extends StatefulWidget {
 class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
  DesignDeliverablesData _data = const DesignDeliverablesData();
  bool _loading = false;
- String? _error;
  final _saveDebouncer = _Debouncer();
  bool _saving = false;
  bool _frameworkGuideExpanded = false;
@@ -171,7 +170,6 @@ class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
 
  setState(() {
  _loading = true;
- _error = null;
  });
 
  try {
@@ -206,7 +204,6 @@ class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
  if (mounted) {
  setState(() {
  _loading = false;
- _error = 'Failed to load data: $e';
  });
  }
  }
@@ -296,7 +293,6 @@ class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
  if (mounted) {
  setState(() {
  _loading = false;
- _error = null;
  });
  }
  if (!silentFallback) {
@@ -306,7 +302,6 @@ class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
  }
  setState(() {
  _loading = true;
- _error = null;
  });
  try {
  final data = ProjectDataHelper.getData(context);
@@ -339,7 +334,6 @@ class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
  if (!mounted) return;
  setState(() {
  _loading = false;
- _error = 'Unable to generate content. Please try again later.';
  _data = const DesignDeliverablesData();
  });
  }

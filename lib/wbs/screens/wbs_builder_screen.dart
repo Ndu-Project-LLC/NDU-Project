@@ -94,7 +94,7 @@ class _TopDownConnectorPainter extends CustomPainter {
       ..strokeCap = StrokeCap.square;
 
     final centerX = size.width / 2;
-    final railY = _SimpleDiagram.topDownDrop;
+    const railY = _SimpleDiagram.topDownDrop;
     // Parent stub: from the parent card's bottom edge (the band sits flush
     // under it) down to the rail.
     canvas.drawLine(Offset(centerX, 0), Offset(centerX, railY), paint);
@@ -106,9 +106,9 @@ class _TopDownConnectorPainter extends CustomPainter {
     }
 
     // Rail across every child slot's centre, then a stub down into each card.
-    final firstX = _SimpleDiagram.slotWidth / 2;
+    const firstX = _SimpleDiagram.slotWidth / 2;
     final lastX = size.width - _SimpleDiagram.slotWidth / 2;
-    canvas.drawLine(Offset(firstX, railY), Offset(lastX, railY), paint);
+    canvas.drawLine(const Offset(firstX, railY), Offset(lastX, railY), paint);
     for (int i = 0; i < childSlots.length; i++) {
       final x = _SimpleDiagram.slotWidth * (i + childSlots[i] / 2);
       canvas.drawLine(Offset(x, railY), Offset(x, size.height), paint);
@@ -833,10 +833,10 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
           parentColumn,
           // Parent link: drawn in its own stretched box so it runs from the
           // parent card's right edge into the rows' spine with no gap.
-          SizedBox(
+          const SizedBox(
             width: _SimpleDiagram.leftRightBandWidth,
             child: CustomPaint(
-              painter: const _LeftRightParentStubPainter(),
+              painter: _LeftRightParentStubPainter(),
             ),
           ),
           Column(
@@ -2111,7 +2111,7 @@ Guidelines:
       if (!mounted) return;
 
       if (result.trim().isEmpty) {
-        if (mounted) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('KAZ AI returned empty result'),
@@ -2129,7 +2129,7 @@ Guidelines:
           .toList();
 
       if (lines.isEmpty) {
-        if (mounted) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Could not parse KAZ AI output'),
@@ -2153,7 +2153,7 @@ Guidelines:
         }
       }
 
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('KAZ AI added $added ${fm.level1Label} node(s)'),
@@ -2162,7 +2162,7 @@ Guidelines:
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('KAZ AI error: ${aiErrorMessage(e)}'),

@@ -49,7 +49,6 @@ class _TransitionToProdTeamScreenState
 
   bool _isLoading = true;
   bool _isGenerating = false;
-  bool _isExporting = false;
   bool _hasLoaded = false;
   bool _suspendSave = false;
   final Map<String, bool> _kazAiRegenerating = {};
@@ -681,7 +680,8 @@ class _TransitionToProdTeamScreenState
     if (!confirmed) return;
     setState(() => _teamRoster.removeAt(idx));
     _scheduleSave();
-      showDeleteSuccessSnackBar(context, itemLabel: 'Team Member');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Team Member');
   }
 
   Future<void> _deleteHandoverItem(int idx) async {
@@ -692,7 +692,8 @@ class _TransitionToProdTeamScreenState
     if (!confirmed) return;
     setState(() => _handoverChecklist.removeAt(idx));
     _scheduleSave();
-      showDeleteSuccessSnackBar(context, itemLabel: 'Handover Item');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Handover Item');
   }
 
   Future<void> _deleteKnowledgeTransfer(int idx) async {
@@ -703,7 +704,8 @@ class _TransitionToProdTeamScreenState
     if (!confirmed) return;
     setState(() => _knowledgeTransfers.removeAt(idx));
     _scheduleSave();
-      showDeleteSuccessSnackBar(context, itemLabel: 'Knowledge Transfer');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Knowledge Transfer');
   }
 
   Future<void> _deleteApproval(int idx) async {
@@ -714,7 +716,8 @@ class _TransitionToProdTeamScreenState
     if (!confirmed) return;
     setState(() => _signOffs.removeAt(idx));
     _scheduleSave();
-      showDeleteSuccessSnackBar(context, itemLabel: 'Approval');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Approval');
   }
 
   void _scheduleSave() {
@@ -907,10 +910,9 @@ class _TransitionToProdTeamScreenState
   }
 
   Future<void> _exportPdf() async {
-    setState(() => _isExporting = true);
     try {
       final projectData = ProjectDataHelper.getData(context);
-      final projectName = projectData.projectName ?? 'Project';
+      final projectName = projectData.projectName;
       final now = DateTime.now();
       final stamp =
           '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
@@ -940,7 +942,7 @@ class _TransitionToProdTeamScreenState
             if (_teamRoster.isEmpty)
               _pdfCell('No team members recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Name', 'Role', 'Contact', 'Status'],
                 data: _teamRoster
                     .map((m) => [m.name, m.role, m.contact, m.releaseStatus])
@@ -960,7 +962,7 @@ class _TransitionToProdTeamScreenState
             if (_handoverChecklist.isEmpty)
               _pdfCell('No handover items recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Category', 'Item', 'Owner', 'Status'],
                 data: _handoverChecklist
                     .map((h) => [h.category, h.item, h.owner, h.status])
@@ -980,7 +982,7 @@ class _TransitionToProdTeamScreenState
             if (_knowledgeTransfers.isEmpty)
               _pdfCell('No knowledge transfers recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Topic', 'From', 'To', 'Method', 'Status'],
                 data: _knowledgeTransfers
                     .map((k) =>
@@ -1001,7 +1003,7 @@ class _TransitionToProdTeamScreenState
             if (_signOffs.isEmpty)
               _pdfCell('No sign-offs recorded.')
             else
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: ['Stakeholder', 'Role', 'Status'],
                 data: _signOffs
                     .map((s) => [s.stakeholder, s.role, s.status])
@@ -1025,8 +1027,6 @@ class _TransitionToProdTeamScreenState
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('PDF export failed: ${e.toString()}')));
       }
-    } finally {
-      if (mounted) setState(() => _isExporting = false);
     }
   }
 
@@ -1034,14 +1034,6 @@ class _TransitionToProdTeamScreenState
     return pw.Text(title,
         style:
             pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold));
-  }
-
-  pw.Widget _pdfHeaderCell(String text) {
-    return pw.Padding(
-        padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(text,
-            style: pw.TextStyle(
-                fontSize: 9, fontWeight: pw.FontWeight.bold)));
   }
 
   pw.Widget _pdfCell(String text) {

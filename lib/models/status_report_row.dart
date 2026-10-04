@@ -1,4 +1,5 @@
 /// Model for a status report row in Progress Tracking
+library;
 import 'package:ndu_project/utils/unique_id.dart';
 
 class StatusReportRow {

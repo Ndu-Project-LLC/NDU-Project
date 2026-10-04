@@ -113,7 +113,7 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  PdfSection.keyValue('Project Info', [
  {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
  ],
  );
  }
@@ -303,7 +303,7 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  String _computeCharterSourceHash(ProjectDataModel data) {
  final fep = data.frontEndPlanning;
  final buffer = StringBuffer()
- ..write(data.projectName ?? '')
+ ..write(data.projectName)
  ..write('|')
  ..write(data.projectObjective)
  ..write('|')

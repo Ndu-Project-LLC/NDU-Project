@@ -89,7 +89,7 @@ class _FrontEndPlanningRisksScreenState
  PdfSection.keyValue('Project Info', [
  {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
  // The risk log itself. The export used to print only Project Info and Notes,
  // so the table "didn't show anything" (Lusaka 27).
  if (fep.riskRegisterItems.isNotEmpty)
@@ -1258,34 +1258,6 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  _riskTableErrorText = null;
  }
 
- Future<void> _focusFirstRiskIssue(FormValidationResult validation) async {
- await FormValidationEngine.scrollToFirstIssue(validation);
- final issue = validation.firstIssue;
- if (issue == null) return;
-
- if (issue.id == 'risk_title') {
- if (_rows.isEmpty) {
- _addNewRisk();
- return;
- }
-
- final firstMissingTitle =
- _rows.indexWhere((row) => row.risk.trim().isEmpty);
- if (firstMissingTitle != -1) {
- _showEditRiskSheet(firstMissingTitle);
- }
- return;
- }
-
- if (issue.id == 'mitigation_strategy') {
- final firstMissingMitigation = _rows.indexWhere(
- (row) => row.risk.trim().isNotEmpty && row.mitigation.trim().isEmpty);
- if (firstMissingMitigation != -1) {
- _showEditRiskSheet(firstMissingMitigation);
- }
- }
- }
-
  Future<void> _saveAndNavigateToOpportunities({
  bool skippedValidation = false,
  }) async {
@@ -2083,7 +2055,6 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  }
 
 	Widget _buildRiskTableContent([List<_RiskItem>? rowsOverride, bool locked = false]) {
-		final rowsSource = rowsOverride ?? _rows;
  const border = BorderSide(color: Color(0xFFE5E7EB));
  const headerStyle = TextStyle(
  fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));

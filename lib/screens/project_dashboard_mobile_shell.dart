@@ -164,49 +164,6 @@ class _ProjectDashboardMobileShellState
  context.push('/portfolio-dashboard');
  }
 
- Future<void> _handleLogout() async {
- final shouldLogout = await showDialog<bool>(
- context: context,
- builder: (dialogContext) => AlertDialog(
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
- title: const Text('Confirm Log Out'),
- content: const Text('Are you sure you want to log out?'),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(false),
- child: const Text('Cancel'),
- ),
- ElevatedButton(
- onPressed: () => Navigator.of(dialogContext).pop(true),
- style: ElevatedButton.styleFrom(
- backgroundColor: _Tokens.error,
- foregroundColor: Colors.white,
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- ),
- child: const Text('Log Out'),
- ),
- ],
- ),
- );
-
- if (shouldLogout == true && mounted) {
- try {
- await FirebaseAuthService.signOut();
- if (mounted) context.go('/');
- } catch (e) {
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Error logging out: $e'),
- backgroundColor: Colors.red,
- ),
- );
- }
- }
- }
- }
-
  // ─── Stat card matching the HTML 2×2 grid ───────────────────────────────
  Widget _statCard({
  required String label,

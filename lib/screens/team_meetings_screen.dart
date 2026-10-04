@@ -122,7 +122,8 @@ class _TeamMeetingsScreenState extends State<TeamMeetingsScreen> {
 
  _autoGenerationTriggered = true;
  _isAutoGenerating = true;
- try {
+if (!mounted) return;
+  try {
  final contextText =
  ExecutionPhaseAiSeed.buildContext(context, section: 'Team Meetings');
  final ai = OpenAiServiceSecure();
@@ -135,6 +136,7 @@ class _TeamMeetingsScreenState extends State<TeamMeetingsScreen> {
  )
  : _meetingRows;
 
+  if (!mounted) return;
  final generatedEntries = await ExecutionPhaseAiSeed.generateEntries(
  context: context,
  section: 'Team Meetings',
@@ -287,29 +289,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  ),
  ),
- );
- }
-
- Widget _buildHeader(BuildContext context) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Meeting Intelligence Hub',
- style: TextStyle(
- fontSize: 24,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827)),
- ),
- const SizedBox(height: 6),
- Text(
- _loading ? 'Execution Phase · Loading...' : 'Execution Phase',
- style: Theme.of(context).textTheme.bodyMedium?.copyWith(
- color: const Color(0xFF4B5563),
- height: 1.5,
- ),
- ),
- ],
  );
  }
 

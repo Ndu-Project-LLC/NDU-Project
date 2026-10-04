@@ -45,7 +45,6 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
   bool _loadingData = false;
   bool _autoPopulated = false;
   bool _isAutoPopulating = false;
-  String? _carriedContext;
 
   @override
   void initState() {
@@ -64,10 +63,6 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
 
     try {
       final data = ProjectDataHelper.getData(context);
-
-      // Pull real carried context for display in the banner.
-      final carried = await buildAccumulatedContext(context, 'security_management');
-      if (mounted) setState(() => _carriedContext = carried);
 
       // If roles already exist (either in memory or Firestore), do nothing.
       if (_roles.isNotEmpty) {

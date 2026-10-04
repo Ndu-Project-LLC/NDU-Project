@@ -546,12 +546,12 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           children: [
             DraggableSidebar(
               openWidth: AppBreakpoints.sidebarWidth(context),
-              child: InitiationLikeSidebar(activeItemLabel: activeSidebarLabel),
+              child: const InitiationLikeSidebar(activeItemLabel: activeSidebarLabel),
             ),
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
+                  const MobileSidebarHamburger(
                     sidebar: InitiationLikeSidebar(
                         activeItemLabel: activeSidebarLabel),
                   ),
@@ -772,39 +772,6 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
             ),
           ),
         ],
-      ],
-    );
-  }
-
-  Widget _buildMetricsTab() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF8E1),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFFDE68A)),
-          ),
-          child: const Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.insights, size: 18, color: Color(0xFFFFC812)),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Define how delivery progress, throughput, predictability, '
-                  'and quality will be measured and reported across the project.',
-                  style: TextStyle(fontSize: 13, color: Color(0xFFFFC812)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        ..._metricsFields.map((f) => _buildField(f)),
       ],
     );
   }

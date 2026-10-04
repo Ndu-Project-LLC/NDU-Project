@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/screens/front_end_planning_risks_screen.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -15,8 +14,6 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
-import 'package:ndu_project/services/firebase_auth_service.dart';
-import 'package:ndu_project/services/project_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
@@ -82,12 +79,6 @@ class _FrontEndPlanningRequirementsScreenState
   String? _initialGenerationError;
   List<_AssignableMember> _memberOptions = const <_AssignableMember>[];
 
-  static const Set<String> _authorizedRequirementSubmitRoles = {
-    'owner',
-    'project manager',
-    'technical manager',
-  };
-
   // Start with a single requirement row; additional rows are added via "Add another"
   final List<_RequirementRow> _rows = [];
 
@@ -117,7 +108,7 @@ class _FrontEndPlanningRequirementsScreenState
         PdfSection.keyValue('Project Info', [
           {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
-        PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+        PdfSection.text('Notes', fep.requirementsNotes),
       ],
     );
   }
@@ -2029,23 +2020,8 @@ class _FrontEndPlanningRequirementsScreenState
 
     // Update provider state and Firebase
     _commitAutoSave(showSnack: false);
-      showDeleteSuccessSnackBar(context, itemLabel: 'Item');
-  }
-
-  Widget _th(String text, TextStyle style) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Center(
-        child: EditableContentText(
-          contentKey:
-              'fep_req_header_${text.toLowerCase().replaceAll(' ', '_')}',
-          fallback: text,
-          category: 'front_end_planning',
-          style: style,
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Item');
   }
 
   List<CsvColumnSpec> get _csvColumns => [
@@ -2266,7 +2242,8 @@ class _FrontEndPlanningRequirementsScreenState
     if (!continueAnyway) return;
 
     final requirementItems = _buildRequirementItems();
-    if (requirementItems.isEmpty) {
+if (!mounted) return;
+        if (requirementItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Add at least one requirement before submitting.'),
@@ -2290,7 +2267,8 @@ class _FrontEndPlanningRequirementsScreenState
       }
     }
 
-    if (missingAssignmentRows.isNotEmpty) {
+if (!mounted) return;
+        if (missingAssignmentRows.isNotEmpty) {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
@@ -2312,7 +2290,8 @@ class _FrontEndPlanningRequirementsScreenState
       );
     }
 
-    if (missingPhaseRows.isNotEmpty) {
+if (!mounted) return;
+        if (missingPhaseRows.isNotEmpty) {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
@@ -2597,108 +2576,6 @@ class _FrontEndPlanningRequirementsScreenState
     final union = tokensA.union(tokensB).length.toDouble();
     if (union == 0) return 0;
     return intersection / union;
-  }
-
-  Future<String> _resolveCurrentUserRoleForRequirementsSubmit() async {
-    var resolvedRole = 'Member';
-
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      final provider = ProjectDataHelper.getProvider(context);
-      final data = provider.projectData;
-      final email = user?.email?.trim().toLowerCase() ?? '';
-      final uid = user?.uid ?? '';
-      final displayName =
-          FirebaseAuthService.displayNameOrEmail(fallback: '').trim();
-
-      if (UserService.isAdminEmail(email)) {
-        resolvedRole = 'Owner';
-      }
-
-      final projectId = data.projectId?.trim() ?? '';
-      if (projectId.isNotEmpty && uid.isNotEmpty) {
-        final project = await ProjectService.getProjectById(projectId);
-        if (project != null) {
-          final ownerEmail = project.ownerEmail.trim().toLowerCase();
-          if (project.ownerId == uid ||
-              (email.isNotEmpty && ownerEmail == email)) {
-            resolvedRole = 'Owner';
-          }
-        }
-      }
-
-      if (!_isRoleAuthorizedForRequirementSubmit(resolvedRole)) {
-        for (final member in data.teamMembers) {
-          final memberEmail = member.email.trim().toLowerCase();
-          final memberName = member.name.trim().toLowerCase();
-          final role = member.role.trim();
-          final matchesByEmail = email.isNotEmpty &&
-              memberEmail.isNotEmpty &&
-              memberEmail == email;
-          final matchesByName = displayName.isNotEmpty &&
-              memberName.isNotEmpty &&
-              (memberName == displayName.toLowerCase() ||
-                  memberName.contains(displayName.toLowerCase()) ||
-                  displayName.toLowerCase().contains(memberName));
-          if ((matchesByEmail || matchesByName) && role.isNotEmpty) {
-            resolvedRole = role;
-            break;
-          }
-        }
-      }
-
-      if (!_isRoleAuthorizedForRequirementSubmit(resolvedRole)) {
-        final pmName = data.charterProjectManagerName.trim();
-        if (_matchesIdentity(pmName, displayName, email)) {
-          resolvedRole = 'Project Manager';
-        }
-      }
-    } catch (e) {
-      debugPrint('Failed to resolve submitter role for requirements: $e');
-    }
-
-    return resolvedRole;
-  }
-
-  bool _matchesIdentity(String candidate, String displayName, String email) {
-    final normalizedCandidate = candidate.trim().toLowerCase();
-    if (normalizedCandidate.isEmpty) return false;
-
-    final normalizedDisplay = displayName.trim().toLowerCase();
-    final emailLocal = email.contains('@')
-        ? email.split('@').first.trim().toLowerCase()
-        : email.trim().toLowerCase();
-
-    if (normalizedDisplay.isNotEmpty) {
-      if (normalizedCandidate == normalizedDisplay) return true;
-      if (normalizedDisplay.contains(normalizedCandidate) ||
-          normalizedCandidate.contains(normalizedDisplay)) {
-        return true;
-      }
-    }
-
-    if (emailLocal.isNotEmpty) {
-      if (normalizedCandidate == emailLocal) return true;
-      if (emailLocal.contains(normalizedCandidate) ||
-          normalizedCandidate.contains(emailLocal)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  String _normalizeRole(String role) {
-    final lower = role.trim().toLowerCase();
-    if (lower.contains('project manager')) return 'project manager';
-    if (lower.contains('technical manager')) return 'technical manager';
-    if (lower.contains('founder')) return 'owner';
-    if (lower.contains('owner')) return 'owner';
-    return lower;
-  }
-
-  bool _isRoleAuthorizedForRequirementSubmit(String role) {
-    return _authorizedRequirementSubmitRoles.contains(_normalizeRole(role));
   }
 
   void _handleNotesChanged() {

@@ -177,8 +177,8 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
         .length;
     _velocity = workItems.fold<int>(
       0,
-      (sum, item) =>
-          sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
+      (total, item) =>
+          total + AgileProjectContextHelper.estimateStoryPoints(item.title),
     );
     _sprintTotalDays = 10;
     _sprintDay = (_storiesCompleted == 0

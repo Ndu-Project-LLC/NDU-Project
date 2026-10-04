@@ -1,4 +1,5 @@
 /// Model for an agile task/user story in Agile Development Iterations page
+library;
 import 'package:ndu_project/utils/unique_id.dart';
 
 class AgileTask {

@@ -10,7 +10,6 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 import 'package:ndu_project/widgets/collapsible_notes_section.dart';
-const String _currencySymbol = r'$';
 
 class ScheduleManagementBoardScreen extends StatefulWidget {
  const ScheduleManagementBoardScreen({super.key});

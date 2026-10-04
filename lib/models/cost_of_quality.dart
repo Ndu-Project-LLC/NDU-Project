@@ -3,6 +3,7 @@
 ///
 /// Embedded in [ProjectDataModel] and provides the quality cost data
 /// that links to the Quality Management module.
+library;
 import 'package:ndu_project/utils/unique_id.dart';
 
 class CostOfQualityData {

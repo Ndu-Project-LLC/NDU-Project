@@ -724,7 +724,6 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
 
  Widget _buildMainContent() {
  const brandYellow = Color(0xFFFFC107);
- const gray50 = Color(0xFFF9FAFB);
  const gray200 = Color(0xFFE5E7EB);
  const gray500 = Color(0xFF6B7280);
  const gray700 = Color(0xFF374151);

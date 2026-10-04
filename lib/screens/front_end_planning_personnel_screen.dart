@@ -58,7 +58,7 @@ class _FrontEndPlanningPersonnelScreenState
  PdfSection.keyValue('Project Info', [
  {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
  ],
  );
  }
@@ -370,7 +370,8 @@ class _FrontEndPlanningPersonnelScreenState
  _rows.removeWhere((item) => item.id == row.id);
  });
  _syncRowsToProvider();
-    showDeleteSuccessSnackBar(context, itemLabel: 'Staffing Row');
+if (!mounted) return;
+        showDeleteSuccessSnackBar(context, itemLabel: 'Staffing Row');
  }
 
  double get _staffingTotal =>

@@ -9256,7 +9256,7 @@ class QualityManagementData {
   }
 }
 
-/// Parse a Map<String,String> from JSON, tolerating nested or non-string
+/// Parse a `Map<String,String>` from JSON, tolerating nested or non-string
 /// values by coercing to string. Used by QualityManagementData for the
 /// `aiInsights` field.
 Map<String, String> _parseStringMap(dynamic raw) {
@@ -9266,7 +9266,7 @@ Map<String, String> _parseStringMap(dynamic raw) {
   );
 }
 
-/// Parse a Map<String,bool> from JSON. Used by QualityManagementData for the
+/// Parse a `Map<String,bool>` from JSON. Used by QualityManagementData for the
 /// `skippedSections` and `sectionApplicability` maps.
 Map<String, bool> _parseBoolMap(dynamic raw) {
   if (raw is! Map) return <String, bool>{};

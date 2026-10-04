@@ -186,7 +186,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  PdfSection.keyValue('Project Info', [
  {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
  ],
  );
  }
@@ -3850,7 +3850,8 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  false;
 
  if (!saved) return;
- final data = ProjectDataHelper.getData(context);
+if (!mounted) return;
+  final data = ProjectDataHelper.getData(context);
  final reports = _loadContractingReports(data);
  final entry = _ContractingReportEntry(
  id: existing?.id ?? newId('report_'),
@@ -3918,75 +3919,6 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  SnackBar(content: Text('Unable to update contractor: $e')),
  );
  }
- }
-
- Future<void> _openContractorActionsDialog({
- required String name,
- required VendorModel? vendor,
- required List<ProcurementItemModel> scopes,
- }) async {
- await showDialog<void>(
- context: context,
- builder: (dialogContext) => AlertDialog(
- title: Text(name),
- content: Column(
- mainAxisSize: MainAxisSize.min,
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- vendor == null
- ? 'Status: Untracked (not yet in vendors list)'
- : 'Status: ${vendor.status}',
- style: const TextStyle(fontSize: 12.5),
- ),
- const SizedBox(height: 10),
- const Text(
- 'Actions',
- style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
- ),
- ],
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.pop(dialogContext),
- child: const Text('Close'),
- ),
- if (vendor != null) ...[
- TextButton(
- onPressed: () async {
- Navigator.pop(dialogContext);
- await _setVendorStatus(vendor, 'Approved');
- },
- child: const Text('Approve'),
- ),
- TextButton(
- onPressed: () async {
- Navigator.pop(dialogContext);
- await _setVendorStatus(vendor, 'Denied');
- },
- child: const Text('Deny', style: TextStyle(color: Colors.red)),
- ),
- ] else
- TextButton(
- onPressed: () async {
- Navigator.pop(dialogContext);
- await _openAddContractorDialog();
- },
- child: const Text('Add To Vendors'),
- ),
- TextButton(
- onPressed: () async {
- Navigator.pop(dialogContext);
- await _promptAssignContractorToScopes(
- contractorName: name,
- scopes: scopes,
- );
- },
- child: const Text('Assign to Scope'),
- ),
- ],
- ),
- );
  }
 
  List<String> _collectApprovedContractors(

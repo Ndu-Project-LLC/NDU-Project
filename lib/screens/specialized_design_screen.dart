@@ -40,7 +40,6 @@ class SpecializedDesignScreen extends StatefulWidget {
 class _SpecializedDesignScreenState extends State<SpecializedDesignScreen> {
  final _Debouncer _saveDebouncer = _Debouncer();
  bool _isLoading = false;
- String? _loadError;
 
  // Registers
  List<SecurityPatternRow> _securityRows = [];
@@ -151,7 +150,6 @@ class _SpecializedDesignScreenState extends State<SpecializedDesignScreen> {
  final data = await DesignPhaseService.instance.loadSpecializedDesign(projectId);
  final doc = await _docFor(projectId).get();
  final extra = doc.data() ?? {};
- _suspendSave = true;
  if (!mounted) return;
  final complianceRows = _ComplianceRow.fromList(extra['complianceRows']);
  final reviewGates = _ReviewGateRow.fromList(extra['reviewGates']);
@@ -167,14 +165,10 @@ class _SpecializedDesignScreenState extends State<SpecializedDesignScreen> {
  });
  } catch (e) {
  debugPrint('Error loading specialized design: $e');
- setState(() => _loadError = 'Unable to load specialized design data.');
  } finally {
- _suspendSave = false;
  if (mounted) setState(() => _isLoading = false);
  }
  }
-
- bool _suspendSave = false;
 
  Future<void> _saveToFirestore() async {
  final projectId = _projectId;

@@ -67,8 +67,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     return tabs;
   }
 
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   // ── SharedPreferences keys ──
   static const _prefLanguage = 'pref_language';
   static const _prefTimezone = 'pref_timezone';
@@ -98,16 +96,10 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _disableOpenEditor = false;
   bool _twoFactorEnabled = false;
   bool _twoFactorLoading = true;
-  bool _passwordLoginEnabled = true;
-  bool _passwordlessEmailEnabled = false;
-  bool _mfaEnabledPolicy = true;
-  MfaMethod _defaultMfaMethod = MfaMethod.authenticator;
   final Set<MfaMethod> _backupMfaMethods = {
     MfaMethod.sms,
     MfaMethod.emailCode,
   };
-  MfaRequirement _mfaRequirement = MfaRequirement.everyLogin;
-  int _rememberDeviceDays = 30;
 
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
@@ -134,21 +126,9 @@ class _SettingsScreenState extends State<SettingsScreen>
         setState(() {
           _twoFactorEnabled = enabled;
           _twoFactorLoading = false;
-          _passwordLoginEnabled = policy.passwordLoginEnabled;
-          _passwordlessEmailEnabled = policy.passwordlessEmailEnabled;
-          _mfaEnabledPolicy = policy.mfaEnabled;
-          _defaultMfaMethod = policy.defaultMfaMethod;
           _backupMfaMethods
             ..clear()
             ..addAll(policy.backupMethods);
-          _mfaRequirement = policy.requireMfaEveryLogin
-              ? MfaRequirement.everyLogin
-              : policy.requireMfaNewDeviceOnly
-                  ? MfaRequirement.newDeviceOnly
-                  : policy.requireMfaHighRiskOnly
-                      ? MfaRequirement.highRiskOnly
-                      : MfaRequirement.adminOnly;
-          _rememberDeviceDays = policy.rememberDeviceDays;
         });
       }
     } catch (e) {
@@ -231,22 +211,6 @@ class _SettingsScreenState extends State<SettingsScreen>
         ],
       ),
     );
-  }
-
-  Future<void> _saveSecurityPolicy() async {
-    final policy = SecurityPolicy(
-      passwordLoginEnabled: _passwordLoginEnabled,
-      passwordlessEmailEnabled: _passwordlessEmailEnabled,
-      mfaEnabled: _mfaEnabledPolicy,
-      requireMfaEveryLogin: _mfaRequirement == MfaRequirement.everyLogin,
-      requireMfaNewDeviceOnly: _mfaRequirement == MfaRequirement.newDeviceOnly,
-      requireMfaHighRiskOnly: _mfaRequirement == MfaRequirement.highRiskOnly,
-      requireMfaAdminOnly: _mfaRequirement == MfaRequirement.adminOnly,
-      defaultMfaMethod: _defaultMfaMethod,
-      backupMethods: _backupMfaMethods.toList(),
-      rememberDeviceDays: _rememberDeviceDays,
-    );
-    await TwoFactorAuthService.savePolicy(policy);
   }
 
   void _handleLogout() {
@@ -442,6 +406,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   if (code == null) return;
                   await currencyService.setDefaultCurrency(code);
                   setState(() {});
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Default currency set to $code'),
@@ -2281,438 +2246,6 @@ class _TopAppBar extends StatelessWidget {
   }
 }
 
-class _AccountPlanCard extends StatelessWidget {
-  const _AccountPlanCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<Subscription?>(
-      future: SubscriptionService.getCurrentSubscription(),
-      builder: (context, snapshot) {
-        final subscription = snapshot.data;
-        final isLoading = snapshot.connectionState == ConnectionState.waiting;
-        final tierName = subscription != null
-            ? SubscriptionService.getTierName(subscription.tier)
-            : 'Free';
-        final renewalDate = subscription?.nextBillingDate;
-        final renewalText = renewalDate != null
-            ? 'Renews on ${DateFormat.yMMMd().format(renewalDate)}'
-            : 'No active subscription';
-
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-                color: Colors.black.withValues(alpha: 0.06),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (isLoading)
-                          const SizedBox(
-                            width: 80,
-                            height: 20,
-                            child: LinearProgressIndicator(),
-                          )
-                        else ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFABD00),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Text(
-                              'PREMIUM',
-                              style: TextStyle(
-                                color: Color(0xFF261A00),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '$tierName Plan',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF191C1E),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            renewalText,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF414754),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFC812).withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.workspace_premium,
-                      color: Color(0xFFFFC812),
-                      size: 24,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: OutlinedButton(
-                  onPressed: () {
-                    context.go('/${AppRoutes.pricing}');
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFC0C6D6)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('Manage Subscription'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _BillingPaymentCard extends StatelessWidget {
-  const _BillingPaymentCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<Invoice>>(
-      future: SubscriptionService.getInvoiceHistory(),
-      builder: (context, snapshot) {
-        final invoices = snapshot.data ?? [];
-        final isLoading = snapshot.connectionState == ConnectionState.waiting;
-
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-                color: Colors.black.withValues(alpha: 0.06),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Billing & Payment',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF191C1E),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      context.go('/${AppRoutes.pricing}');
-                    },
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFFFFC812),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text('Update'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Payment method row
-              Row(
-                children: [
-                  const Icon(Icons.credit_card,
-                      color: Color(0xFF717786), size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Visa ending in 4242',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF191C1E),
-                          ),
-                        ),
-                        Text(
-                          'Expires 12/25',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color:
-                                const Color(0xFF414754).withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              // Recent invoices header
-              const Text(
-                'RECENT INVOICES',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF414754),
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Invoice rows
-              if (isLoading)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (invoices.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text(
-                    'No invoices yet',
-                    style: TextStyle(color: Color(0xFF414754), fontSize: 14),
-                  ),
-                )
-              else
-                ...invoices.take(3).map((invoice) {
-                  final dateStr = DateFormat.yMMMd().format(invoice.createdAt);
-                  final amountStr = '\$${invoice.amount.toStringAsFixed(2)}';
-                  final isPaid = invoice.status.toLowerCase() == 'paid' ||
-                      invoice.status.toLowerCase() == 'succeeded';
-                  return _InvoiceRow(
-                    date: dateStr,
-                    amount: amountStr,
-                    isPaid: isPaid,
-                  );
-                }),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _InvoiceRow extends StatelessWidget {
-  const _InvoiceRow({
-    required this.date,
-    required this.amount,
-    required this.isPaid,
-  });
-
-  final String date;
-  final String amount;
-  final bool isPaid;
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 56),
-      child: Container(
-        decoration: const BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: Color(0xFFE0E3E5), width: 1),
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    date,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF191C1E),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        amount,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF414754),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: isPaid
-                              ? const Color(0xFFE8F5E9)
-                              : const Color(0xFFFFDAD6),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          isPaid ? 'Paid' : 'Pending',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isPaid
-                                ? const Color(0xFF2E7D32)
-                                : const Color(0xFFBA1A1A),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.download_outlined, size: 20),
-              color: const Color(0xFF717786),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LegalTermsCard extends StatelessWidget {
-  const _LegalTermsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-            color: Colors.black.withValues(alpha: 0.06),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _LegalTile(
-            title: 'Terms and Conditions',
-            onTap: () => context.go('/${AppRoutes.termsConditions}'),
-          ),
-          _LegalTile(
-            title: 'Privacy Policy',
-            onTap: () => context.go('/${AppRoutes.privacyPolicy}'),
-          ),
-          _LegalTile(
-            title: 'Data Processing Agreement',
-            onTap: () {
-              // Could navigate to a DPA screen or open a URL
-            },
-            isLast: true,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LegalTile extends StatelessWidget {
-  const _LegalTile({
-    required this.title,
-    required this.onTap,
-    this.isLast = false,
-  });
-
-  final String title;
-  final VoidCallback onTap;
-  final bool isLast;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 56),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          decoration: BoxDecoration(
-            border: isLast
-                ? null
-                : const Border(
-                    bottom: BorderSide(color: Color(0xFFE0E3E5), width: 1),
-                  ),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF191C1E),
-                  ),
-                ),
-              ),
-              const Icon(Icons.chevron_right,
-                  color: Color(0xFF717786), size: 22),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _AccountActionsSection extends StatelessWidget {
   const _AccountActionsSection({required this.onLogout});
   final VoidCallback onLogout;
@@ -2782,115 +2315,6 @@ class _AccountActionsSection extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _BottomNavBar extends StatelessWidget {
-  const _BottomNavBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 64,
-      decoration: BoxDecoration(
-        color: const Color(0xFFECEEF0),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 4,
-            offset: const Offset(0, -1),
-            color: Colors.black.withValues(alpha: 0.06),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _BottomNavItem(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home,
-            label: 'Home',
-            isActive: false,
-            onTap: () => context.go('/${AppRoutes.dashboard}'),
-          ),
-          _BottomNavItem(
-            icon: Icons.folder_outlined,
-            activeIcon: Icons.folder,
-            label: 'Projects',
-            isActive: false,
-            onTap: () => context.go('/${AppRoutes.dashboard}'),
-          ),
-          _BottomNavItem(
-            icon: Icons.timeline_outlined,
-            activeIcon: Icons.timeline,
-            label: 'Reports',
-            isActive: false,
-            onTap: () => context.go('/${AppRoutes.dashboard}'),
-          ),
-          _BottomNavItem(
-            icon: Icons.settings_outlined,
-            activeIcon: Icons.settings,
-            label: 'Settings',
-            isActive: true,
-            onTap: () {},
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BottomNavItem extends StatelessWidget {
-  const _BottomNavItem({
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 64,
-        height: 56,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFFFABD00) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isActive ? activeIcon : icon,
-              size: 22,
-              color:
-                  isActive ? const Color(0xFF261A00) : const Color(0xFF414754),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                color: isActive
-                    ? const Color(0xFF261A00)
-                    : const Color(0xFF414754),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -4598,16 +4022,16 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
   String _selectedExpiry = '30 days';
   final bool _requireMfa = true;
   bool _notifyOnAccessChange = true;
-  bool _passwordLoginEnabled = true;
-  bool _passwordlessEmailEnabled = false;
+  final bool _passwordLoginEnabled = true;
+  final bool _passwordlessEmailEnabled = false;
   bool _mfaEnabledPolicy = true;
-  MfaMethod _defaultMfaMethod = MfaMethod.authenticator;
+  final MfaMethod _defaultMfaMethod = MfaMethod.authenticator;
   final Set<MfaMethod> _backupMfaMethods = {
     MfaMethod.sms,
     MfaMethod.emailCode,
   };
-  MfaRequirement _mfaRequirement = MfaRequirement.everyLogin;
-  int _rememberDeviceDays = 30;
+  final MfaRequirement _mfaRequirement = MfaRequirement.everyLogin;
+  final int _rememberDeviceDays = 30;
   bool _isSending = false;
   final Set<Permission> _customPermissions = {
     Permission.viewAnalytics,
@@ -4641,7 +4065,8 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
     // TwoFactorVerificationScreen pattern and prevents unauthorized
     // invitation creation even if the inviter's session is hijacked.
     setState(() => _isSending = true);
-    try {
+if (!mounted) return;
+        try {
       // Step 1: Send OTP to the inviter's email
       await TwoFactorAuthService.sendCode(email: user.email!);
 
@@ -4669,6 +4094,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
       }
 
       // Step 3: OTP verified — proceed to create the invitation
+      if (!mounted) return;
       final project = ProjectDataInherited.maybeOf(context)?.projectData;
       final expiresAt = _expiryDate(_selectedExpiry);
 
@@ -4897,140 +4323,6 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
         backupMethods: _backupMfaMethods.toList(),
         rememberDeviceDays: _rememberDeviceDays,
       ),
-    );
-  }
-
-  Widget _securitySettingsPanel() {
-    return _RbacCard(
-      title: 'Security Settings',
-      subtitle:
-          'Configure authentication method, MFA defaults, trusted devices, and backup verification methods.',
-      icon: Icons.security,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              FilterChip(
-                label: const Text('Password Login'),
-                selected: _passwordLoginEnabled,
-                onSelected: (v) async {
-                  setState(() => _passwordLoginEnabled = v);
-                  await _saveSecurityPolicy();
-                },
-              ),
-              FilterChip(
-                label: const Text('Passwordless Email'),
-                selected: _passwordlessEmailEnabled,
-                onSelected: (v) async {
-                  setState(() => _passwordlessEmailEnabled = v);
-                  await _saveSecurityPolicy();
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          const Text('Default MFA Method',
-              style: TextStyle(fontWeight: FontWeight.w700)),
-          Wrap(
-            spacing: 12,
-            children: [
-              _mfaChoice(MfaMethod.authenticator, 'Authenticator App'),
-              _mfaChoice(MfaMethod.sms, 'Text Message'),
-              _mfaChoice(MfaMethod.emailCode, 'Email Code'),
-            ],
-          ),
-          const SizedBox(height: 18),
-          const Text('Backup methods',
-              style: TextStyle(fontWeight: FontWeight.w700)),
-          Wrap(
-            spacing: 12,
-            children: [
-              _backupChoice(MfaMethod.sms, 'SMS'),
-              _backupChoice(MfaMethod.emailCode, 'Email Code'),
-            ],
-          ),
-          const SizedBox(height: 18),
-          DropdownButtonFormField<MfaRequirement>(
-            initialValue: _mfaRequirement,
-            items: const [
-              DropdownMenuItem(
-                  value: MfaRequirement.everyLogin, child: Text('Every Login')),
-              DropdownMenuItem(
-                  value: MfaRequirement.newDeviceOnly,
-                  child: Text('New Device Only')),
-              DropdownMenuItem(
-                  value: MfaRequirement.highRiskOnly,
-                  child: Text('High Risk Login Only')),
-              DropdownMenuItem(
-                  value: MfaRequirement.adminOnly,
-                  child: Text('Administrator Accounts Only')),
-            ],
-            onChanged: (value) async {
-              if (value == null) return;
-              setState(() => _mfaRequirement = value);
-              await _saveSecurityPolicy();
-            },
-            decoration: const InputDecoration(labelText: 'Require MFA'),
-          ),
-          const SizedBox(height: 18),
-          DropdownButtonFormField<int>(
-            initialValue: _rememberDeviceDays,
-            items: const [
-              DropdownMenuItem(value: 7, child: Text('7 days')),
-              DropdownMenuItem(value: 30, child: Text('30 days')),
-              DropdownMenuItem(value: 60, child: Text('60 days')),
-            ],
-            onChanged: (value) async {
-              if (value == null) return;
-              setState(() => _rememberDeviceDays = value);
-              await _saveSecurityPolicy();
-            },
-            decoration:
-                const InputDecoration(labelText: 'Remember this device'),
-          ),
-          const SizedBox(height: 18),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton.icon(
-              onPressed: () => context.pushNamed(AppRoutes.securityManagement),
-              icon: const Icon(Icons.open_in_new),
-              label: const Text('Open Security Management'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _mfaChoice(MfaMethod method, String label) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: _defaultMfaMethod == method,
-      onSelected: (value) async {
-        if (!value) return;
-        setState(() => _defaultMfaMethod = method);
-        await _saveSecurityPolicy();
-      },
-    );
-  }
-
-  Widget _backupChoice(MfaMethod method, String label) {
-    return FilterChip(
-      label: Text(label),
-      selected: _backupMfaMethods.contains(method),
-      onSelected: (value) async {
-        setState(() {
-          if (value) {
-            _backupMfaMethods.add(method);
-          } else {
-            _backupMfaMethods.remove(method);
-          }
-        });
-        await _saveSecurityPolicy();
-      },
     );
   }
 

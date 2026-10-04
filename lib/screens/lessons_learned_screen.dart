@@ -10,8 +10,6 @@ import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/services/firebase_auth_service.dart';
-import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
@@ -35,7 +33,6 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  final TextEditingController _searchController = SpellCheckTextEditingController();
  bool _autoPopulated = false;
  bool _isAutoPopulating = false;
- String? _carriedContext;
 
  @override
  void initState() {
@@ -68,10 +65,6 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  if (mounted) setState(() => _isAutoPopulating = false);
  return;
  }
-
- // Pull real carried context for display in the banner.
- final carried = await buildAccumulatedContext(context, 'lessons_learned');
- if (mounted) setState(() => _carriedContext = carried);
 
  // Deterministic seed from real prior-phase data — never invents lessons.
  // Seed pulls from FEP summary + project notes (NOT the current screen's
@@ -772,7 +765,6 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  const headerStyle = TextStyle(
  fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87);
  const cellStyle = TextStyle(fontSize: 13, color: Colors.black87);
- const subStyle = TextStyle(fontSize: 12, color: Colors.black54);
 
  Widget buildTable(BuildContext context) {
  return LayoutBuilder(
@@ -1001,107 +993,6 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  fontWeight: FontWeight.w600,
  color: foreground,
  ),
- ),
- );
- }
-
- Widget _circularIconButton(IconData icon, {VoidCallback? onTap}) {
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(24),
- child: Container(
- width: 44,
- height: 44,
- decoration: BoxDecoration(
- color: icon == Icons.arrow_forward_ios
- ? const Color(0xFFFFD700)
- : Colors.white,
- borderRadius: BorderRadius.circular(22),
- border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
- boxShadow: [
- BoxShadow(
- color: Colors.black.withValues(alpha: 0.05),
- blurRadius: 6,
- offset: const Offset(0, 2)),
- ],
- ),
- child: Icon(
- icon,
- size: 18,
- color:
- icon == Icons.arrow_forward_ios ? Colors.black : Colors.grey[800],
- ),
- ),
- );
- }
-
- Widget _profileChip() {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(30),
- border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
- boxShadow: [
- BoxShadow(
- color: Colors.black.withValues(alpha: 0.05),
- blurRadius: 6,
- offset: const Offset(0, 2)),
- ],
- ),
- child: StreamBuilder<bool>(
- stream: UserService.watchAdminStatus(),
- builder: (context, snapshot) {
- final user = FirebaseAuth.instance.currentUser;
- final displayName =
- FirebaseAuthService.displayNameOrEmail(fallback: 'User');
- final email = user?.email ?? '';
- final name = displayName.isNotEmpty
- ? displayName
- : (email.isNotEmpty ? email : 'User');
- final photoUrl = user?.photoURL ?? '';
- final isAdmin = snapshot.data ?? UserService.isAdminEmail(email);
- final role = isAdmin ? 'Admin' : 'Member';
-
- return Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- CircleAvatar(
- radius: 18,
- backgroundColor: Colors.grey.withValues(alpha: 0.2),
- backgroundImage:
- photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
- child: photoUrl.isEmpty
- ? Text(
- name.isNotEmpty ? name[0].toUpperCase() : 'U',
- style: TextStyle(
- color: Colors.grey[800],
- fontWeight: FontWeight.w600,
- ),
- )
- : null,
- ),
- const SizedBox(width: 10),
- Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- name,
- style: const TextStyle(
- fontSize: 14, fontWeight: FontWeight.w600),
- ),
- Text(
- role,
- style: TextStyle(fontSize: 12, color: Colors.grey[600]),
- ),
- ],
- ),
- const SizedBox(width: 6),
- Icon(Icons.keyboard_arrow_down,
- color: Colors.grey[700], size: 18),
- ],
- );
- },
  ),
  );
  }

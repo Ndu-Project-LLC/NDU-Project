@@ -280,7 +280,7 @@ void main() {
           startDate: DateTime(2026, 1, 6),
           endDate: DateTime(2026, 2, 6),
           children: [
-            ScheduleActivity(
+            const ScheduleActivity(
               id: 'a1',
               level: 1,
               code: '',
@@ -288,11 +288,11 @@ void main() {
               type: ActivityType.activity,
               domain: ScheduleDomain.engineering,
               duration: 10,
-              dependencies: const [],
+              dependencies: [],
               aiGenerated: false,
-              children: const [],
+              children: [],
             ),
-            ScheduleActivity(
+            const ScheduleActivity(
               id: 'a2',
               level: 1,
               code: '',
@@ -300,14 +300,14 @@ void main() {
               type: ActivityType.activity,
               domain: ScheduleDomain.construction,
               duration: 20,
-              dependencies: const [
+              dependencies: [
                 ActivityDependency(
                   activityId: 'a1',
                   type: DependencyType.finishToStart,
                 ),
               ],
               aiGenerated: false,
-              children: const [],
+              children: [],
             ),
           ],
         ),
@@ -331,7 +331,7 @@ void main() {
         schedule.schedule!.activities.first.copyWith(
           startDate: DateTime(2026, 1, 6),
           children: [
-            ScheduleActivity(
+            const ScheduleActivity(
               id: 'a1',
               level: 1,
               code: '',
@@ -339,14 +339,14 @@ void main() {
               type: ActivityType.activity,
               domain: ScheduleDomain.engineering,
               duration: 5,
-              dependencies: const [
+              dependencies: [
                 ActivityDependency(
                   activityId: 'deleted-activity',
                   type: DependencyType.finishToStart,
                 ),
               ],
               aiGenerated: false,
-              children: const [],
+              children: [],
             ),
           ],
         ),
@@ -369,7 +369,7 @@ void main() {
         provider.schedule!.activities.first.copyWith(
           startDate: DateTime(2020, 1, 6),
           children: [
-            ScheduleActivity(
+            const ScheduleActivity(
               id: 'a1',
               level: 1,
               code: '',
@@ -377,9 +377,9 @@ void main() {
               type: ActivityType.activity,
               domain: ScheduleDomain.engineering,
               duration: 5,
-              dependencies: const [],
+              dependencies: [],
               aiGenerated: false,
-              children: const [],
+              children: [],
             ),
           ],
         ),
@@ -403,16 +403,16 @@ void main() {
         provider.schedule!.activities.first.copyWith(
           startDate: DateTime(2026, 1, 6),
           children: [
-            ScheduleActivity(
+            const ScheduleActivity(
               id: 'a1',
               level: 1,
               code: '',
               name: 'Undated work',
               type: ActivityType.activity,
               domain: ScheduleDomain.engineering,
-              dependencies: const [],
+              dependencies: [],
               aiGenerated: false,
-              children: const [],
+              children: [],
             ),
           ],
         ),
@@ -593,7 +593,7 @@ void main() {
       schedule.setActivities([
         schedule.schedule!.activities.first.copyWith(
           children: [
-            ScheduleActivity(
+            const ScheduleActivity(
               id: 'a1',
               level: 1,
               code: '',
@@ -601,9 +601,9 @@ void main() {
               type: ActivityType.activity,
               domain: ScheduleDomain.engineering,
               duration: 5,
-              dependencies: const [],
+              dependencies: [],
               aiGenerated: false,
-              children: const [],
+              children: [],
             ),
           ],
         ),

@@ -6,10 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/program_model.dart';
-import '../models/portfolio_model.dart';
 import '../widgets/dashboard_bottom_nav_bar.dart';
 import '../services/navigation_context_service.dart';
-import '../services/portfolio_service.dart';
 import '../services/program_service.dart';
 import '../services/project_service.dart';
 import '../services/project_navigation_service.dart';
@@ -61,21 +59,6 @@ class _InterfaceItem {
  final List<String> tags;
  final String riskLabel;
  final Color riskColor;
-}
-
-class _ProgramAction {  const _ProgramAction({
-    required this.title,
-    required this.description,
-    required this.appliesTo,
-    required this.isOn,
-  }) : badgeColor = null, badgeTextColor = null;
-
- final String title;
- final String description;
- final String appliesTo;
- final bool isOn;
- final Color? badgeColor;
- final Color? badgeTextColor;
 }
 
 class _RollupSlice {
@@ -169,11 +152,9 @@ class _ProgramDashboardMobileScreenState
  StreamSubscription<List<ProgramModel>>? _programSubscription;
  StreamSubscription<List<ProjectRecord>>? _projectSubscription;
  StreamSubscription<List<ProjectRecord>>? _allProjectsSubscription;
- StreamSubscription<List<PortfolioModel>>? _portfolioSubscription;
  int _totalProjects = 0;
  int _basicProjectCount = 0;
  int _programCount = 0;
- int _portfolioCount = 0;
 
  // ── Toggle state for program actions ──
  bool _gateApprovalsOn = true;
@@ -193,7 +174,6 @@ class _ProgramDashboardMobileScreenState
  _programSubscription?.cancel();
  _projectSubscription?.cancel();
  _allProjectsSubscription?.cancel();
- _portfolioSubscription?.cancel();
  super.dispose();
  }
 
@@ -202,7 +182,6 @@ class _ProgramDashboardMobileScreenState
  Future<void> _loadProgramData() async {
  final user = FirebaseAuth.instance.currentUser;
  _allProjectsSubscription?.cancel();
- _portfolioSubscription?.cancel();
  if (user == null) {
  setState(() {
  _isLoading = false;
@@ -212,7 +191,6 @@ class _ProgramDashboardMobileScreenState
  _programCount = 0;
  _totalProjects = 0;
  _basicProjectCount = 0;
- _portfolioCount = 0;
  });
  return;
  }
@@ -233,18 +211,6 @@ class _ProgramDashboardMobileScreenState
  },
  );
 
- _portfolioSubscription =
- PortfolioService.streamPortfolios(ownerId: user.uid).listen(
- (items) {
- if (!mounted) return;
- setState(() {
- _portfolioCount = items.length;
- });
- },
- onError: (error) {
- debugPrint('Error streaming portfolios: $error');
- },
- );
 
  try {
  _programSubscription?.cancel();
@@ -378,10 +344,6 @@ class _ProgramDashboardMobileScreenState
  'P3 - Support',
  ];
 
- String category = 'General';
- if (record.tags.isNotEmpty) {
- category = record.tags.first;
- }
 
  final projectCode =
  'PRJ-${(index + 1).toString().padLeft(3, '0')}';
@@ -454,7 +416,7 @@ class _ProgramDashboardMobileScreenState
 
  debugPrint('Load result: $success, error: ${provider.lastError}');
 
- if (!context.mounted) return;
+ if (!mounted) return;
 
  dismissLoadingDialog();
 
@@ -469,7 +431,7 @@ class _ProgramDashboardMobileScreenState
  debugPrint(
  'Project loaded successfully, navigating to checkpoint: $checkpointRoute');
 
- if (!context.mounted) return;
+ if (!mounted) return;
 
  final screen = NavigationRouteResolver.resolveCheckpointToScreen(
  checkpointRoute.isEmpty ? 'initiation' : checkpointRoute,
@@ -1462,7 +1424,7 @@ class _ActionToggleRow extends StatelessWidget {
  Switch.adaptive(
  value: isOn,
  onChanged: onChanged,
- activeColor: const Color(0xFFFFC812),
+ activeThumbColor: const Color(0xFFFFC812),
  ),
  const SizedBox(width: 8),
  Expanded(

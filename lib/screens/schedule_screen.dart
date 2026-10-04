@@ -64,7 +64,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       0; // 0: Master Schedule, 1: Gantt Chart, 2: List View, 3: Board View, 4: Work Packages, 5: Procurement Timeline, 6: Cost vs Schedule
   String _timelineSearchQuery = '';
   String _workPackageSearchQuery = '';
-  final String _ganttSearchQuery = '';
   String _workPackageSortField = 'title'; // title, status, owner, phase, budget
   bool _workPackageSortAscending = true;
   String _listSortField =
@@ -1722,7 +1721,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _saveWorkPackages(data.workPackages);
       _showInfo('Work package deleted.');
     }
-      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
   }
 
   Future<void> _showWorkPackageDetail(WorkPackage wp) async {
@@ -1751,12 +1751,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   .toList(),
             );
             setState(() {});
-            if (mounted) {
+            if (context.mounted) {
               _showInfo('EWP "${wp.title}" released for execution.');
             }
           } on StateError catch (e) {
-            Navigator.of(context).pop();
-            if (mounted) {
+            if (context.mounted) Navigator.of(context).pop();
+            if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(e.message),
@@ -2769,8 +2769,8 @@ class _WbsAndSummaryCard extends StatelessWidget {
         rows.where((row) => row.priority.toLowerCase() == 'critical').length;
     final totalHours = rows.fold<double>(
       0,
-      (sum, row) =>
-          sum + (double.tryParse(row.hoursController.text.trim()) ?? 0),
+      (total, row) =>
+          total + (double.tryParse(row.hoursController.text.trim()) ?? 0),
     );
     final done =
         rows.where((row) => row.status.toLowerCase() == 'completed').length;
@@ -4531,7 +4531,7 @@ class _ScheduleValidationDialog extends StatelessWidget {
                   _ValidationStat(
                     label: 'Readiness Warnings',
                     value: report.packageWarnings
-                        .fold<int>(0, (sum, item) => sum + item.warnings.length)
+                        .fold<int>(0, (total, item) => total + item.warnings.length)
                         .toString(),
                     color: const Color(0xFFEF4444),
                   ),
@@ -5928,17 +5928,17 @@ class _CostVsScheduleTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final totalBudget = workPackages.fold<double>(
       0,
-      (sum, wp) => sum + wp.budgetedCost,
+      (total, wp) => total + wp.budgetedCost,
     );
     final totalActual = workPackages.fold<double>(
       0,
-      (sum, wp) => sum + wp.actualCost,
+      (total, wp) => total + wp.actualCost,
     );
     final totalEstimate = costEstimateItems
         .where(
           (item) => item.costState == 'forecast' && !item.isBaseline,
         )
-        .fold<double>(0, (sum, item) => sum + item.amount);
+        .fold<double>(0, (total, item) => total + item.amount);
 
     final variance = totalBudget - totalActual;
     final variancePercent =

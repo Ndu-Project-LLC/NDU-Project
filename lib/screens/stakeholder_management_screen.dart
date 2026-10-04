@@ -506,7 +506,8 @@ class _StakeholderManagementScreenState
             d.stakeholderEntries.where((e) => e.id != id).toList(),
       ),
     );
-      showDeleteSuccessSnackBar(context, itemLabel: 'Stakeholder');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Stakeholder');
   }
 
   void _addEngagementPlan() async {
@@ -550,7 +551,8 @@ class _StakeholderManagementScreenState
             d.engagementPlanEntries.where((e) => e.id != id).toList(),
       ),
     );
-      showDeleteSuccessSnackBar(context, itemLabel: 'Engagement Plan');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Engagement Plan');
   }
 
   // ── Announcements persistence (Firestore subcollection) ─────────────
@@ -618,7 +620,8 @@ class _StakeholderManagementScreenState
         .collection('stakeholder_announcements')
         .doc(id)
         .delete();
-      showDeleteSuccessSnackBar(context, itemLabel: 'Announcement');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Announcement');
   }
 
   /// Persist edits made to a [TeamMember] from the Project Team
@@ -1047,7 +1050,8 @@ class _StakeholderManagementScreenState
       );
     }
 
-    if (newEntries.isEmpty) {
+if (!mounted) return;
+        if (newEntries.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('No stakeholders found in Initiation Phase.')));
       return;
@@ -1072,7 +1076,8 @@ class _StakeholderManagementScreenState
             ))
         .toList();
 
-    await ProjectDataHelper.updateAndSave(
+if (!mounted) return;
+        await ProjectDataHelper.updateAndSave(
       context: context,
       checkpoint: 'stakeholder_management',
       dataUpdater: (d) => d.copyWith(

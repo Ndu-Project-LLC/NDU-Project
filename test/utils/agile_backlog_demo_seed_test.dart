@@ -6,11 +6,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ndu_project/models/agile_task.dart';
-import 'package:ndu_project/models/epic_model.dart';
 import 'package:ndu_project/models/feature_model.dart';
 import 'package:ndu_project/utils/agile_backlog_demo_seed.dart';
-
-Epic _epic(String id) => Epic(id: id, title: 'Epic $id');
 
 Feature _feature(
   String id, {

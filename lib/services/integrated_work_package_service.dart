@@ -534,61 +534,6 @@ class IntegratedWorkPackageService {
   // Supports any WBS depth — matches against leaf node and all ancestors.
   // ------------------------------------------------------------------
 
-  /// Matches design specification rows to a WBS leaf node and its
-  /// ancestors. A spec row matches if its `wbsWorkPackageId` equals any
-  /// ancestor or leaf WBS ID, OR if its title/discipline/area keywords
-  /// overlap with the leaf or ancestor titles.
-  static List<DesignSpecificationPlanRow> _matchSpecificationsToWbs(
-    List<DesignSpecificationPlanRow> specs, {
-    required String level2WbsId,
-    required String level3WbsId,
-    required String level3Title,
-    required String level2Title,
-  }) {
-    if (specs.isEmpty) return [];
-
-    // Build a combined set of all ancestor + leaf IDs and titles
-    // for matching. The old API only passed level2/level3 but
-    // we also accept them for backward compatibility.
-    final allWbsIds = <String>{level2WbsId, level3WbsId};
-    final allTitlesLower = <String>{
-      level2Title.toLowerCase(),
-      level3Title.toLowerCase(),
-    };
-    final allTokens = <String>{
-      ..._tokenize(level2Title.toLowerCase()),
-      ..._tokenize(level3Title.toLowerCase()),
-    };
-
-    return specs.where((spec) {
-      // Direct WBS ID match (strongest signal)
-      if (allWbsIds.contains(spec.wbsWorkPackageId)) {
-        return true;
-      }
-
-      // Title keyword overlap
-      final specTitle = spec.title.toLowerCase();
-      final specTokens = _tokenize(specTitle);
-      if (allTokens.any((t) => specTokens.contains(t))) {
-        return true;
-      }
-
-      // Discipline/area keyword match against all ancestor titles
-      final specDiscipline = spec.discipline.toLowerCase();
-      final specArea = spec.area.toLowerCase();
-      if (specDiscipline.isNotEmpty &&
-          allTitlesLower.any((t) => t.contains(specDiscipline))) {
-        return true;
-      }
-      if (specArea.isNotEmpty &&
-          allTitlesLower.any((t) => t.contains(specArea))) {
-        return true;
-      }
-
-      return false;
-    }).toList();
-  }
-
   /// Deep-aware spec matching for arbitrary WBS depth.
   /// Matches against the leaf node ID/title AND all ancestor IDs/titles.
   /// This supersedes [_matchSpecificationsToWbs] for the recursive generator.
@@ -1010,10 +955,6 @@ class IntegratedWorkPackageService {
         }
         // Fix 1.1: Warn if procurement has no EWP deliverable traceability
         if (package.linkedEngineeringPackageIds.isNotEmpty) {
-          final hasDeliverableLink = _packageHasDeliverableLink(
-            package,
-            package.linkedEngineeringPackageIds,
-          );
           // This is informational — not all procurement needs design deliverables
         }
       case constructionCwp:
@@ -1101,18 +1042,6 @@ class IntegratedWorkPackageService {
     }
 
     return warnings;
-  }
-
-  /// Checks if any deliverable on the linked EWP packages feeds this
-  /// procurement package. Returns true if at least one deliverable is
-  /// traced.
-  static bool _packageHasDeliverableLink(
-    WorkPackage package,
-    List<String> engineeringPackageIds,
-  ) {
-    // This is a placeholder for cross-package checking which requires
-    // access to the full package list — done in schedule_screen validation
-    return false;
   }
 
   // ------------------------------------------------------------------
@@ -1505,7 +1434,6 @@ class IntegratedWorkPackageService {
     required String methodology,
     required String procurementCategory,
   }) {
-    final isAgile = methodology.trim().toLowerCase() == 'agile';
 
     switch (packageClassification) {
       case engineeringEwp:
@@ -1615,15 +1543,6 @@ class IntegratedWorkPackageService {
         return _defaultEstimateBasis(methodology);
     }
   }
-
-  static List<PackageDeliverable> _defaultEngineeringDeliverables() => [
-        PackageDeliverable(title: 'Drawings', type: 'drawing'),
-        PackageDeliverable(title: 'Specifications', type: 'specification'),
-        PackageDeliverable(title: 'Calculations', type: 'calculation'),
-        PackageDeliverable(title: 'Bill of materials', type: 'bom'),
-        PackageDeliverable(
-            title: 'Codes and requirements', type: 'requirement'),
-      ];
 
   static String _packageCode(String level2Title, String level3Title) {
     final left = _codeToken(level2Title);

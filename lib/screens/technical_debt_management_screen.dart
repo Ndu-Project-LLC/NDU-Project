@@ -162,27 +162,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- Widget _buildHeaderActions() {
- return Wrap(
- spacing: 10,
- runSpacing: 10,
- children: [
- _actionButton(Icons.add, 'Add debt item',
- onPressed: _showAddDebtItemDialog),
- _actionButton(Icons.tune, 'Prioritize backlog', onPressed: () {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text(
- 'Use severity, status, and target fields to prioritize the backlog.')),
- );
- }),
- _actionButton(Icons.description_outlined, 'Generate report',
- onPressed: _showDebtSnapshotReport),
- _primaryButton('Launch remediation sprint'),
- ],
- );
- }
-
  Widget _actionButton(IconData icon, String label, {VoidCallback? onPressed}) {
  return OutlinedButton.icon(
  onPressed: onPressed ?? () {},
@@ -195,28 +174,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: OutlinedButton.styleFrom(
  side: const BorderSide(color: Color(0xFFE2E8F0)),
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
- ),
- );
- }
-
- Widget _primaryButton(String label) {
- return ElevatedButton.icon(
- onPressed: () {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text(
- 'Remediation sprint launched. Keep debt status and targets updated to track closure velocity.'),
- ),
- );
- },
- icon: const Icon(Icons.play_arrow, size: 18),
- label: Text(label,
- style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFFFC812),
- foregroundColor: Colors.white,
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
  ),
  );
@@ -1075,43 +1032,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  })
  .where((item) => item.name.isNotEmpty)
  .toList();
- }
-
- void _showDebtSnapshotReport() {
- final critical =
- _debtItems.where((item) => item.severity == 'Critical').length;
- final inProgress =
- _debtItems.where((item) => item.status == 'In progress').length;
- final backlog = _debtItems.where((item) => item.status == 'Backlog').length;
- final resolved = _debtItems.where((item) => item.status == 'Done').length;
-
- showDialog<void>(
- context: context,
- builder: (dialogContext) => AlertDialog(
- title: const Text('Technical Debt Snapshot'),
- content: Column(
- mainAxisSize: MainAxisSize.min,
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text('Total items: ${_debtItems.length}'),
- Text('Critical: $critical'),
- Text('In progress: $inProgress'),
- Text('Backlog: $backlog'),
- Text('Resolved: $resolved'),
- ],
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(),
- child: const Text('Close'),
- ),
- ],
- ),
- );
- }
-
- void _showAddDebtItemDialog() {
- _showDebtItemDialog();
  }
 
  void _showEditDebtItemDialog(DebtItem item) {
@@ -2662,33 +2582,5 @@ class _StatCardData {
   final String label;
   final String value;
   final String supporting;
-  final Color color;
-}
-
-class _DebtItem {
-  const _DebtItem(this.id, this.title, this.area, this.owner, this.severity,
-      this.status, this.target);
-
-  final String id;
-  final String title;
-  final String area;
-  final String owner;
-  final String severity;
-  final String status;
-  final String target;
-}
-
-class _DebtInsight {
-  const _DebtInsight(this.title, this.subtitle);
-
-  final String title;
-  final String subtitle;
-}
-
-class _RemediationTrack {
-  const _RemediationTrack(this.label, this.progress, this.color);
-
-  final String label;
-  final double progress;
   final Color color;
 }

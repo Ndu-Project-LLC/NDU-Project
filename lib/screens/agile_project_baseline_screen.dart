@@ -162,7 +162,7 @@ class _AgileProjectBaselineScreenState
  final releasePlans = results[6] as List<AgileReleasePlan>;
  _backlogDoD = backlogGov['definition_of_done'] as String? ?? '';
  _epicTotalPoints = epics.fold<double>(
- 0, (sum, e) => sum + e.totalStoryPoints);
+ 0, (total, e) => total + e.totalStoryPoints);
 
  _sprints = roadmap.sprints;
  _deliverables = roadmap.deliverables;

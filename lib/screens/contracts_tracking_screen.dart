@@ -1167,7 +1167,8 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     } catch (e) {
       debugPrint('Error deleting contract: $e');
     }
-      showDeleteSuccessSnackBar(context, itemLabel: 'Contract Model');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Contract Model');
   }
 
   // ignore: unused_element

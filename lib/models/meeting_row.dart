@@ -1,4 +1,5 @@
 /// Model for a meeting row in the Team Meetings page
+library;
 import 'package:ndu_project/utils/unique_id.dart';
 
 class MeetingRow {

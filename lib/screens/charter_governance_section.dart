@@ -674,7 +674,8 @@ class _CharterApprovalsState extends State<CharterApprovals> {
  ),
  );
 
- if (result == true) {
+if (!mounted) return;
+  if (result == true) {
  final name = nameController.text.trim();
  final email = emailController.text.trim();
  final provider = ProjectDataInherited.maybeOf(context);

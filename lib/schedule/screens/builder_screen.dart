@@ -1770,55 +1770,6 @@ class _BuilderScreenState extends State<BuilderScreen> {
   }
 }
 
-/// Compact action chip used in the Builder header.
-class _ActionChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool primary;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  const _ActionChip({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  })  : primary = false,
-        enabled = true;
-
-  @override
-  Widget build(BuildContext context) {
-    final disabled = !enabled;
-    if (primary && !disabled) {
-      return FilledButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 16),
-        label: Text(label),
-        style: FilledButton.styleFrom(
-          backgroundColor: LightModeColors.accent,
-          foregroundColor: LightModeColors.lightOnPrimary,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
-    }
-    return OutlinedButton.icon(
-      onPressed: disabled ? null : onTap,
-      icon: Icon(icon, size: 16),
-      label: Text(label),
-      style: OutlinedButton.styleFrom(
-        foregroundColor:
-            disabled ? const Color(0xFF9CA3AF) : const Color(0xFF1A1D1F),
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        side: BorderSide(
-            color:
-                disabled ? const Color(0xFFE4E7EC) : const Color(0xFFE4E7EC)),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
-  }
-}
-
 /// Treasury-styled secondary action pill — used for the overflow action row
 /// (Import by Methodology, From Work Packages, Run CPM, Export, etc.).
 class _TreasuryActionPill extends StatelessWidget {

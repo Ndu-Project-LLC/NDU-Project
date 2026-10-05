@@ -393,7 +393,9 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  height: 100,
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: Colors.white,
+ // Dialog loading box: resolved from the theme because a dialog is
+ // mounted above DashboardPaletteScope.
+ color: Theme.of(context).colorScheme.surface,
  borderRadius: BorderRadius.circular(12),
  boxShadow: [
  BoxShadow(
@@ -2158,7 +2160,9 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  height: 140,
  padding: const EdgeInsets.all(24),
  decoration: BoxDecoration(
- color: Colors.white,
+ // Dialog loading box: resolved from the theme because a dialog is
+ // mounted above DashboardPaletteScope.
+ color: Theme.of(context).colorScheme.surface,
  borderRadius: BorderRadius.circular(16),
  boxShadow: [
  BoxShadow(

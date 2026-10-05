@@ -20,7 +20,7 @@ library;
 //     the user to hold that link in their head.
 //   • It keeps a single deep-link surface. `/regular-project-dashboard` stays
 //     valid for existing bookmarks and the `/dashboard` stat card, while
-//     `/integration-dashboard` keeps its Planning-sidebar entry point.
+//     `/integration-dashboard` stays reachable from the mobile shell.
 //
 // The screen is read-only. It never mutates module state; every action it
 // offers either navigates to the module where the gap gets closed, or
@@ -345,6 +345,11 @@ class _IntegrationDashboardScreenState
     return DashboardPaletteScope(
       palette: palette,
       child: ResponsiveScaffold(
+        // This page is a full-width cross-project command centre, so the
+        // phase sidebar is suppressed here: it carries no context a user needs
+        // while scanning workspaces and baseline health. The dashboard's own
+        // Workspaces / Baseline switcher is the navigation for this screen.
+        showSidebar: false,
         appBarTitle: 'Integration Dashboard',
         activeItemLabel: 'Integration Dashboard',
         floatingActionButton: const KazAiChatBubble(positioned: false),

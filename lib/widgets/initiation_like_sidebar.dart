@@ -1433,12 +1433,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     context.push('/project-controls');
   }
 
-  void _openIntegrationDashboard() {
-    // PMB Integration Dashboard — unified Scope ↔ WBS ↔ Schedule ↔ PC view.
-    // Route-based module (uses go_router).
-    context.push('/integration-dashboard');
-  }
-
   void _openChangeManagement() {
     _navigateWithCheckpoint(
         'change_management', const ChangeManagementModuleScreen());
@@ -2905,13 +2899,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               onTap: _openCostEstimate,
               isActive: _isActiveLabel('Cost Estimate')),
         ],
-        // Integration Dashboard — moved below the Cost Estimate (Lusaka 28):
-        // after Schedule you go straight to Cost; the dashboard is a unified
-        // wrap-up view, not a step in the build-the-schedule flow.
-        _buildSubMenuItem('Integration Dashboard',
-            onTap: _openIntegrationDashboard,
-            isActive:
-                _isActiveLabel('Integration Dashboard')),
+        // The Integration Dashboard is deliberately absent from this rail.
+        // It is a cross-project command centre rather than a step in the
+        // build-the-schedule flow, it renders full width without a sidebar,
+        // and it is reached from the dashboard stat card and the mobile shell
+        // instead. Keeping a link here only duplicated a dead end.
         _buildSubExpandableHeader(
           'Project Services',
           expanded: _projectServicesExpanded,

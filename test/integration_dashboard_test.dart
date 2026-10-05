@@ -7,7 +7,7 @@
 //
 //   1. Both deep-link paths stay registered (the `/dashboard` stat card and
 //      the mobile shell both navigate to `/regular-project-dashboard`, and
-//      the Planning sidebar links to `/integration-dashboard`).
+//      the mobile shell links to `/integration-dashboard`).
 //   2. The dashboard's design tokens actually respond to the ambient theme —
 //      the previous implementations hard-coded `Colors.white` surfaces, which
 //      silently produced unreadable dark-mode output.
@@ -64,7 +64,7 @@ void main() {
       expect(
         registered,
         contains('/${AppRoutes.integrationDashboard}'),
-        reason: 'The Planning sidebar links here.',
+        reason: 'The mobile shell links here.',
       );
     });
 

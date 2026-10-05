@@ -12,7 +12,9 @@ import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/services/project_service.dart';
+import 'package:ndu_project/utils/dashboard_palette.dart';
 import 'package:ndu_project/utils/navigation_route_resolver.dart';
+import 'package:ndu_project/widgets/integration_dashboard/_integration_tokens.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/widgets/compact_action_button.dart';
 import 'package:ndu_project/widgets/dashboard_metrics_cards.dart';
@@ -47,40 +49,55 @@ class _ProjectWorkspaceDashboardScreenState
   final TextEditingController _updateController = SpellCheckTextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  // Design tokens — white canvas, near-black ink, gray secondary text,
-  // status colors and a yellow accent (#FFC812).
-  static const _bg = Color(0xFFFFFFFF);
-  static const _surface = Color(0xFFF8FAFC);
-  static const _surfaceHigh = Color(0xFFF1F5F9);
-  static const _outline = Color(0xFFE5E7EB);
-  static const _outlineStrong = Color(0xFFCBD5E1);
-  static const _ink = Color(0xFF0A0A0A);
-  static const _inkSoft = Color(0xFF1F2937);
-  static const _muted = Color(0xFF6B7280);
-  static const _mutedSoft = Color(0xFF9CA3AF);
-  static const _accent = Color(0xFFFFC812);
-  static const _accentDeep = Color(0xFFE0A800);
-  static const _accentSoft = Color(0xFFFFF4CC);
-  static const _emerald = Color(0xFF059669);
-  static const _emeraldSoft = Color(0xFFD1FAE5);
-  static const _gold = Color(0xFFD97706);
-  static const _goldSoft = Color(0xFFFEF3C7);
-  static const _crimson = Color(0xFFDC2626);
-  static const _crimsonSoft = Color(0xFFFEE2E2);
-  static const _slate = Color(0xFF0F172A);
+  // Design tokens.
+  //
+  // These were a light-only constant block (white canvas, near-black ink,
+  // hard-coded status hexes), which is why this workspace drifted from the
+  // Regular Dashboard and broke in dark mode. They now resolve from the same
+  // [IntegrationTokens] the Regular Dashboard uses, so both surfaces share one
+  // palette, one accent and one dark-mode behaviour.
+  //
+  // The names are kept as instance getters so the ~100 call sites below do not
+  // all have to change. [build] assigns [_t] before any of them are read.
+  late IntegrationTokens _t;
 
-  static const _statusColors = <String, Color>{
-    'on_track': _emerald,
-    'at_risk': _gold,
-    'off_track': _crimson,
-    'unknown': _muted,
-  };
-  static const _statusSoftColors = <String, Color>{
-    'on_track': _emeraldSoft,
-    'at_risk': _goldSoft,
-    'off_track': _crimsonSoft,
-    'unknown': _surfaceHigh,
-  };
+  /// Soft status wash: the hue blended onto the surface so it stays legible in
+  /// both themes instead of assuming a white backdrop.
+  Color _soft(Color c) =>
+      Color.alphaBlend(c.withValues(alpha: 0.14), _t.surface);
+
+  Color get _bg => _t.canvas;
+  Color get _surface => _t.surface;
+  Color get _surfaceHigh => _t.surfaceAlt;
+  Color get _outline => _t.outline;
+  Color get _outlineStrong => _t.muted;
+  Color get _ink => _t.ink;
+  Color get _inkSoft => _t.inkSoft;
+  Color get _muted => _t.muted;
+  Color get _mutedSoft => _t.mutedSoft;
+  Color get _accent => _t.brand;
+  Color get _accentDeep => _t.brandDeep;
+  Color get _accentSoft => _t.brandSoft;
+  Color get _emerald => _t.good;
+  Color get _emeraldSoft => _soft(_t.good);
+  Color get _gold => _t.warn;
+  Color get _goldSoft => _soft(_t.warn);
+  Color get _crimson => _t.bad;
+  Color get _crimsonSoft => _soft(_t.bad);
+  Color get _slate => _t.ink;
+
+  Map<String, Color> get _statusColors => {
+        'on_track': _t.good,
+        'at_risk': _t.warn,
+        'off_track': _t.bad,
+        'unknown': _t.muted,
+      };
+  Map<String, Color> get _statusSoftColors => {
+        'on_track': _soft(_t.good),
+        'at_risk': _soft(_t.warn),
+        'off_track': _soft(_t.bad),
+        'unknown': _t.surfaceAlt,
+      };
   static const _statusLabels = <String, String>{
     'on_track': 'On Track',
     'at_risk': 'At Risk',
@@ -207,6 +224,9 @@ class _ProjectWorkspaceDashboardScreenState
   // ── Build ───────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    // Same palette the Regular Dashboard resolves, so both dashboards share one
+    // accent, one canvas and one dark-mode treatment.
+    _t = IntegrationTokens.of(context, DashboardPalette.forPlan(true));
     NavigationContextService.instance.setLastClientDashboard('/dashboard');
     return Scaffold(
       floatingActionButton: const KazAiChatBubble(positioned: false),
@@ -294,7 +314,7 @@ class _ProjectWorkspaceDashboardScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('NDU Executive Command Center',
+              Text('NDU Executive Command Center',
                   style: TextStyle(
                       fontSize: 18, fontWeight: FontWeight.w800,
                       color: _ink, letterSpacing: -0.2)),
@@ -302,7 +322,7 @@ class _ProjectWorkspaceDashboardScreenState
                 _isBasic
                     ? 'Basic plan workspace · program-level delivery visibility'
                     : 'Active workspace · executive-level delivery visibility',
-                style: const TextStyle(fontSize: 12, color: _muted),
+                style: TextStyle(fontSize: 12, color: _muted),
               ),
             ],
           ),
@@ -352,23 +372,23 @@ class _ProjectWorkspaceDashboardScreenState
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Container(width: 6, height: 6,
-            decoration: const BoxDecoration(color: _accentDeep, shape: BoxShape.circle)),
+            decoration: BoxDecoration(color: _accentDeep, shape: BoxShape.circle)),
         const SizedBox(width: 6),
         Text(_isBasic ? 'BASIC PLAN' : 'STANDARD PLAN',
-            style: const TextStyle(color: _accentDeep, fontSize: 10,
+            style: TextStyle(color: _accentDeep, fontSize: 10,
                 fontWeight: FontWeight.w800, letterSpacing: 0.8)),
       ]),
     );
     final managerRow = Row(children: [
       Container(width: 26, height: 26,
-          decoration: const BoxDecoration(color: _slate, shape: BoxShape.circle,
-              border: Border.fromBorderSide(BorderSide(color: Colors.white, width: 2))),
+          decoration: BoxDecoration(color: _slate, shape: BoxShape.circle,
+              border: const Border.fromBorderSide(BorderSide(color: Colors.white, width: 2))),
           alignment: Alignment.center,
           child: Text(initial,
               style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800))),
       const SizedBox(width: 8),
       Text(manager,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _inkSoft)),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _inkSoft)),
       const SizedBox(width: 14),
       _dateChip(Icons.calendar_today_outlined, 'Started ${_formatDate(start)}'),
       const SizedBox(width: 14),
@@ -436,7 +456,7 @@ class _ProjectWorkspaceDashboardScreenState
           Row(children: [badge, const SizedBox(width: 10), planPill]),
           const SizedBox(height: 12),
           Text(name,
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800,
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800,
                   color: _ink, letterSpacing: -0.4, height: 1.15)),
           const SizedBox(height: 10),
           narrow ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [managerRow]) : managerRow,
@@ -459,7 +479,7 @@ class _ProjectWorkspaceDashboardScreenState
           Icon(icon, size: 14, color: _muted),
           const SizedBox(width: 6),
           Text(label,
-              style: const TextStyle(fontSize: 12, color: _muted, fontWeight: FontWeight.w600)),
+              style: TextStyle(fontSize: 12, color: _muted, fontWeight: FontWeight.w600)),
         ],
       );
 
@@ -525,7 +545,7 @@ class _ProjectWorkspaceDashboardScreenState
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: _outline),
         boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 14, offset: Offset(0, 4))],
@@ -544,10 +564,10 @@ class _ProjectWorkspaceDashboardScreenState
                 color: valueColor ?? _ink, letterSpacing: -0.4)),
         const SizedBox(height: 4),
         Text(label,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _inkSoft)),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _inkSoft)),
         const SizedBox(height: 4),
         Text(sub,
-            style: const TextStyle(fontSize: 11.5, color: _muted, height: 1.4),
+            style: TextStyle(fontSize: 11.5, color: _muted, height: 1.4),
             maxLines: 2, overflow: TextOverflow.ellipsis),
       ]),
     );
@@ -581,7 +601,7 @@ class _ProjectWorkspaceDashboardScreenState
           child: LinearProgressIndicator(
             value: value.clamp(0.0, 1.0),
             backgroundColor: _surfaceHigh,
-            valueColor: const AlwaysStoppedAnimation<Color>(_emerald),
+            valueColor: AlwaysStoppedAnimation<Color>(_emerald),
           ),
         ),
       );
@@ -645,9 +665,9 @@ class _ProjectWorkspaceDashboardScreenState
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(999),
             border: Border.all(color: _outline)),
-        child: const Row(mainAxisSize: MainAxisSize.min, children: [
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.insights_rounded, size: 14, color: _accentDeep),
-          SizedBox(width: 6),
+          const SizedBox(width: 6),
           Text('Live', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
               color: _inkSoft, letterSpacing: 0.4)),
         ]),
@@ -659,7 +679,7 @@ class _ProjectWorkspaceDashboardScreenState
           legend('Actual', _accent, _slate),
           const Spacer(),
           Text('Plan ${_formatMoney(plannedTotal / 1000)} · Actual ${_formatMoney(actualTotal / 1000)}',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _muted)),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _muted)),
         ]),
         const SizedBox(height: 16),
         SizedBox(
@@ -713,7 +733,7 @@ class _ProjectWorkspaceDashboardScreenState
           ),
           for (int i = 0; i < rows.length; i++) ...[
             _healthRow(rows[i]),
-            if (i != rows.length - 1) const Divider(height: 1, color: _outline),
+            if (i != rows.length - 1) Divider(height: 1, color: _outline),
           ],
         ]),
       ),
@@ -740,7 +760,7 @@ class _ProjectWorkspaceDashboardScreenState
               child: Icon(row.icon, color: statusColor, size: 18)),
           const SizedBox(width: 10),
           Expanded(child: Text(row.indicator,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _inkSoft))),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _inkSoft))),
         ])),
         Expanded(flex: 2, child: _statusChip(statusLabel, statusColor, statusSoft)),
         Expanded(flex: 2, child: Row(children: [
@@ -749,7 +769,7 @@ class _ProjectWorkspaceDashboardScreenState
           Text(row.trend, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: trendColor)),
         ])),
         Expanded(flex: 4, child: Text(row.insight,
-            style: const TextStyle(fontSize: 12, color: _muted, height: 1.4),
+            style: TextStyle(fontSize: 12, color: _muted, height: 1.4),
             maxLines: 2, overflow: TextOverflow.ellipsis)),
       ]),
     );
@@ -806,14 +826,14 @@ class _ProjectWorkspaceDashboardScreenState
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Expanded(child: Text(b.title,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _ink, height: 1.3),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _ink, height: 1.3),
                 maxLines: 2, overflow: TextOverflow.ellipsis)),
             const SizedBox(width: 8),
             _priorityBadge(b.priority, palette.$1, palette.$2),
           ]),
           const SizedBox(height: 6),
           Text(b.subtitle,
-              style: const TextStyle(fontSize: 11.5, color: _muted, fontWeight: FontWeight.w600)),
+              style: TextStyle(fontSize: 11.5, color: _muted, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           Row(children: [
             Icon(Icons.schedule_outlined, size: 12, color: palette.$1),
@@ -848,10 +868,10 @@ class _ProjectWorkspaceDashboardScreenState
     final entries = <_ActivityEntry>[
       _ActivityEntry(primary?.ownerName.isNotEmpty == true ? primary!.ownerName : 'A. Khan',
           'updated the milestone review checklist', '12m ago', _emerald),
-      const _ActivityEntry('M. Rahman', 'approved Phase 2 quality gates', '1h ago', _accentDeep),
-      const _ActivityEntry('J. Sarker', 'logged a new high-impact risk', '3h ago', _crimson),
-      const _ActivityEntry('T. Pasha', 'revised the cost forecast for Q3', '5h ago', _gold),
-      const _ActivityEntry('A. Khan', 'closed blocker on procurement vendor', '1d ago', _emerald),
+      _ActivityEntry('M. Rahman', 'approved Phase 2 quality gates', '1h ago', _accentDeep),
+      _ActivityEntry('J. Sarker', 'logged a new high-impact risk', '3h ago', _crimson),
+      _ActivityEntry('T. Pasha', 'revised the cost forecast for Q3', '5h ago', _gold),
+      _ActivityEntry('A. Khan', 'closed blocker on procurement vendor', '1d ago', _emerald),
     ];
     return _sectionCard(
       title: 'Activity Stream',
@@ -881,14 +901,14 @@ class _ProjectWorkspaceDashboardScreenState
           padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             RichText(maxLines: 2, overflow: TextOverflow.ellipsis, text: TextSpan(
-              style: const TextStyle(fontSize: 12.5, color: _inkSoft, height: 1.4),
+              style: TextStyle(fontSize: 12.5, color: _inkSoft, height: 1.4),
               children: [
                 TextSpan(text: e.who, style: const TextStyle(fontWeight: FontWeight.w800)),
-                TextSpan(text: ' ${e.action}', style: const TextStyle(color: _muted)),
+                TextSpan(text: ' ${e.action}', style: TextStyle(color: _muted)),
               ],
             )),
             const SizedBox(height: 3),
-            Text(e.at, style: const TextStyle(fontSize: 10.5, color: _mutedSoft, fontWeight: FontWeight.w600)),
+            Text(e.at, style: TextStyle(fontSize: 10.5, color: _mutedSoft, fontWeight: FontWeight.w600)),
           ]),
         )),
       ]),
@@ -905,12 +925,12 @@ class _ProjectWorkspaceDashboardScreenState
         Expanded(child: TextField(
           controller: _updateController,
           minLines: 1, maxLines: 3,
-          style: const TextStyle(fontSize: 13, color: _ink, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 13, color: _ink, fontWeight: FontWeight.w500),
           decoration: InputDecoration(
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
             hintText: 'Post a project update...',
-            hintStyle: const TextStyle(color: _mutedSoft, fontSize: 13, fontWeight: FontWeight.w500),
+            hintStyle: TextStyle(color: _mutedSoft, fontSize: 13, fontWeight: FontWeight.w500),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
             filled: true, fillColor: Colors.white,
           ),
@@ -923,9 +943,9 @@ class _ProjectWorkspaceDashboardScreenState
             onTap: _submitUpdate, borderRadius: BorderRadius.circular(9),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: const Row(mainAxisSize: MainAxisSize.min, children: [
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Icon(Icons.send_rounded, size: 14, color: _slate),
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
                 Text('Post', style: TextStyle(color: _slate, fontSize: 12.5, fontWeight: FontWeight.w800)),
               ]),
             ),
@@ -955,17 +975,17 @@ class _ProjectWorkspaceDashboardScreenState
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(20),
+        color: _surface, borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _outline),
         boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 16, offset: Offset(0, 4))],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800,
+            Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800,
                 color: _ink, letterSpacing: -0.2)),
             const SizedBox(height: 4),
-            Text(subtitle, style: const TextStyle(fontSize: 12, color: _muted, height: 1.45)),
+            Text(subtitle, style: TextStyle(fontSize: 12, color: _muted, height: 1.45)),
           ])),
           if (headerTrailing != null) headerTrailing,
         ]),
@@ -1029,15 +1049,15 @@ class _ProjectWorkspaceDashboardScreenState
       decoration: BoxDecoration(color: _surface, borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _outline)),
       child: Row(children: [
-        const Icon(Icons.bolt_rounded, size: 16, color: _accentDeep),
+        Icon(Icons.bolt_rounded, size: 16, color: _accentDeep),
         const SizedBox(width: 8),
         Expanded(child: Text(
           _isBasic
               ? 'Basic plan · executive command center · synced ${_nowLabel()}'
               : 'Executive command center · last synced ${_nowLabel()}',
-          style: const TextStyle(fontSize: 11.5, color: _muted, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 11.5, color: _muted, fontWeight: FontWeight.w600),
         )),
-        const Text('NDU v2.0', style: TextStyle(fontSize: 11, color: _mutedSoft,
+        Text('NDU v2.0', style: TextStyle(fontSize: 11, color: _mutedSoft,
             fontWeight: FontWeight.w700, letterSpacing: 0.5)),
       ]),
     );
@@ -1067,7 +1087,7 @@ class _ProjectWorkspaceDashboardScreenState
           Icon(Icons.inbox_outlined, size: 30, color: Colors.grey.shade400),
           const SizedBox(height: 10),
           Text(message, textAlign: TextAlign.center,
-              style: const TextStyle(color: _muted, fontSize: 12.5)),
+              style: TextStyle(color: _muted, fontSize: 12.5)),
         ]),
       );
 

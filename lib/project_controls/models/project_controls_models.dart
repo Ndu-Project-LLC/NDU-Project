@@ -53,11 +53,11 @@ extension ChangeStatusLabel on ChangeStatus {
 
   Color get color => switch (this) {
         ChangeStatus.draft => const Color(0xFF6B7280),
-        ChangeStatus.submitted => const Color(0xFF3B82F6),
+        ChangeStatus.submitted => const Color(0xFFFFC812),
         ChangeStatus.underReview => const Color(0xFFF59E0B),
         ChangeStatus.approved => const Color(0xFF10B981),
         ChangeStatus.rejected => const Color(0xFFEF4444),
-        ChangeStatus.implemented => const Color(0xFF8B5CF6),
+        ChangeStatus.implemented => const Color(0xFFB8860B),
         ChangeStatus.archived => const Color(0xFF909096),
       };
 }
@@ -203,7 +203,7 @@ extension CompressionStrategyLabel on CompressionStrategy {
   Color get color => switch (this) {
         CompressionStrategy.none => const Color(0xFF6B7280),
         CompressionStrategy.crash => const Color(0xFFD97706),
-        CompressionStrategy.fastTrack => const Color(0xFF6366F1),
+        CompressionStrategy.fastTrack => const Color(0xFFB8860B),
       };
 }
 
@@ -222,7 +222,7 @@ extension RiskStatusLabel on RiskStatus {
   Color get color => switch (this) {
         RiskStatus.open => const Color(0xFFEF4444),
         RiskStatus.mitigated => const Color(0xFFF59E0B),
-        RiskStatus.realized => const Color(0xFF8B5CF6),
+        RiskStatus.realized => const Color(0xFFB8860B),
         RiskStatus.closed => const Color(0xFF10B981),
       };
 }
@@ -249,9 +249,9 @@ extension ResourceDisciplineLabel on ResourceDiscipline {
       };
 
   Color get color => switch (this) {
-        ResourceDiscipline.pm => const Color(0xFF6366F1),
-        ResourceDiscipline.engineering => const Color(0xFF2563EB),
-        ResourceDiscipline.design => const Color(0xFF8B5CF6),
+        ResourceDiscipline.pm => const Color(0xFFB8860B),
+        ResourceDiscipline.engineering => const Color(0xFFFFC812),
+        ResourceDiscipline.design => const Color(0xFFB8860B),
         ResourceDiscipline.qa => const Color(0xFFF59E0B),
         ResourceDiscipline.construction => const Color(0xFF10B981),
       };
@@ -721,6 +721,12 @@ class ScheduleVariance {
   final String delayReason;
   final CompressionStrategy compressionStrategy;
 
+  /// The change request (e.g. `CR-2026-003`) that caused this variance —
+  /// the "reason" for the actual-vs-plan delta, per the Lusaka 22 call
+  /// ("the reason will be because of the change request … whatever the
+  /// number of this change request is").
+  final String? changeRequestNumber;
+
   const ScheduleVariance({
     required this.workPackageId,
     this.scheduleActivityId,
@@ -731,6 +737,7 @@ class ScheduleVariance {
     required this.floatDays,
     required this.delayReason,
     required this.compressionStrategy,
+    this.changeRequestNumber,
   });
 
   /// Variance in days vs planned finish (positive = late, negative = early).
@@ -758,6 +765,7 @@ class ScheduleVariance {
     double? floatDays,
     String? delayReason,
     CompressionStrategy? compressionStrategy,
+    String? changeRequestNumber,
   }) {
     return ScheduleVariance(
       workPackageId: workPackageId ?? this.workPackageId,
@@ -769,6 +777,7 @@ class ScheduleVariance {
       floatDays: floatDays ?? this.floatDays,
       delayReason: delayReason ?? this.delayReason,
       compressionStrategy: compressionStrategy ?? this.compressionStrategy,
+      changeRequestNumber: changeRequestNumber ?? this.changeRequestNumber,
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'roadmap_deliverable.dart';
 
+import 'package:ndu_project/utils/unique_id.dart';
+
 /// Aggregated deliverable from any phase, unified representation
 class AggregatedDeliverable {
   final String id;
@@ -112,7 +114,7 @@ class AggregatedDeliverable {
 
   factory AggregatedDeliverable.fromJson(Map<String, dynamic> json) {
     return AggregatedDeliverable(
-      id: json['id'] ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id'] ?? newId(),
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       phase: DeliverablePhase.values.firstWhere(

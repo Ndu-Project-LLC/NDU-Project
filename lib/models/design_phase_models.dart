@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart' show ProjectMethodology;
 export 'package:ndu_project/wbs/models/wbs_models.dart' show ProjectMethodology;
 
@@ -203,7 +204,7 @@ class RequirementRow {
   }
 
   static String _generateId() =>
-      DateTime.now().microsecondsSinceEpoch.toString();
+      newId();
 
   @override
   bool operator ==(Object other) {
@@ -668,7 +669,7 @@ class DesignSpecification {
     String? id,
     this.description = '',
     this.status = 'Defined',
-  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -711,7 +712,7 @@ class DesignDocument {
     this.notes,
     this.uploadedFileName,
     this.uploadedStoragePath,
-  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   bool get hasUploadedFile =>
       uploadedFileName != null && uploadedFileName!.isNotEmpty;
@@ -763,7 +764,7 @@ class DesignToolLink {
     this.isInternal = false,
     this.uploadedFileName,
     this.uploadedStoragePath,
-  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   bool get hasUploadedFile =>
       uploadedFileName != null && uploadedFileName!.isNotEmpty;

@@ -3,6 +3,9 @@
 ///
 /// Embedded in [ProjectDataModel] and provides the quality cost data
 /// that links to the Quality Management module.
+library;
+import 'package:ndu_project/utils/unique_id.dart';
+
 class CostOfQualityData {
   List<CoQEntry> preventionCosts;
   List<CoQEntry> appraisalCosts;
@@ -125,7 +128,7 @@ class CoQEntry {
     this.status = 'Planned',
     this.notes = '',
     DateTime? createdAt,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {

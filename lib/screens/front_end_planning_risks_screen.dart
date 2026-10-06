@@ -9,6 +9,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/form_validation_engine.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/risk_log.dart';
 import 'package:ndu_project/widgets/content_text.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
@@ -18,7 +19,11 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 /// Front End Planning – Project Risks page
 /// Matches the provided screenshot with:
 /// - Top bar (back/forward, centered title, user chip)
@@ -42,7 +47,7 @@ class _FrontEndPlanningRisksScreenState
  extends State<FrontEndPlanningRisksScreen> {
  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
  final GlobalKey _riskTableKey = GlobalKey();
- final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  bool _isSyncReady = false;
  bool _isApplyingNotesSummary = false;
  bool _hasShownDueDiligencePrompt = false;
@@ -82,9 +87,20 @@ class _FrontEndPlanningRisksScreenState
  screenTitle: 'Risks',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
+ // The risk log itself. The export used to print only Project Info and Notes,
+ // so the table "didn't show anything" (Lusaka 27).
+ if (fep.riskRegisterItems.isNotEmpty)
+ PdfSection.table(
+ 'Risk Log',
+ headers: RiskLogRow.columnLabels,
+ rows: [
+ for (final row in RiskLogRow.fromRegisterItems(fep.riskRegisterItems))
+ row.values,
+ ],
+ ),
  ],
  );
  }
@@ -114,6 +130,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  probability: item.likelihood,
  impact: item.impactLevel,
  riskValue: '',
+ costImpact: RiskLogRow.costImpactLabel(item),
+ scheduleImpact: RiskLogRow.scheduleImpactLabel(item),
  riskLevel: _deriveRiskLevel(item.likelihood, item.impactLevel),
  mitigation: item.mitigationStrategy,
  discipline: item.discipline,
@@ -525,6 +543,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  probability: '',
  impact: '',
  riskValue: '',
+ costImpact: '',
+ scheduleImpact: '',
  riskLevel: '',
  mitigation: '',
  discipline: '',
@@ -544,15 +564,21 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  if (index < 0 || index >= _rows.length) return;
  final current = _rows[index];
 
- final idCtrl = TextEditingController(text: current.id);
- final requirementCtrl = TextEditingController(text: current.requirement);
- final riskCtrl = TextEditingController(text: current.risk);
- final descriptionCtrl = TextEditingController(text: current.description);
- final categoryCtrl = TextEditingController(text: current.category);
- final mitigationCtrl = TextEditingController(text: current.mitigation);
- final disciplineCtrl = TextEditingController(text: current.discipline);
- final projectRoleCtrl = TextEditingController(text: current.projectRole);
- final ownerCtrl = TextEditingController(text: current.owner);
+ final idCtrl = SpellCheckTextEditingController(text: current.id);
+ final requirementCtrl = SpellCheckTextEditingController(text: current.requirement);
+ final riskCtrl = SpellCheckTextEditingController(text: current.risk);
+ final descriptionCtrl = SpellCheckTextEditingController(text: current.description);
+ final categoryCtrl = SpellCheckTextEditingController(text: current.category);
+ final mitigationCtrl = SpellCheckTextEditingController(text: current.mitigation);
+ final disciplineCtrl = SpellCheckTextEditingController(text: current.discipline);
+ final projectRoleCtrl = SpellCheckTextEditingController(text: current.projectRole);
+ final ownerCtrl = SpellCheckTextEditingController(text: current.owner);
+ // Quantitative impact (Lusaka 27: "the potential cost impact with the
+ // schedule impact … all done on the table"). Left blank when unknown.
+ final costImpactCtrl = SpellCheckTextEditingController(
+     text: current.costImpact.isEmpty ? '' : current.costImpact);
+ final scheduleImpactCtrl = SpellCheckTextEditingController(
+     text: current.scheduleImpact.isEmpty ? '' : current.scheduleImpact);
  // Dropdown options
  const requirementTypeOptions = [
  'Technical',
@@ -615,7 +641,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  final result = await showDialog<_RiskItem>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (ctx) {
  final viewInsets = MediaQuery.of(ctx).viewInsets;
  return Center(
@@ -634,8 +660,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  mainAxisSize: MainAxisSize.min,
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
- children: const [
+ const Row(
+ children: [
  Icon(Icons.edit_note, color: Color(0xFF111827)),
  SizedBox(width: 8),
  Text('Edit Risk',
@@ -734,6 +760,24 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ],
  ),
  const SizedBox(height: 12),
+ Row(
+ children: [
+ Expanded(
+ child: _LabeledField(
+ label: 'Cost Impact (\$)',
+ controller: costImpactCtrl,
+ hintText: 'e.g. 12500'),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: _LabeledField(
+ label: 'Schedule Impact (days)',
+ controller: scheduleImpactCtrl,
+ hintText: 'e.g. 12'),
+ ),
+ ],
+ ),
+ const SizedBox(height: 12),
  _LabeledField(
  label: 'Mitigation', controller: mitigationCtrl),
  const SizedBox(height: 12),
@@ -769,6 +813,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  probability: selectedProbability,
  impact: selectedImpact,
  riskValue: current.riskValue,
+ costImpact: costImpactCtrl.text.trim(),
+ scheduleImpact: scheduleImpactCtrl.text.trim(),
  riskLevel: selectedRiskLevel,
  mitigation: mitigationCtrl.text.trim(),
  discipline: disciplineCtrl.text.trim(),
@@ -976,15 +1022,17 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  _isApplyingNotesSummary = true;
  _notesController.clear();
  _isApplyingNotesSummary = false;
- }
-
- final riskRegisterItems = _rows
+ } final riskRegisterItems = _rows
  .map((r) => RiskRegisterItem(
  riskName: r.risk.trim(),
  description: r.description.trim(),
  category: r.category.trim(),
  requirement: r.requirement.trim(),
  requirementType: r.requirementType.trim(),
+ costImpactMostLikely:
+ double.tryParse(r.costImpact.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0,
+ scheduleImpactMostLikely:
+ int.tryParse(r.scheduleImpact.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
  impactLevel: (r.impact.trim().isNotEmpty
  ? r.impact.trim()
  : r.riskLevel.trim())
@@ -1147,30 +1195,15 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  return 'Key risks: ${highlights.join(', ')}$suffix.';
  }
 
- String _normalizeRiskScale(String rawValue, {String fallback = 'Medium'}) {
- final normalized = rawValue.trim().toLowerCase();
- if (normalized.startsWith('h')) return 'High';
- if (normalized.startsWith('l')) return 'Low';
- if (normalized.startsWith('m')) return 'Medium';
- return fallback;
- }
+ /// One implementation, shared with the Planning risk log
+ /// (`lib/models/risk_log.dart`) so both sides rate a risk the same way.
+ String _normalizeRiskScale(String rawValue, {String fallback = 'Medium'}) =>
+ RiskLogRow.normalizeScale(rawValue, fallback: fallback);
 
- String _deriveRiskLevel(String probability, String impact) {
- final prob =
- _normalizeRiskScale(probability, fallback: 'Medium').toLowerCase();
- final imp = _normalizeRiskScale(impact, fallback: 'Medium').toLowerCase();
- if ((prob == 'high' && imp == 'high') ||
- (prob == 'high' && imp == 'medium') ||
- (prob == 'medium' && imp == 'high')) {
- return 'High';
- }
- if ((prob == 'low' && imp == 'low') ||
- (prob == 'low' && imp == 'medium') ||
- (prob == 'medium' && imp == 'low')) {
- return 'Low';
- }
- return 'Medium';
- }
+ /// The overall rating for a probability × impact pair — see
+ /// [RiskLogRow.deriveRiskLevel].
+ String _deriveRiskLevel(String probability, String impact) =>
+ RiskLogRow.deriveRiskLevel(probability, impact);
 
  String _shortRiskLabel(String value, {int maxChars = 54}) {
  final normalized = value.replaceAll(RegExp(r'\s+'), ' ').trim();
@@ -1223,34 +1256,6 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  void _clearRiskTableValidationState() {
  _riskTableHasError = false;
  _riskTableErrorText = null;
- }
-
- Future<void> _focusFirstRiskIssue(FormValidationResult validation) async {
- await FormValidationEngine.scrollToFirstIssue(validation);
- final issue = validation.firstIssue;
- if (issue == null) return;
-
- if (issue.id == 'risk_title') {
- if (_rows.isEmpty) {
- _addNewRisk();
- return;
- }
-
- final firstMissingTitle =
- _rows.indexWhere((row) => row.risk.trim().isEmpty);
- if (firstMissingTitle != -1) {
- _showEditRiskSheet(firstMissingTitle);
- }
- return;
- }
-
- if (issue.id == 'mitigation_strategy') {
- final firstMissingMitigation = _rows.indexWhere(
- (row) => row.risk.trim().isNotEmpty && row.mitigation.trim().isEmpty);
- if (firstMissingMitigation != -1) {
- _showEditRiskSheet(firstMissingMitigation);
- }
- }
  }
 
  Future<void> _saveAndNavigateToOpportunities({
@@ -1317,10 +1322,16 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  if (isMobile) {
  return _buildMobileScaffold(context);
  }
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
 
  return Scaffold(
  // Ensure white background as requested
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1345,21 +1356,32 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _roundedField(
+ CharterLockBanner(visible: charterLocked),
+ // Lusaka 28 follow-up: the blanket `CharterLockBanner.applyLock` that
+ // used to wrap this whole column swallowed scroll drags too — a locked
+ // page could not scroll at all. The lock is now applied ONLY to the
+ // editable controls (notes field, regenerate button, row editors, add
+ // button) so the user can still scroll, search, and expand every cell
+ // while the section stays read-only.
+ CollapsibleNotesSection(
+ title: 'Notes',
+ child: _roundedField(
  controller: _notesController,
  hint: 'Input your notes here...',
  minLines: 2,
  maxLines: 4,
+ readOnly: charterLocked,
+ ),
  ),
  const SizedBox(height: 22),
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment:
  CrossAxisAlignment.start,
- children: const [
+ children: [
  EditableContentText(
  contentKey:
  'fep_initial_project_risks_title',
@@ -1385,6 +1407,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ],
  ),
  ),
+ // Regenerate is an EDIT action — gated by the lock.
+ if (!charterLocked)
  PageRegenerateAllButton(
  onRegenerateAll: () async {
  final confirmed =
@@ -1402,15 +1426,17 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  const SizedBox(height: 14),
  _buildRiskDistributionMatrix(),
  const SizedBox(height: 14),
- const Row(
+ Row(
  children: [
- Icon(Icons.info_outline,
+ const Icon(Icons.info_outline,
  size: 16, color: Color(0xFF6B7280)),
- SizedBox(width: 6),
+ const SizedBox(width: 6),
  Expanded(
  child: Text(
- 'Use the Action column or double-click any row cell to edit risk details.',
- style: TextStyle(
+ charterLocked
+ ? 'This section is read-only — the Charter has been approved. You can still scroll, search, and expand rows to view all content.'
+ : 'Use the Action column or double-click any row cell to edit risk details.',
+ style: const TextStyle(
  fontSize: 12.5,
  color: Color(0xFF6B7280),
  ),
@@ -1434,7 +1460,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  )
  else
- _buildRiskTable(context),
+ _buildRiskTable(context, locked: charterLocked),
  if (_riskTableHasError) ...[
  const SizedBox(height: 8),
  Text(
@@ -1448,6 +1474,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  ],
  const SizedBox(height: 16),
+ // Add Item is an EDIT action — gated by the lock.
+ if (!charterLocked)
  Align(
  alignment: Alignment.centerLeft,
  child: ElevatedButton.icon(
@@ -1477,8 +1505,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Project Risks',
  ),
  ),
@@ -1503,7 +1531,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
 
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: Drawer(
  width: MediaQuery.sizeOf(context).width * 0.88,
  child: const SafeArea(
@@ -1542,7 +1570,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  borderRadius: BorderRadius.circular(20),
  child: const CircleAvatar(
  radius: 13,
- backgroundColor: Color(0xFF2563EB),
+ backgroundColor: Color(0xFFFFC812),
  child: Text('C',
  style: TextStyle(
  color: Colors.white,
@@ -1640,8 +1668,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  style: TextStyle(fontWeight: FontWeight.w700),
  ),
  style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF2563EB),
- side: const BorderSide(color: Color(0xFFBFDBFE)),
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12)),
  padding: const EdgeInsets.symmetric(vertical: 13),
@@ -1947,7 +1975,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  _buildDistributionTile(
  label: 'High',
  value: distribution['High'] ?? 0,
- background: const Color(0xFFFFE4E6),
+ background: const Color(0xFFFFF8E1),
  foreground: const Color(0xFFDC2626),
  ),
  _buildDistributionTile(
@@ -1981,7 +2009,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  decoration: BoxDecoration(
  color: background,
  borderRadius: BorderRadius.circular(10),
- border: Border.all(color: foreground.withOpacity(0.25)),
+ border: Border.all(color: foreground.withValues(alpha: 0.25)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -2008,19 +2036,29 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  );
  }
 
- Widget _buildRiskTable(BuildContext context) {
- return FullScreenTableWrapper(
- title: 'Risks',
- child: _buildRiskTableContent(),
- tableBuilder: (fsContext) => _buildRiskTableContent(),
- );
+ Widget _buildRiskTable(BuildContext context, {bool locked = false}) {
+		return SearchableTableSection(
+			title: 'Risks',
+			items: _rows,
+			searchFilter: (item, query) {
+				final r = item as _RiskItem;
+				final q = query.trim().toLowerCase();
+				if (q.isEmpty) return true;
+				return r.risk.toLowerCase().contains(q) ||
+						r.description.toLowerCase().contains(q) ||
+						r.category.toLowerCase().contains(q) ||
+						r.owner.toLowerCase().contains(q);
+			},
+			tableBuilder: (fsContext, query) => _buildRiskTableContent(query.isEmpty ? null : _rows.where((r) => r.risk.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.category.toLowerCase().contains(query.trim().toLowerCase()) || r.owner.toLowerCase().contains(query.trim().toLowerCase())).toList(), locked),
+			cardBuilder: (fsContext, query) => Column(children: _rows.where((r) => r.risk.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.category.toLowerCase().contains(query.trim().toLowerCase()) || r.owner.toLowerCase().contains(query.trim().toLowerCase())).map((r) => Card(child: ListTile(title: Text(r.risk), subtitle: Text(r.description)))).toList()),
+		);
  }
 
- Widget _buildRiskTableContent() {
- final border = const BorderSide(color: Color(0xFFE5E7EB));
- final headerStyle = const TextStyle(
+	Widget _buildRiskTableContent([List<_RiskItem>? rowsOverride, bool locked = false]) {
+ const border = BorderSide(color: Color(0xFFE5E7EB));
+ const headerStyle = TextStyle(
  fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));
- final cellStyle = const TextStyle(fontSize: 14, color: Color(0xFF111827));
+ const cellStyle = TextStyle(fontSize: 14, color: Color(0xFF111827));
 
  return Container(
  key: _riskTableKey,
@@ -2035,7 +2073,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  child: LayoutBuilder(
  builder: (context, constraints) {
- final minTableWidth = 1940.0;
+ const minTableWidth = 1940.0;
  final tableWidth = constraints.maxWidth < minTableWidth
  ? minTableWidth
  : constraints.maxWidth;
@@ -2062,7 +2100,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  11: FixedColumnWidth(120),
  12: FixedColumnWidth(132),
  },
- border: TableBorder(
+ border: const TableBorder(
  horizontalInside: border,
  verticalInside: border,
  top: border,
@@ -2089,34 +2127,36 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  _th('Status', headerStyle),
  _th('Action', headerStyle),
  ],
- ),
- ...List.generate(_rows.length, (i) {
+ ),	...List.generate(_rows.length, (i) {
  final r = _rows[i];
  final severity = _displayRiskSeverity(r);
  final rowCanUndo = _canUndoRiskRow(i);
+ // Charter lock (Lusaka 28 follow-up): viewing, scrolling, searching and
+ // expanding stay live; only the EDIT affordances are gated.
+ final canEdit = !locked;
  return TableRow(children: [
  _td(WrappedText(r.id, style: cellStyle),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  _ExpandableCellText(
  text: r.risk,
  style: cellStyle,
  collapsedLines: 2,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  _ExpandableCellText(
  text: r.description,
  style: cellStyle,
  collapsedLines: 2,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  r.category.isEmpty
  ? const SizedBox.shrink()
- : _chip(r.category, const Color(0xFFF3E8FF),
- const Color(0xFF7C3AED)),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ : _chip(r.category, const Color(0xFFFFF8E1),
+ const Color(0xFFB8860B)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  WrappedText(
  r.probability.trim().isEmpty
@@ -2124,58 +2164,58 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  : r.probability,
  style: cellStyle,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  WrappedText(
  r.impact.trim().isEmpty ? '-' : r.impact,
  style: cellStyle,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  severity.isEmpty
  ? const SizedBox.shrink()
  : _riskLevelChip(severity),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  _ExpandableCellText(
  text: r.mitigation,
  style: cellStyle,
  collapsedLines: 2,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  _ExpandableCellText(
  text: r.discipline,
  style: cellStyle,
  collapsedLines: 2,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  _ExpandableCellText(
  text: r.projectRole,
  style: cellStyle,
  collapsedLines: 2,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  _ExpandableCellText(
  text: r.owner,
  style: cellStyle,
  collapsedLines: 2,
  ),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  r.status.isEmpty
  ? const SizedBox.shrink()
  : _statusPill(r.status),
- onDoubleTap: () => _showEditRiskSheet(i)),
+ onDoubleTap: canEdit ? () => _showEditRiskSheet(i) : null),
  _td(
  Center(
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
  InkWell(
- onTap: () => _showEditRiskSheet(i),
+ onTap: canEdit ? () => _showEditRiskSheet(i) : null,
  borderRadius: BorderRadius.circular(8),
  child: Container(
  padding: const EdgeInsets.all(6),
@@ -2183,42 +2223,51 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  color: const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(8),
  ),
- child: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF4B5563)),
- ),
- ),
- const SizedBox(width: 6),
- InkWell(
- onTap:
- rowCanUndo ? () => _undoRiskRow(i) : null,
- borderRadius: BorderRadius.circular(8),
- child: Container(
- padding: const EdgeInsets.all(6),
- decoration: BoxDecoration(
- color: rowCanUndo
- ? const Color(0xFFEFF6FF)
- : const Color(0xFFF3F4F6),
- borderRadius: BorderRadius.circular(8),
- ),
- child: Icon(Icons.undo_rounded,
+ child: Icon(Icons.edit_outlined,
  size: 16,
- color: rowCanUndo
- ? const Color(0xFF2563EB)
+ color: canEdit
+ ? const Color(0xFF4B5563)
  : const Color(0xFF9CA3AF)),
  ),
  ),
  const SizedBox(width: 6),
  InkWell(
- onTap: () => _confirmAndDeleteRow(i),
+ onTap: canEdit && rowCanUndo
+ ? () => _undoRiskRow(i)
+ : null,
  borderRadius: BorderRadius.circular(8),
  child: Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: const Color(0xFFFEF2F2),
+ color: canEdit && rowCanUndo
+ ? const Color(0xFFFFF8E1)
+ : const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(8),
  ),
- child: const Icon(Icons.delete_outline,
- size: 16, color: Color(0xFFDC2626)),
+ child: Icon(Icons.undo_rounded,
+ size: 16,
+ color: canEdit && rowCanUndo
+ ? const Color(0xFFFFC812)
+ : const Color(0xFF9CA3AF)),
+ ),
+ ),
+ const SizedBox(width: 6),
+ InkWell(
+ onTap: canEdit ? () => _confirmAndDeleteRow(i) : null,
+ borderRadius: BorderRadius.circular(8),
+ child: Container(
+ padding: const EdgeInsets.all(6),
+ decoration: BoxDecoration(
+ color: canEdit
+ ? const Color(0xFFFEF2F2)
+ : const Color(0xFFF3F4F6),
+ borderRadius: BorderRadius.circular(8),
+ ),
+ child: Icon(Icons.delete_outline,
+ size: 16,
+ color: canEdit
+ ? const Color(0xFFDC2626)
+ : const Color(0xFF9CA3AF)),
  ),
  ),
  ],
@@ -2282,7 +2331,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  severity, const Color(0xFFFEE2E2), const Color(0xFFB91C1C));
  case 'High':
  return _chip(
- severity, const Color(0xFFFFE4E6), const Color(0xFFDC2626));
+ severity, const Color(0xFFFFF8E1), const Color(0xFFDC2626));
  case 'Low':
  return _chip(
  severity, const Color(0xFFDCFCE7), const Color(0xFF16A34A));
@@ -2315,7 +2364,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
- color: const Color(0xFFFFE4E6),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(16),
  ),
  child: Text(status,
@@ -2338,6 +2387,12 @@ class _RiskItem {
  final String probability;
  final String impact;
  final String riskValue;
+
+ /// Potential cost impact in project currency, blank when not recorded.
+ final String costImpact;
+
+ /// Potential schedule impact in days, blank when not recorded.
+ final String scheduleImpact;
  final String riskLevel;
  final String mitigation;
  final String discipline;
@@ -2354,6 +2409,8 @@ class _RiskItem {
  required this.probability,
  required this.impact,
  required this.riskValue,
+ this.costImpact = '',
+ this.scheduleImpact = '',
  required this.riskLevel,
  required this.mitigation,
  required this.discipline,
@@ -2372,6 +2429,8 @@ class _RiskItem {
  String? probability,
  String? impact,
  String? riskValue,
+ String? costImpact,
+ String? scheduleImpact,
  String? riskLevel,
  String? mitigation,
  String? discipline,
@@ -2389,6 +2448,8 @@ class _RiskItem {
  probability: probability ?? this.probability,
  impact: impact ?? this.impact,
  riskValue: riskValue ?? this.riskValue,
+ costImpact: costImpact ?? this.costImpact,
+ scheduleImpact: scheduleImpact ?? this.scheduleImpact,
  riskLevel: riskLevel ?? this.riskLevel,
  mitigation: mitigation ?? this.mitigation,
  discipline: discipline ?? this.discipline,
@@ -2468,7 +2529,7 @@ class _ExpandableCellTextState extends State<_ExpandableCellText> {
  child: Text(
  _isExpanded ? 'View less' : 'View more',
  style: widget.style.copyWith(
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFFFC812),
  fontSize: 12.5,
  fontWeight: FontWeight.w700,
  ),
@@ -2543,13 +2604,13 @@ class _BottomOverlays extends StatelessWidget {
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFD7E5FF)),
  ),
- child: Row(
- children: const [
- Icon(Icons.lightbulb_outline, color: Color(0xFF2563EB)),
+ child: const Row(
+ children: [
+ Icon(Icons.lightbulb_outline, color: Color(0xFFFFC812)),
  SizedBox(width: 8),
  Text('Hint',
  style: TextStyle(
- fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+ fontWeight: FontWeight.w800, color: Color(0xFFFFC812))),
  SizedBox(width: 10),
  Text('Focus on major risks associated with each potential solution.',
  style: TextStyle(color: Color(0xFF1F2937))),
@@ -2563,7 +2624,8 @@ Widget _roundedField(
  {required TextEditingController controller,
  required String hint,
  int minLines = 1,
- int maxLines = 4}) {
+ int maxLines = 4,
+ bool readOnly = false}) {
  return Container(
  width: double.infinity,
  decoration: BoxDecoration(
@@ -2574,6 +2636,7 @@ Widget _roundedField(
  padding: const EdgeInsets.all(14),
  child: VoiceTextField(
  controller: controller,
+ readOnly: readOnly,
  minLines: minLines,
  maxLines: maxLines,
  decoration: InputDecoration(
@@ -2596,9 +2659,9 @@ class _LabeledField extends StatelessWidget {
  const _LabeledField({
  required this.label,
  required this.controller,
- this.hintText,
  this.autofocus = false,
  this.enabled = true,
+ this.hintText,
  });
 
  @override
@@ -2623,7 +2686,7 @@ class _LabeledField extends StatelessWidget {
  controller: controller,
  autofocus: autofocus,
  enabled: enabled,
- decoration: InputDecoration(
+ decoration: const InputDecoration(
  border: InputBorder.none,
  ),
  ),

@@ -16,6 +16,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 
 class SetupWizardScreen extends StatefulWidget {
   const SetupWizardScreen({super.key});
@@ -37,7 +38,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       appBarTitle: 'Cost Estimate',
       breadcrumbPhase: 'Planning Phase',
       breadcrumbTitle: 'Cost Estimate Setup',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 600),
@@ -163,11 +164,13 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     if (_step < 2) {
       setState(() => _step++);
     } else {
-      // Finish
+      // Finish — bind the estimate to the project the user is working in so
+      // it is stored (and read back) under that project's own key.
       context.read<CostEstimateProvider>().setup(
             projectName: _projectName.trim(),
             className: _className!,
             deliveryModel: _deliveryModel!,
+            projectId: ProjectDataHelper.getData(context).projectId ?? '',
           );
     }
   }

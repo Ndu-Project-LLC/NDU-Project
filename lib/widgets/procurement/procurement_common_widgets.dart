@@ -25,8 +25,8 @@ class ProcurementEmptyStateCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0F0F172A), blurRadius: 12, offset: Offset(0, 8)),
         ],
@@ -72,11 +72,11 @@ class _EmptyStateBody extends StatelessWidget {
           width: iconSize,
           height: iconSize,
           decoration: BoxDecoration(
-            color: Color(0xFFEFF6FF),
+            color: const Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(icon,
-              color: const Color(0xFF2563EB), size: compact ? 20 : 24),
+              color: const Color(0xFFFFC812), size: compact ? 20 : 24),
         ),
         SizedBox(height: compact ? 10 : 14),
         Text(
@@ -99,7 +99,7 @@ class _EmptyStateBody extends StatelessWidget {
           ElevatedButton(
             onPressed: onAction,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
+              backgroundColor: const Color(0xFFFFC812),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
               shape: RoundedRectangleBorder(
@@ -137,7 +137,7 @@ class ProcurementSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       child: Row(
@@ -147,7 +147,7 @@ class ProcurementSummaryCard extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
                 color: iconBackground, borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: const Color(0xFF1D4ED8)),
+            child: Icon(icon, color: const Color(0xFFFFC812)),
           ),
           const SizedBox(width: 16),
           Column(
@@ -202,9 +202,9 @@ class ProcurementItemStatusPill extends StatelessWidget {
         break;
       case 'pending':
       default:
-        background = const Color(0xFFDBEAFE);
-        border = const Color(0xFF93C5FD);
-        foreground = const Color(0xFF1D4ED8);
+        background = const Color(0xFFFEF3C7);
+        border = const Color(0xFFFFC812);
+        foreground = const Color(0xFFFFC812);
         break;
     }
 
@@ -242,9 +242,9 @@ class ProcurementInfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

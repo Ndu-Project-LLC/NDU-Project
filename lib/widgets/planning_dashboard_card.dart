@@ -13,11 +13,15 @@ class PlanningDashboardCard extends StatelessWidget {
   final VoidCallback? onGenerateAI;
   final bool isGenerating;
   final String emptyStateText;
-  /// When provided, the list becomes reorderable via long-press drag
-  /// (using `ReorderableListView.builder`). A drag handle icon is
-  /// shown on each row. When null, the list is a static
-  /// `ListView.separated` (legacy behavior).
   final void Function(int oldIndex, int newIndex)? onReorder;
+
+  /// Stable key for this section — used as the DragTarget payload
+  /// identifier so items dragged from other sections can be routed
+  /// to the correct list.
+  final String? sectionKey;
+
+  /// Called when an item is dropped onto this card from another section.
+  final void Function(String itemId, String sourceSectionKey)? onItemReceived;
 
   const PlanningDashboardCard({
     super.key,
@@ -33,11 +37,17 @@ class PlanningDashboardCard extends StatelessWidget {
     this.isGenerating = false,
     this.emptyStateText = 'No items yet. Add manually or generate with AI.',
     this.onReorder,
+    this.sectionKey,
+    this.onItemReceived,
   });
+
+  /// Payload string for cross-section drag. Format: `sectionKey::itemId`
+  String _dragPayload(PlanningDashboardItem item) =>
+      '${sectionKey ?? title}::${item.id}';
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    Widget card = Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -112,7 +122,7 @@ class PlanningDashboardCard extends StatelessWidget {
                                     CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.auto_awesome,
-                                color: Color(0xFF7C3AED)), // Purple accent
+                                color: Color(0xFFB8860B)),
                       ),
                   ],
                 ),
@@ -139,7 +149,6 @@ class PlanningDashboardCard extends StatelessWidget {
               ),
             )
           else if (onReorder != null)
-            // Reorderable list — long-press an item to drag it.
             ReorderableListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -169,7 +178,11 @@ class PlanningDashboardCard extends StatelessWidget {
                   key: ValueKey(
                       '${title}_item_${index}_${item.description.hashCode}'),
                   index: index,
-                  child: _buildItemRow(context, item, showDragHandle: true),
+                  child: _wrapWithCrossSectionDrag(
+                    context,
+                    item,
+                    _buildItemRow(context, item, showDragHandle: true),
+                  ),
                 );
               },
             )
@@ -181,7 +194,11 @@ class PlanningDashboardCard extends StatelessWidget {
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final item = items[index];
-                return _buildItemRow(context, item);
+                return _wrapWithCrossSectionDrag(
+                  context,
+                  item,
+                  _buildItemRow(context, item),
+                );
               },
             ),
 
@@ -220,6 +237,66 @@ class PlanningDashboardCard extends StatelessWidget {
         ],
       ),
     );
+
+    // Wrap with DragTarget when sectionKey is provided
+    if (sectionKey != null && onItemReceived != null) {
+      return DragTarget<String>(
+        onWillAcceptWithDetails: (details) {
+          final payload = details.data;
+          if (!payload.contains('::')) return false;
+          final sourceSection = payload.split('::').first;
+          return sourceSection != sectionKey;
+        },
+        onAcceptWithDetails: (details) {
+          final payload = details.data;
+          final parts = payload.split('::');
+          if (parts.length >= 2) {
+            onItemReceived!(parts[1], parts[0]);
+          }
+        },
+        builder: (context, candidateData, rejectedData) {
+          final isHovering = candidateData.isNotEmpty;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: isHovering
+                  ? Border.all(color: const Color(0xFFF59E0B), width: 2)
+                  : null,
+            ),
+            child: card,
+          );
+        },
+      );
+    }
+
+    return card;
+  }
+
+  Widget _wrapWithCrossSectionDrag(
+      BuildContext context, PlanningDashboardItem item, Widget child) {
+    if (sectionKey == null) return child;
+    return LongPressDraggable<String>(
+      data: _dragPayload(item),
+      delay: const Duration(milliseconds: 250),
+      feedback: Material(
+        elevation: 6,
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.transparent,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Opacity(
+            opacity: 0.92,
+            child: _buildItemRow(context, item, showDragHandle: false),
+          ),
+        ),
+      ),
+      childWhenDragging: Opacity(
+        opacity: 0.35,
+        child: child,
+      ),
+      child: child,
+    );
   }
 
   Widget _buildItemRow(BuildContext context, PlanningDashboardItem item,
@@ -234,7 +311,6 @@ class PlanningDashboardCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Drag handle (only shown when reorderable).
           if (showDragHandle) ...[
             Padding(
               padding: const EdgeInsets.only(top: 2.0),
@@ -246,7 +322,6 @@ class PlanningDashboardCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
           ],
-          // Icon based on context (hard to guess, generic dot for now)
           Padding(
             padding: const EdgeInsets.only(top: 2.0),
             child: Container(
@@ -254,8 +329,8 @@ class PlanningDashboardCard extends StatelessWidget {
               height: 8,
               decoration: BoxDecoration(
                 color: item.isAiGenerated
-                    ? const Color(0xFF8B5CF6) // Purple for AI
-                    : const Color(0xFF10B981), // Green for Manual
+                    ? const Color(0xFFB8860B)
+                    : const Color(0xFF10B981),
                 shape: BoxShape.circle,
               ),
             ),
@@ -286,7 +361,6 @@ class PlanningDashboardCard extends StatelessWidget {
               ],
             ),
           ),
-          // Actions
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -303,7 +377,7 @@ class PlanningDashboardCard extends StatelessWidget {
               if (onDelete != null)
                 IconButton(
                   icon: const Icon(Icons.close,
-                      size: 16, color: Color(0xFFEF4444)), // Red close
+                      size: 16, color: Color(0xFFEF4444)),
                   onPressed: () => onDelete!(item),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),

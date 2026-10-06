@@ -22,7 +22,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Best Practices',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -46,7 +46,7 @@ class ExecutionPlanBestPracticesScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Plan - Best Practices',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -107,7 +107,7 @@ class _BestPracticesSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Best Practices',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'issueTopic',
                       label: 'Topic',
@@ -203,7 +203,7 @@ class _BestPracticesSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileBestPracticesActions()
+          const _MobileBestPracticesActions()
         else
           const _DesktopBestPracticesActions(),
       ],

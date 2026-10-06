@@ -3,6 +3,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/milestone_item_linkage_service.dart';
 import 'package:ndu_project/widgets/milestone_picker_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class WorkPackageDialog extends StatefulWidget {
   const WorkPackageDialog({
@@ -58,48 +59,48 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
     super.initState();
     final wp = widget.initialWorkPackage;
     _milestoneIds = List<String>.from(wp?.milestoneIds ?? []);
-    _titleController = TextEditingController(text: wp?.title ?? '');
-    _descriptionController = TextEditingController(text: wp?.description ?? '');
-    _ownerController = TextEditingController(text: wp?.owner ?? '');
-    _disciplineController = TextEditingController(text: wp?.discipline ?? '');
-    _budgetController = TextEditingController(
+    _titleController = SpellCheckTextEditingController(text: wp?.title ?? '');
+    _descriptionController = SpellCheckTextEditingController(text: wp?.description ?? '');
+    _ownerController = SpellCheckTextEditingController(text: wp?.owner ?? '');
+    _disciplineController = SpellCheckTextEditingController(text: wp?.discipline ?? '');
+    _budgetController = SpellCheckTextEditingController(
         text: wp != null && wp.budgetedCost > 0
             ? wp.budgetedCost.toString()
             : '');
     _acceptingCriteriaController =
-        TextEditingController(text: wp?.acceptingCriteria ?? '');
-    _notesController = TextEditingController(text: wp?.notes ?? '');
-    _packageCodeController = TextEditingController(text: wp?.packageCode ?? '');
+        SpellCheckTextEditingController(text: wp?.acceptingCriteria ?? '');
+    _notesController = SpellCheckTextEditingController(text: wp?.notes ?? '');
+    _packageCodeController = SpellCheckTextEditingController(text: wp?.packageCode ?? '');
     _sourceWbsLevel3IdController =
-        TextEditingController(text: wp?.sourceWbsLevel3Id ?? '');
+        SpellCheckTextEditingController(text: wp?.sourceWbsLevel3Id ?? '');
     _sourceWbsLevel3TitleController =
-        TextEditingController(text: wp?.sourceWbsLevel3Title ?? '');
+        SpellCheckTextEditingController(text: wp?.sourceWbsLevel3Title ?? '');
     _areaOrSystemController =
-        TextEditingController(text: wp?.areaOrSystem ?? '');
+        SpellCheckTextEditingController(text: wp?.areaOrSystem ?? '');
     _contractorOrCrewController =
-        TextEditingController(text: wp?.contractorOrCrew ?? '');
+        SpellCheckTextEditingController(text: wp?.contractorOrCrew ?? '');
     _estimateMethodController =
-        TextEditingController(text: wp?.estimateBasis.method ?? '');
+        SpellCheckTextEditingController(text: wp?.estimateBasis.method ?? '');
     _estimateSourceController =
-        TextEditingController(text: wp?.estimateBasis.sourceData ?? '');
-    _estimateAssumptionsController = TextEditingController(
+        SpellCheckTextEditingController(text: wp?.estimateBasis.sourceData ?? '');
+    _estimateAssumptionsController = SpellCheckTextEditingController(
       text: wp?.estimateBasis.assumptions.join('\n') ?? '',
     );
     _estimateConfidenceController =
-        TextEditingController(text: wp?.estimateBasis.confidenceLevel ?? '');
+        SpellCheckTextEditingController(text: wp?.estimateBasis.confidenceLevel ?? '');
     _procurementCategoryController =
-        TextEditingController(text: wp?.procurementBreakdown.category ?? '');
-    _procurementScopeController = TextEditingController(
+        SpellCheckTextEditingController(text: wp?.procurementBreakdown.category ?? '');
+    _procurementScopeController = SpellCheckTextEditingController(
         text: wp?.procurementBreakdown.scopeDefinition ?? '');
-    _procurementLeadTimeController = TextEditingController(
+    _procurementLeadTimeController = SpellCheckTextEditingController(
       text: wp != null && wp.procurementBreakdown.leadTimeDays > 0
           ? wp.procurementBreakdown.leadTimeDays.toString()
           : '',
     );
     _contractIdsController =
-        TextEditingController(text: wp?.contractIds.join(', ') ?? '');
+        SpellCheckTextEditingController(text: wp?.contractIds.join(', ') ?? '');
     _vendorIdsController =
-        TextEditingController(text: wp?.vendorIds.join(', ') ?? '');
+        SpellCheckTextEditingController(text: wp?.vendorIds.join(', ') ?? '');
     _readiness = PackageReadinessChecklist.fromJson(
       wp?.readiness.toJson() ?? PackageReadinessChecklist().toJson(),
     );
@@ -603,7 +604,7 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
                             onPressed: () => _pickDate(true),
                           ),
                         ),
-                        controller: TextEditingController(
+                        controller: SpellCheckTextEditingController(
                           text: _plannedStart ?? 'Select date',
                         ),
                       ),
@@ -619,7 +620,7 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
                             onPressed: () => _pickDate(false),
                           ),
                         ),
-                        controller: TextEditingController(
+                        controller: SpellCheckTextEditingController(
                           text: _plannedEnd ?? 'Select date',
                         ),
                       ),

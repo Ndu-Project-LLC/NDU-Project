@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class ScopeTrackingItem {
   final String id;
   String scopeItem;
@@ -71,7 +73,7 @@ class ScopeTrackingItem {
     this.featureId = '',
     this.weight = 0,
     this.percentComplete = 0,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         dependencies = dependencies ?? [];
 
   ScopeTrackingItem copyWith({
@@ -172,7 +174,7 @@ class ScopeTrackingItem {
 
     return ScopeTrackingItem(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       scopeItem: json['scopeItem']?.toString() ?? '',
       implementationStatus:
           json['implementationStatus']?.toString() ?? 'Not Started',

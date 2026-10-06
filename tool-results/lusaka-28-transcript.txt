@@ -1,0 +1,488 @@
+I'm going to close the sidebar system, and what's the view?
+The sidebar on the list.
+So, this is a schedule, a fixed part of it allows you to do any other things that the
+say WBS that could have noticed in, like, um, showing him that I saw you in one of these,
+but I thought it would allow you to take hope. And then you can also see him.
+Oh, private, private, do you mind, um, showing the sidebar? So for procurement, you guys
+Okay, and the way you need next is to schedule. So just pressing that pops up when you go
+to schedule. Yes. So when you go to schedule, this is what pops up. Yes, this is the pressing
+Okay so did this pull in all the packages from the IDOC delivery section?
+Yes, I mean if you could put down some of these in the audiobook and uh...
+So he's falling down or scrolling up?
+Uh, scrolling down.
+What does it feel like he's falling in?
+So like with package one, like 1.0, and then it has like 1.1, 1.3, 1.7, because it break
+down.
+Also like the second with package node, which it's opening, it's.
+Okay.
+Is there a reason why this view is also, I think, the number of times I've had for a
+table view.
+like this is not working for somebody going to put in their dates and they're going to click on
+which one open it up full and then print the information for it is that do you walk me through
+how you protect the schedule please okay so kind of like close the side but
+So if there is no date, it allows you just a key where you can see the time dates, where you can at the date.
+Meaning if it's not linked to the database, it will kind of show you.
+So, try to explain the data with the code script, so you think most of them did and then most of them didn't do.
+So, when you came together for the first time, it also showed all the current epics and features within those epics?
+This is not free and time for those, but what did this time come from?
+So you went in and clicked on each one and changed the date?
+Yes.
+So, when you do the WBF, there's no aspect to it like you, but I did the dates and the
+time now.
+So, welcome to your picture, so you can just show it to you, and I'll come to you.
+Can you hear him because I can't see him too long.
+He was cutting back.
+Not all packages, so this page was still being worked on, and there are still also some other actors that are still being pushed on it.
+Did you get me?
+So you were breaking out, but I think I had to say you
+You added dates to some but not some but I'm wondering which one did you add the dates to?
+So just the best ones because the page was to be worked on
+if you
+So that this you added was that effective
+Comment through each each card. So let me guess you you go through it and then you hit edit or you double click on it
+To add the date and duration
+Yes
+And I work for you
+Yes, so like they were being like added
+Just to be down
+The only thing that I couldn't get to see in the officiate was the gun shop to make sure that now these are populated in the gun shop.
+Thank you.
+I think this still has some bugs but it's showing the same, if you can see this is the one that's repeating itself.
+yes and so the actual bug that was there was that whenever I'm changing
+something on the section and then I put it here it wouldn't check if the stuff
+is already existing and so I can put the same content into the like schedule you
+know over I mean I actually could put it to like same content over and over and
+over until we had fixed it back and so now this happened because like we had put the
+same content over and over and over so it has the same name same name the same name
+so like that's that's actually part of what the fix is meant to cure so that when you're
+- I'm trying to-- - Can I just hit you?
+- Okay, let me see.
+Okay, so the list view needs to be the default, and the same comments I have with the other
+table.
+I mean, it's a lot of space, but I'm sure you can see them.
+Right?
+So it has a spacing, and it has to be editable here, where they can put in the duration,
+they can put in the start date, and the end date here, without having to click edit.
+At least the first round, this has to be very user friendly.
+now from I guess that's it from that cloud view, it didn't look user friendly, but with
+this list view it looks a bit more user friendly, but it does have to have the ability to mask
+or date. A way of creating a schedule, you could you have 10 line items, you could have 50, you
+could have 200. Nobody's going to be able to go double click, open air date, then put in and then
+some things are connected to others right like the start to finish the the the linkage of this one
+item to that one item so it's sometimes it helps where you can actually see everything in one go
+or most of the things in one go and you can put in the information and and if something is linked
+to something else you should be able to maybe drag and drop it there or something to that effect so
+So, you know, okay, that's the clearance.
+And this is gonna have to,
+this cannot be done before this one is done.
+So, the schedule needs some more.
+The downcharge view is, of course, the most important.
+When you're gonna view the schedule,
+not after you built it, right?
+So, this view has to be the person that,
+and it has to be able to be a detailed mask,
+where as you go down the line,
+You are seeing everything, you are presenting the dates,
+you are comparing the dates,
+and you're able to just walk very freely.
+The way it is now, it's almost like you expect somebody
+to come and double click into each of this or go to edit
+to then edit your own things.
+When you're building a schedule, you have to,
+especially in the beginning part,
+you have to be able to mass provide information,
+put in the dates or whatever it is and adjust things
+as you go see what is related to the other,
+maybe drag some stuff across or on top like say okay this one is gonna be this
+this is right after this happen after this this is all under the design that is
+under that contract so it has to be user friendly where they can easily navigate
+and create an actual schedule right now it does not look like that ability is
+there
+Did you get that chump? Yes, yes, yes. Thanks a lot. I'm going to try to drop down the chump.
+So, the builder is where he had the card view, but the builder should have the list to him.
+So, that is where you actually build the theorem, and you should have the ability to move things
+and tie them to what is valid.
+So if you go back to the card view, I think you had a start to finish and the relationships
+and stuff like that, that needs to be something that is available in the field and that should
+be in this view.
+So you should be able to open it big and see quite a few line items at the same time, and
+also need to reflect, tie, whatever.
+So I will leave it up to you on how you want to reflect what is tied towards.
+So either they can drag and drop it or they can send link to this parent issue and maybe
+be able to search for the issue and add it to that.
+So but it has to be fluid where if somebody is walking on a schedule, they're able to
+see everything they need to see and just easily move forward to the other.
+They won't finish this save, then go hit edit, open another card, put information, hit save,
+Oh, we're trying to get the tattoo, but every time you scroll up and down, up and down, you will go, man.
+Mm-hmm.
+Yeah.
+So, some of the scheduled items that are not yet assigned to a cost, it would also try
+to, like, try to place there where it says $4.20 to cost estimate.
+Okay, so why you say scheduled items are not assigned to a cost?
+That is not accurate.
+You clear the schedule before you clear the cost.
+So, at this point, I mean, yes, you can have an idea of what's possible.
+So you see this view, this is the VBS package view, so this is on the computer, right?
+So this is where you can apply the, this is the VBS, I don't know if you're trying to
+say the schedule items that are not on the top VBS, but there shouldn't be any schedule
+item, not on every item that the VBS should be tied to a schedule.
+So this has to be continuous where they shouldn't be tagged up, but say if somebody say add
+item and they might add something to the schedule like oh they just add this
+milestone right so they say let's add a milestone then it needs to be clear on
+which the video is a milestone type stuff like that but you can have
+milestones the schedule right now all these work packages have the requirements
+that they're tied to, the code and content they're tied to,
+and what milestones those topics or goals we are tied to.
+So those milestones are gonna guide kind of the schedule
+on as they're putting information on something
+related to what, there should be an inbuilt
+at the code level, like code red if the schedule item
+is going past the milestone that identifies for us.
+that way it is clear that hey, we've put this in the schedule, we have since started this and that
+milestone that this is to feed is supposed to have been two months before or a week before.
+So that way they can make informed decisions on how they are building the schedule. But
+Build your schedule takes time usually and requires fluid movements and stuff so it needs to be
+it needs to be a process where it's going to be easy for them to actually build in the building.
+So those muscles have to be clear, um, on the schedule in the, for the, for the grand
+chat as well.
+there has to be some level of color coding, it doesn't have to be, you don't, the buyers
+have to have a certain level of color coding that's associated with being children.
+So and I'm not, there's nothing, I don't have any specific colors in my like color coding
+idea in my mind, but the third process is, there has to be a way to tell the difference
+between like the difference, right, so maybe for EP-1 you have a certain color code, EP-2, EP-3,
+come up with a structure to everything that fits
+goal one might all be this specific color, anything that fits goal two, goal three,
+and then within them, that is going to make it easy to like catch things, like say oh wait isn't
+that goal one, right, so everything is just yellow, it's not going to be very easy to move things
+So the promise is to make it usable and effective for those that are actually using it.
+Okay, so I got from a schedule perspective and what I saw last time, this is a bit different
+from that.
+So, it sounds like they're still working on this page, but I would really like to see
+the schedule actually functional, reflecting the WBS, reflecting the word you call it.
+They have to, depending on how the WPS is broken down, so it needs to reflect out.
+I mean, this is agile, so you'll probably go straight, straight forward.
+But if you were broken down by area or whatever it is, you cannot see the schedule associated
+with each one.
+The gank gen view also has to be rolled, like you can roll it up where you can see it at
+The very detailed level that if you click on, this is B6, no, 86, 87, 88, 89, but it's
+all at the same time, but it was go one and you sit down and go one and you just sit and
+go one, go one, go two, go three.
+On the schedule you can kind of see where all those things go.
+If you put them and minimize it, you can just see where go one, go two, and go three.
+how gone there is right. If you so everything has to time and then also for the contract and
+procurement I think they already have like a tracking and what's associated with those ones
+but those need to be tied in with the schedule of course so the WVAS is that are impacting the
+contract procurement which we're able to see okay the contract we're going to talk about where the
+contract dashboard that shows okay this is everything that we can contract and this is where
+they are. Those of the BPS's have to then be linked through to the schedule. So that way the
+schedule will be the one source of truth of where everything is. Anything that is now keeping the
+procurement or the contract tracking will be from the schedule because the schedule is what's going
+to be in the project controls where you then map the schedule to the cost and so the schedule is
+He's going to show you what the project really is.
+Get a list of what is being done.
+The schedule is going to be what you drive the cost,
+like the starting point for the cost,
+and are there any additional costs?
+And the project controls is literally gonna be the schedule items, besides the cost items,
+and then tracking the actual, um, um, plan.
+That's the project controls is gonna be telling you, okay, you said it was gonna take one
+week to get this, this work done for two weeks, but we are at two weeks and you spent one
+dollar and we're not done.
+So it's gonna give you like that update of, okay, for this work, this is what it was supposed
+be this is what it what it is right right right right now this is the very last and that way
+you kind of know where to focus and to get things going.
+I'm just seeing this integration button is it a new case?
+(keyboard clicking)
+Yes, I think this pit has been there for about a week or two.
+It just amalgamates all the information, but I guess the issue is just looking at what
+to place it.
+Maybe it would be better placed inside.
+I think maybe Chin can advise.
+So, I think this dashboard is kind of what I talked to.
+I think Anthony, was it Anthony?
+Yes.
+So, I think this dashboard is kind of what I talked to. I think Anthony. Was it Anthony
+or Michael? Yes, yes, yes. Who was Michael? Yeah. Yeah. So, because overall, so this was
+like, I think in June or July, but overall, what was being focused on with the dashboard
+was the program dashboard and the portfolio dashboard. But every project needs to have
+its own dashboard that has this key information. That's the information that will then feed the
+program dashboard and the portfolio dashboard. Does that make sense? So I think this is going
+to work. He came up to it or I don't know if it was you that did this show. But the third process was
+this would be like the main dashboard for that each product will have its own product dashboard
+that gives you its own updates. The one is the program that's where that program gets all the
+information that most of the information that feeds the program and the portfolio it just takes
+it from the programs. So that's what I believe this is um this is in the planning phase and yes
+I'm saying this for the first time too, today.
+I didn't see it through yesterday.
+The third process here is 'cause in planning,
+you might still have some work that is moving forward.
+So the dashboard, I mean, there's no information
+that will not have anything from everything,
+it will be zero, like in progress, whatever it is.
+But when information starts becoming available,
+and it starts showing up here, all right.
+So in planning, I would say that from the usability
+perspective, that should not be between the cost of schedule.
+After the schedule, you need to go to cost.
+So it's definitely in the wrong place there.
+I feel like maybe the guide work can go towards the bottom.
+And all of this is filled out, because in this case,
+where we are trying to build out what the work is going to be,
+so there really shouldn't be anything for anybody
+to be viewed right now.
+But yes, this is supposedly so good with the project
+because the way our current system is,
+you have your personal dash, dash, dash.
+Well, that's where you run.
+So your personal dash will show you your projects,
+your program to portfolio,
+shows you that it works,
+that you're pending and stuff like that.
+And gives you some information.
+So, but then you see your project.
+So when you click on project,
+you just click on the project and that's it.
+takes you to the project. When you click on program then you go to the program dashboard
+so it shows you all the programs and then all the information for the programs but for the
+descent it shows you all the information so it's just projects that brings you directly into the
+project. So the third process is I think this dashboard actually needs to be very accessible.
+right now I'm not seeing that product activities list but the dashboard itself and the activities
+list need to be almost in the top right we need to have the product activity did you remove that
+from there or what's going on not necessarily like let me look at it so for example on a page like
+let me look at the page like this so it shows us like this so so like this is the first level
+where it shows you always assigned to something and then when you click on it it shows you advance
+view okay again this guard view i've talked about this so many times you cannot have a card view
+that has to be a table view but we talked about that i believe like two months ago for the
+the activities log.
+So I know you're working on a few things.
+If you can just take that comment and implement it,
+the card view is not what it is.
+I mean, some people might wanna see a card view
+and search and find what they're looking for.
+But also when you have that listable view,
+they're able to see way more information, scroll right,
+and see everything associated with that thing in one glance.
+So the product activities log is something that needs to be
+There, so when you have the outstanding task, is this outstanding task for the person or
+for their discipline or for their role, right?
+So I don't mind this, it's just, I think the dashboard and the activity log needs to
+be easily accessible anywhere you are on the site, so that way, but in this planning section,
+I do believe that if there's anything that they need to update in the activity log, they
+can do that if there's any options that they need to implement they can do that in this planning
+phase but the dashboard needs to be readily available so that way if you come in you can
+just see okay this is where we are recording kind of got a status of update on how far things are
+going on the project what what the developers are pending and stuff like that what is late what what
+risks have not been toyed and stuff like that. So that dashboard needs to be readily accessible
+once you get on into the project. You can tell that we program on portfolio but the
+project on is the one that I believe Michael and I were discussing that it has had an easily
+accessible dashboard for rate and that's what will feed the program on portfolio as well.
+Because right now in program and portfolio I do not know how they are getting the information.
+And I think you guys were grabbing it
+from the different sections.
+But make sense that something is rolling up, rolling up,
+rolling in, right?
+So at the particular level, you have this dashboard.
+And that information from it as well
+feeds the program and then the portfolio.
+>> Okay, so I think those are my key comments.
+Was there anything else?
+Like, because I feel like this schedule needs to be --
+I don't know if we can't talk about it first,
+if the schedule is not done.
+Right now, the schedule doesn't really reflect the schedule.
+To some extent, like, the least viewed does,
+but it does not sound like --
+and for work, like I said,
+it's great that the WBL did pull in here.
+Now, the milestones pull in there, right?
+So did he show those milestones that he selected?
+Is there anything tied to those milestones?
+There's those epics that we linked to milestones.
+Are we showing here that, hey, this are the dates for it.
+So those dates at a good level should also show here.
+But it should also kind of give that information
+of, okay, this is, these are the key things.
+If you said, oh, we need this contract, this certain date,
+the work packages that are associated with that contract
+to have that date as a date as the back end for it but this has to be fully tied in together. This
+is not just going to be a new this thing where I mean it is good that it's already coding the
+packages um the work packages but the most important thing is you need to reflect the dates
+that have been committed to so if we put any mouse on dates you know due by dates whatever it is
+anywhere on the side. At the core level we shoot all those to reflect on the schedule
+and then you can start moving things around and stuff like that.
+And there should be that that that error or warning sign that shows if you said this this
+is going to be due on June 1st and when you're putting it in full what is linked to it and
+The Latin is coming on June 8th.
+There should be some kind of name, like, hey,
+these days don't match.
+And then people have to discuss and override a date.
+And also, that should be tracked, where, okay,
+these are all the decisions being made,
+and these are things that are removed.
+So that way, people know why dates are out there.
+Uh, did you get that deal with the down? The same. Excuse me, things like, um, yes,
+one question questions because it's you.
+Yes, actually.
+I'm sorry. Did he say he had the question? He's he said
+got it. I got the answer. I wasn't sure what the answer was for. No, I followed. All right, cool.
+So was there anything else for today? Because I don't think, I think we are at an end where
+this has to be fully implemented. And I think the, the, the, the content and the
+procurement pages need to be updated. I think we need to measure that information
+because we've kind of gone through some of these sections. We've talked about what they need to be.
+I know you said that you've been making some of those changes, and I know in the interest of time,
+we are kind of getting through so we can get through everything, but that continuity is very
+important. So I need you to confirm, you know, that at least the milestones, the linkage, and all of
+that have made it to the schedule. So we do have to go through the schedule again to confirm that.
+So once you got made the update and your idea and internal review, the thought process would
+be to ensure that that continuity is there. So again, you have the wall breakdown structure,
+you have, and we went to the go safety school option, but I am repeating this again, so we're
+very clear. If you scroll all the way up on the sidebar, sorry. So the cyber planning, sorry,
+come back to the planning phase. The planning phase we had to protect these details. We
+had to work with them so they went to the goals and milestones. So we came into the goals and
+milestones. So we went to the goals and milestones. The thought process was to tie the goals to every
+milestones, the deep milestones for the goals. Can you scroll down please on the
+milestone section. So the third process was anything that was that had like a specific
+milestone and it's not so we first of all had the milestones that were then identified in the FEP
+but have been started by this get this license by days start start off the invitation stream by
+by by this get the delivery um delivery API into into whatever date so you have like those days
+that it could has two milestones. The FEP-1 pull down here, it does this change itself,
+you kind of implement that. Now you have mapped those milestones to the work breakdown structure,
+so the VBS elements of, okay, this one has to be done here. This is where you do that mapping.
+Once you've mapped those milestones, you know when you need to get stuck down.
+So this needs to be understood, it needs to be reflected on the schedule, because those
+work with our structure and go to the different levels say if it was in relations now like this
+in that stuff again maybe together line this particular one has to stick to that mouse
+mouse stone because it's going to be the person purchasing it but this one is just for somebody
+to go and dig the ground and they can dig the ground anytime you want right before it gets there
+so that one might not be tied to that mouse stone so it's on the sudden there are activities that
+that are related and unlocked.
+And that's where the schedule is gonna help flush out.
+So the reason I'm saying this is,
+this has to be reflected on the schedule.
+That schedule has to start off with like,
+you have to have kind of a timeline.
+And with the schedule right now,
+I see it just shows like, I think two weeks or two months.
+I don't know what it is.
+But the schedule has to be big enough
+where it can show like months, right?
+And then of course, if you wanna zoom in
+to like one month, you can do that.
+But when you have time in your schedule,
+you have to be able to see the schedule.
+could be quarterly, it could be weekly, it could be monthly, right, where you can kind of change
+that view where if you want to just, if the product is going to be a 16 month project, you want to
+be able to zoom out where you can see in 16 months, this is kind of what it will look like. But of
+course, as you're building each element, you want to be closer, so it could be, oh, this week, this month,
+this quarter, this year, right? So that, so I think that the key thing that it has to be usable
+overall. So now you've done the goals I'm asking, can you please click on the requirements?
+Now for the requirements, you've kind of looked at the requirements and like confirming all the
+all the requirements that are required to actually get the work done so you can import it or export
+it. I know you guys were still working on the template and all of that actually if that's
+finalized because we've talked about it a few times but so confirm that that's also
+functional right so you have requirements awarded in parts um can you scroll right on the
+front but i don't know if you ended up tying the requirements to the the previous elements here
+i see something we just see for design planning things go to the right are you able to scroll to
+the right all right so requirements so it's coming we're coming link so this just and the phase so
+So this just talk about the trades.
+It doesn't talk about the WBS element
+that the requirement is tied to.
+But that's okay because in design planning,
+it does talk about not the requirements to do.
+So we didn't tie the requirements to any WBS element.
+Can you go back left?
+The requirements, comments, person, rule, discipline, time.
+- Oh, okay.
+So...
+Yeah, so the requirements were supposed to be tied to the WBS elements at the second
+level. So you must write again. So do you remember tying this to any WBS element? I
+know we were spending a lot of time trying to do the upload and download so we didn't
+quite get into this. No. So actually thinking about right now. So I think the thing that
+We're tied to the W should be the it should be the most of the goals of most of the requirements. No
+what's been on the phone. I think we can't I think we can't act because the
+chatter was approved or something because oh it's oh so I'm pressing yeah
+(speaking in foreign language)
+- Yeah, so the requirements,
+I'm not sure how that's a little bit,
+but the requirements is supposed to be tied to a WBS element,
+so the second level of the WBS.
+So it's not triggering the problem, I have to check, what's going on.
+Because they manually added some of the requirements they put from the FAP.
+So Chumu, can you scroll left on the sidebar?
+On the sidebar?
+yes I know we are in the station I want to sit down in all right so we have
+requirements so if you didn't mark the requirements to the biggest we mark the
+goals and the milestones so we're supposed to mark them to the requirements
+but I think in the requirements session we spent all the time talking about
+important that is the only thing I remember about this conversation was
+The requirements are supposed to be mapped to those back to the second level with the WPS.
+That's why it's actually like right beside the WPS was to make sure that
+the requirements like what do they apply to? Like what are they going to impact on the project?
+So I think we might need to either ditch one of the columns or to restrict the goal or to,
+because I feel like there's already a lot of columns. And we still, can you explain,
+can you hit that screen? I see the expander from there. I was going to say we still can expand,
+but I see the expander from there. So I'm going to hit that. But it doesn't fill the screen,
+do you see that? Can you do this? Because we still can't. Yes. So when they expand,
+because fill up the screen with it. It's basically the whole screen with it.
+Okay, all right and then so we go through the requirement discipline, the type that's needed.
+The discipline is required. The rule, the person, the phase. What phase requirement applies to the
+that. The source, okay, maybe we can get more comments on the source link that is required.
+Now the person, who is responsible, the rules, and then the discipline. So what is the thing
+that this requirement impacts? Who should steal this requirement? So we might need to add a tile.
+a column for the impact of what's called the B.S. name, right, the BBS element.
+So what the impact of the BBS element, like it's not here for sure. So
+I think that is one key thing that is needed for this requirement is to know which, so when I was
+talking about the contract and procurement and I was saying the requirement also is tied to the WBS
+so if it's this work packet then you know all the requirements associated with it and those
+requirements of course have really been linked to the code and the standards in the design planning
+section. So that step is missing here is the linkage of the requirements to the WBS technical level.
+So it will be almost similar to mapping the milestones to the goals.
+This way you are mapping the goals to the requirements.
+It could be more than one goal, it could be all the goals.
+See the entire project, you will see the entire project.
+If it's just one of those goals, it will just say that goal.
+and then be so good so let me please go left again because i'm surprised this is not her
+so if i'm in type discipline so what is the place in parts we're all those on the project
+the person who is actually going to be responsible for it
+and then yeah we need wbs
+I don't want to miss guide you and I don't want it to be lost, so I'm going to send an
+email on your own because that's how you can tie the WBS to the--
+to the requirements here. So when I was talking about point talking yesterday, I was like,
+once you have those requirements, the WPSA, you know what requirements, fix it, and then
+we think the requirements to the cause and standard. That's how everything stays combined
+[BLANK_AUDIO]
+[BLANK_AUDIO]
+>> Hello?
+[BLANK_AUDIO]
+>> I'm here, I'm sending you the email.
+>> Okay.
+[BLANK_AUDIO]
+>> Why wasn't Elliot Kipchoge's sub two hour marathon officially recognized by
+world athletics?
+First, he had 41 world class pacemakers split into six rotating groups,
+Forming a human wall that blocked more than 85% of the wind, something you'd never see in a real marathon.
+Second, a pace car drove in front of him, projecting a green laser line to mark the ideal racing path and maintain the perfect pace.
+Third, a custom carbon-plated shoes far beyond the rules allowed, estimated to save over 5% of his energy.
+(background noise drowns out other sounds)
+okay so i'm saying i just sent you the email you can really make sure that you understand
+um but this this needs to be um this is missing
+and i'm not sure how i missed the question but i do remember i was more obsessed with the
+important on it. So functionality versus without.
+So since it has an email with that I said two columns so the first column is going to be the
+previous element so that first level it could be you know go 1 go 2 go 3 or go 2 and 3 or whatever
+it is or it could be all if you can partner their projects. Then the second column beside
+it's going to be like this sub goal. So say if it was a goal 2, it would be, so which of these
+elements in goal 2 though, this requirement and estimate is it 2.1 or 2.4 or 2.1, 2.9 or 2.7.
+So those can be highlighted. And the third process is to make sure that
+that follows it all the way through to the final boss talk for it.
+so did that make sense
+i think it's clear on my side all right so so do you guys have any additional questions
+or anything else i know we are almost an hour in and this has to be done before we move forward
+just to make sure that that initial continuity already exists when we go to the cost
+okay and so and so actually implement and then you can touch base on this second tomorrow
+All right.
+Thank you.
+All right.
+Thank you.
+Okay.
+Okay.

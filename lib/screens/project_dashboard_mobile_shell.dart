@@ -16,14 +16,11 @@ import '../services/project_service.dart';
 import '../utils/dashboard_palette.dart';
 import '../utils/navigation_route_resolver.dart';
 import 'initiation_phase_screen.dart';
-import 'program_dashboard_mobile_screen.dart';
-import 'portfolio_dashboard_screen.dart';
-import 'regular_project_dashboard_screen.dart';
-import 'project_command_center_screen.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import '../widgets/dashboard_bottom_nav_bar.dart';
 import '../widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Design tokens extracted from the HTML source (Material You / Tailwind config)
@@ -74,8 +71,8 @@ class ProjectDashboardMobileShell extends StatefulWidget {
 
 class _ProjectDashboardMobileShellState
  extends State<ProjectDashboardMobileShell> {
- final TextEditingController _searchProjects = TextEditingController();
- final TextEditingController _searchGrouping = TextEditingController();
+ final TextEditingController _searchProjects = SpellCheckTextEditingController();
+ final TextEditingController _searchGrouping = SpellCheckTextEditingController();
  String _query = '';
  String _groupQuery = '';
  int _bottomNavIndex = 0;
@@ -153,10 +150,10 @@ class _ProjectDashboardMobileShellState
 
  void _navigateToProgram() {
  context.push('/program-dashboard-mobile');
- }
-
- void _navigateToRegularProjects() {
- context.push('/regular-project-dashboard');
+ }void _navigateToRegularProjects() {
+  // Regular Projects now lives on the Integration Dashboard's Workspaces
+  // view; the route is kept stable so this deep link stays valid.
+  context.push('/regular-project-dashboard');
  }
 
  void _navigateToProjects() {
@@ -165,49 +162,6 @@ class _ProjectDashboardMobileShellState
 
  void _navigateToPortfolio() {
  context.push('/portfolio-dashboard');
- }
-
- Future<void> _handleLogout() async {
- final shouldLogout = await showDialog<bool>(
- context: context,
- builder: (dialogContext) => AlertDialog(
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
- title: const Text('Confirm Log Out'),
- content: const Text('Are you sure you want to log out?'),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(false),
- child: const Text('Cancel'),
- ),
- ElevatedButton(
- onPressed: () => Navigator.of(dialogContext).pop(true),
- style: ElevatedButton.styleFrom(
- backgroundColor: _Tokens.error,
- foregroundColor: Colors.white,
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- ),
- child: const Text('Log Out'),
- ),
- ],
- ),
- );
-
- if (shouldLogout == true && mounted) {
- try {
- await FirebaseAuthService.signOut();
- if (mounted) context.go('/');
- } catch (e) {
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Error logging out: $e'),
- backgroundColor: Colors.red,
- ),
- );
- }
- }
- }
  }
 
  // ─── Stat card matching the HTML 2×2 grid ───────────────────────────────
@@ -343,7 +297,7 @@ class _ProjectDashboardMobileShellState
  switch (snapshot.health) {
  case ProjectProgressHealth.completed:
  healthLabel = 'Completed';
- healthColor = const Color(0xFF1D4ED8);
+ healthColor = const Color(0xFFFFC812);
  break;
  case ProjectProgressHealth.onTrack:
  healthLabel = 'On Track';
@@ -821,8 +775,8 @@ class _ProjectDashboardMobileShellState
  ? 'Sign in to view'
  : programCount.toString(),
  icon: Icons.layers,
- iconBg: const Color(0xFFFAF5FF),
- iconColor: const Color(0xFF9333EA),
+ iconBg: const Color(0xFFFFF8E1),
+ iconColor: const Color(0xFFB8860B),
  onTap: _navigateToProgram,
  ),
  _statCard(
@@ -1188,11 +1142,14 @@ class _PremiumUserGreeting extends StatelessWidget {
 
  /// Extract initials (up to 2 chars) from display name
  static String _initials(String name) {
- final parts = name.trim().split(RegExp(r'\s+'));
+ final trimmed = name.trim();
+ if (trimmed.isEmpty) return 'U';
+ final parts = trimmed.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+ if (parts.isEmpty) return trimmed[0].toUpperCase();
  if (parts.length >= 2) {
  return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
  }
- return name.isNotEmpty ? name[0].toUpperCase() : 'U';
+ return parts[0][0].toUpperCase();
  }
 
  @override

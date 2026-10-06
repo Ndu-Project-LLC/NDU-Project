@@ -85,9 +85,9 @@ class PlanningPhaseHeader extends StatelessWidget {
     PdfExportHelper.exportScreenPdf(
       context: context,
       screenTitle: title,
-      sections: [
-        PdfSection.text(title, 'Project section export from Ndu Project.'),
-      ],
+      // No structured sections: the export captures the screen itself so the
+      // PDF contains everything actually on screen.
+      sections: const <PdfSection>[],
     );
   }
 
@@ -108,7 +108,7 @@ class _WhiteButton extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         foregroundColor: Colors.black87,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         side: const BorderSide(color: Color(0xFFE5E7EB)),

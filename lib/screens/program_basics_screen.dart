@@ -11,6 +11,7 @@ import 'package:ndu_project/widgets/bullet_point_editor.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 const Color _kAccentColor = Color(0xFFFFC812);
 const Color _kTextPrimary = Color(0xFF1A1D1F);
 const Color _kTextSecondary = Color(0xFF6B7280);
@@ -28,7 +29,7 @@ class ProgramBasicsScreen extends StatelessWidget {
  Widget build(BuildContext context) {
  return Scaffold(
  // Use a white page background per spec
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: Stack(
  children: [
  SafeArea(
@@ -316,10 +317,9 @@ class _InputGroup extends StatelessWidget {
  contentPadding:
  const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
  enabledBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(18),
- borderSide: const BorderSide(color: _kSurfaceBorder),
- ),
- focusedBorder: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(18),borderSide: const BorderSide(color: _kSurfaceBorder),
+              ),
+              focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(18),
  borderSide: const BorderSide(color: _kAccentColor, width: 1.6),
  ),
@@ -380,7 +380,7 @@ class ProjectDetailsScreen extends StatelessWidget {
  Widget build(BuildContext context) {
  return Scaffold(
  // Use white background for the follow-on step as well
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -501,7 +501,7 @@ void _showAiHintDialog(BuildContext context) {
  builder: (ctx) {
  return Center(
  child: Dialog(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  insetPadding:
  const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
  shape:
@@ -658,11 +658,14 @@ class _NotesInput extends StatelessWidget {
  final String initialValue;
  final ValueChanged<String>? onChanged;
 
- @override
- Widget build(BuildContext context) {
- return VoiceTextFormField(
- initialValue: initialValue,
- onChanged: onChanged,
+  @override
+  Widget build(BuildContext context) {
+    return CollapsibleNotesSection(
+      title: 'Notes',
+      card: true,
+      child: VoiceTextFormField(
+      initialValue: initialValue,
+      onChanged: onChanged,
  // Allow the Notes field to grow with content with no character/line cap
  minLines: 5,
  maxLines: null,
@@ -677,16 +680,17 @@ class _NotesInput extends StatelessWidget {
  fillColor: Colors.white,
  contentPadding:
  const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
- enabledBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(22),
- borderSide: const BorderSide(color: _kSurfaceBorder),
- ),
- focusedBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(22),
- borderSide: const BorderSide(color: _kAccentColor, width: 1.6),
- ),
- ),
- );
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22),
+                borderSide: const BorderSide(color: _kSurfaceBorder),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22),
+                borderSide: const BorderSide(color: _kAccentColor, width: 1.6),
+          ),
+        ),
+      ),
+    );
  }
 }
 

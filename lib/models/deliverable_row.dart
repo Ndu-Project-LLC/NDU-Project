@@ -1,4 +1,7 @@
 /// Model for a deliverable row in Progress Tracking
+library;
+import 'package:ndu_project/utils/unique_id.dart';
+
 class DeliverableRow {
   final String id;
   String title;
@@ -24,7 +27,7 @@ class DeliverableRow {
     this.blockers = '',
     this.nextSteps = '',
     this.notes = '',
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         dependencies = dependencies ?? [];
 
   /// Check if deliverable is overdue
@@ -99,7 +102,7 @@ class DeliverableRow {
 
     return DeliverableRow(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       owner: json['owner']?.toString() ?? '',

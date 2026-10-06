@@ -11,6 +11,7 @@ import 'package:ndu_project/models/design_component.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/scope_tracking_item.dart';
 import 'package:ndu_project/models/stakeholder_alignment_item.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 
 class ExecutionPhaseService {
   static final _firestore = FirebaseFirestore.instance;
@@ -552,25 +553,36 @@ class ExecutionPhaseService {
       if (!doc.exists) return [];
 
       final data = doc.data() ?? {};
-      final componentsRaw = data['designComponents'];
-      if (componentsRaw is List) {
-        return componentsRaw
-            .map((c) {
-              try {
-                return DesignComponent.fromJson(Map<String, dynamic>.from(c));
-              } catch (e) {
-                debugPrint('Error parsing DesignComponent: $e');
-                return null;
-              }
-            })
-            .whereType<DesignComponent>()
-            .toList();
-      }
-      return [];
+      return decodeDesignComponents(data['designComponents']);
     } catch (e) {
       debugPrint('ExecutionPhaseService loadDesignComponents error: $e');
       return [];
     }
+  }
+
+  /// Decodes the `designComponents` payload into components with unique ids.
+  ///
+  /// The design canvas keys its nodes by component id, so the same duplicate
+  /// id that broke the kanban board (see [decodeAgileTasks]) would collapse
+  /// two nodes into one. This payload lives in its own entry, outside the
+  /// project document the app-wide heal covers, so it is healed here.
+  @visibleForTesting
+  static List<DesignComponent> decodeDesignComponents(Object? componentsRaw) {
+    if (componentsRaw is! List) return [];
+    final seen = <String>{};
+    final components = <DesignComponent>[];
+    for (final entry in componentsRaw) {
+      try {
+        final json = Map<String, dynamic>.from(entry as Map);
+        components.add(DesignComponent.fromJson({
+          ...json,
+          'id': persistedId(json['id'], seen),
+        }));
+      } catch (e) {
+        debugPrint('Error parsing DesignComponent: $e');
+      }
+    }
+    return components;
   }
 
   /// Save agile tasks for Agile Development Iterations page
@@ -597,9 +609,61 @@ class ExecutionPhaseService {
     }
   }
 
-  /// Load agile tasks for Agile Development Iterations page
+  /// Decodes the `agileTasks` payload into tasks with unique ids.
+  ///
+  /// Stories saved before ids were minted with a counter (see
+  /// `lib/utils/unique_id.dart`) all carry the same `microsecondsSinceEpoch`
+  /// stamp when they were seeded in one batch, because the web clock only ticks
+  /// about once a millisecond. The kanban board keys each card by
+  /// `ValueKey('kanban_card_${story.id}')` and moves stories with
+  /// `indexWhere((s) => s.id == story.id)`. Rows sharing an id therefore share
+  /// a key, which scrambles the column's sliver — in debug it trips
+  /// `RenderSliverMultiBoxAdaptor`'s child-order assert, and with assertions
+  /// off the gestures land on the wrong child, so only the first cards on a
+  /// board stay draggable. Healing here — at the decode point, where the
+  /// payload is read — repairs the board and every other consumer of these
+  /// tasks at once.
+  ///
+  /// The first row to carry an id keeps it, so anything referencing these
+  /// stories by id still resolves.
+  @visibleForTesting
+  static List<AgileTask> decodeAgileTasks(Object? tasksRaw) =>
+      decodeAgileTasksWithRepair(tasksRaw).tasks;
+
+  /// [decodeAgileTasks] plus whether any stored id had to be re-minted.
+  ///
+  /// A caller that owns the document can use [repaired] to write the healed
+  /// list back, so the repair survives the next read instead of being
+  /// re-derived on every load. Missing, blank and duplicated ids all count.
+  @visibleForTesting
+  static ({List<AgileTask> tasks, bool repaired}) decodeAgileTasksWithRepair(
+      Object? tasksRaw) {
+    if (tasksRaw is! List) return (tasks: const <AgileTask>[], repaired: false);
+    final seen = <String>{};
+    final tasks = <AgileTask>[];
+    var repaired = false;
+    for (final entry in tasksRaw) {
+      try {
+        final json = Map<String, dynamic>.from(entry as Map);
+        final id = persistedId(json['id'], seen);
+        if (id != json['id']?.toString()) repaired = true;
+        tasks.add(AgileTask.fromJson({...json, 'id': id}));
+      } catch (e) {
+        debugPrint('Error parsing AgileTask: $e');
+      }
+    }
+    return (tasks: tasks, repaired: repaired);
+  }
+
+  /// Load agile tasks for Agile Development Iterations page.
+  ///
+  /// With [persistRepairs] the healed list is written back when the stored
+  /// payload carried duplicate ids, so the fix is not re-derived on every
+  /// load. The write is best-effort — a read must not fail because its repair
+  /// write did — and happens at most once, since the written ids are unique.
   static Future<List<AgileTask>> loadAgileTasks({
     required String projectId,
+    bool persistRepairs = false,
   }) async {
     try {
       final doc = await _firestore
@@ -612,21 +676,15 @@ class ExecutionPhaseService {
       if (!doc.exists) return [];
 
       final data = doc.data() ?? {};
-      final tasksRaw = data['agileTasks'];
-      if (tasksRaw is List) {
-        return tasksRaw
-            .map((t) {
-              try {
-                return AgileTask.fromJson(Map<String, dynamic>.from(t));
-              } catch (e) {
-                debugPrint('Error parsing AgileTask: $e');
-                return null;
-              }
-            })
-            .whereType<AgileTask>()
-            .toList();
+      final decoded = decodeAgileTasksWithRepair(data['agileTasks']);
+      if (persistRepairs && decoded.repaired && decoded.tasks.isNotEmpty) {
+        try {
+          await saveAgileTasks(projectId: projectId, tasks: decoded.tasks);
+        } catch (e) {
+          debugPrint('ExecutionPhaseService agile repair save failed: $e');
+        }
       }
-      return [];
+      return decoded.tasks;
     } catch (e) {
       debugPrint('ExecutionPhaseService loadAgileTasks error: $e');
       return [];
@@ -810,27 +868,39 @@ class ExecutionPhaseService {
       if (!doc.exists) return [];
 
       final data = doc.data() ?? {};
-      final itemsRaw = data['stakeholderAlignmentItems'];
-      if (itemsRaw is List) {
-        return itemsRaw
-            .map((i) {
-              try {
-                return StakeholderAlignmentItem.fromJson(
-                    Map<String, dynamic>.from(i));
-              } catch (e) {
-                debugPrint('Error parsing StakeholderAlignmentItem: $e');
-                return null;
-              }
-            })
-            .whereType<StakeholderAlignmentItem>()
-            .toList();
-      }
-      return [];
+      return decodeStakeholderAlignmentItems(
+          data['stakeholderAlignmentItems']);
     } catch (e) {
       debugPrint(
           'ExecutionPhaseService loadStakeholderAlignmentItems error: $e');
       return [];
     }
+  }
+
+  /// Decodes the `stakeholderAlignmentItems` payload into items with unique
+  /// ids.
+  ///
+  /// The alignment table keys every row and every editable cell by item id, so
+  /// a duplicate id makes one row's edits land on another — the same hazard as
+  /// [decodeAgileTasks], in a payload the app-wide heal does not reach.
+  @visibleForTesting
+  static List<StakeholderAlignmentItem> decodeStakeholderAlignmentItems(
+      Object? itemsRaw) {
+    if (itemsRaw is! List) return [];
+    final seen = <String>{};
+    final items = <StakeholderAlignmentItem>[];
+    for (final entry in itemsRaw) {
+      try {
+        final json = Map<String, dynamic>.from(entry as Map);
+        items.add(StakeholderAlignmentItem.fromJson({
+          ...json,
+          'id': persistedId(json['id'], seen),
+        }));
+      } catch (e) {
+        debugPrint('Error parsing StakeholderAlignmentItem: $e');
+      }
+    }
+    return items;
   }
 
   /// Save risk tracking snapshot data.

@@ -303,7 +303,7 @@ class WorkPackageDetailView extends StatelessWidget {
                               margin: const EdgeInsets.only(bottom: 4),
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Color(0xFFF9FAFB),
+                                color: const Color(0xFFF9FAFB),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: AppSemanticColors.border,
@@ -357,7 +357,7 @@ class WorkPackageDetailView extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Color(0xFFF9FAFB),
+                        color: const Color(0xFFF9FAFB),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: AppSemanticColors.border),
                       ),
@@ -426,57 +426,12 @@ class WorkPackageDetailView extends StatelessWidget {
       case 'complete':
         return const Color(0xFF10B981);
       case 'in_progress':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'overdue':
         return const Color(0xFFEF4444);
       default:
         return const Color(0xFF9CA3AF);
     }
-  }
-
-  Color _statusChipColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-      case 'complete':
-        return const Color(0xFF10B981);
-      case 'in_progress':
-        return const Color(0xFF3B82F6);
-      case 'blocked':
-      case 'on_hold':
-        return const Color(0xFFEF4444);
-      case 'overdue':
-        return const Color(0xFFEF4444);
-      default:
-        return const Color(0xFFF59E0B);
-    }
-  }
-}
-
-/// Quick stat chip for the header row.
-class _QuickStatChip extends StatelessWidget {
-  const _QuickStatChip({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-      ),
-    );
   }
 }
 
@@ -499,7 +454,7 @@ class _AccordionSection extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppSemanticColors.border),
       ),
@@ -547,9 +502,9 @@ class _WarningPanel extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Color(0xFFECFDF5),
+          color: const Color(0xFFECFDF5),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Color(0xFF10B981)),
+          border: Border.all(color: const Color(0xFF10B981)),
         ),
         child: const Text(
           'No readiness warnings.',
@@ -566,9 +521,9 @@ class _WarningPanel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFFFF7ED),
+        color: const Color(0xFFFFF7ED),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFF97316)),
+        border: Border.all(color: const Color(0xFFF97316)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,41 +549,6 @@ class _WarningPanel extends StatelessWidget {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PackageSection extends StatelessWidget {
-  const _PackageSection({required this.title, required this.child});
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppSemanticColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF111827),
-            ),
-          ),
-          const SizedBox(height: 8),
-          child,
         ],
       ),
     );
@@ -886,14 +806,14 @@ class _EwpReleaseGate extends StatelessWidget {
         color: isReleased
             ? const Color(0xFFECFDF5)
             : (blockers.isEmpty
-                ? const Color(0xFFEFF6FF)
+                ? const Color(0xFFFFF8E1)
                 : const Color(0xFFFFF7ED)),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isReleased
               ? const Color(0xFF10B981)
               : (blockers.isEmpty
-                  ? const Color(0xFF3B82F6)
+                  ? const Color(0xFFFFC812)
                   : const Color(0xFFF97316)),
         ),
       ),
@@ -910,7 +830,7 @@ class _EwpReleaseGate extends StatelessWidget {
                 color: isReleased
                     ? const Color(0xFF047857)
                     : (blockers.isEmpty
-                        ? const Color(0xFF1D4ED8)
+                        ? const Color(0xFFFFC812)
                         : const Color(0xFF9A3412)),
               ),
               const SizedBox(width: 8),
@@ -926,7 +846,7 @@ class _EwpReleaseGate extends StatelessWidget {
                   color: isReleased
                       ? const Color(0xFF047857)
                       : (blockers.isEmpty
-                          ? const Color(0xFF1D4ED8)
+                          ? const Color(0xFFFFC812)
                           : const Color(0xFF9A3412)),
                 ),
               ),
@@ -974,7 +894,7 @@ class _EwpReleaseGate extends StatelessWidget {
                 icon: const Icon(Icons.lock_open, size: 16),
                 label: const Text('Release for Execution'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF1D4ED8),
+                  backgroundColor: const Color(0xFFFFC812),
                 ),
               ),
             ),
@@ -1063,30 +983,30 @@ class _DeliverableRow extends StatelessWidget {
               runSpacing: 4,
               children: [
                 if (deliverable.type.isNotEmpty)
-                  _traceChip(
+                  _TraceChip(
                     icon: Icons.category,
                     label: deliverable.type,
                     color: const Color(0xFF6B7280),
                   ),
                 if (deliverable.requiredForProcurement)
-                  const _traceChip(
+                  const _TraceChip(
                     icon: Icons.local_shipping,
                     label: 'Required for Procurement',
                     color: Color(0xFFD97706),
                   ),
                 if (hasProcurementLink)
-                  _traceChip(
+                  _TraceChip(
                     icon: Icons.arrow_forward,
                     label:
                         'Feeds ${deliverable.feedsProcurementPackageIds.length} procurement pkg(s)',
-                    color: const Color(0xFF2563EB),
+                    color: const Color(0xFFFFC812),
                   ),
                 if (hasSpecLink)
-                  _traceChip(
+                  _TraceChip(
                     icon: Icons.link,
                     label:
                         '${deliverable.linkedSpecificationIds.length} spec(s)',
-                    color: const Color(0xFF7C3AED),
+                    color: const Color(0xFFB8860B),
                   ),
               ],
             ),
@@ -1103,7 +1023,7 @@ class _DeliverableRow extends StatelessWidget {
       case 'completed':
         return const Color(0xFF10B981);
       case 'in_review':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'planned':
         return const Color(0xFF9CA3AF);
       default:
@@ -1112,8 +1032,8 @@ class _DeliverableRow extends StatelessWidget {
   }
 }
 
-class _traceChip extends StatelessWidget {
-  const _traceChip({
+class _TraceChip extends StatelessWidget {
+  const _TraceChip({
     required this.icon,
     required this.label,
     required this.color,

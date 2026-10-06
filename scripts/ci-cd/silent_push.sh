@@ -47,7 +47,8 @@ WORKFLOWS_SRC="$SCRIPT_DIR/../.github/workflows"
 
 # ── Locate gh CLI ───────────────────────────────────────────────────────────
 GH_BIN=""
-for candidate in "/home/z/my-project/sdk/gh/gh" "$(command -v gh 2>/dev/null)"; do
+# Check: env override → script-local → system PATH
+for candidate in "${GH_BIN_OVERRIDE:-}" "$(command -v gh 2>/dev/null)"; do
   if [ -n "$candidate" ] && [ -x "$candidate" ]; then
     GH_BIN="$candidate"
     break
@@ -57,7 +58,7 @@ done
 if [ -z "$GH_BIN" ]; then
   echo "ERROR: gh CLI not found."
   echo "  Install: https://cli.github.com/"
-  echo "  Or on this sandbox: it's at /home/z/my-project/sdk/gh/gh"
+  echo "  Or set GH_BIN_OVERRIDE=/path/to/gh"
   exit 1
 fi
 

@@ -23,6 +23,10 @@
 /// A single checklist item in a team member's mobilization checklist.
 /// When all items are checked, the team member is "mobilized" for the
 /// Execution phase.
+library;
+
+import 'package:ndu_project/utils/unique_id.dart';
+
 class MobilizationChecklistItem {
   String id;
   String label;
@@ -36,7 +40,7 @@ class MobilizationChecklistItem {
     this.isChecked = false,
     this.completedAt,
     this.completedBy,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -131,7 +135,7 @@ class RoleOnboardingRequirement {
     this.description = '',
     this.isRequired = true,
     this.isSkipped = false,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -183,7 +187,7 @@ class RoleHandoverRecord {
     this.completedAt,
     this.completedBy,
     this.isCompleted = false,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -235,7 +239,7 @@ class TeamActivityPost {
     required this.message,
     DateTime? createdAt,
     List<String>? attachments,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         createdAt = createdAt ?? DateTime.now(),
         attachments = attachments ?? [];
 

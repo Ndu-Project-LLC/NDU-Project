@@ -1,10 +1,12 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class AgileBaselineAssumption {
   AgileBaselineAssumption({
     String? id,
     this.category = '',
     this.impact = 'Medium',
     this.text = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   final String id;
   String category;

@@ -55,191 +55,196 @@ class DetailedDesignTableWidget extends StatelessWidget {
           child: buildNduTableWithExpand(
             context: context,
             title: 'Design Specifications',
-            minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 1200,
+            // Keep the table wider than the viewport so every column gets
+            // measurable space; the responsive wrapper provides horizontal
+            // scrolling instead of collapsing cells to near-zero width.
+            minWidth: constraints.maxWidth > 0
+                ? constraints.maxWidth.clamp(1200.0, double.infinity)
+                : 1200,
             maxHeight: 560,
-            columnSpacing: 16,
-            horizontalMargin: 16,
+            columnSpacing: 24,
+            horizontalMargin: 20,
             headingRowHeight: 52,
-            dataRowMinHeight: 48,
-            dataRowMaxHeight: 120,
+            dataRowMinHeight: 64,
+            dataRowMaxHeight: 180,
             columns: const [
-                DataColumn(
-                  label: Center(
-                    child: Text('Spec ID',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151))),
-                  ),
+              DataColumn(
+                label: Center(
+                  child: Text('Spec ID',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF374151))),
                 ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Design Element',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151))),
-                  ),
+              ),
+              DataColumn(
+                label: Center(
+                  child: Text('Design Element',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF374151))),
                 ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Type',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151))),
-                  ),
+              ),
+              DataColumn(
+                label: Center(
+                  child: Text('Type',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF374151))),
                 ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Specification',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151))),
-                  ),
+              ),
+              DataColumn(
+                label: Center(
+                  child: Text('Specification',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF374151))),
                 ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Priority',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151))),
-                  ),
+              ),
+              DataColumn(
+                label: Center(
+                  child: Text('Priority',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF374151))),
                 ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Phase',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151))),
-                  ),
+              ),
+              DataColumn(
+                label: Center(
+                  child: Text('Phase',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF374151))),
                 ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Owner',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151))),
-                  ),
+              ),
+              DataColumn(
+                label: Center(
+                  child: Text('Owner',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF374151))),
                 ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Traceability',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151))),
-                  ),
+              ),
+              DataColumn(
+                label: Center(
+                  child: Text('Traceability',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF374151))),
                 ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Status',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151))),
-                  ),
+              ),
+              DataColumn(
+                label: Center(
+                  child: Text('Status',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF374151))),
                 ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Actions',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151))),
-                  ),
+              ),
+              DataColumn(
+                label: Center(
+                  child: Text('Actions',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF374151))),
                 ),
-              ],
-              rows: components.map((component) {
-                return DataRow(
-                  cells: [
-                    DataCell(_DesignSpecRowWidget(
-                      component: component,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                      column: 'specId',
-                      methodology: methodology,
-                    )),
-                    DataCell(_DesignSpecRowWidget(
-                      component: component,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                      column: 'name',
-                      methodology: methodology,
-                    )),
-                    DataCell(_DesignSpecRowWidget(
-                      component: component,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                      column: 'type',
-                      methodology: methodology,
-                    )),
-                    DataCell(_DesignSpecRowWidget(
-                      component: component,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                      column: 'specification',
-                      methodology: methodology,
-                    )),
-                    DataCell(_DesignSpecRowWidget(
-                      component: component,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                      column: 'priority',
-                      methodology: methodology,
-                    )),
-                    DataCell(_DesignSpecRowWidget(
-                      component: component,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                      column: 'phase',
-                      methodology: methodology,
-                    )),
-                    DataCell(_DesignSpecRowWidget(
-                      component: component,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                      column: 'owner',
-                      methodology: methodology,
-                    )),
-                    DataCell(_DesignSpecRowWidget(
-                      component: component,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                      column: 'traceability',
-                      methodology: methodology,
-                    )),
-                    DataCell(_DesignSpecRowWidget(
-                      component: component,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                      column: 'status',
-                      methodology: methodology,
-                    )),
-                    DataCell(_DesignSpecRowWidget(
-                      component: component,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                      column: 'actions',
-                      methodology: methodology,
-                    )),
-                  ],
-                );
-              }).toList(),
+              ),
+            ],
+            rows: components.map((component) {
+              return DataRow(
+                cells: [
+                  DataCell(_DesignSpecRowWidget(
+                    component: component,
+                    onUpdated: onUpdated,
+                    onDeleted: onDeleted,
+                    column: 'specId',
+                    methodology: methodology,
+                  )),
+                  DataCell(_DesignSpecRowWidget(
+                    component: component,
+                    onUpdated: onUpdated,
+                    onDeleted: onDeleted,
+                    column: 'name',
+                    methodology: methodology,
+                  )),
+                  DataCell(_DesignSpecRowWidget(
+                    component: component,
+                    onUpdated: onUpdated,
+                    onDeleted: onDeleted,
+                    column: 'type',
+                    methodology: methodology,
+                  )),
+                  DataCell(_DesignSpecRowWidget(
+                    component: component,
+                    onUpdated: onUpdated,
+                    onDeleted: onDeleted,
+                    column: 'specification',
+                    methodology: methodology,
+                  )),
+                  DataCell(_DesignSpecRowWidget(
+                    component: component,
+                    onUpdated: onUpdated,
+                    onDeleted: onDeleted,
+                    column: 'priority',
+                    methodology: methodology,
+                  )),
+                  DataCell(_DesignSpecRowWidget(
+                    component: component,
+                    onUpdated: onUpdated,
+                    onDeleted: onDeleted,
+                    column: 'phase',
+                    methodology: methodology,
+                  )),
+                  DataCell(_DesignSpecRowWidget(
+                    component: component,
+                    onUpdated: onUpdated,
+                    onDeleted: onDeleted,
+                    column: 'owner',
+                    methodology: methodology,
+                  )),
+                  DataCell(_DesignSpecRowWidget(
+                    component: component,
+                    onUpdated: onUpdated,
+                    onDeleted: onDeleted,
+                    column: 'traceability',
+                    methodology: methodology,
+                  )),
+                  DataCell(_DesignSpecRowWidget(
+                    component: component,
+                    onUpdated: onUpdated,
+                    onDeleted: onDeleted,
+                    column: 'status',
+                    methodology: methodology,
+                  )),
+                  DataCell(_DesignSpecRowWidget(
+                    component: component,
+                    onUpdated: onUpdated,
+                    onDeleted: onDeleted,
+                    column: 'actions',
+                    methodology: methodology,
+                  )),
+                ],
+              );
+            }).toList(),
           ),
         );
       },
@@ -470,10 +475,10 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
   Color _getStatusColor(String status) {
     return switch (status.toLowerCase()) {
       'draft' => const Color(0xFF9CA3AF),
-      'in review' => const Color(0xFF0EA5E9),
-      'reviewed' => const Color(0xFF6366F1),
+      'in review' => const Color(0xFFFFC812),
+      'reviewed' => const Color(0xFFB8860B),
       'approved' => const Color(0xFF10B981),
-      'baseline' => const Color(0xFF2563EB),
+      'baseline' => const Color(0xFFFFC812),
       'superseded' => const Color(0xFFEF4444),
       _ => const Color(0xFF9CA3AF),
     };
@@ -483,7 +488,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
   Color _getPriorityColor(String priority) {
     return switch (priority.toLowerCase()) {
       'must have' => const Color(0xFFDC2626),
-      'should have' => const Color(0xFF2563EB),
+      'should have' => const Color(0xFFFFC812),
       'could have' => const Color(0xFFD97706),
       "won't have" => const Color(0xFF6B7280),
       _ => const Color(0xFF6B7280),
@@ -493,14 +498,14 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
   // ── Spec type color mapping ──
   Color _getSpecTypeColor(String type) {
     return switch (type.toLowerCase()) {
-      'architecture' => const Color(0xFF7C3AED),
-      'interface' => const Color(0xFF2563EB),
-      'data' => const Color(0xFF0891B2),
+      'architecture' => const Color(0xFFB8860B),
+      'interface' => const Color(0xFFFFC812),
+      'data' => const Color(0xFFD97706),
       'component' => const Color(0xFF059669),
       'security' => const Color(0xFFDC2626),
       'nfr' => const Color(0xFFD97706),
       'infrastructure' => const Color(0xFF475569),
-      'ui/ux' => const Color(0xFFEC4899),
+      'ui/ux' => const Color(0xFFD97706),
       _ => const Color(0xFF6B7280),
     };
   }
@@ -539,7 +544,8 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
   Widget build(BuildContext context) {
     switch (widget.column) {
       case 'specId':
-        return Center(
+        return SizedBox(
+          width: 100,
           child: InlineEditableText(
             value: _component.specId,
             isListField: false,
@@ -554,7 +560,8 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
           ),
         );
       case 'name':
-        return Center(
+        return SizedBox(
+          width: 170,
           child: InlineEditableText(
             value: _component.componentName,
             isListField: false,
@@ -569,7 +576,8 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
         );
       case 'type':
         final typeColor = _getSpecTypeColor(_component.specificationType);
-        return Center(
+        return SizedBox(
+          width: 120,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
@@ -606,7 +614,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
         );
       case 'specification':
         return SizedBox(
-          width: 180,
+          width: 260,
           child: InlineEditableText(
             value: _component.specificationDetails,
             isListField: true,
@@ -618,7 +626,8 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
         );
       case 'priority':
         final priorityColor = _getPriorityColor(_component.priority);
-        return Center(
+        return SizedBox(
+          width: 130,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
@@ -652,7 +661,8 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
           ),
         );
       case 'phase':
-        return Center(
+        return SizedBox(
+          width: 150,
           child: DropdownButton<String>(
             value: _component.methodologyPhase.isNotEmpty
                 ? _component.methodologyPhase
@@ -675,7 +685,8 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
           ),
         );
       case 'owner':
-        return Center(
+        return SizedBox(
+          width: 130,
           child: DropdownButton<String>(
             value:
                 _component.owner.isNotEmpty ? _component.owner : 'Engineering',
@@ -697,7 +708,8 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
           ),
         );
       case 'traceability':
-        return Center(
+        return SizedBox(
+          width: 120,
           child: InlineEditableText(
             value: _component.traceability,
             isListField: false,
@@ -706,12 +718,13 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
             style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF2563EB)),
+                color: Color(0xFFFFC812)),
             textAlign: TextAlign.center,
           ),
         );
       case 'status':
-        return Center(
+        return SizedBox(
+          width: 120,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
@@ -744,57 +757,60 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
           ),
         );
       case 'actions':
-        return MouseRegion(
-          onEnter: (_) =>
-              Future.microtask(() => setState(() => _isHovering = true)),
-          onExit: (_) =>
-              Future.microtask(() => setState(() => _isHovering = false)),
-          child: Center(
-            child: _isHovering
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_previousState != null)
+        return SizedBox(
+          width: 110,
+          child: MouseRegion(
+            onEnter: (_) =>
+                Future.microtask(() => setState(() => _isHovering = true)),
+            onExit: (_) =>
+                Future.microtask(() => setState(() => _isHovering = false)),
+            child: Center(
+              child: _isHovering
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_previousState != null)
+                          IconButton(
+                            icon: const Icon(Icons.undo,
+                                size: 14, color: Color(0xFF64748B)),
+                            onPressed: _undo,
+                            tooltip: 'Undo',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                                minWidth: 28, minHeight: 28),
+                          ),
                         IconButton(
-                          icon: const Icon(Icons.undo,
-                              size: 14, color: Color(0xFF64748B)),
-                          onPressed: _undo,
-                          tooltip: 'Undo',
+                          icon: _isRegenerating
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Color(0xFFB8860B),
+                                  ),
+                                )
+                              : const Icon(Icons.auto_awesome,
+                                  size: 14, color: Color(0xFFB8860B)),
+                          onPressed:
+                              _isRegenerating ? null : _regenerateSpecification,
+                          tooltip: 'AI Regenerate',
                           padding: EdgeInsets.zero,
                           constraints:
                               const BoxConstraints(minWidth: 28, minHeight: 28),
                         ),
-                      IconButton(
-                        icon: _isRegenerating
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Color(0xFF7C3AED),
-                                ),
-                              )
-                            : const Icon(Icons.auto_awesome,
-                                size: 14, color: Color(0xFF7C3AED)),
-                        onPressed:
-                            _isRegenerating ? null : _regenerateSpecification,
-                        tooltip: 'AI Regenerate',
-                        padding: EdgeInsets.zero,
-                        constraints:
-                            const BoxConstraints(minWidth: 28, minHeight: 28),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline,
-                            size: 14, color: Color(0xFF9CA3AF)),
-                        onPressed: _deleteComponent,
-                        tooltip: 'Delete',
-                        padding: EdgeInsets.zero,
-                        constraints:
-                            const BoxConstraints(minWidth: 28, minHeight: 28),
-                      ),
-                    ],
-                  )
-                : const SizedBox(width: 36),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline,
+                              size: 14, color: Color(0xFF9CA3AF)),
+                          onPressed: _deleteComponent,
+                          tooltip: 'Delete',
+                          padding: EdgeInsets.zero,
+                          constraints:
+                              const BoxConstraints(minWidth: 28, minHeight: 28),
+                        ),
+                      ],
+                    )
+                  : const SizedBox(width: 36),
+            ),
           ),
         );
       default:

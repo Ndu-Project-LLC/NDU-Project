@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class RoadmapSprint {
   final String id;
   String name;
@@ -25,7 +27,7 @@ class RoadmapSprint {
     this.capacityPoints = 0,
     this.focusFactor = 1,
     this.squadName = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   String get dateRangeLabel {
     if (startDate == null && endDate == null) return '';
@@ -106,7 +108,7 @@ class RoadmapSprint {
 
     return RoadmapSprint(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       name: json['name']?.toString() ?? '',
       startDate: parseDate(json['startDate']?.toString()),
       endDate: parseDate(json['endDate']?.toString()),

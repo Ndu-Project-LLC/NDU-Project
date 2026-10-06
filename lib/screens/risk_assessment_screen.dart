@@ -1,26 +1,35 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/risk_log.dart';
+import 'package:ndu_project/widgets/risk_register_cards.dart';
+import 'package:ndu_project/models/risk_assessment_signoff.dart';
+import 'package:ndu_project/cost_estimate/providers/compute_utils.dart'
+    hide newId;
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
-import 'package:ndu_project/widgets/unified_phase_header.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:math' as math;
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 
 class RiskAssessmentScreen extends StatefulWidget {
  const RiskAssessmentScreen({super.key});
@@ -40,10 +49,19 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  'In Progress',
  'Monitoring',
  'Closed',
- ];
+ ];  final List<_RiskEntry> _entries = [];
 
- final List<_RiskEntry> _entries = [];
- final TextEditingController _searchController = TextEditingController();
+  /// The project's risk log, carried over from Front End Planning — the same
+  /// rows and columns as the FEP risk register (Lusaka 27). Empty until a
+  /// project has a register to carry over, in which case the planning-local
+  /// entries below stand in for the numbers.
+  List<RiskLogRow> _logRows = const [];
+
+  /// The required stakeholder sign-off on this section, and the review cadence
+  /// recorded with it (Lusaka 27).
+  RiskAssessmentSignoff _signoff = RiskAssessmentSignoff.empty;
+  bool _signoffSaving = false;
+ final TextEditingController _searchController = SpellCheckTextEditingController();
  String? _statusFilter;
  bool _loadingEntries = false;
 
@@ -86,10 +104,10 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  void didChangeDependencies() {
  super.didChangeDependencies();
  if (_didInitNotes) return;
- final data = ProjectDataHelper.getData(context);
- _notesController.text =
- data.planningNotes['planning_risk_assessment_notes'] ?? '';
- _didInitNotes = true;
+ final data = ProjectDataHelper.getData(context);    _notesController.text =
+        data.planningNotes['planning_risk_assessment_notes'] ?? '';
+    _signoff = RiskAssessmentSignoff.fromPlanningNotes(data.planningNotes);
+    _didInitNotes = true;
  }
 
  @override
@@ -102,14 +120,20 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  controller.dispose();
  }
  super.dispose();
- }
+ }  Future<void> _loadEntries() async {
+    final data = ProjectDataHelper.getData(context);
+    // The risk log starts from what Front End Planning already logged, so the
+    // two views of the same project report the same risks (Lusaka 27).
+    final logRows =
+        RiskLogRow.fromRegisterItems(data.frontEndPlanning.riskRegisterItems);
+    if (mounted) setState(() => _logRows = logRows);
 
- Future<void> _loadEntries() async {
- final projectId = ProjectDataHelper.getData(context).projectId;
- if (projectId == null || projectId.isEmpty) return;
+    final projectId = data.projectId;
+    if (projectId == null || projectId.isEmpty) return;
  if (!mounted) return;
  setState(() => _loadingEntries = true);
- try {
+if (!mounted) return;
+  try {
  final snapshot = await FirebaseFirestore.instance
  .collection('projects')
  .doc(projectId)
@@ -118,6 +142,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  .get();
  final firestoreEntries =
  snapshot.docs.map((doc) => _RiskEntry.fromFirestore(doc)).toList();
+  if (!mounted) return;
  final provider = ProjectDataHelper.getProvider(context);
  final projectData = provider.projectData;
  final mergedEntries = await _mergeEntriesWithSolutionRisks(
@@ -190,14 +215,18 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  }
 
  Future<void> _openEntryDialog(
- {_RiskEntry? entry, bool readOnly = false}) async {
- final idController = TextEditingController(text: entry?.id ?? '');
- final descriptionController =
- TextEditingController(text: entry?.description ?? '');
- final categoryController =
- TextEditingController(text: entry?.category ?? '');
- final scoreController = TextEditingController(text: entry?.score ?? '');
- final ownerController = TextEditingController(text: entry?.owner ?? '');
+    {_RiskEntry? entry, bool readOnly = false}) async {
+    final descriptionController =
+    SpellCheckTextEditingController(text: entry?.description ?? '');
+ // Risk ID is assigned by the app (_nextEntryId), not typed here.
+ final savedCategory = entry?.category ?? '';
+ final savedOwner = entry?.owner ?? '';
+ String selectedCategory = riskCategoryOptions.contains(savedCategory)
+ ? savedCategory
+ : _defaultCategory();
+ String selectedOwner = _ownerOptions(context).contains(savedOwner)
+ ? savedOwner
+ : '';
  String selectedProbability =
  _riskLevelOptions.contains(entry?.probability ?? '')
  ? (entry?.probability ?? _riskLevelOptions[1])
@@ -208,6 +237,14 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  String selectedStatus = _riskStatusOptions.contains(entry?.status ?? '')
  ? (entry?.status ?? _riskStatusOptions.first)
  : _riskStatusOptions.first;
+
+ // Risk Score is the overall scale, derived from Probability x Impact rather
+ // than typed by hand, so it can never disagree with the two inputs that
+ // produce it. Entries saved before it was derived keep the value they already
+ // carry instead of being silently rewritten.
+ String derivedScore() => (entry?.score.trim().isNotEmpty ?? false)
+ ? entry!.score.trim()
+ : RiskLogRow.deriveRiskLevel(selectedProbability, selectedImpact);
 
  final result = await showDialog<bool>(
  context: context,
@@ -225,18 +262,18 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  mainAxisSize: MainAxisSize.min,
  children: [
  _dialogField(
- controller: idController,
- label: 'Risk ID',
- readOnly: readOnly),
- _dialogField(
  controller: descriptionController,
  label: 'Description',
  readOnly: readOnly,
  maxLines: 2),
- _dialogField(
- controller: categoryController,
+ _dialogDropdownField(
  label: 'Category',
- readOnly: readOnly),
+ value: selectedCategory,
+ options: riskCategoryOptions,
+ enabled: !readOnly,
+ onChanged: (value) =>
+ setLocalState(() => selectedCategory = value),
+ ),
  _dialogDropdownField(
  label: 'Probability',
  value: selectedProbability,
@@ -253,14 +290,17 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  onChanged: (value) =>
  setLocalState(() => selectedImpact = value),
  ),
- _dialogField(
- controller: scoreController,
- label: 'Risk Score',
- readOnly: readOnly),
- _dialogField(
- controller: ownerController,
+ // The overall scale, recomputed live from Probability x Impact.
+ _dialogReadOnlyField(label: 'Risk Score', value: derivedScore()),
+ _dialogDropdownField(
  label: 'Owner',
- readOnly: readOnly),
+ value: selectedOwner,
+ options: _ownerOptions(context),
+ enabled: !readOnly,
+ allowEmpty: selectedOwner.isEmpty,
+ onChanged: (value) =>
+ setLocalState(() => selectedOwner = value),
+ ),
  _dialogDropdownField(
  label: 'Status',
  value: selectedStatus,
@@ -291,17 +331,17 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  if (result != true || readOnly) return;
  final newEntry = _RiskEntry(
  docId: entry?.docId ?? _newEntryId(),
- id: idController.text.trim().isEmpty
- ? 'R-${DateTime.now().millisecondsSinceEpoch}'
- : idController.text.trim(),
+ // Risk ID is no longer typed: new entries take the next sequential number
+ // and existing entries keep the id they were given.
+ id: entry?.id ?? _nextEntryId(),
  description: descriptionController.text.trim(),
- category: categoryController.text.trim(),
+ category: selectedCategory,
  probability: selectedProbability,
  impact: selectedImpact,
- score: scoreController.text.trim(),
+ score: derivedScore(),
  discipline: '',
  role: '',
- owner: ownerController.text.trim(),
+ owner: selectedOwner,
  status: selectedStatus,
  createdAt: entry?.createdAt ?? DateTime.now(),
  updatedAt: DateTime.now(),
@@ -318,10 +358,60 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  await _persistEntry(newEntry, isNew: entry == null);
  }
 
+ /// The next sequential Risk ID (R-001, R-002, ...) for a newly added risk.
+ ///
+ /// Ids are assigned by the app rather than typed, so they stay unique and in
+ /// order. Scans both this screen's entries and the carried-over risk log so
+ /// the sequence continues across the two sources.
+ String _nextEntryId() {
+ var max = 0;
+ final pattern = RegExp(r'^R-(\d+)$');
+ void consider(String raw) {
+ final match = pattern.firstMatch(raw.trim());
+ if (match == null) return;
+ final value = int.tryParse(match.group(1)!);
+ if (value != null && value > max) max = value;
+ }
+ for (final item in _entries) {
+ consider(item.id);
+ }
+ for (final row in _logRows) {
+ consider(row.id);
+ }
+ return 'R-${(max + 1).toString().padLeft(3, '0')}';
+ }
+
+ /// Everyone registered on this project who can own a risk, for the Owner
+ /// dropdown. Roles and team members are the same people the rest of the app
+ /// assigns work to, so an owner picked here always matches a real name.
+ List<String> _ownerOptions(BuildContext context) {
+ final data = ProjectDataHelper.getData(context);
+ final options = <String>{};
+ for (final role in data.projectRoles) {
+ final title = role.title.trim();
+ if (title.isNotEmpty) options.add(title);
+ }
+ for (final member in data.teamMembers) {
+ final name = member.name.trim();
+ if (name.isNotEmpty) options.add(name);
+ }
+ if (options.isEmpty) return const ['Unassigned'];
+ return options.toList()..sort((a, b) => a.compareTo(b));
+ }
+
+ /// Reuses a category already in use on this screen when it is still part of
+ /// the shared taxonomy, otherwise falls back to the first option.
+ String _defaultCategory() {
+ final existing = _entries.map((item) => item.category.trim()).toSet();
+ for (final category in riskCategoryOptions) {
+ if (existing.contains(category)) return category;
+ }
+ return riskCategoryOptions.first;
+ }
+
  String _newEntryId() {
  final projectId = ProjectDataHelper.getData(context).projectId;
- if (projectId == null || projectId.isEmpty) {
- return DateTime.now().millisecondsSinceEpoch.toString();
+ if (projectId == null || projectId.isEmpty) {        return newId();
  }
  return FirebaseFirestore.instance
  .collection('projects')
@@ -344,12 +434,81 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  entry.category,
  entry.owner,
  entry.status,
- ].join(' ').toLowerCase();
- return haystack.contains(query);
- }).toList();
- }
+ ].join(' ').toLowerCase();      return haystack.contains(query);
+    }).toList();
+  }
 
- Future<void> _openFilterDialog() async {
+  /// The planning-local entries shaped like log rows. Only used for the
+  /// metrics and matrix when the project has no carried-over risk log yet.
+  List<RiskLogRow> _riskLogRowsFromEntries(List<_RiskEntry> entries) => [
+        for (var i = 0; i < entries.length; i++)
+          RiskLogRow(
+            id: entries[i].id.trim().isEmpty
+                ? RiskLogRow.idForIndex(i)
+                : entries[i].id.trim(),
+            title: '',
+            description: entries[i].description,
+            category: entries[i].category,
+            probability: entries[i].probability,
+            impact: entries[i].impact,
+            costImpact: '',
+            scheduleImpact: '',
+            riskLevel: RiskLogRow.deriveRiskLevel(
+                entries[i].probability, entries[i].impact),
+            mitigation: _mitigationPlans[entries[i].docId] ?? '',
+            discipline: entries[i].discipline,
+            projectRole: entries[i].role,
+            owner: entries[i].owner,
+            status: entries[i].status,
+          ),
+      ];  /// The rows this section reports and gates on: the carried-over risk log when
+  /// the project has one, otherwise the planning-local entries.
+  List<RiskLogRow> get _riskLogRows =>
+      _logRows.isNotEmpty ? _logRows : _riskLogRowsFromEntries(_entries);
+
+  /// The budget the risk allowance is a percentage of.
+  double get _budget => ProjectDataHelper.getTotalEstimatedCostValue(
+      ProjectDataHelper.getData(context));
+
+  Future<void> _persistSignoff(RiskAssessmentSignoff next) async {
+    setState(() {
+      _signoff = next;
+      _signoffSaving = true;
+    });
+    final success = await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'risk_assessment',
+      dataUpdater: (data) => data.copyWith(
+        planningNotes: {...data.planningNotes, ...next.toPlanningNotes()},
+      ),
+      showSnackbar: false,
+    );
+    if (!mounted) return;
+    setState(() => _signoffSaving = false);
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save the risk assessment sign-off.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Next is blocked while the section is incomplete (Lusaka 27): the reviewer
+  /// confirms the stakeholder review before the flow moves on.
+  void _handleForward() {
+    final blocker = _signoff.blockerFor(_riskLogRows);
+    if (blocker != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(blocker), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+    PlanningPhaseNavigation.goToNext(context, 'risk_assessment');
+  }
+
+  Future<void> _openFilterDialog() async {
  final current = _statusFilter;
  final options = ['All', 'Open', 'In Progress', 'Monitoring', 'Closed'];
  final result = await showDialog<String?>(
@@ -382,8 +541,13 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  @override
  Widget build(BuildContext context) {
  final entries = _filteredEntries();
- final stats = _RiskStats.fromEntries(entries);
- final isMobile = AppBreakpoints.isMobile(context);
+    // When the project has a carried-over risk log, the metrics, the matrix and
+    // the sign-off all count those same rows, so Planning and Front End
+    // Planning cannot report different risk numbers for one project (Lusaka 27).
+    final logRows = _logRows;
+    final gateRows = _riskLogRows;
+    final stats = _RiskStats.fromRows(gateRows);
+    final isMobile = AppBreakpoints.isMobile(context);
 
  return ResponsiveScaffold(
  activeItemLabel: 'Risk Mitigation',
@@ -396,8 +560,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  breadcrumbTitle: 'Risk Assessment',
  onBack: () => PlanningPhaseNavigation.goToPrevious(
  context, 'risk_assessment'),
- onForward: () =>
- PlanningPhaseNavigation.goToNext(context, 'risk_assessment'), onExportPdf: _exportPdf),
+ onForward: _handleForward, onExportPdf: _exportPdf),
  Expanded(
  child: SingleChildScrollView(
  padding: EdgeInsets.fromLTRB(
@@ -418,10 +581,13 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  const SizedBox(height: 4),
  const Text('Identify, analyze and mitigate project risks.',
  style:
- TextStyle(fontSize: 14, color: Color(0xFF6B7280))),
- const SizedBox(height: 24),
- // Notes
- _RiskNotesCard(
+ TextStyle(fontSize: 14, color: Color(0xFF6B7280))),                const SizedBox(height: 24),
+                // The worst risks and their mitigation plans, up front so they
+                // "can be seen immediately" (Lusaka 27).
+                _TopRisksCard(rows: gateRows),
+                const SizedBox(height: 16),
+                // Notes
+                _RiskNotesCard(
  controller: _notesController,
  saving: _notesSaving,
  savedAt: _notesSavedAt,
@@ -429,11 +595,23 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  const SizedBox(height: 16),
  // Metrics
  _MetricsWrap(stats: stats),
- const SizedBox(height: 16),
- // Risk Matrix
- _RiskMatrixCard(stats: stats),
- const SizedBox(height: 16),
- // Mitigation Plan
+ const SizedBox(height: 16),                // Risk Matrix
+                _RiskMatrixCard(stats: stats),
+                const SizedBox(height: 16),
+                // Risk allowance — 0.6 % of the budget, shown before the risk
+                // table, which is where the owner wants it (Lusaka 27).
+                _RiskAllowanceCard(
+                  budget: _budget,
+                  allowance: RiskAssessmentSignoff.riskAllowanceFor(_budget),
+                ),
+                const SizedBox(height: 16),
+                // Risk Log — the same table, columns and rows as the FEP risk
+                // register, carried on over (Lusaka 27).
+                if (logRows.isNotEmpty) ...[
+                  _RiskLogSection(rows: logRows),
+                  const SizedBox(height: 16),
+                ],
+                // Mitigation Plan
  _MitigationPlanCard(
  entries: entries,
  controllers: _mitigationControllers,
@@ -444,6 +622,13 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  saving: _mitigationSaving,
  savedAt: _mitigationSavedAt,
  regeneratingIds: _regeneratingMitigationIds),
+ const SizedBox(height: 16),
+ // Required sign-off — the gate on completing this section (Lusaka 27).
+ _RiskSignoffCard(
+ signoff: _signoff,
+ blocker: _signoff.blockerFor(gateRows),
+ saving: _signoffSaving,
+ onChanged: _persistSignoff),
  const SizedBox(height: 16),    // Risk Register
         _RiskRegister(
           entries: entries,
@@ -461,89 +646,6 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  ),
  ),
  ],
- ),
- );
- }
-
- Widget _buildMobileHeader() {
- final user = FirebaseAuth.instance.currentUser;
- final photoUrl = user?.photoURL;
-
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
- decoration: const BoxDecoration(
- color: Colors.white,
- border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
- ),
- child: SafeArea(
- bottom: false,
- child: Row(
- children: [
- // Hamburger menu button
- InkWell(
- onTap: () {
- final scaffold = Scaffold.maybeOf(context);
- if (scaffold != null && scaffold.hasDrawer) {
- scaffold.openDrawer();
- }
- },
- borderRadius: BorderRadius.circular(8),
- child: const Padding(
- padding: EdgeInsets.all(4),
- child: Icon(Icons.menu, size: 24, color: Color(0xFF1F2937)),
- ),
- ),
- const SizedBox(width: 12),
- // Back/Forward chevrons + title
- _circleIcon(
- icon: Icons.chevron_left_rounded,
- onTap: () => PlanningPhaseNavigation.goToPrevious(
- context, 'risk_assessment'),
- ),
- const SizedBox(width: 8),
- _circleIcon(
- icon: Icons.chevron_right_rounded,
- onTap: () =>
- PlanningPhaseNavigation.goToNext(context, 'risk_assessment'),
- ),
- const SizedBox(width: 12),
- const Expanded(
- child: Text(
- 'Risk Mitigation',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w600,
- color: Color(0xFF111827)),
- ),
- ),
- // Avatar
- CircleAvatar(
- radius: 18,
- backgroundColor: const Color(0xFFE5E7EB),
- backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
- child: photoUrl == null
- ? const Icon(Icons.person, size: 18, color: Color(0xFF374151))
- : null,
- ),
- ],
- ),
- ),
- );
- }
-
- Widget _circleIcon({required IconData icon, VoidCallback? onTap}) {
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(999),
- child: Container(
- width: 36,
- height: 36,
- decoration: BoxDecoration(
- color: Colors.white,
- shape: BoxShape.circle,
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
  ),
  );
  }
@@ -574,12 +676,10 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  if (normalizedExisting.contains(normalized) ||
  _seededRiskDescriptions.contains(normalized)) {
  continue;
- }
-
- final newEntry = _RiskEntry(
- docId: _newEntryId(),
- id: 'R-${DateTime.now().millisecondsSinceEpoch}',
- description: riskText,
+ }final newEntry = _RiskEntry(
+          docId: _newEntryId(),
+          id: _nextEntryId(),
+          description: riskText,
  category:
  solutionTitle.isNotEmpty ? solutionTitle : 'Initiation risk',
  probability: 'Medium',
@@ -754,7 +854,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
- content: Text('Failed to regenerate mitigation plan: $e'),
+ content: Text('Failed to regenerate mitigation plan: ${aiErrorMessage(e)}'),
  backgroundColor: Colors.red,
  ),
  );
@@ -775,7 +875,7 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
         docId: _newEntryId(),
         id: row['id']?.trim().isNotEmpty == true
             ? row['id']!.trim()
-            : 'R-${DateTime.now().millisecondsSinceEpoch + imported}',
+            : _nextEntryId(),
         description: description,
         category: row['category']?.trim() ?? '',
         probability: row['probability']?.trim().isNotEmpty == true
@@ -812,16 +912,550 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  screenTitle: 'Risk Assessment',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
- ]),
- PdfSection.text('Notes', projectData.planningNotes['planning_risk_assessment_notes'] ?? 'No data recorded.'),
- ],
- );
- }
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
+ ]),        PdfSection.text('Notes', projectData.planningNotes['planning_risk_assessment_notes'] ?? 'No data recorded.'),
+        // The carried-over risk log, so the export shows the table the owner
+        // was looking at instead of exporting nothing (Lusaka 27).
+        if (_logRows.isNotEmpty)
+          PdfSection.table(
+            'Risk Log',
+            headers: RiskLogRow.columnLabels,
+            rows: [for (final row in _logRows) row.values],
+          ),
+      ],
+    );
+  }
 }
 
 // ─── UI Widgets ─────────────────────────────────────────────────────────────
+
+/// The top risks and their mitigation plans, shown before the rest of the
+/// section so they "can be seen immediately" (Lusaka 27).
+class _TopRisksCard extends StatelessWidget {
+  const _TopRisksCard({required this.rows});
+
+  final List<RiskLogRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final top = RiskAssessmentSignoff.topRisks(rows);
+    final missing = RiskAssessmentSignoff.topRisksMissingMitigation(rows);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Top Risks & Mitigation',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF111827)),
+                ),
+              ),
+              if (missing.isEmpty && top.isNotEmpty)
+                const _StatusChip(
+                    label: 'All mitigated',
+                    color: Color(0xFF16A34A),
+                    background: Color(0xFFECFDF3))
+              else if (missing.isNotEmpty)
+                _StatusChip(
+                    label: '${missing.length} without a plan',
+                    color: const Color(0xFF92400E),
+                    background: const Color(0xFFFEF3C7)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'The ${RiskAssessmentSignoff.minimumTopRisks}–'
+            '${RiskAssessmentSignoff.maximumTopRisks} highest risks carry the '
+            'mitigation plan the review signs off on.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 12),
+          if (top.isEmpty)
+            const Text(
+              'No risks logged yet — the log below starts from Front End '
+              'Planning.',
+              style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+            )
+          else
+            for (final row in top) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          row.id,
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF6B7280)),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            row.title.isEmpty ? row.description : row.title,
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF111827)),
+                          ),
+                        ),
+                        if (row.riskLevel.isNotEmpty)
+                          _RiskTag(label: row.riskLevel),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      row.mitigation.isEmpty
+                          ? 'No mitigation plan yet.'
+                          : row.mitigation,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: row.mitigation.isEmpty
+                            ? const Color(0xFFB91C1C)
+                            : const Color(0xFF4B5563),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+        ],
+      ),
+    );
+  }
+}
+
+/// The risk allowance: 0.6 % of the project budget, before the risk table
+/// (Lusaka 27).
+class _RiskAllowanceCard extends StatelessWidget {
+  const _RiskAllowanceCard({required this.budget, required this.allowance});
+
+  final double budget;
+  final double allowance;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasBudget = budget > 0;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.savings_outlined,
+              size: 22, color: Color(0xFF6B7280)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Risk Allowance',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF111827)),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  hasBudget
+                      ? '${RiskAssessmentSignoff.riskAllowanceLabel} of '
+                          '${formatCurrency(budget)} budget.'
+                      : '${RiskAssessmentSignoff.riskAllowanceLabel} — no '
+                          'budget recorded yet.',
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            formatCurrency(allowance),
+            style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF111827)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The required sign-off: the owner's confirmation sentence plus the review
+/// record, and what still blocks the section (Lusaka 27).
+class _RiskSignoffCard extends StatelessWidget {
+  const _RiskSignoffCard({
+    required this.signoff,
+    required this.blocker,
+    required this.saving,
+    required this.onChanged,
+  });
+
+  final RiskAssessmentSignoff signoff;
+  final String? blocker;
+  final bool saving;
+  final ValueChanged<RiskAssessmentSignoff> onChanged;
+
+  Future<void> _pickReviewDate(BuildContext context) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.tryParse(signoff.reviewedOn) ?? now,
+      firstDate: DateTime(now.year - 3),
+      lastDate: DateTime(now.year + 2),
+    );
+    if (picked == null) return;
+    onChanged(signoff.copyWith(
+      reviewedOn: picked.toIso8601String().split('T').first,
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isComplete = blocker == null;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: isComplete
+                ? const Color(0xFFBBF7D0)
+                : const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Sign-off',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF111827)),
+                ),
+              ),
+              if (saving)
+                const _StatusChip(
+                    label: 'Saving...', color: Color(0xFF64748B)),
+            ],
+          ),
+          CheckboxListTile(
+            value: signoff.confirmed,
+            onChanged: (value) =>
+                onChanged(signoff.copyWith(confirmed: value ?? false)),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            title: const Text(
+              RiskAssessmentSignoff.confirmationSentence,
+              style: TextStyle(fontSize: 13, color: Color(0xFF111827)),
+            ),
+            subtitle: const Text(
+              'Required before this section can be completed.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => _pickReviewDate(context),
+                  borderRadius: BorderRadius.circular(10),
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: 'Reviewed with stakeholders on',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                    ),
+                    child: Text(
+                      signoff.hasReviewDate
+                          ? signoff.reviewedOn
+                          : 'Select a date',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: signoff.hasReviewDate
+                            ? const Color(0xFF111827)
+                            : const Color(0xFF9CA3AF),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  key: ValueKey(signoff.reviewCadence),
+                  initialValue: RiskAssessmentSignoff.reviewCadences
+                          .contains(signoff.reviewCadence)
+                      ? signoff.reviewCadence
+                      : null,
+                  decoration: InputDecoration(
+                    labelText: 'Risk review cadence',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 12),
+                  ),
+                  hint: const Text('Select cadence',
+                      style: TextStyle(fontSize: 13)),
+                  items: [
+                    for (final cadence in RiskAssessmentSignoff.reviewCadences)
+                      DropdownMenuItem<String>(
+                        value: cadence,
+                        child: Text(cadence,
+                            style: const TextStyle(fontSize: 13)),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) return;
+                    onChanged(signoff.copyWith(reviewCadence: value));
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                isComplete
+                    ? Icons.check_circle_outline
+                    : Icons.error_outline,
+                size: 16,
+                color: isComplete
+                    ? const Color(0xFF16A34A)
+                    : const Color(0xFFB45309),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  blocker ?? 'Section complete — recorded as reviewed and accepted.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isComplete
+                        ? const Color(0xFF16A34A)
+                        : const Color(0xFFB45309),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The project's risk log, carried over from Front End Planning: the same
+/// columns and the same rows the FEP risk register shows (Lusaka 27).
+///
+/// Table first, with the card view as the secondary toggle, and the table
+/// expandable to full screen (`buildNduTableWithExpand`).
+class _RiskLogSection extends StatelessWidget {
+  const _RiskLogSection({required this.rows});
+
+  final List<RiskLogRow> rows;
+
+  static bool _matches(dynamic item, String query) {
+    final row = item as RiskLogRow;
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    return row.id.toLowerCase().contains(q) ||
+        row.title.toLowerCase().contains(q) ||
+        row.description.toLowerCase().contains(q) ||
+        row.category.toLowerCase().contains(q) ||
+        row.owner.toLowerCase().contains(q) ||
+        row.status.toLowerCase().contains(q);
+  }
+
+  List<RiskLogRow> _matching(String query) {
+    if (query.trim().isEmpty) return rows;
+    return rows.where((row) => _matches(row, query)).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SearchableTableSection(
+      title: 'Risk Log',
+      subtitle:
+          'Carried over from Front End Planning — the same risks, columns and '
+          'statuses as the FEP risk register.',
+      items: rows,
+      searchHint: 'Search the risk log...',
+      searchFilter: _matches,
+      tableBuilder: (context, query) => _buildTable(context, _matching(query)),
+      cardBuilder: (context, query) => _buildCards(context, _matching(query)),
+    );
+  }
+
+  Widget _buildTable(BuildContext context, List<RiskLogRow> visible) {
+    if (visible.isEmpty) {
+      return buildNduTableEmptyState(context,
+          message: 'No risks match this search.');
+    }
+    return buildNduTableWithExpand(
+      context: context,
+      title: 'Risk Log',
+      minWidth: 1500,
+      columnSpacing: 16,
+      columns: [
+        for (final column in riskLogColumns) DataColumn(label: Text(column.label)),
+      ],
+      rows: [
+        for (final row in visible)
+          DataRow(
+            cells: [
+              for (final column in riskLogColumns)
+                DataCell(_riskLogCell(column.key, row)),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _riskLogCell(String key, RiskLogRow row) {
+    final value = row.valueFor(key);
+    if (value.isEmpty) return const Text('—');
+    switch (key) {
+      case 'probability':
+      case 'impact':
+      case 'riskLevel':
+        return _RiskTag(label: value);
+      case 'status':
+        return _StatusChip(label: value, color: const Color(0xFF374151));
+      case 'title':
+      case 'description':
+      case 'mitigation':
+        return WrappedText(value,
+            maxLines: 3, overflow: TextOverflow.ellipsis);
+      default:
+        return Text(value);
+    }
+  }
+
+  Widget _buildCards(BuildContext context, List<RiskLogRow> visible) {
+    if (visible.isEmpty) {
+      return buildNduTableEmptyState(context,
+          message: 'No risks match this search.');
+    }
+    return Column(
+      children: [
+        for (final row in visible)
+          Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        row.id,
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF6B7280)),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          row.title.isEmpty ? row.description : row.title,
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF111827)),
+                        ),
+                      ),
+                      if (row.riskLevel.isNotEmpty)
+                        _RiskTag(label: row.riskLevel),
+                    ],
+                  ),
+                  if (row.description.isNotEmpty && row.title.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      row.description,
+                      style: const TextStyle(
+                          fontSize: 13, color: Color(0xFF4B5563)),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 6,
+                    children: [
+                      _logMeta('Category', row.category),
+                      _logMeta('Probability', row.probability),
+                      _logMeta('Impact', row.impact),
+                      _logMeta('Owner', row.owner),
+                      _logMeta('Status', row.status),
+                    ],
+                  ),
+                  if (row.mitigation.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      'Mitigation: ${row.mitigation}',
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF6B7280)),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _logMeta(String label, String value) {
+    if (value.isEmpty) return const SizedBox.shrink();
+    return Text(
+      '$label: $value',
+      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+    );
+  }
+}
 
 class _RiskNotesCard extends StatelessWidget {
  const _RiskNotesCard({
@@ -836,84 +1470,34 @@ class _RiskNotesCard extends StatelessWidget {
  final DateTime? savedAt;
  final ValueChanged<String> onChanged;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: const [
- BoxShadow(
- color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
- ],
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- // Header with border-bottom, bg-gray-50/50
- Container(
- padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
- decoration: const BoxDecoration(
- color: Color(0xFFFAFAFA),
- borderRadius: BorderRadius.only(
- topLeft: Radius.circular(16),
- topRight: Radius.circular(16),
- ),
- border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
- ),
- child: Row(
- children: [
- Container(
- width: 32,
- height: 32,
- decoration: BoxDecoration(
- color: const Color(0xFFF1F5F9),
- borderRadius: BorderRadius.circular(10),
- ),
- child: const Icon(Icons.description_outlined,
- color: Color(0xFF475569), size: 16),
- ),
- const SizedBox(width: 10),
- const Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Notes',
- style: TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w600,
- color: Color(0xFF111827)),
- ),
- SizedBox(height: 2),
- Text(
- 'Summarize key risks, probability/impact themes, and mitigation focus.',
- style: TextStyle(
- fontSize: 12,
- color: Color(0xFF6B7280),
- height: 1.3),
- ),
- ],
- ),
- ),
- if (saving)
- const _StatusChip(
- label: 'Saving...', color: Color(0xFF64748B))
- else if (savedAt != null)
- _StatusChip(
- label:
- 'Saved ${TimeOfDay.fromDateTime(savedAt!).format(context)}',
- color: const Color(0xFF16A34A),
- background: const Color(0xFFECFDF3),
- ),
- ],
- ),
- ),
- // Body: transparent textarea
- Padding(
- padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
- child: VoiceTextField(
+  @override
+  Widget build(BuildContext context) {
+    // Notes stay collapsed until the user opens them.
+    return CollapsibleNotesSection(
+      title: 'Notes',
+      icon: Icons.description_outlined,
+      iconColor: const Color(0xFF475569),
+      card: true,
+      trailing: saving
+          ? const _StatusChip(label: 'Saving...', color: Color(0xFF64748B))
+          : (savedAt != null
+              ? _StatusChip(
+                  label:
+                      'Saved ${TimeOfDay.fromDateTime(savedAt!).format(context)}',
+                  color: const Color(0xFF16A34A),
+                  background: const Color(0xFFECFDF3),
+                )
+              : null),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Summarize key risks, probability/impact themes, and mitigation focus.',
+            style: TextStyle(
+                fontSize: 12, color: Color(0xFF6B7280), height: 1.3),
+          ),
+          const SizedBox(height: 12),
+          VoiceTextField(
  controller: controller,
  onChanged: onChanged,
  maxLines: 6,
@@ -923,13 +1507,12 @@ class _RiskNotesCard extends StatelessWidget {
  filled: false,
  contentPadding: EdgeInsets.zero,
  ),
- style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
- ),
- ),
- ],
- ),
- );
- }
+            style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _StatusChip extends StatelessWidget {
@@ -968,7 +1551,7 @@ class _OutlinedButton extends StatelessWidget {
  return OutlinedButton(
  onPressed: onPressed,
  style: OutlinedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  side: const BorderSide(color: Color(0xFFE5E7EB)),
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -1012,10 +1595,10 @@ class _RiskStats {
  required this.topRiskArea,
  required this.openCount,
  required this.matrixCounts,
- });
-
- factory _RiskStats.fromEntries(List<_RiskEntry> entries) {
- final total = entries.length;
+ });  /// Counts the carried-over risk log rows, so the metrics and the matrix
+  /// report what the risk log table shows (Lusaka 27).
+  factory _RiskStats.fromRows(List<RiskLogRow> rows) {
+    final total = rows.length;
  final statusCounts = <String, int>{};
  int closedCount = 0;
  final areaCounts = <String, int>{};
@@ -1024,20 +1607,19 @@ class _RiskStats {
  level: {for (final inner in _levels) inner: 0}
  };
 
- for (final entry in entries) {
- final status = entry.status.trim();
+ for (final row in rows) {
+      final status = row.status.trim();
  if (status.isNotEmpty) {
  statusCounts[status] = (statusCounts[status] ?? 0) + 1;
  if (status.toLowerCase() == 'closed') {
  closedCount += 1;
  }
- }
- final category = entry.category.trim();
- if (category.isNotEmpty) {
- areaCounts[category] = (areaCounts[category] ?? 0) + 1;
- }
- final probability = _normalizeLevel(entry.probability);
- final impact = _normalizeLevel(entry.impact);
+ }      final category = row.category.trim();
+      if (category.isNotEmpty) {
+        areaCounts[category] = (areaCounts[category] ?? 0) + 1;
+      }
+      final probability = RiskLogRow.normalizeScale(row.probability);
+      final impact = RiskLogRow.normalizeScale(row.impact);
  matrixCounts[probability]?[impact] =
  (matrixCounts[probability]?[impact] ?? 0) + 1;
  }
@@ -1072,16 +1654,7 @@ class _RiskStats {
  openCount: openCount,
  matrixCounts: matrixCounts,
  );
- }
-
- static const List<String> _levels = ['Low', 'Medium', 'High'];
-
- static String _normalizeLevel(String value) {
- final lower = value.trim().toLowerCase();
- if (lower.startsWith('h')) return 'High';
- if (lower.startsWith('m')) return 'Medium';
- return 'Low';
- }
+ }  static const List<String> _levels = ['Low', 'Medium', 'High'];
 
  final int total;
  final Map<String, int> statusCounts;
@@ -1659,7 +2232,7 @@ class _MitigationPlanCard extends StatelessWidget {
  );  }
 }
 
-class _RiskRegister extends StatelessWidget {
+class _RiskRegister extends StatefulWidget {
   const _RiskRegister({
     required this.entries,
     required this.loading,
@@ -1680,8 +2253,34 @@ class _RiskRegister extends StatelessWidget {
   final ValueChanged<_RiskEntry> onView;
   final ValueChanged<_RiskEntry> onEdit;
 
+  @override
+  State<_RiskRegister> createState() => _RiskRegisterState();
+}
+
+class _RiskRegisterState extends State<_RiskRegister> {
+ /// Table is the default because it is the denser read for a register, and
+ /// because it is the view the rest of this app's registers default to.
+  RiskRegisterView _view = RiskRegisterView.table;
+
  static const List<int> _columnFlex = [4, 3, 2, 2, 2, 1, 2, 2, 2];
  static const double _actionsColumnWidth = 96;
+
+ /// Maps a card back to the entry it was built from.
+ ///
+ /// A card carries a snapshot of the fields rather than the entry itself, so
+ /// this matches on the row's stable id and falls back to the first entry, so
+ /// a tap is never swallowed.
+ _RiskEntry _entryFor(RiskCardModel card, List<_RiskEntry> entries) {
+ for (final entry in entries) {
+ if (entry.id == card.id) return entry;
+ }
+ return entries.first;
+ }
+
+ /// The controls the table body reads, which moved onto the state when this
+ /// became stateful to carry the view toggle.
+  List<_RiskEntry> get entries => widget.entries;
+  TextEditingController get searchController => widget.searchController;
 
  @override
  Widget build(BuildContext context) {
@@ -1733,19 +2332,28 @@ class _RiskRegister extends StatelessWidget {
  style: const TextStyle(fontSize: 14),
  ),
  ),        const SizedBox(width: 8),
-        _OutlinedButton(label: 'Filter', onPressed: onFilter),
+        _OutlinedButton(label: 'Filter', onPressed: widget.onFilter),
         const SizedBox(width: 8),
         CsvTableImportButton(
           tableTitle: 'Risk Register',
           columns: _RiskAssessmentScreenState._riskCsvColumns,
-          onImport: onCsvImport,
+          onImport: widget.onCsvImport,
         ),
         const SizedBox(width: 8),
-        _YellowButton(label: 'Add Risk', onPressed: onAdd),
+        _YellowButton(label: 'Add Risk', onPressed: widget.onAdd),
  ],
  ),
+ const SizedBox(height: 12),
+ // Table/Cards switch, matching the toggle the other registers use.
+ Align(
+ alignment: Alignment.centerRight,
+ child: RiskRegisterViewToggle(
+ view: _view,
+ onChanged: (next) => setState(() => _view = next),
+ ),
+ ),
  const SizedBox(height: 16),
- if (loading) ...[
+ if (widget.loading) ...[
  const Center(
  child: Padding(
  padding: EdgeInsets.symmetric(vertical: 32),
@@ -1790,6 +2398,27 @@ class _RiskRegister extends StatelessWidget {
  ),
  ),
  ] else ...[
+ if (_view == RiskRegisterView.cards)
+ RiskCardGrid(
+ risks: [
+ for (final entry in entries)
+ RiskCardModel(
+ id: entry.id,
+ description: entry.description,
+ category: entry.category,
+ probability: entry.probability,
+ impact: entry.impact,
+ score: entry.score,
+ discipline: entry.discipline,
+ role: entry.role,
+ owner: entry.owner,
+ status: entry.status,
+ ),
+ ],
+ onView: (card) => widget.onView(_entryFor(card, entries)),
+ onEdit: (card) => widget.onEdit(_entryFor(card, entries)),
+ )
+ else
  LayoutBuilder(
  builder: (context, constraints) {
  final viewportWidth =
@@ -1812,8 +2441,8 @@ class _RiskRegister extends StatelessWidget {
  entry: entry,
  columnFlex: _columnFlex,
  actionsColumnWidth: _actionsColumnWidth,
- onView: () => onView(entry),
- onEdit: () => onEdit(entry),
+ onView: () => widget.onView(entry),
+ onEdit: () => widget.onEdit(entry),
  ),
  if (!isLast)
  const Divider(
@@ -1860,7 +2489,7 @@ class _RegisterHeader extends StatelessWidget {
  ...List.generate(_labels.length, (index) {
  if (index == _labels.length - 1) {
  return const SizedBox(
- width: _RiskRegister._actionsColumnWidth); // icons
+ width: _RiskRegisterState._actionsColumnWidth); // icons
  }
  final flex = columnFlex[index];
  return Expanded(
@@ -2151,10 +2780,25 @@ Widget _dialogDropdownField({
  required List<String> options,
  required ValueChanged<String> onChanged,
  bool enabled = true,
+ bool allowEmpty = false,
 }) {
- final selected = options.contains(value) ? value : options.first;
+ // An optional dropdown still needs exactly one non-null value to select, so
+ // an unset choice is represented by a placeholder entry rather than null.
+ const emptyValue = '';
+ final hasEmpty = allowEmpty && value.isEmpty;
+ final selected = hasEmpty
+ ? emptyValue
+ : (options.contains(value) ? value : options.first);
  return Padding(
  padding: const EdgeInsets.only(bottom: 12),
+ // The field's menu renders each option as a ListTile that paints its
+ // selected background on the nearest Material ancestor. The dialog body is a
+ // decorated Container (white fill, border, radius 16), so without a Material
+ // between the two that fill hides the selection colour — Flutter asserts on
+ // this in debug builds. A transparency Material costs no paint and puts the
+ // boundary where the ListTile can actually reach it.
+ child: Material(
+ type: MaterialType.transparency,
  child: DropdownButtonFormField<String>(
  initialValue: selected,
  onChanged: enabled
@@ -2163,13 +2807,36 @@ Widget _dialogDropdownField({
  onChanged(next);
  }
  : null,
- items: options
- .map((option) => DropdownMenuItem<String>(
+ items: [
+ if (hasEmpty)
+ const DropdownMenuItem<String>(
+ value: emptyValue,
+ child: Text('Not assigned'),
+ ),
+ ...options.map((option) => DropdownMenuItem<String>(
  value: option,
  child: Text(option),
- ))
- .toList(),
+ )),
+ ],
  decoration: InputDecoration(labelText: label),
+ ),
+ ),
+ );
+}
+
+/// A non-editable field, for values the app derives rather than the user types.
+Widget _dialogReadOnlyField({
+ required String label,
+ required String value,
+}) {
+ return Padding(
+ padding: const EdgeInsets.only(bottom: 12),
+ child: InputDecorator(
+ decoration: InputDecoration(labelText: label),
+ child: Text(
+ value.isEmpty ? '—' : value,
+ style: TextStyle(color: Colors.grey[700], fontSize: 15),
+ ),
  ),
  );
 }

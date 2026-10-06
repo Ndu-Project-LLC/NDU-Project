@@ -1,4 +1,7 @@
 /// Model for a recurring deliverable in Progress Tracking
+library;
+import 'package:ndu_project/utils/unique_id.dart';
+
 class RecurringDeliverableRow {
   final String id;
   String title;
@@ -24,7 +27,7 @@ class RecurringDeliverableRow {
     this.status = 'Active',
     this.actionItems = '',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   /// Calculate next occurrence based on frequency
   DateTime? calculateNextOccurrence() {
@@ -93,7 +96,7 @@ class RecurringDeliverableRow {
 
     return RecurringDeliverableRow(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       frequency: json['frequency']?.toString() ?? 'Weekly',

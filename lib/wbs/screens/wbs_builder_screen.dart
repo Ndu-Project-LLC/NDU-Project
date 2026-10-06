@@ -9,6 +9,7 @@
 
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/theme.dart';
@@ -19,7 +20,8 @@ import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
-import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
+import 'package:ndu_project/wbs/widgets/wbs_node_dialog.dart';
 
 class WBSBuilderScreen extends StatefulWidget {
   const WBSBuilderScreen({super.key});
@@ -30,107 +32,186 @@ class WBSBuilderScreen extends StatefulWidget {
 
 enum _SimpleAxis { topDown, leftRight }
 
-class _TopDownConnectorBand extends StatelessWidget {
-  const _TopDownConnectorBand({required this.childCount});
+/// Shared geometry for the Simple view's diagram so the connector bands and
+/// the card rows always agree on where each card sits — the invariant that
+/// makes every drawn line start and end exactly on a card edge.
+abstract final class _SimpleDiagram {
+  /// Matches the card's own `maxWidth` constraint.
+  static const double cardMaxWidth = 240;
 
-  final int childCount;
+  /// Horizontal room one top-level subtree occupies: the widest card plus
+  /// breathing room. Sibling cards therefore never overlap and every slot's
+  /// centre is where the connector band drops its stub.
+  static const double slotWidth = 260;
+
+  /// Height of the parent stub and the child stubs on either side of the
+  /// top-down rail.
+  static const double topDownDrop = 14;
+
+  /// Width of the left-right spine band the branch runs through.
+  static const double leftRightBandWidth = 16;
+
+  /// Vertical gap between consecutive child rows in the left-right diagram.
+  /// The spine painter crosses it so the rows read as one continuous rail.
+  static const double leftRightRowGap = 18;
+}
+
+/// Vertical band between a parent card and its row of child subtrees in the
+/// top-down diagram. Sits flush under the parent card with the child cards
+/// flush under it, so its stubs touch cards on both ends.
+///
+/// [childSlots] carries how many layout slots each child subtree occupies, so
+/// a slot that is itself an expanded subtree keeps its stub on the child's
+/// true centre instead of a hard-coded offset.
+class _TopDownConnectorBand extends StatelessWidget {
+  const _TopDownConnectorBand({required this.childSlots});
+
+  final List<int> childSlots;
 
   @override
   Widget build(BuildContext context) {
-    if (childCount <= 0) return const SizedBox.shrink();
+    if (childSlots.isEmpty) return const SizedBox.shrink();
     return CustomPaint(
-      size: Size(144.0 * childCount, 28.0),
-      painter: _TopDownConnectorPainter(childCount: childCount),
+      size: Size(
+          _SimpleDiagram.slotWidth * childSlots.length,
+          _SimpleDiagram.topDownDrop * 2),
+      painter: _TopDownConnectorPainter(childSlots: childSlots),
     );
   }
 }
 
 class _TopDownConnectorPainter extends CustomPainter {
-  const _TopDownConnectorPainter({required this.childCount});
+  const _TopDownConnectorPainter({required this.childSlots});
 
-  final int childCount;
+  final List<int> childSlots;
 
   @override
   void paint(Canvas canvas, Size size) {
-    const lineColor = Color(0xFF64748B);
     final paint = Paint()
-      ..color = lineColor
+      ..color = const Color(0xFF64748B)
       ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.square;
 
     final centerX = size.width / 2;
-    canvas.drawLine(Offset(centerX, 0), Offset(centerX, 12), paint);
-    if (childCount == 1) {
-      canvas.drawLine(Offset(centerX, 12), Offset(centerX, size.height), paint);
+    const railY = _SimpleDiagram.topDownDrop;
+    // Parent stub: from the parent card's bottom edge (the band sits flush
+    // under it) down to the rail.
+    canvas.drawLine(Offset(centerX, 0), Offset(centerX, railY), paint);
+    if (childSlots.length == 1) {
+      // Single child: one straight line from parent into the child card.
+      canvas.drawLine(
+          Offset(centerX, railY), Offset(centerX, size.height), paint);
       return;
     }
-    const firstAnchor = 72.0;
-    final lastX = size.width - 72.0;
-    canvas.drawLine(const Offset(firstAnchor, 12.0), Offset(lastX, 12.0), paint);
-    for (int i = 0; i < childCount; i++) {
-      final x = 72.0 + (144.0 * i);
-      canvas.drawLine(Offset(x, 12.0), Offset(x, size.height), paint);
+
+    // Rail across every child slot's centre, then a stub down into each card.
+    const firstX = _SimpleDiagram.slotWidth / 2;
+    final lastX = size.width - _SimpleDiagram.slotWidth / 2;
+    canvas.drawLine(const Offset(firstX, railY), Offset(lastX, railY), paint);
+    for (int i = 0; i < childSlots.length; i++) {
+      final x = _SimpleDiagram.slotWidth * (i + childSlots[i] / 2);
+      canvas.drawLine(Offset(x, railY), Offset(x, size.height), paint);
     }
   }
 
   @override
   bool shouldRepaint(covariant _TopDownConnectorPainter oldDelegate) {
-    return oldDelegate.childCount != childCount;
+    return !listEquals(oldDelegate.childSlots, childSlots);
   }
 }
 
-class _LeftRightConnectorBand extends StatelessWidget {
-  const _LeftRightConnectorBand({required this.isFirst, required this.isLast});
+/// Horizontal link between a parent card and its rows of child subtrees in
+/// the left-right diagram. Stretched to the rows' full height with the parent
+/// card centred in its box, so its line runs from the parent card's right
+/// edge straight into the rows' spine at the exact vertical centre.
+class _LeftRightParentStubPainter extends CustomPainter {
+  const _LeftRightParentStubPainter();
 
-  final bool isFirst;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF64748B)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.square;
+
+    canvas.drawLine(Offset(0, size.height / 2),
+        Offset(size.width, size.height / 2), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LeftRightParentStubPainter oldDelegate) {
+    return false;
+  }
+}
+
+/// One child row's spine band in the left-right diagram. Stretched to the row
+/// height: the branch leaves at the card's vertical centre, and — unless it
+/// is the last row — the spine continues across the inter-row gap so all rows
+/// read as one continuous rail the parent stub plugs into.
+class _LeftRightConnectorBand extends StatelessWidget {
+  const _LeftRightConnectorBand({required this.isLast});
+
   final bool isLast;
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      size: const Size(48, 96),
-      painter: _LeftRightConnectorPainter(isFirst: isFirst, isLast: isLast),
+    return SizedBox(
+      width: _SimpleDiagram.leftRightBandWidth,
+      child: CustomPaint(
+        painter: _LeftRightConnectorPainter(isLast: isLast),
+      ),
     );
   }
 }
 
 class _LeftRightConnectorPainter extends CustomPainter {
-  const _LeftRightConnectorPainter(
-      {required this.isFirst, required this.isLast});
+  const _LeftRightConnectorPainter({required this.isLast});
 
-  final bool isFirst;
   final bool isLast;
 
   @override
   void paint(Canvas canvas, Size size) {
-    const lineColor = Color(0xFF64748B);
     final paint = Paint()
-      ..color = lineColor
+      ..color = const Color(0xFF64748B)
       ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.square;
 
-    final spineX = size.width * 0.35;
-    final midY = size.height / 2;
+    // The spine runs on the band's left edge — exactly where the parent stub
+    // ends — and the branch runs to the band's right edge, which is the child
+    // card's left edge.
+    final branchY = size.height / 2;
 
-    if (!isFirst) {
-      canvas.drawLine(Offset(spineX, 0), Offset(spineX, midY), paint);
-    }
-    canvas.drawLine(Offset(spineX, midY), Offset(size.width, midY), paint);
+    canvas.drawLine(const Offset(0, 0), Offset(0, branchY), paint);
+    canvas.drawLine(Offset(0, branchY), Offset(size.width, branchY), paint);
     if (!isLast) {
-      canvas.drawLine(Offset(spineX, midY), Offset(spineX, size.height), paint);
+      canvas.drawLine(Offset(0, branchY),
+          Offset(0, size.height + _SimpleDiagram.leftRightRowGap), paint);
     }
   }
 
   @override
   bool shouldRepaint(covariant _LeftRightConnectorPainter oldDelegate) {
-    return oldDelegate.isFirst != isFirst || oldDelegate.isLast != isLast;
+    return oldDelegate.isLast != isLast;
   }
 }
 
-class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
+class _WBSBuilderScreenState extends State<WBSBuilderScreen>
+    with TickerProviderStateMixin {
   final Set<String> _expanded = {};
   bool _kazAiLoading = false;
   _SimpleAxis _simpleAxis = _SimpleAxis.topDown;
+
+  /// Node currently highlighted with the yellow selection border.
+  /// Tap a card to select it; the state persists across scroll rebuilds
+  /// because the whole tree renders inside one SingleChildScrollView.
+  String? _selectedNodeId;
+
+  /// Shared constants for the 12-16px spacing rhythm + depth guides.
+  static const double _kNodeGap = 12;
+  static const Color _kGuideColor = Color(0xFFFFC107);
 
   @override
   Widget build(BuildContext context) {
@@ -215,19 +296,36 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     if (counts.level6 > 0) levelParts.add('${counts.level6} ${fm.level6Label}');
     if (counts.level7 > 0) levelParts.add('${counts.level7} ${fm.level7Label}');
     if (counts.level8 > 0) levelParts.add('${counts.level8} ${fm.level8Label}');
+    // Keep the summary computation local for future header metrics.
+    // ignore: unused_local_variable
     final summary = levelParts.join(' · ');
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE4E7EC)),
+        gradient: const LinearGradient(
+          colors: [
+            Colors.white,
+            Color(0xFFFFFCF5),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: wbs.methodology.color.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
         boxShadow: [
+          BoxShadow(
+            color: wbs.methodology.color.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
-            offset: const Offset(0, 3),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -236,18 +334,29 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
         children: [
           Row(
             children: [
-              // Icon with methodology color
+              // Icon with methodology color — refined
               Container(
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: wbs.methodology.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    colors: [
+                      wbs.methodology.color.withValues(alpha: 0.18),
+                      wbs.methodology.color.withValues(alpha: 0.08),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: wbs.methodology.color.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
                 ),
                 child:
-                    Icon(fm.iconData, color: wbs.methodology.color, size: 22),
+                    Icon(fm.iconData, color: wbs.methodology.color, size: 24),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,21 +366,15 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                         Flexible(
                           child: Text(wbs.projectName,
                               style: const TextStyle(
-                                  color: Color(0xFF1A1D1F),
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold)),
+                                  color: Color(0xFF111827),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.3,
+                                  height: 1.2)),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         _buildMethodologyBadge(wbs.methodology),
                       ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      summary.isNotEmpty
-                          ? '${fm.label} · $summary · $totalNodes nodes total'
-                          : '${fm.label} · $totalNodes nodes total',
-                      style: const TextStyle(
-                          color: Color(0xFF6B7280), fontSize: 13),
                     ),
                   ],
                 ),
@@ -279,111 +382,167 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          // Action buttons
-          Row(
+          // Action toolbar — consistent 40px control heights, tooltips,
+          // and tidy 10px gaps. Wraps on narrow widths instead of overflow.
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               // Generate WBS button (prominent)
-              _kazAiLoading
-                  ? const SizedBox(
+              if (_kazAiLoading)
+                const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Center(
+                    child: SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : FilledButton.icon(
+                    ),
+                  ),
+                )
+              else
+                Tooltip(
+                  message: 'Generate Level 1 ${fm.level1Label}s with KAZ AI',
+                  child: FilledButton.icon(
                       onPressed: () =>
                           _generateWithKazAi(context, provider, wbs),
                       icon: const Icon(Icons.auto_awesome, size: 16),
                       label: Text('Generate ${fm.level1Label}'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFC107),
-                        foregroundColor: const Color(0xFF1A1D1F),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-              const SizedBox(width: 8),
+                      style: _toolbarFilledStyle()),
+                ),
               if (WBSTemplates.templates[wbs.framework]!.isNotEmpty)
-                OutlinedButton.icon(
-                  onPressed: () => _showTemplatesDialog(
-                      context, provider, wbs.framework, wbs.level0.id),
-                  icon: const Icon(Icons.auto_awesome, size: 14),
-                  label: const Text('Templates'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF1A1D1F),
-                    side: const BorderSide(color: Color(0xFFE4E7EC)),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                Tooltip(
+                  message:
+                      'Start from a ready-made ${wbs.framework.label} template',
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showTemplatesDialog(
+                        context, provider, wbs.framework, wbs.level0.id),
+                    icon: const Icon(Icons.auto_awesome, size: 14),
+                    label: const Text('Templates'),
+                    style: _toolbarOutlinedStyle(),
                   ),
                 ),
               // View mode toggle
-              SegmentedButton<bool>(
-                segments: const [
-                  ButtonSegment(
-                      value: false,
-                      label: Text('Advanced', style: TextStyle(fontSize: 12))),
-                  ButtonSegment(
-                      value: true,
-                      label: Text('Simple', style: TextStyle(fontSize: 12))),
-                ],
-                selected: {provider.viewModeSimple},
-                onSelectionChanged: (v) => provider.setViewMode(v.first),
-                style: SegmentedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  visualDensity: VisualDensity.compact,
-                  textStyle: const TextStyle(fontSize: 12),
+              Tooltip(
+                message: provider.viewModeSimple
+                    ? 'Switch to the full hierarchy editor'
+                    : 'Switch to a simplified diagram view',
+                child: SizedBox(
+                  height: 40,
+                  child: SegmentedButton<bool>(
+                    showSelectedIcon: true,
+                    segments: const [
+                      ButtonSegment(
+                          value: false,
+                          label:
+                              Text('Advanced', style: TextStyle(fontSize: 12))),
+                      ButtonSegment(
+                          value: true,
+                          label:
+                              Text('Simple', style: TextStyle(fontSize: 12))),
+                    ],
+                    // Simple is the safe, readable default. Existing provider
+                    // state remains respected after the user changes modes.
+                    selected: {provider.viewModeSimple},
+                    onSelectionChanged: (v) => provider.setViewMode(v.first),
+                    style: ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      padding: WidgetStateProperty.all(
+                          const EdgeInsets.symmetric(horizontal: 14)),
+                      textStyle: WidgetStateProperty.all(const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w600)),
+                      backgroundColor:
+                          WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return const Color(0xFFFFC812); // Yellow theme
+                        }
+                        return Colors.white;
+                      }),
+                      foregroundColor:
+                          WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return const Color(0xFF111827);
+                        }
+                        return const Color(0xFF374151);
+                      }),
+                      side: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return const BorderSide(color: Color(0xFFFFC812));
+                        }
+                        return const BorderSide(color: Color(0xFFD1D5DB));
+                      }),
+                    ),
+                  ),
                 ),
               ),
               if (provider.viewModeSimple) ...[
-                const SizedBox(width: 8),
-                SegmentedButton<_SimpleAxis>(
-                  segments: const [
-                    ButtonSegment(
-                      value: _SimpleAxis.topDown,
-                      icon: Icon(Icons.south, size: 14),
-                      label: Text('Top Down', style: TextStyle(fontSize: 12)),
+                Tooltip(
+                  message: 'Diagram orientation',
+                  child: SizedBox(
+                    height: 40,
+                    child: SegmentedButton<_SimpleAxis>(
+                      segments: const [
+                        ButtonSegment(
+                          value: _SimpleAxis.topDown,
+                          icon: Icon(Icons.south, size: 14),
+                          label:
+                              Text('Top Down', style: TextStyle(fontSize: 12)),
+                        ),
+                        ButtonSegment(
+                          value: _SimpleAxis.leftRight,
+                          icon: Icon(Icons.east, size: 14),
+                          label: Text('Left Right',
+                              style: TextStyle(fontSize: 12)),
+                        ),
+                      ],
+                      selected: {_simpleAxis},
+                      onSelectionChanged: (v) =>
+                          setState(() => _simpleAxis = v.first),
+                      style: ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                        textStyle: WidgetStateProperty.all(const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w600)),
+                        backgroundColor:
+                            WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return const Color(0xFFFFC812); // Yellow theme
+                          }
+                          return Colors.white;
+                        }),
+                        foregroundColor:
+                            WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return const Color(0xFF111827);
+                          }
+                          return const Color(0xFF374151);
+                        }),
+                        side: WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return const BorderSide(color: Color(0xFFFFC812));
+                          }
+                          return const BorderSide(color: Color(0xFFD1D5DB));
+                        }),
+                      ),
                     ),
-                    ButtonSegment(
-                      value: _SimpleAxis.leftRight,
-                      icon: Icon(Icons.east, size: 14),
-                      label: Text('Left Right', style: TextStyle(fontSize: 12)),
-                    ),
-                  ],
-                  selected: {_simpleAxis},
-                  onSelectionChanged: (v) =>
-                      setState(() => _simpleAxis = v.first),
-                  style: SegmentedButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    visualDensity: VisualDensity.compact,
-                    textStyle: const TextStyle(fontSize: 12),
                   ),
                 ),
               ],
-              const SizedBox(width: 12),
-              FilledButton.icon(
-                onPressed: () {
-                  if (wbs.level0.children.length >= 3) {
-                    _showLevel1CapMessage(context);
-                    return;
-                  }
-                  _showAddNodeDialog(
-                      context, provider, 1, fm.level1Label,
-                      parentId: wbs.level0.id);
-                },
-                icon: const Icon(Icons.add, size: 16),
-                label: Text('Add ${fm.level1Label}'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: LightModeColors.accent,
-                  foregroundColor: LightModeColors.lightOnPrimary,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
+              Tooltip(
+                message: 'Add a new Level 1 ${fm.level1Label}',
+                child: FilledButton.icon(
+                  onPressed: () {
+                    if (wbs.level0.children.length >= 3) {
+                      _showLevel1CapMessage(context);
+                      return;
+                    }
+                    _showAddNodeDialog(context, provider, 1, fm.level1Label,
+                        parentId: wbs.level0.id);
+                  },
+                  icon: const Icon(Icons.add, size: 16),
+                  label: Text('Add ${fm.level1Label}'),
+                  style: _toolbarFilledStyle(hPadding: 16),
                 ),
               ),
             ],
@@ -393,29 +552,64 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     );
   }
 
+  /// Consistent toolbar button style: 40px tall, 10px corner radius.
+  ButtonStyle _toolbarFilledStyle({double hPadding = 14}) {
+    return FilledButton.styleFrom(
+      backgroundColor: const Color(0xFFFFC107),
+      foregroundColor: const Color(0xFF1A1D1F),
+      minimumSize: const Size(0, 40),
+      padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    );
+  }
+
+  ButtonStyle _toolbarOutlinedStyle() {
+    return OutlinedButton.styleFrom(
+      foregroundColor: const Color(0xFF1A1D1F),
+      side: const BorderSide(color: Color(0xFFE4E7EC)),
+      minimumSize: const Size(0, 40),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    );
+  }
+
   // ───────────────────────────────────────────────────────────────────────
   // METHODOLOGY BADGE
   // ───────────────────────────────────────────────────────────────────────
 
   Widget _buildMethodologyBadge(ProjectMethodology methodology) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: methodology.color.withValues(alpha: 0.12),
+        gradient: LinearGradient(
+          colors: [
+            methodology.color.withValues(alpha: 0.15),
+            methodology.color.withValues(alpha: 0.08),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: methodology.color.withValues(alpha: 0.3)),
+        border: Border.all(color: methodology.color.withValues(alpha: 0.25)),
+        boxShadow: [
+          BoxShadow(
+            color: methodology.color.withValues(alpha: 0.08),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(methodology.icon, size: 12, color: methodology.color),
-          const SizedBox(width: 4),
+          const SizedBox(width: 5),
           Text(
             methodology.label,
             style: TextStyle(
               color: methodology.color,
               fontSize: 10,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               letterSpacing: 0.5,
             ),
           ),
@@ -430,8 +624,8 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
       return const SizedBox.shrink();
     }
     final color = switch (methodology) {
-      'agile' => const Color(0xFF7C3AED),
-      'waterfall' => const Color(0xFF2563EB),
+      'agile' => const Color(0xFFB8860B),
+      'waterfall' => const Color(0xFFFFC812),
       _ => const Color(0xFF059669),
     };
     final label = switch (methodology) {
@@ -495,16 +689,20 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
         const SizedBox(height: 16),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: const Color(0xFFE4E7EC)),
+            gradient: const LinearGradient(
+              colors: [Colors.white, Color(0xFFFAFBFC)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(color: const Color(0xFFE8EBF0)),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -524,6 +722,19 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     );
   }
 
+  /// How many layout slots a subtree occupies in the top-down diagram: 1 for
+  /// a card, or the sum of its children's slots when it is expanded. Computed
+  /// bottom-up so connector bands and card rows agree on every centre.
+  int _topDownSlotCount(WBSNode node, {required bool expanded}) {
+    if (node.children.isEmpty || !expanded) return 1;
+    var slots = 0;
+    for (final child in node.children) {
+      slots += _topDownSlotCount(child,
+          expanded: _expanded.contains(child.id));
+    }
+    return slots;
+  }
+
   Widget _buildTopDownDiagram(
     BuildContext context,
     WBSProvider provider,
@@ -533,6 +744,10 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
   }) {
     final isExpanded = _expanded.contains(node.id) || isRoot;
     final children = node.children;
+    final slotCounts = <int>[
+      for (final child in children)
+        _topDownSlotCount(child, expanded: _expanded.contains(child.id)),
+    ];
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -548,18 +763,23 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
         if (isRoot && children.isEmpty)
           _buildSimpleEmptyState(context, provider, fm),
         if (children.isNotEmpty && (isExpanded || isRoot)) ...[
-          const SizedBox(height: 10),
-          _TopDownConnectorBand(childCount: children.length),
-          const SizedBox(height: 6),
+          // Flush under the parent card: the band's parent stub starts on the
+          // card's bottom edge, and the child cards sit flush under the band,
+          // so every line touches at both ends.
+          _TopDownConnectorBand(childSlots: slotCounts),
           Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: children
-                .map((child) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      child: _buildTopDownSubtree(context, provider, child, fm),
-                    ))
-                .toList(),
+            children: [
+              for (var i = 0; i < children.length; i++)
+                SizedBox(
+                  // Each subtree occupies exactly the slots the band drew
+                  // stubs for, with the card centred in its slot.
+                  width: _SimpleDiagram.slotWidth * slotCounts[i],
+                  child: _buildTopDownDiagram(
+                      context, provider, children[i], fm),
+                ),
+            ],
           ),
         ],
       ],
@@ -575,74 +795,87 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
   }) {
     final isExpanded = _expanded.contains(node.id) || isRoot;
     final children = node.children;
-    final childTrees = children
-        .map((child) => _buildLeftRightDiagram(context, provider, child, fm))
-        .toList();
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final parentColumn = Column(
       mainAxisSize: MainAxisSize.min,
+      // Centred so the parent card's middle lines up with the child rows'
+      // centre, where the parent stub draws its link.
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        SizedBox(
-          width: 220,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _buildDiagramNodeCard(
-                context,
-                provider,
-                node,
-                fm,
-                isRoot: isRoot,
-                isExpanded: isExpanded,
-              ),
-              if (isRoot && children.isEmpty) ...[
-                const SizedBox(height: 16),
-                _buildSimpleEmptyState(context, provider, fm),
-              ],
-            ],
-          ),
+        _buildDiagramNodeCard(
+          context,
+          provider,
+          node,
+          fm,
+          isRoot: isRoot,
+          isExpanded: isExpanded,
         ),
-        if (children.isNotEmpty && (isExpanded || isRoot)) ...[
-          const SizedBox(width: 16),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: List.generate(children.length, (index) {
-              final isFirst = index == 0;
-              final isLast = index == children.length - 1;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 18),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    _LeftRightConnectorBand(isFirst: isFirst, isLast: isLast),
-                    const SizedBox(width: 12),
-                    childTrees[index],
-                  ],
-                ),
-              );
-            }),
-          ),
+        if (isRoot && children.isEmpty) ...[
+          const SizedBox(height: 16),
+          _buildSimpleEmptyState(context, provider, fm),
         ],
       ],
     );
-  }
 
-  Widget _buildTopDownSubtree(
-    BuildContext context,
-    WBSProvider provider,
-    WBSNode node,
-    WBSFramework fm,
-  ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(width: 2, height: 16, color: const Color(0xFF64748B)),
-        _buildTopDownDiagram(context, provider, node, fm),
-      ],
+    if (children.isEmpty || !(isExpanded || isRoot)) {
+      return parentColumn;
+    }
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // The parent column hugs its card, so the stub that follows starts
+          // exactly on the card's right edge — a fixed-width column here left
+          // dead space between card and connector.
+          parentColumn,
+          // Parent link: drawn in its own stretched box so it runs from the
+          // parent card's right edge into the rows' spine with no gap.
+          const SizedBox(
+            width: _SimpleDiagram.leftRightBandWidth,
+            child: CustomPaint(
+              painter: _LeftRightParentStubPainter(),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var i = 0; i < children.length; i++)
+                Padding(
+                  padding: EdgeInsets.only(
+                      bottom: i == children.length - 1
+                          ? 0
+                          : _SimpleDiagram.leftRightRowGap),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _LeftRightConnectorBand(
+                            isLast: i == children.length - 1),
+                        // Centred in the stretched row so the band's branch
+                        // lands on the child card's vertical centre.
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLeftRightDiagram(
+                                context, provider, children[i], fm),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -661,17 +894,20 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     final hasChildren = node.children.isNotEmpty;
     final canAddChild = node.level.value < fm.maxDepth;
     return Container(
-      constraints: const BoxConstraints(minWidth: 160, maxWidth: 220),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      constraints: const BoxConstraints(
+          minWidth: 170, maxWidth: _SimpleDiagram.cardMaxWidth),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: accent.withValues(alpha: 0.6), width: 1.5),
+        // One flat, readable surface per card — the old white→accent gradient
+        // made the cards look washed out against the diagram background.
+        color: accent.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withValues(alpha: 0.4), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: accent.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -779,15 +1015,30 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
 
   Widget _buildSimpleLevelHint(WBSFramework fm) {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE4E7EC)),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Text(
-        'Level 0 = Project · Level 1 = ${fm.level1Label} · Level 2 = ${fm.level2Label} · ... up to Level ${fm.maxDepth}',
-        style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, size: 14, color: Color(0xFF94A3B8)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Level 0 = Project · Level 1 = ${fm.level1Label} · Level 2 = ${fm.level2Label} · ... up to Level ${fm.maxDepth}',
+              style: const TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -795,25 +1046,47 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
   Widget _buildSimpleEmptyState(
       BuildContext context, WBSProvider provider, WBSFramework fm) {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFE4E7EC)),
-        borderRadius: BorderRadius.circular(12),
+        gradient: const LinearGradient(
+          colors: [Colors.white, Color(0xFFFFFCF5)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        border: Border.all(color: const Color(0xFFE8EBF0)),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          const Icon(Icons.layers, color: Color(0xFF9CA3AF), size: 32),
-          const SizedBox(height: 8),
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8E1),
+              shape: BoxShape.circle,
+              border: Border.all(
+                  color: const Color(0xFFFFE082).withValues(alpha: 0.5)),
+            ),
+            child: const Icon(Icons.layers, color: Color(0xFFFFC107), size: 28),
+          ),
+          const SizedBox(height: 16),
           Text('No ${fm.level1Label} nodes yet.',
-              style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+              style: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          const Text(
+              'Start building your work breakdown structure by adding the first level.',
+              style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+              textAlign: TextAlign.center),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -824,8 +1097,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                     _showLevel1CapMessage(context);
                     return;
                   }
-                  _showAddNodeDialog(
-                      context, provider, 1, fm.level1Label,
+                  _showAddNodeDialog(context, provider, 1, fm.level1Label,
                       parentId: provider.wbs!.level0.id);
                 },
                 style: FilledButton.styleFrom(
@@ -860,13 +1132,21 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
       child: InkWell(
         onTap: onPressed,
         borderRadius: BorderRadius.circular(999),
+        hoverColor: color.withValues(alpha: 0.08),
         child: Container(
-          width: 30,
-          height: 30,
+          width: 32,
+          height: 32,
           decoration: BoxDecoration(
             color: const Color(0xFFF8FAFC),
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFFE4E7EC)),
+            border: Border.all(color: const Color(0xFFE4E7EC), width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
           child: Icon(icon, size: 16, color: color),
         ),
@@ -924,8 +1204,18 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
           if (node.children.isEmpty)
             _buildEmptyState(context, provider, fm)
           else
-            Padding(
-              padding: const EdgeInsets.only(left: 20, top: 8),
+            Container(
+              // Level-1 depth guide: thin vertical spine under the root card.
+              margin: const EdgeInsets.only(left: 20, top: 12),
+              padding: const EdgeInsets.only(left: 10),
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(
+                    color: _kGuideColor.withValues(alpha: 0.18),
+                    width: 2,
+                  ),
+                ),
+              ),
               child: _buildChildrenList(context, provider, costProvider,
                   node.children, fm, depth + 1),
             ),
@@ -957,7 +1247,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
         final canAddChild = depth < fm.maxDepth;
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.only(bottom: _kNodeGap),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1008,38 +1298,54 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                   ),
                 ],
               ),
-              // Children (when expanded)
-              if (isExpanded && child.children.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(left: 44, top: 6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: child.children.asMap().entries.map((grandEntry) {
-                      final grand = grandEntry.value;
-                      final isLastGrand =
-                          grandEntry.key == child.children.length - 1;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: _buildRecursiveChild(context, provider,
-                            costProvider, grand, fm, depth + 1,
-                            isLast: isLastGrand),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              // Add child button (when expanded)
-              if (isExpanded && canAddChild)
-                Padding(
-                  padding: const EdgeInsets.only(left: 44, top: 2),
-                  child: _buildAddChildButton(
-                      context, provider, child, fm, depth + 1),
-                ),
-              // Linked cost lines panel
-              if (isExpanded)
-                Padding(
-                  padding: const EdgeInsets.only(left: 44, top: 4),
-                  child: _buildLinkedCostLinesPanel(child, costProvider),
-                ),
+              // Children + add-child button + cost panel — wrapped in an
+              // AnimatedSize so expanding/collapsing glides open/closed
+              // (~200ms). Expand state lives in `_expanded` (State-level),
+              // so it persists while the user scrolls.
+              AnimatedSize(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                alignment: Alignment.topLeft,
+                child: !isExpanded
+                    ? const SizedBox(width: double.infinity)
+                    : Container(
+                        // Depth guide: one thin vertical line per level.
+                        margin: const EdgeInsets.only(left: 44, top: 12),
+                        padding: const EdgeInsets.only(left: 12, bottom: 2),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              color: _kGuideColor.withValues(alpha: 0.18),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ...child.children.asMap().entries.map((grandEntry) {
+                              final grand = grandEntry.value;
+                              final isLastGrand =
+                                  grandEntry.key == child.children.length - 1;
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.only(bottom: _kNodeGap),
+                                child: _buildRecursiveChild(context, provider,
+                                    costProvider, grand, fm, depth + 1,
+                                    isLast: isLastGrand),
+                              );
+                            }),
+                            if (canAddChild)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: _buildAddChildButton(
+                                    context, provider, child, fm, depth + 1),
+                              ),
+                            _buildLinkedCostLinesPanel(child, costProvider),
+                          ],
+                        ),
+                      ),
+              ),
             ],
           ),
         );
@@ -1107,33 +1413,52 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
             ),
           ],
         ),
-        if (isExpanded && node.children.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(left: 44, top: 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: node.children.asMap().entries.map((entry) {
-                final c = entry.value;
-                final isLastChild = entry.key == node.children.length - 1;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: _buildRecursiveChild(
-                      context, provider, costProvider, c, fm, depth + 1,
-                      isLast: isLastChild),
-                );
-              }).toList(),
-            ),
-          ),
-        if (isExpanded && canAddChild)
-          Padding(
-            padding: const EdgeInsets.only(left: 44, top: 2),
-            child: _buildAddChildButton(context, provider, node, fm, depth + 1),
-          ),
-        if (isExpanded)
-          Padding(
-            padding: const EdgeInsets.only(left: 44, top: 4),
-            child: _buildLinkedCostLinesPanel(node, costProvider),
-          ),
+        // Children + add-child button + cost panel — animated expand/collapse
+        // (~200ms). Expand state lives in `_expanded`, persisting across
+        // scroll rebuilds.
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          alignment: Alignment.topLeft,
+          child: !isExpanded
+              ? const SizedBox(width: double.infinity)
+              : Container(
+                  // Depth guide: thin vertical line for this level.
+                  margin: const EdgeInsets.only(left: 44, top: 12),
+                  padding: const EdgeInsets.only(left: 12, bottom: 2),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      left: BorderSide(
+                        color: _kGuideColor.withValues(alpha: 0.18),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...node.children.asMap().entries.map((entry) {
+                        final c = entry.value;
+                        final isLastChild =
+                            entry.key == node.children.length - 1;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: _kNodeGap),
+                          child: _buildRecursiveChild(
+                              context, provider, costProvider, c, fm, depth + 1,
+                              isLast: isLastChild),
+                        );
+                      }),
+                      if (canAddChild)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: _buildAddChildButton(
+                              context, provider, node, fm, depth + 1),
+                        ),
+                      _buildLinkedCostLinesPanel(node, costProvider),
+                    ],
+                  ),
+                ),
+        ),
       ],
     );
   }
@@ -1160,287 +1485,279 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     final accentColor = isRoot
         ? LightModeColors.accent
         : levelColor(depth, LightModeColors.accent);
+    final isSelected = _selectedNodeId == node.id;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: isRoot
-                ? accentColor.withValues(alpha: 0.3)
-                : const Color(0xFFE4E7EC),
-            width: isRoot ? 1.5 : 1),
-        boxShadow: [
-          BoxShadow(
-            color: isRoot
-                ? accentColor.withValues(alpha: 0.06)
-                : Colors.black.withValues(alpha: 0.03),
-            blurRadius: isRoot ? 12 : 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top row: code badge + name + badges
-          Row(
-            children: [
-              // Code badge (larger, more prominent)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      accentColor.withValues(alpha: 0.15),
-                      accentColor.withValues(alpha: 0.05),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                      color: accentColor.withValues(alpha: 0.3), width: 1),
-                ),
-                child: Text(
-                  isRoot ? 'ROOT' : node.code,
-                  style: TextStyle(
-                      color: accentColor.withValues(alpha: 0.9),
-                      fontSize: 11,
-                      fontFamily: appFontFamily,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.3),
-                ),
-              ),
-              if (!isRoot) ...[
-                const SizedBox(width: 6),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
-                    border:
-                        Border.all(color: accentColor.withValues(alpha: 0.2)),
-                  ),
-                  child: Text(
-                    levelLabel.toUpperCase(),
-                    style: TextStyle(
-                      color: accentColor.withValues(alpha: 0.8),
-                      fontSize: 8,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(width: 10),
-              // Name
-              Flexible(
-                child: Text(
-                  node.name,
-                  style: TextStyle(
-                    color: const Color(0xFF1A1D1F),
-                    fontSize: isRoot ? 16 : 14,
-                    fontWeight: isRoot ? FontWeight.w800 : FontWeight.w700,
-                    letterSpacing: -0.2,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ),
-              // Badges row
-              if (node.aiGenerated) ...[
-                const SizedBox(width: 6),
-                _buildBadge('AI', const Color(0xFF3B82F6), 8),
-              ],
-              if (node.isWorkPackage == true && !isRoot) ...[
-                const SizedBox(width: 4),
-                _buildBadge('WP', const Color(0xFF16A34A), 8),
-              ],
-              if (isHybrid) ...[
-                const SizedBox(width: 4),
-                _buildSmallMethodologyBadge(methodology, fm),
-              ],
-              if (linkedCount > 0) ...[
-                const SizedBox(width: 4),
-                Tooltip(
-                  message:
-                      '$linkedCount cost line${linkedCount == 1 ? '' : 's'} linked',
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                          color:
-                              const Color(0xFF2563EB).withValues(alpha: 0.25)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.attach_money,
-                            size: 10, color: Color(0xFF2563EB)),
-                        const SizedBox(width: 2),
-                        Text('$linkedCount',
-                            style: const TextStyle(
-                                color: Color(0xFF2563EB),
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700)),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-              if (childCount > 0) ...[
-                const SizedBox(width: 4),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4F6),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.account_tree,
-                          size: 10, color: Color(0xFF6B7280)),
-                      const SizedBox(width: 3),
-                      Text('$childCount',
-                          style: const TextStyle(
-                              color: Color(0xFF4B5563),
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700)),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-          // Description
-          if (node.description != null && node.description!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.only(left: 8),
-              decoration: BoxDecoration(
-                border: Border(
-                  left: BorderSide(
-                      color: accentColor.withValues(alpha: 0.2), width: 2),
-                ),
-              ),
-              child: Text(
-                node.description!,
-                style: const TextStyle(
-                    color: Color(0xFF6B7280), fontSize: 12, height: 1.4),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+    return _HoverBuilder(
+      builder: (context, hovered) => AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+              color: isSelected
+                  ? _kGuideColor
+                  : isRoot
+                      ? accentColor.withValues(alpha: 0.25)
+                      : const Color(0xFFE8EBF0),
+              width: isSelected ? 2 : (isRoot ? 1.5 : 1)),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? _kGuideColor.withValues(alpha: 0.16)
+                  : hovered
+                      ? Colors.black.withValues(alpha: 0.08)
+                      : isRoot
+                          ? accentColor.withValues(alpha: 0.08)
+                          : Colors.black.withValues(alpha: 0.04),
+              blurRadius: isSelected || hovered ? 18 : (isRoot ? 16 : 8),
+              offset: const Offset(0, 4),
             ),
           ],
-          // Bottom row: level label + estimation + actions
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              // Level label
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: isRoot
-                      ? accentColor.withValues(alpha: 0.08)
-                      : const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                      color: isRoot
-                          ? accentColor.withValues(alpha: 0.2)
-                          : const Color(0xFFE4E7EC)),
-                ),
-                child: Text(
-                  isRoot ? 'PROJECT ROOT' : levelLabel.toUpperCase(),
-                  style: TextStyle(
-                      color: isRoot
-                          ? accentColor.withValues(alpha: 0.7)
-                          : const Color(0xFF9CA3AF),
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6),
-                ),
-              ),
-              // Estimation method
-              if (node.estimationMethod != null) ...[
-                const SizedBox(width: 6),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFBBF7D0)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(node.estimationMethod!.icon,
-                          size: 11, color: const Color(0xFF16A34A)),
-                      const SizedBox(width: 3),
-                      Text(node.estimationMethod!.label,
-                          style: const TextStyle(
-                              color: Color(0xFF16A34A),
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600)),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => setState(() => _selectedNodeId = node.id),
+            borderRadius: BorderRadius.circular(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top row: code badge + name + badges
+                Row(
+                  children: [
+                    // Code badge (larger, more prominent)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: accentColor.withValues(alpha: 0.3),
+                            width: 1),
+                      ),
+                      child: Text(
+                        isRoot ? 'ROOT' : node.code,
+                        style: TextStyle(
+                            color: accentColor.withValues(alpha: 0.9),
+                            fontSize: 11,
+                            fontFamily: appFontFamily,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.3),
+                      ),
+                    ),
+                    if (!isRoot) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                              color: accentColor.withValues(alpha: 0.2)),
+                        ),
+                        child: Text(
+                          levelLabel.toUpperCase(),
+                          style: TextStyle(
+                            color: accentColor.withValues(alpha: 0.8),
+                            fontSize: 8,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
                     ],
+                    const SizedBox(width: 10),
+                    // Name
+                    Flexible(
+                      child: Text(
+                        node.name,
+                        style: TextStyle(
+                          color: const Color(0xFF1A1D1F),
+                          fontSize: isRoot ? 16 : 14,
+                          fontWeight:
+                              isRoot ? FontWeight.w800 : FontWeight.w700,
+                          letterSpacing: -0.2,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
+                    // Badges row
+                    if (node.aiGenerated) ...[
+                      const SizedBox(width: 6),
+                      _buildBadge('AI', const Color(0xFFFFC812), 8),
+                    ],
+                    if (node.isWorkPackage == true && !isRoot) ...[
+                      const SizedBox(width: 4),
+                      _buildBadge('WP', const Color(0xFF16A34A), 8),
+                    ],
+                    if (isHybrid) ...[
+                      const SizedBox(width: 4),
+                      _buildSmallMethodologyBadge(methodology, fm),
+                    ],
+                    if (linkedCount > 0) ...[
+                      const SizedBox(width: 4),
+                      Tooltip(
+                        message:
+                            '$linkedCount cost line${linkedCount == 1 ? '' : 's'} linked',
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color:
+                                const Color(0xFFFFC812).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                                color: const Color(0xFFFFC812)
+                                    .withValues(alpha: 0.25)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.attach_money,
+                                  size: 10, color: Color(0xFFFFC812)),
+                              const SizedBox(width: 2),
+                              Text('$linkedCount',
+                                  style: const TextStyle(
+                                      color: Color(0xFFFFC812),
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (childCount > 0) ...[
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.account_tree,
+                                size: 10, color: Color(0xFF6B7280)),
+                            const SizedBox(width: 3),
+                            Text('$childCount',
+                                style: const TextStyle(
+                                    color: Color(0xFF4B5563),
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                // Description
+                if (node.description != null &&
+                    node.description!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.only(left: 8),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                            color: accentColor.withValues(alpha: 0.2),
+                            width: 2),
+                      ),
+                    ),
+                    child: Text(
+                      node.description!,
+                      style: const TextStyle(
+                          color: Color(0xFF6B7280), fontSize: 12, height: 1.4),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                ],
+                // Bottom row: level label + estimation + actions
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    // Level label
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: isRoot
+                            ? accentColor.withValues(alpha: 0.08)
+                            : const Color(0xFFF9FAFB),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: isRoot
+                                ? accentColor.withValues(alpha: 0.2)
+                                : const Color(0xFFE4E7EC)),
+                      ),
+                      child: Text(
+                        isRoot ? 'PROJECT ROOT' : levelLabel.toUpperCase(),
+                        style: TextStyle(
+                            color: isRoot
+                                ? accentColor.withValues(alpha: 0.7)
+                                : const Color(0xFF9CA3AF),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.6),
+                      ),
+                    ),
+                    const Spacer(),
+                    // Action buttons (larger, more touchable)
+                    _actionButton(
+                      icon: Icons.add_circle_outline,
+                      onPressed: () => _showAddNodeDialog(
+                        context,
+                        provider,
+                        isRoot ? 1 : depth + 1,
+                        fm.levelLabel(isRoot ? 1 : depth + 1),
+                        parentId: node.id,
+                      ),
+                      tooltip: 'Add child',
+                      color: levelColor(
+                          isRoot ? 1 : depth + 1, LightModeColors.accent),
+                    ),
+                    if (!isRoot) ...[
+                      const SizedBox(width: 2),
+                      _actionButton(
+                        icon: Icons.arrow_upward,
+                        onPressed: () => provider.moveNode(node.id, true),
+                        tooltip: 'Move up',
+                      ),
+                      const SizedBox(width: 2),
+                      _actionButton(
+                        icon: Icons.arrow_downward,
+                        onPressed: () => provider.moveNode(node.id, false),
+                        tooltip: 'Move down',
+                      ),
+                      const SizedBox(width: 2),
+                      _actionButton(
+                        icon: Icons.edit_outlined,
+                        onPressed: () =>
+                            _showEditNodeDialog(context, provider, node, fm),
+                        tooltip: 'Edit',
+                        color: const Color(0xFF6B7280),
+                      ),
+                      const SizedBox(width: 2),
+                      _actionButton(
+                        icon: Icons.delete_outline,
+                        onPressed: () => provider.removeNode(node.id),
+                        tooltip: 'Delete',
+                        color: const Color(0xFFEF4444),
+                      ),
+                    ],
+                  ],
                 ),
               ],
-              const Spacer(),
-              // Action buttons (larger, more touchable)
-              _actionButton(
-                icon: Icons.add_circle_outline,
-                onPressed: () => _showAddNodeDialog(
-                  context,
-                  provider,
-                  isRoot ? 1 : depth + 1,
-                  fm.levelLabel(isRoot ? 1 : depth + 1),
-                  parentId: node.id,
-                ),
-                tooltip: 'Add child',
-                color:
-                    levelColor(isRoot ? 1 : depth + 1, LightModeColors.accent),
-              ),
-              if (!isRoot) ...[
-                const SizedBox(width: 2),
-                _actionButton(
-                  icon: Icons.arrow_upward,
-                  onPressed: () => provider.moveNode(node.id, true),
-                  tooltip: 'Move up',
-                ),
-                const SizedBox(width: 2),
-                _actionButton(
-                  icon: Icons.arrow_downward,
-                  onPressed: () => provider.moveNode(node.id, false),
-                  tooltip: 'Move down',
-                ),
-                const SizedBox(width: 2),
-                _actionButton(
-                  icon: Icons.edit_outlined,
-                  onPressed: () =>
-                      _showEditNodeDialog(context, provider, node, fm),
-                  tooltip: 'Edit',
-                  color: const Color(0xFF6B7280),
-                ),
-                const SizedBox(width: 2),
-                _actionButton(
-                  icon: Icons.delete_outline,
-                  onPressed: () => provider.removeNode(node.id),
-                  tooltip: 'Delete',
-                  color: const Color(0xFFEF4444),
-                ),
-              ],
-            ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1465,17 +1782,16 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     String? tooltip,
     Color color = const Color(0xFF6B7280),
   }) {
+    // Subtle small icon action: borderless, gentle hover tint, tooltip.
     final btn = InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFFE4E7EC)),
-        ),
-        child: Icon(icon, size: 14, color: color),
+      borderRadius: BorderRadius.circular(8),
+      hoverColor: color.withValues(alpha: 0.08),
+      splashColor: color.withValues(alpha: 0.06),
+      child: SizedBox(
+        width: 28,
+        height: 28,
+        child: Icon(icon, size: 15, color: color),
       ),
     );
     if (tooltip != null) return Tooltip(message: tooltip, child: btn);
@@ -1560,8 +1876,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                     _showLevel1CapMessage(context);
                     return;
                   }
-                  _showAddNodeDialog(
-                      context, provider, 1, fm.level1Label,
+                  _showAddNodeDialog(context, provider, 1, fm.level1Label,
                       parentId: provider.wbs!.level0.id);
                 },
                 style: FilledButton.styleFrom(
@@ -1596,145 +1911,26 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     String levelLabel, {
     String? parentId,
   }) {
-    if (level == 1 && provider.wbs != null &&
+    if (level == 1 &&
+        provider.wbs != null &&
         provider.wbs!.level0.children.length >= 3) {
       _showLevel1CapMessage(context);
       return;
     }
-    final nameCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
-    final isHybrid = provider.wbs!.methodology == ProjectMethodology.hybrid;
-    String? selectedMethodology;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.add_circle_outline,
-                color: LightModeColors.accent, size: 20),
-            const SizedBox(width: 8),
-            Text('Add Level $level — $levelLabel',
-                style: const TextStyle(color: Color(0xFF1A1D1F), fontSize: 16)),
-          ],
-        ),
-        content: StatefulBuilder(
-          builder: (ctx, setDialogState) {
-            return SizedBox(
-              width: 480,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: nameCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Name *',
-                      labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-                      hintText: level <= 2
-                          ? 'Use a deliverable noun (not an activity verb)'
-                          : 'Describe the work package or activity',
-                      hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-                      filled: true,
-                      fillColor: const Color(0xFFF9FAFB),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            const BorderSide(color: LightModeColors.accent),
-                      ),
-                    ),
-                    style: const TextStyle(color: Color(0xFF1A1D1F)),
-                    autofocus: true,
-                  ),
-                  const SizedBox(height: 12),
-                  VoiceTextField(
-                    controller: descCtrl,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      labelText: 'Description (optional)',
-                      labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-                      filled: true,
-                      fillColor: const Color(0xFFF9FAFB),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            const BorderSide(color: LightModeColors.accent),
-                      ),
-                    ),
-                    style: const TextStyle(color: Color(0xFF1A1D1F)),
-                  ),
-                  if (isHybrid && level == 1) ...[
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedMethodology,
-                      decoration: InputDecoration(
-                        labelText: 'Methodology',
-                        labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-                        filled: true,
-                        fillColor: const Color(0xFFF9FAFB),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Color(0xFFE4E7EC)),
-                        ),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                            value: 'waterfall', child: Text('Waterfall')),
-                        DropdownMenuItem(value: 'agile', child: Text('Agile')),
-                      ],
-                      onChanged: (v) =>
-                          setDialogState(() => selectedMethodology = v),
-                      hint: const Text('Inherit from project'),
-                    ),
-                  ],
-                ],
-              ),
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(color: Color(0xFF6B7280))),
-          ),
-          FilledButton(
-            onPressed: () {
-              final name = nameCtrl.text.trim();
-              if (name.isEmpty) return;
-              final id =
-                  provider.addChildNode(parentId!, name, descCtrl.text.trim());
-              if (isHybrid && selectedMethodology != null && id.isNotEmpty) {
-                provider.setNodeMethodology(id, selectedMethodology);
-              }
-              Navigator.pop(ctx);
-            },
-            style: FilledButton.styleFrom(
-                backgroundColor: LightModeColors.accent,
-                foregroundColor: LightModeColors.lightOnPrimary),
-            child: Text('Add $levelLabel'),
-          ),
-        ],
-      ),
+    // Resolve the parent node (if any) so we can show its name in the hero.
+    String? parentName;
+    if (parentId != null && parentId.isNotEmpty) {
+      final parent = provider.findNode(parentId);
+      if (parent != null) parentName = parent.name;
+    }
+    showWBSAddNodeDialog(
+      context,
+      provider: provider,
+      level: level,
+      levelLabel: levelLabel,
+      parentId: parentId,
+      parentName: parentName,
+      framework: provider.wbs?.framework,
     );
   }
 
@@ -1744,82 +1940,11 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     WBSNode node,
     WBSFramework fm,
   ) {
-    final nameCtrl = TextEditingController(text: node.name);
-    final descCtrl = TextEditingController(text: node.description ?? '');
-    final levelLabel = nodeLevelLabel(node, fm);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.edit_outlined, color: LightModeColors.accent, size: 20),
-            const SizedBox(width: 8),
-            Text('Edit $levelLabel',
-                style: const TextStyle(color: Color(0xFF1A1D1F), fontSize: 16)),
-          ],
-        ),
-        content: SizedBox(
-          width: 480,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  filled: true,
-                  fillColor: const Color(0xFFF9FAFB),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                  ),
-                ),
-                style: const TextStyle(color: Color(0xFF1A1D1F)),
-              ),
-              const SizedBox(height: 12),
-              VoiceTextField(
-                controller: descCtrl,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: 'Description',
-                  filled: true,
-                  fillColor: const Color(0xFFF9FAFB),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                  ),
-                ),
-                style: const TextStyle(color: Color(0xFF1A1D1F)),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(color: Color(0xFF6B7280))),
-          ),
-          FilledButton(
-            onPressed: () {
-              provider.updateNode(
-                  node.id,
-                  node.copyWith(
-                    name: nameCtrl.text.trim(),
-                    description: descCtrl.text.trim(),
-                  ));
-              Navigator.pop(ctx);
-            },
-            style: FilledButton.styleFrom(
-                backgroundColor: LightModeColors.accent,
-                foregroundColor: LightModeColors.lightOnPrimary),
-            child: const Text('Update'),
-          ),
-        ],
-      ),
+    showWBSEditNodeDialog(
+      context,
+      provider: provider,
+      node: node,
+      framework: fm,
     );
   }
 
@@ -1829,7 +1954,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
@@ -1896,8 +2021,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                       FilledButton(
                         onPressed: () {
                           final wbs = provider.wbs;
-                          if (wbs != null &&
-                              wbs.level0.children.length >= 3) {
+                          if (wbs != null && wbs.level0.children.length >= 3) {
                             Navigator.pop(ctx);
                             _showLevel1CapMessage(context);
                             return;
@@ -1987,7 +2111,7 @@ Guidelines:
       if (!mounted) return;
 
       if (result.trim().isEmpty) {
-        if (mounted) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('KAZ AI returned empty result'),
@@ -2005,7 +2129,7 @@ Guidelines:
           .toList();
 
       if (lines.isEmpty) {
-        if (mounted) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Could not parse KAZ AI output'),
@@ -2029,7 +2153,7 @@ Guidelines:
         }
       }
 
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('KAZ AI added $added ${fm.level1Label} node(s)'),
@@ -2038,10 +2162,10 @@ Guidelines:
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('KAZ AI error: $e'),
+            content: Text('KAZ AI error: ${aiErrorMessage(e)}'),
             backgroundColor: const Color(0xFFEF4444),
           ),
         );
@@ -2085,21 +2209,21 @@ Guidelines:
       margin: const EdgeInsets.only(top: 4, bottom: 4),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-            color: const Color(0xFF2563EB).withValues(alpha: 0.25), width: 0.8),
+            color: const Color(0xFFFFC812).withValues(alpha: 0.25), width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.link, size: 12, color: Color(0xFF2563EB)),
+              const Icon(Icons.link, size: 12, color: Color(0xFFFFC812)),
               const SizedBox(width: 6),
               const Text('LINKED COST LINES',
                   style: TextStyle(
-                      color: Color(0xFF2563EB),
+                      color: Color(0xFFFFC812),
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8)),
@@ -2107,7 +2231,7 @@ Guidelines:
               Text(
                 '${linked.length} line${linked.length == 1 ? '' : 's'} · ${formatCurrency(total, currency)}',
                 style: const TextStyle(
-                    color: Color(0xFF1E40AF),
+                    color: Color(0xFFFFC812),
                     fontSize: 11,
                     fontWeight: FontWeight.w700),
               ),
@@ -2125,12 +2249,12 @@ Guidelines:
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                            color: const Color(0xFFBFDBFE), width: 0.5),
+                            color: const Color(0xFFFDE68A), width: 0.5),
                       ),
                       child: Text(
                         l.category.label,
                         style: const TextStyle(
-                            color: Color(0xFF1E40AF),
+                            color: Color(0xFFFFC812),
                             fontSize: 9,
                             fontWeight: FontWeight.w600),
                       ),
@@ -2214,4 +2338,26 @@ class _TreeBranchPainter extends CustomPainter {
   @override
   bool shouldRepaint(_TreeBranchPainter old) =>
       old.isLast != isLast || old.color != color;
+}
+
+/// Local hover-state helper (MouseRegion) used by the advanced-view node
+/// cards to animate elevation/border on hover — same pattern as the Epics &
+/// Features screen's epic cards.
+class _HoverBuilder extends StatefulWidget {
+  const _HoverBuilder({required this.builder});
+  final Widget Function(BuildContext context, bool hovered) builder;
+  @override
+  State<_HoverBuilder> createState() => _HoverBuilderState();
+}
+
+class _HoverBuilderState extends State<_HoverBuilder> {
+  bool _hovered = false;
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: widget.builder(context, _hovered),
+    );
+  }
 }

@@ -27,19 +27,18 @@ import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 // ─── Design Tokens ───────────────────────────────────────────────────────────
 class _Tokens {
  _Tokens._();
 
  // Surface
  static const surface = Colors.white;
- static const surfaceDim = Color(0xFFD8DADC);
  static const surfaceBright = Color(0xFFFFFFFF);
  static const surfaceContainerLowest = Color(0xFFFFFFFF);
  static const surfaceContainerLow = Color(0xFFF2F4F6);
  static const surfaceContainer = Color(0xFFEBEDEF);
  static const surfaceContainerHigh = Color(0xFFE6E8EA);
- static const surfaceContainerHighest = Color(0xFFE0E2E4);
 
  // On-Surface
  static const onSurface = Color(0xFF191C1D);
@@ -48,20 +47,14 @@ class _Tokens {
  // Primary (Yellow)
  static const primary = Color(0xFFFFCC00);
  static const primaryOn = Color(0xFF000000);
- static const primaryContainer = Color(0xFFFFE480);
- static const primaryOnContainer = Color(0xFF1A1400);
 
  // Outline
- static const outline = Color(0xFF71787D);
  static const outlineVariant = Color(0xFFC0C7CD);
 
  // Error
  static const error = Color(0xFFBA1A1A);
 
  // Text
- static const textDark = Color(0xFF191C1D);
- static const textMuted = Color(0xFF40484C);
- static const textLight = Color(0xFF71787D);
 }
 
 class ProjectFrameworkScreen extends StatefulWidget {
@@ -249,7 +242,7 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
   @override
   void initState() {
     super.initState();
-    _projectNameController = TextEditingController();
+    _projectNameController = SpellCheckTextEditingController();
     _projectObjectiveController = RichTextEditingController();
     _projectNameFocus = FocusNode()..addListener(_onFocusChange);
     _projectObjectiveFocus = FocusNode()..addListener(_onFocusChange);
@@ -610,8 +603,9 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
 
  void _deleteGoal(int goalId) {
  setState(() {
- final goal = _goals.firstWhere((g) => g.id == goalId);
- goal.nameController.removeListener(_onFieldChanged);
+ final goal = _goals.where((g) => g.id == goalId).firstOrNull;
+if (goal == null) return;
+goal.nameController.removeListener(_onFieldChanged);
  goal.controller.removeListener(_onFieldChanged);
  goal.dispose();
  _goals.removeWhere((g) => g.id == goalId);
@@ -634,7 +628,7 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
  missingFields.add('Overall Framework');
  }
  if (projectGoals.isEmpty) {
- missingFields.add('Project Goals');
+ missingFields.add('Project Objectives');
  }
 
  if (missingFields.isNotEmpty) {
@@ -669,7 +663,8 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
  if (projectGoals.isEmpty) {
  ScaffoldMessenger.of(context).showSnackBar(
  const SnackBar(
- content: Text('Please add at least one Project Goal before proceeding.'),
+ content: Text(
+              'Please add at least one Project Objective before proceeding.'),
  backgroundColor: Color(0xFFEF4444),
  duration: Duration(seconds: 3),
  ),
@@ -1043,8 +1038,8 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
  screenTitle: 'Project Framework',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_project_framework_notes'] ?? 'No data recorded.'),
  ],
@@ -1062,8 +1057,8 @@ class _Goal {
  String? name,
  this.framework,
  String? description,
- }) : controller = TextEditingController(text: description),
- nameController = TextEditingController(text: name),
+ }) : controller = SpellCheckTextEditingController(text: description),
+ nameController = SpellCheckTextEditingController(text: name),
  nameFocus = FocusNode(),
  descFocus = FocusNode();
 
@@ -1446,8 +1441,7 @@ class _MobileProjectInfoSection extends StatelessWidget {
                         bottom: BorderSide(
                           color: _Tokens.surfaceContainerLow, width: 1),
                       ),
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(10)),
+
                     ),
                     child: Row(
                       children: [
@@ -1732,59 +1726,29 @@ class _MobileGoalsSection extends StatelessWidget {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  // Header row
- Row(
+ const Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
- const Expanded(
+ Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Project Goals',
- style: TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: _Tokens.onSurface,
- ),
- ),
- SizedBox(height: 2),
- Text(
- 'Indicate upto 5 key high-level outcomes for this project',
+ children: [                Text(
+                  'Project Objectives',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _Tokens.onSurface,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Indicate upto 5 key high-level outcomes for this project',
  style: TextStyle(
  fontSize: 11,
  color: _Tokens.onSurfaceVariant,
  height: 1.3),
  ),
  ],
- ),
- ),
- const SizedBox(width: 12),
- Material(
- color: _Tokens.primary.withValues(alpha: 0.2),
- borderRadius: BorderRadius.circular(8),
- child: InkWell(
- onTap: onAddGoal,
- borderRadius: BorderRadius.circular(8),
- child: Container(
- padding:
- const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
- child: const Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.add, size: 16,
- color: _Tokens.primaryOnContainer),
- SizedBox(width: 4),
- Text(
- 'Add Goal',
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: _Tokens.primaryOnContainer,
- ),
- ),
- ],
- ),
- ),
  ),
  ),
  ],

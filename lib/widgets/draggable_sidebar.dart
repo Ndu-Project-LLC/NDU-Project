@@ -83,26 +83,6 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
     });
   }
 
-  void _openMobileMenu() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        final height = MediaQuery.sizeOf(context).height * 0.92;
-        return SafeArea(
-          child: SizedBox(
-            height: height,
-            child: widget.child,
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // On mobile: take zero horizontal space so content extends full-width.
@@ -155,7 +135,7 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
                   width: 28,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
@@ -169,7 +149,7 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
                     child: Icon(
                       collapsed ? Icons.chevron_right : Icons.chevron_left,
                       size: 20,
-                      color: const Color(0xFF6B7280),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -213,12 +193,13 @@ class MobileSidebarHamburger extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final cs = Theme.of(context).colorScheme;
     return Positioned(
       top: 8,
       left: 8,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -236,7 +217,7 @@ class MobileSidebarHamburger extends StatelessWidget {
               showModalBottomSheet<void>(
                 context: context,
                 isScrollControlled: true,
-                backgroundColor: Colors.white,
+                backgroundColor: cs.surface,
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
@@ -250,10 +231,9 @@ class MobileSidebarHamburger extends StatelessWidget {
                   );
                 },
               );
-            },
-            child: const Padding(
-              padding: EdgeInsets.all(10),
-              child: Icon(Icons.menu, color: Color(0xFF374151), size: 24),
+            },              child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Icon(Icons.menu, color: cs.onSurface, size: 24),
             ),
           ),
         ),

@@ -1,0 +1,62 @@
+name: Firestore Rules Drift Check
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Why this exists
+# ---------------
+# On 2026-09-25 a DIFFERENT app's security rules ("QuizPop" — only
+# `players/{uid}` allowed, everything else default-deny) were deployed over
+# NDU's rules in Firebase project ndu-d3f60. Nothing in this repo changed, but
+# every production read/write outside `players/` started failing with
+# `cloud_firestore/permission-denied` (profile onboarding, dashboard project
+# lists, onboarding saves). The breakage was invisible from the repo side and
+# went unnoticed until users hit it.
+#
+# This workflow closes that gap: it fetches the ruleset CURRENTLY RELEASED to
+# `cloud.firestore` from the Firebase Rules API and fails if it differs from
+# `firestore.rules` in this repo. It is strictly read-only — it never deploys.
+#
+# Manual-only trigger by default (daily schedule below), because drift is
+# about the LIVE project, not about this repo's history.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  schedule:
+    # Daily at 06:23 UTC.
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+  # `schedule` and `workflow_dispatch` only fire from the default branch, so
+  # until this file lands on `main` (protected — needs review) the push trigger
+  # below is what actually exercises the job. It is also useful long-term:
+  # touching firestore.rules means live and repo now differ until the rules are
+  # deployed, and this run flags exactly that.
+  push:
+    branches: [staging]
+    paths:
+      - firestore.rules
+      - scripts/check_firestore_rules_drift.js
+      - .github/workflows/check-firestore-rules-drift.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firestore-rules-drift-check
+  cancel-in-progress: false
+
+jobs:
+  drift-check:
+    name: Live rules == firestore.rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Compare live Firestore rules against the repo
+        env:
+          # Same CI refresh token the rules/functions deploy workflows use.
+          FIREBASE_TOKEN: ${{ secrets.STAGING_DEPLOY_TOKEN }}
+        run: |
+          set -eu
+          node scripts/check_firestore_rules_drift.js

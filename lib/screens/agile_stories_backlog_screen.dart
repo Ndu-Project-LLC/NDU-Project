@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/models/acceptance_criteria.dart';
 import 'package:ndu_project/models/agile_release_plan.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/epic_model.dart';
@@ -11,8 +12,15 @@ import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/roadmap_service.dart';
+import 'package:ndu_project/utils/agile_backlog_order.dart';
+import 'package:ndu_project/utils/agile_backlog_demo_seed.dart';
+import 'package:ndu_project/utils/agile_board_pull.dart';
+import 'package:ndu_project/utils/agile_backlog_table.dart';
+import 'package:ndu_project/utils/agile_story_linkage.dart';
+import 'package:ndu_project/utils/agile_story_template.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/agile_backlog_table_view.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -23,6 +31,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -43,12 +52,25 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
   List<AgileTask> _stories = [];
   List<RoadmapSprint> _sprints = [];
   List<AgileReleasePlan> _releases = [];
+
+  /// The User Story Template config, so a story added here starts with the
+  /// default template's acceptance criteria instead of a blank field.
+  AcceptanceCriteriaConfig _acConfig = AcceptanceCriteriaConfig();
+
+  /// The project's Kanban configuration, so pulling a story onto the board
+  /// targets the columns the board actually uses.
+  Map<String, dynamic> _kanbanConfig = const {};
   bool _isLoading = true;
   bool _isSaving = false;
   Timer? _saveDebounce;
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
   String? _selectedEpicId;
+
+  /// The table is the default view: the review found the card-only backlog
+  /// "not very efficient" for seeing what a story is and which feature and
+  /// epic it came from. Cards stay for editing.
+  bool _tableView = true;
 
   String? get _projectId {
     try {
@@ -85,6 +107,8 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
       final tasks = await ExecutionPhaseService.loadAgileTasks(projectId: pid);
       final sprints = await RoadmapService.loadSprints(projectId: pid);
       final releases = await AgileWireframeService.loadReleasePlans(pid);
+      final acConfig = await AgileWireframeService.loadAcceptanceCriteria(pid);
+      final kanbanConfig = await AgileWireframeService.loadKanbanConfig(pid);
       if (!mounted) return;
       setState(() {
         _epics = epics;
@@ -93,6 +117,8 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
           ..sort((a, b) => a.backlogOrder.compareTo(b.backlogOrder));
         _sprints = sprints;
         _releases = releases;
+        _acConfig = acConfig;
+        _kanbanConfig = kanbanConfig;
         _selectedEpicId =
             _selectedEpicId ?? (epics.isNotEmpty ? epics.first.id : null);
         _isLoading = false;
@@ -107,19 +133,61 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     return _featuresByEpic[_selectedEpicId] ?? [];
   }
 
-  List<AgileTask> _storiesForFeature(String featureId) {
-    final filtered = _stories.where((story) => story.featureId == featureId);
-    if (_searchQuery.trim().isEmpty) {
-      return filtered.toList()
-        ..sort((a, b) => a.backlogOrder.compareTo(b.backlogOrder));
+  Feature? _featureFor(String featureId) {
+    for (final features in _featuresByEpic.values) {
+      for (final feature in features) {
+        if (feature.id == featureId) return feature;
+      }
     }
-    final q = _searchQuery.toLowerCase();
-    return filtered.where((story) {
-      return story.userStory.toLowerCase().contains(q) ||
-          story.taskDescription.toLowerCase().contains(q) ||
-          story.acceptanceCriteria.toLowerCase().contains(q);
-    }).toList()
-      ..sort((a, b) => a.backlogOrder.compareTo(b.backlogOrder));
+    return null;
+  }
+
+  String _epicTitleFor(String epicId) {
+    for (final epic in _epics) {
+      if (epic.id == epicId) return epic.title;
+    }
+    return '';
+  }
+
+  /// This feature's stories in priority order, narrowed by the search box.
+  ///
+  /// The search reaches the feature and epic titles too — the review asked to
+  /// "search for epic, feature, story" — so typing an epic name surfaces its
+  /// stories instead of nothing.
+  List<AgileTask> _storiesForFeature(String featureId) {
+    final stories = AgileBacklogOrdering.forFeature(_stories, featureId);
+    final query = _searchQuery.trim();
+    if (query.isEmpty) return stories;
+    final feature = _featureFor(featureId);
+    final epicTitle = feature == null ? '' : _epicTitleFor(feature.epicId);
+    return [
+      for (final story in stories)
+        if (AgileBacklogOrdering.matches(
+          story,
+          query: query,
+          featureTitle: feature?.title ?? '',
+          epicTitle: epicTitle,
+        ))
+          story,
+    ];
+  }
+
+  /// Reorder within a feature's story list. The drop is stored as the story's
+  /// backlog position, so priority survives a reload instead of living in the
+  /// widget.
+  void _reorderStories(Feature feature, int oldIndex, int newIndex) {
+    final reordered = AgileBacklogOrdering.moveWithinFeature(
+      stories: _stories,
+      featureId: feature.id,
+      oldIndex: oldIndex,
+      newIndex: newIndex,
+    );
+    setState(() {
+      _stories
+        ..clear()
+        ..addAll(reordered);
+    });
+    _scheduleSave();
   }
 
   Future<void> _persistStories() async {
@@ -130,11 +198,20 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
       await ExecutionPhaseService.saveAgileTasks(
           projectId: pid, tasks: _stories);
       if (mounted) {
+        // Report the breakdown gap on save: a story under no feature never
+        // rolls up to an epic, and the review asked to be able to see that.
+        final unlinked = AgileStoryLinkage.countUnlinked(
+          _stories,
+          featuresByEpic: _featuresByEpic,
+        );
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Backlog stories saved'),
-              duration: Duration(seconds: 1)),
+          SnackBar(
+            content: Text(unlinked == 0
+                ? 'Backlog stories saved'
+                : 'Backlog stories saved · $unlinked still have no feature'),
+            duration: const Duration(seconds: 2),
+          ),
         );
       }
     } finally {
@@ -147,20 +224,105 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     _saveDebounce = Timer(const Duration(milliseconds: 500), _persistStories);
   }
 
+  /// Move a story one place earlier or later among its feature's stories — the
+  /// table view's explicit priority actions.
+  void _nudgeStory(AgileTask story, int delta) {
+    final nudged = AgileBacklogOrdering.nudgeWithinFeature(
+      stories: _stories,
+      storyId: story.id,
+      delta: delta,
+    );
+    setState(() {
+      _stories
+        ..clear()
+        ..addAll(nudged);
+    });
+    _scheduleSave();
+  }
+
+  /// Pull a story onto the Kanban board: out of the board's entry column and
+  /// into its first working column, which is what the review meant by
+  /// "pull them into the Kanban".
+  void _pullIntoBoard(AgileTask story) {
+    final pulled = AgileBoardPull.pull(story, _kanbanConfig);
+    setState(() => _updateStory(pulled));
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            'Sent to ${AgileBoardPull.columnTitle(pulled, _kanbanConfig)} on the Kanban board'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  /// Seed a demo-ready backlog (Lusaka 27 follow-up: "build us stories
+  /// there, some story points and stuff like that … so that way we can test
+  /// the schedule"). Adds sized, linked stories under every feature that has
+  /// none, then saves the same way an added story is saved.
+  Future<void> _seedDemoStories() async {
+    final features = <Feature>[
+      for (var epicIndex = 0;
+          epicIndex < _epics.length;
+          epicIndex++)
+        ..._featuresByEpic[_epics[epicIndex].id] ?? const <Feature>[],
+    ];
+    if (!AgileBacklogDemoSeed.backlogNeedsSeeding(features,
+        stories: _stories)) {
+      _snack('Every feature already has sized stories.');
+      return;
+    }
+    final seeds = <AgileTask>[
+      for (var i = 0; i < features.length; i++)
+        ...AgileBacklogDemoSeed.storiesForFeature(
+          features[i],
+          featureIndex: i,
+          existing: _stories,
+        ),
+    ];
+    if (seeds.isEmpty) {
+      _snack('Define epics and features first, then seed the backlog.');
+      return;
+    }
+    setState(() => _stories.addAll(seeds));
+    await _persistStories();
+  }
+
+  void _snack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
+  }
+
   void _addStory(Feature feature) {
-    final nextOrder =
-        _stories.where((s) => s.featureId == feature.id).length + 1;
-    final story = AgileTask(
-      epicId: feature.epicId,
-      featureId: feature.id,
-      userStory: 'New story $nextOrder',
-      storyPoints: 3,
-      priority: 'Medium',
-      status: 'To-Do',
-      readinessStatus: 'Draft',
-      backlogOrder: nextOrder,
+    // Every story is born under a feature: the linkage rule owns both ids and
+    // the backlog position. The User Story Template then seeds its acceptance
+    // criteria from whichever template is marked default.
+    final story = AgileStoryTemplate.newStoryFor(
+      feature: feature,
+      existing: _stories,
+      config: _acConfig,
     );
     setState(() => _stories.add(story));
+    _scheduleSave();
+  }
+
+  /// Feature id → "Epic · Feature", for the per-story feature picker.
+  Map<String, String> get _featureOptions => AgileStoryLinkage.optionLabels(
+        epics: _epics,
+        featuresByEpic: _featuresByEpic,
+      );
+
+  /// Re-parent a story onto a feature. The feature's epic comes with it.
+  void _linkStoryToFeature(AgileTask story, String featureId) {
+    final feature = AgileStoryLinkage.allFeatures(
+      epics: _epics,
+      featuresByEpic: _featuresByEpic,
+    ).where((f) => f.id == featureId).firstOrNull;
+    if (feature == null) return;
+    final linked = AgileStoryLinkage.link(story, feature);
+    setState(() => _updateStory(linked));
     _scheduleSave();
   }
 
@@ -238,10 +400,27 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                         else ...[
                           _buildSummaryBar(),
                           const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(child: _buildViewToggle()),
+                              const SizedBox(width: 12),
+                              OutlinedButton.icon(
+                                key: const ValueKey('backlog-seed-demo'),
+                                onPressed: _seedDemoStories,
+                                icon: const Icon(Icons.auto_awesome, size: 16),
+                                label: const Text('Seed demo stories'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: _kAccent,
+                                  side: const BorderSide(color: _kAccent),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
                           VoiceTextField(
                             controller: _searchController,
                             decoration: InputDecoration(
-                              hintText: 'Search stories...',
+                              hintText: 'Search stories, features, epics...',
                               prefixIcon: const Icon(Icons.search, size: 20),
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10)),
@@ -249,19 +428,23 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                             onChanged: (v) => setState(() => _searchQuery = v),
                           ),
                           const SizedBox(height: 16),
-                          _buildEpicTabs(),
-                          const SizedBox(height: 16),
-                          if (_visibleFeatures.isEmpty)
-                            _buildEmptyState(
-                                'No features found for this epic. Define features first in Epics & Features.')
-                          else
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _visibleFeatures.length,
-                              itemBuilder: (context, i) =>
-                                  _buildFeatureSection(_visibleFeatures[i]),
-                            ),
+                          if (_tableView)
+                            _buildBacklogTableView()
+                          else ...[
+                            _buildEpicTabs(),
+                            const SizedBox(height: 16),
+                            if (_visibleFeatures.isEmpty)
+                              _buildEmptyState(
+                                  'No features found for this epic. Define features first in Epics & Features.')
+                            else
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _visibleFeatures.length,
+                                itemBuilder: (context, i) =>
+                                    _buildFeatureSection(_visibleFeatures[i]),
+                              ),
+                          ],
                           const SizedBox(height: 24),
                           LaunchPhaseNavigation(
                             backLabel: PlanningPhaseNavigation.backLabel(
@@ -335,6 +518,68 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
           Text(value, style: const TextStyle(color: _kMuted)),
         ],
       ),
+    );
+  }
+
+  /// Table (default) or the editable card view.
+  Widget _buildViewToggle() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        const Text('Backlog view:',
+            style: TextStyle(fontSize: 13, color: _kMuted)),
+        ChoiceChip(
+          key: const ValueKey('backlog-view-table'),
+          label: const Text('Table'),
+          avatar: const Icon(Icons.table_rows_outlined, size: 16),
+          selected: _tableView,
+          onSelected: (_) => setState(() => _tableView = true),
+          selectedColor: _kAccent.withValues(alpha: 0.12),
+        ),
+        ChoiceChip(
+          key: const ValueKey('backlog-view-cards'),
+          label: const Text('Cards'),
+          avatar: const Icon(Icons.view_agenda_outlined, size: 16),
+          selected: !_tableView,
+          onSelected: (_) => setState(() => _tableView = false),
+          selectedColor: _kAccent.withValues(alpha: 0.12),
+        ),
+      ],
+    );
+  }
+
+  /// The whole backlog in one table: every story with the feature and epic it
+  /// descends from, plus an explicit group for stories no feature claims.
+  Widget _buildBacklogTableView() {
+    if (_epics.isEmpty) {
+      return _buildEmptyState(
+          'No epics found. Define epics before breaking work into stories.');
+    }
+
+    return AgileBacklogTableView(
+      rows: AgileBacklogTable.build(
+        epics: _epics,
+        featuresByEpic: _featuresByEpic,
+        stories: _stories,
+        query: _searchQuery,
+      ),
+      featuresWithoutStories: _searchQuery.trim().isEmpty
+          ? AgileBacklogTable.featuresWithoutStories(
+              epics: _epics,
+              featuresByEpic: _featuresByEpic,
+              stories: _stories,
+            ).length
+          : 0,
+      sprintLabel: _sprintLabel,
+      releaseLabel: _releaseLabel,
+      onMoveUp: (story) => _nudgeStory(story, -1),
+      onMoveDown: (story) => _nudgeStory(story, 1),
+      boardLabel: (story) => AgileBoardPull.columnTitle(story, _kanbanConfig),
+      emptyMessage: _searchQuery.trim().isNotEmpty
+          ? 'No stories match your search.'
+          : 'No stories in the backlog yet. Switch to Cards to add a story to a feature.',
     );
   }
 
@@ -420,13 +665,51 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                     : 'No stories planned for this feature yet.',
                 style: const TextStyle(color: _kMuted),
               )
+            else if (_searchQuery.trim().isNotEmpty)
+              // Dropping into a filtered list would renumber against the wrong
+              // neighbours, so dragging waits until the search is cleared.
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Clear the search to drag these stories into priority order.',
+                    style: TextStyle(fontSize: 12, color: _kMuted),
+                  ),
+                  const SizedBox(height: 8),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: stories.length,
+                    itemBuilder: (context, i) =>
+                        _buildStoryCard(stories[i], feature),
+                  ),
+                ],
+              )
             else
-              ListView.builder(
+              // Drag to prioritise: the whole point of the backlog, per the
+              // review ("drag them up and down to prioritize them").
+              ReorderableListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
                 itemCount: stories.length,
-                itemBuilder: (context, i) =>
-                    _buildStoryCard(stories[i], feature),
+                onReorder: (oldIndex, newIndex) =>
+                    _reorderStories(feature, oldIndex, newIndex),
+                itemBuilder: (context, i) => KeyedSubtree(
+                  key: ValueKey('story-${stories[i].id}'),
+                  child: _buildStoryCard(
+                    stories[i],
+                    feature,
+                    dragHandle: ReorderableDragStartListener(
+                      index: i,
+                      child: const Tooltip(
+                        message: 'Drag to prioritize',
+                        child: Icon(Icons.drag_indicator,
+                            size: 18, color: _kMuted),
+                      ),
+                    ),
+                  ),
+                ),
               ),
           ],
         ),
@@ -434,18 +717,19 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     );
   }
 
-  Widget _buildStoryCard(AgileTask story, Feature feature) {
-    final titleCtrl = TextEditingController(text: story.userStory);
-    final descCtrl = TextEditingController(text: story.taskDescription);
-    final acCtrl = TextEditingController(text: story.acceptanceCriteria);
+  Widget _buildStoryCard(AgileTask story, Feature feature,
+      {Widget? dragHandle}) {
+    final titleCtrl = SpellCheckTextEditingController(text: story.userStory);
+    final descCtrl = SpellCheckTextEditingController(text: story.taskDescription);
+    final acCtrl = SpellCheckTextEditingController(text: story.acceptanceCriteria);
     final depCtrl =
-        TextEditingController(text: story.dependencyTaskIds.join(', '));
+        SpellCheckTextEditingController(text: story.dependencyTaskIds.join(', '));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -465,12 +749,13 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.08),
+                    color: const Color(0xFFFFC812).withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text('WBS linked',
-                      style: TextStyle(fontSize: 11, color: Colors.blue[700])),
+                  child: const Text('WBS linked',
+                      style: TextStyle(fontSize: 11, color: Color(0xFFB8860B))),
                 ),
+              if (dragHandle != null) dragHandle,
               IconButton(
                 icon: const Icon(Icons.delete_outline,
                     color: Colors.red, size: 18),
@@ -513,6 +798,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
             spacing: 12,
             runSpacing: 12,
             children: [
+              _featurePicker(story),
               _dropdownField<int>(
                 label: 'Story points',
                 value: story.storyPoints,
@@ -562,6 +848,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                   _updateStory(story);
                 },
               ),
+              _buildBoardAction(story),
               _dropdownField<String>(
                 label: 'Target release',
                 value: story.plannedReleaseId.isEmpty
@@ -599,7 +886,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
               SizedBox(
                 width: 120,
                 child: VoiceTextField(
-                  controller: TextEditingController(
+                  controller: SpellCheckTextEditingController(
                       text: story.backlogOrder.toString()),
                   decoration: const InputDecoration(labelText: 'Backlog order'),
                   keyboardType: TextInputType.number,
@@ -619,6 +906,63 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  /// Whether this story has been pulled onto the board, and the action to do
+  /// it (or the column it is already working in).
+  Widget _buildBoardAction(AgileTask story) {
+    if (AgileBoardPull.isOnBoard(story, _kanbanConfig)) {
+      return Chip(
+        key: ValueKey('story-board-${story.id}'),
+        avatar: const Icon(Icons.view_kanban_outlined, size: 16),
+        label: Text(
+          'On the board · ${AgileBoardPull.columnTitle(story, _kanbanConfig)}',
+          style: const TextStyle(fontSize: 12),
+        ),
+      );
+    }
+    return OutlinedButton.icon(
+      key: ValueKey('story-pull-${story.id}'),
+      onPressed: () => _pullIntoBoard(story),
+      icon: const Icon(Icons.view_kanban_outlined, size: 16),
+      label: const Text('Send to board'),
+    );
+  }
+
+  /// The feature this story belongs to. Required: a story that is under no
+  /// feature cannot roll up to an epic, which is the gap the review found, so
+  /// an unlinked story says so and offers the list to fix it.
+  Widget _featurePicker(AgileTask story) {
+    final options = _featureOptions;
+    final linked = options.containsKey(story.featureId);
+    return SizedBox(
+      width: 320,
+      child: DropdownButtonFormField<String>(
+        key: ValueKey('story-feature-${story.id}'),
+        initialValue: linked ? story.featureId : null,
+        isExpanded: true,
+        decoration: InputDecoration(
+          labelText: 'Feature',
+          border: const OutlineInputBorder(),
+          errorText: linked ? null : 'Not under any feature',
+          helperText: linked
+              ? 'Every story sits under a feature so it can roll up to an epic.'
+              : 'Pick the feature this story belongs to.',
+        ),
+        hint: const Text('Select a feature'),
+        items: [
+          for (final entry in options.entries)
+            DropdownMenuItem<String>(
+              value: entry.key,
+              child: Text(entry.value, overflow: TextOverflow.ellipsis),
+            ),
+        ],
+        onChanged: (featureId) {
+          if (featureId == null) return;
+          _linkStoryToFeature(story, featureId);
+        },
       ),
     );
   }

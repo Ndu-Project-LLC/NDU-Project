@@ -85,8 +85,19 @@ class PlanningSyncService {
     int milestones = 0;
 
     // 1) Import work packages
+    //
+    // The package rows are rebuilt from scratch on every sync (only rows from
+    // other sources are preserved above), so a project whose saved package
+    // list already holds the same package twice — the design screen used to
+    // append generated chains without deduping, and regenerating after a WBS
+    // rebuild mints fresh ids that defeat id-based filters — would otherwise
+    // re-materialise the duplicate rows on the schedule forever. Identity
+    // dedupe (collapsed title + classification) keeps the first of each.
     final allMs = data.keyMilestones;
-    final packageActivities = _buildPackageActivities(data.workPackages, allMs);
+    final packageActivities = _buildPackageActivities(
+      IntegratedWorkPackageService.dedupePackages(data.workPackages),
+      allMs,
+    );
     preserved.addAll(packageActivities);
     packages = packageActivities.length;
 
@@ -235,14 +246,6 @@ class PlanningSyncService {
       }
     }
 
-    String formatPackageName(dm.WorkPackage pkg) {
-      final readable = pkg.packageClassification
-          .replaceAllMapped(RegExp(r'[A-Z]'), (m) => ' ${m.group(0)}')
-          .trim();
-      final title = pkg.title.isNotEmpty ? pkg.title : 'Untitled';
-      return '$readable: $title';
-    }
-
     final activities = <ScheduleActivity>[];
     for (final pkg in packages) {
       final domain = domainForPackage(pkg);
@@ -272,7 +275,7 @@ class PlanningSyncService {
         id: activityId,
         level: level,
         code: '',
-        name: formatPackageName(pkg),
+        name: IntegratedWorkPackageService.packageActivityName(pkg),
         description: descBuf.toString().trim(),
         type: activityType,
         domain: domain,

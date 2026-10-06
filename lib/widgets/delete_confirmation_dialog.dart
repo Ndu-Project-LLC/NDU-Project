@@ -27,7 +27,7 @@ Future<bool> showDeleteConfirmationDialog(
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Color(0xFFFEE2E2),
+              color: const Color(0xFFFEE2E2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(

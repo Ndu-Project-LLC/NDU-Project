@@ -2,20 +2,11 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:ndu_project/utils/finance.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:ndu_project/widgets/app_logo.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
-import 'package:ndu_project/services/firebase_auth_service.dart';
-import 'package:ndu_project/services/auth_nav.dart';
-import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/screens/ssher_stacked_screen.dart';
-import 'package:ndu_project/screens/team_management_screen.dart';
-import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
-import 'package:ndu_project/screens/home_screen.dart';
-import 'package:ndu_project/screens/lessons_learned_screen.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -23,21 +14,13 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/content_text.dart';
 import 'package:ndu_project/widgets/business_case_header.dart';
-import 'package:ndu_project/screens/preferred_solution_analysis_screen.dart';
-import 'package:ndu_project/screens/front_end_planning_summary.dart';
 import 'package:ndu_project/widgets/expanding_text_field.dart';
-import 'package:ndu_project/screens/initiation_phase_screen.dart';
-import 'package:ndu_project/screens/potential_solutions_screen.dart';
-import 'package:ndu_project/screens/risk_identification_screen.dart';
-import 'package:ndu_project/screens/it_considerations_screen.dart';
-import 'package:ndu_project/screens/infrastructure_considerations_screen.dart';
-import 'package:ndu_project/screens/core_stakeholders_screen.dart';
-import 'package:ndu_project/screens/settings_screen.dart';
+import 'package:ndu_project/screens/project_decision_summary_screen.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/access_policy.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
-import 'package:ndu_project/services/sidebar_navigation_service.dart';
 
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
@@ -50,6 +33,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class CostAnalysisScreen extends StatefulWidget {
   final String notes;
@@ -135,9 +119,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       ScrollController();
   final ScrollController _initialCostTableHorizontalController =
       ScrollController();
-  bool _initiationExpanded = true;
-  bool _businessCaseExpanded = true;
-  final GlobalKey _tablesSectionKey = GlobalKey();
   int _currentStepIndex = 0;
   bool _reviewConfirmed = false;
   // Full Cost Benefit Analysis is only available on the admin web host.
@@ -306,11 +287,10 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   static const List<double> _discountRateOptions = [0.08, 0.10, 0.12];
   final Set<int> _solutionLoading = <int>{};
   int _benefitTabIndex = 0;
-  final TextEditingController _savingsNotesController = TextEditingController();
+  final TextEditingController _savingsNotesController = SpellCheckTextEditingController();
   final TextEditingController _savingsTargetController =
-      TextEditingController(text: '10');
+      SpellCheckTextEditingController(text: '10');
   bool _isSavingsGenerating = false;
-  String? _savingsError;
 
   Future<void> _exportPdf() async {
     final notes = _notesController.text.trim();
@@ -417,12 +397,12 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   void initState() {
     super.initState();
     _suppressDirtyTracking = true;
-    _notesController = TextEditingController(text: widget.notes);
+    _notesController = SpellCheckTextEditingController(text: widget.notes);
     _notesController.addListener(_markDirty);
-    _projectValueAmountController = TextEditingController();
+    _projectValueAmountController = SpellCheckTextEditingController();
     _projectValueBenefitControllers = {
       for (final field in _projectValueFields)
-        field.key: TextEditingController(),
+        field.key: SpellCheckTextEditingController(),
     };
     _benefitCategoryTabController =
         TabController(length: _projectValueFields.length, vsync: this);
@@ -692,7 +672,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         // Derive a simple, logical unit count based on the benefit title
         final units = _deriveUnitsFromTitle(candidateTitles[i]);
         final entry = _BenefitLineItemEntry(
-          id: 'benefit-seed-${DateTime.now().microsecondsSinceEpoch}-$i',
+          id: newId('benefit-seed-'),
           categoryKey: categories[i % categories.length],
           title: candidateTitles[i],
           unitValue: unitValue,
@@ -921,9 +901,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       final name = row.itemController.text.trim();
       final description = row.descriptionController.text.trim().toLowerCase();
       final assumptions = row.assumptionsController.text.trim();
-      final hasName = name.isNotEmpty && name.toLowerCase() != 'name';
-      final hasDescription =
-          description.isNotEmpty && !description.startsWith('lorem ipsum');
+      final hasName = name.isNotEmpty;
+      final hasDescription = description.isNotEmpty;
       final hasAssumptions = assumptions.isNotEmpty;
       final hasCost = row.currentCost() > 0;
       return hasName || hasDescription || hasAssumptions || hasCost;
@@ -1389,9 +1368,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           final name = row.itemName.trim();
           final description = row.description.trim().toLowerCase();
           final assumptions = row.assumptions.trim();
-          final hasName = name.isNotEmpty && name.toLowerCase() != 'name';
-          final hasDescription =
-              description.isNotEmpty && !description.startsWith('lorem ipsum');
+          final hasName = name.isNotEmpty;
+          final hasDescription = description.isNotEmpty;
           final hasAssumptions = assumptions.isNotEmpty;
           final hasText = hasName || hasDescription || hasAssumptions;
           final hasCost = _parseCurrencyInput(row.cost) > 0;
@@ -1468,7 +1446,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     if (nextIndex != currentIndex) {
       setState(() {
         _activeTab = nextIndex;
-        _savingsError = null;
       });
     }
     _loadProjectValueEditorsForSolution(nextIndex);
@@ -1576,11 +1553,15 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   Widget build(BuildContext context) {
     final isMobile = AppBreakpoints.isMobile(context);
     final sidebarWidth = AppBreakpoints.sidebarWidth(context);
-    return WillPopScope(
-      onWillPop: _confirmExit,
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, _) {
+        // _confirmExit autosaves unsaved changes and always allows the pop.
+        if (didPop) _confirmExit();
+      },
       child: Scaffold(
         key: _scaffoldKey,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         drawer: isMobile ? _buildMobileDrawer() : null,
         body: SafeArea(
           top: true,
@@ -1601,8 +1582,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                   Expanded(child: _buildMainContent()),
                 ])),
               ]),
-              MobileSidebarHamburger(
-                sidebar: const InitiationLikeSidebar(
+              const MobileSidebarHamburger(
+                sidebar: InitiationLikeSidebar(
                   activeItemLabel: 'Initial Cost Estimate',
                 ),
               ),
@@ -1611,193 +1592,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTopHeader() {
-    final isMobile = AppBreakpoints.isMobile(context);
-    // Match InitiationPhaseScreen header: no logo, centered title, profile at right
-    final double headerHeight = isMobile ? 72 : 88;
-    return Container(
-      height: headerHeight,
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 24),
-      child: Row(
-        children: [
-          Row(
-            children: [
-              if (isMobile)
-                IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                )
-              else
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios, size: 16),
-                  onPressed: _handleBackNavigation,
-                ),
-            ],
-          ),
-          const Spacer(),
-          if (!isMobile)
-            const Text(
-              'Initiation Phase',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black),
-            ),
-          const Spacer(),
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                    color: Colors.blue, shape: BoxShape.circle),
-                child: const Icon(Icons.person, color: Colors.white, size: 20),
-              ),
-              if (!isMobile) ...[
-                const SizedBox(width: 12),
-                StreamBuilder<bool>(
-                  stream: UserService.watchAdminStatus(),
-                  builder: (context, snapshot) {
-                    final email =
-                        FirebaseAuth.instance.currentUser?.email ?? '';
-                    final isAdmin =
-                        snapshot.data ?? UserService.isAdminEmail(email);
-                    final role = isAdmin ? 'Admin' : 'Member';
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          FirebaseAuthService.displayNameOrEmail(
-                              fallback: 'User'),
-                          style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black),
-                        ),
-                        Text(role,
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.grey)),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(width: 8),
-                const Icon(Icons.keyboard_arrow_down,
-                    color: Colors.grey, size: 20),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSidebar() {
-    // Match RiskIdentificationScreen sidebar styling and structure
-    final sidebarWidth = AppBreakpoints.sidebarWidth(context);
-    // Keep banner height consistent with other initiation-like sidebars
-    final double bannerHeight = AppBreakpoints.isMobile(context) ? 72 : 96;
-    return Container(
-      width: sidebarWidth,
-      color: Colors.white,
-      child: Column(
-        children: [
-          // Full-width banner image above "StackOne"
-          SizedBox(
-            width: double.infinity,
-            height: bannerHeight,
-            child: Center(child: AppLogo(height: 64)),
-          ),
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              border: Border(
-                  bottom: BorderSide(color: Color(0xFFFFD700), width: 1)),
-            ),
-            child: const Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Color(0xFFFFD700),
-                  child: Icon(Icons.person_outline, color: Colors.black87),
-                ),
-                SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('StackOne',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black)),
-                  ],
-                )
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              children: [
-                _buildMenuItem(Icons.home_outlined, 'Home',
-                    onTap: () => HomeScreen.open(context)),
-                _buildExpandableHeader(
-                  Icons.flag_outlined,
-                  'Initiation Phase',
-                  expanded: _initiationExpanded,
-                  onTap: () => setState(
-                      () => _initiationExpanded = !_initiationExpanded),
-                  isActive: true,
-                ),
-                if (_initiationExpanded) ...[
-                  _buildExpandableHeaderLikeCost(
-                    Icons.business_center_outlined,
-                    'Business Case',
-                    expanded: _businessCaseExpanded,
-                    onTap: () => setState(
-                        () => _businessCaseExpanded = !_businessCaseExpanded),
-                    isActive: false,
-                  ),
-                  if (_businessCaseExpanded) ...[
-                    _buildNestedSubMenuItem('Business Case',
-                        onTap: _openBusinessCase),
-                    _buildNestedSubMenuItem('Potential Solutions',
-                        onTap: _openPotentialSolutions),
-                    _buildNestedSubMenuItem('Risk Identification',
-                        onTap: _openRiskIdentification),
-                    _buildNestedSubMenuItem('IT Considerations',
-                        onTap: _openITConsiderations),
-                    _buildNestedSubMenuItem('Infrastructure Considerations',
-                        onTap: _openInfrastructureConsiderations),
-                    _buildNestedSubMenuItem('Core Stakeholders',
-                        onTap: _openCoreStakeholders),
-                    _buildNestedSubMenuItem('Initial Cost Estimate',
-                        isActive: true),
-                    _buildNestedSubMenuItem('Preferred Solution Analysis',
-                        onTap: _openPreferredSolutionAnalysis),
-                  ],
-                ],
-                _buildMenuItem(
-                    Icons.timeline, 'Initiation: Front End Planning'),
-                _buildMenuItem(Icons.account_tree_outlined, 'Workflow Roadmap'),
-                _buildMenuItem(Icons.flash_on, 'Agile Roadmap'),
-                _buildMenuItem(Icons.description_outlined, 'Contracting'),
-                _buildMenuItem(Icons.shopping_cart_outlined, 'Procurement'),
-                const SizedBox(height: 20),
-                _buildMenuItem(Icons.settings_outlined, 'Settings',
-                    onTap: () => SettingsScreen.open(context)),
-                _buildMenuItem(Icons.logout_outlined, 'LogOut',
-                    onTap: () => AuthNav.signOutAndExit(context)),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1811,272 +1605,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         ),
       ),
     );
-  }
-
-  Widget _buildMenuItem(IconData icon, String title,
-      {bool disabled = false, VoidCallback? onTap, bool isActive = false}) {
-    final primary = Theme.of(context).colorScheme.primary;
-    VoidCallback? handler;
-    if (!disabled) {
-      handler = onTap ??
-          () {
-            if (title == 'Home') {
-              HomeScreen.open(context);
-            } else if (title == 'SSHER') {
-              context.push('/ssher-stacked');
-            } else if (title == 'LogOut') {
-              AuthNav.signOutAndExit(context);
-            } else if (title == 'Team Management') {
-              context.push('/team-management');
-            } else if (title == 'Change Management') {
-              context.push('/change-management-module');
-            } else if (title == 'Lessons Learned') {
-              LessonsLearnedScreen.open(context);
-            }
-          };
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
-      child: InkWell(
-        onTap: handler,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Icon(icon,
-                  size: 20,
-                  color: isActive
-                      ? primary
-                      : (disabled ? Colors.grey[400] : Colors.black87)),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isActive
-                        ? primary
-                        : (disabled ? Colors.grey[500] : Colors.black87),
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                  softWrap: true,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSubMenuItem(String title,
-      {VoidCallback? onTap, bool isActive = false}) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return Padding(
-      padding: const EdgeInsets.only(left: 48, right: 24, top: 2, bottom: 2),
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.circle,
-                  size: 8, color: isActive ? primary : Colors.grey[500]),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isActive ? primary : Colors.black87,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExpandableHeaderLikeCost(IconData icon, String title,
-      {required bool expanded,
-      required VoidCallback onTap,
-      bool isActive = false}) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return Padding(
-      padding: const EdgeInsets.only(left: 48, right: 24, top: 2, bottom: 2),
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(children: [
-            Icon(Icons.circle,
-                size: 8, color: isActive ? primary : Colors.grey[500]),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isActive ? primary : Colors.black87,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Icon(expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                color: Colors.grey[600], size: 18),
-          ]),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNestedSubMenuItem(String title,
-      {VoidCallback? onTap, bool isActive = false}) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return Padding(
-      padding: const EdgeInsets.only(left: 72, right: 24, top: 2, bottom: 2),
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(children: [
-            Icon(Icons.circle,
-                size: 6, color: isActive ? primary : Colors.grey[400]),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isActive ? primary : Colors.black87,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ]),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExpandableHeader(IconData icon, String title,
-      {required bool expanded,
-      required VoidCallback onTap,
-      bool isActive = false}) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 20, color: isActive ? primary : Colors.black87),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isActive ? primary : Colors.black87,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                  softWrap: true,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Icon(
-                  expanded
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down,
-                  color: Colors.grey[700],
-                  size: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _openBusinessCase() {
-    context.push('/initiation-phase', extra: const InitiationPhaseScreen(scrollToBusinessCase: true));
-  }
-
-  void _openPotentialSolutions() {
-    context.push('/potential-solutions');
-  }
-
-  void _openRiskIdentification() {
-    context.push('/risk-identification', extra: RiskIdentificationScreen(
-          notes: _notesController.text,
-          solutions: widget.solutions,
-          businessCase: widget.businessCase,
-        ));
-  }
-
-  void _openITConsiderations() {
-    context.push('/it-considerations', extra: ITConsiderationsScreen(
-          notes: _notesController.text,
-          solutions: widget.solutions,
-          businessCase: widget.businessCase,
-        ));
-  }
-
-  void _openInfrastructureConsiderations() {
-    context.push('/infrastructure-considerations', extra: InfrastructureConsiderationsScreen(
-          notes: _notesController.text,
-          solutions: widget.solutions,
-          businessCase: widget.businessCase,
-        ));
-  }
-
-  void _openCoreStakeholders() {
-    context.push('/core-stakeholders', extra: CoreStakeholdersScreen(
-          notes: _notesController.text,
-          solutions: widget.solutions,
-          businessCase: widget.businessCase,
-        ));
-  }
-
-  void _openPreferredSolutionAnalysis() {
-    context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
-          notes: _notesController.text,
-          solutions: widget.solutions,
-          businessCase: widget.businessCase,
-        ));
   }
 
   Widget _buildMainContent() {
@@ -2236,7 +1764,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFFFD700).withOpacity(0.26),
+                      color: const Color(0xFFFFD700).withValues(alpha: 0.26),
                       blurRadius: 14,
                       offset: const Offset(0, 4),
                     ),
@@ -2358,7 +1886,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     final stepStatus =
         '${_stepDefinitions[_currentStepIndex].shortLabel} (${_isFullAdminView ? _currentStepIndex + 1 : 1}/$effectiveStepCount)';
     final primaryLabel =
-        isLast ? 'Continue to Preferred Solution Analysis' : 'Next Tab';
+        isLast ? 'Continue to Preferred Solution' : 'Next Tab';
     final primaryIcon = isLast ? Icons.check : Icons.arrow_forward_ios_rounded;
 
     final previousButton = TextButton.icon(
@@ -2469,7 +1997,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         color: const Color(0xFFE6F2FF),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF90CAF9).withOpacity(0.4)),
+        border: Border.all(color: const Color(0xFF90CAF9).withValues(alpha: 0.4)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2581,20 +2109,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       }
     }
 
-    // 3. Smart checkpoint check
-    final nextCheckpoint =
-        SidebarNavigationService.instance.getNextItem('cost_analysis');
-    if (nextCheckpoint?.checkpoint != 'preferred_solution_analysis') {
-      // Use standard lock check for non-sequential navigation
-      final isLocked = ProjectDataHelper.isDestinationLocked(
-          context, 'preferred_solution_analysis');
-      if (isLocked) {
-        ProjectDataHelper.showLockedDestinationMessage(
-            context, 'Preferred Solution Analysis');
-        return;
-      }
-    }
-
     // Show loading dialog
     if (!mounted) return;
     showDialog(
@@ -2622,11 +2136,34 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     if (!mounted) return;
     Navigator.of(context).pop(); // Close loading dialog
 
-    // Navigate to Preferred Solution Analysis
-    context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
-          notes: widget.notes,
-          solutions: widget.solutions,
+    // Navigate to Preferred Solution (Project Decision Summary)
+    final potentialSolutions = projectData.potentialSolutions;
+    final solutions = potentialSolutions
+        .map((s) => AiSolutionItem(title: s.title, description: s.description))
+        .toList();
+    final safeSolutions = solutions.isNotEmpty
+        ? solutions
+        : [
+            AiSolutionItem(
+              title: projectData.projectName,
+              description: projectData.businessCase,
+            ),
+          ];
+    final preferredAnalysis = projectData.preferredSolutionAnalysis;
+    final selectedSolution =
+        (preferredAnalysis?.selectedSolutionTitle != null)
+            ? safeSolutions.firstWhere(
+                (s) => s.title == preferredAnalysis!.selectedSolutionTitle,
+                orElse: () => safeSolutions.first,
+              )
+            : safeSolutions.first;
+
+    context.push('/project-decision-summary', extra: ProjectDecisionSummaryScreen(
+          projectName: projectData.projectName,
+          selectedSolution: selectedSolution,
+          allSolutions: safeSolutions,
           businessCase: projectData.businessCase,
+          notes: preferredAnalysis?.workingNotes ?? '',
         ));
   }
 
@@ -2897,17 +2434,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     return true;
   }
 
-  Future<void> _handleBackNavigation() async {
-    final shouldLeave = await _confirmExit();
-    if (!shouldLeave) return;
-    if (!mounted) return;
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-      return;
-    }
-    HomeScreen.open(context);
-  }
-
   void _onProjectValueFieldChanged() {
     if (_syncingProjectValueEditors) {
       return;
@@ -2922,7 +2448,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     if (!_isSavingsGenerating && _savingsSuggestions.isNotEmpty) {
       setState(() {
         _clearSavingsSuggestionsForSolution(solutionIndex);
-        _savingsError = null;
       });
     }
     _markDirty();
@@ -2997,55 +2522,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     ]);
   }
 
-  Widget _buildCurrencySelector() {
-    final availableCurrencies = _currencyRates.keys.toSet();
-    final selectedCurrency =
-        availableCurrencies.contains(_currency) ? _currency : 'USD';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        children: [
-          const Text(
-            'Select Currency:',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF111827),
-            ),
-          ),
-          const SizedBox(width: 16),
-          DropdownButton<String>(
-            value: selectedCurrency,
-            items: _currencyRates.keys
-                .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                .toList(),
-            onChanged: (value) {
-              if (value != null) {
-                final factor = _currencyFactor(_lastCurrency, value);
-                setState(() {
-                  _currency = value;
-                  _applyCurrencyConversion(factor);
-                  _lastCurrency = value;
-                });
-                _markDirty();
-                // Update provider
-                final provider = ProjectDataHelper.getProvider(context);
-                provider.updateCostBenefitCurrency(value);
-              }
-            },
-            style: const TextStyle(fontSize: 14),
-            underline: Container(height: 2, color: const Color(0xFFFFD700)),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildProjectValueSection() {
     const basisHelperText =
         'Enter the estimated project benefit value to calculate ROI, NPV, and IRR for 1, 3, 5, and 10 years.';
@@ -3056,10 +2532,10 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.25)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4)),
         ],
@@ -3068,17 +2544,17 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         LayoutBuilder(
           builder: (context, constraints) {
             final isNarrow = constraints.maxWidth < 600;
-            final titleColumn = Column(
+            const titleColumn = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  const Text('Project Benefit Calculation',
+                  Text('Project Benefit Calculation',
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  const SizedBox(width: 8),
-                  const _AiTag(),
+                  SizedBox(width: 8),
+                  _AiTag(),
                 ]),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   'AI-assisted estimation to showcase project benefits',
                   style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -3115,7 +2591,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: titleColumn),
+                const Expanded(child: titleColumn),
                 const SizedBox(width: 12),
                 aiButton,
               ],
@@ -3161,7 +2637,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             fillColor: Colors.grey.shade100,
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.withOpacity(0.3))),
+                borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3))),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: Color(0xFFFFD700))),
@@ -3173,38 +2649,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         LayoutBuilder(
           builder: (context, constraints) {
             final isVeryNarrow = constraints.maxWidth < 400;
-            final basisWidth = constraints.maxWidth >= 980
-                ? 220.0
-                : math.max(150.0, constraints.maxWidth * 0.32);
-            final basisControl = SizedBox(
-              width: isVeryNarrow ? constraints.maxWidth : basisWidth,
-              child: DropdownButtonFormField<String>(
-                value: _basisFrequency,
-                items: _frequencyOptions
-                    .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() => _basisFrequency = value);
-                  _markDirty();
-                },
-                decoration: InputDecoration(
-                  labelText: 'Basis Frequency',
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                          BorderSide(color: Colors.grey.withOpacity(0.3))),
-                  focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFFFD700))),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  isDense: true,
-                ),
-                hint: const Text('Select'),
-              ),
-            );
             final currencyControl = Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -3226,7 +2670,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
               decoration: BoxDecoration(
                 color: Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey.withOpacity(0.25)),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
               ),
               child: isVeryNarrow
                   ? Column(
@@ -3317,20 +2761,20 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           color: isSelected ? accentColor : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? accentColor : Colors.grey.withOpacity(0.3),
+            color: isSelected ? accentColor : Colors.grey.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: accentColor.withOpacity(0.3),
+                    color: accentColor.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
                 ]
               : [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 2,
                     offset: const Offset(0, 1),
                   ),
@@ -3467,36 +2911,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     );
   }
 
-  Widget _buildInlineYearBoxes() {
-    return const SizedBox.shrink();
-  }
-
-  Widget _buildYearBox(String label, double value, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _formatCurrencyValue(value),
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(fontSize: 11, color: Colors.grey[700]),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildMultiYearBenefitTable() {
     return FullScreenTableWrapper(
       title: 'Projected Benefit Horizons',
@@ -3547,14 +2961,14 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.4)),
+        border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.4)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const Icon(Icons.calculate_outlined,
+        const Row(children: [
+          Icon(Icons.calculate_outlined,
               size: 20, color: Color(0xFFFF8F00)),
-          const SizedBox(width: 8),
-          const Text('Projected Benefit Horizons',
+          SizedBox(width: 8),
+          Text('Projected Benefit Horizons',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         ]),
         const SizedBox(height: 8),
@@ -3574,12 +2988,12 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                 topLeft: Radius.circular(8), topRight: Radius.circular(8)),
           ),
           child: Row(children: [
-            Expanded(
+            const Expanded(
                 flex: 2,
                 child: Align(
                   alignment: Alignment.center,
                   child: Text('Time Horizon',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 12, fontWeight: FontWeight.w600)),
                 )),
             Expanded(
@@ -3598,7 +3012,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(8),
                 bottomRight: Radius.circular(8)),
-            border: Border.all(color: Colors.grey.withOpacity(0.25)),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
           ),
           child: Column(children: [
             _multiYearRow('1 Year', year1, isFirst: true),
@@ -3618,7 +3032,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         border: isFirst
             ? null
-            : Border(top: BorderSide(color: Colors.grey.withOpacity(0.2))),
+            : Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
       ),
       child: Row(children: [
         Expanded(
@@ -3686,7 +3100,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     String? notes,
   }) {
     final entry = _BenefitLineItemEntry(
-      id: 'benefit-${DateTime.now().microsecondsSinceEpoch}',
+      id: newId('benefit-'),
       categoryKey: _normalizeBenefitCategoryKey(
           categoryKey ?? _projectValueFields.first.key),
       title: title ?? '',
@@ -3715,7 +3129,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     setState(() {
       _benefitItemsForSolution(solutionIndex).add(entry);
       _clearSavingsSuggestionsForSolution(solutionIndex);
-      _savingsError = null;
     });
     _markDirty();
   }
@@ -3734,7 +3147,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       entry.unitsController.text = draft.units;
       entry.notesController.text = draft.notes;
       _clearSavingsSuggestionsForSolution(solutionIndex);
-      _savingsError = null;
     });
     _markDirty();
   }
@@ -3760,7 +3172,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     setState(() {
       _benefitItemsForSolution(solutionIndex).remove(entry);
       _clearSavingsSuggestionsForSolution(solutionIndex);
-      _savingsError = null;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => entry.dispose());
     _markDirty();
@@ -3770,7 +3181,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     if (!mounted) return;
     final solutionIndex = _activeSolutionIndex();
     setState(() {
-      _savingsError = null;
       if (!_isSavingsGenerating && _savingsSuggestions.isNotEmpty) {
         _clearSavingsSuggestionsForSolution(solutionIndex);
       }
@@ -3784,13 +3194,13 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     String? categoryKey,
   }) async {
     final titleController =
-        TextEditingController(text: entry?.titleController.text ?? '');
+        SpellCheckTextEditingController(text: entry?.titleController.text ?? '');
     final unitValueController =
-        TextEditingController(text: entry?.unitValueController.text ?? '');
+        SpellCheckTextEditingController(text: entry?.unitValueController.text ?? '');
     final unitsController =
-        TextEditingController(text: entry?.unitsController.text ?? '');
+        SpellCheckTextEditingController(text: entry?.unitsController.text ?? '');
     final notesController =
-        TextEditingController(text: entry?.notesController.text ?? '');
+        SpellCheckTextEditingController(text: entry?.notesController.text ?? '');
     String selectedCategory = _normalizeBenefitCategoryKey(
       entry?.categoryKey ?? categoryKey ?? _projectValueFields.first.key,
     );
@@ -3815,7 +3225,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     DropdownButtonFormField<String>(
-                      value: selectedCategory,
+                      initialValue: selectedCategory,
                       items: _projectValueFields
                           .map(
                             (field) => DropdownMenuItem<String>(
@@ -4022,7 +3432,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   Widget _buildFinancialBenefitsTrackerSection() {
-    final tabs = const [
+    const tabs = [
       'Line Items',
       'Estimated Benefits',
       'Project Benefits Review'
@@ -4038,10 +3448,10 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.25)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 8,
               offset: const Offset(0, 4))
         ],
@@ -4228,8 +3638,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           );
           final metadata = [
             Chip(
-              avatar: Icon(Icons.attach_money,
-                  size: 16, color: Colors.blue.shade700),
+              avatar: const Icon(Icons.attach_money,
+                  size: 16, color: Color(0xFFB8860B)),
               label: Text('Currency: $_currency'),
             ),
             Chip(
@@ -4415,20 +3825,20 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                           border: Border(
                             top: BorderSide(
                                 color:
-                                    const Color(0xFFFFD700).withOpacity(0.5)),
+                                    const Color(0xFFFFD700).withValues(alpha: 0.5)),
                           ),
                         ),
                         child: Row(children: [
-                          SizedBox(
+                          const SizedBox(
                             width: _benefitIndexColumnWidth,
-                            child: const Text('',
+                            child: Text('',
                                 textAlign: TextAlign.left,
                                 style: TextStyle(fontSize: 12)),
                           ),
                           const SizedBox(width: _benefitColumnGap),
-                          SizedBox(
+                          const SizedBox(
                             width: _benefitCategoryColumnWidth,
-                            child: const Text(
+                            child: Text(
                               'TOTAL benefits',
                               textAlign: TextAlign.center,
                               style: TextStyle(
@@ -4438,9 +3848,9 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                             ),
                           ),
                           const SizedBox(width: _benefitColumnGap),
-                          SizedBox(width: _benefitTitleColumnWidth),
+                          const SizedBox(width: _benefitTitleColumnWidth),
                           const SizedBox(width: _benefitColumnGap),
-                          SizedBox(width: _benefitUnitValueColumnWidth),
+                          const SizedBox(width: _benefitUnitValueColumnWidth),
                           const SizedBox(width: _benefitColumnGap),
                           SizedBox(
                             width: _benefitTotalUnitsColumnWidth,
@@ -4469,9 +3879,9 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                             ),
                           ),
                           const SizedBox(width: _benefitColumnGap),
-                          SizedBox(width: _benefitNotesColumnWidth),
+                          const SizedBox(width: _benefitNotesColumnWidth),
                           const SizedBox(width: _benefitColumnGap),
-                          SizedBox(width: _benefitActionsColumnWidth),
+                          const SizedBox(width: _benefitActionsColumnWidth),
                         ]),
                       ),
                     ],
@@ -4706,34 +4116,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     );
   }
 
-  Widget _metricFocusCard(MapEntry<String, _BenefitCategorySummary> entry) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.teal.shade200),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.show_chart, size: 16, color: Colors.teal.shade700),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              _benefitCategoryLabel(entry.key),
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.teal.shade900),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _benefitSummaryCard({
     required String title,
     required String value,
@@ -4745,7 +4127,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Row(children: [
         Container(
@@ -4777,35 +4159,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     );
   }
 
-  Widget _benefitCategoryCard(
-      {required String label, required _BenefitCategorySummary summary}) {
-    return Container(
-      width: 260,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 6,
-              offset: const Offset(0, 3))
-        ],
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
-        Text('Items: ${summary.itemCount}',
-            style: TextStyle(fontSize: 12, color: Colors.grey[700])),
-        const SizedBox(height: 4),
-        Text('Total value: ${_formatCurrencyValue(summary.valueTotal)}',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-      ]),
-    );
-  }
-
   Widget _buildProjectBenefitsReviewTab({
     required Map<String, _BenefitCategorySummary> summaries,
     required double totalValue,
@@ -4824,8 +4177,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         top3CategoryKeys.map((key) => _benefitCategoryLabel(key)).toList();
 
     // Sort benefit categories by total value (highest first)
-    final sortedCategories = summaries.entries.toList()
-      ..sort((a, b) => b.value.valueTotal.compareTo(a.value.valueTotal));
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       // Only show summaries if there are benefit items
@@ -4898,7 +4249,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             decoration: BoxDecoration(
               color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.withOpacity(0.25)),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
             ),
             child: Text(
               'No project benefits highlights yet. Add project benefits to see highlights.',
@@ -4917,10 +4268,10 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -4929,8 +4280,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.stacked_line_chart,
-                          size: 18, color: const Color(0xFFFFD700)),
+                      const Icon(Icons.stacked_line_chart,
+                          size: 18, color: Color(0xFFFFD700)),
                       const SizedBox(width: 8),
                       Text(
                         categoryLabel,
@@ -4997,27 +4348,27 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
             // Table Header
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A3A3F),
-                borderRadius: const BorderRadius.only(
+              decoration: const BoxDecoration(
+                color: Color(0xFF1A3A3F),
+                borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(8),
                   topRight: Radius.circular(8),
                 ),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   SizedBox(
                     width: 50,
                     child: Center(
                       child: Text('#',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: Colors.white)),
@@ -5027,7 +4378,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                     flex: 2,
                     child: Center(
                       child: Text('Title',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: Colors.white)),
@@ -5037,7 +4388,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                     flex: 5,
                     child: Center(
                       child: Text('Value Calculation Formula',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: Colors.white)),
@@ -5060,7 +4411,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                       ? null
                       : Border(
                           bottom:
-                              BorderSide(color: Colors.grey.withOpacity(0.2)),
+                              BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
                         ),
                 ),
                 child: Row(
@@ -5153,11 +4504,11 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         border: Border.all(
           color: isHighest && hasValue
               ? const Color(0xFF2196F3)
-              : Colors.grey.withOpacity(0.3),
+              : Colors.grey.withValues(alpha: 0.3),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -5182,7 +4533,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: isHighest
-                    ? Colors.white.withOpacity(0.2)
+                    ? Colors.white.withValues(alpha: 0.2)
                     : const Color(0xFFFFF7CC),
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -5202,184 +4553,13 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   // Initial Cost Estimate: per-solution itemized cost matrix (AI-derived items)
-  Widget _buildCategoryCostMatrix() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.25)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 4))
-        ],
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const Text('Initial itemized estimates by solution',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-          const SizedBox(width: 8),
-          const _AiTag(),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Enter high-level estimates per AI-identified cost item for each solution. These anchor your Initial Cost Estimate.',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ),
-        ]),
-        const SizedBox(height: 12),
-        if (_categoryCostsPerSolution.isEmpty)
-          Text(
-              'Add at least one potential solution to start estimating per-category costs.',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]))
-        else
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (int i = 0; i < _categoryCostsPerSolution.length; i++) ...[
-                _categoryCostCard(i),
-                const SizedBox(height: 12),
-              ],
-            ],
-          ),
-      ]),
-    );
-  }
-
-  Widget _categoryCostCard(int solutionIndex) {
-    final rows = _rowsPerSolution[solutionIndex];
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withOpacity(0.25)),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Expanded(
-              child: Text(_solutionTitle(solutionIndex),
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w700))),
-          Chip(
-            avatar: const Icon(Icons.summarize_outlined, size: 16),
-            label: Text(
-                'Total: ${_formatCurrencyValue(_solutionTotalCost(solutionIndex))}'),
-          )
-        ]),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.grey.withOpacity(0.35))),
-          child: Row(children: const [
-            Expanded(
-                flex: 3,
-                child: Center(
-                    child: Text('Item',
-                        style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w600)))),
-            SizedBox(width: 12),
-            Expanded(
-                flex: 2,
-                child: Align(
-                    alignment: Alignment.center,
-                    child: Text('Estimated cost',
-                        style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w600)))),
-            SizedBox(width: 12),
-            Expanded(
-                flex: 4,
-                child: Center(
-                    child: Text('Comments',
-                        style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w600)))),
-            SizedBox(width: 8),
-            SizedBox(width: 36),
-          ]),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.grey.withOpacity(0.25))),
-          child: Column(children: [
-            for (final r in rows) _initialItemCostRow(r),
-          ]),
-        ),
-      ]),
-    );
-  }
-
-  Widget _categoryCostRow(int solutionIndex, String categoryKey, String label,
-      _CategoryCostEntry entry) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2)))),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(
-            flex: 3, child: Text(label, style: const TextStyle(fontSize: 12))),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 2,
-          child: Align(
-            alignment: Alignment.topRight,
-            child: VoiceTextField(
-              controller: entry.costController,
-              textAlign: TextAlign.right,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                hintText: '0.00',
-                isDense: true,
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                prefixIcon: _costFieldAiPrefix(
-                  loading: entry.aiLoading,
-                  onSuggest: () => _suggestCategoryCost(
-                      solutionIndex, categoryKey, label, entry),
-                ),
-                prefixIconConstraints:
-                    const BoxConstraints.tightFor(width: 28, height: 28),
-                suffix: _currencySuffix(_currency),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 4,
-          child: ExpandingTextField(
-            controller: entry.notesController,
-            decoration: const InputDecoration(
-              hintText: 'Assumptions or notes for this category',
-              isDense: true,
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            ),
-            minLines: 1,
-          ),
-        ),
-      ]),
-    );
-  }
 
   // Row renderer for itemized initial estimate (reuses _CostRow controllers)
   Widget _initialItemCostRow(_CostRow row) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2)))),
+          border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
       child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         Expanded(
           flex: 3,
@@ -5472,33 +4652,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   // Compact controls moved: AI icon at the start (prefix), currency at the end (suffix)
-  Widget _costFieldAiPrefix(
-      {required bool loading, required VoidCallback onSuggest}) {
-    if (loading) {
-      return const Padding(
-        padding: EdgeInsets.only(left: 6),
-        child: SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2)),
-      );
-    }
-    return IconButton(
-      onPressed: onSuggest,
-      tooltip: 'Suggest with AI',
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(width: 24, height: 24),
-      icon: const Icon(Icons.auto_awesome, size: 16, color: Colors.amber),
-    );
-  }
-
-  Widget _currencySuffix(String currency) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 4),
-      child: Text(currency,
-          style: TextStyle(fontSize: 11, color: Colors.grey[700])),
-    );
-  }
 
   Future<double?> _estimateCostForInputs({
     required String itemName,
@@ -5527,34 +4680,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     }
   }
 
-  Future<void> _suggestCategoryCost(int solutionIndex, String categoryKey,
-      String label, _CategoryCostEntry entry) async {
-    if (entry.aiLoading) return;
-    setState(() => entry.aiLoading = true);
-    try {
-      final cost = await _openAi.estimateCostForItem(
-        itemName: '$label (category estimate)',
-        description: 'High-level category estimate for $_currency',
-        assumptions: entry.notesController.text,
-        currency: _currency,
-        contextNotes: _buildUnifiedAiContext(
-          sectionLabel: 'Cost Benefit Analysis - Initial Cost Estimate',
-          forSolution: solutionIndex,
-        ),
-      );
-      if (!mounted) return;
-      setState(() {
-        final v = cost.isFinite ? cost : 0;
-        entry.costController.text =
-            v == 0 ? '' : v.toStringAsFixed(v % 1 == 0 ? 0 : 2);
-      });
-    } catch (e) {
-      debugPrint('Error estimating category cost: $e');
-    } finally {
-      if (mounted) setState(() => entry.aiLoading = false);
-    }
-  }
-
   double _initialCostEstimateTotalFor(int index) {
     if (index < 0 || index >= _categoryCostsPerSolution.length) return 0;
     final map = _categoryCostsPerSolution[index];
@@ -5573,7 +4698,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.withOpacity(0.25))),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.25))),
         child: Text(
             'Add solutions to compare values gained in Profitability Analysis.',
             style: TextStyle(fontSize: 12, color: Colors.grey[600])),
@@ -5615,10 +4740,10 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.25)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 8,
               offset: const Offset(0, 4))
         ],
@@ -5627,11 +4752,11 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         LayoutBuilder(
           builder: (context, constraints) {
             final isNarrow = constraints.maxWidth < 600;
-            final titleRow = Row(children: [
-              const Text('Initial cost estimate',
+            const titleRow = Row(children: [
+              Text('Initial cost estimate',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              const SizedBox(width: 8),
-              const _AiTag(),
+              SizedBox(width: 8),
+              _AiTag(),
             ]);
             final actionButtons = Row(
               mainAxisSize: MainAxisSize.min,
@@ -5703,244 +4828,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
 
   // Opportunity Savings Section for Step 2 (Initial Cost Estimate)
   // Shows savings that can be subtracted from total cost for identified opportunities
-  Widget _buildOpportunitySavingsSection() {
-    final activeIndex = _boundedIndex(
-        _activeTab, _rowsPerSolution.isEmpty ? 1 : _rowsPerSolution.length);
-    final totalValue = _projectBenefitTotalForSolution(activeIndex);
-    final currentSolutionTotal =
-        _rowsPerSolution.isNotEmpty ? _solutionTotalCost(activeIndex) : 0.0;
-
-    // Calculate total savings from suggestions
-    double totalSavings = 0.0;
-    for (final suggestion in _savingsSuggestions) {
-      totalSavings += suggestion.projectedSavings;
-    }
-
-    // Net cost after savings
-    final netCost = currentSolutionTotal - totalSavings;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.25)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 4))
-        ],
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const Text('Savings Calculator',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-          const SizedBox(width: 8),
-          const _AiTag(),
-          const Spacer(),
-          ElevatedButton.icon(
-            onPressed:
-                _isSavingsGenerating ? null : _generateSavingsSuggestions,
-            icon: _isSavingsGenerating
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.auto_awesome),
-            label: const Text('Generate savings scenarios'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFFD700),
-              foregroundColor: Colors.black,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-            ),
-          ),
-        ]),
-        const SizedBox(height: 8),
-        Text(
-          'Identify cost savings opportunities for this solution. Generated savings can be subtracted from the total estimated cost.',
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 16,
-          runSpacing: 12,
-          children: [
-            SizedBox(
-              width: 200,
-              height: 56,
-              child: VoiceTextField(
-                controller: _savingsTargetController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Savings target (%)',
-                  hintText: 'e.g. 10',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-              ),
-            ),
-            SizedBox(
-              width: 280,
-              height: 56,
-              child: VoiceTextField(
-                controller: _savingsNotesController,
-                maxLines: 1,
-                decoration: const InputDecoration(
-                  labelText: 'Context notes',
-                  hintText: 'Add constraints or priorities',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.withOpacity(0.25)),
-              ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(Icons.payments_outlined,
-                    size: 18, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text('Total benefits: ${_formatCurrencyValue(totalValue)}',
-                    style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w500)),
-              ]),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        if (_savingsError != null)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red.withOpacity(0.3)),
-            ),
-            child: Text(_savingsError!,
-                style: const TextStyle(color: Colors.red, fontSize: 12)),
-          ),
-        if (_savingsSuggestions.isEmpty && _savingsError == null)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-            ),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(
-                _benefitLineItems.isEmpty
-                    ? 'Add project benefits in the "Line Items" tab to enable AI savings analysis.'
-                    : 'Click "Generate savings scenarios" to identify cost reduction opportunities for this solution.',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-            ]),
-          ),
-        if (_savingsSuggestions.isNotEmpty) ...[
-          const Text('Identified Savings Opportunities',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-            ),
-            child: Column(children: [
-              for (int i = 0; i < _savingsSuggestions.length; i++)
-                _savingsSuggestionTile(i, _savingsSuggestions[i]),
-            ]),
-          ),
-          const SizedBox(height: 16),
-          // Summary: Total savings to subtract from cost
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF7CC),
-              borderRadius: BorderRadius.circular(10),
-              border:
-                  Border.all(color: const Color(0xFFFFD700).withOpacity(0.5)),
-            ),
-            child: Row(children: [
-              Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Cost Summary',
-                          style: TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 8),
-                      Row(children: [
-                        Expanded(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Estimated Solution Cost:',
-                                    style: TextStyle(
-                                        fontSize: 12, color: Colors.grey[700])),
-                                Text(_formatCurrencyValue(currentSolutionTotal),
-                                    style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600)),
-                              ]),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('−',
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.w600)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Identified Savings:',
-                                    style: TextStyle(
-                                        fontSize: 12, color: Colors.grey[700])),
-                                Text(_formatCurrencyValue(totalSavings),
-                                    style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.green)),
-                              ]),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('=',
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.w600)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Net Cost:',
-                                    style: TextStyle(
-                                        fontSize: 12, color: Colors.grey[700])),
-                                Text(_formatCurrencyValue(netCost),
-                                    style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700)),
-                              ]),
-                        ),
-                      ]),
-                    ]),
-              ),
-            ]),
-          ),
-        ],
-      ]),
-    );
-  }
 
   Widget _buildContingencyButtons(int solutionIndex) {
     return Container(
@@ -5948,7 +4835,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.grey.withOpacity(0.25)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
@@ -6035,11 +4922,11 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                             color: Colors.grey.shade200,
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                                color: Colors.grey.withOpacity(0.35))),
-                        child: Row(children: [
+                                color: Colors.grey.withValues(alpha: 0.35))),
+                        child: const Row(children: [
                           SizedBox(
                             width: 300,
-                            child: const Align(
+                            child: Align(
                               alignment: Alignment.center,
                               child: Text('Item',
                                   style: TextStyle(
@@ -6047,20 +4934,20 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                                       fontWeight: FontWeight.w600)),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           SizedBox(
                             width: 150,
-                            child: const Align(
+                            child: Align(
                                 alignment: Alignment.center,
                                 child: Text('Estimated cost',
                                     style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600))),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           SizedBox(
                             width: 300,
-                            child: const Align(
+                            child: Align(
                               alignment: Alignment.center,
                               child: Text('Comments',
                                   style: TextStyle(
@@ -6068,10 +4955,10 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                                       fontWeight: FontWeight.w600)),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           SizedBox(
                             width: _initialCostActionsColumnWidth,
-                            child: const Align(
+                            child: Align(
                               alignment: Alignment.center,
                               child: Text('Actions',
                                   style: TextStyle(
@@ -6087,7 +4974,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                                color: Colors.grey.withOpacity(0.25))),
+                                color: Colors.grey.withValues(alpha: 0.25))),
                         child: Column(
                           children: [
                             ConstrainedBox(
@@ -6111,13 +4998,13 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                                   border: Border(
                                       top: BorderSide(
                                           color:
-                                              Colors.grey.withOpacity(0.2)))),
+                                              Colors.grey.withValues(alpha: 0.2)))),
                               child: Row(children: [
-                                Expanded(
+                                const Expanded(
                                   flex: 3,
                                   child: Center(
                                     child: WrappedText('Total',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w700)),
                                   ),
@@ -6137,11 +5024,11 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Expanded(flex: 4, child: const SizedBox()),
+                                const Expanded(flex: 4, child: SizedBox()),
                                 const SizedBox(width: 8),
-                                SizedBox(
+                                const SizedBox(
                                   width: _initialCostActionsColumnWidth,
-                                  child: const SizedBox(),
+                                  child: SizedBox(),
                                 ),
                               ]),
                             ),
@@ -6280,9 +5167,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       final desc = row.descriptionController.text.trim();
       final assumptions = row.assumptionsController.text.trim();
       final cost = row.currentCost();
-      final hasName = name.isNotEmpty && name.toLowerCase() != 'name';
-      final hasDesc =
-          desc.isNotEmpty && !desc.toLowerCase().startsWith('lorem ipsum');
+      final hasName = name.isNotEmpty;
+      final hasDesc = desc.isNotEmpty;
       final hasAssumptions = assumptions.isNotEmpty;
       return hasName || hasDesc || hasAssumptions || cost > 0;
     }
@@ -6314,13 +5200,13 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     _CostRow? row,
   }) async {
     final itemController =
-        TextEditingController(text: row?.itemController.text ?? '');
+        SpellCheckTextEditingController(text: row?.itemController.text ?? '');
     final descriptionController =
-        TextEditingController(text: row?.descriptionController.text ?? '');
+        SpellCheckTextEditingController(text: row?.descriptionController.text ?? '');
     final costController =
-        TextEditingController(text: row?.costController.text ?? '');
+        SpellCheckTextEditingController(text: row?.costController.text ?? '');
     final assumptionsController =
-        TextEditingController(text: row?.assumptionsController.text ?? '');
+        SpellCheckTextEditingController(text: row?.assumptionsController.text ?? '');
     bool isSuggesting = false;
     final readOnly = mode == _EditorDialogMode.view;
     final result = await showDialog<_InitialCostRowDraft>(
@@ -6474,7 +5360,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
@@ -6543,7 +5429,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.withOpacity(0.2))),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.2))),
         child: const Text(
             'Add one or more solutions to see ROI, NPV, and IRR results.'),
       );
@@ -6564,10 +5450,10 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.25)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 8,
               offset: const Offset(0, 4))
         ],
@@ -6581,7 +5467,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           decoration: BoxDecoration(
               color: Colors.grey.shade200,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.grey.withOpacity(0.35))),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.35))),
           child: Row(children: [
             const Expanded(
                 flex: 4,
@@ -6617,7 +5503,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.grey.withOpacity(0.25))),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.25))),
           child: Column(children: [
             for (int i = 0; i < count; i++) _profitabilityRow(i),
           ]),
@@ -6649,7 +5535,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
           border: Border(
               top: BorderSide(
-                  color: Colors.grey.withOpacity(index == 0 ? 0 : 0.2)))),
+                  color: Colors.grey.withValues(alpha: index == 0 ? 0 : 0.2)))),
       child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         Expanded(
             flex: 4,
@@ -6694,7 +5580,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey.withOpacity(0.25))),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.25))),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(_solutionTitle(index),
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
@@ -6717,57 +5603,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     );
   }
 
-  Widget _savingsSuggestionTile(
-      int index, AiBenefitSavingsSuggestion suggestion) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        border: Border(
-            top: BorderSide(
-                color: Colors.grey.withOpacity(index == 0 ? 0 : 0.2))),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Text('${index + 1}. ${suggestion.lever}',
-              style:
-                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-          const Spacer(),
-          Text('${suggestion.confidence} confidence',
-              style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-        ]),
-        const SizedBox(height: 4),
-        Text(
-          suggestion.recommendation,
-          style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 12,
-          runSpacing: 6,
-          children: [
-            Chip(
-              avatar: const Icon(Icons.savings_outlined, size: 16),
-              label: Text(
-                  'Projected savings: ${_formatCurrencyValue(suggestion.projectedSavings)}'),
-            ),
-            Chip(
-              avatar: const Icon(Icons.schedule_outlined, size: 16),
-              label: Text(
-                  'Timeframe: ${suggestion.timeframe.isEmpty ? 'TBD' : suggestion.timeframe}'),
-            ),
-          ],
-        ),
-        if (suggestion.rationale.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Text(
-            suggestion.rationale,
-            style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
-          ),
-        ],
-      ]),
-    );
-  }
-
   Widget _buildNotesSection() {
     return Container(
       width: double.infinity,
@@ -6775,7 +5610,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
       ),
       child: ExpandingTextField(
         controller: _notesController,
@@ -6930,7 +5765,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
         ),
         child: const Text(
             'Add at least one potential solution to start modelling costs and benefits.'),
@@ -7048,10 +5883,10 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.25)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 4))
         ],
@@ -7107,7 +5942,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         Text(summaryLine,
             style: TextStyle(fontSize: 11, color: Colors.grey[500])),
         const SizedBox(height: 16),
-        Divider(color: Colors.grey.withOpacity(0.2), height: 1),
+        Divider(color: Colors.grey.withValues(alpha: 0.2), height: 1),
         const SizedBox(height: 12),
         const Text('Cost assumptions',
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
@@ -7208,7 +6043,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                 'Explain why this investment level is appropriate (e.g., resourcing, integrations, governance).',
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.withOpacity(0.3))),
+                borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3))),
             isDense: true,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -7282,7 +6117,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       required ValueChanged<int> onChanged}) {
     final boundedValue = _boundedIndex(value, options.length);
     return DropdownButtonFormField<int>(
-      value: boundedValue,
+      initialValue: boundedValue,
       itemHeight: null, // allow multi-line menu entries without overflow
       menuMaxHeight: 320,
       isExpanded: true, // Prevent overflow by expanding to fill available space
@@ -7291,7 +6126,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.grey.withOpacity(0.3))),
+            borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3))),
         isDense: true,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -7409,64 +6244,15 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     }
   }
 
-  Widget _buildDetailedBreakdown(
-      {required bool isMobile, required String horizonLabel}) {
-    final tabsCount = _rowsPerSolution.length;
-    final int activeIndex;
-    if (tabsCount == 0) {
-      activeIndex = 0;
-    } else if (_activeTab >= tabsCount) {
-      activeIndex = tabsCount - 1;
-    } else if (_activeTab < 0) {
-      activeIndex = 0;
-    } else {
-      activeIndex = _activeTab;
-    }
-
-    return Container(
-      key: _tablesSectionKey,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // Header actions: currency only. Tabs removed per request.
-        Row(children: [
-          const Spacer(),
-          _currencyDropdown(),
-        ]),
-        const SizedBox(height: 12),
-        if (tabsCount > 0) ...[
-          for (int i = 0; i < tabsCount; i++) ...[
-            const SizedBox(height: 12),
-            Text(_solutionTitle(i),
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            _tableForIndex(i, isMobile: isMobile, horizonLabel: horizonLabel),
-          ]
-        ] else ...[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-            ),
-            child: const Text(
-                'Add a solution to unlock the ROI and NPV breakdown.'),
-          ),
-        ],
-      ]),
-    );
-  }
-
   Widget _errorBanner(String message, {VoidCallback? onRetry}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.08),
+        color: Colors.red.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.red.withOpacity(0.3)),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
       ),
       child: Row(children: [
         const Icon(Icons.cloud_off_outlined, color: Colors.red, size: 18),
@@ -7574,27 +6360,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     if (index >= _rowsPerSolution.length) return 0;
     return _rowsPerSolution[index]
         .fold<double>(0, (sum, row) => sum + row.currentCost());
-  }
-
-  double _solutionTotalNpv(int index) {
-    if (index >= _rowsPerSolution.length) return 0;
-    return _rowsPerSolution[index]
-        .fold<double>(0, (sum, row) => sum + row.currentNpv());
-  }
-
-  double _solutionAverageRoi(int index) {
-    if (index >= _rowsPerSolution.length) return 0;
-    double total = 0;
-    int count = 0;
-    for (final row in _rowsPerSolution[index]) {
-      final roi = row.currentRoi();
-      final hasData = row.currentCost() > 0 || roi != 0;
-      if (roi.isFinite && hasData) {
-        total += roi;
-        count++;
-      }
-    }
-    return count == 0 ? 0 : total / count;
   }
 
   int _solutionItemCount(int index) {
@@ -7992,10 +6757,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       final row = rows[j];
       if (j < targetLen) {
         final it = filtered[j];
-        row.itemController.text = it.item.isEmpty ? 'Name' : it.item;
-        row.descriptionController.text = it.description.isEmpty
-            ? 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum...'
-            : it.description;
+        row.itemController.text = it.item;
+        row.descriptionController.text = it.description;
         row.applyBaseline(
             cost: it.estimatedCost,
             roiPercent: it.roiPercent,
@@ -8115,10 +6878,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     for (final entry in map.entries) {
       final key = entry.key;
       final costCtrl = entry.value.costController;
-      final noteCtrl = entry.value.notesController;
       final hasUserCost = (costCtrl.text.trim().isNotEmpty) &&
           (_parseCurrencyInput(costCtrl.text.trim()) > 0);
-      final hasUserNotes = noteCtrl.text.trim().isNotEmpty;
       final t = (totals[key] ?? 0);
       if (!hasUserCost && t > 0) {
         costCtrl.text = t.toStringAsFixed(t % 1 == 0 ? 0 : 2);
@@ -8182,12 +6943,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = (e.toString().contains('Failed to fetch') ||
-                e.toString().contains('ClientException') ||
-                e.toString().contains('XMLHttpRequest') ||
-                e.toString().contains('Connection refused'))
-            ? 'AI assist is being set up. Please try again later or enter content manually.'
-            : e.toString();
+        _error = aiErrorMessage(e);
       });
     } finally {
       if (mounted) setState(() => _isGenerating = false);
@@ -8202,10 +6958,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     // Add to Step 3 breakdown as a new row with baseline derived from AI
     final row = _CostRow(currencyProvider: () => _currency);
     _attachRowDirtyListeners(row);
-    row.itemController.text = item.item.isEmpty ? 'Name' : item.item;
-    row.descriptionController.text = item.description.isEmpty
-        ? 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum...'
-        : item.description;
+    row.itemController.text = item.item;
+    row.descriptionController.text = item.description;
     row.applyBaseline(
         cost: item.estimatedCost,
         roiPercent: item.roiPercent,
@@ -8231,30 +6985,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     _markDirty();
   }
 
-  Widget _tabButton(
-      {required String label,
-      required bool isActive,
-      required VoidCallback onTap}) {
-    return ElevatedButton(
-      onPressed: onTap,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isActive ? const Color(0xFFFFD700) : Colors.grey[200],
-        foregroundColor: Colors.black,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
-      child: Text(
-        label,
-        overflow: TextOverflow.ellipsis,
-        maxLines: 1,
-        style: TextStyle(
-            fontSize: 13,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal),
-      ),
-    );
-  }
-
   Widget _currencyDropdown() {
     final availableCurrencies = _currencyRates.keys.toSet();
     final selectedCurrency =
@@ -8264,7 +6994,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.withOpacity(0.35))),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.35))),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: selectedCurrency,
@@ -8285,302 +7015,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           },
         ),
       ),
-    );
-  }
-
-  Widget _tableForIndex(int index,
-      {required bool isMobile, required String horizonLabel}) {
-    final rows = _rowsPerSolution[index];
-    if (isMobile) {
-      return Column(
-          children: rows.map((r) => _mobileCard(r, horizonLabel)).toList());
-    }
-    return Column(children: [
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.grey.withOpacity(0.35))),
-        child: Row(children: [
-          const Expanded(
-              flex: 2,
-              child: Text('Potential Solution',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
-          const Expanded(
-              flex: 5,
-              child: Text('Description',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
-          const Expanded(
-              flex: 2,
-              child: Align(
-                  alignment: Alignment.center,
-                  child: Text('Return On Investment',
-                      style: TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600)))),
-          const SizedBox(width: 16),
-          Expanded(
-            flex: 2,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text('Net Present Value ($horizonLabel)',
-                  style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600)),
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
-              flex: 2,
-              child: Align(
-                  alignment: Alignment.center,
-                  child: Text('Estimated Cost',
-                      style: TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600)))),
-          const SizedBox(width: 16),
-          const Expanded(
-              flex: 3,
-              child: Text('Comments',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
-        ]),
-      ),
-      const SizedBox(height: 8),
-      Container(
-        decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.grey.withOpacity(0.35))),
-        child: Column(children: rows.map((r) => _tableRow(r)).toList()),
-      ),
-    ]);
-  }
-
-  Widget _tableRow(_CostRow row) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-          border:
-              Border(top: BorderSide(color: Colors.grey.withOpacity(0.25)))),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(
-          flex: 2,
-          child: ExpandingTextField(
-            controller: row.itemController,
-            decoration: const InputDecoration(
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-                hintText: 'Name'),
-            style: const TextStyle(fontSize: 13, color: Colors.black87),
-            minLines: 1,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 5,
-          child: ExpandingTextField(
-            controller: row.descriptionController,
-            decoration: const InputDecoration(
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-                hintText: 'Lorem ipsum ...'),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-            minLines: 1,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 2,
-          child: Align(
-            alignment: Alignment.topRight,
-            child: VoiceTextField(
-              controller: row.roiController,
-              textAlign: TextAlign.right,
-              readOnly: true,
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                  hintText: '0%'),
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 2,
-          child: Align(
-            alignment: Alignment.topRight,
-            child: VoiceTextField(
-              controller: row.npvController,
-              textAlign: TextAlign.right,
-              readOnly: true,
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                  hintText: '0.00'),
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 2,
-          child: Align(
-            alignment: Alignment.topRight,
-            child: VoiceTextField(
-              controller: row.costController,
-              textAlign: TextAlign.right,
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                  hintText: '0.00'),
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 3,
-          child: ExpandingTextField(
-            controller: row.assumptionsController,
-            minLines: 1,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
-              hintText: 'Assumptions or notes',
-            ),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        ),
-      ]),
-    );
-  }
-
-  Widget _mobileCard(_CostRow row, String horizonLabel) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.withOpacity(0.35))),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Potential Solution',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 6),
-        ExpandingTextField(
-            controller: row.itemController,
-            decoration: const InputDecoration(
-                border: OutlineInputBorder(), isDense: true, hintText: 'Name'),
-            minLines: 1),
-        const SizedBox(height: 10),
-        const Text('Description',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 6),
-        ExpandingTextField(
-            controller: row.descriptionController,
-            decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                isDense: true,
-                hintText: 'Lorem ipsum...'),
-            minLines: 2),
-        const SizedBox(height: 10),
-        const Text('Return On Investment',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 6),
-        VoiceTextField(
-            controller: row.roiController,
-            readOnly: true,
-            decoration: const InputDecoration(
-                border: OutlineInputBorder(), isDense: true, hintText: '0%')),
-        const SizedBox(height: 10),
-        Text('Net Present Value ($horizonLabel)',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 6),
-        VoiceTextField(
-            controller: row.npvController,
-            readOnly: true,
-            decoration: const InputDecoration(
-                border: OutlineInputBorder(), isDense: true, hintText: '0.00')),
-        const SizedBox(height: 10),
-        const Text('Estimated Cost',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 6),
-        VoiceTextField(
-            controller: row.costController,
-            decoration: const InputDecoration(
-                border: OutlineInputBorder(), isDense: true, hintText: '0.00')),
-        const SizedBox(height: 10),
-        const Text('Comments',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 6),
-        ExpandingTextField(
-          controller: row.assumptionsController,
-          decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              isDense: true,
-              hintText: 'Assumptions or notes'),
-          minLines: 2,
-        ),
-      ]),
-    );
-  }
-
-  Widget _buildPhaseNavigation() {
-    final phases = [
-      'Initiation Phase',
-      'Initiation: Front End Planning',
-      'Workflow Roadmap',
-      'Agile Roadmap',
-      'Contracting',
-      'Procurement'
-    ];
-    return Container(
-      height: 80,
-      color: Colors.white,
-      child: Row(children: [
-        IconButton(
-          icon: const Icon(Icons.arrow_back_ios, size: 16),
-          onPressed: () {
-            _handleBackNavigation();
-          },
-        ),
-        Expanded(
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: phases.length,
-            itemBuilder: (context, index) {
-              final isActive = index == 0;
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                    color:
-                        isActive ? const Color(0xFFFFD700) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(20)),
-                child: Center(
-                  child: Text(
-                    phases[index],
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight:
-                            isActive ? FontWeight.w600 : FontWeight.normal,
-                        color: isActive ? Colors.black : Colors.grey[600]),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        IconButton(
-            icon: const Icon(Icons.arrow_forward_ios, size: 16),
-            onPressed: () {}),
-      ]),
     );
   }
 
@@ -8641,8 +7075,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         .toList();
     if (eligible.isEmpty) {
       setState(() {
-        _savingsError =
-            'Add at least one benefit with unit value and units before generating savings scenarios.';
         _clearSavingsSuggestionsForSolution(activeIndex);
       });
       return;
@@ -8660,7 +7092,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     if (!mounted) return;
     setState(() {
       _isSavingsGenerating = true;
-      _savingsError = null;
     });
 
     try {
@@ -8692,7 +7123,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _savingsError = e.toString();
         _clearSavingsSuggestionsForSolution(activeIndex);
       });
     } finally {
@@ -8830,11 +7260,11 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _projectValueError = e.toString();
+        _projectValueError = aiErrorMessage(e);
       });
       if (showFeedback && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to regenerate project value: $e')),
+          SnackBar(content: Text('Failed to regenerate project value: ${aiErrorMessage(e)}')),
         );
       }
     } finally {
@@ -9093,12 +7523,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = (e.toString().contains('Failed to fetch') ||
-                e.toString().contains('ClientException') ||
-                e.toString().contains('XMLHttpRequest') ||
-                e.toString().contains('Connection refused'))
-            ? 'AI assist is being set up. Please try again later or enter content manually.'
-            : e.toString();
+        _error = aiErrorMessage(e);
         _solutionLoading.remove(index);
       });
     }
@@ -9257,16 +7682,16 @@ class _BenefitLineItemEntry {
     double unitValue = 0,
     double units = 0,
     String notes = '',
-  })  : titleController = TextEditingController(text: title),
-        unitValueController = TextEditingController(
+  })  : titleController = SpellCheckTextEditingController(text: title),
+        unitValueController = SpellCheckTextEditingController(
           text: unitValue == 0
               ? ''
               : unitValue.toStringAsFixed(unitValue % 1 == 0 ? 0 : 2),
         ),
-        unitsController = TextEditingController(
+        unitsController = SpellCheckTextEditingController(
           text: units == 0 ? '' : units.toStringAsFixed(units % 1 == 0 ? 0 : 2),
         ),
-        notesController = TextEditingController(text: notes);
+        notesController = SpellCheckTextEditingController(text: notes);
 
   String get title => titleController.text.trim();
 
@@ -9330,14 +7755,12 @@ class _BenefitCategorySummary {
 }
 
 class _CostRow {
-  final TextEditingController itemController =
-      TextEditingController(text: 'Name');
-  final TextEditingController descriptionController = TextEditingController(
-      text: 'Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum...');
-  final TextEditingController costController = TextEditingController();
-  final TextEditingController roiController = TextEditingController();
-  final TextEditingController npvController = TextEditingController();
-  final TextEditingController assumptionsController = TextEditingController();
+  final TextEditingController itemController = SpellCheckTextEditingController();
+  final TextEditingController descriptionController = SpellCheckTextEditingController();
+  final TextEditingController costController = SpellCheckTextEditingController();
+  final TextEditingController roiController = SpellCheckTextEditingController();
+  final TextEditingController npvController = SpellCheckTextEditingController();
+  final TextEditingController assumptionsController = SpellCheckTextEditingController();
   bool aiLoading = false;
 
   // Baseline values used for recomputation
@@ -9443,44 +7866,9 @@ class _CostRow {
 
   String _num(double v) => (v.isFinite ? v : 0).toStringAsFixed(2);
 
-  String _formatCurrency(double v) {
-    final formatted = _formatNumber(v);
-    final code = currencyProvider();
-    return '$code $formatted';
-  }
-
   String _formatPercent(double v) {
     final n = v.isFinite ? v : 0;
     return '${n.toStringAsFixed(1)}%';
-  }
-
-  String _formatNumber(double v) {
-    final abs = v.abs();
-    String s;
-    if (abs >= 1000000000) {
-      s = '${(v / 1000000000).toStringAsFixed(2)}B';
-    } else if (abs >= 1000000) {
-      s = '${(v / 1000000).toStringAsFixed(2)}M';
-    } else if (abs >= 1000) {
-      s = _thousands(v);
-    } else {
-      s = v.toStringAsFixed(2);
-    }
-    return s;
-  }
-
-  String _thousands(double v) {
-    final fixed = v.toStringAsFixed(2);
-    final parts = fixed.split('.');
-    final intPart = parts[0];
-    final decPart = parts.length > 1 ? parts[1] : '00';
-    final buffer = StringBuffer();
-    for (int i = 0; i < intPart.length; i++) {
-      final reverseIndex = intPart.length - i - 1;
-      buffer.write(intPart[i]);
-      if (reverseIndex % 3 == 0 && i != intPart.length - 1) buffer.write(',');
-    }
-    return '$buffer.$decPart';
   }
 
   void dispose() {
@@ -9497,7 +7885,7 @@ class _SolutionCostContext {
   int resourceIndex = 0;
   int timelineIndex = 1;
   int complexityIndex = 0;
-  final TextEditingController justificationController = TextEditingController();
+  final TextEditingController justificationController = SpellCheckTextEditingController();
   bool autoGenerated = true;
   bool _updating = false;
 
@@ -9630,8 +8018,8 @@ class _BasisFrequencyToggle extends StatelessWidget {
 
 class _CategoryCostEntry {
   final String categoryKey;
-  final TextEditingController costController = TextEditingController();
-  final TextEditingController notesController = TextEditingController();
+  final TextEditingController costController = SpellCheckTextEditingController();
+  final TextEditingController notesController = SpellCheckTextEditingController();
   VoidCallback? _listener;
   bool aiLoading = false;
 

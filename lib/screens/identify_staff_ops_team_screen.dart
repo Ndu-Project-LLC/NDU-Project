@@ -1,7 +1,6 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ndu_project/screens/salvage_disposal_team_screen.dart';
-import 'package:ndu_project/screens/technical_debt_management_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -16,10 +15,9 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/csv_import_dialog.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class IdentifyStaffOpsTeamScreen extends StatefulWidget {
   const IdentifyStaffOpsTeamScreen({super.key});
 
@@ -45,11 +43,6 @@ class _IdentifyStaffOpsTeamScreenState
 
   bool _autoGenerationTriggered = false;
   bool _isAutoGenerating = false;
-  List<_HandoffItemData> _handoffItems = const [
-    _HandoffItemData('On-call rotation published', 'Pending confirmation'),
-    _HandoffItemData('Ops runbook review', 'Scheduled for Oct 16'),
-    _HandoffItemData('Stakeholder sign-off', 'Awaiting sponsor'),
-  ];
 
   @override
   void initState() {
@@ -65,7 +58,7 @@ class _IdentifyStaffOpsTeamScreenState
       screenTitle: 'Identify Staff & Ops Team',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text(
             'Notes',
@@ -82,7 +75,7 @@ class _IdentifyStaffOpsTeamScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: 'Identify and Staff Ops Team',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(padding),
@@ -101,17 +94,13 @@ class _IdentifyStaffOpsTeamScreenState
               children: [
                 _buildRosterPanel(),
                 const SizedBox(height: 20),
-                _buildCoveragePanel(),
-                const SizedBox(height: 20),
                 _buildChecklistPanel(),
-                const SizedBox(height: 20),
-                _buildHandoffPanel(),
                 const SizedBox(height: 24),
                 LaunchPhaseNavigation(
-                  backLabel: 'Back: Technical Debt Management',
-                  nextLabel: 'Next: Salvage & Disposal Plan',
-                  onBack: () => TechnicalDebtManagementScreen.open(context),
-                  onNext: () => SalvageDisposalTeamScreen.open(context),
+                  backLabel: PlanningPhaseNavigation.backLabel('identify_staff_ops_team'),
+                  nextLabel: PlanningPhaseNavigation.nextLabel('identify_staff_ops_team'),
+                  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'identify_staff_ops_team'),
+                  onNext: () => PlanningPhaseNavigation.goToNext(context, 'identify_staff_ops_team'),
                 ),
               ],
             ),
@@ -128,7 +117,7 @@ class _IdentifyStaffOpsTeamScreenState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Color(0xFFFFC812),
+            color: const Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(6),
           ),
           child: const Text(
@@ -140,10 +129,10 @@ class _IdentifyStaffOpsTeamScreenState
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(
+            const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     'Identify & Staff Ops Team',
                     style: TextStyle(
@@ -169,39 +158,6 @@ class _IdentifyStaffOpsTeamScreenState
     );
   }
 
-  Widget _buildHeaderActions() {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        _actionButton(Icons.upload_file_outlined, 'Import CSV',
-            onPressed: () async {
-          final rows = await showCsvImportDialog(context,
-              tableTitle: 'Ops Team',
-              columns: [
-                CsvColumnSpec(
-                    key: 'name', label: 'Member Name', sampleValue: 'John Doe'),
-                CsvColumnSpec(
-                    key: 'role', label: 'Role', sampleValue: 'Operations Lead'),
-                CsvColumnSpec(
-                    key: 'email',
-                    label: 'Email',
-                    sampleValue: 'john@company.com'),
-              ]);
-          if (rows == null || !mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('${rows.length} members imported from CSV'),
-              backgroundColor: Colors.green));
-        }),
-        _actionButton(Icons.person_add_alt_1, 'Add role',
-            onPressed: () => _showAddMemberDialog(context)),
-        _actionButton(Icons.assignment_ind_outlined, 'Assign member'),
-        _actionButton(Icons.description_outlined, 'Export roster'),
-        _primaryButton('Publish handoff'),
-      ],
-    );
-  }
-
   Widget _actionButton(IconData icon, String label, {VoidCallback? onPressed}) {
     return OutlinedButton.icon(
       onPressed: onPressed ?? () {},
@@ -214,28 +170,6 @@ class _IdentifyStaffOpsTeamScreenState
       style: OutlinedButton.styleFrom(
         side: const BorderSide(color: Color(0xFFE2E8F0)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
-
-  Widget _primaryButton(String label) {
-    return ElevatedButton.icon(
-      onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  'Ops handoff published. Continue updating checklist completion as evidence.')),
-        );
-      },
-      icon: const Icon(Icons.check_circle_outline, size: 18),
-      label: Text(label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF0EA5E9),
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10)),
       ),
@@ -261,27 +195,24 @@ class _IdentifyStaffOpsTeamScreenState
         .collection('ops_checklist')
         .limit(1)
         .get();
-    final handoffDoc = await _handoffDocRef(projectId).get();
 
     final needsMembers = membersSnap.docs.isEmpty;
     final needsChecklist = checklistSnap.docs.isEmpty;
-    final needsHandoff = !handoffDoc.exists ||
-        (_HandoffItemData.fromList(handoffDoc.data()?['items']).isEmpty);
 
-    if (!needsMembers && !needsChecklist && !needsHandoff) {
+    if (!needsMembers && !needsChecklist) {
       if (mounted) setState(() => _isAutoGenerating = false);
       return;
     }
 
     Map<String, List<LaunchEntry>> generated = {};
-    try {
+if (!mounted) return;
+        try {
       generated = await ExecutionPhaseAiSeed.generateEntries(
         context: context,
         section: 'Identify & Staff Ops Team',
         sections: const {
           'roles': 'Ops roles with responsibilities and readiness',
           'checklist': 'Ops readiness checklist items',
-          'handoff': 'Handoff summary items and status',
         },
         itemsPerSection: 4,
       );
@@ -312,16 +243,6 @@ class _IdentifyStaffOpsTeamScreenState
           item: item,
           completed: false,
         );
-      }
-    }
-    if (needsHandoff) {
-      final handoffItems = _mapHandoffItems(generated['handoff']);
-      if (handoffItems.isNotEmpty) {
-        await _handoffDocRef(projectId).set({
-          'items': handoffItems.map((item) => item.toMap()).toList(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-        setState(() => _handoffItems = handoffItems);
       }
     }
 
@@ -364,19 +285,6 @@ class _IdentifyStaffOpsTeamScreenState
         .toList();
   }
 
-  List<_HandoffItemData> _mapHandoffItems(List<LaunchEntry>? entries) {
-    if (entries == null) return [];
-    return entries
-        .map((entry) => _HandoffItemData(
-              entry.title.trim(),
-              entry.status?.trim().isNotEmpty == true
-                  ? entry.status!.trim()
-                  : 'Pending',
-            ))
-        .where((item) => item.title.isNotEmpty)
-        .toList();
-  }
-
   String _extractField(String text, String key) {
     final match = RegExp('$key\\s*[:=-]\\s*([^|;\\n]+)', caseSensitive: false)
         .firstMatch(text);
@@ -386,124 +294,6 @@ class _IdentifyStaffOpsTeamScreenState
   int _extractNumber(String text, {required int fallback}) {
     final match = RegExp(r'(\\d{1,3})').firstMatch(text);
     return match != null ? int.parse(match.group(1) ?? '$fallback') : fallback;
-  }
-
-  DocumentReference<Map<String, dynamic>> _handoffDocRef(String projectId) {
-    return FirebaseFirestore.instance
-        .collection('projects')
-        .doc(projectId)
-        .collection('execution_phase_sections')
-        .doc('ops_handoff');
-  }
-
-  Widget _buildCoveragePanel() {
-    if (_projectId == null) {
-      return _PanelShell(
-        title: 'Capability coverage',
-        subtitle: 'Readiness by operational capability',
-        child: const SizedBox.shrink(),
-      );
-    }
-
-    return _PanelShell(
-      title: 'Capability coverage',
-      subtitle: 'Readiness by operational capability',
-      child: RepaintBoundary(
-        child: StreamBuilder<List<OpsMemberModel>>(
-          stream: OpsService.streamMembers(_projectId!),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: Text('No member data available',
-                      style: TextStyle(color: Color(0xFF64748B))),
-                ),
-              );
-            }
-
-            final members = snapshot.data!;
-            final avgReadiness = members
-                    .map((m) => m.readinessScore / 100.0)
-                    .reduce((a, b) => a + b) /
-                members.length;
-            final incidentResponse = members
-                    .where((m) =>
-                        m.responsibility.toLowerCase().contains('incident') ||
-                        m.responsibility.toLowerCase().contains('response'))
-                    .isEmpty
-                ? 0.0
-                : members
-                        .where((m) =>
-                            m.responsibility
-                                .toLowerCase()
-                                .contains('incident') ||
-                            m.responsibility.toLowerCase().contains('response'))
-                        .map((m) => m.readinessScore / 100.0)
-                        .reduce((a, b) => a + b) /
-                    members
-                        .where((m) =>
-                            m.responsibility
-                                .toLowerCase()
-                                .contains('incident') ||
-                            m.responsibility.toLowerCase().contains('response'))
-                        .length;
-            final trainingCompletion =
-                avgReadiness * 0.75; // Estimate based on readiness
-            final serviceDesk = avgReadiness * 0.9; // Estimate
-
-            final capabilities = [
-              _CapabilityItem(
-                  'Incident response coverage',
-                  incidentResponse > 0 ? incidentResponse : avgReadiness * 0.78,
-                  const Color(0xFF0EA5E9)),
-              _CapabilityItem('Runbook completeness', avgReadiness * 0.64,
-                  const Color(0xFF6366F1)),
-              _CapabilityItem('Training completion', trainingCompletion,
-                  const Color(0xFFF59E0B)),
-              _CapabilityItem('Service desk readiness', serviceDesk,
-                  const Color(0xFF10B981)),
-            ];
-
-            return Column(
-              children: capabilities.map((capability) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                              child: Text(capability.label,
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600))),
-                          Text('${(capability.progress * 100).round()}%',
-                              style: const TextStyle(
-                                  fontSize: 11, color: Color(0xFF64748B))),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: LinearProgressIndicator(
-                          value: capability.progress,
-                          minHeight: 8,
-                          backgroundColor: const Color(0xFFE5E7EB),
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(capability.color),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            );
-          },
-        ),
-      ),
-    );
   }
 
   Widget _buildRosterPanel() {
@@ -761,6 +551,7 @@ class _IdentifyStaffOpsTeamScreenState
           final items = snapshot.data ?? [];
 
           return LaunchDataTable(
+            virtualizedBodyHeight: launchTableBodyCap,
             title: 'Readiness Checklist',
             subtitle:
                 'Pre-handover verification — add, edit, or remove items inline',
@@ -796,7 +587,7 @@ class _IdentifyStaffOpsTeamScreenState
                   notes: values['Notes'] ?? '',
                 );
               } catch (e) {
-                if (mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Error adding item: $e')),
                   );
@@ -819,7 +610,7 @@ class _IdentifyStaffOpsTeamScreenState
                       itemId: item.id,
                     );
                   } catch (e) {
-                    if (mounted) {
+                    if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error deleting item: $e')),
                       );
@@ -876,18 +667,6 @@ class _IdentifyStaffOpsTeamScreenState
             },
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildHandoffPanel() {
-    return _PanelShell(
-      title: 'Handoff summary',
-      subtitle: 'Critical items to complete before launch',
-      child: Column(
-        children: _handoffItems
-            .map((item) => _HandoffItem(item.title, item.status))
-            .toList(),
       ),
     );
   }
@@ -952,15 +731,15 @@ class _IdentifyStaffOpsTeamScreenState
   Future<void> _showMemberDialog(
       BuildContext context, OpsMemberModel? member, String projectId) async {
     final isEdit = member != null;
-    final nameController = TextEditingController(text: member?.name ?? '');
-    final roleController = TextEditingController(text: member?.role ?? '');
+    final nameController = SpellCheckTextEditingController(text: member?.name ?? '');
+    final roleController = SpellCheckTextEditingController(text: member?.role ?? '');
     final responsibilityController =
-        TextEditingController(text: member?.responsibility ?? '');
+        SpellCheckTextEditingController(text: member?.responsibility ?? '');
     final statusController =
-        TextEditingController(text: member?.status ?? 'Active');
+        SpellCheckTextEditingController(text: member?.status ?? 'Active');
     final readinessController =
-        TextEditingController(text: member?.readinessScore.toString() ?? '0');
-    final notesController = TextEditingController(text: member?.notes ?? '');
+        SpellCheckTextEditingController(text: member?.readinessScore.toString() ?? '0');
+    final notesController = SpellCheckTextEditingController(text: member?.notes ?? '');
 
     try {
       await showDialog(
@@ -1193,7 +972,7 @@ class _PanelShell extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1226,74 +1005,6 @@ class _PanelShell extends StatelessWidget {
   }
 }
 
-class _HandoffItem extends StatelessWidget {
-  const _HandoffItem(this.title, this.status);
-
-  final String title;
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(
-                color: Color(0xFF0EA5E9), shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600)),
-                Text(status,
-                    style: const TextStyle(
-                        fontSize: 12, color: Color(0xFF64748B))),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HandoffItemData {
-  const _HandoffItemData(this.title, this.status);
-
-  final String title;
-  final String status;
-
-  Map<String, dynamic> toMap() => {
-        'title': title,
-        'status': status,
-      };
-
-  static List<_HandoffItemData> fromList(dynamic data) {
-    if (data is! List) return [];
-    return data
-        .whereType<Map>()
-        .map((item) => _HandoffItemData(
-              item['title']?.toString() ?? '',
-              item['status']?.toString() ?? '',
-            ))
-        .where((item) => item.title.trim().isNotEmpty)
-        .toList();
-  }
-}
-
 class _OpsMemberSeed {
   const _OpsMemberSeed({
     required this.name,
@@ -1310,12 +1021,4 @@ class _OpsMemberSeed {
   final String status;
   final int readinessScore;
   final String? notes;
-}
-
-class _CapabilityItem {
-  const _CapabilityItem(this.label, this.progress, this.color);
-
-  final String label;
-  final double progress;
-  final Color color;
 }

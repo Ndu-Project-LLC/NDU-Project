@@ -179,6 +179,15 @@ class LaunchPhaseAiSeed {
       buf.writeln(stakeholdersSummary);
     }
 
+    // Latest-version overlay: topics repeated across phases are read from
+    // their most recent phase (e.g. planning supersedes initiation) — never
+    // re-anchor an AI prompt on a stale earlier copy.
+    final overlay = ProjectDataHelper.buildLatestTopicOverlay(projectData);
+    if (overlay.trim().isNotEmpty) {
+      buf.writeln();
+      buf.write(overlay);
+    }
+
     return buf.toString().trim();
   }
 
@@ -201,8 +210,8 @@ class LaunchPhaseAiSeed {
     final missingAreas = <String>[];
 
     // Check base project data
-    final projectName = projectData.projectName ?? '';
-    final projectDescription = projectData.projectDescription ?? '';
+    final projectName = projectData.projectName;
+    final projectDescription = projectData.projectDescription;
     if (projectName.isEmpty && projectDescription.isEmpty) {
       missingAreas.add('Project name and description');
     }
@@ -320,6 +329,13 @@ class LaunchPhaseAiSeed {
       sectionLabel: sectionLabel,
     );
 
+    if (!context.mounted) {
+      return const LaunchAiResult(
+        entries: {},
+        isContextSufficient: false,
+        missingAreas: [],
+      );
+    }
     final contextText = await buildFullPhaseDependencyContext(
       context,
       sectionLabel: sectionLabel,
@@ -413,7 +429,7 @@ class LaunchPhaseAiSeed {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF005BB3),
+              foregroundColor: const Color(0xFFFFC812),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
             child: const Text('Understood',

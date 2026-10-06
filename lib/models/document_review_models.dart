@@ -1,6 +1,8 @@
 /// Document review and approval tracking models for the Document Review Matrix
 library;
 
+import 'package:ndu_project/utils/unique_id.dart';
+
 /// Status of a document in the review workflow
 enum ReviewStatus {
   notStarted,
@@ -86,7 +88,7 @@ class ReviewHistoryEntry {
 
   factory ReviewHistoryEntry.fromJson(Map<String, dynamic> json) {
     return ReviewHistoryEntry(
-      id: json['id'] ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id'] ?? newId(),
       reviewerId: json['reviewerId'] ?? '',
       reviewerName: json['reviewerName'] ?? '',
       reviewerRole: json['reviewerRole'] ?? '',
@@ -247,7 +249,7 @@ class DocumentReviewItem {
 
   factory DocumentReviewItem.fromJson(Map<String, dynamic> json) {
     return DocumentReviewItem(
-      id: json['id'] ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id'] ?? newId(),
       documentId: json['documentId'] ?? '',
       documentName: json['documentName'] ?? '',
       description: json['description'] ?? '',
@@ -432,7 +434,7 @@ class DocumentReviewTemplate {
     DateTime? reviewDueDate,
   }) {
     return DocumentReviewItem(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: newId(),
       documentId: documentId,
       documentName: documentName,
       description: description,

@@ -131,7 +131,7 @@ class CsvEnabledSectionHeader extends StatelessWidget {
         icon: Icon(addIcon, size: 18),
         style: IconButton.styleFrom(
           foregroundColor: const Color(0xFF4154F1),
-          side: const BorderSide(color: Color(0xFFC7D2FE)),
+          side: const BorderSide(color: Color(0xFFFEF3C7)),
           padding: const EdgeInsets.all(8),
           minimumSize: const Size(36, 36),
         ),
@@ -142,7 +142,7 @@ class CsvEnabledSectionHeader extends StatelessWidget {
     // Full mode: Outlined button matching standalone header style
     final defaultStyle = OutlinedButton.styleFrom(
       foregroundColor: const Color(0xFF4154F1),
-      side: const BorderSide(color: Color(0xFFC7D2FE)),
+      side: const BorderSide(color: Color(0xFFFEF3C7)),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );

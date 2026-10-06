@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
@@ -10,8 +11,10 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/screen_flow_navigator.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -57,7 +60,7 @@ class _WorkingAgreement {
     String? id,
     this.category = 'Communication',
     this.description = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 }
 
 class AgileScrumConfigScreen extends StatefulWidget {
@@ -124,7 +127,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
   void initState() {
     super.initState();
     for (final f in _fields) {
-      _controllers[f.key] = TextEditingController();
+      _controllers[f.key] = SpellCheckTextEditingController();
     }
     for (final key in [
       'planning_duration',
@@ -137,7 +140,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
       _selectedValues[key] = _defaultFor(key);
     }
     for (final f in _doaFields) {
-      _doaControllers[f.key] = TextEditingController();
+      _doaControllers[f.key] = SpellCheckTextEditingController();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
@@ -219,8 +222,8 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
     _agreementCtrls.clear();
     _agreementCatCtrls.clear();
     for (final a in _agreements) {
-      _agreementCatCtrls[a.id] = TextEditingController(text: a.category);
-      _agreementCtrls[a.id] = TextEditingController(text: a.description);
+      _agreementCatCtrls[a.id] = SpellCheckTextEditingController(text: a.category);
+      _agreementCtrls[a.id] = SpellCheckTextEditingController(text: a.description);
     }
   }
 
@@ -317,6 +320,11 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
                           onForward: () => PlanningPhaseNavigation.goToNext(
                               context, 'agile_scrum_config'),
                           onExportPdf: _exportPdf,
+                        ),
+                        const SizedBox(height: 24),
+                        ScreenFlowNavigator(
+                          steps: PlanningPhaseNavigation.agileDeliverySteps,
+                          currentCheckpoint: 'agile_scrum_config',
                         ),
                         const SizedBox(height: 24),
                         if (_isLoading)
@@ -500,7 +508,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
         const SizedBox(height: 6),
         VoiceTextField(
           controller:
-              _controllers.putIfAbsent(key, () => TextEditingController()),
+              _controllers.putIfAbsent(key, () => SpellCheckTextEditingController()),
           decoration: InputDecoration(
             hintText: hint,
             border: const OutlineInputBorder(),
@@ -604,6 +612,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
           SizedBox(
             width: 140,
             child: DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: [
                 'Communication',
                 'Code Quality',
@@ -621,19 +630,24 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
               items: const [
                 DropdownMenuItem(
                     value: 'Communication',
-                    child:
-                        Text('Communication', style: TextStyle(fontSize: 11))),
+                    child: Text('Communication',
+                        style: TextStyle(fontSize: 11),
+                        overflow: TextOverflow.ellipsis)),
                 DropdownMenuItem(
                     value: 'Code Quality',
-                    child:
-                        Text('Code Quality', style: TextStyle(fontSize: 11))),
+                    child: Text('Code Quality',
+                        style: TextStyle(fontSize: 11),
+                        overflow: TextOverflow.ellipsis)),
                 DropdownMenuItem(
                     value: 'Collaboration',
-                    child:
-                        Text('Collaboration', style: TextStyle(fontSize: 11))),
+                    child: Text('Collaboration',
+                        style: TextStyle(fontSize: 11),
+                        overflow: TextOverflow.ellipsis)),
                 DropdownMenuItem(
                     value: 'Meeting',
-                    child: Text('Meeting', style: TextStyle(fontSize: 11))),
+                    child: Text('Meeting',
+                        style: TextStyle(fontSize: 11),
+                        overflow: TextOverflow.ellipsis)),
               ],
               onChanged: (v) {
                 if (v != null) {
@@ -647,7 +661,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: VoiceTextField(
-              controller: _agreementCtrls[a.id] ?? TextEditingController(),
+              controller: _agreementCtrls[a.id] ?? SpellCheckTextEditingController(),
               decoration: const InputDecoration(
                 hintText: 'Agreement description',
                 border: OutlineInputBorder(),

@@ -9,8 +9,6 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 
 class StartUpPlanningScreen extends StatefulWidget {
  const StartUpPlanningScreen({super.key});
@@ -20,7 +18,6 @@ class StartUpPlanningScreen extends StatefulWidget {
 }
 
 class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
- String? _carriedContext;
  bool _isAutoPopulating = false;
  bool _autoPopulated = false;
 
@@ -36,14 +33,7 @@ class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
  _isAutoPopulating = true;
  if (mounted) setState(() {});
 
- try {
- final carried = await buildAccumulatedContext(context, 'startup_planning');
- if (mounted) setState(() => _carriedContext = carried);
- } catch (e) {
- debugPrint('StartUpPlanning auto-populate error: $e');
- } finally {
  if (mounted) setState(() => _isAutoPopulating = false);
- }
  }
 
  @override
@@ -52,7 +42,7 @@ class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
  final horizontalPadding = isMobile ? 20.0 : 32.0;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,16 +81,7 @@ class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
  'startup_planning',
  ), onExportPdf: _exportPdf),
  const SizedBox(height: 12),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 12),
- child: CarriedContextBanner(
- checkpoint: 'startup_planning',
- contextText: _carriedContext!,
- ),
- ),
+
  const Text(
  'Plan readiness, go-live criteria, and transition activities.',
  style: TextStyle(
@@ -184,8 +165,8 @@ class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
  screenTitle: 'Startup Planning',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_startup_planning_notes'] ?? 'No data recorded.'),
  ],
@@ -210,9 +191,9 @@ class _ReadinessRow extends StatelessWidget {
  value: '9',
  accent: Color(0xFFF59E0B)),
  _MetricCard(
- label: 'Launch Window', value: 'Jul 8', accent: Color(0xFF2563EB)),
+ label: 'Launch Window', value: 'Jul 8', accent: Color(0xFFFFC812)),
  _MetricCard(
- label: 'Hypercare Days', value: '14', accent: Color(0xFF8B5CF6)),
+ label: 'Hypercare Days', value: '14', accent: Color(0xFFB8860B)),
  ],
  );
  }

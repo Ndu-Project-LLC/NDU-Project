@@ -2,13 +2,22 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
 import 'package:ndu_project/openai/openai_config.dart';
+import 'package:ndu_project/providers/display_preferences_provider.dart';
+import 'package:ndu_project/services/ai/local_ai_client.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+
+/// KAZ chat transport. In local AI mode this answers every completion in code
+/// (see [LocalAiClient]); in live mode it is a transparent HTTP client.
+final http.Client _kazAiClient = LocalAiClient.wrap(http.Client());
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // KAZ AI Chat Bubble — World-Class AI + Support Agent Interface
 // Features:
@@ -20,13 +29,17 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 //   • Clear history, search, and conversation management
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-class KazAiChatBubble extends StatelessWidget {
+class KazAiChatBubble extends StatefulWidget {
   const KazAiChatBubble({super.key, this.positioned = true});
 
   final bool positioned;
 
   /// Public static method to open the KAZ AI chat dialog from anywhere.
+  ///
+  /// No-op when the KAZ AI preference is disabled (Settings → Display &
+  /// Accessibility → KAZ AI).
   static void openChat(BuildContext context) {
+    if (!kazAiEnabledFor(context, listen: false)) return;
     showGeneralDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.15),
@@ -54,68 +67,99 @@ class KazAiChatBubble extends StatelessWidget {
   }
 
   @override
+  State<KazAiChatBubble> createState() => _KazAiChatBubbleState();
+}
+
+class _KazAiChatBubbleState extends State<KazAiChatBubble>
+    with TickerProviderStateMixin {
+  // Brand amber — matches the KAZ AI bubble design (golden-yellow FAB).
+  static const Color _kBubbleColor = Color(0xFFFBC02D);
+
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    // Soft, slow pulse on the outer glow to draw the user's eye to the
+    // assistant entry point. Loop forever, ~2.4s period.
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat(reverse: true);
+    // Glow alpha oscillates between 0.30 and 0.55 — subtle but noticeable.
+    _pulseAnimation = Tween<double>(begin: 0.30, end: 0.55).animate(
+      CurvedAnimation(
+        parent: _pulseController,
+        curve: Curves.easeInOutSine,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final bubble = Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => openChat(context),
-        borderRadius: BorderRadius.circular(32),
-        child: Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFFFFC812),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFFC812).withValues(alpha: 0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+    // The Settings → Display & Accessibility → KAZ AI toggle hides the chat
+    // bubble app-wide. Watching the provider here means every bubble instance
+    // (and there is one per screen) reacts immediately to the change.
+    if (!kazAiEnabledFor(context)) return const SizedBox.shrink();
+    final bubble = AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        final glowAlpha = _pulseAnimation.value;
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => KazAiChatBubble.openChat(context),
+            borderRadius: BorderRadius.circular(32),
+            child: Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _kBubbleColor,
+                boxShadow: [
+                  // Primary floating shadow (depth, slightly offset down).
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                  // Soft amber outer glow — the signature "halo" around the
+                  // bubble. Pulses gently to draw attention.
+                  BoxShadow(
+                    color: _kBubbleColor.withValues(alpha: glowAlpha),
+                    blurRadius: 28,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 0),
+                  ),
+                ],
               ),
-            ],
+              child: child,
+            ),
           ),
-          child: const Icon(
-            Icons.chat_bubble_rounded,
-            color: Colors.white,
-            size: 28,
-          ),
-        ),
+        );
+      },
+      // The icon is rendered once and reused across animation frames — only
+      // the outer glow alpha changes each tick.
+      child: const Icon(
+        Icons.chat_bubble_rounded,
+        color: Colors.white,
+        size: 28,
       ),
     );
 
-    if (!positioned) return bubble;
+    if (!widget.positioned) return bubble;
 
     return Positioned(
       bottom: 90,
       right: 24,
       child: bubble,
-    );
-  }
-
-  void _openKazAiChat(BuildContext context) {
-    showGeneralDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.15),
-      barrierDismissible: true,
-      barrierLabel: 'Close chat',
-      transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          const _KazAiChatPopup(),
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0.15, 0.15),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutCubic,
-            )),
-            child: child,
-          ),
-        );
-      },
     );
   }
 }
@@ -175,7 +219,7 @@ class _ChatMessage {
   }
 
   Map<String, dynamic> toMap() => {
-        'id': id.isNotEmpty ? id : timestamp.millisecondsSinceEpoch.toString(),
+        'id': id.isNotEmpty ? id : newId(),
         'text': text,
         'source': sourceKey,
         'timestamp': timestamp.toIso8601String(),
@@ -223,18 +267,6 @@ class _SupportTicket {
         'agentName': agentName,
         'lastMessage': lastMessage,
       };
-
-  static _SupportTicket fromMap(Map<String, dynamic> map) => _SupportTicket(
-        id: map['id']?.toString() ?? '',
-        subject: map['subject']?.toString() ?? '',
-        status: map['status']?.toString() ?? 'open',
-        createdAt: map['createdAt'] is Timestamp
-            ? (map['createdAt'] as Timestamp).toDate()
-            : DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
-                DateTime.now(),
-        agentName: map['agentName']?.toString() ?? '',
-        lastMessage: map['lastMessage']?.toString() ?? '',
-      );
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -415,10 +447,10 @@ class _KazAiChatPopup extends StatefulWidget {
 class _KazAiChatPopupState extends State<_KazAiChatPopup>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final TextEditingController _aiInputController = TextEditingController();
+  final TextEditingController _aiInputController = SpellCheckTextEditingController();
   final ScrollController _aiScrollController = ScrollController();
   final ScrollController _supportScrollController = ScrollController();
-  final TextEditingController _supportInputController = TextEditingController();
+  final TextEditingController _supportInputController = SpellCheckTextEditingController();
 
   List<_ChatMessage> _aiMessages = [];
   List<_ChatMessage> _supportMessages = [];
@@ -428,8 +460,8 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
   int _activeTab = 0;
 
   // Support ticket state
-  final _ticketSubjectController = TextEditingController();
-  final _ticketDescController = TextEditingController();
+  final _ticketSubjectController = SpellCheckTextEditingController();
+  final _ticketDescController = SpellCheckTextEditingController();
   bool _showTicketForm = true;
   _SupportTicket? _activeTicket;
 
@@ -539,7 +571,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
     try {
       final uri = OpenAiConfig.chatUri();
       // Use centralized headers() — the server-side proxy adds Authorization.
-      final headers = OpenAiConfig.headers();
+      final headers = await OpenAiConfig.authenticatedHeaders();
 
       // Build full conversation history for multi-turn context
       final messages = <Map<String, String>>[
@@ -573,18 +605,29 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         'messages': messages,
       }));
 
-      final response = await http
+      final response = await _kazAiClient
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 20));
+          .timeout(const Duration(seconds: 120));
 
       if (response.statusCode == 401) {
-        return 'Invalid API key. Please check your OpenAI configuration in **Settings**.';
+        return 'AI authentication failed. Please sign out and sign back in, then try again.';
       }
       if (response.statusCode == 429) {
-        return 'API quota exceeded. Please check your OpenAI billing or try again shortly.';
+        // Surface the actionable credits-exhausted state everywhere it
+        // occurs; otherwise fall back to the generic rate-limit message
+        // enriched with the proxy/OpenAI error detail when available.
+        if (isOpenAiCreditsExhausted(
+            response.statusCode, response.body)) {
+          return const OpenAiCreditsExhaustedException().toString();
+        }
+        final detail = _extractAiErrorDetail(response.body);
+        return 'AI is rate limited right now.'
+            '${detail.isNotEmpty ? ' ($detail)' : ''} Please try again in a minute.';
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        return 'I encountered a server error (${response.statusCode}). Please try again.';
+        final detail = _extractAiErrorDetail(response.body);
+        return 'AI request failed (${response.statusCode})'
+            '${detail.isNotEmpty ? ': $detail' : ''}. Please try again in a moment.';
       }
 
       final data =
@@ -595,8 +638,35 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           : '';
       return content.trim();
     } catch (e) {
+      if (e is OpenAiCreditsExhaustedException) {
+        return e.toString();
+      }
       return 'I\'m having trouble connecting right now. Please try again in a moment.';
     }
+  }
+
+  /// Pulls the human-readable error message out of a proxy / OpenAI error
+  /// body (e.g. `{"error":{"message":"..."}}` or `{"message":"..."}`) so
+  /// the chat surfaces the real failure instead of a generic string.
+  String _extractAiErrorDetail(String body) {
+    if (body.trim().isEmpty) return '';
+    try {
+      final data = jsonDecode(body);
+      if (data is Map<String, dynamic>) {
+        final err = data['error'];
+        if (err is Map<String, dynamic>) {
+          final m = err['message'];
+          if (m is String && m.trim().isNotEmpty) return m.trim();
+        } else if (err is String && err.trim().isNotEmpty) {
+          return err.trim();
+        }
+        final m = data['message'];
+        if (m is String && m.trim().isNotEmpty) return m.trim();
+      }
+    } catch (_) {
+      // Non-JSON body (proxy HTML error page etc.) — return empty detail.
+    }
+    return '';
   }
 
   // ── Support Chat ──────────────────────────────────────────────────────
@@ -610,8 +680,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
     final desc = _ticketDescController.text.trim();
     if (subject.isEmpty) return;
 
-    final ticketId =
-        'TK-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}';
+    final ticketId = shortId('TK-');
 
     setState(() {
       _activeTicket = _SupportTicket(
@@ -711,8 +780,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         title: const Text('Clear AI Chat History'),
         content: const Text(
             'This will permanently delete all conversation history with KAZ AI. This action cannot be undone.'),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -746,8 +814,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         title: const Text('Clear Support Chat History'),
         content: const Text(
             'This will permanently delete all support chat history. This action cannot be undone.'),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -963,15 +1030,15 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         indicatorWeight: 3,
         indicatorSize: TabBarIndicatorSize.label,
         dividerHeight: 0,
-        tabs: [
+        tabs: const [
           Tab(
             height: 40,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.psychology_rounded, size: 18),
-                const SizedBox(width: 8),
-                const Text('AI Assistant'),
+                Icon(Icons.chat_bubble_rounded, size: 18),
+                SizedBox(width: 8),
+                Text('AI Assistant'),
               ],
             ),
           ),
@@ -980,9 +1047,9 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.support_agent_rounded, size: 18),
-                const SizedBox(width: 8),
-                const Text('Support'),
+                Icon(Icons.support_agent_rounded, size: 18),
+                SizedBox(width: 8),
+                Text('Support'),
               ],
             ),
           ),
@@ -1190,7 +1257,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(0xFFFABD00).withValues(alpha: 0.25),
+                    color: const Color(0xFFFABD00).withValues(alpha: 0.25),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -1235,23 +1302,25 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
             controller: _ticketSubjectController,
             decoration: InputDecoration(
               hintText: 'Brief description of your issue',
-              hintStyle: TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
+              hintStyle:
+                  const TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
               filled: true,
-              fillColor: Color(0xFFF8FAFC),
+              fillColor: const Color(0xFFF8FAFC),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Color(0xFFFABD00), width: 1.5),
+                borderSide:
+                    const BorderSide(color: Color(0xFFFABD00), width: 1.5),
               ),
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             style: const TextStyle(fontSize: 14),
           ),
@@ -1270,23 +1339,25 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
             maxLines: 4,
             decoration: InputDecoration(
               hintText: 'Provide additional context about your issue...',
-              hintStyle: TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
+              hintStyle:
+                  const TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
               filled: true,
-              fillColor: Color(0xFFF8FAFC),
+              fillColor: const Color(0xFFF8FAFC),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Color(0xFFFABD00), width: 1.5),
+                borderSide:
+                    const BorderSide(color: Color(0xFFFABD00), width: 1.5),
               ),
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             style: const TextStyle(fontSize: 14),
           ),
@@ -1317,10 +1388,10 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Color(0xFFFABD00).withValues(alpha: 0.06),
+              color: const Color(0xFFFABD00).withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(14),
-              border:
-                  Border.all(color: Color(0xFFFABD00).withValues(alpha: 0.2)),
+              border: Border.all(
+                  color: const Color(0xFFFABD00).withValues(alpha: 0.2)),
             ),
             child: const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1524,10 +1595,6 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
         border: Border(
           top:
               BorderSide(color: const Color(0xFFE2E8F0).withValues(alpha: 0.5)),
@@ -1539,9 +1606,9 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Color(0xFFF8FAFC),
+                color: const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Color(0xFFE2E8F0)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: VoiceTextField(
                 controller: controller,
@@ -1558,6 +1625,10 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
                 style: const TextStyle(fontSize: 14, height: 1.4),
                 maxLines: 4,
                 minLines: 1,
+                // Hide the Open Editor affordance in the chat input — the
+                // actions are surfaced via the send button and Format toolbar.
+                enableVoice: false,
+                enableKazAi: false,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => onSend(),
               ),
@@ -1714,9 +1785,9 @@ class _ChatBubble extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: Color(0xFFF1F5F9),
+            color: const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Color(0xFFE2E8F0)),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1754,13 +1825,13 @@ class _ChatBubble extends StatelessWidget {
         height: 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+          color: const Color(0xFFFFC812).withValues(alpha: 0.12),
           border: Border.all(
-              color: const Color(0xFF2563EB).withValues(alpha: 0.2),
+              color: const Color(0xFFFFC812).withValues(alpha: 0.2),
               width: 1.5),
         ),
         child: const Icon(Icons.person_rounded,
-            color: Color(0xFF2563EB), size: 16),
+            color: Color(0xFFFFC812), size: 16),
       );
     }
 
@@ -1777,10 +1848,10 @@ class _ChatBubble extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: isSupport
-            ? LinearGradient(
-                colors: [const Color(0xFFFABD00), const Color(0xFFFFD54F)])
-            : LinearGradient(
-                colors: [const Color(0xFFFFC812), const Color(0xFFFF9800)]),
+            ? const LinearGradient(
+                colors: [Color(0xFFFABD00), Color(0xFFFFD54F)])
+            : const LinearGradient(
+                colors: [Color(0xFFFFC812), Color(0xFFFF9800)]),
         boxShadow: [
           BoxShadow(
             color: bgColor.withValues(alpha: 0.25),
@@ -1794,9 +1865,10 @@ class _ChatBubble extends StatelessWidget {
   }
 
   Color _bubbleColor() {
-    if (message.isUser) return const Color(0xFF2563EB).withValues(alpha: 0.1);
-    if (message.isSupportAgent)
-      return Color(0xFFFABD00).withValues(alpha: 0.06);
+    if (message.isUser) return const Color(0xFFFFC812).withValues(alpha: 0.1);
+    if (message.isSupportAgent) {
+      return const Color(0xFFFABD00).withValues(alpha: 0.06);
+    }
     return const Color(0xFFF8FAFC);
   }
 

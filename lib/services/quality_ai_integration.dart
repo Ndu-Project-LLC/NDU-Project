@@ -254,7 +254,7 @@ class QualityQuickActionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final defaultColor = color ?? const Color(0xFF6366F1);
+    final defaultColor = color ?? const Color(0xFFB8860B);
 
     return Material(
       color: Colors.transparent,
@@ -264,9 +264,9 @@ class QualityQuickActionChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: defaultColor.withOpacity(0.1),
+            color: defaultColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: defaultColor.withOpacity(0.3)),
+            border: Border.all(color: defaultColor.withValues(alpha: 0.3)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

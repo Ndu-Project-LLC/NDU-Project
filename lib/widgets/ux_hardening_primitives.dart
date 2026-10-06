@@ -59,9 +59,9 @@ class ExpandableDataTable extends StatefulWidget {
     this.rowDetailBuilder,
     this.columnSpacing = 18,
     this.horizontalMargin = 14,
-    this.headingRowHeight = 52,
-    this.dataRowMinHeight = 60,
-    this.dataRowMaxHeight = 220,
+    this.headingRowHeight = 44,
+    this.dataRowMinHeight = 48,
+    this.dataRowMaxHeight = 120,
     this.minWidth,
     this.maxHeight,
     this.showExpandButton = true,
@@ -387,9 +387,9 @@ class _ExpandableTableRenderer extends StatelessWidget {
         rows: rows,
         columnSpacing: columnSpacing + 6,
         horizontalMargin: horizontalMargin + 6,
-        headingRowHeight: headingRowHeight + 8,
-        dataRowMinHeight: dataRowMinHeight + 8,
-        dataRowMaxHeight: dataRowMaxHeight + 80,
+        headingRowHeight: headingRowHeight + 4,
+        dataRowMinHeight: dataRowMinHeight + 4,
+        dataRowMaxHeight: dataRowMaxHeight + 40,
       ),
     );
   }
@@ -534,7 +534,7 @@ class _UnsavedChangesGuardState extends State<UnsavedChangesGuard> {
             onPressed: () =>
                 Navigator.of(dialogContext).pop(_SaveDialogAction.save),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
+              backgroundColor: const Color(0xFFFFC812),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),

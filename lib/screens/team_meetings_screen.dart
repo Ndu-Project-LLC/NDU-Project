@@ -1,10 +1,9 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/meeting_row.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/progress_tracking_screen.dart';
-import 'package:ndu_project/screens/staff_team_screen.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
@@ -123,7 +122,8 @@ class _TeamMeetingsScreenState extends State<TeamMeetingsScreen> {
 
  _autoGenerationTriggered = true;
  _isAutoGenerating = true;
- try {
+if (!mounted) return;
+  try {
  final contextText =
  ExecutionPhaseAiSeed.buildContext(context, section: 'Team Meetings');
  final ai = OpenAiServiceSecure();
@@ -136,6 +136,7 @@ class _TeamMeetingsScreenState extends State<TeamMeetingsScreen> {
  )
  : _meetingRows;
 
+  if (!mounted) return;
  final generatedEntries = await ExecutionPhaseAiSeed.generateEntries(
  context: context,
  section: 'Team Meetings',
@@ -223,7 +224,7 @@ class _TeamMeetingsScreenState extends State<TeamMeetingsScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Team Meetings',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
  padding: EdgeInsets.symmetric(
@@ -279,38 +280,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Staff Team',
- nextLabel: 'Next: Progress Tracking',
- onBack: () => StaffTeamScreen.open(context),
- onNext: () => ProgressTrackingScreen.open(context),
+ backLabel: PlanningPhaseNavigation.backLabel('team_meetings'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('team_meetings'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'team_meetings'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'team_meetings'),
  ),
  const SizedBox(height: 48),
  ],
  ),
  ),
- );
- }
-
- Widget _buildHeader(BuildContext context) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Meeting Intelligence Hub',
- style: TextStyle(
- fontSize: 24,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827)),
- ),
- const SizedBox(height: 6),
- Text(
- _loading ? 'Execution Phase · Loading...' : 'Execution Phase',
- style: Theme.of(context).textTheme.bodyMedium?.copyWith(
- color: const Color(0xFF4B5563),
- height: 1.5,
- ),
- ),
- ],
  );
  }
 
@@ -377,8 +355,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  screenTitle: 'Team Meetings',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_team_meetings_notes'] ?? 'No data recorded.'),
  ],

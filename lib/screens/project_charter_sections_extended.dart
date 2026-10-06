@@ -367,7 +367,7 @@ class CharterApprovals extends StatelessWidget {
  fontSize: 24,
  fontStyle: FontStyle.italic,
  color: value.isNotEmpty
- ? const Color(0xFF1E3A8A)
+ ? const Color(0xFFB8860B)
  : Colors
  .grey[400]), // Dark blue specifically for signatures
  ),
@@ -431,9 +431,9 @@ class CharterSecurity extends StatelessWidget {
  children: secRoles
  .map((r) => Chip(
  label: Text(r.name),
- backgroundColor: Colors.blue.shade50,
- labelStyle: TextStyle(
- color: Colors.blue.shade800, fontSize: 11),
+ backgroundColor: const Color(0xFFFFF8E1),
+ labelStyle: const TextStyle(
+ color: Color(0xFFB8860B), fontSize: 11),
  ))
  .toList(),
  ),

@@ -132,7 +132,7 @@ class DifferentiatorScreen extends StatelessWidget {
             children: [
               _credibilityBadge('NSF I-Corps IdeaLaunch Research', Icons.science_outlined, const Color(0xFFFBBF24)),
               _credibilityBadge('Tens of Companies Surveyed', Icons.groups_outlined, const Color(0xFF10B981)),
-              _credibilityBadge('IdeaVillage Accelerator', Icons.rocket_launch_outlined, const Color(0xFF8B5CF6)),
+              _credibilityBadge('IdeaVillage Accelerator', Icons.rocket_launch_outlined, const Color(0xFFB8860B)),
             ],
           ),
           const SizedBox(height: 16),

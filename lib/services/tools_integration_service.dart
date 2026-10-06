@@ -95,6 +95,25 @@ class ToolIntegrationModel {
           return IntegrationProvider.drawio;
         case 'whiteboard':
           return IntegrationProvider.whiteboard;
+        case 'slack':
+          return IntegrationProvider.slack;
+        case 'microsoft teams':
+        case 'teams':
+          return IntegrationProvider.microsoftTeams;
+        case 'microsoft 365':
+        case 'microsoft365':
+        case 'm365':
+          return IntegrationProvider.microsoft365;
+        case 'quickbooks':
+        case 'quick books':
+          return IntegrationProvider.quickBooks;
+        case 'xero':
+          return IntegrationProvider.xero;
+        case 'salesforce':
+          return IntegrationProvider.salesforce;
+        case 'hubspot':
+        case 'hub spot':
+          return IntegrationProvider.hubSpot;
         default:
           return IntegrationProvider.figma;
       }

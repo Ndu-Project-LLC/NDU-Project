@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ndu_project/models/issue_log.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/services/execution_service.dart';
 
 IssueLogItem _item({
   String id = 'ISS-001',
@@ -178,7 +179,8 @@ void main() {
       expect(IssueLogSummary.empty.isEmpty, isTrue);
     });
 
-    test('counts open, in progress and resolved the way the log classifies', () {
+    test('counts open, in progress and resolved the way the log classifies',
+        () {
       final summary = IssueLogSummary.fromItems(<IssueLogItem>[
         _item(id: '1', status: 'Open'),
         _item(id: '2', status: 'Open'),
@@ -191,6 +193,125 @@ void main() {
       expect(summary.open, 3);
       expect(summary.inProgress, 1);
       expect(summary.resolved, 2);
+    });
+  });
+
+  group('one log, two stores (planning ↔ execution)', () {
+    ExecutionIssueModel exec({
+      String id = 'x1',
+      String topic = 'Tower crane breakdown',
+      String description = 'Crane hydraulic line failed on site',
+      String discipline = 'Engineering',
+      String raisedBy = 'Site Engineer',
+      bool approved = false,
+      String comments = 'Severity: High, Status: Open',
+    }) {
+      return ExecutionIssueModel(
+        id: id,
+        projectId: 'p1',
+        issueTopic: topic,
+        description: description,
+        discipline: discipline,
+        raisedBy: raisedBy,
+        scheduleImpact: '2 weeks',
+        costImpact: r'$5,000',
+        approved: approved,
+        comments: comments,
+        createdById: 'u1',
+        createdByEmail: 'u1@example.com',
+        createdByName: 'U1',
+        createdAt: DateTime(2026, 1, 2),
+        updatedAt: DateTime(2026, 1, 2),
+      );
+    }
+
+    test('an execution issue maps onto a planning log row', () {
+      final item = issueLogItemFromExecution(exec());
+      expect(item.id, 'exec_x1');
+      expect(item.title, 'Tower crane breakdown');
+      expect(item.description, 'Crane hydraulic line failed on site');
+      expect(item.type, 'Engineering');
+      expect(item.severity, 'High');
+      expect(item.status, 'Open');
+      expect(item.assignee, 'Site Engineer');
+      // Rendered with the log's defaults where the execution store carries
+      // no field.
+      final row = IssueLogRow.fromItem(item, number: 1);
+      expect(row.valueFor('dueDate'), 'No due date');
+      expect(row.valueFor('milestone'), 'Unassigned');
+    });
+
+    test('approved without a status comment reads as resolved', () {
+      final item = issueLogItemFromExecution(
+        exec(approved: true, comments: 'Closed out on site'),
+      );
+      expect(item.status, 'Resolved');
+      expect(item.severity, isEmpty);
+    });
+
+    test('id helpers round-trip and leave native rows alone', () {
+      expect(executionDocIdForPlanningItem('ISS-9'), 'plan_ISS-9');
+      expect(planningItemIdFromExecutionDocId('plan_ISS-9'), 'ISS-9');
+      expect(planningItemIdFromExecutionDocId('x1'), isNull);
+      expect(viewIdForExecutionIssue('x1'), 'exec_x1');
+      expect(executionDocIdFromViewId('exec_x1'), 'x1');
+      expect(executionDocIdFromViewId('ISS-001'), isNull);
+    });
+
+    test('a linked copy is not shown twice while the planning row exists', () {
+      final merged = mergeIssueLogViews(
+        planning: <IssueLogItem>[_item(id: 'ISS-9')],
+        execution: <ExecutionIssueModel>[
+          exec(id: 'plan_ISS-9', topic: _item(id: 'ISS-9').title),
+          exec(),
+        ],
+      );
+      expect(merged.map((i) => i.id), ['ISS-9', 'exec_x1']);
+    });
+
+    test('an orphaned linked copy still shows, so nothing is lost', () {
+      final merged = mergeIssueLogViews(
+        planning: const <IssueLogItem>[],
+        execution: <ExecutionIssueModel>[
+          exec(id: 'plan_ISS-9', topic: 'Permit approval pending'),
+        ],
+      );
+      expect(merged.single.id, 'exec_plan_ISS-9');
+      expect(merged.single.title, 'Permit approval pending');
+    });
+
+    test('planning rows keep their order and execution rows follow', () {
+      final merged = mergeIssueLogViews(
+        planning: <IssueLogItem>[
+          _item(id: 'ISS-1'),
+          _item(id: 'ISS-2'),
+        ],
+        execution: <ExecutionIssueModel>[exec(id: 'a'), exec(id: 'b')],
+      );
+      expect(merged.map((i) => i.id), ['ISS-1', 'ISS-2', 'exec_a', 'exec_b']);
+    });
+
+    test('comment meta is rewritten in place, not clobbered', () {
+      expect(
+        upsertExecutionCommentMeta(
+          'Severity: Low, Status: Open',
+          severity: 'High',
+          status: 'Resolved',
+        ),
+        'Severity: High, Status: Resolved',
+      );
+      expect(
+        upsertExecutionCommentMeta(
+          'Follow up with authorities',
+          severity: 'High',
+          status: 'Open',
+        ),
+        'Follow up with authorities, Severity: High, Status: Open',
+      );
+      expect(
+        upsertExecutionCommentMeta('', severity: 'High', status: 'Open'),
+        'Severity: High, Status: Open',
+      );
     });
   });
 }

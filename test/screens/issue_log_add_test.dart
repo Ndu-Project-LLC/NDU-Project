@@ -15,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/issue_management_screen.dart';
+import 'package:ndu_project/services/execution_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -82,10 +83,12 @@ void main() {
     // Scope to the dialog: the screen underneath has its own text fields
     // (notes, search), and finder traversal reaches those first.
     await tester.enterText(
-      find.descendant(
-        of: find.byType(AlertDialog),
-        matching: find.byType(TextField),
-      ).first,
+      find
+          .descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(TextField),
+          )
+          .first,
       'Permit delay',
     );
     await pumpFrames(tester, 2);
@@ -105,6 +108,48 @@ void main() {
     final size = tester.getSize(rowText.first);
     expect(size.width, greaterThan(0), reason: 'row text laid out');
     expect(size.height, greaterThan(0), reason: 'row text laid out');
+  });
+
+  testWidgets('issues created in the execution phase render in this log',
+      (tester) async {
+    // The planning log and the execution-phase issue store used to be two
+    // disconnected stores: issues created in execution never reached this
+    // screen. They must read as ONE log.
+    debugExecutionIssuesStream = (projectId) => Stream.value(
+          <ExecutionIssueModel>[
+            ExecutionIssueModel(
+              id: 'x1',
+              projectId: projectId,
+              issueTopic: 'Tower crane breakdown',
+              description: 'Crane hydraulic line failed on site',
+              discipline: 'Engineering',
+              raisedBy: 'Site Engineer',
+              scheduleImpact: '2 weeks',
+              costImpact: r'$5,000',
+              approved: false,
+              comments: 'Severity: High, Status: Open',
+              createdById: 'u1',
+              createdByEmail: 'u1@example.com',
+              createdByName: 'U1',
+              createdAt: DateTime(2026, 1, 2),
+              updatedAt: DateTime(2026, 1, 2),
+            ),
+          ],
+        );
+    addTearDown(() => debugExecutionIssuesStream = null);
+
+    await pumpScreen(tester);
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+    expect(tester.takeException(), isNull);
+
+    // The execution-created issue is on screen...
+    expect(find.text('Tower crane breakdown'), findsOneWidget);
+    // ...under its execution-linked id...
+    expect(find.text('exec_x1'), findsOneWidget);
+    // ...and the empty state is gone.
+    expect(find.text('Issue log is empty'), findsNothing);
   });
 
   testWidgets('the Add issue button is reachable on a narrow window',

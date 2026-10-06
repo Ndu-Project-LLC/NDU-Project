@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'package:ndu_project/models/project_data_model.dart';
+
 /// Model for execution tools/items
 class ExecutionToolModel {
   final String id;
@@ -45,7 +47,8 @@ class ExecutionToolModel {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-  static ExecutionToolModel fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+  static ExecutionToolModel fromDoc(
+      DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
 
     DateTime parseTs(dynamic v) {
@@ -130,7 +133,8 @@ class ExecutionIssueModel {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-  static ExecutionIssueModel fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+  static ExecutionIssueModel fromDoc(
+      DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
 
     DateTime parseTs(dynamic v) {
@@ -324,11 +328,19 @@ class CommunicationPlanModel {
 }
 
 class ExecutionService {
-  static CollectionReference<Map<String, dynamic>> _toolsCol(String projectId) =>
-      FirebaseFirestore.instance.collection('projects').doc(projectId).collection('execution_tools');
+  static CollectionReference<Map<String, dynamic>> _toolsCol(
+          String projectId) =>
+      FirebaseFirestore.instance
+          .collection('projects')
+          .doc(projectId)
+          .collection('execution_tools');
 
-  static CollectionReference<Map<String, dynamic>> _issuesCol(String projectId) =>
-      FirebaseFirestore.instance.collection('projects').doc(projectId).collection('execution_issues');
+  static CollectionReference<Map<String, dynamic>> _issuesCol(
+          String projectId) =>
+      FirebaseFirestore.instance
+          .collection('projects')
+          .doc(projectId)
+          .collection('execution_issues');
 
   // Execution Tools CRUD
   static Future<String> createTool({
@@ -345,7 +357,8 @@ class ExecutionService {
     final user = FirebaseAuth.instance.currentUser;
     final userId = createdById ?? user?.uid ?? '';
     final userEmail = createdByEmail ?? user?.email ?? '';
-    final userName = createdByName ?? user?.displayName ?? userEmail.split('@').first;
+    final userName =
+        createdByName ?? user?.displayName ?? userEmail.split('@').first;
 
     final payload = ExecutionToolModel(
       id: '',
@@ -395,7 +408,8 @@ class ExecutionService {
     await _toolsCol(projectId).doc(toolId).delete();
   }
 
-  static Stream<List<ExecutionToolModel>> streamTools(String projectId, {int limit = 50}) {
+  static Stream<List<ExecutionToolModel>> streamTools(String projectId,
+      {int limit = 50}) {
     return _toolsCol(projectId)
         .orderBy('createdAt', descending: true)
         .limit(limit)
@@ -423,7 +437,8 @@ class ExecutionService {
     final user = FirebaseAuth.instance.currentUser;
     final userId = createdById ?? user?.uid ?? '';
     final userEmail = createdByEmail ?? user?.email ?? '';
-    final userName = createdByName ?? user?.displayName ?? userEmail.split('@').first;
+    final userName =
+        createdByName ?? user?.displayName ?? userEmail.split('@').first;
 
     final payload = ExecutionIssueModel(
       id: '',
@@ -488,7 +503,51 @@ class ExecutionService {
     await _issuesCol(projectId).doc(issueId).delete();
   }
 
-  static Stream<List<ExecutionIssueModel>> streamIssues(String projectId, {int limit = 50}) {
+  /// Creates (or refreshes) the execution-phase copy of a planning issue log
+  /// entry.
+  ///
+  /// The copy lives at the deterministic doc id `plan_<planningItemId>` (see
+  /// lib/models/issue_log.dart for the id scheme), so re-syncing can never
+  /// duplicate a row: an existing copy is skipped by id, never re-created.
+  static Future<void> upsertPlanningIssueLink({
+    required String projectId,
+    required String planningItemId,
+    required IssueLogItem item,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? '';
+    final userEmail = user?.email ?? '';
+    final userName = user?.displayName ?? userEmail.split('@').first;
+
+    final payload = ExecutionIssueModel(
+      id: '',
+      projectId: projectId,
+      issueTopic: item.title,
+      description: item.description,
+      discipline: item.type,
+      raisedBy: item.assignee,
+      scheduleImpact: '',
+      costImpact: '',
+      approved: false,
+      comments: 'Severity: ${item.severity}, Status: ${item.status}',
+      createdById: userId,
+      createdByEmail: userEmail,
+      createdByName: userName,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ).toMap();
+
+    await _issuesCol(projectId)
+        .doc('plan_$planningItemId')
+        .set(<String, dynamic>{
+      ...payload,
+      'planningItemId': planningItemId,
+      'sourceSection': 'planning_issue_log',
+    });
+  }
+
+  static Stream<List<ExecutionIssueModel>> streamIssues(String projectId,
+      {int limit = 50}) {
     return _issuesCol(projectId)
         .orderBy('createdAt', descending: true)
         .limit(limit)
@@ -497,14 +556,23 @@ class ExecutionService {
   }
 
   // Enabling Works CRUD
-  static CollectionReference<Map<String, dynamic>> _enablingWorksCol(String projectId) =>
-      FirebaseFirestore.instance.collection('projects').doc(projectId).collection('execution_enabling_works');
+  static CollectionReference<Map<String, dynamic>> _enablingWorksCol(
+          String projectId) =>
+      FirebaseFirestore.instance
+          .collection('projects')
+          .doc(projectId)
+          .collection('execution_enabling_works');
 
   // Early Works CRUD (separate from tools to avoid shared data bug)
-  static CollectionReference<Map<String, dynamic>> _earlyWorksCol(String projectId) =>
-      FirebaseFirestore.instance.collection('projects').doc(projectId).collection('execution_early_works');
+  static CollectionReference<Map<String, dynamic>> _earlyWorksCol(
+          String projectId) =>
+      FirebaseFirestore.instance
+          .collection('projects')
+          .doc(projectId)
+          .collection('execution_early_works');
 
-  static Stream<List<ExecutionToolModel>> streamEarlyWorks(String projectId, {int limit = 50}) {
+  static Stream<List<ExecutionToolModel>> streamEarlyWorks(String projectId,
+      {int limit = 50}) {
     return _earlyWorksCol(projectId)
         .orderBy('createdAt', descending: true)
         .limit(limit)
@@ -526,7 +594,8 @@ class ExecutionService {
     final user = FirebaseAuth.instance.currentUser;
     final userId = createdById ?? user?.uid ?? '';
     final userEmail = createdByEmail ?? user?.email ?? '';
-    final userName = createdByName ?? user?.displayName ?? userEmail.split('@').first;
+    final userName =
+        createdByName ?? user?.displayName ?? userEmail.split('@').first;
 
     final payload = ExecutionToolModel(
       id: '',
@@ -590,7 +659,8 @@ class ExecutionService {
     final user = FirebaseAuth.instance.currentUser;
     final userId = createdById ?? user?.uid ?? '';
     final userEmail = createdByEmail ?? user?.email ?? '';
-    final userName = createdByName ?? user?.displayName ?? userEmail.split('@').first;
+    final userName =
+        createdByName ?? user?.displayName ?? userEmail.split('@').first;
 
     final payload = ExecutionEnablingWorkModel(
       id: '',
@@ -640,19 +710,28 @@ class ExecutionService {
     await _enablingWorksCol(projectId).doc(workId).delete();
   }
 
-  static Stream<List<ExecutionEnablingWorkModel>> streamEnablingWorks(String projectId, {int limit = 50}) {
+  static Stream<List<ExecutionEnablingWorkModel>> streamEnablingWorks(
+      String projectId,
+      {int limit = 50}) {
     return _enablingWorksCol(projectId)
         .orderBy('createdAt', descending: true)
         .limit(limit)
         .snapshots()
-        .map((snap) => snap.docs.map(ExecutionEnablingWorkModel.fromDoc).toList());
+        .map((snap) =>
+            snap.docs.map(ExecutionEnablingWorkModel.fromDoc).toList());
   }
 
   // Change Requests CRUD (using ExecutionIssueModel structure)
-  static CollectionReference<Map<String, dynamic>> _changeRequestsCol(String projectId) =>
-      FirebaseFirestore.instance.collection('projects').doc(projectId).collection('execution_change_requests');
+  static CollectionReference<Map<String, dynamic>> _changeRequestsCol(
+          String projectId) =>
+      FirebaseFirestore.instance
+          .collection('projects')
+          .doc(projectId)
+          .collection('execution_change_requests');
 
-  static Stream<List<ExecutionIssueModel>> streamChangeRequests(String projectId, {int limit = 50}) {
+  static Stream<List<ExecutionIssueModel>> streamChangeRequests(
+      String projectId,
+      {int limit = 50}) {
     return _changeRequestsCol(projectId)
         .orderBy('createdAt', descending: true)
         .limit(limit)
@@ -679,7 +758,8 @@ class ExecutionService {
     final user = FirebaseAuth.instance.currentUser;
     final userId = createdById ?? user?.uid ?? '';
     final userEmail = createdByEmail ?? user?.email ?? '';
-    final userName = createdByName ?? user?.displayName ?? userEmail.split('@').first;
+    final userName =
+        createdByName ?? user?.displayName ?? userEmail.split('@').first;
 
     final payload = ExecutionIssueModel(
       id: '',
@@ -759,7 +839,8 @@ class ExecutionService {
           .orderBy('createdAt', descending: true)
           .limit(limit)
           .snapshots()
-          .map((snap) => snap.docs.map(InterfaceRegisterModel.fromDoc).toList());
+          .map(
+              (snap) => snap.docs.map(InterfaceRegisterModel.fromDoc).toList());
 
   static Future<String> createInterfaceRegister({
     required String projectId,
@@ -852,8 +933,8 @@ class ExecutionService {
           .orderBy('createdAt', descending: true)
           .limit(limit)
           .snapshots()
-          .map((snap) =>
-              snap.docs.map(CommunicationPlanModel.fromDoc).toList());
+          .map(
+              (snap) => snap.docs.map(CommunicationPlanModel.fromDoc).toList());
 
   static Future<String> createCommunicationPlan({
     required String projectId,
@@ -972,7 +1053,8 @@ class ExecutionEnablingWorkModel {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-  static ExecutionEnablingWorkModel fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+  static ExecutionEnablingWorkModel fromDoc(
+      DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
 
     DateTime parseTs(dynamic v) {
@@ -997,4 +1079,3 @@ class ExecutionEnablingWorkModel {
     );
   }
 }
-

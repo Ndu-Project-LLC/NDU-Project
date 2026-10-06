@@ -15,10 +15,7 @@ import '../services/navigation_context_service.dart';
 import '../services/portfolio_service.dart';
 import '../services/program_service.dart';
 import '../services/profile_onboarding_service.dart';
-import '../services/dashboard_metrics_service.dart';
 import '../screens/profile_onboarding_screen.dart';
-import '../widgets/dashboard_metrics_cards.dart';
-import '../widgets/collapsible_section.dart';
 import '../services/project_service.dart';
 import '../services/user_service.dart';
 import '../services/project_navigation_service.dart';
@@ -42,8 +39,6 @@ class ProjectDashboardScreen extends StatefulWidget {
 
 class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  late final ValueNotifier<Set<String>> _selectedProjectIds;
- DashboardMetrics? _metrics;
- bool _isLoadingMetrics = true;
 
  @override
  void initState() {
@@ -54,23 +49,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  // Runs once, post-frame, so we don't block the build.
  WidgetsBinding.instance.addPostFrameCallback((_) {
  _checkProfileOnboarding();
- _loadMetrics();
  });
- }
-
- Future<void> _loadMetrics() async {
- try {
- final m = await DashboardMetricsService.load();
- if (mounted) {
- setState(() {
- _metrics = m;
- _isLoadingMetrics = false;
- });
- }
- } catch (e) {
- debugPrint('[ProjectDashboardScreen] metrics load failed: $e');
- if (mounted) setState(() => _isLoadingMetrics = false);
- }
  }
 
  Future<void> _checkProfileOnboarding() async {
@@ -583,45 +562,6 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                               ),
                             ],
                           ),
-                        // ── Live activity metrics ──
-                        if (_isLoadingMetrics || _metrics != null)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(2, 22, 2, 12),
-                            child: _SectionEyebrow(
-                              title: 'LIVE ACTIVITY',
-                              icon: Icons.monitor_heart_outlined,
-                              tint: palette.primaryDeep,
-                            ),
-                          ),
-                        if (_isLoadingMetrics)
-                          _buildMetricsSkeleton()
-                        else if (_metrics != null) ...[
-                          if (_metrics!.totalPastDue > 0) ...[
-                            PastDueActivitiesCard(
-                                activities: _metrics!.pastDue),
-                            const SizedBox(height: 14),
-                          ],
-                          AssignedActivitiesCard(
-                              activities: _metrics!.assignedToMe),
-                          const SizedBox(height: 14),
-                          if (_metrics!.projectStatuses.isNotEmpty) ...[
-                            CollapsibleSection(
-                              title: 'Project status',
-                              initiallyExpanded: false,
-                              child: Wrap(
-                                spacing: 16,
-                                runSpacing: 16,
-                                children: _metrics!.projectStatuses
-                                    .map((r) => ProjectMetricsCard(
-                                          rollup: r,
-                                          level: 'Project',
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                          ],
-                        ],
                         // ── Workspaces table ──
                         Padding(
                           padding: const EdgeInsets.fromLTRB(2, 24, 2, 12),
@@ -668,77 +608,6 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
             const KazAiChatBubble(),
           ],
         ),
-      ),
-    );
-  }
-  /// World-class metrics loading skeleton — fills space so the dashboard
-  /// never has empty gaps during data fetch.
-  /// World-class metrics loading skeleton — fills space so the dashboard
-  /// never has empty gaps during data fetch.
-  Widget _buildMetricsSkeleton() {
-    final palette = DashboardPalette.forPlan(widget.isBasicPlan);
-    return Column(
-      children: [
-        Container(
-          height: 100,
-          decoration: BoxDecoration(
-            color: palette.surface,
-            borderRadius: BorderRadius.circular(palette.cardRadius),
-            border: Border.all(color: palette.outline),
-          ),
-          child: Row(
-            children: List.generate(3, (i) => Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _shimmerBox(width: 80, height: 10),
-                    _shimmerBox(width: 120, height: 22),
-                    _shimmerBox(width: 60, height: 8),
-                  ],
-                ),
-              ),
-            )),
-          ),
-        ),
-        const SizedBox(height: 18),
-        Container(
-          height: 76,
-          decoration: BoxDecoration(
-            color: palette.surface,
-            borderRadius: BorderRadius.circular(palette.cardRadius),
-            border: Border.all(color: palette.outline),
-          ),
-          child: Row(
-            children: List.generate(4, (i) => Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _shimmerBox(width: 60, height: 10),
-                    _shimmerBox(width: 100, height: 18),
-                    _shimmerBox(width: 40, height: 8),
-                  ],
-                ),
-              ),
-            )),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _shimmerBox({required double width, required double height, double radius = 6}) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE4E7EC),
-        borderRadius: BorderRadius.circular(radius),
       ),
     );
   }

@@ -17,6 +17,7 @@ library;
 import 'package:flutter/foundation.dart';
 
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/services/execution_service.dart';
 
 /// One column of the issue log.
 @immutable
@@ -86,9 +87,12 @@ class IssueLogRow {
       type: item.type.trim().isEmpty ? 'Other' : item.type.trim(),
       severity: item.severity.trim().isEmpty ? 'Medium' : item.severity.trim(),
       status: status.isEmpty ? 'Open' : status,
-      assignee: item.assignee.trim().isEmpty ? 'Unassigned' : item.assignee.trim(),
-      dueDate: item.dueDate.trim().isEmpty ? 'No due date' : item.dueDate.trim(),
-      milestone: item.milestone.trim().isEmpty ? 'Unassigned' : item.milestone.trim(),
+      assignee:
+          item.assignee.trim().isEmpty ? 'Unassigned' : item.assignee.trim(),
+      dueDate:
+          item.dueDate.trim().isEmpty ? 'No due date' : item.dueDate.trim(),
+      milestone:
+          item.milestone.trim().isEmpty ? 'Unassigned' : item.milestone.trim(),
     );
   }
 
@@ -224,4 +228,119 @@ class IssueLogSummary {
   }
 
   bool get isEmpty => total == 0;
+}
+
+/// ─── One log, two stores ──────────────────────────────────────────────────
+///
+/// The app carries two issue stores: the planning log (`issueLogItems` on the
+/// project document — the rows this module renders) and the execution phase's
+/// `execution_issues` subcollection. Created issues must read as ONE log:
+/// every execution issue shows on the Planning Issue Management screen, and
+/// every planning issue reaches the execution section.
+///
+/// Both directions are linked by deterministic ids so neither side can create
+/// a duplicate of the other side's row:
+///
+///  - Planning → execution: the copy of planning item `X` is the execution
+///    doc `plan_X`. Re-syncing skips ids that already exist.
+///  - Execution → planning view: execution issue `Y` renders with log id
+///    `exec_Y`; the linked copy `plan_X` is skipped in the view while `X`
+///    still exists as a planning row (it is already on screen).
+const String planningLinkedExecutionIdPrefix = 'plan_';
+const String executionViewIdPrefix = 'exec_';
+
+/// The execution doc id that mirrors planning item [planningItemId].
+String executionDocIdForPlanningItem(String planningItemId) =>
+    '$planningLinkedExecutionIdPrefix$planningItemId';
+
+/// The planning item id a `plan_…` execution doc mirrors, or null when
+/// [docId] is not a linked copy.
+String? planningItemIdFromExecutionDocId(String docId) {
+  if (!docId.startsWith(planningLinkedExecutionIdPrefix)) return null;
+  return docId.substring(planningLinkedExecutionIdPrefix.length);
+}
+
+/// The log id under which execution issue [docId] renders in the planning log.
+String viewIdForExecutionIssue(String docId) => '$executionViewIdPrefix$docId';
+
+/// The execution doc id behind an `exec_…` log id, or null when [viewId] is a
+/// planning-native row.
+String? executionDocIdFromViewId(String viewId) {
+  if (!viewId.startsWith(executionViewIdPrefix)) return null;
+  return viewId.substring(executionViewIdPrefix.length);
+}
+
+/// Execution issues carry severity/status inside their free-form comments
+/// (`Severity: High, Status: Open` — the shape the planning → execution copy
+/// writes), because the execution store has no dedicated columns for them.
+final RegExp _severityInComments =
+    RegExp(r'Severity:\s*([^,]+)', caseSensitive: false);
+final RegExp _statusInComments =
+    RegExp(r'Status:\s*([^,]+)', caseSensitive: false);
+
+/// Maps an execution-phase issue onto a planning log row so both stores read
+/// as one log. Fields the execution store does not carry (due date, milestone)
+/// stay empty and the row falls back to the log's defaults when rendered.
+IssueLogItem issueLogItemFromExecution(ExecutionIssueModel issue) {
+  final severity =
+      _severityInComments.firstMatch(issue.comments)?.group(1)?.trim() ?? '';
+  final parsedStatus =
+      _statusInComments.firstMatch(issue.comments)?.group(1)?.trim() ?? '';
+  final status = parsedStatus.isNotEmpty
+      ? parsedStatus
+      : (issue.approved ? 'Resolved' : '');
+  return IssueLogItem(
+    id: viewIdForExecutionIssue(issue.id),
+    title: issue.issueTopic,
+    description: issue.description,
+    type: issue.discipline,
+    severity: severity,
+    status: status,
+    assignee: issue.raisedBy,
+  );
+}
+
+/// Rewrites the `Severity: …` / `Status: …` segments inside execution comments
+/// in place, appending them when absent, so planning-side edits persist
+/// without clobbering the rest of the text.
+String upsertExecutionCommentMeta(
+  String comments, {
+  required String severity,
+  required String status,
+}) {
+  var updated = comments;
+  final sev = severity.trim();
+  final stat = status.trim();
+  if (sev.isNotEmpty) {
+    updated = _severityInComments.hasMatch(updated)
+        ? updated.replaceFirstMapped(
+            _severityInComments, (m) => 'Severity: $sev')
+        : (updated.isEmpty ? 'Severity: $sev' : '$updated, Severity: $sev');
+  }
+  if (stat.isNotEmpty) {
+    updated = _statusInComments.hasMatch(updated)
+        ? updated.replaceFirstMapped(_statusInComments, (m) => 'Status: $stat')
+        : (updated.isEmpty ? 'Status: $stat' : '$updated, Status: $stat');
+  }
+  return updated;
+}
+
+/// The one issue log both stores render: planning rows first (their order is
+/// the owner's), then execution issues planning does not already show. A
+/// `plan_…` linked copy is skipped while the planning row it mirrors exists,
+/// so a single issue never renders twice.
+List<IssueLogItem> mergeIssueLogViews({
+  required List<IssueLogItem> planning,
+  required List<ExecutionIssueModel> execution,
+}) {
+  final planningIds = <String>{for (final item in planning) item.id};
+  final merged = List<IssueLogItem>.of(planning);
+  for (final issue in execution) {
+    final linkedPlanningId = planningItemIdFromExecutionDocId(issue.id);
+    if (linkedPlanningId != null && planningIds.contains(linkedPlanningId)) {
+      continue;
+    }
+    merged.add(issueLogItemFromExecution(issue));
+  }
+  return merged;
 }

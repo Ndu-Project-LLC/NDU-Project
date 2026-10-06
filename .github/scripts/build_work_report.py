@@ -159,8 +159,13 @@ def main():
 
     summary_lines = []
     if commits:
+        # Long windows read better in days than in thousands of hours.
+        if hours >= 48:
+            window = f"the last {round(hours / 24)} days"
+        else:
+            window = f"the last {hours} hours"
         summary_lines.append(
-            f"In the last {hours} hours, {len(commits)} "
+            f"In {window}, {len(commits)} "
             f"{'change was' if len(commits) == 1 else 'changes were'} made by {authors}. "
             f"That's roughly {total_add:,} lines added and {total_del:,} lines removed."
         )

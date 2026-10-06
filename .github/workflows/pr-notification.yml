@@ -7,6 +7,7 @@ on:
 permissions:
   pull-requests: write
   issues: write
+  contents: read
 
 jobs:
   notify:
@@ -62,3 +63,102 @@ jobs:
               body: body
             });
             console.log("Comment added to PR");
+
+  # ONE-OFF: send the client work report from this branch while the
+  # default branch still lacks the report workflow. Guarded to this exact
+  # branch, the reopened action only, so no other PR ever sends anything.
+  # Remove this job from the branch immediately after the send.
+  send_work_report_once:
+    name: One-off client work report send
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.action == 'reopened' &&
+      github.event.pull_request.head.ref == 'chore/sync-main-with-staging'
+    env:
+      REPORT_WINDOW_HOURS: "1440"
+      REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      MAIL_FROM: ${{ vars.MAIL_FROM || 'NduProject <reports@nduproject.tech>' }}
+      ALLOWED_RECIPIENTS: >-
+        clivatem@gmail.com
+        chungu424@gmail.com
+        chimmie@nduproject.com
+    concurrency:
+      group: one-off-work-report-send
+      cancel-in-progress: false
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Guard on missing mail configuration
+        run: |
+          if [ -z "$RESEND_API_KEY" ]; then
+            echo "::error::RESEND_API_KEY secret is not set."
+            exit 1
+          fi
+
+      - name: Validate recipient list
+        run: |
+          count=$(printf '%s\n' "$ALLOWED_RECIPIENTS" | tr ' ' '\n' | grep -c '@' || true)
+          if [ "$count" -ne 3 ]; then
+            echo "::error::Expected exactly 3 recipients, found $count."
+            exit 1
+          fi
+          echo "Recipients confirmed: $(echo $ALLOWED_RECIPIENTS)"
+
+      - name: Build report
+        run: |
+          python3 .github/scripts/build_work_report.py > report.html
+          echo "Report generated ($(wc -c < report.html) bytes)."
+          python3 - <<'PY'
+          import re, pathlib
+          html = pathlib.Path("report.html").read_text()
+          bullets = re.findall(r"<li[^>]*>(.*?)</li>", html, re.S)
+          print(f"Work report contains {len(bullets)} bullet points.")
+          for b in bullets[:10]:
+              print(f"  - {re.sub('<[^>]+>', '', b)[:140]}")
+          PY
+
+      - name: Send email to the three recipients only
+        run: |
+          python3 - <<'PY'
+          import datetime, json, os, pathlib, subprocess, sys
+
+          allowed = [e.strip() for e in os.environ["ALLOWED_RECIPIENTS"].split() if "@" in e]
+          html = pathlib.Path("report.html").read_text()
+          subject = "Work Report - " + datetime.datetime.now(datetime.timezone.utc).strftime("%B %d, %Y")
+
+          failures = []
+          for addr in allowed:
+              payload = {
+                  "from": os.environ["MAIL_FROM"],
+                  "to": [addr],
+                  "subject": subject,
+                  "html": html,
+              }
+              res = subprocess.run(
+                  [
+                      "curl", "-sS", "-w", "\\n%{http_code}", "-X", "POST",
+                      "https://api.resend.com/emails",
+                      "-H", f"Authorization: Bearer {os.environ['RESEND_API_KEY']}",
+                      "-H", "Content-Type: application/json",
+                      "--data-binary", "@-",
+                  ],
+                  input=json.dumps(payload).encode(),
+                  capture_output=True,
+              )
+              lines = [l for l in res.stdout.decode().splitlines() if l.strip()]
+              code = lines[-1].strip() if lines else ""
+              body = "\n".join(lines[:-1])
+              if res.returncode != 0 or not code.startswith("2"):
+                  failures.append(addr)
+                  print(f"FAILED  -> {addr}: HTTP {code or 'no response'} {body[:200]}")
+              else:
+                  print(f"sent    -> {addr}")
+
+          if failures:
+              print(f"::error::Failed to send to: {', '.join(failures)}")
+              sys.exit(1)
+          PY

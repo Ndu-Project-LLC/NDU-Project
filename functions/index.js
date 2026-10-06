@@ -9,6 +9,11 @@ const {
   forwardCompletion,
   OPENAI_URL,
 } = require('./llm-router');
+const {
+  publicProviderConfig: oauthPublicProviderConfig,
+  exchangeCode: oauthExchangeCode,
+  refreshAccessToken: oauthRefreshAccessToken,
+} = require('./oauth-broker');
 
 // Initialize admin only if not already initialized
 if (!admin.apps.length) {
@@ -2759,6 +2764,131 @@ exports.listAllProjectsAdmin = functions
     } catch (error) {
       console.error('listAllProjectsAdmin error:', error);
       throw new functions.https.HttpsError('internal', `Failed to fetch projects: ${error.message}`);
+    }
+  });
+
+// ============================================================================
+// ACCOUNTING INTEGRATION OAUTH BROKER
+//
+// QuickBooks Online, Xero, Sage Intacct and SAP S/4HANA are confidential
+// OAuth clients: the token exchange needs the client secret and cannot be done
+// from a browser. The Flutter web build
+// (lib/services/backend_oauth_broker.dart) sends the authorization code here;
+// the secret stays server-side and only the tokens travel back. The
+// mobile/desktop builds keep using flutter_appauth directly
+// (lib/services/integration_oauth_service.dart).
+//
+// Configure each provider's credentials either as plain environment values in
+// functions/.env (gitignored):
+//
+//   QUICKBOOKS_CLIENT_ID=...   QUICKBOOKS_CLIENT_SECRET=...
+//   XERO_CLIENT_ID=...         XERO_CLIENT_SECRET=...
+//   SAGE_CLIENT_ID=...         SAGE_CLIENT_SECRET=...
+//   SAP_CLIENT_ID=...          SAP_CLIENT_SECRET=...
+//
+// or through Secret Manager — `firebase functions:secrets:set XERO_CLIENT_SECRET`
+// — and then list those names in OAUTH_BROKER_SECRETS below so the runtime is
+// granted access to them. The list is deliberately empty: declaring a secret
+// that does not exist yet makes `firebase deploy` fail outright. Unconfigured
+// providers report configured:false rather than pretending.
+// ============================================================================
+
+const OAUTH_BROKER_SECRETS = [];
+
+const OAUTH_PROVIDERS = ['quickbooks', 'xero', 'sage', 'sap'];
+
+/**
+ * Public half of a provider's OAuth configuration: the client id, authorize
+ * endpoint and scopes the browser needs to start consent. The client secret is
+ * never included.
+ */
+exports.oauthProviderConfig = functions
+  .runWith({ secrets: OAUTH_BROKER_SECRETS, timeoutSeconds: 30, memory: '256MB' })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'Sign in before connecting an accounting system.'
+      );
+    }
+    const provider = String((data && data.provider) || '').toLowerCase();
+    const config = oauthPublicProviderConfig(provider);
+    if (!config) {
+      console.warn(`[oauthProviderConfig] Unsupported provider: ${provider}`);
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        `Unsupported accounting provider: ${provider}`
+      );
+    }
+    return config;
+  });
+
+/** Redeems an authorization code for tokens, server-side. */
+exports.oauthExchange = functions
+  .runWith({ secrets: OAUTH_BROKER_SECRETS, timeoutSeconds: 60, memory: '256MB' })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'Sign in before connecting an accounting system.'
+      );
+    }
+    const payload = data || {};
+    const provider = String(payload.provider || '').toLowerCase();
+    if (!OAUTH_PROVIDERS.includes(provider)) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        `Unsupported accounting provider: ${provider}`
+      );
+    }
+
+    try {
+      const tokens = await oauthExchangeCode({
+        provider,
+        code: payload.code,
+        codeVerifier: payload.codeVerifier,
+        redirectUri: payload.redirectUri,
+        tenantHost: payload.tenantHost,
+      });
+      // Audit trail only — never log tokens or the client secret.
+      await logSecurityEvent('oauth_exchange', context.auth.uid, { provider });
+      return tokens;
+    } catch (error) {
+      console.error(`[oauthExchange] ${provider} failed: ${error.message}`);
+      throw new functions.https.HttpsError('failed-precondition', error.message);
+    }
+  });
+
+/** Renews an expired access token from a stored refresh token. */
+exports.oauthRefresh = functions
+  .runWith({ secrets: OAUTH_BROKER_SECRETS, timeoutSeconds: 60, memory: '256MB' })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'Sign in to renew an accounting connection.'
+      );
+    }
+    const payload = data || {};
+    const provider = String(payload.provider || '').toLowerCase();
+    if (!OAUTH_PROVIDERS.includes(provider)) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        `Unsupported accounting provider: ${provider}`
+      );
+    }
+
+    try {
+      const tokens = await oauthRefreshAccessToken({
+        provider,
+        refreshToken: payload.refreshToken,
+        tenantHost: payload.tenantHost,
+      });
+      await logSecurityEvent('oauth_refresh', context.auth.uid, { provider });
+      return tokens;
+    } catch (error) {
+      console.error(`[oauthRefresh] ${provider} failed: ${error.message}`);
+      throw new functions.https.HttpsError('failed-precondition', error.message);
     }
   });
 

@@ -10,9 +10,10 @@
 /// are not supported", stream-listener "invalid state" errors), so a widget
 /// that threw one of them rendered **nothing at all** — a blank page body with
 /// a live sidebar and header, nothing in the console, and no way for the user
-/// or a developer to tell what happened. Only framework/harness noise is
-/// silently dropped now; every other failure draws [AppErrorScreen] with the
-/// message and stack, and every suppression is logged.
+/// or a developer to tell what happened. Nothing is dropped from the screen
+/// any more: every failure draws [AppErrorScreen] with the message and stack.
+/// Framework noise is kept out of the console only, and every suppression is
+/// logged.
 library;
 
 import 'package:flutter/material.dart';
@@ -20,11 +21,15 @@ import 'package:flutter/material.dart';
 /// Error-message fragments that indicate framework or tooling noise rather
 /// than a broken screen.
 ///
-/// These are safe to hide: they are emitted by the widget inspector, by
-/// `Restorable*` property registration on hot reload, by modal-route
-/// bookkeeping, and by `ListTile`s that sit behind a `DecoratedBox` (the app
-/// wraps every route in a transparent `Material` for exactly that reason).
-/// Hiding one of them cannot hide a failure of the screen's own content.
+/// These are kept out of the *console* (see [installAppErrorHandling]): they
+/// are emitted by the widget inspector, by `Restorable*` property registration
+/// on hot reload, by modal-route bookkeeping, and by `ListTile`s that sit
+/// behind a `DecoratedBox` (the app wraps every route in a transparent
+/// `Material` for exactly that reason).
+///
+/// They are deliberately **not** hidden from the UI — see
+/// [buildAppErrorWidget]. Hiding a message from the screen is what produces a
+/// blank page that nobody can diagnose.
 ///
 /// Deliberately narrow: stack-trace fragments are never matched (in a release
 /// build every frame contains `mode#`, which would suppress *every* error and
@@ -44,15 +49,20 @@ bool isBenignFrameworkNoise(String message) {
 
 /// What a failed subtree renders.
 ///
-/// Never `SizedBox.shrink()`: a page that fails to build must say so. The
-/// sidebar and header of the surrounding shell keep rendering either way, so a
-/// silent empty body is indistinguishable from "this page has no content" —
-/// the symptom this policy exists to prevent.
+/// Always [AppErrorScreen] — including for the framework noise listed in
+/// [isBenignFrameworkNoise]. Hiding *those* was the last silent path left: if
+/// the failure happens at the root of the app, `SizedBox.shrink()` paints an
+/// empty frame over the page's own background, the `flutter-first-frame` event
+/// still fires so the HTML loading spinner is removed, and the console shows
+/// nothing — a uniformly blank screen with no way to tell a broken app from a
+/// page that has not loaded yet. A card naming the failure is never wrong, and
+/// a false positive costs one visible message; a false negative costs the
+/// whole screen.
+///
+/// The noise is still kept out of the console by [installAppErrorHandling],
+/// so nothing here reintroduces log spam.
 Widget buildAppErrorWidget(FlutterErrorDetails details) {
   final message = details.exceptionAsString();
-  if (isBenignFrameworkNoise(message)) {
-    return const SizedBox.shrink();
-  }
   debugPrint('ErrorWidget.builder rendering error screen: $message');
   return AppErrorScreen(
     title: 'Something went wrong',
@@ -66,6 +76,10 @@ Widget buildAppErrorWidget(FlutterErrorDetails details) {
 ///
 /// Suppressed noise is logged, not swallowed silently: if a screen ever comes
 /// up blank, the console has to say which error blanked it.
+///
+/// Note that this only governs the *console*. What a failed subtree *draws* is
+/// decided by [buildAppErrorWidget], which never hides anything — a hidden
+/// widget at the root of the app is a uniformly blank page.
 void installAppErrorHandling() {
   final previousHandler = FlutterError.onError;
   FlutterError.onError = (FlutterErrorDetails details) {

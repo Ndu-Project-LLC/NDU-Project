@@ -8,10 +8,12 @@
 // indistinguishable from an empty page: sidebar and header drew, the body came
 // up blank, and the console said nothing. These tests pin down the fix:
 //
-//   * only framework/tooling noise is hidden;
+//   * the screen never hides a failure — not even framework noise, because a
+//     hidden widget at the root is a uniformly blank page;
 //   * a data-layer failure draws a visible error screen naming the failure;
-//   * every suppression is logged, and real errors still reach the previous
-//     handler (so the test binding / crash reporting still sees them).
+//   * noise stays out of the console (still logged, never silent), and real
+//     errors still reach the previous handler (so the test binding / crash
+//     reporting still sees them).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -84,11 +86,21 @@ void main() {
   });
 
   group('what a failed subtree renders', () {
-    test('framework noise still renders nothing', () {
-      final widget = buildAppErrorWidget(FlutterErrorDetails(
-        exception: StateError('Id does not exist.'),
-      ));
-      expect(widget, isA<SizedBox>());
+    test('framework noise renders a card, never nothing', () {
+      // Hiding noise from the *screen* is what produced a uniformly blank
+      // page with no console output: the failure still fired flutter-first-frame
+      // (so the HTML loading spinner was removed) while its widget drew zero
+      // pixels.
+      for (final message in const [
+        'Id does not exist.',
+        '_RestorableNode was used after being disposed.',
+        'ModalScopeStatus.of() called with a context that has no ModalRoute.',
+        'ListTile background color or ink splashes may be invisible.',
+      ]) {
+        final widget = buildAppErrorWidget(
+            FlutterErrorDetails(exception: StateError(message)));
+        expect(widget, isA<AppErrorScreen>(), reason: message);
+      }
     });
 
     test('a data failure renders a visible error screen', () {
@@ -126,19 +138,18 @@ void main() {
       expect(find.text('Page header'), findsOneWidget);
     });
 
-    testWidgets('the hidden case is limited to framework noise', (tester) async {
+    testWidgets('even a framework-noise failure draws a visible screen',
+        (tester) async {
       await tester.pumpWidget(const MaterialApp(
         home: Scaffold(
           body: _Exploding('_RestorableNode was used after being disposed.'),
         ),
       ));
 
-      // Reported (so it is diagnosable), but drawn as nothing — this is the
-      // narrow, deliberate exception for framework noise.
+      // Reported (so it is diagnosable) and drawn — never blank.
       expect(tester.takeException(), isA<StateError>());
 
-      expect(find.byType(AppErrorScreen), findsNothing);
-      expect(find.byType(SizedBox), findsWidgets);
+      expect(find.byType(AppErrorScreen), findsOneWidget);
     });
   });
 

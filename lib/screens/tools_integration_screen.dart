@@ -2671,11 +2671,12 @@ showNavigationButtons: false,
  case IntegrationProvider.microsoftTeams: return 'Microsoft Teams';
  case IntegrationProvider.microsoft365: return 'Microsoft 365';
  case IntegrationProvider.quickBooks: return 'QuickBooks';
- case IntegrationProvider.xero: return 'Xero';
- case IntegrationProvider.salesforce: return 'Salesforce';
- case IntegrationProvider.hubSpot: return 'HubSpot';
- }
- }
+ case IntegrationProvider.xero: return 'Xero';      case IntegrationProvider.salesforce: return 'Salesforce';
+      case IntegrationProvider.hubSpot: return 'HubSpot';
+      case IntegrationProvider.sage: return 'Sage Intacct';
+      case IntegrationProvider.sap: return 'SAP S/4HANA';
+    }
+  }
 
  String _providerSubtitle(String provider) {
  switch (provider) {

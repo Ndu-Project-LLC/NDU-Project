@@ -307,6 +307,11 @@ class CostEstimateProvider extends ChangeNotifier {
                   'stakeholders': _estimate!.stakeholders
                       .map((s) => s.toJson())
                       .toList(growable: false),
+                  // The accounting connection (provider, granted scopes, GL
+                  // mapping) is real state: persisting it is what keeps a
+                  // connected ledger connected across a restart.
+                  'accountingIntegration':
+                      _estimate!.accountingIntegration?.toJson(),
                   'createdAt': _estimate!.createdAt.toIso8601String(),
                   'updatedAt': _estimate!.updatedAt.toIso8601String(),
                 }
@@ -364,6 +369,19 @@ class CostEstimateProvider extends ChangeNotifier {
       stakeholders = <Stakeholder>[];
     }
 
+    // Restore the accounting connection when present; a corrupt block must
+    // never take the whole estimate with it.
+    AccountingIntegration? accounting;
+    final accountingJson =
+        json['accountingIntegration'] as Map<String, dynamic>?;
+    if (accountingJson != null) {
+      try {
+        accounting = AccountingIntegration.fromJson(accountingJson);
+      } catch (_) {
+        accounting = null;
+      }
+    }
+
     return CostEstimate(
       id: json['id'] as String,
       projectId: json['projectId'] as String? ?? 'default',
@@ -379,6 +397,7 @@ class CostEstimateProvider extends ChangeNotifier {
       totals: totals,
       access: access,
       stakeholders: stakeholders,
+      accountingIntegration: accounting,
       aiSuggestions: [],
       createdAt: json['createdAt'] is String
           ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
@@ -1586,15 +1605,15 @@ class CostEstimateProvider extends ChangeNotifier {
 
   // ---- Accounting ----
 
+  /// Stores [patch] as the estimate's accounting connection.
+  ///
+  /// The record is stored whole (rather than rebuilt field by field) so a new
+  /// field — the granted scopes, the authorised account, the token expiry —
+  /// can never be silently dropped on the way in.
   void updateAccounting(AccountingIntegration patch) {
     if (_estimate == null) return;
     _estimate = _estimate!.copyWith(
-      accountingIntegration: AccountingIntegration(
-        provider: patch.provider,
-        connected: patch.connected,
-        connectedAt: patch.connectedAt,
-        glMapping: patch.glMapping,
-      ),
+      accountingIntegration: patch,
       updatedAt: DateTime.now(),
     );
     notifyListeners();

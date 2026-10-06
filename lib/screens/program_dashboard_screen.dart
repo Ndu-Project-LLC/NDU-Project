@@ -34,6 +34,7 @@ import 'package:ndu_project/utils/navigation_route_resolver.dart';
 import 'package:ndu_project/services/program_service.dart';
 import 'package:ndu_project/services/project_service.dart';
 import 'package:ndu_project/widgets/compact_action_button.dart';
+import 'package:ndu_project/widgets/aggregated_business_systems_card.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/screens/group_into_portfolio_screen.dart';
 import 'package:ndu_project/theme.dart';
@@ -106,6 +107,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
 
  // ─── Empty metrics fallback (used when streams haven't loaded yet) ──────
  static const _emptyMetrics = _ProgramMetrics(
+ programId: null,
  programName: 'Program Dashboard',
  programSubtitle: 'Loading…',
  totalBudget: 0,
@@ -508,6 +510,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  }).toList();
 
  return _ProgramMetrics(
+ programId: activeProgram?.id ?? widget.programId,
  programName: activeProgram?.name ?? 'Program Dashboard',
  programSubtitle: activeProgram != null
  ? '${relevantProjects.length} projects in this program'
@@ -1911,10 +1914,20 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  // Stack the left column (Project Status, risks, capacity) on top of the
  // right column (Escalations, Recent Activity, Visual Context) at every
  // screen width instead of placing them side by side.
+ final programId = metrics?.programId;
  return Column(children: [
  _leftColumn(metrics: metrics),
  const SizedBox(height: 24),
  _rightColumn(metrics: metrics),
+ // Business systems roll-up — the program's own connections plus the
+ // accounting connectors wired up on individual projects.
+ if (programId != null && programId.isNotEmpty) ...[
+ const SizedBox(height: 24),
+ AggregatedBusinessSystemsCard(
+ programId: programId,
+ programName: metrics?.programName,
+ ),
+ ],
  ]);
  }
 
@@ -2640,6 +2653,7 @@ class _RadialGaugePainter extends CustomPainter {
 // ═══════════════════════════════════════════════════════════════════════════
 
 class _ProgramMetrics {
+ final String? programId;
  final String programName;
  final String programSubtitle;
  final double totalBudget;
@@ -2653,6 +2667,7 @@ class _ProgramMetrics {
  final List<ProjectRecord> projects;
 
  const _ProgramMetrics({
+ required this.programId,
  required this.programName,
  required this.programSubtitle,
  required this.totalBudget,

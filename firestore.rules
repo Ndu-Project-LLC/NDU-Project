@@ -166,6 +166,26 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
       allow update: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || isAdmin());
       allow delete: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || isAdmin());
+
+      // ─── Program-scoped business systems ─────────────────────────────
+      // CRM / ERP / accounting connectors attached to a whole program, plus
+      // their cached snapshots (`{providerName}/snapshots/{snapshotId}`).
+      // These used to fall through to the default deny at the bottom of this
+      // file, so the connect screen could never persist a program-level
+      // connection and the dashboard roll-up card always read an empty list.
+      // Access mirrors the program itself: its owner and admins. `resource`
+      // here is the integration document, so the owner is read from the
+      // parent program document.
+      function isProgramOwner() {
+        return isAuthenticated()
+          && exists(/databases/$(database)/documents/programs/$(programId))
+          && request.auth.uid == get(/databases/$(database)/documents/programs/$(programId)).data.ownerId;
+      }
+
+      match /businessIntegrations/{document=**} {
+        allow read: if isProgramOwner() || isAdmin();
+        allow write: if isProgramOwner() || isAdmin();
+      }
     }
     
     // ─── Portfolios collection ─────────────────────────────────────────

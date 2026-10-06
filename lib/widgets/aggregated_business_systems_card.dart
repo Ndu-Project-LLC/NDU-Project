@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/screens/business_system_integrations_screen.dart';
 import 'package:ndu_project/services/business_system_integration_service.dart';
+import 'package:ndu_project/services/program_service.dart';
 
 /// Card shown on the program dashboard that aggregates data from all
 /// connected CRM / ERP / Accounting integrations.
+///
+/// The roll-up covers two scopes, because the app connects systems in two
+/// places: the program's own connect screen writes
+/// `programs/{programId}/businessIntegrations`, while the module connectors
+/// (the Cost Estimate's QuickBooks / Xero / Sage / SAP accounting providers)
+/// write `projects/{projectId}/businessIntegrations` for one of the program's
+/// projects. Both are merged here, one row per provider.
 ///
 /// Shows:
 /// - A row of category chips (CRM / ERP / Accounting) with per-category
@@ -16,10 +24,17 @@ class AggregatedBusinessSystemsCard extends StatefulWidget {
     super.key,
     required this.programId,
     this.programName,
+    this.projectIds,
   });
 
   final String programId;
   final String? programName;
+
+  /// Projects whose module-scoped connections are rolled in.
+  ///
+  /// Defaults to the projects listed on the program
+  /// ([ProgramModel.projectIds]).
+  final List<String>? projectIds;
 
   @override
   State<AggregatedBusinessSystemsCard> createState() =>
@@ -45,13 +60,17 @@ class _AggregatedBusinessSystemsCardState
       _error = null;
     });
     try {
-      final integrations =
+      final programIntegrations =
           await BusinessSystemIntegrationService.loadAll(widget.programId);
+      final projectIds = widget.projectIds ?? await _projectIds();
+      final moduleIntegrations = await BusinessSystemIntegrationService
+          .loadAllForProjects(projectIds);
       final snapshots = await BusinessSystemIntegrationService.loadSnapshots(
           widget.programId);
       if (mounted) {
         setState(() {
-          _integrations = integrations;
+          _integrations = BusinessSystemIntegrationService.mergeByProvider(
+              programIntegrations, moduleIntegrations);
           _snapshots = snapshots;
         });
       }
@@ -59,6 +78,18 @@ class _AggregatedBusinessSystemsCardState
       if (mounted) setState(() => _error = 'Failed to load: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// The projects that belong to this program, used to find connections made
+  /// from inside a module.
+  Future<List<String>> _projectIds() async {
+    try {
+      final program = await ProgramService.getProgram(widget.programId);
+      return program?.projectIds ?? const [];
+    } catch (e) {
+      debugPrint('[AggregatedBusinessSystemsCard] project lookup failed: $e');
+      return const [];
     }
   }
 

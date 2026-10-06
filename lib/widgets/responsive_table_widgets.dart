@@ -1,8 +1,15 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 /// Responsive wrapper for data tables with horizontal scroll support
+/// Width a table falls back to when its parent gives it no width at all
+/// (an unbounded parent and no `minWidth`), so its columns still have
+/// something to divide up.
+const double _kFallbackTableWidth = 720;
+
 class ResponsiveDataTableWrapper extends StatefulWidget {
   final Widget child;
   final double? minWidth;
@@ -91,14 +98,36 @@ class _ResponsiveDataTableWrapperState
         final hasBoundedHeight =
             widget.maxHeight != null || constraints.maxHeight.isFinite;
 
+        // A horizontally scrolling viewport hands its child an *unbounded*
+        // width. Some of these tables divide their columns with `Expanded`, and
+        // a flexed child cannot resolve against infinity: layout throws
+        // `RenderFlex children have non-zero flex but incoming width
+        // constraints are unbounded`, which poisons the whole page's render
+        // subtree — the sidebar and header still draw, the body comes up
+        // empty, and nothing on screen explains why.
+        //
+        // `IntrinsicWidth` supplies the missing definite width without
+        // capping it: the child is laid out at its own intrinsic width (so a
+        // genuinely wide table still overflows and scrolls, never squashes or
+        // clips), lifted to the viewport width — or [minWidth], when the table
+        // must not shrink below it — by the ConstrainedBox around it.
+        final double minTableWidth;
+        if (constraints.maxWidth.isFinite) {
+          minTableWidth = math.max(widget.minWidth ?? 0, constraints.maxWidth);
+        } else if ((widget.minWidth ?? 0) > 0) {
+          minTableWidth = widget.minWidth!;
+        } else {
+          // Unbounded parent and no minimum: a table with nothing to divide
+          // between its columns would collapse, so give it a readable floor.
+          minTableWidth = _kFallbackTableWidth;
+        }
+
         final horizontalChild = SingleChildScrollView(
           controller: _horizontalController,
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minWidth: widget.minWidth ?? constraints.maxWidth,
-            ),
-            child: widget.child,
+            constraints: BoxConstraints(minWidth: minTableWidth),
+            child: IntrinsicWidth(child: widget.child),
           ),
         );
 

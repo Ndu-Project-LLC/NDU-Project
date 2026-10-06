@@ -28,6 +28,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/web_utils.dart';
 import 'package:ndu_project/utils/file_upload_helper.dart';
+import 'package:ndu_project/widgets/safe_section.dart';
 import 'package:ndu_project/widgets/design_phase_stable_shell.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -343,9 +344,6 @@ Future<void> _loadProgress(String projectId) async {
  if (widget.activeItemLabel == 'Design Management') {
  return _buildStableManagementScreen(padding);
  }
- if (kIsWeb) {
- return _buildMinimalWebScreen(padding);
- }
 
  return ResponsiveScaffold(
  activeItemLabel: widget.activeItemLabel,
@@ -451,7 +449,10 @@ Future<void> _loadProgress(String projectId) async {
  // (it took up too much screen space).
 
  // ── 2. Notes Section ───────────────────────────────────────────
- _buildStableNotesCard(),
+ SafeSection(
+   title: 'Notes',
+   builder: (_) => _buildStableNotesCard(),
+ ),
  const SizedBox(height: 24),
 
  // ── 3. Design Management Heading ───────────────────────────────
@@ -471,23 +472,38 @@ Future<void> _loadProgress(String projectId) async {
  const SizedBox(height: 20),
 
  // ── 4. Design Strategy & Governance ────────────────────────────
- _buildStableStrategySection(),
+ SafeSection(
+   title: 'Design Strategy & Governance',
+   builder: (_) => _buildStableStrategySection(),
+ ),
  const SizedBox(height: 24),
 
  // ── 5. Two-Column Cards: Design Documents + Design Tools ───────
- _buildStableDocumentToolCards(),
+ SafeSection(
+   title: 'Design Documents & Tools',
+   builder: (_) => _buildStableDocumentToolCards(),
+ ),
  const SizedBox(height: 24),
 
  // ── 6. System Architecture Section ─────────────────────────────
- _buildStableSystemArchitecture(),
+ SafeSection(
+   title: 'System Architecture',
+   builder: (_) => _buildStableSystemArchitecture(),
+ ),
  const SizedBox(height: 24),
 
  // ── 7. Design Tools & Rich Text Editor ─────────────────────────
- _buildStableDesignToolsEditor(),
+ SafeSection(
+   title: 'Design Tools',
+   builder: (_) => _buildStableDesignToolsEditor(),
+ ),
  const SizedBox(height: 24),
 
  // ── 7.5 Collaborators Section ──────────────────────────────────
- _buildStableCollaboratorsCard(),
+ SafeSection(
+   title: 'Collaborators',
+   builder: (_) => _buildStableCollaboratorsCard(),
+ ),
  const SizedBox(height: 24),
 
  // ── 8. Navigation Buttons ──────────────────────────────────────
@@ -1923,70 +1939,6 @@ Future<void> _loadProgress(String projectId) async {
  ),
  ),
  ],
- ),
- );
- }
-
- Widget _buildMinimalWebScreen(double padding) {
- return Scaffold(
- backgroundColor: Theme.of(context).scaffoldBackgroundColor,
- floatingActionButton: const KazAiChatBubble(positioned: false),
- body: SafeArea(
- child: Center(
- child: Padding(
- padding: EdgeInsets.all(padding),
- child: ConstrainedBox(
- constraints: const BoxConstraints(maxWidth: 720),
- child: Container(
- width: double.infinity,
- padding: const EdgeInsets.all(24),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: AppSemanticColors.border),
- boxShadow: const [
- BoxShadow(
- color: Color(0x12000000),
- blurRadius: 18,
- offset: Offset(0, 10),
- ),
- ],
- ),
- child: const Column(
- mainAxisSize: MainAxisSize.min,
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Design Management',
- style: TextStyle(
- fontSize: 28,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827),
- ),
- ),
- SizedBox(height: 12),
- Text(
- 'Web diagnostic mode is active.',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w600,
- ),
- ),
- SizedBox(height: 12),
- Text(
- 'If this placeholder renders, the previous layout failure was inside the Design Management widget tree. If it still crashes, the failure is outside this screen and in a shared app wrapper.',
- style: TextStyle(
- fontSize: 14,
- height: 1.5,
- color: Color(0xFF4B5563),
- ),
- ),
- ],
- ),
- ),
- ),
- ),
- ),
  ),
  );
  }

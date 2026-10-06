@@ -17,6 +17,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/safe_section.dart';
 import 'package:ndu_project/widgets/design_phase_stable_shell.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/requirements_traceability_dashboard.dart';
@@ -1782,31 +1783,52 @@ if (!mounted) return;
  ),
  children: [
  // 1. Header Section
- _buildWebHeader(projectData),
+ SafeSection(
+   title: 'Specifications Header',
+   builder: (_) => _buildWebHeader(projectData),
+ ),
  const SizedBox(height: 16),
 
  // 4. Design Specifications Framework Guide
- _buildWebFrameworkGuide(),
+ SafeSection(
+   title: 'Specifications Framework',
+   builder: (_) => _buildWebFrameworkGuide(),
+ ),
  const SizedBox(height: 24),
 
  // 5. Requirements Register Table (MAIN)
- _buildWebRequirementsRegister(ownerOptions),
+ SafeSection(
+   title: 'Requirements Register',
+   builder: (_) => _buildWebRequirementsRegister(ownerOptions),
+ ),
  const SizedBox(height: 20),
 
  // 8. Approval Readiness Panel
- _buildWebApprovalReadinessPanel(),
+ SafeSection(
+   title: 'Approval Readiness',
+   builder: (_) => _buildWebApprovalReadinessPanel(),
+ ),
  const SizedBox(height: 20),
 
  // 9. Section Approval Card
- _buildSectionApprovalCard(ownerOptions),
+ SafeSection(
+   title: 'Section Approval',
+   builder: (_) => _buildSectionApprovalCard(ownerOptions),
+ ),
  const SizedBox(height: 20),
 
  // 10. Documents & Links Register
- _buildDocumentsRegister(ownerOptions),
+ SafeSection(
+   title: 'Documents & Links',
+   builder: (_) => _buildDocumentsRegister(ownerOptions),
+ ),
  const SizedBox(height: 20),
 
  // Working Notes
- _buildWebWorkingNotes(),
+ SafeSection(
+   title: 'Working Notes',
+   builder: (_) => _buildWebWorkingNotes(),
+ ),
  const SizedBox(height: 24),
 
  // Navigation

@@ -29,6 +29,7 @@ import 'package:ndu_project/providers/display_preferences_provider.dart';
 import 'package:ndu_project/widgets/no_animation_page_transitions_builder.dart';
 import 'package:ndu_project/widgets/speech_to_text_overlay.dart';
 import 'package:ndu_project/utils/screen_capture.dart';
+import 'package:ndu_project/utils/error_widget_policy.dart';
 import 'package:ndu_project/platform/webview_platform_setup.dart';
 import 'package:ndu_project/utils/browser_route_normalizer.dart';
 
@@ -38,88 +39,10 @@ void main() async {
   configureWebWebViewPlatform();
   normalizeBrowserHashRoute();
 
-  // Suppress specific framework warnings and inspector errors
-  final previousHandler = FlutterError.onError;
-  FlutterError.onError = (FlutterErrorDetails details) {
-    final message = details.exceptionAsString();
-
-    // Suppress inspector selection errors (common in Dreamflow preview)
-    if (message.contains('Id does not exist.')) {
-      debugPrint('Inspector selection error suppressed: $message');
-      return;
-    }
-
-    // Comprehensive suppression of RestorableNode/ModalScope warnings.
-    // NOTE: we deliberately do NOT match on stack-trace fragments like
-    // 'mode#' here — in release builds every stack frame contains 'mode#'
-    // (e.g. `<mode#...>`), so matching on it would suppress ALL errors and
-    // hide every real bug as a silent grey/blank screen.
-    if (message.contains('_RestorableNode') ||
-        message.contains('RestorableNode') ||
-        message.contains('_DialogScope') ||
-        message.contains('ModalScopeStatus') ||
-        message.contains('ModalScope') ||
-        message.contains('Nested arrays are not supported') ||
-        message.contains('Remote arrays are not supported') ||
-        message.contains('listening Function with') ||
-        message.contains('listening to Function') ||
-        message.contains('called with invalid state') ||
-        message.contains('saved with invalid state') ||
-        message.contains('invalid state. Nested arrays') ||
-        message.contains('ListTile background color or ink splashes') ||
-        (message.contains('listening to') &&
-            message.contains('invalid state'))) {
-      // Silently suppress — these are benign framework warnings that
-      // don't affect functionality and would only add noise to the console.
-      return;
-    }
-
-    // Log other errors for debugging
-    debugPrint('Flutter error: $message');
-    if (details.stack != null) {
-      debugPrint(details.stack.toString());
-    }
-    previousHandler?.call(details);
-  };
-
-  // Override the error widget builder to hide specific warnings from UI
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    final message = details.exceptionAsString();
-
-    // Don't show error widgets for these suppressed warnings (these are
-    // benign framework-level warnings that don't affect functionality).
-    // NOTE: we deliberately do NOT match on stack-trace fragments like
-    // 'mode#' here — in release builds every stack frame contains 'mode#'
-    // (e.g. `<mode#...>`), so matching on it would suppress ALL errors and
-    // turn every broken screen into a silent grey/blank page.
-    if (message.contains('Id does not exist.') ||
-        message.contains('_RestorableNode') ||
-        message.contains('RestorableNode') ||
-        message.contains('_DialogScope') ||
-        message.contains('ModalScopeStatus') ||
-        message.contains('ModalScope') ||
-        message.contains('Nested arrays are not supported') ||
-        message.contains('Remote arrays are not supported') ||
-        message.contains('listening Function with') ||
-        message.contains('listening to Function') ||
-        message.contains('called with invalid state') ||
-        message.contains('saved with invalid state') ||
-        message.contains('invalid state. Nested arrays') ||
-        message.contains('ListTile background color or ink splashes') ||
-        (message.contains('listening to') &&
-            message.contains('invalid state'))) {
-      return const SizedBox.shrink();
-    }
-
-    // For other errors, show a friendly error screen so the user sees a
-    // helpful message instead of a silent grey/blank page.
-    debugPrint('ErrorWidget.builder rendering error screen: $message');
-    return _FriendlyErrorScreen(
-      title: 'Something went wrong',
-      message: message,
-      stack: details.stack?.toString(),
-    );
-  };
+  // Framework-noise suppression + a visible fallback for real failures.
+  // Shared with the admin entry point — see the policy file for why the
+  // list of silently-hidden messages is deliberately narrow.
+  installAppErrorHandling();
 
   // Firebase must be ready before providers or routes touch Auth/Firestore.
   // Initialization itself is bounded by a timeout; keeping this ordering
@@ -527,98 +450,6 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class _FriendlyErrorScreen extends StatelessWidget {
-  const _FriendlyErrorScreen(
-      {required this.title, required this.message, this.stack});
-
-  final String title;
-  final String message;
-  final String? stack;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      body: SafeArea(
-        top: true,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.warning_amber_rounded,
-                              color: theme.colorScheme.error, size: 36),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child:
-                                Text(title, style: theme.textTheme.titleLarge),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(message, style: theme.textTheme.bodyMedium),
-                      if (stack != null) ...[
-                        const SizedBox(height: 12),
-                        ExpansionTile(
-                          leading:
-                              const Icon(Icons.bug_report, color: Colors.red),
-                          title: const Text('Technical details'),
-                          children: [
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Text(
-                                stack!,
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FilledButton.icon(
-                          onPressed: () {
-                            // Try to navigate back safely, or do nothing if Navigator isn't available
-                            try {
-                              final nav = Navigator.maybeOf(context,
-                                  rootNavigator: true);
-                              if (nav != null && nav.canPop()) {
-                                nav.pop();
-                              } else {
-                                debugPrint(
-                                    'No Navigator available or cannot pop. Please refresh the app manually.');
-                              }
-                            } catch (e) {
-                              debugPrint('Error during retry: $e');
-                            }
-                          },
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Retry'),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

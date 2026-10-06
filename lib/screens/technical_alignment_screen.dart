@@ -16,6 +16,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/safe_section.dart';
 import 'package:ndu_project/widgets/design_phase_stable_shell.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -670,19 +671,40 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       child: ListView(
         padding: EdgeInsets.all(padding),
         children: [
-          _buildDetailedRegistersPanel(ownerOptions),
+          SafeSection(
+            title: 'Detailed Registers',
+            builder: (_) => _buildDetailedRegistersPanel(ownerOptions),
+          ),
           const SizedBox(height: 24),
-          _buildStableMethodologyMatrix(),
+          SafeSection(
+            title: 'Methodology Matrix',
+            builder: (_) => _buildStableMethodologyMatrix(),
+          ),
           const SizedBox(height: 24),
-          _buildStableReadinessGateTable(),
+          SafeSection(
+            title: 'Readiness Gate',
+            builder: (_) => _buildStableReadinessGateTable(),
+          ),
           const SizedBox(height: 24),
-          _buildStableTraceabilityTable(),
+          SafeSection(
+            title: 'Traceability Matrix',
+            builder: (_) => _buildStableTraceabilityTable(),
+          ),
           const SizedBox(height: 24),
-          _buildStableConstraintPanel(ownerOptions),
+          SafeSection(
+            title: 'Constraints',
+            builder: (_) => _buildStableConstraintPanel(ownerOptions),
+          ),
           const SizedBox(height: 24),
-          _buildStableMappingPanel(),
+          SafeSection(
+            title: 'Mapping',
+            builder: (_) => _buildStableMappingPanel(),
+          ),
           const SizedBox(height: 24),
-          _buildStableDependencyPanel(ownerOptions),
+          SafeSection(
+            title: 'Dependencies',
+            builder: (_) => _buildStableDependencyPanel(ownerOptions),
+          ),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(20),

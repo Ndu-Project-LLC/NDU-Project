@@ -40,6 +40,16 @@ class ProjectDashboardScreen extends StatefulWidget {
 class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  late final ValueNotifier<Set<String>> _selectedProjectIds;
 
+ // Streams are created once per signed-in owner and reused across rebuilds.
+ // Building them inline in build() produced a new Stream instance on every
+ // rebuild, so each StreamBuilder cancelled and re-subscribed — re-issuing
+ // Firestore queries and repeating the "StreamProjects" debug log.
+ String? _streamsOwnerId;
+ Stream<List<ProjectRecord>>? _workspacesProjects$;
+ Stream<List<ProjectRecord>>? _statusProjects$;
+ Stream<List<ProgramModel>>? _statusPrograms$;
+ Stream<List<PortfolioModel>>? _statusPortfolios$;
+
  @override
  void initState() {
  super.initState();
@@ -92,6 +102,20 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  }
 
  _selectedProjectIds.value = current;
+ }
+
+ void _ensureStreams(String ownerId) {
+ if (_streamsOwnerId == ownerId) return;
+ _workspacesProjects$ = ProjectService.streamProjects(
+ ownerId: ownerId,
+ filterByOwner: true,
+ limit: 200,
+ );
+ _statusProjects$ =
+ ProjectService.streamProjects(ownerId: ownerId, limit: 100);
+ _statusPrograms$ = ProgramService.streamPrograms(ownerId: ownerId);
+ _statusPortfolios$ = PortfolioService.streamPortfolios(ownerId: ownerId);
+ _streamsOwnerId = ownerId;
  }
 
  void _clearSelection() {
@@ -473,6 +497,10 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
       );
     }
 
+    if (user != null) {
+      _ensureStreams(user.uid);
+    }
+
     final palette = DashboardPalette.forPlan(widget.isBasicPlan);
 
     return DashboardPaletteScope(
@@ -517,7 +545,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                           isBasicPlan: widget.isBasicPlan,
                         ),
                         const SizedBox(height: 20),
-                        const _StatusStrip(),
+                        _StatusStrip(
+                          projectsStream: _statusProjects$,
+                          programsStream: _statusPrograms$,
+                          portfoliosStream: _statusPortfolios$,
+                        ),
                         const SizedBox(height: 20),
                         // ── Quick actions (standard plan) ──
                         if (!widget.isBasicPlan)
@@ -578,11 +610,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                               projects: const [], isLoading: false)
                         else
                           StreamBuilder<List<ProjectRecord>>(
-                            stream: ProjectService.streamProjects(
-                              ownerId: user.uid,
-                              filterByOwner: true,
-                              limit: 200,
-                            ),
+                            stream: _workspacesProjects$!,
                             builder: (context, snapshot) {
                               final projects =
                                   snapshot.data ?? const <ProjectRecord>[];
@@ -614,7 +642,17 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
 }
 
 class _StatusStrip extends StatelessWidget {
-  const _StatusStrip();
+  const _StatusStrip({
+    this.projectsStream,
+    this.programsStream,
+    this.portfoliosStream,
+  });
+
+  /// Optional pre-built streams, passed down by the dashboard state so the
+  /// widget does not rebuild (and re-subscribe to) them on every rebuild.
+  final Stream<List<ProjectRecord>>? projectsStream;
+  final Stream<List<ProgramModel>>? programsStream;
+  final Stream<List<PortfolioModel>>? portfoliosStream;
 
   @override
   Widget build(BuildContext context) {
@@ -677,7 +715,8 @@ class _StatusStrip extends StatelessWidget {
     }
 
     return StreamBuilder<List<ProjectRecord>>(
-      stream: ProjectService.streamProjects(ownerId: user.uid, limit: 100),
+      stream: projectsStream ??
+          ProjectService.streamProjects(ownerId: user.uid, limit: 100),
       builder: (context, projectSnapshot) {
         final projects = projectSnapshot.data ?? const <ProjectRecord>[];
         final projectCount =
@@ -686,12 +725,14 @@ class _StatusStrip extends StatelessWidget {
             projects.where((p) => p.isBasicPlanProject).length;
 
         return StreamBuilder<List<ProgramModel>>(
-          stream: ProgramService.streamPrograms(ownerId: user.uid),
+          stream: programsStream ??
+              ProgramService.streamPrograms(ownerId: user.uid),
           builder: (context, programSnapshot) {
             final programCount =
                 programSnapshot.hasData ? programSnapshot.data!.length : 0;
             return StreamBuilder<List<PortfolioModel>>(
-              stream: PortfolioService.streamPortfolios(ownerId: user.uid),
+              stream: portfoliosStream ??
+                  PortfolioService.streamPortfolios(ownerId: user.uid),
               builder: (context, portfolioSnapshot) {
                 final portfolioCount = portfolioSnapshot.hasData
                     ? portfolioSnapshot.data!.length

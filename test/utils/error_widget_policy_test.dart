@@ -138,6 +138,46 @@ void main() {
       expect(find.text('Page header'), findsOneWidget);
     });
 
+    testWidgets('a failure in a fixed-height slot does not blank the page',
+        (tester) async {
+      // The reported symptom, part two: the failure lands in a *fixed-height*
+      // sibling slot — a page header inside a Column, or a child of a ListView
+      // — rather than in an Expanded. That slot hands its child an unbounded
+      // height. The fallback used to be a `Scaffold`, which cannot lay out
+      // without a bounded parent: it threw `RenderCustomMultiChildLayoutBox ...
+      // infinite size` during layout, which poisons the whole content subtree,
+      // so the header and body both vanished while the sidebar kept drawing.
+      await tester.pumpWidget(const MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              _Exploding('Nested arrays are not supported'),
+              Expanded(child: SizedBox.shrink()),
+            ],
+          ),
+        ),
+      ));
+
+      // Drain every queued report: a layout failure is reported *after* the
+      // build failure, so stopping at the first exception would miss it.
+      final seen = <Object>[];
+      for (var i = 0; i < 50; i++) {
+        final extra = tester.takeException();
+        if (extra == null) break;
+        seen.add(extra);
+      }
+
+      expect(find.byType(AppErrorScreen), findsOneWidget);
+      expect(find.textContaining('Nested arrays are not supported'),
+          findsWidgets);
+      expect(
+        seen.where((e) => e.toString().contains('infinite size')).toList(),
+        isEmpty,
+        reason: 'The fallback must lay out with an unbounded parent; it threw: '
+            '$seen',
+      );
+    });
+
     testWidgets('even a framework-noise failure draws a visible screen',
         (tester) async {
       await tester.pumpWidget(const MaterialApp(

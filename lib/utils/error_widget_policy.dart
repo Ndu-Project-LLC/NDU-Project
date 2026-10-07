@@ -61,6 +61,9 @@ bool isBenignFrameworkNoise(String message) {
 ///
 /// The noise is still kept out of the console by [installAppErrorHandling],
 /// so nothing here reintroduces log spam.
+///
+/// The widget returned here must lay out in *any* slot — see
+/// [AppErrorScreen] for why an unbounded parent is the case that matters.
 Widget buildAppErrorWidget(FlutterErrorDetails details) {
   final message = details.exceptionAsString();
   debugPrint('ErrorWidget.builder rendering error screen: $message');
@@ -104,10 +107,21 @@ void installAppErrorHandling() {
   ErrorWidget.builder = buildAppErrorWidget;
 }
 
-/// Full-screen fallback shown in place of a subtree whose build threw.
+/// Fallback shown in place of a subtree whose build threw.
 ///
 /// Names the failure and offers a back/retry action, so a broken page is
 /// visible and diagnosable instead of blank.
+///
+/// Layout note — this widget is substituted wherever the failed one used to
+/// sit, so it has to survive *any* slot. It is a full-screen card when the
+/// parent is bounded, and a content-sized card when it is not. That second
+/// case is the one that used to blank pages: a failed widget in a fixed-height
+/// sibling slot (a page header inside a `Column`, or a child of a `ListView`)
+/// receives an *unbounded* height, and the `Scaffold` this used to be threw
+/// `RenderCustomMultiChildLayoutBox ... infinite size` during layout. A layout
+/// failure poisons the whole content subtree, so the header and body vanished
+/// while the sidebar kept drawing — a grey page with no way to tell it had
+/// failed. Nothing here may require a bounded parent.
 class AppErrorScreen extends StatelessWidget {
   const AppErrorScreen({
     super.key,
@@ -123,83 +137,104 @@ class AppErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      body: SafeArea(
-        top: true,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.warning_amber_rounded,
-                              color: theme.colorScheme.error, size: 36),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child:
-                                Text(title, style: theme.textTheme.titleLarge),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(message, style: theme.textTheme.bodyMedium),
-                      if (stack != null) ...[
-                        const SizedBox(height: 12),
-                        ExpansionTile(
-                          leading:
-                              const Icon(Icons.bug_report, color: Colors.red),
-                          title: const Text('Technical details'),
-                          children: [
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Text(
-                                stack!,
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FilledButton.icon(
-                          onPressed: () {
-                            // Try to navigate back safely, or do nothing if
-                            // Navigator isn't available.
-                            try {
-                              final nav = Navigator.maybeOf(context,
-                                  rootNavigator: true);
-                              if (nav != null && nav.canPop()) {
-                                nav.pop();
-                              } else {
-                                debugPrint('No Navigator available or cannot '
-                                    'pop. Please refresh the app manually.');
-                              }
-                            } catch (e) {
-                              debugPrint('Error during retry: $e');
-                            }
-                          },
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Retry'),
-                        ),
-                      ),
-                    ],
+
+    // The failure card. Deliberately an intrinsically-sized widget: it draws
+    // the same content whether the slot hands it tight or infinite height.
+    final card = Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.warning_amber_rounded,
+                    color: theme.colorScheme.error, size: 36),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(title, style: theme.textTheme.titleLarge),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(message, style: theme.textTheme.bodyMedium),
+            if (stack != null) ...[
+              const SizedBox(height: 12),
+              ExpansionTile(
+                leading: const Icon(Icons.bug_report, color: Colors.red),
+                title: const Text('Technical details'),
+                children: [
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Text(
+                      stack!,
+                      style: theme.textTheme.bodySmall,
+                    ),
                   ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.icon(
+                onPressed: () {
+                  // Try to navigate back safely, or do nothing if Navigator
+                  // isn't available.
+                  try {
+                    final nav = Navigator.maybeOf(context,
+                        rootNavigator: true);
+                    if (nav != null && nav.canPop()) {
+                      nav.pop();
+                    } else {
+                      debugPrint('No Navigator available or cannot '
+                          'pop. Please refresh the app manually.');
+                    }
+                  } catch (e) {
+                    debugPrint('Error during retry: $e');
+                  }
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return Material(
+      color: theme.colorScheme.surface,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // No bounded parent (a fixed-height Column sibling, a ListView child):
+          // size to the card instead of asking for the whole viewport. A
+          // viewport-sized widget here is what threw during layout.
+          final unbounded = !constraints.hasBoundedHeight ||
+              !constraints.hasBoundedWidth;
+          if (unbounded) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: card,
+              ),
+            );
+          }
+          return SafeArea(
+            top: true,
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: card,
                 ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

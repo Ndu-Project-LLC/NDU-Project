@@ -50,6 +50,74 @@
       window.setTimeout(function() { loader.remove(); }, 220);
     });
   </script>
+  <!--
+    Boot diagnostics. A start that fails or stalls has to say so on screen:
+    otherwise a broken boot is visually identical to a site that has not
+    loaded yet — same dark background, no console, nothing to act on. These
+    three listeners only ever add a message; they never block Flutter.
+  -->
+  <script>
+    (function() {
+      var started = Date.now();
+      var reported = false;
+
+      function fail(title, detail) {
+        if (reported) return;
+        reported = true;
+        try {
+          var box = document.createElement('div');
+          box.setAttribute('role', 'alert');
+          box.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:9999;'
+            + 'background:#7f1d1d;color:#fecaca;padding:14px 18px;'
+            + 'font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;'
+            + 'white-space:pre-wrap;word-break:break-word;';
+          var head = document.createElement('strong');
+          head.textContent = title + '\n';
+          var body = document.createElement('span');
+          body.textContent = detail;
+          box.appendChild(head);
+          box.appendChild(body);
+          document.body.appendChild(box);
+        } catch (_) {}
+      }
+
+      // A script that never loads (blocked, offline, interrupted) leaves the
+      // spinner running forever with no indication of why.
+      window.addEventListener('error', function(e) {
+        var target = e.target;
+        if (target && target !== window && target.tagName === 'SCRIPT') {
+          fail('NDU Project could not start',
+            'A required script failed to load: ' + (target.src || 'unknown') +
+            '\nCheck the connection (or a blocking extension) and reload.');
+          return;
+        }
+        if (e.message) {
+          fail('NDU Project could not start', e.message +
+            (e.filename ? '\n' + e.filename.split('/').pop() + ':' + (e.lineno || 0) : ''));
+        }
+      }, true);
+
+      window.addEventListener('unhandledrejection', function(e) {
+        var r = e.reason;
+        var msg = r && (r.stack || r.message) ? String(r.stack || r.message) : String(r);
+        fail('NDU Project could not start', msg.split('\n').slice(0, 4).join('\n'));
+      });
+
+      // Stalled start: keep the user informed instead of spinning silently.
+      window.setInterval(function() {
+        var el = document.getElementById('loading-indicator');
+        if (!el || reported) return;
+        var secs = Math.round((Date.now() - started) / 1000);
+        if (secs < 15) return;
+        var text = el.querySelector('.loading-text');
+        if (text) {
+          text.textContent = 'Still loading… ' + secs + 's.'
+            + (secs >= 45 ? ' This is taking too long — reload the page.'
+                          : ' A slow connection can take a while.');
+        }
+      }, 1000);
+    })();
+  </script>
   <!-- Runtime config must be available before Flutter starts. -->
   <script>
     (function() {

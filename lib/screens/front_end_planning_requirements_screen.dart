@@ -26,6 +26,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
+import 'package:ndu_project/widgets/wbs_mapping_selectors.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:go_router/go_router.dart';
@@ -272,6 +273,9 @@ class _FrontEndPlanningRequirementsScreenState
               _resolvePersonSelection(item.person, roleHint: item.role);
           row.selectedPhase = _normalizePhaseSelection(item.phase);
           row.sourceController.text = item.requirementSource;
+          row.selectedWbsGoal =
+              item.wbsGoalId.trim().isEmpty ? null : item.wbsGoalId.trim();
+          row.selectedWbsElements = List<String>.from(item.wbsElementIds);
           return row;
         }).toList(),
       );
@@ -1071,6 +1075,8 @@ class _FrontEndPlanningRequirementsScreenState
                       _tableHeaderCell('Person', 120, headerStyle),
                       _tableHeaderCell('Phase', 100, headerStyle),
                       _tableHeaderCell('Source', 160, headerStyle),
+                      _tableHeaderCell('WBS Mapping (Goal)', 180, headerStyle),
+                      _tableHeaderCell('Sub WBS', 200, headerStyle),
                       _tableHeaderCell('Comments', 200, headerStyle),
                       _tableHeaderCell('Actions', 80, headerStyle),
                     ],
@@ -1130,6 +1136,8 @@ class _FrontEndPlanningRequirementsScreenState
                               : row.sourceController.text.trim(),
                           160,
                         ),
+                        _tableDataCell(_wbsGoalLabel(row), 180),
+                        _tableDataCell(_wbsElementsLabel(row), 200),
                         _tableDataCell(
                           row.commentsController.text.trim().isEmpty
                               ? '—'
@@ -1187,6 +1195,21 @@ class _FrontEndPlanningRequirementsScreenState
         ),
       ),
     );
+  }
+
+  String _wbsGoalLabel(_RequirementRow row) {
+    final goal = row.selectedWbsGoal;
+    if (goal == null || goal.isEmpty) return '—';
+    return goal == 'ALL' ? 'ALL — Entire project' : goal;
+  }
+
+  String _wbsElementsLabel(_RequirementRow row) {
+    if (row.selectedWbsGoal == null ||
+        row.selectedWbsGoal == 'ALL' ||
+        row.selectedWbsElements.isEmpty) {
+      return '—';
+    }
+    return row.selectedWbsElements.join(', ');
   }
 
   Widget _tableHeaderCell(String text, double width, TextStyle style) {
@@ -1752,6 +1775,9 @@ class _FrontEndPlanningRequirementsScreenState
     String? selectedDiscipline =
         _normalizeDisciplineSelection(row.selectedDiscipline);
     String? selectedPhase = _normalizePhaseSelection(row.selectedPhase);
+    String? selectedWbsGoal = row.selectedWbsGoal;
+    List<String> selectedWbsElements =
+        List<String>.from(row.selectedWbsElements);
 
     await showDialog<void>(
       context: context,
@@ -1921,6 +1947,33 @@ class _FrontEndPlanningRequirementsScreenState
                         ),
                       ),
                       const SizedBox(height: 12),
+                      const Text(
+                        'WBS Mapping (Goal)',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 6),
+                      WbsGoalDropdown(
+                        value: selectedWbsGoal,
+                        onChanged: (value) => setLocalState(() {
+                          selectedWbsGoal = value;
+                          selectedWbsElements = [];
+                        }),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Sub WBS',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 6),
+                      WbsElementMultiSelect(
+                        goalId: selectedWbsGoal,
+                        selectedIds: selectedWbsElements,
+                        enabled: selectedWbsGoal != null &&
+                            selectedWbsGoal != 'ALL',
+                        onChanged: (ids) =>
+                            setLocalState(() => selectedWbsElements = ids),
+                      ),
+                      const SizedBox(height: 12),
                       VoiceTextField(
                         controller: commentsController,
                         decoration: const InputDecoration(
@@ -1971,6 +2024,11 @@ class _FrontEndPlanningRequirementsScreenState
                                       );
                                   row.selectedPhase =
                                       _normalizePhaseSelection(selectedPhase);
+                                  row.selectedWbsGoal = selectedWbsGoal;
+                                  row.selectedWbsElements = selectedWbsGoal ==
+                                          'ALL'
+                                      ? <String>[]
+                                      : List<String>.from(selectedWbsElements);
                                 });
                                 _scheduleAutoSave(showSnack: false);
                               }
@@ -2369,6 +2427,8 @@ if (!mounted) return;
               phase: row.selectedPhase ?? '',
               requirementSource: row.sourceController.text.trim(),
               comments: row.commentsController.text.trim(),
+              wbsGoalId: row.selectedWbsGoal ?? '',
+              wbsElementIds: List<String>.from(row.selectedWbsElements),
             ))
         .where((item) =>
             item.description.isNotEmpty ||
@@ -2378,7 +2438,8 @@ if (!mounted) return;
             item.person.isNotEmpty ||
             item.phase.isNotEmpty ||
             item.requirementSource.isNotEmpty ||
-            item.comments.isNotEmpty)
+            item.comments.isNotEmpty ||
+            item.wbsGoalId.isNotEmpty)
         .toList();
   }
 
@@ -2748,6 +2809,11 @@ class _RequirementRow {
   }
 
   int number;
+
+  /// WBS mapping: Level-1 goal ("G1", or "ALL" for the whole project) and the
+  /// Level-2 elements under it ("G1.1", "G1.4"). Blank Sub WBS when ALL.
+  String? selectedWbsGoal;
+  List<String> selectedWbsElements = [];
 
   final TextEditingController descriptionController;
   final TextEditingController commentsController;

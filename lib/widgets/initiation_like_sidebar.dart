@@ -493,6 +493,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   late final ScrollController _scrollController =
       ScrollController(initialScrollOffset: _sharedScrollOffset);
 
+  /// Attached to the highlighted item so it can be scrolled into view when the
+  /// page opens. Only one item per build may carry it (see
+  /// [_activeKeyFor]).
+  final GlobalKey _activeItemKey = GlobalKey();
+  bool _activeItemKeyClaimed = false;
+
   final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
 
@@ -673,6 +679,27 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     _scrollController.addListener(() {
       _sharedScrollOffset = _scrollController.offset;
     });
+    // Bring the page the user is on into view. Without this, an active item
+    // near the bottom of the menu stays hidden until the user scrolls down.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final activeContext = _activeItemKey.currentContext;
+      if (activeContext != null) {
+        Scrollable.ensureVisible(activeContext, alignment: 0.3);
+      }
+    });
+  }
+
+  /// Returns [_activeItemKey] for the one sub-page that is the open page, and
+  /// null for everything else, so the key is never attached twice. Section
+  /// headers also highlight, so the match is on the sub-page name itself.
+  Key? _activeKeyFor(String title, bool isHighlighted) {
+    if (!isHighlighted || _activeItemKeyClaimed) return null;
+    final resolved = _resolvedActiveLabel() ?? '';
+    final isOpenSubPage = resolved == title || resolved.endsWith(' - $title');
+    if (!isOpenSubPage) return null;
+    _activeItemKeyClaimed = true;
+    return _activeItemKey;
   }
 
   @override
@@ -1908,6 +1935,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       : (isHighlighted ? activeColor : cs.onSurface.withValues(alpha: 0.85));
 
     return Padding(
+      key: _activeKeyFor(title, isHighlighted),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
       child: AbsorbPointer(
         absorbing: !isInteractive,
@@ -1976,6 +2004,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       : (isHighlighted ? activeColor : cs.onSurface.withValues(alpha: 0.75));
 
     return Padding(
+      key: _activeKeyFor(title, isHighlighted),
       padding: const EdgeInsets.only(left: 48, right: 24, top: 2, bottom: 2),
       child: AbsorbPointer(
         absorbing: !isInteractive,
@@ -2117,6 +2146,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       ? Colors.grey[400]
       : (isHighlighted ? activeColor : Colors.black87);
     return Padding(
+      key: _activeKeyFor(title, isHighlighted),
       padding: const EdgeInsets.only(left: 72, right: 24, top: 2, bottom: 2),
       child: AbsorbPointer(
         absorbing: !isInteractive,
@@ -2246,6 +2276,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   @override
   Widget build(BuildContext context) {
+    _activeItemKeyClaimed = false;
     final double bannerHeight = AppBreakpoints.isMobile(context) ? 72 : 96;
     final sidebarWidth = AppBreakpoints.sidebarWidth(context);
     final cs = Theme.of(context).colorScheme;
@@ -2355,10 +2386,15 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           ],
           Expanded(
             child: _searchQuery.isEmpty
-                ? ListView(
+                ? SingleChildScrollView(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(vertical: 20),
-                    children: _buildAllMenuItems(),
+                    // Eager (not a lazy ListView) so the active item is built and
+                    // can be scrolled to on open.
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: _buildAllMenuItems(),
+                    ),
                   )
                 : _buildSearchResults(),
           ),

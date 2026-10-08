@@ -7,8 +7,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/wbs/providers/wbs_provider.dart';
+import 'package:ndu_project/wbs/utils/wbs_to_work_item_converter.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
@@ -3642,9 +3645,37 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
     );
   }
 
+  /// The WBS as work items, read live from the WBS so the list is never stale.
+  /// The saved tree is only written when packages are generated, so it can lag
+  /// behind the WBS; it is the fallback when no WBS has been built yet.
+  List<WorkItem> _liveWbsTree({required bool listen}) {
+    final provider = listen
+        ? context.watch<WBSProvider>()
+        : context.read<WBSProvider>();
+    final wbs = provider.wbs;
+    if (wbs != null && wbs.level0.children.isNotEmpty) {
+      return wbsNodeToWorkItems(wbs.level0);
+    }
+    return ProjectDataHelper.getData(context).wbsTree;
+  }
+
+  /// Requirements mapped to a WBS node. Level-1 goals match on their goal code
+  /// (requirements for "ALL" span every goal); Level-2 nodes match on their
+  /// element code (e.g. G2.1).
+  List<RequirementItem> _requirementsForWbs(WorkItem item, int depth) {
+    final code = item.wbsCode.trim();
+    if (code.isEmpty) return const [];
+    final requirements =
+        ProjectDataHelper.getData(context).frontEndPlanning.requirementItems;
+    return requirements.where((r) {
+      if (depth <= 1) return r.wbsGoalId == code || r.wbsGoalId == 'ALL';
+      return r.wbsElementIds.map((e) => e.trim()).contains(code);
+    }).toList();
+  }
+
   Widget _buildWorkPackagesSection() {
     final data = ProjectDataHelper.getData(context);
-    final wbsTree = data.wbsTree;
+    final wbsTree = _liveWbsTree(listen: true);
     final methodology = ProjectDataHelper.resolvedProjectMethodology(data);
 
     // An agile project is told this section does not apply to it rather than
@@ -3788,6 +3819,27 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
           ),
         ),
       );
+      final linked = _requirementsForWbs(item, depth);
+      if (linked.isNotEmpty) {
+        widgets.add(
+          Padding(
+            padding: EdgeInsets.only(left: (depth - 1) * 20.0 + 28, bottom: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final requirement in linked)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      '• ${requirement.description.trim().isEmpty ? '(untitled requirement)' : requirement.description.trim()}',
+                      style: const TextStyle(fontSize: 12, color: _kMuted),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      }
       if (item.children.isNotEmpty) {
         widgets.addAll(_buildWbsTree(item.children, depth: depth + 1));
       }
@@ -3796,8 +3848,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   }
 
   Future<void> _generateWorkPackages() async {
-    final context_ = context;
-    final wbsTree = ProjectDataHelper.getData(context_).wbsTree;
+    final wbsTree = _liveWbsTree(listen: false);
 
     List<WorkItem> collectSelected(List<WorkItem> items) {
       final result = <WorkItem>[];

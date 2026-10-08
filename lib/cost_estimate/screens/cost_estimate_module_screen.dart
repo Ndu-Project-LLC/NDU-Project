@@ -83,7 +83,7 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
     SectionTab(icon: Icons.description_outlined, label: 'BOE'),
     SectionTab(icon: Icons.auto_awesome, label: 'AI'),
     SectionTab(icon: Icons.people_outline, label: 'Stakeholders'),
-    SectionTab(icon: Icons.account_balance_outlined, label: 'Accounting'),
+    SectionTab(icon: Icons.account_balance_outlined, label: 'GL Mapping'),
     SectionTab(icon: Icons.check_circle_outline, label: 'Review'),
     SectionTab(icon: Icons.lock_outline, label: 'Baseline'),
     SectionTab(icon: Icons.trending_up, label: 'Variance'),

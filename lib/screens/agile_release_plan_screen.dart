@@ -6,11 +6,14 @@ import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/epic_model.dart';
 import 'package:ndu_project/models/feature_model.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/roadmap_sprint.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
+import 'package:ndu_project/services/roadmap_service.dart';
 import 'package:ndu_project/utils/agile_release_scope.dart';
+import 'package:ndu_project/utils/agile_schedule_controls.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/agile_release_plan_table.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -45,6 +48,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
   Map<String, List<Feature>> _featuresByEpic = {};
   List<Milestone> _milestones = [];
   List<WorkPackage> _workPackages = [];
+  List<RoadmapSprint> _sprints = [];
   bool _isLoading = true;
   final DateFormat _df = DateFormat('MMM dd, yyyy');
   final Set<int> _expandedCards = {};
@@ -92,12 +96,14 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
         featuresByEpic[epic.id] =
             await EpicFeatureService.loadFeatures(pid, epic.id);
       }
+      final sprints = await RoadmapService.loadSprints(projectId: pid);
       if (mounted) {
         setState(() {
           _plans = plans;
           _stories = stories;
           _epics = epics;
           _featuresByEpic = featuresByEpic;
+          _sprints = sprints;
           _milestones = projectData?.keyMilestones ?? const <Milestone>[];
           _workPackages = projectData?.workPackages ?? const <WorkPackage>[];
           _isLoading = false;
@@ -213,6 +219,8 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                         if (_isLoading)
                           const Center(child: CircularProgressIndicator())
                         else ...[
+                          _buildMilestoneSchedule(),
+                          const SizedBox(height: 16),
                           _buildViewToggle(),
                           const SizedBox(height: 16),
                           if (_tableView)
@@ -649,6 +657,91 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
       default:
         return Colors.grey[700]!;
     }
+  }
+
+  /// Planned completion per release, from the sprints its stories sit in. The
+  /// variance against the release date and any red flags are shown here so the
+  /// milestone risk is visible on the release plan itself.
+  Widget _buildMilestoneSchedule() {
+    if (_plans.isEmpty) return const SizedBox.shrink();
+    final statuses = buildReleaseMilestones(
+      releases: _plans,
+      stories: _stories,
+      sprints: _sprints,
+    );
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _kBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Milestone schedule check',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          const Text(
+              'Planned completion is the last sprint holding each release\'s stories, compared with its release date.',
+              style: TextStyle(fontSize: 13, color: _kMuted)),
+          const SizedBox(height: 12),
+          for (final status in statuses) ...[
+            _buildMilestoneRow(status),
+            const SizedBox(height: 12),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMilestoneRow(ReleaseMilestoneStatus status) {
+    final release = status.release;
+    final name = release.releaseLabel.trim().isEmpty
+        ? 'Untitled release'
+        : release.releaseLabel.trim();
+    final target = release.releaseDate == null
+        ? 'No release date'
+        : _df.format(release.releaseDate!);
+    final planned = status.plannedCompletion == null
+        ? 'Not scheduled'
+        : _df.format(status.plannedCompletion!);
+    final variance = status.varianceDays;
+    final varianceText = variance == null
+        ? '—'
+        : variance > 0
+            ? '$variance day${variance == 1 ? '' : 's'} late'
+            : variance == 0
+                ? 'On time'
+                : '${-variance} day${variance == -1 ? '' : 's'} early';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(name,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        Text(
+          'Release date: $target  •  Planned completion: $planned  •  '
+          '$varianceText  •  ${status.totalPoints} pts',
+          style: const TextStyle(fontSize: 13, color: _kMuted),
+        ),
+        for (final flag in status.flags)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              flag.message,
+              style: TextStyle(
+                fontSize: 13,
+                color: flag.severity == RedFlagSeverity.critical
+                    ? const Color(0xFFB91C1C)
+                    : _kAccent,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildEmptyState(String message) {

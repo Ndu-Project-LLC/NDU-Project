@@ -160,9 +160,8 @@ void main() {
         seed: (provider) => provider.updateAccounting(expiredXero),
       );
 
-      expect(find.text('LIVE'), findsOneWidget,
+      expect(find.textContaining('GL codes map to Xero'), findsOneWidget,
           reason: 'the ledger must not drop just because the token aged out');
-      expect(find.text('Xero'), findsOneWidget);
       expect(find.textContaining('no longer authorised'), findsNothing);
       expect(find.textContaining('session renewed'), findsOneWidget);
 
@@ -186,8 +185,9 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.text('LIVE'), findsNothing);
-      expect(find.text('Not connected'), findsOneWidget);
+      expect(find.textContaining('GL codes map to Xero'), findsNothing);
+      expect(find.text('No accounting system is connected to your account yet.'),
+          findsOneWidget);
       expect(find.textContaining('no longer authorised'), findsOneWidget);
       expect(provider.estimate!.accountingIntegration!.connected, isFalse);
       expect(provider.estimate!.accountingIntegration!.provider,
@@ -204,7 +204,7 @@ void main() {
         seed: (provider) => provider.updateAccounting(expiredXero),
       );
 
-      expect(find.text('LIVE'), findsOneWidget);
+      expect(find.textContaining('GL codes map to Xero'), findsOneWidget);
       expect(provider.estimate!.accountingIntegration!.connected, isTrue);
     });
   });

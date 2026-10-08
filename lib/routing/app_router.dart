@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/routing/platform_router.dart';
+import 'package:ndu_project/routing/auth_session_listenable.dart';
 
 // Screens
 import 'package:ndu_project/screens/landing_screen.dart';
@@ -593,6 +594,10 @@ class AppRouter {
     // prior-phase data is carried page-to-page with real project data — no
     // AI involvement. See [ContinuityRouteObserver].
     observers: [ContinuityRouteObserver.instance],
+    // Re-run the auth guard when a session ends while a page is open (for
+    // example the 30-minute inactivity timeout), so the user is sent to
+    // sign-in instead of staying on a page whose data reads are denied.
+    refreshListenable: AuthSessionListenable.instance,
     redirect: (context, state) async {
       // Enforce admin-host policy if a user is present
       User? user;

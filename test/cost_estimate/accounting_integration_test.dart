@@ -30,6 +30,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/screens/accounting_screen.dart';
+import 'package:ndu_project/cost_estimate/widgets/accounting_connection_panel.dart';
 import 'package:ndu_project/cost_estimate/services/accounting_integration_service.dart';
 import 'package:ndu_project/services/integration_oauth_service.dart';
 
@@ -65,6 +66,23 @@ Future<CostEstimateProvider> pumpAccounting(
   );
   await tester.pumpAndSettle();
   return provider;
+}
+
+/// Pumps the account-level [AccountingConnectionPanel] on its own, as it is
+/// shown in account Settings. It needs no estimate.
+Future<void> pumpPanel(WidgetTester tester) async {
+  tester.view.physicalSize = const Size(1500, 1000);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+
+  await tester.pumpWidget(
+    const MaterialApp(
+      home: Scaffold(
+        body: SingleChildScrollView(child: AccountingConnectionPanel()),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
 }
 
 /// A connected Xero record, as a completed authorisation leaves it.
@@ -213,10 +231,10 @@ void main() {
     });
   });
 
-  group('Accounting screen', () {
+  group('Account connection panel (Settings)', () {
     testWidgets('offers the four providers as OAuth connections',
         (tester) async {
-      await pumpAccounting(tester);
+      await pumpPanel(tester);
 
       expect(find.text('Not connected'), findsOneWidget);
       expect(find.text('Pick a provider below to connect'), findsOneWidget);
@@ -233,7 +251,7 @@ void main() {
 
     testWidgets('tapping a provider opens the credentials modal',
         (tester) async {
-      await pumpAccounting(tester);
+      await pumpPanel(tester);
 
       await tester.tap(find.text('QuickBooks Online'));
       await tester.pumpAndSettle();
@@ -271,7 +289,7 @@ void main() {
         );
       };
 
-      final provider = await pumpAccounting(tester);
+      await pumpPanel(tester);
 
       await tester.tap(find.text('QuickBooks Online'));
       await tester.pumpAndSettle();
@@ -285,14 +303,10 @@ void main() {
 
       expect(find.text('LIVE'), findsOneWidget);
       expect(find.text('Disconnect'), findsOneWidget);
+      expect(find.text('connected 1/10/2026'), findsOneWidget,
+          reason: 'the connection date is shown on the status card');
       expect(find.text('OAuth 2.0 · Secure connection'), findsNothing,
           reason: 'the picker is replaced once connected');
-
-      final record = provider.estimate!.accountingIntegration!;
-      expect(record.provider, AccountingProvider.quickbooks);
-      expect(record.connected, isTrue);
-      expect(record.scopes, ['com.intuit.quickbooks.accounting']);
-      expect(record.connectedAt, DateTime(2026, 10, 1, 9, 30));
     });
 
     testWidgets('a failed authorisation leaves the provider disconnected',
@@ -304,7 +318,7 @@ void main() {
         message: 'access_denied',
       );
 
-      final provider = await pumpAccounting(tester);
+      await pumpPanel(tester);
 
       await tester.tap(find.text('Xero'));
       await tester.pumpAndSettle();
@@ -315,8 +329,6 @@ void main() {
       expect(find.text('LIVE'), findsNothing);
       expect(find.text('Not connected'), findsOneWidget);
       expect(find.textContaining('Could not connect Xero'), findsOneWidget);
-      expect(provider.estimate!.accountingIntegration?.connected ?? false,
-          isFalse);
     });
 
     testWidgets('SAP asks for its tenant host before authorising',
@@ -333,7 +345,7 @@ void main() {
         );
       };
 
-      await pumpAccounting(tester);
+      await pumpPanel(tester);
 
       await tester.tap(find.text('SAP S/4HANA'));
       await tester.pumpAndSettle();
@@ -360,18 +372,76 @@ void main() {
             accountLabel: 'Acme Ltd',
           );
 
-      await pumpAccounting(
-        tester,
-        seed: (provider) => provider.updateAccounting(connectedXero),
-      );
+      await pumpPanel(tester);
 
-      expect(find.text('Xero'), findsOneWidget);
       expect(find.text('LIVE'), findsOneWidget);
       expect(find.textContaining('Acme Ltd'), findsOneWidget);
       expect(find.text('Disconnect'), findsOneWidget);
     });
 
-    testWidgets('an unreadable store never clears a real connection',
+    testWidgets('disconnect clears the connection and brings the picker back',
+        (tester) async {
+      AccountingIntegrationService.statusOverride = (_) async =>
+          const AccountingConnection(connected: true, accountLabel: 'Acme Ltd');
+
+      await pumpPanel(tester);
+      expect(find.text('Disconnect'), findsOneWidget);
+
+      await tester.tap(find.text('Disconnect'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Not connected'), findsOneWidget);
+      expect(find.text('LIVE'), findsNothing);
+      expect(find.text('QuickBooks Online'), findsOneWidget,
+          reason: 'the provider picker comes back');
+    });
+  });
+
+  group('GL code mapping (project estimate)', () {
+    testWidgets('shows the account connection the estimate maps to',
+        (tester) async {
+      AccountingIntegrationService.statusOverride = (_) async =>
+          const AccountingConnection(connected: true, accountLabel: 'Acme Ltd');
+
+      await pumpAccounting(
+        tester,
+        seed: (provider) => provider.updateAccounting(connectedXero),
+      );
+
+      expect(
+          find.text('GL codes map to Xero, your account connection.'),
+          findsOneWidget);
+      expect(find.text('Manage in Settings'), findsOneWidget);
+    });
+
+    testWidgets('points to Settings when no account connection exists',
+        (tester) async {
+      await pumpAccounting(tester);
+
+      expect(find.text('No accounting system is connected to your account yet.'),
+          findsOneWidget);
+      expect(find.text('Connect in Settings'), findsOneWidget);
+      expect(find.text('Connect an accounting system in Settings to map GL codes.'),
+          findsOneWidget);
+    });
+
+    testWidgets('adopts an account connection onto an estimate without one',
+        (tester) async {
+      AccountingIntegrationService.statusOverride = (_) async =>
+          const AccountingConnection(connected: true, accountLabel: 'Acme Ltd');
+
+      final provider = await pumpAccounting(tester);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final record = provider.estimate!.accountingIntegration!;
+      expect(record.connected, isTrue);
+      expect(record.provider, AccountingProvider.quickbooks);
+      expect(
+          find.text('GL codes map to QuickBooks Online, your account connection.'),
+          findsOneWidget);
+    });
+
+    testWidgets('an unreadable store never clears a real estimate connection',
         (tester) async {
       AccountingIntegrationService.statusOverride =
           (_) async => AccountingConnection.unknown;
@@ -381,7 +451,9 @@ void main() {
         seed: (provider) => provider.updateAccounting(connectedXero),
       );
 
-      expect(find.text('LIVE'), findsOneWidget);
+      expect(
+          find.text('GL codes map to Xero, your account connection.'),
+          findsOneWidget);
       expect(provider.estimate!.accountingIntegration!.connected, isTrue,
           reason: 'a storage read failure must not delete the connection');
     });
@@ -401,32 +473,12 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.text('LIVE'), findsNothing);
-      expect(find.text('Not connected'), findsOneWidget);
       expect(find.textContaining('no longer authorised'), findsOneWidget);
-      expect(provider.estimate!.accountingIntegration!.connected, isFalse,);
+      expect(find.text('No accounting system is connected to your account yet.'),
+          findsOneWidget);
+      expect(provider.estimate!.accountingIntegration!.connected, isFalse);
       expect(provider.estimate!.accountingIntegration!.provider,
           AccountingProvider.none);
-    });
-
-    testWidgets('disconnect clears the connection', (tester) async {
-      AccountingIntegrationService.statusOverride = (_) async =>
-          const AccountingConnection(connected: true, accountLabel: 'Acme Ltd');
-
-      final provider = await pumpAccounting(
-        tester,
-        seed: (provider) => provider.updateAccounting(connectedXero),
-      );
-      expect(find.text('Disconnect'), findsOneWidget);
-
-      await tester.tap(find.text('Disconnect'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Not connected'), findsOneWidget);
-      expect(find.text('LIVE'), findsNothing);
-      expect(find.text('QuickBooks Online'), findsOneWidget,
-          reason: 'the provider picker comes back');
-      expect(provider.estimate!.accountingIntegration!.connected, isFalse);
     });
   });
 }

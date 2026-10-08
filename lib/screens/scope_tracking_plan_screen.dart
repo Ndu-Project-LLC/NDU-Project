@@ -47,6 +47,11 @@ class ScopeTrackingPlanScreen extends StatefulWidget {
 }
 
 class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
+  /// The registry, traceability, and baseline tabs are change-control detail
+  /// that belongs to Project Controls. The planning page shows only the plan
+  /// summary; flip this to bring the tabs back.
+  static const bool _showChangeControlTabs = false;
+
  _ScopeTab _activeTab = _ScopeTab.overview;
  List<ScopeTrackingItem> _items = [];
  List<String> _availableRoles = [];
@@ -263,27 +268,29 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  PlanningPhaseHeader(title: 'Scope Tracking Plan', onExportPdf: _exportPdf),
- const SizedBox(height: 20),
- const PlanningAiNotesCard(
- title: 'Notes',
- sectionLabel: 'Scope Tracking Plan',
- noteKey: 'planning_scope_tracking_notes',
- checkpoint: 'scope_tracking_plan',
- description:
- 'Capture scope boundaries, governance decisions, and change thresholds.',
- ),
- const SizedBox(height: 20),
- _buildTabs(),
- const SizedBox(height: 20),
- if (_isLoading)
- const Center(
- child: Padding(
- padding: EdgeInsets.all(48),
- child: CircularProgressIndicator(),
- ),
- )
- else
- _buildTabContent(),
+ const SizedBox(height: 20),                                const PlanningAiNotesCard(
+                title: 'Notes',
+                sectionLabel: 'Scope Tracking Plan',
+                noteKey: 'planning_scope_tracking_notes',
+                checkpoint: 'scope_tracking_plan',
+                description:
+                    'Summarise how scope will be planned and tracked on this project.',
+              ),
+              if (_showChangeControlTabs) ...[
+                const SizedBox(height: 20),
+                _buildTabs(),
+                const SizedBox(height: 20),
+                if (_isLoading)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(48),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else
+                  _buildTabContent(),
+              ],
+
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
  backLabel: PlanningPhaseNavigation.backLabel(

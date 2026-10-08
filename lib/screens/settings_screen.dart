@@ -22,10 +22,12 @@ import 'package:ndu_project/providers/theme_provider.dart';
 import 'package:ndu_project/providers/display_preferences_provider.dart';
 import 'package:ndu_project/services/auth_nav.dart';
 import 'package:ndu_project/services/security_services.dart';
+import 'package:ndu_project/cost_estimate/widgets/accounting_connection_panel.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ndu_project/services/user_preferences_service.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -69,7 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   // ── SharedPreferences keys ──
   static const _prefLanguage = 'pref_language';
-  static const _prefTimezone = 'pref_timezone';
+  static const _prefTimezone = UserPreferencesService.timezoneKey;
   static const _prefDateFormat = 'pref_date_format';
   static const _prefEmailNotif = 'pref_email_notif';
   static const _prefPushNotif = 'pref_push_notif';
@@ -786,6 +788,16 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ],
                     );
                   }),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // ── Accounting Integration (account-level, all users) ──
+              sectionCard(
+                title: 'Accounting Integration',
+                icon: Icons.account_balance_outlined,
+                children: [
+                  const AccountingConnectionPanel(),
                 ],
               ),
               const SizedBox(height: 20),

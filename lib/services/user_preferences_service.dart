@@ -9,6 +9,9 @@ class UserPreferencesService {
   static const String _currencyKey = 'user_currency';
   static const String _currencyCodeKey = 'user_currency_code';
   static const String _currencySymbolKey = 'user_currency_symbol';
+
+  /// Settings > Timezone. Stored as an IANA name such as 'America/New_York'.
+  static const String timezoneKey = 'pref_timezone';
   static Future<SharedPreferences>? _prefsFuture;
 
   // In-memory cache for synchronous reads (populated by warmUp or first read)
@@ -25,6 +28,12 @@ class UserPreferencesService {
   /// Warm up shared preferences early to reduce first-read latency.
   static Future<void> warmUp() async {
     await _prefs();
+  }
+
+  /// The configured timezone (IANA name), or 'UTC' until Settings sets one.
+  static Future<String> timezone() async {
+    final prefs = await _prefs();
+    return prefs.getString(timezoneKey) ?? 'UTC';
   }
 
   /// Check if this is the first time the user is opening the app

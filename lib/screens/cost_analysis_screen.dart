@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:ndu_project/utils/finance.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
@@ -2055,7 +2056,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
 
     // Show 3-second loading dialog
     if (!mounted) return;
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(
@@ -2111,7 +2112,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
 
     // Show loading dialog
     if (!mounted) return;
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(
@@ -3206,7 +3207,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     );
     bool isSuggesting = false;
     final readOnly = mode == _EditorDialogMode.view;
-    final result = await showDialog<_BenefitLineItemDraft>(
+    final result = await showAppDialog<_BenefitLineItemDraft>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {
@@ -5209,7 +5210,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         SpellCheckTextEditingController(text: row?.assumptionsController.text ?? '');
     bool isSuggesting = false;
     final readOnly = mode == _EditorDialogMode.view;
-    final result = await showDialog<_InitialCostRowDraft>(
+    final result = await showAppDialog<_InitialCostRowDraft>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {

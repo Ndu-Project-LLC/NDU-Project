@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -3273,7 +3274,7 @@ class _TimelineSectionState extends State<_TimelineSection> {
  final maxController = SpellCheckTextEditingController(
  text: (_maxDays[number] ?? (_minDays[number] ?? 0)).toString());
 
- await showDialog(
+ await showAppDialog(
  context: context,
  builder: (ctx) {
  return AlertDialog(

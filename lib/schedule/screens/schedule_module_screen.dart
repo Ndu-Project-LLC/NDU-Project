@@ -10,6 +10,7 @@ library;
 /// Project Controls screen), replacing the old dark navy left rail.
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -261,7 +262,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
         }
       }
       if (line == null) continue;
-      final savedId = await showDialog<String>(
+      final savedId = await showAppDialog<String>(
         context: navigatorContext,
         barrierDismissible: true,
         builder: (ctx) => AddLineDialog(

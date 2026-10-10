@@ -31,6 +31,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -289,7 +290,7 @@ class _IntegrationDashboardScreenState
 
   /// Load a workspace, then resume it exactly where it was last left.
   Future<void> _openProject(ProjectRecord project) async {
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),

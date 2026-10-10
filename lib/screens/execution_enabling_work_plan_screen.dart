@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ndu_project/screens/execution_issue_management_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/execution_plan_shared.dart';
@@ -296,7 +297,7 @@ class _EnablingWorksPlanTable extends StatelessWidget {
       return;
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Enabling Work'),
@@ -348,7 +349,7 @@ class _EnablingWorksPlanTable extends StatelessWidget {
     final commentsController =
         SpellCheckTextEditingController(text: work?.comments ?? '');
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(isEdit ? 'Edit Enabling Work' : 'Add New Enabling Work'),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
@@ -114,7 +115,7 @@ class _AiIntegrationsScreenState extends State<AiIntegrationsScreen> {
  final name = SpellCheckTextEditingController();
  final messenger = ScaffoldMessenger.of(context);
  final nav = Navigator.of(context);
- showDialog(context: context, builder: (c) => AlertDialog(
+ showAppDialog(context: context, builder: (c) => AlertDialog(
  title: const Text('Add integration'),
  content: VoiceTextField(controller: name, decoration: const InputDecoration(labelText: 'Name')),
  actions: [

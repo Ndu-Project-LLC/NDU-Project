@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -1081,7 +1082,7 @@ void _showCreateContractDialog(BuildContext context, String? projectId) {
  bool isSaving = false;
  String? valueError;
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (dCtx) => StatefulBuilder(
  builder: (dCtx, setDialog) => AlertDialog(
@@ -1315,7 +1316,7 @@ Future<void> _showEditPackageDialog(
  );
  }
 
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialog) {
@@ -1887,7 +1888,7 @@ Future<void> _showContractorImportDialog(
     );
     return;
   }
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showAppDialog<bool>(
     context: context,
     builder: (dCtx) => AlertDialog(
       title: const Text('Import contractors'),
@@ -2024,7 +2025,7 @@ Future<void> _showAddFromFepDialog(
     return;
   }
   final selected = <String>{};
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showAppDialog<bool>(
     context: context,
     builder: (dCtx) => StatefulBuilder(
       builder: (dCtx, setDialog) => AlertDialog(
@@ -2148,7 +2149,7 @@ Future<void> _showRfpCycleDialog(
         lastDate: DateTime(2100),
       );
 
-  await showDialog<void>(
+  await showAppDialog<void>(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
       builder: (dialogContext, setDialog) {
@@ -3320,7 +3321,7 @@ void _showRfpDialog(
 
  bool isSaving = false;
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (dCtx) => StatefulBuilder(
  builder: (dCtx, setDialog) => AlertDialog(
@@ -3946,7 +3947,7 @@ Future<void> _showEvaluationDialog(
  return null;
  }
 
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialog) => AlertDialog(
@@ -5362,7 +5363,7 @@ Future<void> _showNegotiationDialog(
  String authority = contract.negotiationAuthority ?? 'Not Set';
  String status = contract.negotiationStatus ?? 'Not Started';
 
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialog) => AlertDialog(
@@ -5675,7 +5676,7 @@ class _BudgetEditableTable extends StatelessWidget {
  final pctController = SpellCheckTextEditingController(
  text: (contract.contingencyPercent ?? 0).toStringAsFixed(0));
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (ctx, setDialogState) {
@@ -5754,7 +5755,7 @@ class _BudgetEditableTable extends StatelessWidget {
  final pctController = SpellCheckTextEditingController(text: '0');
 
 if (!context.mounted) return;
-  showDialog(
+  showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Add Contract Budget'),

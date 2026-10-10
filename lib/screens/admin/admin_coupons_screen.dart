@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/coupon_model.dart';
 import 'package:ndu_project/services/coupon_service.dart';
@@ -199,7 +200,7 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
   Future<void> _showCreateCouponDialog(BuildContext context) async {
     // Capture before await to avoid use_build_context_synchronously.
     final messenger = ScaffoldMessenger.of(context);
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (context) => const _CouponFormDialog(),
     );
@@ -218,7 +219,7 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
       BuildContext context, CouponModel coupon) async {
     // Capture before await to avoid use_build_context_synchronously.
     final messenger = ScaffoldMessenger.of(context);
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (context) => _CouponFormDialog(coupon: coupon),
     );
@@ -248,7 +249,7 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
   }
 
   Future<void> _deleteCoupon(CouponModel coupon) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Coupon'),

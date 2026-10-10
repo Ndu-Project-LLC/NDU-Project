@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -447,7 +448,7 @@ if (!mounted) return;
  );
  }
 
- final result = await showDialog<bool>(
+ final result = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(

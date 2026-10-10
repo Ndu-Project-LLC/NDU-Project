@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/user_model.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:intl/intl.dart';
@@ -171,7 +172,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   }
 
   Future<void> _toggleAdminStatus(UserModel user) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title:
@@ -228,7 +229,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   }
 
   Future<void> _deleteUser(UserModel user) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete User'),

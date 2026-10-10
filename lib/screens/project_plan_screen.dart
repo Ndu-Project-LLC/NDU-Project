@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -1674,7 +1675,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
     var status = 'Planned';
     final formKey = GlobalKey<FormState>();
 
-    final created = await showDialog<bool>(
+    final created = await showAppDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) {
@@ -4743,7 +4744,7 @@ class _ListEditor extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context, _ListEntry item) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Item'),
@@ -5137,7 +5138,7 @@ class _DeleteCell extends StatelessWidget {
 
   void _showDeleteConfirmation(
       BuildContext context, VoidCallback onConfirm) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Item'),

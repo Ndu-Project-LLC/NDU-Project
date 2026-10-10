@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
@@ -75,7 +76,7 @@ class ProcurementDialogShell extends StatelessWidget {
         constraints:
             BoxConstraints(maxWidth: 720, maxHeight: media.size.height * 0.88),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: modalSurface(context),
           borderRadius: BorderRadius.circular(24),
           boxShadow: const [
             BoxShadow(
@@ -578,7 +579,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
 
     // Task 14 follow-up: When the Project Charter is approved, the
     // Add/Edit Procurement Item modal must also be locked from editing.
-    // The dialog is launched via showDialog which renders in the root
+    // The dialog is launched via showAppDialog which renders in the root
     // Overlay — escaping any AbsorbPointer placed on the parent screen
     // body. Without this guard here, the user could open the modal
     // (the "Add Item" button still receives taps from locations outside
@@ -782,7 +783,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
                   ? null
                   : () async {
                       final selected =
-                          await showDialog<ProcurementAssignableMemberOption>(
+                          await showAppDialog<ProcurementAssignableMemberOption>(
                         context: context,
                         builder: (dialogContext) =>
                             _ResponsibleMemberPickerDialog(

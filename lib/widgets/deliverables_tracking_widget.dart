@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/deliverable_row.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -380,7 +381,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
     var selectedStatus = _deliverable.status;
     DateTime? selectedDueDate = _deliverable.dueDate;
 
-    await showDialog<bool>(
+    await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(

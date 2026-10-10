@@ -24,6 +24,7 @@ import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -122,7 +123,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
   }
 
   Future<void> _openProject(ProjectRecord project) async {
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),

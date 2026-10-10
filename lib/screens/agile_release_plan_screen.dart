@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/agile_release_plan.dart';
 import 'package:ndu_project/models/agile_task.dart';
@@ -130,7 +131,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
     // `Release N` read as content while holding nothing.
     final plan = AgileReleaseScope.blankPlan();
     final pid = _projectId;
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => _ReleasePlanEditDialog(
         plan: plan,
@@ -149,7 +150,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
   void _editPlan(int index) {
     final plan = _plans[index];
     final pid = _projectId;
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => _ReleasePlanEditDialog(
         plan: plan,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -30,13 +31,23 @@ class PunchlistActionsScreen extends StatefulWidget {
   State<PunchlistActionsScreen> createState() => _PunchlistActionsScreenState();
 }
 
-class _PunchlistActionsScreenState extends State<PunchlistActionsScreen> {
+class _PunchlistActionsScreenState extends State<PunchlistActionsScreen>
+    with SingleTickerProviderStateMixin {
   static const double _panelMinHeight = 200;
 
  List<_DistributionRow> _distributionRows = [];
  List<_ActionVelocityRow> _velocityRows = [];
 
  bool _isLoading = false;
+
+ late final TabController _sectionTabs =
+ TabController(length: 3, vsync: this);
+
+ @override
+ void dispose() {
+ _sectionTabs.dispose();
+ super.dispose();
+ }
 
  @override
  void initState() {
@@ -160,13 +171,58 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Widget _buildSummaryGrid(BuildContext context) {
- final cards = [
- _buildCompletionCard(),
- _buildDistributionCard(),
- _buildActionVelocityCard(),
- ];
+ final double screenHeight = MediaQuery.of(context).size.height;
+ final double tabHeight = screenHeight - 340 < 520 ? 520 : screenHeight - 340;
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ _buildSectionTabBar(),
+ const SizedBox(height: 16),
+ SizedBox(
+ height: tabHeight,
+ child: TabBarView(
+ controller: _sectionTabs,
+ children: [
+ SingleChildScrollView(child: _buildCompletionCard()),
+ SingleChildScrollView(child: _buildDistributionCard()),
+ SingleChildScrollView(child: _buildActionVelocityCard()),
+ ],
+ ),
+ ),
+ ],
+ );
+ }
 
- return _buildPanelGrid(cards, horizontalSpacing: 20, verticalSpacing: 20);
+ Widget _buildSectionTabBar() {
+ return Container(
+ decoration: BoxDecoration(
+ color: const Color(0xFFF8FAFC),
+ borderRadius: BorderRadius.circular(12),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ padding: const EdgeInsets.all(4),
+ child: TabBar(
+ controller: _sectionTabs,
+ isScrollable: true,
+ tabAlignment: TabAlignment.start,
+ dividerColor: Colors.transparent,
+ labelColor: const Color(0xFF111827),
+ unselectedLabelColor: const Color(0xFF64748B),
+ labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+ unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+ indicator: BoxDecoration(
+ color: const Color(0xFFFFF8E1),
+ borderRadius: BorderRadius.circular(8),
+ border: Border.all(color: const Color(0xFFFFC812)),
+ ),
+ indicatorSize: TabBarIndicatorSize.tab,
+ tabs: const [
+ Tab(text: 'Completion health'),
+ Tab(text: 'Item distribution'),
+ Tab(text: 'Action velocity'),
+ ],
+ ),
+ );
  }
 
  List<_DistributionRow> _defaultDistributionRows() => [
@@ -187,21 +243,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const _ActionVelocityRow(workstream: 'Closure items', openItems: 15, closedThisSprint: 12, velocity: 53, throughput: 6.0, delta: '+4.8%', avgCycleTime: 4.2, period: 'Sprint 41-42', owner: 'PMO', status: 'Stable'),
  const _ActionVelocityRow(workstream: 'Safety', openItems: 12, closedThisSprint: 9, velocity: 78, throughput: 4.5, delta: '+11.0%', avgCycleTime: 1.8, period: 'Sprint 41-42', owner: 'Safety Officer', status: 'On Track'),
  ];
-
- Widget _buildPanelGrid(
- List<Widget> cards, {
- double horizontalSpacing = 20,
- double verticalSpacing = 20,
- }) {
- return Column(
- children: [
- for (int i = 0; i < cards.length; i++) ...[
- cards[i],
- if (i != cards.length - 1) SizedBox(height: verticalSpacing),
- ],
- ],
- );
- }
 
  Widget _buildCompletionCard() {
  return _panel(
@@ -766,7 +807,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  : (existingCategory.isNotEmpty ? existingCategory : categoryOptions.first);
  String status = existing?.status ?? 'Active';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (ctx, setDialogState) => AlertDialog(
@@ -907,7 +948,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String status = existing?.status ?? 'On Track';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (ctx, setDialogState) => AlertDialog(
@@ -1003,7 +1044,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _deleteDistributionRow(int index) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Category'),
@@ -1028,7 +1069,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _deleteVelocityRow(int index) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Workstream'),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/screens/front_end_planning_opportunities_screen.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -197,7 +198,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  Future<void> _showDueDiligencePromptIfNeeded() async {
  if (!mounted || _hasShownDueDiligencePrompt) return;
  _hasShownDueDiligencePrompt = true;
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Risk Collaboration Reminder'),
@@ -638,7 +639,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  selectedStatus,
  ];
 
- final result = await showDialog<_RiskItem>(
+ final result = await showAppDialog<_RiskItem>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),

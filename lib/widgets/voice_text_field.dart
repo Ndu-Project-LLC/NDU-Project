@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:ndu_project/providers/display_preferences_provider.dart';
@@ -662,7 +663,7 @@ Future<bool> _askMicrophonePermission(BuildContext context) async {
 }
 
 Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
-  final result = await showDialog<bool>(
+  final result = await showAppDialog<bool>(
     context: context,
     barrierDismissible: true,
     builder: (dialogContext) {

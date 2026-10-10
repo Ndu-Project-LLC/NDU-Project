@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/user_role.dart';
 import 'package:ndu_project/services/permission_service.dart';
 import 'package:ndu_project/widgets/permission_aware_widgets.dart';
@@ -628,7 +629,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     final nameController = SpellCheckTextEditingController();
     SiteRole selectedRole = SiteRole.user;
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
@@ -742,7 +743,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     final organizationController =
         SpellCheckTextEditingController(text: user.organization ?? '');
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -920,21 +921,21 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   }
 
   Future<void> _showPermissionsDialog(UserProfile user) async {
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (context) => _UserPermissionsDialog(user: user),
     );
   }
 
   Future<void> _showProjectAccessDialog(UserProfile user) async {
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (context) => _ProjectAccessDialog(user: user),
     );
   }
 
   Future<void> _confirmDeactivate(UserProfile user) async {
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Deactivate User?'),

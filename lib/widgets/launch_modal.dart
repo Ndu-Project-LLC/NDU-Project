@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -21,7 +22,7 @@ const Color _kModalTextSecondary = Color(0xFF6B7280);
 const Color _kModalBorder = Color(0xFFE4E7EC);
 const Color _kModalAccent = Color(0xFFFFC107);
 
-/// Convenience wrapper around [showDialog] that builds a [LaunchModalShell].
+/// Convenience wrapper around [showAppDialog] that builds a [LaunchModalShell].
 ///
 /// Pass [icon], [title], [subtitle] for the header, [accent] for the icon tile
 /// color (defaults to gold), [body] for the form fields, and [actions] for the
@@ -36,7 +37,7 @@ Future<T?> showLaunchModal<T>({
   List<Widget>? actions,
   T? resultValue,
 }) {
-  return showDialog<T>(
+  return showAppDialog<T>(
     context: context,
     barrierDismissible: true,
     builder: (ctx) => LaunchModalShell(
@@ -50,7 +51,7 @@ Future<T?> showLaunchModal<T>({
   );
 }
 
-/// The world-class modal container. Use directly inside [showDialog] when you
+/// The world-class modal container. Use directly inside [showAppDialog] when you
 /// need full control, or via [showLaunchModal] for the common case.
 class LaunchModalShell extends StatelessWidget {
   const LaunchModalShell({
@@ -74,14 +75,14 @@ class LaunchModalShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color effectiveAccent = accent ?? _kModalAccent;
     return Dialog(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: modalSurface(context),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: modalSurface(context),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(

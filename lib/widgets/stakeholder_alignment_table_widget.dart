@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/stakeholder_alignment_item.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -530,7 +531,7 @@ class _StakeholderAlignmentRowWidget extends StatefulWidget {
     String selectedStatus = widget.item.alignmentStatus;
     String? selectedKeyInterest = widget.item.keyInterest.isEmpty ? null : widget.item.keyInterest;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -718,7 +719,7 @@ class _AlignmentStatusPill extends StatelessWidget {
     final color = _getStatusColor(status);
     return GestureDetector(
       onTap: () {
-        showDialog(
+        showAppDialog(
           context: context,
           builder: (dialogContext) => AlertDialog(
             title: const Text('Select Alignment Status'),

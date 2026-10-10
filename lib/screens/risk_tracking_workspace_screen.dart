@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:flutter/services.dart';
 
@@ -1989,7 +1990,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String impact = existing?.impact ?? 'Medium';
  String status = existing?.status ?? 'Open';
 
- final result = await showDialog<bool>(
+ final result = await showAppDialog<bool>(
  context: context,
  builder: (context) => StatefulBuilder(
  builder: (context, setDialogState) => Dialog(
@@ -2577,7 +2578,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String severity = existing?.severity ?? 'Medium';
  String confidenceLevel = existing?.confidenceLevel ?? 'Medium';
 
- final result = await showDialog<bool>(
+ final result = await showAppDialog<bool>(
  context: context,
  builder: (context) => StatefulBuilder(
  builder: (context, setDialogState) => Dialog(
@@ -2818,7 +2819,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String status = existing?.status ?? 'Planning';
  int progress = existing?.progress ?? 0;
 
- final result = await showDialog<bool>(
+ final result = await showAppDialog<bool>(
  context: context,
  builder: (context) => StatefulBuilder(
  builder: (context, setDialogState) => Dialog(

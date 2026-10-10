@@ -2621,7 +2621,7 @@ Future<void> _loadProgress(String projectId) async {
  suggestions = matches.take(6).toList();
  }
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (ctx, setModalState) => AlertDialog(
@@ -2834,7 +2834,7 @@ Future<void> _loadProgress(String projectId) async {
  }
 
  // For mobile/desktop, use modal with WebView
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) => Dialog(
  backgroundColor: Colors.transparent,
@@ -3546,7 +3546,7 @@ Future<void> _loadProgress(String projectId) async {
  String? uploadedStoragePath;
  bool isUploading = false;
 
- await showDialog(
+ await showAppDialog(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -3783,7 +3783,7 @@ Future<void> _loadProgress(String projectId) async {
  String? uploadedStoragePath;
  bool isUploading = false;
 
- await showDialog(
+ await showAppDialog(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(

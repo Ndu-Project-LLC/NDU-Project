@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -28,7 +29,7 @@ Future<dynamic> showMilestoneEditDialog({
   Milestone? existing,
   bool isAgile = false,
 }) {
-  return showDialog<dynamic>(
+  return showAppDialog<dynamic>(
     context: context,
     builder: (_) => MilestoneEditDialog(
       existing: existing,

@@ -109,7 +109,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
     UserModel? selectedManager;
 
 if (!mounted) return;
-        final portfolioName = await showDialog<String>(
+        final portfolioName = await showAppDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {

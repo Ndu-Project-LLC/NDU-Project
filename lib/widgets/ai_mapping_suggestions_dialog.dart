@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import '../services/spec_mapping_ai_service.dart';
 
 /// Dialog widget for displaying and managing AI mapping suggestions
@@ -34,7 +35,7 @@ class AiMappingSuggestionsDialog extends StatefulWidget {
     required Function(AiMappingSuggestion suggestion, bool accepted) onAction,
     String? title,
   }) async {
-    final result = await showDialog<List<AiMappingSuggestion>>(
+    final result = await showAppDialog<List<AiMappingSuggestion>>(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => AiMappingSuggestionsDialog(

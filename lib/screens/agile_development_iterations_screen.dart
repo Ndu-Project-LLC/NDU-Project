@@ -1,5 +1,6 @@
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -615,7 +616,7 @@ class _AgileDevelopmentIterationsScreenState
 
 if (!mounted) return;
         try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         builder: (dialogContext) => StatefulBuilder(
           builder: (dialogContext, setDialogState) {
@@ -788,7 +789,7 @@ if (!mounted) return;
                         final data = await _loadMilestonesForPicker();
                         if (data == null) return;
                         if (!context.mounted) return;
-                        final picked = await showDialog<List<String>>(
+                        final picked = await showAppDialog<List<String>>(
                           context: dialogContext,
                           builder: (ctx) => MilestonePickerDialog(
                             title: 'Link Milestones',

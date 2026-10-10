@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
 import 'package:ndu_project/widgets/review_confirmation_checkbox.dart';
 
@@ -26,7 +27,7 @@ Future<bool> showProceedWithoutReviewDialog(
   bool skipFuture = false;
 
   if (!context.mounted) return false;
-  final result = await showDialog<bool>(
+  final result = await showAppDialog<bool>(
     context: context,
     barrierDismissible: false,
     builder: (context) {

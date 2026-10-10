@@ -159,7 +159,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: modalSurface(context),
       title: Text(
         widget.editingLine != null ? 'Edit cost line' : 'Add cost line',
         style: const TextStyle(color: Color(0xFF1A1D1F)),
@@ -638,7 +638,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
   Future<void> _openWbsSearchDialog(List<FlattenedWBSNode> flat) async {
     String query = '';
     final searchCtrl = SpellCheckTextEditingController();
-    final result = await showDialog<FlattenedWBSNode>(
+    final result = await showAppDialog<FlattenedWBSNode>(
       context: context,
       builder: (ctx) {
         return StatefulBuilder(
@@ -654,7 +654,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
                         normalize(n.path).contains(q))
                     .toList();
             return AlertDialog(
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              backgroundColor: modalSurface(context),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
               title: const Row(
@@ -1000,7 +1000,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
     ValueChanged<String> onSuggestion,
   ) async {
     // Show loading dialog
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
@@ -1070,7 +1070,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
       Navigator.of(context).pop(); // Close loading dialog
 
       // Show suggestion dialog
-      final result = await showDialog<String>(
+      final result = await showAppDialog<String>(
         context: context,
         builder: (ctx) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/screens/front_end_planning_risks_screen.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -418,7 +419,7 @@ class _FrontEndPlanningRequirementsScreenState
         }
         _commitAutoSave(showSnack: false);
         if (mounted && showSeedNotice) {
-          await showDialog<void>(
+          await showAppDialog<void>(
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('KAZ AI Requirements Added'),
@@ -1847,7 +1848,7 @@ class _FrontEndPlanningRequirementsScreenState
     List<String> selectedCodesStandards =
         List<String>.from(row.selectedCodesStandards);
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) {
@@ -1855,7 +1856,7 @@ class _FrontEndPlanningRequirementsScreenState
           builder: (context, setLocalState) {
             final inset = MediaQuery.of(context).viewInsets.bottom;
             return Dialog(
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              backgroundColor: modalSurface(context),
               insetPadding: EdgeInsets.fromLTRB(
                 16,
                 24,
@@ -2411,7 +2412,7 @@ if (!mounted) return;
 
 if (!mounted) return;
         if (missingAssignmentRows.isNotEmpty) {
-      await showDialog<void>(
+      await showAppDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Assignment Guidance'),
@@ -2434,7 +2435,7 @@ if (!mounted) return;
 
 if (!mounted) return;
         if (missingPhaseRows.isNotEmpty) {
-      await showDialog<void>(
+      await showAppDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Phase Guidance'),
@@ -2456,7 +2457,7 @@ if (!mounted) return;
     }
 
     if (!mounted) return;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirm Requirement Coverage'),
@@ -3846,7 +3847,7 @@ class _PersonDropdownField extends StatelessWidget {
       onTap: noMembers
           ? null
           : () async {
-              final selected = await showDialog<_AssignableMember>(
+              final selected = await showAppDialog<_AssignableMember>(
                 context: context,
                 builder: (dialogContext) => _MemberPickerDialog(
                   options: options,

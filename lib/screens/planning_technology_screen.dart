@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
@@ -352,7 +353,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
         _normalizeStatus(existing['status']?.toString() ?? 'Proposed/Pending');
     String date = existing['added']?.toString() ?? '';
 
-    final save = await showDialog<bool>(
+    final save = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setLocalState) => AlertDialog(
@@ -486,7 +487,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
     String status =
         _normalizeStatus(existing['status']?.toString() ?? 'Proposed/Pending');
 
-    final save = await showDialog<bool>(
+    final save = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setLocalState) => AlertDialog(
@@ -580,7 +581,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
           '',
     );
 
-    final save = await showDialog<bool>(
+    final save = await showAppDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
         title: Text(index == null
@@ -649,7 +650,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
     final vendor = SpellCheckTextEditingController(
         text: existing['vendor']?.toString() ?? '');
 
-    final save = await showDialog<bool>(
+    final save = await showAppDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
         title:
@@ -716,7 +717,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
   }
 
   Future<bool> _confirmDelete() async {
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
         title: const Text('Delete item'),

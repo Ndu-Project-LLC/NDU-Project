@@ -5760,7 +5760,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
     final reasonCtrl = SpellCheckTextEditingController();
     BaselineType selectedType = BaselineType.scope;
 
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => StatefulBuilder(
@@ -6163,7 +6163,7 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
   // ROLLBACK CONFIRMATION DIALOG
   // ──────────────────────────────────────────────────────────────────────
   void _confirmRollback(BaselineSnapshot b) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -9495,7 +9495,7 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
     ReportType selectedType = ReportType.costVariance;
     DateTime startDate = DateTime.now().subtract(const Duration(days: 30));
     DateTime endDate = DateTime.now();
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(

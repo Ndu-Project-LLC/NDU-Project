@@ -1343,7 +1343,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
 
     // Show 3-second loading dialog
     if (!mounted) return;
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -2135,7 +2135,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     final existingRisks = _getExistingRisksForSolution(solutionIndex);
 
     // Show loading dialog
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
@@ -2172,7 +2172,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
 
       // Show suggestions dialog
       final scheme = Theme.of(context).colorScheme;
-      showDialog(
+      showAppDialog(
         context: context,
         builder: (ctx) => AlertDialog(
           title: Row(

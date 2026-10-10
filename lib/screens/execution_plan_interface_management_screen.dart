@@ -1,5 +1,6 @@
 import 'package:ndu_project/screens/execution_plan_communication_plan_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/execution_plan_shared.dart';
@@ -290,7 +291,7 @@ class _InterfaceRegisterTable extends StatelessWidget {
       return;
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Interface Entry'),
@@ -363,7 +364,7 @@ class _InterfaceRegisterTable extends StatelessWidget {
       'As Needed'
     ];
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(

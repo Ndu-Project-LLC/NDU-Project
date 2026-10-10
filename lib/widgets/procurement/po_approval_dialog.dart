@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -229,7 +230,7 @@ Future<PoApprovalResult?> showPoApprovalDialog(
   required String projectOwnerId,
   required String projectOwnerName,
 }) {
-  return showDialog<PoApprovalResult>(
+  return showAppDialog<PoApprovalResult>(
     context: context,
     builder: (context) => PoApprovalDialog(
       po: po,

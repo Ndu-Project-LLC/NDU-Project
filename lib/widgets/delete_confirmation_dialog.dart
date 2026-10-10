@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 
 Future<bool> showDeleteConfirmationDialog(
   BuildContext context, {
@@ -13,7 +14,7 @@ Future<bool> showDeleteConfirmationDialog(
           ? 'This action cannot be undone.'
           : 'Delete "$trimmedLabel"? This action cannot be undone.');
 
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showAppDialog<bool>(
     context: context,
     builder: (dialogContext) => AlertDialog(
       shape:

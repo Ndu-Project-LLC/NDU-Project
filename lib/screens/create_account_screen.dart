@@ -187,7 +187,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       if (!mounted) return;
 
       // Inform user and route to Sign In
-      await showDialog(
+      await showAppDialog(
         context: context,
         builder: (ctx) {
           return AlertDialog(
@@ -309,7 +309,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     final parentNav = Navigator.of(context);
     final parentMessenger = ScaffoldMessenger.of(context);
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(

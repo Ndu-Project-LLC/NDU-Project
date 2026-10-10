@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/milestone_item_linkage_service.dart';
 import 'package:ndu_project/widgets/milestone_picker_dialog.dart';
@@ -330,7 +331,7 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
       );
       return;
     }
-    final picked = await showDialog<List<String>>(
+    final picked = await showAppDialog<List<String>>(
       context: context,
       builder: (ctx) => MilestonePickerDialog(
         title: 'Link Milestones',

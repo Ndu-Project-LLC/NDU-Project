@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/header_banner_image.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/auth_nav.dart';
@@ -1463,7 +1464,7 @@ class _PreferredSolutionAnalysisScreenState
         provider.projectData.preferredSolutionAnalysis?.isSelectionFinalized ==
             true;
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (context) {
         return Dialog(
@@ -1596,7 +1597,7 @@ class _PreferredSolutionAnalysisScreenState
   }
 
   void _showAuthorizationBlockedDialog() {
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Selection Blocked'),
@@ -1617,7 +1618,7 @@ class _PreferredSolutionAnalysisScreenState
     if (index < 0 || index >= _analysis.length) return;
     bool authorityChecked = false;
 
-    final proceed = await showDialog<bool>(
+    final proceed = await showAppDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
@@ -1736,7 +1737,7 @@ class _PreferredSolutionAnalysisScreenState
 
     // Show 3-second loading dialog
     if (!mounted) return;
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(
@@ -2471,7 +2472,7 @@ class _PreferredSolutionAnalysisScreenState
       solutionIndex: index,
     );
 
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -3947,7 +3948,7 @@ class _PreferredSolutionAnalysisScreenState
       solutionIndex: index,
     );
 
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) => Dialog(
@@ -4665,7 +4666,7 @@ class _PreferredSolutionAnalysisScreenState
 
     // Show 3-second loading dialog
     if (!mounted) return;
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
@@ -4917,7 +4918,7 @@ class _PreferredSolutionAnalysisScreenState
     bool dialogShown = false;
     if (mounted) {
       dialogShown = true;
-      showDialog<void>(
+      showAppDialog<void>(
         context: navigator.context,
         barrierDismissible: false,
         builder: (_) => const Center(child: CircularProgressIndicator()),
@@ -5206,7 +5207,7 @@ class _ProjectSelectionDialogState extends State<_ProjectSelectionDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: modalSurface(context),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 640),
@@ -5691,7 +5692,7 @@ class _ComparisonContent extends StatelessWidget {
   }
 
   static void _showPrintDialog(BuildContext context) {
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       builder: (context) {
         return AlertDialog(

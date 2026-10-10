@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -159,7 +160,7 @@ class _OrganizationStaffingPlanScreenState
 
   Future<void> _addStaffing(BuildContext context) async {
     final projectData = ProjectDataHelper.getData(context);
-    final result = await showDialog<StaffingRequirement>(
+    final result = await showAppDialog<StaffingRequirement>(
       context: context,
       builder: (dialogContext) => _StaffingRequirementDialog(
         title: 'Add Staffing Position',
@@ -190,7 +191,7 @@ if (!mounted) return;
   Future<void> _editStaffing(
       BuildContext context, int index, StaffingRequirement req) async {
     final projectData = ProjectDataHelper.getData(context);
-    final result = await showDialog<StaffingRequirement>(
+    final result = await showAppDialog<StaffingRequirement>(
       context: context,
       builder: (dialogContext) => _StaffingRequirementDialog(
         title: 'Edit Staffing Position',
@@ -215,7 +216,7 @@ if (!context.mounted) return;
   }
 
   Future<void> _deleteStaffing(BuildContext context, int index) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Remove Position?'),
@@ -343,7 +344,7 @@ if (!context.mounted) return;
 
     // Show the suggestion dialog.
     if (!context.mounted) return;
-    final accepted = await showDialog<_NduSuggestionResult>(
+    final accepted = await showAppDialog<_NduSuggestionResult>(
       context: context,
       builder: (dialogContext) => _NduSuggestionDialog(
         tierLabel: tierConfig.label,
@@ -650,7 +651,7 @@ if (!context.mounted) return;
     }
 
     if (!mounted) return;
-    final accepted = await showDialog<Set<int>>(
+    final accepted = await showAppDialog<Set<int>>(
       context: context,
       builder: (dialogContext) => _AiSuggestDatesDialog(
         projectScope: _projectScopeSummary(projectData),
@@ -2522,7 +2523,7 @@ class _OrganizationRolesResponsibilitiesScreenState
     final selectedIndices = <int>{};
     final headcounts = <int, int>{};
 
-    showDialog(
+    showAppDialog(
       context: rootContext,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -2634,7 +2635,7 @@ class _OrganizationRolesResponsibilitiesScreenState
     final descController = SpellCheckTextEditingController(text: role.description);
     int headcount = role.headcount > 0 ? role.headcount : 1;
 
-    showDialog(
+    showAppDialog(
       context: rootContext,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => PremiumEditDialog(
@@ -2727,7 +2728,7 @@ class _OrganizationRolesResponsibilitiesScreenState
     final descController = SpellCheckTextEditingController();
     int headcount = 1;
 
-    showDialog(
+    showAppDialog(
       context: rootContext,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => PremiumEditDialog(
@@ -2814,7 +2815,7 @@ class _OrganizationRolesResponsibilitiesScreenState
 
   void _deleteRole(BuildContext context, int index) {
     final rootContext = context;
-    showDialog(
+    showAppDialog(
       context: rootContext,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Role'),
@@ -4328,7 +4329,7 @@ class _StaffingPlanTabContent extends StatelessWidget {
   }
 
   void _showExpandedView(BuildContext context) {
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -4858,7 +4859,7 @@ class _StaffingTimelineTab extends StatelessWidget {
   }
 
   void _showExpandedTimeline(BuildContext context) {
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -5726,7 +5727,7 @@ class _EstimatedCostTableState extends State<_EstimatedCostTable> {
   }
 
   void _showExpanded(BuildContext context) {
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

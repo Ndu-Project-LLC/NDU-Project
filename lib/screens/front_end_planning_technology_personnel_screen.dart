@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/planning_contracting_screen.dart';
@@ -94,7 +95,7 @@ class _FrontEndPlanningTechnologyPersonnelScreenState
  final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
 
  try {
- final result = await showDialog<TechnologyPersonnelItem>(
+ final result = await showAppDialog<TechnologyPersonnelItem>(
  context: context,
  builder: (dialogContext) {
  return AlertDialog(

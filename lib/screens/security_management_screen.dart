@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -209,7 +210,7 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
     final nameController = SpellCheckTextEditingController();
     final tierController = SpellCheckTextEditingController(text: 'Tier 1');
     final descriptionController = SpellCheckTextEditingController();
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -278,7 +279,7 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
     final resourceController = SpellCheckTextEditingController();
     final actionController = SpellCheckTextEditingController();
     final descriptionController = SpellCheckTextEditingController();
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -345,7 +346,7 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
     final nameController = SpellCheckTextEditingController();
     final valueController = SpellCheckTextEditingController();
     final descriptionController = SpellCheckTextEditingController();
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(

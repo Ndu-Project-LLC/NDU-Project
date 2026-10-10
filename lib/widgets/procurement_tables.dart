@@ -544,7 +544,7 @@ class _ResponsiblePickerCell extends StatelessWidget {
       onTap: !isInteractive
           ? null
           : () async {
-              final selected = await showDialog<String>(
+              final selected = await showAppDialog<String>(
                 context: context,
                 builder: (dialogContext) => _ResponsiblePickerDialog(
                   options: options,

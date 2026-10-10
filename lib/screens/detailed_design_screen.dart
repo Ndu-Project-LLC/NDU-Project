@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/models/design_component.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
@@ -96,7 +97,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
         SpellCheckTextEditingController(text: existing?.requirement ?? '');
     final standard = SpellCheckTextEditingController(text: existing?.standard ?? '');
     var status = existing?.status ?? 'Pending';
-    final result = await showDialog<_SecurityControl>(
+    final result = await showAppDialog<_SecurityControl>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -733,7 +734,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       if (match != -1) selectedIconIndex = match;
     }
 
-    final saved = await showDialog<_ArchitecturePattern>(
+    final saved = await showAppDialog<_ArchitecturePattern>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -1111,7 +1112,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
     final target = SpellCheckTextEditingController(text: existing?.target ?? '');
     var category = existing?.category ?? 'Performance';
     var status = existing?.status ?? 'Draft';
-    final result = await showDialog<_NFRItem>(
+    final result = await showAppDialog<_NFRItem>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -1232,7 +1233,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
   }
 
   Future<bool> _confirmDelete(String itemType) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) => LaunchModalShell(
@@ -1280,7 +1281,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
     final decision = SpellCheckTextEditingController(text: existing?.decision ?? '');
     var status = existing?.status ?? 'Proposed';
     String? titleError;
-    final result = await showDialog<_ADRecord>(
+    final result = await showAppDialog<_ADRecord>(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) => StatefulBuilder(

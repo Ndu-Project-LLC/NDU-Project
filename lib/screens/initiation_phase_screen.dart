@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
@@ -78,7 +79,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
     final business = _businessCaseController.text.trim();
     final wordCount =
         business.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
-    final shouldContinue = await showDialog<bool>(
+    final shouldContinue = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Business Case Incomplete'),
@@ -569,7 +570,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
       });
       final wordCount =
           business.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
-      final shouldContinue = await showDialog<bool>(
+      final shouldContinue = await showAppDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
           title: const Text('Business Case Incomplete'),
@@ -615,7 +616,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
 
     // Show a 3-second loading experience before navigation
     if (!mounted) return;
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -698,7 +699,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
     }
 
     // If business case already exists, show modal explaining skip requirements
-    final shouldProceed = await showDialog<bool>(
+    final shouldProceed = await showAppDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
@@ -875,7 +876,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
 
     SolutionOption? selection;
     try {
-      selection = await showDialog<SolutionOption?>(
+      selection = await showAppDialog<SolutionOption?>(
         context: context,
         barrierDismissible: true,
         builder: (dialogCtx) {
@@ -1041,7 +1042,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
     bool dialogShown = false;
     if (mounted) {
       dialogShown = true;
-      showDialog<void>(
+      showAppDialog<void>(
           context: context,
           barrierDismissible: false,
           builder: (_) => const Center(child: CircularProgressIndicator()));

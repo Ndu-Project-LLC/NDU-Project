@@ -2,6 +2,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -1240,7 +1241,7 @@ class _UpdateOpsMaintenancePlansScreenState
     );
 
     try {
-      await showDialog<void>(
+      await showAppDialog<void>(
         context: context,
         barrierDismissible: true,
         builder: (dialogContext) {
@@ -1299,7 +1300,7 @@ class _UpdateOpsMaintenancePlansScreenState
     final subtitleController = SpellCheckTextEditingController(text: signal.subtitle);
 
     try {
-      await showDialog<void>(
+      await showAppDialog<void>(
         context: context,
         barrierDismissible: true,
         builder: (dialogContext) {
@@ -1353,7 +1354,7 @@ class _UpdateOpsMaintenancePlansScreenState
   }
 
   Future<void> _confirmDeletePlan(String projectId, OpsPlanItem plan) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Ops Plan Item?'),
@@ -1455,7 +1456,7 @@ class _UpdateOpsMaintenancePlansScreenState
     }
 
     try {
-      await showDialog<void>(
+      await showAppDialog<void>(
         context: context,
         barrierDismissible: true,
         builder: (dialogContext) {

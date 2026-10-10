@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'dart:math' as math;
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
@@ -671,7 +672,7 @@ Current Cost Items: ${pd.costEstimateItems.map((e) => "${e.title} (${e.costType}
       if (scanContext.isNotEmpty) 'Project Context Scan:\n$scanContext',
     ].join('\n\n');
 
-    final selectedItems = await showDialog<List<CostEstimateItem>>(
+    final selectedItems = await showAppDialog<List<CostEstimateItem>>(
       context: context,
       builder: (ctx) => _AiSuggestionsDialog(projectContext: projectContext),
     );
@@ -714,7 +715,7 @@ Current Cost Items: ${pd.costEstimateItems.map((e) => "${e.title} (${e.costType}
 
   Future<void> _showAddItem(BuildContext context) async {
     final provider = ProjectDataHelper.getProvider(context);
-    final selected = await showDialog<CostEstimateItem>(
+    final selected = await showAppDialog<CostEstimateItem>(
       context: context,
       builder: (dialogContext) => _AddCostItemDialog(
         initialView: _activeView,
@@ -735,7 +736,7 @@ Current Cost Items: ${pd.costEstimateItems.map((e) => "${e.title} (${e.costType}
   Future<void> _showEditItem(
       BuildContext context, CostEstimateItem existing) async {
     final provider = ProjectDataHelper.getProvider(context);
-    final updated = await showDialog<CostEstimateItem>(
+    final updated = await showAppDialog<CostEstimateItem>(
       context: context,
       builder: (dialogContext) => _AddCostItemDialog(
         initialView: existing.costType == 'direct'
@@ -758,7 +759,7 @@ Current Cost Items: ${pd.costEstimateItems.map((e) => "${e.title} (${e.costType}
 
   Future<void> _deleteItem(BuildContext context, CostEstimateItem item) async {
     final provider = ProjectDataHelper.getProvider(context);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete cost item?'),
@@ -853,7 +854,7 @@ if (!context.mounted) return;
       return;
     }
 
-    final replace = await showDialog<bool>(
+    final replace = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Refresh initiation baseline?'),

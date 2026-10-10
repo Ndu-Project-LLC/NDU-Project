@@ -1951,10 +1951,10 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
   void _showTemplatesDialog(BuildContext context, WBSProvider provider,
       WBSFramework framework, String parentId) {
     final templates = WBSTemplates.templates[framework]!;
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: modalSurface(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [

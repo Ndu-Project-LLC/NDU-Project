@@ -27,7 +27,7 @@ Future<List<Map<String, String>>?> showCsvImportDialog(
   required String tableTitle,
   required List<CsvColumnSpec> columns,
 }) {
-  return showDialog<List<Map<String, String>>>(
+  return showAppDialog<List<Map<String, String>>>(
     context: context,
     barrierDismissible: false,
     builder: (ctx) => _CsvImportDialog(
@@ -235,7 +235,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
             maxHeight: MediaQuery.of(context).size.height * 0.88,
           ),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: modalSurface(context),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(

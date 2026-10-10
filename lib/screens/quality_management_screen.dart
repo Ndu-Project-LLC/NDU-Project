@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -335,7 +336,7 @@ Future<void> _createTrainingActivityShortcut(
   required String checkpoint,
   String defaultTitle = 'Quality Training Session',
 }) async {
-  final result = await showDialog<TrainingActivity>(
+  final result = await showAppDialog<TrainingActivity>(
     context: context,
     builder: (_) => _TrainingShortcutDialog(defaultTitle: defaultTitle),
   );
@@ -2188,7 +2189,7 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
   }
 
   Future<void> _addStandard() async {
-    final result = await showDialog<QualityStandard>(
+    final result = await showAppDialog<QualityStandard>(
       context: context,
       builder: (_) => const _QualityStandardDialog(),
     );
@@ -2211,7 +2212,7 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
     final standards = _qualityData(context).standards;
     if (index < 0 || index >= standards.length) return;
 
-    final result = await showDialog<QualityStandard>(
+    final result = await showAppDialog<QualityStandard>(
       context: context,
       builder: (_) => _QualityStandardDialog(initialValue: standards[index]),
     );
@@ -2415,7 +2416,7 @@ class _ObjectivesView extends StatefulWidget {
 
 class _ObjectivesViewState extends State<_ObjectivesView> {
   Future<void> _addObjective() async {
-    final result = await showDialog<QualityObjective>(
+    final result = await showAppDialog<QualityObjective>(
       context: context,
       builder: (_) =>
           _QualityObjectiveDialog(ownerOptions: _ownerOptions(context)),
@@ -2439,7 +2440,7 @@ class _ObjectivesViewState extends State<_ObjectivesView> {
     final objectives = _qualityData(context).objectives;
     if (index < 0 || index >= objectives.length) return;
 
-    final result = await showDialog<QualityObjective>(
+    final result = await showAppDialog<QualityObjective>(
       context: context,
       builder: (_) => _QualityObjectiveDialog(
         ownerOptions: _ownerOptions(context),
@@ -2515,7 +2516,7 @@ class _QaTrackingView extends StatefulWidget {
 
 class _QaTrackingViewState extends State<_QaTrackingView> {
   Future<void> _addWorkflowControl() async {
-    final result = await showDialog<QualityWorkflowControl>(
+    final result = await showAppDialog<QualityWorkflowControl>(
       context: context,
       builder: (_) => _WorkflowControlDialog(
         initialType: QualityWorkflowType.qa,
@@ -2539,7 +2540,7 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
   }
 
   Future<void> _editWorkflowControl(QualityWorkflowControl control) async {
-    final result = await showDialog<QualityWorkflowControl>(
+    final result = await showAppDialog<QualityWorkflowControl>(
       context: context,
       builder: (_) => _WorkflowControlDialog(
         initialType: control.type,
@@ -2579,7 +2580,7 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
   }
 
   Future<void> _addTask() async {
-    final result = await showDialog<QualityTaskEntry>(
+    final result = await showAppDialog<QualityTaskEntry>(
       context: context,
       builder: (_) => _QualityTaskDialog(ownerOptions: _ownerOptions(context)),
     );
@@ -2599,7 +2600,7 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
   }
 
   Future<void> _editTask(QualityTaskEntry task) async {
-    final result = await showDialog<QualityTaskEntry>(
+    final result = await showAppDialog<QualityTaskEntry>(
       context: context,
       builder: (_) => _QualityTaskDialog(
         ownerOptions: _ownerOptions(context),
@@ -2711,7 +2712,7 @@ class _QcTrackingView extends StatefulWidget {
 
 class _QcTrackingViewState extends State<_QcTrackingView> {
   Future<void> _addWorkflowControl() async {
-    final result = await showDialog<QualityWorkflowControl>(
+    final result = await showAppDialog<QualityWorkflowControl>(
       context: context,
       builder: (_) => _WorkflowControlDialog(
         initialType: QualityWorkflowType.qc,
@@ -2735,7 +2736,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
   }
 
   Future<void> _editWorkflowControl(QualityWorkflowControl control) async {
-    final result = await showDialog<QualityWorkflowControl>(
+    final result = await showAppDialog<QualityWorkflowControl>(
       context: context,
       builder: (_) => _WorkflowControlDialog(
         initialType: control.type,
@@ -2775,7 +2776,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
   }
 
   Future<void> _addTask() async {
-    final result = await showDialog<QualityTaskEntry>(
+    final result = await showAppDialog<QualityTaskEntry>(
       context: context,
       builder: (_) => _QualityTaskDialog(ownerOptions: _ownerOptions(context)),
     );
@@ -2795,7 +2796,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
   }
 
   Future<void> _editTask(QualityTaskEntry task) async {
-    final result = await showDialog<QualityTaskEntry>(
+    final result = await showAppDialog<QualityTaskEntry>(
       context: context,
       builder: (_) => _QualityTaskDialog(
         ownerOptions: _ownerOptions(context),
@@ -2832,7 +2833,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
   }
 
   Future<void> _addAudit() async {
-    final result = await showDialog<QualityAuditEntry>(
+    final result = await showAppDialog<QualityAuditEntry>(
       context: context,
       builder: (_) => _QualityAuditDialog(ownerOptions: _ownerOptions(context)),
     );
@@ -2852,7 +2853,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
   }
 
   Future<void> _editAudit(QualityAuditEntry audit) async {
-    final result = await showDialog<QualityAuditEntry>(
+    final result = await showAppDialog<QualityAuditEntry>(
       context: context,
       builder: (_) => _QualityAuditDialog(
         ownerOptions: _ownerOptions(context),
@@ -2889,7 +2890,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
   }
 
   Future<void> _createCorrectiveAction(QualityAuditEntry audit) async {
-    final result = await showDialog<CorrectiveActionEntry>(
+    final result = await showAppDialog<CorrectiveActionEntry>(
       context: context,
       builder: (_) => _CorrectiveActionDialog(
         ownerOptions: _ownerOptions(context),
@@ -2916,7 +2917,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
   }
 
   Future<void> _editCorrectiveAction(CorrectiveActionEntry entry) async {
-    final result = await showDialog<CorrectiveActionEntry>(
+    final result = await showAppDialog<CorrectiveActionEntry>(
       context: context,
       builder: (_) => _CorrectiveActionDialog(
         ownerOptions: _ownerOptions(context),
@@ -3061,7 +3062,7 @@ class _MetricsView extends StatefulWidget {
 class _MetricsViewState extends State<_MetricsView> {
   Future<void> _editDashboardConfig() async {
     final quality = _qualityData(context);
-    final result = await showDialog<QualityDashboardConfig>(
+    final result = await showAppDialog<QualityDashboardConfig>(
       context: context,
       builder: (_) =>
           _DashboardConfigDialog(initialValue: quality.dashboardConfig),
@@ -3079,7 +3080,7 @@ class _MetricsViewState extends State<_MetricsView> {
 
   Future<void> _editManualMetrics() async {
     final quality = _qualityData(context);
-    final result = await showDialog<QualityMetrics>(
+    final result = await showAppDialog<QualityMetrics>(
       context: context,
       builder: (_) => _MetricsEditDialog(metrics: quality.metrics),
     );
@@ -6700,7 +6701,7 @@ class _QualityRegisterView extends StatefulWidget {
 
 class _QualityRegisterViewState extends State<_QualityRegisterView> {
   Future<void> _editAction(CorrectiveActionEntry entry) async {
-    final result = await showDialog<CorrectiveActionEntry>(
+    final result = await showAppDialog<CorrectiveActionEntry>(
       context: context,
       builder: (_) => _CorrectiveActionDialog(
         ownerOptions: _ownerOptions(context), initialValue: entry),
@@ -6722,7 +6723,7 @@ class _QualityRegisterViewState extends State<_QualityRegisterView> {
   }
 
   Future<void> _editAudit(QualityAuditEntry entry) async {
-    final result = await showDialog<QualityAuditEntry>(
+    final result = await showAppDialog<QualityAuditEntry>(
       context: context,
       builder: (_) => _QualityAuditDialog(
         ownerOptions: _ownerOptions(context), initialValue: entry),
@@ -6744,7 +6745,7 @@ class _QualityRegisterViewState extends State<_QualityRegisterView> {
   }
 
   Future<void> _createAction(QualityAuditEntry audit) async {
-    final result = await showDialog<CorrectiveActionEntry>(
+    final result = await showAppDialog<CorrectiveActionEntry>(
       context: context,
       builder: (_) => _CorrectiveActionDialog(
         ownerOptions: _ownerOptions(context),
@@ -6994,7 +6995,7 @@ class _CostOfQualityViewState extends State<_CostOfQualityView> {
   }
 
   Future<void> _addEntry(String key) async {
-    final entry = await showDialog<CoQEntry>(
+    final entry = await showAppDialog<CoQEntry>(
       context: context,
       builder: (_) => _CoQEntryDialog(category: key),
     );
@@ -7005,7 +7006,7 @@ class _CostOfQualityViewState extends State<_CostOfQualityView> {
   }
 
   Future<void> _editEntry(String key, CoQEntry existing) async {
-    final entry = await showDialog<CoQEntry>(
+    final entry = await showAppDialog<CoQEntry>(
       context: context,
       builder: (_) => _CoQEntryDialog(category: key, initialValue: existing),
     );
@@ -7019,7 +7020,7 @@ class _CostOfQualityViewState extends State<_CostOfQualityView> {
   }
 
   Future<void> _removeEntry(String key, CoQEntry existing) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Remove entry?'),

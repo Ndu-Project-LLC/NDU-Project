@@ -18,6 +18,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 
 /// Represents a single unfinished work item on the current page.
 class UnfinishedItem {
@@ -88,7 +89,7 @@ Future<bool> showUnfinishedWorkDialog(
   BuildContext context, {
   required List<UnfinishedItem> items,
 }) async {
-  final result = await showDialog<bool>(
+  final result = await showAppDialog<bool>(
     context: context,
     barrierDismissible: true,
     builder: (context) => _UnfinishedWorkDialog(items: items),

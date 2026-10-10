@@ -99,7 +99,7 @@ class _AccountingConnectionPanelState extends State<AccountingConnectionPanel> {
     // The modal opens straight away; saved credentials fill in as they load.
     final needsCredentials =
         AccountingIntegrationService.requiresClientCredentials;
-    final credentials = await showDialog<_ConnectCredentials>(
+    final credentials = await showAppDialog<_ConnectCredentials>(
       context: context,
       builder: (dialogContext) => _ConnectDialog(
         provider: p,

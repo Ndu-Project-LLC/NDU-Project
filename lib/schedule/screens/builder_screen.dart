@@ -1011,10 +1011,10 @@ class _BuilderScreenState extends State<BuilderScreen> {
           : '12/31/26',
     );
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: modalSurface(context),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: Color(0xFFE4E7EC)),
@@ -1163,10 +1163,10 @@ class _BuilderScreenState extends State<BuilderScreen> {
   void _showAddDialog(BuildContext context, ScheduleProvider provider,
       String parentId, int level) {
     final nameCtrl = SpellCheckTextEditingController();
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: modalSurface(context),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: Color(0xFFE4E7EC))),
@@ -1293,7 +1293,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     // moment the user tapped it.
     var source = isAgileFlow ? _ImportSource.stories : _ImportSource.packages;
 
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {
@@ -1373,7 +1373,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
           );
 
           return AlertDialog(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            backgroundColor: modalSurface(context),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
                 side: const BorderSide(color: Color(0xFFE4E7EC))),
@@ -2882,7 +2882,7 @@ class _ActivityNode extends StatelessWidget {
       });
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(

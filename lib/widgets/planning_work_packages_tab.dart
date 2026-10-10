@@ -126,7 +126,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
         .where((d) => d.linkedSpecificationIds.isNotEmpty)
         .length;
 
-    final shouldImport = await showDialog<bool>(
+    final shouldImport = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Generate Integrated Package Chains'),
@@ -185,7 +185,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
       return;
     }
 
-    final shouldImport = await showDialog<bool>(
+    final shouldImport = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Create Integrated Schedule Network'),
@@ -232,7 +232,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
       }
     }
 
-    final result = await showDialog<WorkPackage>(
+    final result = await showAppDialog<WorkPackage>(
       context: context,
       builder: (context) => WorkPackageDialog(
         wbsLevel2Options: wbsLevel2Ids,
@@ -261,7 +261,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
       }
     }
 
-    final result = await showDialog<WorkPackage>(
+    final result = await showAppDialog<WorkPackage>(
       context: context,
       builder: (context) => WorkPackageDialog(
         initialWorkPackage: wp,
@@ -284,7 +284,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
   }
 
   Future<void> _deleteWorkPackage(WorkPackage wp) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Work Package'),
@@ -325,7 +325,7 @@ if (!mounted) return;
         data.scheduleActivities.where((a) => a.workPackageId == wp.id).toList();
 
     if (!mounted) return;
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (context) => WorkPackageDetailView(
         workPackage: wp,

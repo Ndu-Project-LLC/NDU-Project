@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -378,7 +379,7 @@ class _ProgramDashboardMobileScreenState
  loadingDialogVisible = false;
  }
 
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: false,
  useRootNavigator: true,

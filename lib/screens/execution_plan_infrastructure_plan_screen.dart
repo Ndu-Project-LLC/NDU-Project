@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ndu_project/screens/execution_plan_agile_delivery_plan_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -205,7 +206,7 @@ class _PlanningInfrastructureCostSectionState
     final statusController =
         SpellCheckTextEditingController(text: existing?.status ?? 'Planned');
 
-    final result = await showDialog<InfrastructurePlanningItem>(
+    final result = await showAppDialog<InfrastructurePlanningItem>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(existing == null

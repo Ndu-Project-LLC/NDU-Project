@@ -255,7 +255,7 @@ class _ExecutionWorkPackagesScreenState
         .where((d) => d.linkedSpecificationIds.isNotEmpty)
         .length;
 
-    final shouldImport = await showDialog<bool>(
+    final shouldImport = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Generate Integrated Package Chains'),
@@ -314,7 +314,7 @@ class _ExecutionWorkPackagesScreenState
       return;
     }
 
-    final shouldImport = await showDialog<bool>(
+    final shouldImport = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Create Integrated Schedule Network'),
@@ -370,7 +370,7 @@ class _ExecutionWorkPackagesScreenState
     }
 
     if (!mounted) return;
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
@@ -417,7 +417,7 @@ class _ExecutionWorkPackagesScreenState
       }
     }
 
-    final result = await showDialog<WorkPackage>(
+    final result = await showAppDialog<WorkPackage>(
       context: context,
       builder: (ctx) => WorkPackageDialog(
         wbsLevel2Options: wbsLevel2Ids,
@@ -446,7 +446,7 @@ class _ExecutionWorkPackagesScreenState
       }
     }
 
-    final result = await showDialog<WorkPackage>(
+    final result = await showAppDialog<WorkPackage>(
       context: context,
       builder: (ctx) => WorkPackageDialog(
         initialWorkPackage: wp,
@@ -469,7 +469,7 @@ class _ExecutionWorkPackagesScreenState
   }
 
   Future<void> _deleteWorkPackage(WorkPackage wp) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Work Package'),
@@ -510,7 +510,7 @@ class _ExecutionWorkPackagesScreenState
         data.scheduleActivities.where((a) => a.workPackageId == wp.id).toList();
 
     if (!mounted) return;
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (ctx) => WorkPackageDetailView(
         workPackage: wp,
@@ -562,7 +562,7 @@ class _ExecutionWorkPackagesScreenState
     String contractType = 'Fixed Price';
     String paymentType = 'Lump Sum';
 
-    await showDialog<bool>(
+    await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Link Contract to Work Package'),

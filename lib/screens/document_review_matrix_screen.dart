@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/document_review_models.dart';
 import 'package:ndu_project/services/document_review_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -740,7 +741,7 @@ class _DocumentReviewMatrixScreenState
   }
 
   void _showDocumentPreview(DocumentReviewItem doc) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => _DocumentPreviewDialog(
         document: doc,
@@ -774,7 +775,7 @@ class _DocumentReviewMatrixScreenState
   }
 
   void _assignReviewer(DocumentReviewItem doc) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => _AssignReviewerDialog(
         document: doc,
@@ -878,7 +879,7 @@ class _DocumentReviewMatrixScreenState
   ) {
     final controller = SpellCheckTextEditingController();
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Row(

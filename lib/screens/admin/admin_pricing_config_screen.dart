@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/services/subscription_pricing_service.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
@@ -175,7 +176,7 @@ class _AdminPricingConfigScreenState extends State<AdminPricingConfigScreen>
   }
 
   Future<void> _restoreDefaults() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Restore defaults?'),

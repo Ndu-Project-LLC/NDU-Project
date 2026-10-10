@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/recurring_deliverable_row.dart';
 import 'package:ndu_project/widgets/inline_editable_text.dart';
 import 'package:ndu_project/widgets/progress_quick_actions.dart';
@@ -305,7 +306,7 @@ class _RecurringRowWidgetState extends State<_RecurringRowWidget> {
     DateTime? nextOccurrence = _item.nextOccurrence;
 
     try {
-      await showDialog<void>(
+      await showAppDialog<void>(
         context: context,
         builder: (dialogContext) {
           return StatefulBuilder(

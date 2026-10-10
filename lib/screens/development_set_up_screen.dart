@@ -12,6 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -38,6 +39,17 @@ class DevelopmentSetUpScreen extends StatefulWidget {
 }
 
 class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
+  /// Width of the action column in every register table — the five header
+  /// cells that label it and the five rows that fill it.
+  ///
+  /// It holds three icon buttons (edit, delete, KAZ AI). Each one keeps the
+  /// 48px tap target Material gives an [IconButton], despite the 28px
+  /// `minWidth` the buttons declare, so the column was 48px too narrow at its
+  /// old 96px and every register row painted its third button outside the
+  /// panel. Sizing the column from the buttons it actually holds is how
+  /// `cost_analysis_screen.dart` handles the same three-button column.
+  static const double _actionColumnWidth = 144;
+
   // ── Methodology selection ──────────────────────────────────────────────
   String _selectedMethodology = 'Hybrid';
 
@@ -518,19 +530,32 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
             PlanningPhaseHeader(
                 title: 'Development Set Up', onExportPdf: _exportPdf),
             const SizedBox(height: 16),
-            _buildFrameworkGuidePanel(),
-            const SizedBox(height: 24),
-            _buildEnvProvisionRegister(),
-            const SizedBox(height: 20),
-            _buildCicdPipelineRegister(),
-            const SizedBox(height: 20),
-            _buildDevToolsRegister(),
-            const SizedBox(height: 20),
-            _buildQualityGatesRegister(),
-            const SizedBox(height: 20),
-            _buildSecurityBaselineRegister(),
-            const SizedBox(height: 20),
-            _buildApprovalGatesPanel(),
+            // The framework guide used to sit above five stacked registers and
+            // the approval gates, so the last table was several screens of
+            // scrolling away. They now sit behind the same tab navigator the
+            // Launch Phase screens use, with the guide as the leading Overview
+            // tab — the arrangement Contracts Tracking uses for its own guide.
+            LaunchPhaseTableTabs(
+              overview: _buildFrameworkGuidePanel(),
+              tabs: const [
+                LaunchPhaseTableTab(
+                    label: 'Environment Provisioning Register'),
+                LaunchPhaseTableTab(label: 'CI/CD Pipeline Register'),
+                LaunchPhaseTableTab(label: 'Development Tools Register'),
+                LaunchPhaseTableTab(label: 'Quality Gates Register'),
+                LaunchPhaseTableTab(label: 'Security Baseline Register'),
+                LaunchPhaseTableTab(label: 'Approval Gates'),
+              ],
+              builders: {
+                'Environment Provisioning Register':
+                    _buildEnvProvisionRegister,
+                'CI/CD Pipeline Register': _buildCicdPipelineRegister,
+                'Development Tools Register': _buildDevToolsRegister,
+                'Quality Gates Register': _buildQualityGatesRegister,
+                'Security Baseline Register': _buildSecurityBaselineRegister,
+                'Approval Gates': _buildApprovalGatesPanel,
+              },
+            ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
               backLabel:
@@ -769,7 +794,8 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
                             color: Color(0xFF6B7280),
                             letterSpacing: 0.8))),
                 SizedBox(
-                    width: 96, child: Text('', style: TextStyle(fontSize: 10))),
+                    width: _actionColumnWidth,
+                    child: Text('', style: TextStyle(fontSize: 10))),
               ],
             ),
           ),
@@ -831,7 +857,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
                   style:
                       const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
           SizedBox(
-            width: 96,
+            width: _actionColumnWidth,
             child: Row(
               children: [
                 IconButton(
@@ -890,7 +916,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
         SpellCheckTextEditingController(text: existing?.targetDate ?? '');
     final notesCtrl =
         SpellCheckTextEditingController(text: existing?.notes ?? '');
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(isEdit ? 'Edit Environment' : 'Add Environment'),
@@ -1014,7 +1040,8 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
                             color: Color(0xFF6B7280),
                             letterSpacing: 0.8))),
                 SizedBox(
-                    width: 96, child: Text('', style: TextStyle(fontSize: 10))),
+                    width: _actionColumnWidth,
+                    child: Text('', style: TextStyle(fontSize: 10))),
               ],
             ),
           ),
@@ -1075,7 +1102,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF0F172A)))),
           SizedBox(
-            width: 96,
+            width: _actionColumnWidth,
             child: Row(
               children: [
                 IconButton(
@@ -1133,7 +1160,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
         SpellCheckTextEditingController(text: existing?.gateCriteria ?? '');
     final ownerCtrl =
         SpellCheckTextEditingController(text: existing?.owner ?? '');
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(isEdit ? 'Edit Pipeline Stage' : 'Add Pipeline Stage'),
@@ -1263,7 +1290,8 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
                             color: Color(0xFF6B7280),
                             letterSpacing: 0.8))),
                 SizedBox(
-                    width: 96, child: Text('', style: TextStyle(fontSize: 10))),
+                    width: _actionColumnWidth,
+                    child: Text('', style: TextStyle(fontSize: 10))),
               ],
             ),
           ),
@@ -1326,7 +1354,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF0F172A)))),
           SizedBox(
-            width: 96,
+            width: _actionColumnWidth,
             child: Row(
               children: [
                 IconButton(
@@ -1385,7 +1413,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
         SpellCheckTextEditingController(text: existing?.expiry ?? '');
     final ownerCtrl =
         SpellCheckTextEditingController(text: existing?.owner ?? '');
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
@@ -1584,7 +1612,8 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
                             color: Color(0xFF6B7280),
                             letterSpacing: 0.8))),
                 SizedBox(
-                    width: 96, child: Text('', style: TextStyle(fontSize: 10))),
+                    width: _actionColumnWidth,
+                    child: Text('', style: TextStyle(fontSize: 10))),
               ],
             ),
           ),
@@ -1644,7 +1673,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
                   style:
                       const TextStyle(fontSize: 12, color: Color(0xFF64748B)))),
           SizedBox(
-            width: 96,
+            width: _actionColumnWidth,
             child: Row(
               children: [
                 IconButton(
@@ -1710,7 +1739,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
               DateFormat('yyyy-MM-dd').tryParse(existing.targetDate);
     }
 
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
@@ -1914,7 +1943,8 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
                             color: Color(0xFF6B7280),
                             letterSpacing: 0.8))),
                 SizedBox(
-                    width: 96, child: Text('', style: TextStyle(fontSize: 10))),
+                    width: _actionColumnWidth,
+                    child: Text('', style: TextStyle(fontSize: 10))),
               ],
             ),
           ),
@@ -1974,7 +2004,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
                   style:
                       const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
           SizedBox(
-            width: 96,
+            width: _actionColumnWidth,
             child: Row(
               children: [
                 IconButton(
@@ -2032,7 +2062,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
         SpellCheckTextEditingController(text: existing?.owner ?? '');
     final dateCtrl =
         SpellCheckTextEditingController(text: existing?.reviewDate ?? '');
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(isEdit ? 'Edit Security Control' : 'Add Security Control'),
@@ -2231,7 +2261,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
         SpellCheckTextEditingController(text: existing?.approver ?? '');
     final dateCtrl =
         SpellCheckTextEditingController(text: existing?.targetDate ?? 'TBD');
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(isEdit ? 'Edit Approval Gate' : 'Add Approval Gate'),
@@ -2280,7 +2310,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
   // ══════════════════════════════════════════════════════════════════════════
 
   void _confirmDelete(String itemType, String itemId, VoidCallback onDelete) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Delete $itemType?'),

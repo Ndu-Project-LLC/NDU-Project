@@ -163,7 +163,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  // ─── Logout (used by the profile avatar dropdown) ────────────────────────
  Future<void> _handleLogout() async {
  if (!mounted) return;
- final shouldLogout = await showDialog<bool>(
+ final shouldLogout = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) {
  final theme = Theme.of(dialogContext);
@@ -1349,7 +1349,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
   // Loads the project workspace and navigates to its last checkpoint,
   // mirroring the open-project flow used across the other dashboards.
   Future<void> _openProject(ProjectRecord project) async {
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
@@ -1401,7 +1401,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
   // projectIds are NOT deleted — only the grouping is removed; the
   // individual projects stay on the dashboard as standalone workspaces.
   Future<void> _showDeletePortfolioDialog(PortfolioModel portfolio) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -1500,7 +1500,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
       }
     }
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(

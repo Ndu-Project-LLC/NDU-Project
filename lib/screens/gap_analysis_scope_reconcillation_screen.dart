@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -1178,7 +1179,7 @@ class _GapRegisterCard extends StatelessWidget {
     String selectedCategory = existing?.category ?? 'Scope';
     String selectedSeverity = existing?.severity ?? 'Medium';
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
@@ -1363,7 +1364,7 @@ class _GapRegisterCard extends StatelessWidget {
   }
 
   void _confirmDeleteEntry(BuildContext context, _GapEntry entry) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Gap Entry'),
@@ -1712,7 +1713,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
     String selectedImpact = existing?.impact ?? 'Medium';
     String selectedStatus = existing?.status ?? 'Open';
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
@@ -1875,7 +1876,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
   }
 
   void _confirmDeleteRootCause(BuildContext context, _RootCauseItem item) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Root Cause'),
@@ -1900,7 +1901,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
   }
 
   void _confirmDeleteMitigation(BuildContext context, _RootCauseItem item) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Mitigation'),
@@ -2767,7 +2768,7 @@ class _ReconciliationPlanningCard extends StatelessWidget {
     String selectedPhase = existing?.phase ?? 'Execution';
     int completionPct = existing?.completionPct ?? 0;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
@@ -2961,7 +2962,7 @@ class _ReconciliationPlanningCard extends StatelessWidget {
   }
 
   void _confirmDeletePlan(BuildContext context, _PlanEntry plan) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Reconciliation Step'),
@@ -3039,7 +3040,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
           const SizedBox(width: 8),
           TextButton.icon(
             onPressed: () {
-              showDialog<void>(
+              showAppDialog<void>(
                 context: context,
                 barrierColor: Colors.black.withValues(alpha: 0.35),
                 builder: (_) => _ScenarioMatrixDialog(
@@ -3194,7 +3195,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
     String selectedTrend = existing?.trend ?? 'Stable';
     String selectedDomain = existing?.domain ?? 'Schedule';
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
@@ -3388,7 +3389,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
   }
 
   void _confirmDeleteImpact(BuildContext context, _ImpactRow impact) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Impact Assessment'),
@@ -4241,7 +4242,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
     var likelihood = record?.likelihood ?? 2;
 
     try {
-      final saved = await showDialog<bool>(
+      final saved = await showAppDialog<bool>(
         context: context,
         builder: (_) => AlertDialog(
           title: Text(record == null ? 'Add scenario' : 'Edit scenario'),
@@ -4570,7 +4571,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
                           IconButton(
                             tooltip: 'Delete',
                             onPressed: () async {
-                              final confirmed = await showDialog<bool>(
+                              final confirmed = await showAppDialog<bool>(
                                   context: context,
                                   builder: (_) => AlertDialog(
                                           title: const Text('Delete scenario?'),
@@ -5080,7 +5081,7 @@ class _ReconciliationWorkflowCardState
     String status = _columns.first.label;
 
     try {
-      final result = await showDialog<_WorkflowStep>(
+      final result = await showAppDialog<_WorkflowStep>(
         context: context,
         builder: (context) {
           return AlertDialog(

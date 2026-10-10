@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/screens/front_end_planning_procurement_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -556,7 +557,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  SpellCheckTextEditingController(text: step.duration.toString());
  var selectedUnit = step.unit;
 
- final result = await showDialog<_ContractingWorkflowStep>(
+ final result = await showAppDialog<_ContractingWorkflowStep>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setState) => AlertDialog(
@@ -1417,7 +1418,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  return;
  }
 
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Start Scope Process?'),
@@ -1472,7 +1473,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  } catch (e) {
  if (!mounted) return;
  if (e is FirebaseException && e.code == 'permission-denied') {
- final continueLocal = await showDialog<bool>(
+ final continueLocal = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Firestore Permission Required'),
@@ -2108,7 +2109,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  'Consulting',
  'Other',
  ];
- final result = await showDialog<ContractModel>(
+ final result = await showAppDialog<ContractModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -2134,7 +2135,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  'Consulting',
  'Other',
  ];
- final result = await showDialog<ContractModel>(
+ final result = await showAppDialog<ContractModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -2169,7 +2170,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Future<void> _deleteContract(ContractModel contract) async {
  final projectId = _activeProjectIdOrNull();
  if (projectId == null) return;
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Delete contract?'),
@@ -2218,7 +2219,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  'Other',
  ];
 
- final result = await showDialog<VendorModel>(
+ final result = await showAppDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -2306,7 +2307,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  'Other',
  ];
 
- final result = await showDialog<VendorModel>(
+ final result = await showAppDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -2357,7 +2358,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  }
 
  Future<void> _confirmDeleteContractor(VendorModel contractor) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Remove contractor?'),
@@ -2424,7 +2425,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  startStage = _startStageOptions[1];
  }
 
- final result = await showDialog<ProcurementItemModel>(
+ final result = await showAppDialog<ProcurementItemModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -2655,7 +2656,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  }
 
  Future<void> _deleteItem(ProcurementItemModel item) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Delete contracting scope item?'),
@@ -2769,7 +2770,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final candidates = _collectApprovedContractors(const [], scopes, vendors);
  final controller = SpellCheckTextEditingController();
  if (!mounted) return;
- final picked = await showDialog<String>(
+ final picked = await showAppDialog<String>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Select Contractor'),
@@ -2827,7 +2828,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
 
  final selected = <String>{};
  if (!mounted) return;
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setState) => AlertDialog(
@@ -2959,7 +2960,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  text: (data.planningNotes[key] ?? '').toString(),
  );
 
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: Text(
@@ -3700,7 +3701,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  status = _trackingStatusOptions.first;
  }
 
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setState) => AlertDialog(
@@ -3788,7 +3789,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  SpellCheckTextEditingController(text: existing?.summary ?? '');
  var status = existing?.status ?? _reportStatusOptions.first;
 
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setState) => AlertDialog(
@@ -3992,7 +3993,7 @@ if (!mounted) return;
  vendorByName[vendor.name.trim().toLowerCase()] = vendor;
  }
 
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setState) => AlertDialog(
@@ -4418,7 +4419,7 @@ if (!mounted) return;
 
  bool shouldImport = silent;
  if (!silent) {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => _AiPreviewDialog(data: generated),
  );
@@ -6249,7 +6250,7 @@ class _ContractScopeDetailCardState extends State<_ContractScopeDetailCard> {
 
  Future<void> _addContractorManually() async {
  final controller = SpellCheckTextEditingController();
- final result = await showDialog<String>(
+ final result = await showAppDialog<String>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Add Potential Contractors'),

@@ -127,7 +127,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  final nameController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
 
- final projectName = await showDialog<String>(
+ final projectName = await showAppDialog<String>(
  context: context,
  barrierDismissible: false,
  builder: (dialogContext) {
@@ -388,7 +388,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  }
 
  // Show loading indicator while creating the project
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: false,
  builder: (context) => Center(
@@ -1320,7 +1320,7 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
  final nameController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
 
- final programName = await showDialog<String>(
+ final programName = await showAppDialog<String>(
  context: context,
  barrierDismissible: false,
  builder: (dialogContext) {
@@ -2063,7 +2063,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  loadingDialogVisible = false;
  }
 
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: false,
  useRootNavigator: true,
@@ -2135,7 +2135,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
   );
  } else {
  debugPrint('Failed to load project: ${provider.lastError}');
- showDialog(
+ showAppDialog(
  context: context,
  builder: (dialogContext) => AlertDialog(
  shape:
@@ -2215,7 +2215,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
 
  if (!context.mounted) return;
  dismissLoadingDialog();
- showDialog(
+ showAppDialog(
  context: context,
  builder: (dialogContext) => AlertDialog(
  shape:
@@ -2259,7 +2259,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
 
  if (!context.mounted) return;
  dismissLoadingDialog();
- showDialog(
+ showAppDialog(
  context: context,
  builder: (dialogContext) => AlertDialog(
  shape:
@@ -2322,7 +2322,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  final nameController = SpellCheckTextEditingController(text: project.name);
  final formKey = GlobalKey<FormState>();
 
- final newName = await showDialog<String>(
+ final newName = await showAppDialog<String>(
  context: context,
  barrierDismissible: false,
  builder: (dialogContext) {
@@ -2420,7 +2420,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  if (newName == null || newName == project.name || !context.mounted) return;
 
  // Show loading indicator
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: false,
  builder: (context) => const Center(child: CircularProgressIndicator()),
@@ -2460,7 +2460,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  }
 
  Future<void> _deleteProject(BuildContext context) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) {
  return AlertDialog(
@@ -2522,7 +2522,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  if (confirmed != true || !context.mounted) return;
 
  // Show loading indicator
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: false,
  builder: (context) => const Center(child: CircularProgressIndicator()),

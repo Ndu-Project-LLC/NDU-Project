@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -1284,7 +1285,7 @@ class _InfrastructureConsiderationsScreenState
  }
 
  Future<_MissingInfrastructureAction?> _showMissingInfrastructureDialog() {
- return showDialog<_MissingInfrastructureAction>(
+ return showAppDialog<_MissingInfrastructureAction>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Infrastructure Considerations Incomplete'),
@@ -1374,7 +1375,7 @@ class _InfrastructureConsiderationsScreenState
  List<_InfrastructureAutoFillPreviewRow> previewRows,
  ) async {
  if (previewRows.isEmpty) return false;
- final approved = await showDialog<bool>(
+ final approved = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Confirm AI Autofill'),
@@ -1570,7 +1571,7 @@ class _InfrastructureConsiderationsScreenState
  }
 
  if (!mounted) return;
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: false,
  builder: (context) => const Center(

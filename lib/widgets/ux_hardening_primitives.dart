@@ -28,6 +28,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
@@ -476,7 +477,7 @@ class _UnsavedChangesGuardState extends State<UnsavedChangesGuard> {
   }
 
   Future<void> _showSaveDialog() async {
-    final action = await showDialog<_SaveDialogAction>(
+    final action = await showAppDialog<_SaveDialogAction>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(

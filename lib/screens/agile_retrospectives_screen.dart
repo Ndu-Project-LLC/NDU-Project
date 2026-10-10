@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -844,7 +845,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
   Future<void> _addCard(_RetroColumn col) async {
     final ctrl = SpellCheckTextEditingController();
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         builder: (ctx) => AlertDialog(
           shape: RoundedRectangleBorder(

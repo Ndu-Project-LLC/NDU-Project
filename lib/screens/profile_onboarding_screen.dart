@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/profile_onboarding_service.dart';
@@ -56,7 +57,7 @@ class ProfileOnboardingScreen extends StatefulWidget {
  /// renders above the current screen with a blurred backdrop.
  static Future<void> show(BuildContext context,
  {String returnTo = AppRoutes.dashboard}) async {
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.transparent, // we render our own backdrop

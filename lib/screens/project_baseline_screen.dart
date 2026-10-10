@@ -436,7 +436,7 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  final descriptionController = SpellCheckTextEditingController();
 
  try {
- final payload = await showDialog<Map<String, String>>(
+ final payload = await showAppDialog<Map<String, String>>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Create Baseline Version'),
@@ -1971,7 +1971,7 @@ onBack: () =>
  }
 
  void _showVersionDetails(_BaselineVersion version) {
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  builder: (dialogContext) => Dialog(
  insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),

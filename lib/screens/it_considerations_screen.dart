@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -1070,7 +1071,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
   }
 
   Future<_MissingItConsiderationsAction?> _showMissingItDataDialog() {
-    return showDialog<_MissingItConsiderationsAction>(
+    return showAppDialog<_MissingItConsiderationsAction>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('IT Considerations Incomplete'),
@@ -1156,7 +1157,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
     List<_ItAutoFillPreviewRow> previewRows,
   ) async {
     if (previewRows.isEmpty) return false;
-    final approved = await showDialog<bool>(
+    final approved = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Confirm AI Autofill'),
@@ -1359,7 +1360,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
 
     // Show loading dialog
     if (!mounted) return;
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(

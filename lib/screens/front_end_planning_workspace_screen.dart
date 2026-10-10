@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/screens/front_end_planning_requirements_screen.dart';
@@ -151,7 +152,7 @@ class _FrontEndPlanningWorkspaceScreenState
 
   Future<void> _showAiGeneratedNotice() async {
     if (!mounted) return;
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('KAZ AI Suggestions Added'),
@@ -332,7 +333,7 @@ class _FrontEndPlanningWorkspaceScreenState
     final currentList = List<String>.from(_listForType(type));
 
     if (currentList.isNotEmpty) {
-      final confirm = await showDialog<bool>(
+      final confirm = await showAppDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Generate additional items?'),
@@ -910,7 +911,7 @@ class _ListEditorCard extends StatelessWidget {
 
   void _showAddDialog(BuildContext context) {
     final controller = RichTextEditingController();
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Add to $title'),
@@ -955,7 +956,7 @@ class _ListEditorCard extends StatelessWidget {
 
   void _showEditDialog(BuildContext context, int index, String current) {
     final controller = RichTextEditingController(text: current);
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Edit item in $title'),

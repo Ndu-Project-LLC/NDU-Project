@@ -1228,7 +1228,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
     DateTime? actualDate = existing?.actualDate;
 
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         barrierDismissible: true,
         builder: (ctx) => StatefulBuilder(
@@ -1436,7 +1436,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   }
 
   void _confirmDeleteWorkPackage(_WorkPackageItem item) {
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => LaunchModalShell(
@@ -1757,7 +1757,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
     DateTime? signOffDate = existing?.signOffDate;
 
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         barrierDismissible: true,
         builder: (ctx) => StatefulBuilder(
@@ -1926,7 +1926,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   }
 
   void _confirmDeleteCheckpoint(_CheckpointItem item) {
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => LaunchModalShell(
@@ -2177,7 +2177,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
     DateTime? dateVerified = existing?.dateVerified;
 
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         barrierDismissible: true,
         builder: (ctx) => StatefulBuilder(
@@ -2313,7 +2313,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   }
 
   void _confirmDeleteAcceptanceTag(_AcceptanceTagItem item) {
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => LaunchModalShell(
@@ -2664,7 +2664,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
     DateTime? decisionDate = existing?.decisionDate;
 
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         barrierDismissible: true,
         builder: (ctx) => StatefulBuilder(
@@ -2853,7 +2853,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   }
 
   void _confirmDeleteScopeChange(_ScopeChangeItem item) {
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => LaunchModalShell(

@@ -220,7 +220,7 @@ class _ScheduleToolbar extends StatelessWidget {
  Future<void> _showCreateTaskDialog(BuildContext context) async {
  final controller = SpellCheckTextEditingController();
  try {
- final created = await showDialog<String>(
+ final created = await showAppDialog<String>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Create Task'),
@@ -723,7 +723,7 @@ class _BoardFooter extends StatelessWidget {
  Future<void> _showAddNoteDialog(BuildContext context) async {
  final controller = SpellCheckTextEditingController();
  try {
- final note = await showDialog<String>(
+ final note = await showAppDialog<String>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Add Note'),

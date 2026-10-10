@@ -598,7 +598,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
 
  Future<void> _handleLogout() async {
  if (!mounted) return;
- final shouldLogout = await showDialog<bool>(
+ final shouldLogout = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -1720,7 +1720,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
   }
 
   Future<void> _openProject(ProjectRecord p) async {
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),

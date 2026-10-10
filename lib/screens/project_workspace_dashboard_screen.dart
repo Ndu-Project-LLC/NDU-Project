@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/initiation_phase_screen.dart';
@@ -148,7 +149,7 @@ class _ProjectWorkspaceDashboardScreenState
 
   // ── Auth (preserved) ────────────────────────────────────────────────────
   Future<void> _handleLogout() async {
-    final shouldLogout = await showDialog<bool>(
+    final shouldLogout = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -176,7 +177,7 @@ class _ProjectWorkspaceDashboardScreenState
 
   // ── Project open (preserved) ─────────────────────────────────────────────
   Future<void> _openProject(ProjectRecord project) async {
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),

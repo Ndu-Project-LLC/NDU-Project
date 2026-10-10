@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:flutter/services.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
@@ -26,7 +27,7 @@ class AiAssistHelper {
     int maxTokens = 1000,
   }) async {
     // Show loading dialog
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
@@ -111,7 +112,7 @@ IMPORTANT RULES:
     String sectionLabel,
     String content,
   ) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Row(

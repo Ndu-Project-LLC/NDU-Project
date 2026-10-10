@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/services/quality_intelligence_service.dart';
 
 /// Quality Intelligence Insights Panel
@@ -484,7 +485,7 @@ class QualityIntelligenceDialog extends StatelessWidget {
   final QualityIntelligenceReport report;
 
   static Future<void> show(BuildContext context, QualityIntelligenceReport report) {
-    return showDialog(
+    return showAppDialog(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,

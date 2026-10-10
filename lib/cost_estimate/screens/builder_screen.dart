@@ -21,6 +21,7 @@ library;
 /// no Scaffold of its own.
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
@@ -648,7 +649,7 @@ class _BuilderScreenState extends State<BuilderScreen>
     CostCategory defaultCategory, [
     CostLine? editing,
   ]) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AddLineDialog(
         defaultCategory: defaultCategory,

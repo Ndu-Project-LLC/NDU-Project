@@ -3,6 +3,7 @@ import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
     as loader;
@@ -627,7 +628,7 @@ class _DeliverProjectClosureScreenState
     if (index < 0 || index >= _scopeItems.length) return;
     final item = _scopeItems[index];
 
-    final result = await showDialog<Map<String, String>>(
+    final result = await showAppDialog<Map<String, String>>(
       context: context,
       builder: (context) => _ScopeEditDialog(
         deliverable: item.deliverable,

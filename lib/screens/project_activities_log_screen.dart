@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/models/project_activity.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -146,7 +147,7 @@ class _ProjectActivitiesLogScreenState
  var localQuery = '';
  final working = Set<String>.from(selectedValues);
 
- final result = await showDialog<Set<String>>(
+ final result = await showAppDialog<Set<String>>(
  context: context,
  builder: (dialogContext) {
  return StatefulBuilder(
@@ -382,7 +383,7 @@ class _ProjectActivitiesLogScreenState
  }) async {
  final actionLabel =
  isCustom ? 'delete this custom activity' : 'hide this activity';
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: Text(isCustom ? 'Delete Activity' : 'Hide Activity'),
@@ -480,7 +481,7 @@ class _ProjectActivitiesLogScreenState
  var selectedApproval =
  existing?.approvalStatus ?? ProjectApprovalStatus.draft;
 
- final result = await showDialog<ProjectActivity>(
+ final result = await showAppDialog<ProjectActivity>(
  context: context,
  builder: (dialogContext) {
  return StatefulBuilder(
@@ -2144,7 +2145,7 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
  required String title,
  required String value,
  }) {
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  builder: (dialogContext) {
  final size = MediaQuery.of(dialogContext).size;

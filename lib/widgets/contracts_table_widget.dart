@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/services/contract_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -448,7 +449,7 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
     DateTime? selectedEndDate = _contract.endDate;
 
     try {
-      await showDialog<bool>(
+      await showAppDialog<bool>(
         context: context,
         builder: (dialogContext) => StatefulBuilder(
           builder: (context, setDialogState) {

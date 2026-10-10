@@ -834,7 +834,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
     final exitStandardController = SpellCheckTextEditingController();
     final formKey = GlobalKey<FormState>();
 
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
@@ -1242,7 +1242,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       for (final f in fields) SpellCheckTextEditingController(text: f.initialValue ?? ''),
     ];
 
-    final result = await showDialog<Map<int, String>>(
+    final result = await showAppDialog<Map<int, String>>(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) => StatefulBuilder(
@@ -1974,7 +1974,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
     final controlsCtl = SpellCheckTextEditingController(text: existing?.controls ?? '');
     final exitCtl = SpellCheckTextEditingController(text: existing?.exitStandard ?? '');
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDState) => AlertDialog(
@@ -2333,7 +2333,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
     final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
     String decision = existing?.decision ?? 'Pending';
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDState) => AlertDialog(
@@ -2719,7 +2719,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
         SpellCheckTextEditingController(text: existing?.waterfallEvidence ?? '');
     final agileCtl = SpellCheckTextEditingController(text: existing?.agileEvidence ?? '');
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Row(children: [
@@ -5731,7 +5731,7 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
   }
 
   Future<bool> _confirmDelete(String label) async {
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete row?'),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 
 import 'package:ndu_project/models/issue_log.dart';
@@ -119,7 +120,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
   }
 
   Future<void> _handleNewIssue() async {
-    final entry = await showDialog<IssueLogItem>(
+    final entry = await showAppDialog<IssueLogItem>(
       context: context,
       builder: (dialogContext) => const _NewIssueDialog(),
     );
@@ -142,7 +143,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
       await _handleEditExecutionIssue(executionDocId, existing);
       return;
     }
-    final updated = await showDialog<IssueLogItem>(
+    final updated = await showAppDialog<IssueLogItem>(
       context: context,
       builder: (dialogContext) => _NewIssueDialog(existingIssue: existing),
     );
@@ -194,7 +195,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
       return;
     }
     final original = _executionIssuesById[executionDocId];
-    final updated = await showDialog<IssueLogItem>(
+    final updated = await showAppDialog<IssueLogItem>(
       context: context,
       builder: (dialogContext) => _NewIssueDialog(existingIssue: mapped),
     );
@@ -238,7 +239,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
 
   Future<void> _handleDeleteIssue(IssueLogItem entry) async {
     final executionDocId = executionDocIdFromViewId(entry.id);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Delete issue?'),

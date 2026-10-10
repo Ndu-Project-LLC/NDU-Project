@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -1182,7 +1183,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  }
 
  Future<_MissingStakeholderAction?> _showMissingStakeholderDialog() {
- return showDialog<_MissingStakeholderAction>(
+ return showAppDialog<_MissingStakeholderAction>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Core Stakeholders Incomplete'),
@@ -1286,7 +1287,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  List<_StakeholderAutoFillPreviewRow> previewRows,
  ) async {
  if (previewRows.isEmpty) return false;
- final approved = await showDialog<bool>(
+ final approved = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Confirm AI Autofill'),

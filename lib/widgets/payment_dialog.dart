@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/services/subscription_service.dart';
 import 'package:ndu_project/services/subscription_pricing_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -48,7 +49,7 @@ class PaymentDialog extends StatefulWidget {
     String? displayPeriod,
     PricingTierId? pricingTierId,
   }) async {
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => PaymentDialog(
@@ -422,7 +423,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
   }
 
   Future<bool?> _showPaymentConfirmationDialog() async {
-    return showDialog<bool>(
+    return showAppDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(

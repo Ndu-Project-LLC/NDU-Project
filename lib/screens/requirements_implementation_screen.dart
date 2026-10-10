@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -644,7 +645,7 @@ if (!mounted) return;
  reasons.add('Set section approval status to In Review or Approved.');
  }
  if (!mounted) return;
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Design Specifications Incomplete'),
@@ -721,7 +722,7 @@ if (!mounted) return;
  }.toList()
  ..sort();
 
- final result = await showDialog<_DesignSpecDocumentRow?>(
+ final result = await showAppDialog<_DesignSpecDocumentRow?>(
  context: context,
  barrierDismissible: true,
  builder: (dialogContext) {
@@ -799,7 +800,7 @@ if (!mounted) return;
  duration: const Duration(milliseconds: 120),
  curve: Curves.easeOutCubic,
  child: Dialog(
- backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+ backgroundColor: modalSurface(context),
  insetPadding: const EdgeInsets.symmetric(
  horizontal: 24, vertical: 24),
  shape: RoundedRectangleBorder(
@@ -2658,7 +2659,7 @@ if (!mounted) return;
  final ownerOptions = _ownerOptions(
  ProjectDataInherited.maybeOf(context)?.projectData ?? ProjectDataModel());
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  builder: (dialogContext) => _VerificationPopupDialog(
  requirement: selected,
@@ -3435,7 +3436,7 @@ if (!mounted) return;
  final conflictNoteController = SpellCheckTextEditingController(text: row.conflictNote);
  var selectedConflictImpact = row.conflictImpact;
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -3961,7 +3962,7 @@ if (!mounted) return;
  var selectedPriority = 'High';
  var selectedStatus = 'Not Started';
 
- final saved = await showDialog<_ApprovalGateData>(
+ final saved = await showAppDialog<_ApprovalGateData>(
  context: context,
  builder: (dialogContext) {
  return StatefulBuilder(
@@ -4158,7 +4159,7 @@ if (!mounted) return;
   }
 
  Future<bool> _confirmDelete(String label) async {
- final result = await showDialog<bool>(
+ final result = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Delete row?'),

@@ -1,5 +1,6 @@
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
@@ -747,7 +748,7 @@ if (!mounted) return;
     final notesController = SpellCheckTextEditingController(text: member?.notes ?? '');
 
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         barrierDismissible: true,
         builder: (ctx) => StatefulBuilder(
@@ -906,7 +907,7 @@ if (!mounted) return;
       return;
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => LaunchModalShell(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 
 enum ValidationFieldType {
   text,
@@ -223,7 +224,7 @@ class FormValidationEngine {
     final visible = summaries.take(maxItems).toList(growable: false);
     final hiddenCount = summaries.length - visible.length;
 
-    return showDialog<MissingRequirementsAction>(
+    return showAppDialog<MissingRequirementsAction>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Row(

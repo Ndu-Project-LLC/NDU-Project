@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/screens/ssher_add_safety_item_dialog.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -575,7 +576,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  }
 
  Future<void> _deleteEntry(SsherEntry entry) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Item'),
@@ -662,7 +663,7 @@ if (!mounted) return;
  return;
  }
 
- final input = await showDialog<SsherItemInput>(
+ final input = await showAppDialog<SsherItemInput>(
  context: context,
  builder: (ctx) => AddSsherItemDialog(
  accentColor: accentColor,
@@ -2417,7 +2418,7 @@ if (!mounted) return;
  break;
  }
 
- final result = await showDialog<SsherItemInput>(
+ final result = await showAppDialog<SsherItemInput>(
  context: context,
  builder: (ctx) => AddSsherItemDialog(
  accentColor: accentColor,

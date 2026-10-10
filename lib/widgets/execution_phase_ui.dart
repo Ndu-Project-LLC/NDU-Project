@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 
 enum ExecutionActionTone {
@@ -940,7 +941,7 @@ Future<T?> showExecutionEditorSheet<T>({
     );
   }
 
-  return showDialog<T>(
+  return showAppDialog<T>(
     context: context,
     barrierDismissible: false,
     builder: (_) {

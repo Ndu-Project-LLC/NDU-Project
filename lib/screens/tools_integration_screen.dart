@@ -2,6 +2,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -270,7 +271,7 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  return;
  }
 
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: Text('Connect $label'),
@@ -1727,7 +1728,7 @@ showNavigationButtons: false,
  IconData icon = existing?.icon ?? Icons.extension;
  Color iconColor = existing?.iconColor ?? const Color(0xFF64748B);
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -1844,7 +1845,7 @@ showNavigationButtons: false,
  }
 
  void _confirmDeleteIntegration(_IntegrationRow item) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Integration'),
@@ -1876,7 +1877,7 @@ showNavigationButtons: false,
  final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  final trendCtl = SpellCheckTextEditingController(text: existing?.trend ?? '');
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: Row(
@@ -1954,7 +1955,7 @@ showNavigationButtons: false,
  String category = existing?.category ?? 'Governance';
  String status = existing?.status ?? 'Open';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -2058,7 +2059,7 @@ showNavigationButtons: false,
  String priority = existing?.priority ?? 'Medium';
  String status = existing?.status ?? 'Not Started';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -2409,7 +2410,7 @@ showNavigationButtons: false,
  String priority = existing?.priority ?? 'High';
  String status = existing?.status ?? 'Not Started';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -2505,7 +2506,7 @@ showNavigationButtons: false,
  }
 
  void _confirmDeleteApprovalGate(_ApprovalGateData item) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Approval Gate'),
@@ -2539,7 +2540,7 @@ showNavigationButtons: false,
  final transformCtl = SpellCheckTextEditingController(text: existing?.transformation ?? '');
  String status = existing?.status ?? 'Active';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -2637,7 +2638,7 @@ showNavigationButtons: false,
  }
 
  void _confirmDeleteDataFlow(_DataFlowRow item) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Data Flow'),

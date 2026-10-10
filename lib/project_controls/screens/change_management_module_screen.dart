@@ -1842,7 +1842,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
         text: suggested > 0 ? suggested.toStringAsFixed(0) : '');
     final commentsCtrl = SpellCheckTextEditingController();
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
@@ -1933,7 +1933,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
     final actualCtrl = SpellCheckTextEditingController();
     final notesCtrl = SpellCheckTextEditingController();
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Close ${cr.crNumber}'),
@@ -2088,11 +2088,11 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
       }
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          backgroundColor: modalSurface(context),
           title: const Text('Quick Change Request',
               style: TextStyle(
                   color: Color(0xFF1A1D1F),
@@ -4669,11 +4669,11 @@ class _WorkflowTabState extends State<_WorkflowTab> {
     var role = ApprovalRole.projectControls;
     final nameCtrl = SpellCheckTextEditingController();
     DateTime? dueDate;
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlgState) => AlertDialog(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          backgroundColor: modalSurface(context),
           title: const Text('Add Approval Step',
               style: TextStyle(
                   color: Color(0xFF1A1D1F),
@@ -4776,10 +4776,10 @@ class _WorkflowTabState extends State<_WorkflowTab> {
     final escalationTargetCtrl = SpellCheckTextEditingController();
     final escalationReasonCtrl = SpellCheckTextEditingController();
     final delegatedFromCtrl = SpellCheckTextEditingController();
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: modalSurface(context),
         title: Row(children: [
           Icon(decision.icon, color: decision.color, size: 18),
           const SizedBox(width: 8),
@@ -5365,10 +5365,10 @@ class _ImplementationTabState extends State<_ImplementationTab> {
   void _confirmApplyToBaseline() {
     final cr = widget.selectedCR;
     if (cr == null) return;
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: modalSurface(context),
         title: const Text('Apply to Baseline?',
             style: TextStyle(
                 color: Color(0xFF1A1D1F),
@@ -5407,10 +5407,10 @@ class _ImplementationTabState extends State<_ImplementationTab> {
   }
 
   void _confirmRollback() {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: modalSurface(context),
         title: const Text('Rollback Baseline?',
             style: TextStyle(
                 color: Color(0xFF1A1D1F),

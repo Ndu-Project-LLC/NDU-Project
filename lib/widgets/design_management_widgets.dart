@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/file_upload_helper.dart';
@@ -123,7 +124,7 @@ class DesignSpecificationsCard extends StatelessWidget {
   void _showAddSpecificationDialog(
       BuildContext context, ProjectDataProvider provider) {
     final controller = SpellCheckTextEditingController();
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Add Specification'),
@@ -163,7 +164,7 @@ class DesignSpecificationsCard extends StatelessWidget {
 
   void _showStatusDialog(BuildContext context, DesignSpecification spec,
       ProjectDataProvider provider) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => SimpleDialog(
         title: const Text('Update Status'),
@@ -426,7 +427,7 @@ class DesignDocumentsCard extends StatelessWidget {
     String? uploadedStoragePath;
     bool isUploading = false;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -862,7 +863,7 @@ class DesignToolsCard extends StatelessWidget {
     String? uploadedStoragePath;
     bool isUploading = false;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(

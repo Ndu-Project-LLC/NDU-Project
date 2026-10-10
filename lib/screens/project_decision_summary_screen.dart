@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/front_end_planning_summary.dart';
@@ -307,7 +308,7 @@ class _ProjectDecisionSummaryScreenState
  if (_guideShown || !mounted) return;
  _guideShown = true;
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Preferred Solution Selection'),
@@ -373,7 +374,7 @@ class _ProjectDecisionSummaryScreenState
  }
 
  Future<bool?> _showWarningStep() {
- return showDialog<bool>(
+ return showAppDialog<bool>(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Warning'),
@@ -399,7 +400,7 @@ class _ProjectDecisionSummaryScreenState
  Future<bool?> _showConfirmationStep() {
  bool acknowledged = false;
 
- return showDialog<bool>(
+ return showAppDialog<bool>(
  context: context,
  builder: (context) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -458,7 +459,7 @@ class _ProjectDecisionSummaryScreenState
  });
 
  if (!mounted) return;
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  barrierDismissible: false,
  builder: (_) => const Center(
@@ -561,7 +562,7 @@ class _ProjectDecisionSummaryScreenState
 
  void _showBlockedMessage(String message, {int? attemptedIndex}) {
  if (!mounted) return;
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Action Blocked'),
@@ -595,7 +596,7 @@ class _ProjectDecisionSummaryScreenState
  SpellCheckTextEditingController(text: '$defaultTitle - New Project');
  String? errorText;
 
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(
@@ -671,7 +672,7 @@ class _ProjectDecisionSummaryScreenState
  ];
 
  if (!mounted) return;
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  barrierDismissible: false,
  builder: (_) => const Center(
@@ -733,7 +734,7 @@ class _ProjectDecisionSummaryScreenState
  }
 
  if (!mounted) return;
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  barrierDismissible: false,
  builder: (_) => const Center(
@@ -1122,7 +1123,7 @@ class _ProjectDecisionSummaryScreenState
  final technologies = clean(analysis?.technologies ?? const <String>[]);
  final infrastructure = clean(analysis?.infrastructure ?? const <String>[]);
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  builder: (dialogContext) => Dialog(
  insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),

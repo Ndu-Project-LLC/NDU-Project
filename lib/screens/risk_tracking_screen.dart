@@ -1,6 +1,7 @@
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/models/risk_log.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
@@ -1334,7 +1335,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  var selectedStatus = 'Pending';
  var readinessValue = 0.0;
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) {
  return StatefulBuilder(
@@ -1480,7 +1481,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  var selectedStatus = esc.status;
  var readinessValue = esc.readiness;
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) {
  return StatefulBuilder(
@@ -1613,7 +1614,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  }
 
  void _deleteEscalation(_EscalationReadiness esc) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Delete escalation path?'),
@@ -1701,7 +1702,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  var selectedStatus = 'Mitigating';
  var selectedCategory = 'Technical';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) {
  return StatefulBuilder(
@@ -1862,7 +1863,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
          ? risk.category
          : 'Technical';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) {
  return StatefulBuilder(
@@ -1966,7 +1967,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  }
 
  void _deleteRisk(_RiskItem risk) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Delete risk?'),
@@ -2002,7 +2003,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  var selectedResidual = 'Medium';
  var coverageValue = 0.0;
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) {
  return StatefulBuilder(
@@ -2156,7 +2157,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  var selectedResidual = plan.residualRisk;
  var coverageValue = plan.coverage;
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) {
  return StatefulBuilder(
@@ -2286,7 +2287,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  }
 
  void _deleteMitigationPlan(_MitigationPlan plan) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Delete mitigation plan?'),
@@ -2319,7 +2320,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  var selectedConfidence = 'Medium';
  var selectedTrend = 'Stable';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) {
  return StatefulBuilder(
@@ -2438,7 +2439,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  var selectedConfidence = signal.confidence;
  var selectedTrend = signal.trend;
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) {
  return StatefulBuilder(
@@ -2550,7 +2551,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  }
 
  void _deleteSignal(_RiskSignal signal) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Delete risk signal?'),

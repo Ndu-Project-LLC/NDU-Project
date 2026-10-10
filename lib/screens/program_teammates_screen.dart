@@ -6,6 +6,7 @@ library;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -68,7 +69,7 @@ class _ProgramTeammatesScreenState extends State<ProgramTeammatesScreen> {
     _inviteError = null;
     _inviteSuccess = null;
 
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => StatefulBuilder(
@@ -134,7 +135,7 @@ class _ProgramTeammatesScreenState extends State<ProgramTeammatesScreen> {
   }
 
   Future<void> _removeMember(String memberId, String name) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Remove Team Member'),

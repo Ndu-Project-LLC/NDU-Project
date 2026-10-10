@@ -611,7 +611,7 @@ class CostByWBSTab extends StatelessWidget {
   /// package. Core functionality: quantity × rate (or lump total) typed by
   /// the user, stored on the Cost Estimate and linked back to this WBS node.
   void _openManualCostDialog(BuildContext context, UnpricedWorkPackage wp) {
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       builder: (ctx) => AddLineDialog(
         defaultCategory: CostCategory.materials,

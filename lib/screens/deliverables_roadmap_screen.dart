@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/roadmap_deliverable.dart';
@@ -1175,7 +1176,7 @@ Future<Map<String, dynamic>?> _showSprintDialog(
  DateTime? endDate = existing?.endDate;
  final formKey = GlobalKey<FormState>();
 
- return showDialog<Map<String, dynamic>>(
+ return showAppDialog<Map<String, dynamic>>(
  context: context,
  barrierDismissible: false,
  builder: (ctx) {
@@ -1287,7 +1288,7 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
  var selectedDeps = existing?.dependencies.toList() ?? <String>[];
  final formKey = GlobalKey<FormState>();
 
- return showDialog<Map<String, dynamic>>(
+ return showAppDialog<Map<String, dynamic>>(
  context: context,
  barrierDismissible: false,
  builder: (ctx) {
@@ -1554,7 +1555,7 @@ Future<bool?> _showConfirmDialog(
   String title,
   String message,
 ) {
- return showDialog<bool>(
+ return showAppDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),

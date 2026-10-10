@@ -321,7 +321,7 @@ class _PBSModuleScreenState extends State<PBSModuleScreen> {
     double quantity = 1;
     String uom = 'EA';
 
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -417,7 +417,7 @@ class _PBSModuleScreenState extends State<PBSModuleScreen> {
     final descCtrl = SpellCheckTextEditingController(text: node.description);
     PBSStatus selectedStatus = node.status;
 
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -493,7 +493,7 @@ class _PBSModuleScreenState extends State<PBSModuleScreen> {
 
   void _confirmDelete(
       BuildContext context, PBSProvider provider, PBSNode node) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Product'),
@@ -518,7 +518,7 @@ class _PBSModuleScreenState extends State<PBSModuleScreen> {
   }
 
   void _confirmReinit(BuildContext context, PBSProvider provider) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Reinitialize PBS'),

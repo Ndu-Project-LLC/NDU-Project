@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/user_model.dart';
@@ -510,7 +511,7 @@ class _AdminSubscriptionLookupScreenState
     SubscriptionTier? selectedTier;
     bool isAnnual = false;
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -613,7 +614,7 @@ class _AdminSubscriptionLookupScreenState
 
     int daysToExtend = 7;
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -726,7 +727,7 @@ class _AdminSubscriptionLookupScreenState
         _subscriptions.where((s) => s.isActive).firstOrNull;
     if (activeSubscription == null) return;
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cancel Subscription'),

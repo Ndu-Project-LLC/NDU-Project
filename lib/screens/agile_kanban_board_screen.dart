@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/feature_model.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
@@ -283,7 +284,7 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
   void _showStoryDetail(AgileTask story) {
     final feature = _featureById[story.featureId];
     final epicTitle = _epicTitleById[story.epicId] ?? 'Unknown Epic';
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(

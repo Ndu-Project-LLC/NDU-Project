@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -1101,7 +1102,7 @@ class _TeamRolesResponsibilitiesScreenState
  final provider = ProjectDataInherited.maybeOf(context);
  final projectId = provider?.projectData.projectId;
  if (projectId == null || projectId.isEmpty) return;
- final result = await showDialog<_RoleCardData>(
+ final result = await showAppDialog<_RoleCardData>(
  context: context,
  barrierColor: Colors.black.withValues(alpha: 0.2),
  builder: (_) => _TeamMemberDialog(initialData: existingData),
@@ -1120,7 +1121,7 @@ class _TeamRolesResponsibilitiesScreenState
  final provider = ProjectDataInherited.maybeOf(context);
  final projectId = provider?.projectData.projectId;
  if (projectId == null || projectId.isEmpty) return;
- final shouldDelete = await showDialog<bool>(
+ final shouldDelete = await showAppDialog<bool>(
  context: context,
  barrierDismissible: true,
  builder: (context) {

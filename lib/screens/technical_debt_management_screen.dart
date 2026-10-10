@@ -1,6 +1,7 @@
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
@@ -1065,7 +1066,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  selectedStatus = 'Backlog';
  }
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(
@@ -1214,7 +1215,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  var selectedColorValue =
  (seed?.color ?? const Color(0xFFFFC812)).toARGB32();
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(
@@ -1375,7 +1376,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  var selectedColorValue =
  (seed?.color ?? const Color(0xFFF97316)).toARGB32();
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(
@@ -1534,7 +1535,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  var selectedColorValue =
  (seed?.color ?? const Color(0xFFFFC812)).toARGB32();
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(

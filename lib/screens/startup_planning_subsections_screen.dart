@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/download_helper.dart' as download_helper;
@@ -2891,12 +2892,12 @@ class _ChecklistTableCard extends StatelessWidget {
         .replaceFirst(RegExp(r'\s+register$', caseSensitive: false), '')
         .trim();
 
-    final result = await showDialog<_ChecklistEntry>(
+    final result = await showAppDialog<_ChecklistEntry>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          backgroundColor: modalSurface(context),
           surfaceTintColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
@@ -4312,12 +4313,12 @@ Future<Map<int, String>?> _showRowEditDialog(
               ? f.options!
               : <String>[f.initialValue.trim(), ...f.options!]),
   ];
-  final result = await showDialog<Map<int, String>?>(
+  final result = await showAppDialog<Map<int, String>?>(
     context: context,
     barrierDismissible: true,
     builder: (dialogContext) => StatefulBuilder(
       builder: (dialogContext, setDialogState) => AlertDialog(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: modalSurface(context),
         surfaceTintColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Row(

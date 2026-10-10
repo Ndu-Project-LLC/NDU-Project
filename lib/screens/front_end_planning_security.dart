@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -421,7 +422,7 @@ Security Training:
  final nameController = SpellCheckTextEditingController(text: existing?.name ?? '');
  final descController =
  SpellCheckTextEditingController(text: existing?.description ?? '');
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: Text(existing == null ? 'Add Security Role' : 'Edit Role'),
@@ -474,7 +475,7 @@ Security Training:
  SpellCheckTextEditingController(text: existing?.resource ?? '');
  final scopeController =
  SpellCheckTextEditingController(text: existing?.scope ?? '');
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: Text(existing == null
@@ -525,7 +526,7 @@ Security Training:
  {SecuritySetting? existing}) async {
  final keyController = SpellCheckTextEditingController(text: existing?.key ?? '');
  final valueController = SpellCheckTextEditingController(text: existing?.value ?? '');
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title:
@@ -581,7 +582,7 @@ Security Training:
  ? existing!.timestamp
  : DateTime.now().toIso8601String(),
  );
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: Text(existing == null ? 'Add Access Log' : 'Edit Log'),

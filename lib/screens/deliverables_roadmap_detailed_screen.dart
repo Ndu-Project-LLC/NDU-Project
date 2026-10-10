@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/aggregated_deliverable.dart';
 import 'package:ndu_project/models/roadmap_deliverable.dart';
 import 'package:ndu_project/services/deliverable_aggregation_service.dart';
@@ -732,7 +733,7 @@ class _DeliverablesRoadmapDetailedScreenState
   }
 
   void _showAddDeliverableDialog() {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => _AddDeliverableDialog(
         onSubmit: (deliverable) async {
@@ -760,7 +761,7 @@ class _DeliverablesRoadmapDetailedScreenState
   }
 
   void _editDeliverable(AggregatedDeliverable deliverable) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => _EditDeliverableDialog(
         deliverable: deliverable,
@@ -786,7 +787,7 @@ class _DeliverablesRoadmapDetailedScreenState
   }
 
   void _deleteDeliverable(AggregatedDeliverable deliverable) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Deliverable'),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -199,7 +200,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  final projectId = _projectId;
  if (projectId == null) return;
 
- final confirm = await showDialog<bool>(
+ final confirm = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Set Scope Baseline?'),
@@ -1009,7 +1010,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
 
  void _showCompareDialog(
  List<ScopeTrackingItem> baseline, List<ScopeTrackingItem> creep) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Baseline Comparison'),
@@ -1072,7 +1073,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  final statusCtrl = SpellCheckTextEditingController(text: 'Not Started');
  final ownerCtrl = SpellCheckTextEditingController();
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Add Scope Item'),

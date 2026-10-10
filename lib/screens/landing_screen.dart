@@ -3697,7 +3697,7 @@ class _LandingScreenState extends State<LandingScreen>
  }
 
  void _showTermsAndConditionsDialog(BuildContext context) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) => Dialog(
  backgroundColor: Colors.transparent,
@@ -3765,7 +3765,7 @@ class _LandingScreenState extends State<LandingScreen>
  }
 
  void _showPrivacyPolicyDialog(BuildContext context) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) => Dialog(
  backgroundColor: Colors.transparent,

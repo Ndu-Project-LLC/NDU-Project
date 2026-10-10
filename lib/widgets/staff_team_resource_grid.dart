@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
@@ -128,13 +129,13 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     bool aiLoading = false;
 
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         barrierDismissible: true,
         barrierColor: Colors.black54,
         builder: (ctx) => StatefulBuilder(
           builder: (ctx, setModalState) => Dialog(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            backgroundColor: modalSurface(context),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24)),
             elevation: 24,

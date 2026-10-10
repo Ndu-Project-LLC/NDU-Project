@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/launch_phase_models.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -371,7 +372,7 @@ class LaunchPhaseAiSeed {
     BuildContext context, {
     required List<String> missingAreas,
   }) async {
-    return showDialog(
+    return showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

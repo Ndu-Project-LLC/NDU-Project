@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/front_end_planning_technology_personnel_screen.dart';
 import 'package:ndu_project/screens/planning_technology_screen.dart';
@@ -146,7 +147,7 @@ class _FrontEndPlanningInfrastructureScreenState
  : 'Planned';
 
  try {
- final result = await showDialog<InfrastructurePlanningItem>(
+ final result = await showAppDialog<InfrastructurePlanningItem>(
  context: context,
  barrierDismissible: false,
  builder: (dialogContext) {
@@ -324,7 +325,7 @@ class _FrontEndPlanningInfrastructureScreenState
  Future<void> _deleteInfrastructureItem(
  InfrastructurePlanningItem item,
  ) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Delete Infrastructure Item'),

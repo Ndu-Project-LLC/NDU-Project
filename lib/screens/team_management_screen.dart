@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -153,7 +154,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  'Data Analyst',
  ];
 
- final result = await showDialog<TeamMember>(
+ final result = await showAppDialog<TeamMember>(
  context: context,
  barrierDismissible: false,
  builder: (dialogContext) {
@@ -1105,7 +1106,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  final reqController = SpellCheckTextEditingController();
  final descController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
- await showDialog<bool>(
+ await showAppDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Add Role Requirement'),
@@ -1185,7 +1186,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  final notesController = SpellCheckTextEditingController();
  final actionsController = SpellCheckTextEditingController();
  final assetsController = SpellCheckTextEditingController();
- await showDialog<bool>(
+ await showAppDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Create Handover Record'),
@@ -1279,7 +1280,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  }
 
  Future<void> _viewHandoverDialog(RoleHandoverRecord h) async {
- await showDialog(
+ await showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: Text('Handover: ${h.memberName}'),

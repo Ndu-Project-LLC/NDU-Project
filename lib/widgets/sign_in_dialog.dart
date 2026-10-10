@@ -15,7 +15,7 @@ class SignInDialog extends StatefulWidget {
 
   /// Convenience method to show the dialog from any context.
   static Future<void> show(BuildContext context) {
-    return showDialog(
+    return showAppDialog(
       context: context,
       barrierDismissible: true,
       builder: (_) => const SignInDialog(),
@@ -192,7 +192,7 @@ class _SignInDialogState extends State<SignInDialog> {
     }
 
     return Dialog(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: modalSurface(context),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       clipBehavior: Clip.antiAlias,

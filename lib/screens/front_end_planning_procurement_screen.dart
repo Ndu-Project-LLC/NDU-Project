@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:intl/intl.dart';
@@ -557,7 +558,7 @@ class _FrontEndPlanningProcurementScreenState
  );
  var unit = initialStep?.unit == 'month' ? 'month' : 'week';
 
- final result = await showDialog<_ProcurementWorkflowStep>(
+ final result = await showAppDialog<_ProcurementWorkflowStep>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -2330,7 +2331,7 @@ class _FrontEndPlanningProcurementScreenState
  final nameController = SpellCheckTextEditingController();
  final emailController = SpellCheckTextEditingController();
 
- final sent = await showDialog<bool>(
+ final sent = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Invite Vendor'),
@@ -2412,7 +2413,7 @@ class _FrontEndPlanningProcurementScreenState
  'Other',
  ];
 
- final result = await showDialog<VendorModel>(
+ final result = await showAppDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -4243,7 +4244,7 @@ if (!mounted) return;
  );
  var selectedStatus = existing?.status ?? StrategyStatus.draft;
 
- final result = await showDialog<ProcurementStrategyModel>(
+ final result = await showAppDialog<ProcurementStrategyModel>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -4407,7 +4408,7 @@ if (!mounted) return;
  }
 
  Future<void> _deleteStrategy(ProcurementStrategyModel strategy) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Delete strategy?'),
@@ -4479,7 +4480,7 @@ if (!mounted) return;
  'Other',
  ];
 
- final result = await showDialog<ProcurementItemModel>(
+ final result = await showAppDialog<ProcurementItemModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -4557,7 +4558,7 @@ if (!mounted) return;
  'Other',
  ];
 
- final result = await showDialog<ProcurementItemModel>(
+ final result = await showAppDialog<ProcurementItemModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -4621,7 +4622,7 @@ if (!mounted) return;
  }
 
  Future<void> _removeItem(ProcurementItemModel item) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) {
  return AlertDialog(
@@ -4688,7 +4689,7 @@ if (!mounted) return;
  'Other',
  ];
 
- final result = await showDialog<VendorModel>(
+ final result = await showAppDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -4785,7 +4786,7 @@ if (!mounted) return;
  'Other',
  ];
 
- final result = await showDialog<RfqModel>(
+ final result = await showAppDialog<RfqModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -4851,7 +4852,7 @@ if (!mounted) return;
  'Other',
  ];
 
- final result = await showDialog<RfqModel>(
+ final result = await showAppDialog<RfqModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -4909,7 +4910,7 @@ if (!mounted) return;
  }
 
  Future<void> _deleteRfq(RfqModel rfq) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) {
  return AlertDialog(
@@ -4977,7 +4978,7 @@ if (!mounted) return;
 
  if (!mounted) return;
 
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Row(
@@ -5066,7 +5067,7 @@ if (!mounted) return;
  ? _vitalLleItems
  : _items;
 
- final result = await showDialog<PurchaseOrderModel>(
+ final result = await showAppDialog<PurchaseOrderModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -5137,7 +5138,7 @@ if (!mounted) return;
  'Services'
  ];
 
- final result = await showDialog<PurchaseOrderModel>(
+ final result = await showAppDialog<PurchaseOrderModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -5196,7 +5197,7 @@ if (!mounted) return;
  }
 
  Future<void> _deletePo(PurchaseOrderModel order) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) {
  return AlertDialog(
@@ -5993,7 +5994,7 @@ Future<void> showProcurementCycleDialog({
  required String checkpointId,
 }) async {
  var working = cycle;
- final result = await showDialog<ProcurementCycle>(
+ final result = await showAppDialog<ProcurementCycle>(
  context: context,
  barrierDismissible: true,
  builder: (dialogContext) => StatefulBuilder(

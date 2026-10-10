@@ -5,6 +5,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -922,7 +923,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String status = existing?.status ?? 'Draft';
 
- final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
+ final saved = await showAppDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
  title: Text(existing == null ? 'Add security control' : 'Edit security control'),
  content: SizedBox(width: 560, child: Column(mainAxisSize: MainAxisSize.min, children: [
  _buildKazAiPillButton(label: 'Pattern name', controller: patternCtrl, setDialogState: setModalState),
@@ -965,7 +966,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final slaCtrl = SpellCheckTextEditingController(text: existing?.sla ?? '');
  String status = existing?.status ?? 'Draft';
 
- final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
+ final saved = await showAppDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
  title: Text(existing == null ? 'Add performance hotspot' : 'Edit performance hotspot'),
  content: SizedBox(width: 560, child: Column(mainAxisSize: MainAxisSize.min, children: [
  _buildKazAiPillButton(label: 'Service hotspot name', controller: hotspotCtrl, setDialogState: setModalState),
@@ -1008,7 +1009,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final ownerCtrl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String status = existing?.status ?? 'Draft';
 
- final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
+ final saved = await showAppDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
  title: Text(existing == null ? 'Add integration flow' : 'Edit integration flow'),
  content: SizedBox(width: 560, child: Column(mainAxisSize: MainAxisSize.min, children: [
  _buildKazAiPillButton(label: 'Flow name', controller: flowCtrl, setDialogState: setModalState),
@@ -1052,7 +1053,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final evidenceCtrl = SpellCheckTextEditingController(text: existing?.evidence ?? '');
  String status = existing?.status ?? 'Not assessed';
 
- final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
+ final saved = await showAppDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
  title: Text(existing == null ? 'Add compliance standard' : 'Edit compliance standard'),
  content: SizedBox(width: 560, child: Column(mainAxisSize: MainAxisSize.min, children: [
  _buildKazAiPillButton(label: 'Standard name', controller: standardCtrl, setDialogState: setModalState),
@@ -1100,7 +1101,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String priority = existing?.priority ?? 'High';
  String status = existing?.status ?? 'Pending';
 
- final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
+ final saved = await showAppDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (context, setModalState) => AlertDialog(
  title: Text(existing == null ? 'Add review gate' : 'Edit review gate'),
  content: SizedBox(width: 560, child: Column(mainAxisSize: MainAxisSize.min, children: [
  _buildKazAiPillButton(label: 'Gate name', controller: gateCtrl, setDialogState: setModalState),
@@ -1147,7 +1148,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _confirmDelete(VoidCallback onDelete) {
- showDialog(context: context, builder: (ctx) => AlertDialog(
+ showAppDialog(context: context, builder: (ctx) => AlertDialog(
  title: const Text('Confirm delete'),
  content: const Text('Are you sure you want to delete this item? This action cannot be undone.'),
  actions: [

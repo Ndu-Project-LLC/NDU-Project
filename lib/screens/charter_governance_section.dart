@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -598,7 +599,7 @@ class _CharterApprovalsState extends State<CharterApprovals> {
  final emailController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
 
- final result = await showDialog<bool>(
+ final result = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  shape: RoundedRectangleBorder(
@@ -766,7 +767,7 @@ if (!mounted) return;
  Future<void> _showApprovalConfirmationDialog(ProjectDataModel data) async {
  bool smeReviewed = false;
  bool sponsorConfirmed = false;
- final result = await showDialog<bool>(
+ final result = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(

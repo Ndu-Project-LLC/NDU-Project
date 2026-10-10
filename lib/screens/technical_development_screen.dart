@@ -3,6 +3,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -1696,7 +1697,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String status = existing?.status ?? _workstreamStatusOptions.first;
  int progress = existing?.progress ?? 0;
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
@@ -1836,7 +1837,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _deleteWorkstreamWithConfirm(_WorkstreamItem item) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete workstream?'),
@@ -1885,7 +1886,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String status = existing?.status ?? _buildStatusOptions.first;
  String type = existing?.type ?? 'Software';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
@@ -2013,7 +2014,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _deleteBuildComponentWithConfirm(_BuildComponentRow item) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete component?'),
@@ -2061,7 +2062,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  SpellCheckTextEditingController(text: existing?.description ?? '');
  String status = existing?.status ?? _integrationStatusOptions.first;
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
@@ -2163,7 +2164,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _deleteIntegrationWithConfirm(_IntegrationRow item) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete integration?'),
@@ -2210,7 +2211,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final detailCtl = SpellCheckTextEditingController(text: existing?.detail ?? '');
  String severity = existing?.severity ?? _severityOptions[1]; // Default to High
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
@@ -2312,7 +2313,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _deleteIssueWithConfirm(_IssueRow item) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete issue?'),
@@ -2362,7 +2363,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String severity = existing?.severity ?? 'High';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
@@ -2514,7 +2515,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _ownerOptions(currentValue: existing?.owner).first;
  String status = existing?.status ?? _readinessStatusOptions.first;
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
@@ -2628,7 +2629,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _deleteReadinessWithConfirm(_ReadinessItem item) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete checklist item?'),

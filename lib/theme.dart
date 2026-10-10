@@ -113,6 +113,76 @@ class AppSemanticColors {
   static const ai = Color(0xFF8B5CF6); // Violet 500
 }
 
+/// Pop-up modal palette (dialogs and bottom sheets). Matches the cream modal in
+/// the design reference: warm cream surface, lighter cream inputs, soft grey
+/// outlines. Light theme only — dark mode keeps its own surfaces.
+class ModalColors {
+  static const surface = Color(0xFFFFF9E6); // cream modal background
+  static const field = Color(0xFFFFFDF5); // inputs sitting on the cream
+  static const border = Color(0xFFC9C4B5); // soft warm-grey outline
+}
+
+/// Background for modal surfaces. Cream in light mode; the scaffold colour in
+/// dark mode so modals stay readable there.
+Color modalSurface(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.brightness == Brightness.light
+      ? ModalColors.surface
+      : theme.scaffoldBackgroundColor;
+}
+
+/// Re-skins everything inside a modal to the cream palette (light mode only).
+class AppModalTheme extends StatelessWidget {
+  const AppModalTheme({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final base = Theme.of(context);
+    if (base.brightness != Brightness.light) return child;
+    return Theme(
+      data: base.copyWith(
+        scaffoldBackgroundColor: ModalColors.surface,
+        colorScheme: base.colorScheme.copyWith(
+          surface: ModalColors.surface,
+          surfaceContainerHighest: ModalColors.field,
+        ),
+        dialogTheme:
+            base.dialogTheme.copyWith(backgroundColor: ModalColors.surface),
+        bottomSheetTheme: base.bottomSheetTheme
+            .copyWith(backgroundColor: ModalColors.surface),
+        inputDecorationTheme: base.inputDecorationTheme.copyWith(
+          fillColor: ModalColors.field,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: ModalColors.border),
+          ),
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Drop-in replacement for [showDialog] that gives every dialog the modal
+/// palette. Use this instead of [showDialog] in app code.
+Future<T?> showAppDialog<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  bool barrierDismissible = true,
+  bool useRootNavigator = true,
+  Color? barrierColor,
+}) {
+  return showDialog<T>(
+    context: context,
+    barrierDismissible: barrierDismissible,
+    useRootNavigator: useRootNavigator,
+    barrierColor: barrierColor,
+    builder: (ctx) => AppModalTheme(child: builder(ctx)),
+  );
+}
+
 class FontSizes {
   static const double displayLarge = 57.0;
   static const double displayMedium = 45.0;
@@ -249,6 +319,19 @@ ThemeData get lightTheme => ThemeData(
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(12))),
         iconColor: Color(0xFF64748B),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: ModalColors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 8,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: ModalColors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
       ),
       dataTableTheme: const DataTableThemeData(
         headingRowColor: WidgetStatePropertyAll(Color(0xFFF5F8FC)),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 
@@ -160,7 +161,7 @@ class WbsElementMultiSelectState extends State<WbsElementMultiSelect> {
  return;
  }
 
- final result = await showDialog<List<String>>(
+ final result = await showAppDialog<List<String>>(
  context: context,
  builder: (dialogContext) {
  final draft = List<String>.from(widget.selectedIds);

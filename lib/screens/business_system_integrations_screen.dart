@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/services/business_system_integration_service.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -67,7 +68,7 @@ class _BusinessSystemIntegrationsScreenState
 
  Future<void> _openConfigDialog(BusinessSystemProvider p) async {
  final existing = _integrationFor(p);
- final result = await showDialog<BusinessSystemIntegration>(
+ final result = await showAppDialog<BusinessSystemIntegration>(
  context: context,
  builder: (ctx) => _ProviderConfigDialog(
  provider: p,
@@ -82,7 +83,7 @@ class _BusinessSystemIntegrationsScreenState
  }
 
  Future<void> _disconnect(BusinessSystemProvider p) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
  title: Text('Disconnect ${p.label}?'),

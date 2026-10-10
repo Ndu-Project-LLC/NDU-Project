@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -147,7 +148,7 @@ class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
       if (!mounted) return;
 
       // Show success dialog
-      await showDialog(
+      await showAppDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
@@ -297,7 +298,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
     final techController = SpellCheckTextEditingController(text: node.technology);
     ArchitectureNodeType selectedType = node.nodeType;
     try {
-      final result = await showDialog<bool>(
+      final result = await showAppDialog<bool>(
         context: context,
         builder: (context) {
           return StatefulBuilder(

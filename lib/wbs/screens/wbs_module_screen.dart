@@ -654,7 +654,7 @@ class _ExportAndLinkTab extends StatelessWidget {
   }
 
   void _confirmReset(BuildContext context, WBSProvider provider) {
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Reset WBS?'),
@@ -903,7 +903,7 @@ class _CrossPhaseActions extends StatelessWidget {
                 ? '$scopeCount scope item${scopeCount == 1 ? '' : 's'}'
                 : 'no candidate sources';
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Seed WBS from Initiation'),
@@ -954,7 +954,7 @@ class _CrossPhaseActions extends StatelessWidget {
     }
 
     final fepLineCount = estimate.lines.length;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Auto-link FEP Cost Lines'),

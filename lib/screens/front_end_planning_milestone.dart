@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'dart:convert';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -428,7 +429,7 @@ void _loadMilestoneData() {
    final notesCtrl = SpellCheckTextEditingController(text: existing?.comments ?? '');
    final formKey = GlobalKey<FormState>();
 
-   final result = await showDialog<bool>(
+   final result = await showAppDialog<bool>(
      context: context,
      barrierDismissible: true,
      builder: (dialogContext) {

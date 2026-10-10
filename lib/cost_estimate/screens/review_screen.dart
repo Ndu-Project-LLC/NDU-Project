@@ -15,6 +15,7 @@ library;
 /// no Scaffold of its own.
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
@@ -280,7 +281,7 @@ Upon finalization, a baseline will be set for the Scope, Cost and Schedule. Scop
 Schedule the cost estimate review meeting to discuss.
 
 Thank you,''');
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => _TreasuryEmailDialog(
         recipients: recipients,
@@ -313,7 +314,7 @@ Thank you,''');
 
   void _showAcceptanceGate(BuildContext context,
       CostEstimateProvider provider, CostEstimate estimate) {
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => _AcceptanceGateDialog(

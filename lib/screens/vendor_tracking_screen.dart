@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -630,7 +631,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
     final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
     final trendCtl = SpellCheckTextEditingController(text: existing?.trend ?? '');
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         builder: (ctx) => AlertDialog(
           title: Row(
@@ -1082,7 +1083,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
     String status = existing?.status ?? 'Open';
 
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         builder: (ctx) => StatefulBuilder(
           builder: (ctx, setDState) => AlertDialog(
@@ -1432,7 +1433,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
     String status = existing?.status ?? 'Pending invite';
 
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         builder: (ctx) => StatefulBuilder(
           builder: (ctx, setDState) => AlertDialog(
@@ -1666,7 +1667,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
 
     if (!context.mounted) return;
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text(isEdit ? 'Edit Vendor' : 'Add New Vendor'),

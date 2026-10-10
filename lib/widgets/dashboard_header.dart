@@ -20,6 +20,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/routing/app_router.dart';
@@ -108,7 +109,7 @@ class _DashboardHeaderState extends State<DashboardHeader> {
   Future<void> _handleLogout() async {
     if (!mounted) return;
 
-    final shouldLogout = await showDialog<bool>(
+    final shouldLogout = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) {
         final theme = Theme.of(dialogContext);

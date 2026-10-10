@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -721,7 +722,7 @@ class _PlanningProcurementV2ScreenState
  return null;
  }
 
- return showDialog<WorkItem>(
+ return showAppDialog<WorkItem>(
  context: context,
  builder: (dialogContext) {
  final queryController = SpellCheckTextEditingController();
@@ -1065,7 +1066,7 @@ class _PlanningProcurementV2ScreenState
  }
 
  Future<void> _openAddItemDialog() async {
- final result = await showDialog<ProcurementItemModel>(
+ final result = await showAppDialog<ProcurementItemModel>(
  context: context,
  builder: (dialogContext) {
  return AddItemDialog(
@@ -1105,7 +1106,7 @@ class _PlanningProcurementV2ScreenState
  }
 
  Future<void> _openEditItemDialog(ProcurementItemModel item) async {
- final result = await showDialog<ProcurementItemModel>(
+ final result = await showAppDialog<ProcurementItemModel>(
  context: context,
  builder: (dialogContext) {
  return AddItemDialog(
@@ -1163,7 +1164,7 @@ class _PlanningProcurementV2ScreenState
  }
 
  Future<void> _removeItem(ProcurementItemModel item) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Remove Procurement Item'),
@@ -1215,7 +1216,7 @@ class _PlanningProcurementV2ScreenState
  'Other',
  ];
 
- final result = await showDialog<VendorModel>(
+ final result = await showAppDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -1297,7 +1298,7 @@ class _PlanningProcurementV2ScreenState
  'Other',
  ];
 
- final result = await showDialog<VendorModel>(
+ final result = await showAppDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -1357,7 +1358,7 @@ class _PlanningProcurementV2ScreenState
  final nameController = SpellCheckTextEditingController();
  final emailController = SpellCheckTextEditingController();
 
- final sent = await showDialog<bool>(
+ final sent = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Invite Vendor'),
@@ -1646,7 +1647,7 @@ class _PlanningProcurementV2ScreenState
  return;
  }
 
- final targetId = await showDialog<String>(
+ final targetId = await showAppDialog<String>(
  context: context,
  builder: (context) => PoEscalationDialog(
  po: po,
@@ -2255,7 +2256,7 @@ class _PlanningProcurementV2ScreenState
  );
  var unit = initialStep?.unit == 'month' ? 'month' : 'week';
 
- final result = await showDialog<ProcurementWorkflowStep>(
+ final result = await showAppDialog<ProcurementWorkflowStep>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(

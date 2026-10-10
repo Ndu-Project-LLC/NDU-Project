@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/epic_model.dart';
@@ -1670,7 +1671,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
     _getController(_chipControllers, '${epic.id}_Value', epic.businessValue)
         .text = epic.businessValue;
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dialogCtx) => StatefulBuilder(
         builder: (dialogCtx, setDialogState) => AlertDialog(
@@ -1888,7 +1889,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
             _featureControllers, '${feature.id}_desc', feature.description)
         .text = feature.description;
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dialogCtx) => StatefulBuilder(
         builder: (dialogCtx, setDialogState) => AlertDialog(

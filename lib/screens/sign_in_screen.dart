@@ -345,7 +345,7 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _showDeviceRestrictionDialog() async {
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Device Not Supported'),

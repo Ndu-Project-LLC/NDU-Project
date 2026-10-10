@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
@@ -246,7 +247,7 @@ if (!mounted) return;
  ? entry!.score.trim()
  : RiskLogRow.deriveRiskLevel(selectedProbability, selectedImpact);
 
- final result = await showDialog<bool>(
+ final result = await showAppDialog<bool>(
  context: context,
  builder: (context) {
  final bool isEditing = entry != null;
@@ -511,7 +512,7 @@ if (!mounted) return;
   Future<void> _openFilterDialog() async {
  final current = _statusFilter;
  final options = ['All', 'Open', 'In Progress', 'Monitoring', 'Closed'];
- final result = await showDialog<String?>(
+ final result = await showAppDialog<String?>(
  context: context,
  builder: (context) {
  return AlertDialog(

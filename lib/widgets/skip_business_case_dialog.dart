@@ -19,6 +19,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/docx_import_service.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
@@ -43,7 +44,7 @@ class SkipBusinessCaseDialog {
           : data.notes,
     );
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => _SkipBusinessCaseDialog(

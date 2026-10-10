@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/screens/front_end_planning_procurement_screen.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -495,13 +496,13 @@ class _ProjectDetailsContentState extends State<_ProjectDetailsContent> {
 }
 
 void _showAiHintDialog(BuildContext context) {
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: true,
  builder: (ctx) {
  return Center(
  child: Dialog(
- backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+ backgroundColor: modalSurface(context),
  insetPadding:
  const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
  shape:

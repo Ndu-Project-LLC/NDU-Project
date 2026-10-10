@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -1488,7 +1489,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
     var selectedStatus = _checklistStatuses.first;
     DateTime? selectedDueDate;
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) => StatefulBuilder(
@@ -2293,11 +2294,11 @@ Future<Map<int, String>?> _showFinalizeRowEditDialog(
   final controllers = [
     for (final f in fields) SpellCheckTextEditingController(text: f.initialValue),
   ];
-  final result = await showDialog<Map<int, String>?>(
+  final result = await showAppDialog<Map<int, String>?>(
     context: context,
     barrierDismissible: true,
     builder: (dialogContext) => AlertDialog(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: modalSurface(context),
       surfaceTintColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       title: Row(

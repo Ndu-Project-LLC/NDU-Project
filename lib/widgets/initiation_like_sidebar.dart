@@ -3232,13 +3232,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           isActive: _activeIn(_agileHubLabels),
         ),
         if (_agileHubExpanded) ...[
-          // The hub's own landing page — the group header toggles, so the
-          // screen the group is named for needs an explicit entry.
-          _buildSubSubMenuItem(
-            'Hub Overview',
-            onTap: _openAgileProjectHub,
-            isActive: _isActiveLabel('Agile Project Hub'),
-          ),
           for (final section in agileHubSections)
             _buildSubSubMenuItem(
               section.sidebarTitle,

@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -661,7 +662,7 @@ class _TeamTrainingAndBuildingScreenState
       controller.addListener(scheduleAutoSave);
     }
 
-    await showDialog(
+    await showAppDialog(
       context: rootContext,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) {
@@ -1019,7 +1020,7 @@ class _TeamTrainingAndBuildingScreenState
     final manualUrlController = SpellCheckTextEditingController();
     bool uploading = false;
 
-    await showDialog(
+    await showAppDialog(
       context: rootContext,
       barrierDismissible: true,
       builder: (dialogContext) => StatefulBuilder(
@@ -2086,7 +2087,7 @@ $notesText
   Future<void> _deleteActivity(
       BuildContext context, TrainingActivity activity) async {
     final rootContext = context;
-    showDialog(
+    showAppDialog(
       context: rootContext,
       barrierDismissible: true,
       builder: (dialogContext) => LaunchModalShell(

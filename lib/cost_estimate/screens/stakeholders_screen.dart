@@ -434,11 +434,11 @@ class StakeholdersScreen extends StatelessWidget {
         roleCtrl.text = '${estimate.className.label} SME';
       }
     } catch (_) {}
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          backgroundColor: modalSurface(context),
           title: const Text('Add stakeholder',
               style: TextStyle(color: Color(0xFF1A1D1F))),
           content: Column(
@@ -509,11 +509,11 @@ class StakeholdersScreen extends StatelessWidget {
       BuildContext context, CostEstimateProvider provider) {
     final emailCtrl = SpellCheckTextEditingController();
     RBACRole role = RBACRole.viewer;
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          backgroundColor: modalSurface(context),
           title: const Text('Grant access',
               style: TextStyle(color: Color(0xFF1A1D1F))),
           content: Column(

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -1996,7 +1997,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  if (idx == -1) return;
  final task = _tasks[idx];
 
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Delete Task'),

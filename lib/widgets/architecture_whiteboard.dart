@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/design_planning_document.dart';
 
 /// Edits the existing architecture modules, not a second diagram-only register.
@@ -36,7 +37,7 @@ class _ArchitectureWhiteboardState extends State<ArchitectureWhiteboard> {
   Future<void> _editModule([DesignPlanningWorkItem? module]) async {
     final name = TextEditingController(text: module?.name ?? '');
     final purpose = TextEditingController(text: module?.purpose ?? '');
-    final accepted = await showDialog<bool>(
+    final accepted = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(module == null ? 'Add architecture module' : 'Edit module'),

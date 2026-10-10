@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -499,7 +500,7 @@ class CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
    loadingSuggestion = false;
  }();
 
- final result = await showDialog<Map<String, String>>(
+ final result = await showAppDialog<Map<String, String>>(
  context: context,
  builder: (dialogContext) {
    return StatefulBuilder(
@@ -828,7 +829,7 @@ if (!mounted) return;
    }
 
 if (!mounted) return;
-      final result = await showDialog<Map<String, String>>(
+      final result = await showAppDialog<Map<String, String>>(
      context: context,
      builder: (dialogContext) {
        return StatefulBuilder(
@@ -2489,7 +2490,7 @@ class _CharterTechnicalProcurementBentoState
     required VoidCallback? onClear,
   }) async {
     final controller = SpellCheckTextEditingController(text: currentText);
-    final result = await showDialog<String>(
+    final result = await showAppDialog<String>(
       context: context,
       builder: (ctx) {
         final canReset = isOverride && onClear != null;
@@ -3357,7 +3358,7 @@ class _CharterFloatingApprovalBarState
 
     bool smeReviewed = false;
     bool sponsorConfirmed = false;
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(

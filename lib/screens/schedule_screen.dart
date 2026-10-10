@@ -488,7 +488,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
 
     if (showConfirm && _activityRows.isNotEmpty) {
-      final shouldContinue = await showDialog<bool>(
+      final shouldContinue = await showAppDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Replace schedule activities?'),
@@ -822,7 +822,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       text: row?.normalizedDependencyIds.join(', ') ?? '',
     );
 
-    final result = await showDialog<_TaskDraft>(
+    final result = await showAppDialog<_TaskDraft>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -1193,7 +1193,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Future<void> _validateSchedule() async {
     final report = _buildValidationReport();
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (context) => _ScheduleValidationDialog(report: report),
     );
@@ -1648,7 +1648,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       }
     }
 
-    final result = await showDialog<WorkPackage>(
+    final result = await showAppDialog<WorkPackage>(
       context: context,
       builder: (context) => WorkPackageDialog(
         wbsLevel2Options: wbsLevel2Ids,
@@ -1673,7 +1673,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       }
     }
 
-    final result = await showDialog<WorkPackage>(
+    final result = await showAppDialog<WorkPackage>(
       context: context,
       builder: (context) => WorkPackageDialog(
         initialWorkPackage: wp,
@@ -1694,7 +1694,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Future<void> _deleteWorkPackage(String wpId) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Work Package'),
@@ -1730,7 +1730,7 @@ if (!mounted) return;
     final activities =
         data.scheduleActivities.where((a) => a.workPackageId == wp.id).toList();
 
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (context) => WorkPackageDetailView(
         workPackage: wp,
@@ -1870,7 +1870,7 @@ if (!mounted) return;
       return;
     }
 
-    final shouldImport = await showDialog<bool>(
+    final shouldImport = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Import Work Packages'),
@@ -1971,7 +1971,7 @@ if (!mounted) return;
         .where((d) => d.linkedSpecificationIds.isNotEmpty)
         .length;
 
-    final shouldImport = await showDialog<bool>(
+    final shouldImport = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Generate Integrated Package Chains'),
@@ -2031,7 +2031,7 @@ if (!mounted) return;
 
     bool shouldImport = true;
     if (showConfirm) {
-      shouldImport = await showDialog<bool>(
+      shouldImport = await showAppDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('Create Integrated Schedule Network'),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/feature_model.dart';
@@ -183,7 +184,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
   }
 
   void _addSprint() {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => _SprintEditDialog(
         onSave: (sprint) {
@@ -199,7 +200,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
 
   void _editSprint(int index) {
     final sprint = _sprints[index];
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => _SprintEditDialog(
         existing: sprint,
@@ -408,7 +409,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
     final nameCtrl = SpellCheckTextEditingController();
     final amountCtrl = TextEditingController();
     var category = 'Contract';
-    final result = await showDialog<ExternalCostItem>(
+    final result = await showAppDialog<ExternalCostItem>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
@@ -1065,7 +1066,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
     final unassigned = _features.where((f) => f.sprintId != sprint.id).toList();
 
     if (!mounted) return;
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (ctx) => _AssignFeaturesDialog(
         sprintName:

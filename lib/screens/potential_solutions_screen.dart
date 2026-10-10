@@ -2325,7 +2325,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
 
  // Show 3-second loading dialog
  if (!mounted) return;
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  barrierDismissible: false,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -2470,7 +2470,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
 
  Future<void> _confirmRegenerateAll() async {
  if (!_guardMutation(action: 'regenerate')) return;
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Regenerate All Solutions'),

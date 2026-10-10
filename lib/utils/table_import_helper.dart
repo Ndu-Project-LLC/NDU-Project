@@ -298,7 +298,7 @@ class TableImportHelper {
     final controller = SpellCheckTextEditingController();
     final filename = '${tableTitle.toLowerCase().replaceAll(' ', '_')}_template.csv';
 
-    return showDialog<List<List<String>>>(
+    return showAppDialog<List<List<String>>>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(

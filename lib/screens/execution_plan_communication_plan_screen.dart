@@ -1,5 +1,6 @@
 import 'package:ndu_project/screens/execution_plan_interface_management_plan_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/execution_plan_shared.dart';
@@ -282,7 +283,7 @@ class _CommunicationPlanTable extends StatelessWidget {
       return;
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Communication Entry'),
@@ -356,7 +357,7 @@ class _CommunicationPlanTable extends StatelessWidget {
     ];
     const statuses = ['Planned', 'Active', 'On Hold', 'Completed'];
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -55,7 +56,7 @@ class CodesStandardsMultiSelectState extends State<CodesStandardsMultiSelect> {
       return;
     }
 
-    final result = await showDialog<List<String>>(
+    final result = await showAppDialog<List<String>>(
       context: context,
       builder: (dialogContext) {
         final draft = List<String>.from(widget.selected);

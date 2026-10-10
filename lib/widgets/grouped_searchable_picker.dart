@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 
 /// One heading plus the options listed under it.
 class PickerSection {
@@ -46,7 +47,7 @@ class GroupedSearchablePicker extends StatelessWidget {
       sections.fold(0, (total, section) => total + section.options.length);
 
   Future<void> _open(BuildContext context) async {
-    final picked = await showDialog<String>(
+    final picked = await showAppDialog<String>(
       context: context,
       builder: (_) => _GroupedSearchPickerDialog(
         sections: sections,

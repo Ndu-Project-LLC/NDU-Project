@@ -35,6 +35,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/section_flow_gate.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
@@ -214,9 +215,18 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   /// default — the owner asked for the rows to be readable as a set, with the
   /// cards still one tap away for editing (Lusaka 25 (copy), 2026-09-17).
   _SpecViewMode _specViewMode = _SpecViewMode.table;
-  late Map<String, bool> _sectionExpanded;
-  late Map<String, int> _sectionTileVersion;
+
+  /// One key per section tab, so a deep-link (or a jump from the header) can
+  /// scroll the selected tab into view even when it sits far along the
+  /// fifteen-section strip.
+  final Map<String, GlobalKey> _sectionTabKeys = {
+    for (final section in _sectionOrder) section.id: GlobalKey(),
+  };
   String _activeSectionId = _sectionOrder.first.id;
+
+  /// When true the section panel fills the screen: the rail and the page
+  /// context band are hidden so the open section gets the full height.
+  bool _sectionEnlarged = false;
 
   late DesignPlanningDocument _document;
   late TextEditingController _overviewController;
@@ -378,8 +388,8 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
     if (progress['work_packages'] == _SectionProgressState.pending &&
         workPackagesSectionStartsNotApplicable(
           methodology: methodology,
-          hasWorkPackageContent: data.wbsTree.isNotEmpty ||
-              data.workPackages.isNotEmpty,
+          hasWorkPackageContent:
+              data.wbsTree.isNotEmpty || data.workPackages.isNotEmpty,
         )) {
       progress['work_packages'] = _SectionProgressState.notApplicable;
     }
@@ -403,23 +413,15 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
               orElse: () => _sectionOrder.first,
             )
             .id;
-    _sectionExpanded = {
-      for (final section in _sectionOrder)
-        section.id: section.id == _activeSectionId,
-    };
-    _sectionTileVersion = {
-      for (final section in _sectionOrder) section.id: 0,
-    };
-
-    // A sidebar deep-link already expanded the requested section, but the page
-    // still renders from the top. Bring the section into view once the first
-    // frame is laid out, otherwise clicking e.g. "Work Packages" lands on the
-    // top of a long page and the user has to scroll to find the tab they
-    // clicked (Lusaka 14).
+    // A sidebar deep-link already selected the requested tab, but the rail may
+    // have scrolled it out of sight. Bring it into view once the first frame is
+    // laid out, otherwise clicking e.g. "Work Packages" lands on a strip where
+    // the highlighted tab is not visible (Lusaka 14).
     if (hasValidInitialSection) {
       final targetSectionId = requestedSectionId;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
+          _ensureActiveTabVisible();
           _scrollToSectionStart(targetSectionId);
         }
       });
@@ -498,51 +500,113 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
       );
   }
 
+  /// Switches the rail to [sectionId], enforcing the guided flow: a section
+  /// whose predecessors are still unresolved cannot be opened, and the tap
+  /// names the section that has to be finished first.
   Future<void> _activateSection(String sectionId) async {
+    if (sectionId == _activeSectionId) return;
     if (!_canOpenSection(sectionId)) {
       _showLockedSectionFeedback(sectionId);
-      setState(() {
-        // Collapse the section the user tried to open (it was auto-expanded
-        // by the ExpansionTile tap before this callback fired).
-        _sectionExpanded[sectionId] = false;
-      });
       return;
     }
-    setState(() {
-      // Collapse the previously active section, expand the new one.
-      // Modifying the existing map in-place avoids changing the ValueKey
-      // for sections whose expanded state didn't change, preventing
-      // unnecessary subtree recreation.
-      for (final section in _sectionOrder) {
-        final shouldExpand = section.id == sectionId;
-        if (_sectionExpanded[section.id] != shouldExpand) {
-          _sectionExpanded[section.id] = shouldExpand;
-          // Bump tile version so the ExpansionTile animates correctly.
-          _sectionTileVersion[section.id] =
-              (_sectionTileVersion[section.id] ?? 0) + 1;
-        }
-      }
-      _activeSectionId = sectionId;
+    setState(() => _activeSectionId = sectionId);
+    // The body scroll is shared across tabs, so reset it to the top once the
+    // new panel has laid out — otherwise a long section leaves the next one
+    // scrolled halfway down.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_scrollController.hasClients) _scrollController.jumpTo(0);
+      _ensureActiveTabVisible();
     });
-    await _scrollToSectionStart(sectionId);
   }
 
-  Future<void> _onSectionExpansionChanged(
-      String sectionId, bool expanded) async {
-    if (!expanded) {
-      setState(() => _sectionExpanded[sectionId] = false);
-      return;
-    }
-    if (!_canOpenSection(sectionId)) {
-      _showLockedSectionFeedback(sectionId);
-      setState(() {
-        _sectionExpanded[sectionId] = false;
-        _sectionTileVersion[sectionId] =
-            (_sectionTileVersion[sectionId] ?? 0) + 1;
-      });
-      return;
-    }
-    await _activateSection(sectionId);
+  /// Switches the open section between its normal and enlarged views.
+  void _toggleSectionEnlarged() {
+    setState(() => _sectionEnlarged = !_sectionEnlarged);
+  }
+
+  /// The whole-screen view of the open section. It replaces the page entirely:
+  /// no sidebar, no page header, no rail, and no Back/Next bar. A top bar names
+  /// the section and holds the exit control; the section panel fills the rest.
+  Widget _buildEnlargedScreen(ProjectDataModel data, List<String> owners) {
+    final sectionLabel = _sectionOrder
+        .firstWhere(
+          (s) => s.id == _activeSectionId,
+          orElse: () => _sectionOrder.first,
+        )
+        .label;
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(bottom: BorderSide(color: _kBorder)),
+              ),
+              padding: const EdgeInsets.fromLTRB(8, 6, 20, 6),
+              child: Row(
+                children: [
+                  Tooltip(
+                    message: 'Exit enlarged view',
+                    child: IconButton(
+                      onPressed: _toggleSectionEnlarged,
+                      icon: const Icon(Icons.fullscreen_exit_rounded),
+                      color: _kGray700,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      sectionLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: _kGray900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Design Planning',
+                    style: TextStyle(fontSize: 12, color: _kGray500),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    child: _buildActiveSectionPanel(data, owners),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Scrolls the selected tab into view along the horizontal rail.
+  void _ensureActiveTabVisible() {
+    final tabContext = _sectionTabKeys[_activeSectionId]?.currentContext;
+    if (tabContext == null || !tabContext.mounted) return;
+    Scrollable.ensureVisible(
+      tabContext,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeInOut,
+      alignment: 0.5,
+    );
   }
 
   Future<void> _setSectionProgress({
@@ -582,7 +646,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
     final label = state == _SectionProgressState.complete
         ? 'mark this section as complete'
         : 'mark this section as not applicable';
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -875,7 +939,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
     var disciplineFilter = 'All';
     var areaFilter = 'All';
     var typeFilter = 'All';
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -2024,6 +2088,10 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
     final projectData = ProjectDataHelper.getData(context);
     final owners = _ownerOptions(projectData);
 
+    if (_sectionEnlarged) {
+      return _buildEnlargedScreen(projectData, owners);
+    }
+
     return ResponsiveScaffold(
       activeItemLabel: widget.activeItemLabel ?? 'Design Planning',
       floatingActionButton: const KazAiChatBubble(positioned: false),
@@ -2032,13 +2100,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
           PlanningPhaseHeader(
               title: 'Design Planning', onExportPdf: _exportPdf),
           _buildPageContext(projectData),
-          Expanded(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.only(top: 8, bottom: 100),
-              child: _buildMainColumn(projectData, owners),
-            ),
-          ),
+          Expanded(child: _buildMainColumn(projectData, owners)),
           _buildBottomBar(),
         ],
       ),
@@ -2328,140 +2390,293 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
     );
   }
 
+  /// The Design Planning surface: a section rail pinned under the page header,
+  /// with the selected section's panel filling the rest of the height and
+  /// scrolling on its own.
+  ///
+  /// The page used to stack every section as a collapsible card, so reaching
+  /// the last of fifteen sections meant scrolling past fourteen others. Each
+  /// section is now a tab: one tap, and the rail always shows where the user is
+  /// and which sections still need a decision.
   Widget _buildMainColumn(ProjectDataModel data, List<String> owners) {
-    final sections = <String, Widget>{
-      'overview': _buildOverviewSection(data),
-      'design_overview': _buildDesignOverviewSection(data),
-      'design_specifications_workspace':
-          _buildDesignSpecificationsWorkspaceSection(),
-      'deviations': _buildDeviationsSection(),
-      'requirements': _buildRequirementsSection(owners),
-      'architecture': _buildArchitectureSection(owners),
-      'uiux': _buildUiUxSection(owners),
-      'technical': _buildTechnicalSection(owners),
-      'constraints': _buildConstraintsSection(),
-      'risks': _buildRisksSection(owners),
-      'dependencies': _buildDependenciesSection(owners),
-      'decisions': _buildDecisionLogSection(owners),
-      'validation': _buildValidationSection(),
-      'approvals': _buildApprovalsSection(owners),
-      'work_packages': _buildWorkPackagesSection(),
-    };
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // The original inner-page navigation hint was removed; clear, numbered
-        // groups now make the guided flow easy to scan without changing its order.
-        for (var index = 0; index < _sectionGroups.length; index++) ...[
-          _buildSectionGroupHeader(index, _sectionGroups[index]),
-          for (final sectionId in _sectionGroups[index].sectionIds)
-            if (sections[sectionId] case final section?) section,
-        ],
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          child: _buildSectionRail(),
+        ),
+        const SizedBox(height: 14),
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+            child: TweenAnimationBuilder<double>(
+              key: ValueKey<String>(_activeSectionId),
+              tween: Tween<double>(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              builder: (context, value, child) => Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, (1 - value) * 8),
+                  child: child,
+                ),
+              ),
+              child: _buildActiveSectionPanel(data, owners),
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildSectionGroupHeader(int index, _SectionGroupMeta group) {
-    final resolved = group.sectionIds.where(_isSectionResolved).length;
-    final allResolved = resolved == group.sectionIds.length;
-    final compact = MediaQuery.sizeOf(context).width < 420;
+  /// The horizontal section rail: one tab per guided section, scrollable so
+  /// all fifteen fit on any width.
+  Widget _buildSectionRail() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final track = isDark ? const Color(0xFF161922) : const Color(0xFFF8FAFC);
+    final trackBorder =
+        isDark ? const Color(0xFF2D3139) : const Color(0xFFE5E7EB);
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(20, index == 0 ? 16 : 28, 20, 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: allResolved
-                  ? _kSuccess.withValues(alpha: 0.1)
-                  : _kBrandYellow.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(11),
-            ),
-            child: allResolved
-                ? const Icon(Icons.check_rounded, size: 18, color: _kSuccess)
-                : Text(
-                    '${index + 1}'.padLeft(2, '0'),
-                    style: const TextStyle(
-                      color: _kBrandDark,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  group.title,
-                  style: const TextStyle(
-                    color: _kGray900,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  group.subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: _kGray500, fontSize: 12),
-                ),
-                const SizedBox(height: 7),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: resolved / group.sectionIds.length,
-                    minHeight: 3,
-                    backgroundColor: const Color(0xFFE9ECEF),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      allResolved ? _kSuccess : _kBrandYellow,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: compact ? 8 : 10,
-              vertical: 6,
-            ),
-            decoration: BoxDecoration(
-              color: allResolved
-                  ? const Color(0xFFECFDF3)
-                  : const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              compact
-                  ? '$resolved/${group.sectionIds.length}'
-                  : '$resolved / ${group.sectionIds.length} resolved',
-              style: TextStyle(
-                color: allResolved ? _kSuccess : _kGray700,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
+    return Semantics(
+      container: true,
+      label: 'Design Planning sections',
+      child: Container(
+        decoration: BoxDecoration(
+          color: track,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: trackBorder),
+          boxShadow: [
+            if (!isDark)
+              const BoxShadow(
+                color: Color(0x0A0F172A),
+                blurRadius: 10,
+                offset: Offset(0, 2),
               ),
-            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(5),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final section in _sectionOrder)
+                Padding(
+                  padding: const EdgeInsets.only(right: 5),
+                  child: _buildSectionTab(section),
+                ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  // Note: The original _mapSectionProgress() helper that mapped section
-  // progress state to InnerPageSectionStatus was removed along with the
-  // InnerPageNavigationHint modal. If you need it again, restore the
-  // import of inner_page_navigation_hint.dart and re-implement based
-  // on git history (commit prior to this change).
+  /// One tab in the section rail: icon + label + a status glyph.
+  ///
+  /// A section whose predecessors are still unresolved stays visible but inert
+  /// — dimmed and carrying a lock — and tapping it names the section to finish
+  /// first, matching the guided flow the Next button enforces.
+  Widget _buildSectionTab(_SectionMeta section) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selected = section.id == _activeSectionId;
+    final state = _sectionProgress[section.id] ?? _SectionProgressState.pending;
+    final locked = !_canOpenSection(section.id);
+    final isNextUp = !locked && section.id == _nextPendingSectionId;
 
+    final idle = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
+    const activeInk = Color(0xFF111827);
+    const brand = LightModeColors.lightPrimary;
+    final foreground = selected
+        ? activeInk
+        : locked
+            ? idle.withValues(alpha: 0.45)
+            : idle;
+
+    return Tooltip(
+      message: locked
+          ? 'Finish "${_firstBlockingSectionLabel(section.id) ?? section.label}" '
+              'first — it feeds this section.'
+          : section.label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: _sectionTabKeys[section.id],
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => _activateSection(section.id),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: selected ? brand : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              border: !selected && isNextUp
+                  ? Border.all(color: brand.withValues(alpha: 0.9), width: 1.2)
+                  : null,
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: brand.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  locked ? Icons.lock_outline : _sectionIcon(section.id),
+                  size: 16,
+                  color: foreground,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  section.label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                    color: foreground,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+                if (!locked) ...[
+                  const SizedBox(width: 8),
+                  _buildSectionTabStatus(state, selected: selected),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Status glyph on a section tab: a tick for Complete, a minus for Not
+  /// applicable, and a quiet dot while the section is still pending.
+  Widget _buildSectionTabStatus(
+    _SectionProgressState state, {
+    required bool selected,
+  }) {
+    switch (state) {
+      case _SectionProgressState.complete:
+        return Icon(
+          Icons.check_circle_rounded,
+          size: 14,
+          color: selected ? _kBrandDark : _kSuccess,
+        );
+      case _SectionProgressState.notApplicable:
+        return Icon(
+          Icons.do_not_disturb_on_rounded,
+          size: 14,
+          color: selected ? _kBrandDark : _kWarning,
+        );
+      case _SectionProgressState.pending:
+        return Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: selected
+                ? _kBrandDark.withValues(alpha: 0.55)
+                : const Color(0xFFCBD5E1),
+          ),
+        );
+    }
+  }
+
+  static IconData _sectionIcon(String id) =>
+      _sectionIcons[id] ?? Icons.circle_outlined;
+
+  /// The first section that still needs a Complete / Not applicable decision.
+  String get _nextPendingSectionId => _sectionOrder
+      .firstWhere(
+        (s) => !_isSectionResolved(s.id),
+        orElse: () => _sectionOrder.first,
+      )
+      .id;
+
+  _SectionGroupMeta _groupForSection(String sectionId) {
+    for (final group in _sectionGroups) {
+      if (group.sectionIds.contains(sectionId)) return group;
+    }
+    return _sectionGroups.first;
+  }
+
+  int _groupNumberForSection(String sectionId) {
+    for (var i = 0; i < _sectionGroups.length; i++) {
+      if (_sectionGroups[i].sectionIds.contains(sectionId)) return i + 1;
+    }
+    return 1;
+  }
+
+  /// Builds only the selected section, so a screen with fifteen rich panels
+  /// lays out one of them at a time instead of all fifteen.
+  Widget _buildActiveSectionPanel(ProjectDataModel data, List<String> owners) {
+    switch (_activeSectionId) {
+      case 'overview':
+        return _buildOverviewSection(data);
+      case 'design_overview':
+        return _buildDesignOverviewSection(data);
+      case 'design_specifications_workspace':
+        return _buildDesignSpecificationsWorkspaceSection();
+      case 'deviations':
+        return _buildDeviationsSection();
+      case 'requirements':
+        return _buildRequirementsSection(owners);
+      case 'architecture':
+        return _buildArchitectureSection(owners);
+      case 'uiux':
+        return _buildUiUxSection(owners);
+      case 'technical':
+        return _buildTechnicalSection(owners);
+      case 'constraints':
+        return _buildConstraintsSection();
+      case 'risks':
+        return _buildRisksSection(owners);
+      case 'dependencies':
+        return _buildDependenciesSection(owners);
+      case 'decisions':
+        return _buildDecisionLogSection(owners);
+      case 'validation':
+        return _buildValidationSection();
+      case 'approvals':
+        return _buildApprovalsSection(owners);
+      case 'work_packages':
+        return _buildWorkPackagesSection();
+      default:
+        return _buildOverviewSection(data);
+    }
+  }
+
+  static const Map<String, IconData> _sectionIcons = {
+    'overview': Icons.dashboard_outlined,
+    'design_overview': Icons.design_services_outlined,
+    'design_specifications_workspace': Icons.rule_folder_outlined,
+    'deviations': Icons.alt_route_outlined,
+    'requirements': Icons.fact_check_outlined,
+    'architecture': Icons.schema_outlined,
+    'uiux': Icons.palette_outlined,
+    'technical': Icons.memory_outlined,
+    'constraints': Icons.tune_outlined,
+    'risks': Icons.warning_amber_rounded,
+    'dependencies': Icons.hub_outlined,
+    'decisions': Icons.gavel_outlined,
+    'validation': Icons.verified_outlined,
+    'approvals': Icons.approval_outlined,
+    'work_packages': Icons.workspaces_outlined,
+  };
+
+  /// The panel the rail shows for one section: a tinted header naming the
+  /// section and its group, the Complete / Not applicable controls, and the
+  /// section's own content.
+  ///
+  /// This is the tab body — there is no collapse affordance, because the rail
+  /// is how sections are switched.
   Widget _buildGuidedSectionCard({
     required String sectionId,
     required GlobalKey sectionKey,
@@ -2470,44 +2685,237 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
     required Color accent,
     required Widget child,
   }) {
-    final isExpanded = _sectionExpanded[sectionId] == true;
     final progressState =
         _sectionProgress[sectionId] ?? _SectionProgressState.pending;
-    // The next pending section in flow order is the one the user should be
-    // in — give it the "Continue" affordance so the page answers "what do I
-    // do now?" without reading a single label.
-    final nextPendingId = _sectionOrder
-        .firstWhere(
-          (s) => !_isSectionResolved(s.id),
-          orElse: () => _sectionOrder.first,
-        )
-        .id;
-    final isNextUp = sectionId == nextPendingId &&
+    final isNextUp = sectionId == _nextPendingSectionId &&
         progressState == _SectionProgressState.pending;
+    final stepNumber =
+        _sectionOrder.indexWhere((section) => section.id == sectionId) + 1;
     return Container(
       key: sectionKey,
-      child: _SectionCard(
-        expansionKey: ValueKey(
-            'tile_${sectionId}_${_sectionTileVersion[sectionId] ?? 0}'),
-        title: title,
-        subtitle: subtitle,
-        accent: accent,
-        expanded: isExpanded,
-        enabled: true,
-        progressState: progressState,
-        isNextUp: isNextUp,
-        stepNumber:
-            _sectionOrder.indexWhere((section) => section.id == sectionId) + 1,
-        onExpansionChanged: (expanded) =>
-            _onSectionExpansionChanged(sectionId, expanded),
-        child: isExpanded
-            ? Column(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accent.withValues(alpha: 0.45)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A111827),
+            blurRadius: 14,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(17),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildSectionPanelHeader(
+              sectionId: sectionId,
+              title: title,
+              subtitle: subtitle,
+              accent: accent,
+              progressState: progressState,
+              stepNumber: stepNumber,
+              isNextUp: isNextUp,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionProgressControls(sectionId),
                   child,
                 ],
-              )
-            : const SizedBox.shrink(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Tinted header of the section panel: the group it belongs to, its step
+  /// number and title, its status, and the subtitle explaining what it is for.
+  Widget _buildSectionPanelHeader({
+    required String sectionId,
+    required String title,
+    required String subtitle,
+    required Color accent,
+    required _SectionProgressState progressState,
+    required int stepNumber,
+    required bool isNextUp,
+  }) {
+    final compact = MediaQuery.sizeOf(context).width < 600;
+    final stateColor = switch (progressState) {
+      _SectionProgressState.complete => _kSuccess,
+      _SectionProgressState.notApplicable => _kWarning,
+      _SectionProgressState.pending => _kGray500,
+    };
+    final statusLabel = switch (progressState) {
+      _SectionProgressState.complete => 'Complete',
+      _SectionProgressState.notApplicable => 'Not applicable',
+      _SectionProgressState.pending => 'Needs review',
+    };
+    final statusIcon = switch (progressState) {
+      _SectionProgressState.complete => Icons.check_circle_rounded,
+      _SectionProgressState.notApplicable => Icons.do_not_disturb_on_rounded,
+      _SectionProgressState.pending => Icons.circle_outlined,
+    };
+    final group = _groupForSection(sectionId);
+    final groupNumber = _groupNumberForSection(sectionId);
+
+    return Material(
+      color: accent.withValues(alpha: 0.07),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 14, 18, 15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'GROUP $groupNumber',
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                      color: accent,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    group.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _kGray500,
+                    ),
+                  ),
+                ),
+                if (isNextUp)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _kBrandYellow.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Text(
+                      'NEXT UP',
+                      style: TextStyle(
+                        color: _kBrandDark,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ),
+                if (!_sectionEnlarged)
+                  Tooltip(
+                    message: 'Enlarge section',
+                    child: IconButton(
+                      onPressed: _toggleSectionEnlarged,
+                      icon: const Icon(Icons.fullscreen_rounded),
+                      color: _kGray700,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: isNextUp
+                        ? _kBrandYellow.withValues(alpha: 0.22)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isNextUp
+                          ? _kBrandYellow
+                          : accent.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: Text(
+                    stepNumber.toString().padLeft(2, '0'),
+                    style: const TextStyle(
+                      color: _kBrandDark,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _kGray900,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: statusLabel,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compact ? 8 : 10,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: stateColor.withValues(alpha: 0.09),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(statusIcon, size: 15, color: stateColor),
+                        if (!compact) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            statusLabel,
+                            style: TextStyle(
+                              color: stateColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 9),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 13,
+                color: _kGray500,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2789,7 +3197,8 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
               owners: owners,
               onChanged: _queueSave,
               onRemove: () {
-                setState(() => _document.removeArchitectureModule(_document.modules[i].id));
+                setState(() => _document
+                    .removeArchitectureModule(_document.modules[i].id));
                 _queueSave();
               },
             ),
@@ -2884,7 +3293,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   }
 
   Future<void> _showArchitectureWhiteboard() async {
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog.fullscreen(
         child: Scaffold(
@@ -2917,7 +3326,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   /// poor place to write a module's purpose. This view exists to answer "what
   /// have I actually got?" at a glance.
   Future<void> _showArchitectureModulesTable() async {
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Architecture Modules'),
@@ -3663,9 +4072,8 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   /// The saved tree is only written when packages are generated, so it can lag
   /// behind the WBS; it is the fallback when no WBS has been built yet.
   List<WorkItem> _liveWbsTree({required bool listen}) {
-    final provider = listen
-        ? context.watch<WBSProvider>()
-        : context.read<WBSProvider>();
+    final provider =
+        listen ? context.watch<WBSProvider>() : context.read<WBSProvider>();
     final wbs = provider.wbs;
     if (wbs != null && wbs.level0.children.isNotEmpty) {
       return wbsNodeToWorkItems(wbs.level0);
@@ -3734,8 +4142,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
               'here — your work packages are still shown below. Mark the '
               'section Not applicable above if your project does not need '
               'one.',
-              style:
-                  TextStyle(fontSize: 12, height: 1.4, color: _kMuted),
+              style: TextStyle(fontSize: 12, height: 1.4, color: _kMuted),
             ),
             const SizedBox(height: 12),
           ],
@@ -3963,7 +4370,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
 
     collectTitles(selectedTree);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Generate Design Work Packages'),
@@ -4107,285 +4514,6 @@ const List<_SectionMeta> _sectionOrder = [
   _SectionMeta('approvals', 'Approvals', Color(0xFF7C2D12)),
   _SectionMeta('work_packages', 'Work Packages', Color(0xFFD97706)),
 ];
-
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({
-    this.expansionKey,
-    required this.title,
-    required this.subtitle,
-    required this.accent,
-    required this.child,
-    required this.expanded,
-    required this.enabled,
-    this.progressState = _SectionProgressState.pending,
-    this.isNextUp = false,
-    required this.stepNumber,
-    required this.onExpansionChanged,
-  });
-
-  final Key? expansionKey;
-  final String title;
-  final String subtitle;
-  final Color accent;
-  final Widget child;
-  final bool expanded;
-  final bool enabled;
-  final _SectionProgressState progressState;
-
-  /// True on the one pending section the user should work through next —
-  /// renders a "Next up" affordance so the page always points forward.
-  final bool isNextUp;
-  final int stepNumber;
-  final ValueChanged<bool> onExpansionChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 600;
-    final stateColor = switch (progressState) {
-      _SectionProgressState.complete => _kSuccess,
-      _SectionProgressState.notApplicable => _kWarning,
-      _SectionProgressState.pending => _kGray500,
-    };
-    final statusLabel = switch (progressState) {
-      _SectionProgressState.complete => 'Complete',
-      _SectionProgressState.notApplicable => 'Not applicable',
-      _SectionProgressState.pending => 'Needs review',
-    };
-    final statusIcon = switch (progressState) {
-      _SectionProgressState.complete => Icons.check_circle_rounded,
-      _SectionProgressState.notApplicable => Icons.do_not_disturb_on_rounded,
-      _SectionProgressState.pending => Icons.circle_outlined,
-    };
-    final stepBadge = Container(
-      width: 36,
-      height: 36,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: isNextUp
-            ? _kBrandYellow.withValues(alpha: 0.22)
-            : const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(12),
-        border: isNextUp ? Border.all(color: _kBrandYellow) : null,
-      ),
-      child: Text(
-        stepNumber.toString().padLeft(2, '0'),
-        style: TextStyle(
-          color: isNextUp ? _kBrandDark : _kGray700,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-    final statusBadge = Tooltip(
-      message: statusLabel,
-      child: Container(
-        padding:
-            EdgeInsets.symmetric(horizontal: compact ? 8 : 10, vertical: 7),
-        decoration: BoxDecoration(
-          color: stateColor.withValues(alpha: 0.09),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(statusIcon, size: 15, color: stateColor),
-            if (!compact) ...[
-              const SizedBox(width: 6),
-              Text(
-                statusLabel,
-                style: TextStyle(
-                  color: stateColor,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-
-    if (expanded) {
-      return Container(
-        key: expansionKey,
-        margin: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: accent.withValues(alpha: 0.45)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0A111827),
-              blurRadius: 14,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(17),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Material(
-                color: accent.withValues(alpha: 0.07),
-                child: InkWell(
-                  onTap: () => onExpansionChanged(false),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 14, 12, 14),
-                    child: Row(
-                      children: [
-                        stepBadge,
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: _kGray900,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        statusBadge,
-                        IconButton(
-                          tooltip: 'Collapse section',
-                          onPressed: () => onExpansionChanged(false),
-                          icon: const Icon(Icons.expand_less_rounded),
-                          color: _kGray500,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: _kGray500,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    child,
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      key: expansionKey,
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-      decoration: BoxDecoration(
-        color: isNextUp ? const Color(0xFFFFFCF0) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isNextUp ? _kBrandYellow : const Color(0xFFE8EBEF),
-          width: isNextUp ? 1.4 : 1,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x07111827),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => onExpansionChanged(true),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-            child: Row(
-              children: [
-                stepBadge,
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              title,
-                              maxLines: compact ? 2 : 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: _kGray900,
-                              ),
-                            ),
-                          ),
-                          if (isNextUp) ...[
-                            const SizedBox(width: 7),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _kBrandYellow.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Text(
-                                'NEXT',
-                                style: TextStyle(
-                                  color: _kBrandDark,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.4,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: _kGray500,
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                statusBadge,
-                const SizedBox(width: 7),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 21,
-                  color: _kGray400,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _ResponsivePair extends StatelessWidget {
   const _ResponsivePair({required this.left, required this.right});

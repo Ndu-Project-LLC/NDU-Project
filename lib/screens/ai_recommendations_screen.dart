@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
@@ -106,7 +107,7 @@ class _AiRecommendationsScreenState extends State<AiRecommendationsScreen> {
  void _openAdd() {
  final t = SpellCheckTextEditingController();
  final navigator = Navigator.of(context);
- showDialog(
+ showAppDialog(
  context: context,
  builder: (c) => AlertDialog(
  title: const Text('Add recommendation'),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -53,7 +54,7 @@ class _SelectProjectKazButtonState extends State<SelectProjectKazButton>
 
   void _showSelectionDialog() {
     _animationController.forward();
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withValues(alpha: 0.45),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:ndu_project/screens/execution_plan_interface_management_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/execution_plan_shared.dart';
@@ -179,7 +180,7 @@ class _StakeholderIdentificationSectionState
     final commentsController =
         SpellCheckTextEditingController(text: base['comments'] ?? '');
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(isEdit ? 'Edit Stakeholder' : 'Add Stakeholder'),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/page_hint_model.dart';
 import 'package:ndu_project/services/hint_content_service.dart';
 import 'package:ndu_project/services/hint_service.dart';
@@ -135,7 +136,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
   }) async {
     final messenger = ScaffoldMessenger.of(context);
     final defaultHint = HintContentService.defaultForPage(hint.pageId);
-    final updated = await showDialog<PageHintConfig>(
+    final updated = await showAppDialog<PageHintConfig>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => _HintEditorDialog(
@@ -180,7 +181,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
   }
 
   Future<void> _previewHint(PageHintConfig hint) async {
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),

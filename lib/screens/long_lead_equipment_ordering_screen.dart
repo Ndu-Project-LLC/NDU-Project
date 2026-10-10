@@ -732,7 +732,7 @@ class _LongLeadEquipmentOrderingScreenState
     final ownerOptions = _ownerOptions();
     String owner = ownerOptions.first;
 
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setModalState) => AlertDialog(
@@ -897,7 +897,7 @@ class _LongLeadEquipmentOrderingScreenState
     final ownerOptions = _ownerOptions();
     String owner = ownerOptions.first;
 
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setModalState) => AlertDialog(
@@ -1066,7 +1066,7 @@ class _LongLeadEquipmentOrderingScreenState
     final notesController = SpellCheckTextEditingController();
     String status = _actionStatusOptions.first;
 
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setModalState) => AlertDialog(

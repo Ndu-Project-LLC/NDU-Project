@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/status_report_row.dart';
 import 'package:ndu_project/widgets/inline_editable_text.dart';
 import 'package:ndu_project/widgets/progress_quick_actions.dart';
@@ -307,7 +308,7 @@ class _StatusReportRowWidgetState extends State<_StatusReportRowWidget> {
     var selectedStatus = _report.status;
 
     try {
-      await showDialog<void>(
+      await showAppDialog<void>(
         context: context,
         builder: (dialogContext) {
           return StatefulBuilder(

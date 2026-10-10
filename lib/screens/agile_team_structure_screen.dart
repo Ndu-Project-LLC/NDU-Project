@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
@@ -384,7 +385,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
     final skillsController = SpellCheckTextEditingController();
     String? nameError;
 
-    final team = await showDialog<TeamRow>(
+    final team = await showAppDialog<TeamRow>(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) => StatefulBuilder(

@@ -32,7 +32,7 @@ Future<void> showWBSAddNodeDialog(
   String? parentName,
   WBSFramework? framework,
 }) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
     barrierDismissible: true,
     barrierColor: const Color(0xFF0B1220).withValues(alpha: 0.55),
@@ -55,7 +55,7 @@ Future<void> showWBSEditNodeDialog(
   required WBSNode node,
   required WBSFramework framework,
 }) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
     barrierDismissible: true,
     barrierColor: const Color(0xFF0B1220).withValues(alpha: 0.55),

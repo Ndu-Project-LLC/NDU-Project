@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -925,7 +926,7 @@ if (!mounted) return;
 
 if (!mounted) return;
   if (missingAssignmentRows.isNotEmpty) {
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Assignment Required'),
@@ -945,7 +946,7 @@ if (!mounted) return;
 
 if (!mounted) return;
   if (missingPhaseRows.isNotEmpty) {
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Phase Required'),
@@ -966,7 +967,7 @@ if (!mounted) return;
  final resolvedRole = await _resolveCurrentUserRoleForRequirementsSubmit();
  if (!_isRoleAuthorizedForRequirementSubmit(resolvedRole)) {
  if (!mounted) return;
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Authorization Required'),
@@ -985,7 +986,7 @@ if (!mounted) return;
  }
 
  if (!mounted) return;
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Confirm Requirement Coverage'),
@@ -1121,7 +1122,7 @@ if (!mounted) return;
  return;
  }
 
- final shouldRegenerate = await showDialog<bool>(
+ final shouldRegenerate = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Regenerate requirements?'),
@@ -2647,7 +2648,7 @@ class _PersonDropdownField extends StatelessWidget {
  onTap: !enabled || noMembers
  ? null
  : () async {
- final selected = await showDialog<_AssignableMember>(
+ final selected = await showAppDialog<_AssignableMember>(
  context: context,
  builder: (dialogContext) => _MemberPickerDialog(
  options: options,

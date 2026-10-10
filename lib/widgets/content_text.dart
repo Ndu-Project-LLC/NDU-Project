@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/app_content_provider.dart';
 import 'package:ndu_project/models/app_content_model.dart';
 import 'package:ndu_project/services/app_content_service.dart';
@@ -169,7 +170,7 @@ class EditableContentText extends StatelessWidget {
 
   void _showEditDialog(BuildContext context, {required bool isStaticEditMode}) {
     final provider = context.read<AppContentProvider>();
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => _ContentEditDialog(
         contentKey: contentKey,

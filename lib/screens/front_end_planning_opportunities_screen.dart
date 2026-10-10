@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/screens/front_end_planning_contract_vendor_quotes_screen.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -1417,7 +1418,7 @@ Opportunity generation constraints:
   }
 
   void _showAddOpportunityDialog({OpportunityItem? existingItem}) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => _OpportunityDialog(item: existingItem),
     ).then((val) {

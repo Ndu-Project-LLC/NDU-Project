@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -182,7 +183,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
   }
 
   void _deleteRecognition(int index) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Recognition'),
@@ -225,7 +226,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     String type = existing?.type ?? _recognitionTypes.first;
 
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         builder: (ctx) => StatefulBuilder(
           builder: (ctx, setDialogState) => AlertDialog(

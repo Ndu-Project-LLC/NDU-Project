@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
@@ -1471,7 +1472,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String status = existing?.status ?? 'In progress';
  String risk = existing?.risk ?? 'Medium';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) {
  return StatefulBuilder(
@@ -1584,7 +1585,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _confirmDeleteDeliverable(int index) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Deliverable'),
@@ -1626,7 +1627,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final riskCtl =
  SpellCheckTextEditingController(text: entry?.riskIfMissing ?? '');
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) {
  return AlertDialog(
@@ -1693,7 +1694,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _confirmDeleteAcceptanceEvidence(int index) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Evidence Row'),
@@ -1732,7 +1733,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  SpellCheckTextEditingController(text: entry?.agileHybridEvidence ?? '');
  String decision = entry?.decision ?? 'Required';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) {
  return StatefulBuilder(
@@ -1813,7 +1814,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _confirmDeleteHandoffGovernance(int index) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Control'),
@@ -1850,7 +1851,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String status = entry?.status ?? 'Pending';
  final dateCtl = SpellCheckTextEditingController(text: entry?.targetDate ?? 'TBD');
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) {
  return StatefulBuilder(
@@ -1944,7 +1945,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _confirmDeleteApprovalGate(int index) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Gate'),
@@ -1987,7 +1988,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String status = entry?.status ?? 'Open';
  final dateCtl = SpellCheckTextEditingController(text: entry?.dueDate ?? 'TBD');
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) {
  return StatefulBuilder(
@@ -2095,7 +2096,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _showPermissionSnackBar('delete dependencies');
  return;
  }
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Dependency'),
@@ -2132,7 +2133,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final labelCtl = SpellCheckTextEditingController();
  String status = 'In progress';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) {
  return StatefulBuilder(
@@ -2195,7 +2196,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final labelCtl = SpellCheckTextEditingController(text: item.label);
  String status = item.status;
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) {
  return StatefulBuilder(

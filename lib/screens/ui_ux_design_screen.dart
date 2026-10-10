@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
@@ -1989,7 +1990,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String priority = existing?.priority ?? 'Medium';
  String status = existing?.status ?? 'Planned';
 
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
@@ -2081,7 +2082,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String fidelity = existing?.fidelity ?? 'Low';
  String status = existing?.status ?? 'To define';
 
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
@@ -2166,7 +2167,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String category = existing?.category ?? 'Colors';
  String status = existing?.status ?? 'Draft';
 
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
@@ -2252,7 +2253,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
  String status = existing?.status ?? 'Not tested';
 
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
@@ -2342,7 +2343,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String priority = existing?.priority ?? 'High';
  String status = existing?.status ?? 'Pending';
 
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
@@ -2501,7 +2502,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _confirmDelete(VoidCallback onDelete) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Confirm delete'),

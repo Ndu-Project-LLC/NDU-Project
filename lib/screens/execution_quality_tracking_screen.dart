@@ -3,6 +3,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/execution_quality_tracking_model.dart';
 import 'package:ndu_project/models/project_data_model.dart' hide AuditResultStatus;
@@ -818,7 +819,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
   }
 
   void _updateInspectionStatus(ExecutionInspection inspection) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Update Inspection Status'),
@@ -1011,7 +1012,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
   }
 
   void _updateAuditStatus(ExecutionAudit audit) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Update Audit Status & Result'),
@@ -1180,7 +1181,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
   }
 
   void _verifyCa(ExecutionCorrectiveAction ca) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Verify Corrective Action'),
@@ -1210,7 +1211,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
   }
 
   void _updateCaStatus(ExecutionCorrectiveAction ca) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Update Corrective Action'),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -111,7 +112,7 @@ class _StakeholderManagementScreenState
     final missingName =
         gaps.where((g) => g.hasNoPerson).toList(growable: false);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Review the stakeholder details'),
@@ -1027,7 +1028,7 @@ if (!mounted) return;
 
     // Show prompt asking about additional teams/groups
     if (mounted) {
-      await showDialog(
+      await showAppDialog(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Teams & Groups Check'),
@@ -1122,7 +1123,7 @@ if (!mounted) return;
     // happened.
     if (!OpenAiConfig.isConfigured) {
       if (!mounted) return;
-      await showDialog<void>(
+      await showAppDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('AI not configured'),
@@ -1142,7 +1143,7 @@ if (!mounted) return;
 
     // Show a loading indicator while the AI is thinking.
     if (!mounted) return;
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => const Dialog(
@@ -1245,7 +1246,7 @@ nothing to add or remove, write "None" under that heading.''';
       }
     }
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('AI Stakeholder Review'),
@@ -1417,7 +1418,7 @@ nothing to add or remove, write "None" under that heading.''';
 
     if (!OpenAiConfig.isConfigured) {
       if (!mounted) return;
-      await showDialog<void>(
+      await showAppDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('AI not configured'),
@@ -1436,7 +1437,7 @@ nothing to add or remove, write "None" under that heading.''';
     }
 
     if (!mounted) return;
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => const Dialog(
@@ -2485,7 +2486,7 @@ class _InfluenceInterestMatrixState extends State<_InfluenceInterestMatrix> {
     final sortMode = _sortModes[ratingKey] ?? 'name_asc';
     final sorted = _sorted(ratingKey, stakeholders);
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
@@ -3618,7 +3619,7 @@ class _MappingRowActions extends StatelessWidget {
     String influence = entry.influence;
     String interest = entry.interest;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -3718,7 +3719,7 @@ class _MappingRowActions extends StatelessWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Stakeholder'),
@@ -4652,7 +4653,7 @@ class _DeleteCell extends StatelessWidget {
     BuildContext context,
     VoidCallback onConfirm,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Item'),
@@ -4784,7 +4785,7 @@ class _RowActions extends StatelessWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Stakeholder'),
@@ -4821,7 +4822,7 @@ class _RowActions extends StatelessWidget {
     String influence = e.influence;
     String interest = e.interest;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -5521,7 +5522,7 @@ class _AnnouncementsTabState extends State<_AnnouncementsTab> {
   }
 
   Future<void> _delete(StakeholderAnnouncement a) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete announcement?'),

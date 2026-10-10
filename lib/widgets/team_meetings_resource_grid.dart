@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/meeting_row.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
@@ -45,7 +46,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
     final notesCtrl = SpellCheckTextEditingController();
     List<String> selectedRoles = [];
 
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black54,
@@ -861,7 +862,7 @@ class _MultiSelectCell extends StatelessWidget {
   Future<void> _showMultiSelectDialog(BuildContext context) async {
     final updatedSelection = List<String>.from(selectedRoles);
 
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title:

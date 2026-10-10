@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/rate_card.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
@@ -20,7 +21,7 @@ class RateCardManagementDialog extends StatefulWidget {
     BuildContext context, {
     required List<RateCard> existingCards,
   }) async {
-    final result = await showDialog<List<RateCard>>(
+    final result = await showAppDialog<List<RateCard>>(
       context: context,
       builder: (context) => RateCardManagementDialog(
         existingCards: existingCards,
@@ -521,7 +522,7 @@ class _RateCardManagementDialogState extends State<RateCardManagementDialog> {
   Future<void> _showAddRateDialog(int cardIndex) async {
     final card = _cards[cardIndex];
     
-    final result = await showDialog<Map<String, dynamic>>(
+    final result = await showAppDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => _AddRateTierDialog(existingRates: card.rates),
     );

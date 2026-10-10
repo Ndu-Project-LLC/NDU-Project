@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -107,7 +108,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  }
 
  Future<void> _openLessonDialog([_LessonEntry? existing]) async {
- final result = await showDialog<_LessonEntry>(
+ final result = await showAppDialog<_LessonEntry>(
  context: context,
  barrierDismissible: false,
  builder: (dialogContext) => _LessonDialog(existing: existing),
@@ -174,7 +175,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  }
 
  Future<void> _confirmDelete(String id) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

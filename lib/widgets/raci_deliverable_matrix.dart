@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/raci_assignment_service.dart';
@@ -243,7 +244,7 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
   }
 
   Future<void> _clearRow(BuildContext context, RaciDeliverableRow row) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Clear row assignments?'),
@@ -301,7 +302,7 @@ if (!context.mounted) return;
     );
     bool checked = false;
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
@@ -447,7 +448,7 @@ if (!context.mounted) return;
   }
 
   Future<void> _revokeApproval(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Revoke approval?'),
@@ -821,7 +822,7 @@ if (!context.mounted) return;
       BuildContext context, RaciDeliverableRow row, String roleKey) async {
     final current = (row.assignments[roleKey] ?? '').toUpperCase();
     String? selected = current.isEmpty ? null : current;
-    final result = await showDialog<String>(
+    final result = await showAppDialog<String>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
@@ -969,7 +970,7 @@ if (!mounted) return;
 
   Future<String?> _pickDesignationForBulk(BuildContext context) async {
     String? picked;
-    return showDialog<String>(
+    return showAppDialog<String>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(

@@ -17,6 +17,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 
 import 'package:ndu_project/services/spell_check/spell_check_service.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -29,7 +30,7 @@ Future<void> showSpellCheckSuggestions(
   required TextEditingController controller,
   required SpellIssue issue,
 }) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
     builder: (dialogContext) => _SuggestionsDialog(
       controller: controller,
@@ -178,7 +179,7 @@ Future<void> showSpellCheckDialog(
   BuildContext context, {
   required TextEditingController controller,
 }) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
     builder: (dialogContext) => _SpellCheckDialog(controller: controller),
   );

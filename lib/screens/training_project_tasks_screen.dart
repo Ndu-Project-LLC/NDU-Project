@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -264,7 +265,7 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  var impact = item.impact;
  var status = item.status;
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (ctx, setDialogState) => LaunchModalShell(

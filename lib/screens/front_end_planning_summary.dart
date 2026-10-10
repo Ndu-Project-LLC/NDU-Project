@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -876,7 +877,7 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
 
  Future<void> _showAiGeneratedNotice() async {
  if (!mounted) return;
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('KAZ AI Suggestions Added'),
@@ -1486,7 +1487,7 @@ if (!context.mounted) return;
  final descController =
  RichTextEditingController(text: existingItem?.description ?? '');
 
- return showDialog<PlanningDashboardItem>(
+ return showAppDialog<PlanningDashboardItem>(
  context: context,
  builder: (context) => AlertDialog(
  title: Text(title),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:flutter/services.dart';
 
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -551,7 +552,7 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
 
   Future<void> _showAddDialog(BuildContext context) async {
     if (widget.onAddValues != null) {
-      final result = await showDialog<Map<String, String>>(
+      final result = await showAppDialog<Map<String, String>>(
         context: context,
         builder: (ctx) => _AddItemDialog(
           title: widget.title,
@@ -991,7 +992,7 @@ class _LaunchDataRowState extends State<LaunchDataRow> {
     }
 
     final layout = _TableLayoutInherited.of(context);
-    final result = await showDialog<Map<String, String>>(
+    final result = await showAppDialog<Map<String, String>>(
       context: context,
       builder: (ctx) => _AddItemDialog(
         title: layout?.title ?? 'Item',
@@ -1531,7 +1532,7 @@ class LaunchStatusDropdown extends StatelessWidget {
 
 Future<bool> launchConfirmDelete(BuildContext context,
     {String itemName = 'item'}) async {
-  final result = await showDialog<bool>(
+  final result = await showAppDialog<bool>(
     context: context,
     barrierDismissible: true,
     builder: (ctx) => LaunchModalShell(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 
 import '../models/portfolio_model.dart';
@@ -97,7 +98,7 @@ class _ProjectDashboardMobileShellState
  }
 
  Future<void> _openProject(ProjectRecord project) async {
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: false,
  builder: (_) => const Center(child: CircularProgressIndicator()),

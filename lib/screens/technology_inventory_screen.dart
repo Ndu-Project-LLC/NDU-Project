@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
@@ -132,7 +133,7 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  final name = SpellCheckTextEditingController();
  final category = SpellCheckTextEditingController();
  final notes = SpellCheckTextEditingController();
- showDialog(
+ showAppDialog(
  context: context,
  builder: (c) => AlertDialog(
  title: const Text('Add technology'),

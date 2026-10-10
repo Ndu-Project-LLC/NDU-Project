@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/models/user_role.dart';
@@ -836,7 +837,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     subtitle: 'Permanently remove your account and all data',
                     labelColor: Colors.red,
                     onTap: () {
-                      showDialog(
+                      showAppDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
                           title: const Text('Delete Account?'),
@@ -2110,7 +2111,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   Future<void> _handleTwoFactorToggle(bool enabled) async {
     if (enabled) {
       // Show confirmation dialog before enabling
-      final confirmed = await showDialog<bool>(
+      final confirmed = await showAppDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Enable Two-Factor Authentication'),
@@ -2154,7 +2155,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       }
     } else {
       // Show confirmation dialog before disabling
-      final confirmed = await showDialog<bool>(
+      final confirmed = await showAppDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Disable Two-Factor Authentication'),
@@ -3114,7 +3115,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                       child: OutlinedButton.icon(
                         onPressed: hasSubscription && isActive
                             ? () async {
-                                final confirmed = await showDialog<bool>(
+                                final confirmed = await showAppDialog<bool>(
                                   context: context,
                                   builder: (ctx) => AlertDialog(
                                     title: const Text('Cancel Subscription'),
@@ -4087,7 +4088,7 @@ if (!mounted) return;
       // Step 2: Show the verification dialog and wait for the user to
       // enter the 6-digit code. The dialog returns true if verification
       // succeeded, false if the user cancelled or verification failed.
-      final verified = await showDialog<bool>(
+      final verified = await showAppDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (context) => InviteVerificationDialog(

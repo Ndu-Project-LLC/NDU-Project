@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:flutter/services.dart';
 
 import 'package:ndu_project/models/acceptance_criteria.dart';
@@ -85,7 +86,7 @@ class AcceptanceCriteriaTemplateDialog extends StatefulWidget {
     List<AcceptanceCriteriaTemplate> existingTemplates =
         const <AcceptanceCriteriaTemplate>[],
   }) {
-    return showDialog<AcceptanceCriteriaTemplate>(
+    return showAppDialog<AcceptanceCriteriaTemplate>(
       context: context,
       // A half-filled form should not vanish because the backdrop was tapped;
       // Cancel (or Esc) is how the user says no.

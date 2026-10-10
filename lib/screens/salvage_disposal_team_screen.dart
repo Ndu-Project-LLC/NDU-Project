@@ -1,5 +1,6 @@
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -1584,7 +1585,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final statusController = SpellCheckTextEditingController(text: item.status);
  final valueController = SpellCheckTextEditingController(text: item.estimatedValue);
 
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: true,
  builder: (ctx) => LaunchModalShell(
@@ -1715,7 +1716,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final statusController = SpellCheckTextEditingController(text: 'Pending');
  final valueController = SpellCheckTextEditingController();
 
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: true,
  builder: (ctx) => LaunchModalShell(
@@ -1846,7 +1847,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final projectId = _getProjectId();
  if (projectId == null) return;
 
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: true,
  builder: (ctx) => LaunchModalShell(
@@ -1920,7 +1921,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  SpellCheckTextEditingController(text: (member?.itemsHandled ?? 0).toString());
  var selectedStatus = member?.status ?? 'Active';
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  barrierDismissible: true,
  builder: (dialogContext) => StatefulBuilder(
@@ -2054,7 +2055,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final projectId = _getProjectId();
  if (projectId == null) return;
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  barrierDismissible: true,
  builder: (dialogContext) => LaunchModalShell(
@@ -2143,7 +2144,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  var selectedPriority = item?.priority ?? 'Medium';
  var selectedDisposalMethod = item?.disposalMethod.isNotEmpty == true ? item!.disposalMethod : 'Auction';
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  barrierDismissible: true,
  builder: (dialogContext) => StatefulBuilder(
@@ -2405,7 +2406,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final projectId = _getProjectId();
  if (projectId == null) return;
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  barrierDismissible: true,
  builder: (dialogContext) => LaunchModalShell(
@@ -3806,7 +3807,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _showDisposalItemDetailDialog(BuildContext context, SalvageDisposalItemModel item) {
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: true,
  builder: (ctx) => LaunchModalShell(
@@ -4444,7 +4445,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  String priority = existing?.priority ?? 'P3';
  String status = existing?.status ?? 'Active';
 
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: true,
  builder: (ctx) => StatefulBuilder(
@@ -4650,7 +4651,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  void _deleteComplianceRow(int index) {
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: true,
  builder: (ctx) => LaunchModalShell(
@@ -5205,7 +5206,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  var selectedPriority = item?.priority ?? 'Medium';
  var progressValue = item?.progress ?? 0;
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  barrierDismissible: true,
  builder: (dialogContext) => StatefulBuilder(
@@ -5443,7 +5444,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final projectId = _getProjectId();
  if (projectId == null) return;
 
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  barrierDismissible: true,
  builder: (dialogContext) => LaunchModalShell(

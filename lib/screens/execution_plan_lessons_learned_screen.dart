@@ -1,5 +1,6 @@
 import 'package:ndu_project/screens/execution_plan_best_practices_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/execution_plan_shared.dart';
@@ -272,7 +273,7 @@ class LessonsLearnedTable extends StatelessWidget {
       return;
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Lesson Learned'),
@@ -334,7 +335,7 @@ class LessonsLearnedTable extends StatelessWidget {
         SpellCheckTextEditingController(text: request?.impacted ?? '');
     bool approved = request?.approved ?? false;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(

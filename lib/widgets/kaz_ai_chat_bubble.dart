@@ -774,7 +774,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
 
   // ── Clear history ─────────────────────────────────────────────────────
   void _clearAiHistory() {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Clear AI Chat History'),
@@ -808,7 +808,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
   }
 
   void _clearSupportHistory() {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Clear Support Chat History'),

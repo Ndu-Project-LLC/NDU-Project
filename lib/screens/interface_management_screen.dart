@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -1173,7 +1174,7 @@ class _InterfaceRegisterRow extends StatelessWidget {
   }
 
   Future<void> _deleteEntry(BuildContext context, String id) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Remove interface entry'),
@@ -1239,7 +1240,7 @@ class _InterfaceEntryDialog extends StatefulWidget {
       BuildContext context, InterfaceEntry? initial, List<String> suggested) {
         if (!context.mounted) return;
         if (!context.mounted) return;
-        showDialog<InterfaceEntry>(
+        showAppDialog<InterfaceEntry>(
       context: context,
       builder: (_) => _InterfaceEntryDialog(
         initial: initial,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ndu_project/screens/execution_enabling_work_plan_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -357,7 +358,7 @@ class _EarlyWorksTable extends StatelessWidget {
       return;
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Tool'),
@@ -417,7 +418,7 @@ class _EarlyWorksTable extends StatelessWidget {
     final commentsController =
         SpellCheckTextEditingController(text: tool?.comments ?? '');
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(isEdit ? 'Edit Tool' : 'Add New Tool'),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ndu_project/screens/execution_plan_lessons_learned_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/execution_plan_shared.dart';
@@ -412,7 +413,7 @@ class _IssuesManagementTable extends StatelessWidget {
       return;
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Issue'),
@@ -470,7 +471,7 @@ class _IssuesManagementTable extends StatelessWidget {
         SpellCheckTextEditingController(text: issue?.comments ?? '');
     bool approved = issue?.approved ?? false;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(

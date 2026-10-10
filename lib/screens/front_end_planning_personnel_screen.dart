@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/wbs/screens/wbs_module_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -118,7 +119,7 @@ class _FrontEndPlanningPersonnelScreenState
  : 'Not Started';
 
  try {
- final result = await showDialog<StaffingRow>(
+ final result = await showAppDialog<StaffingRow>(
  context: context,
  builder: (dialogContext) {
  return StatefulBuilder(
@@ -346,7 +347,7 @@ class _FrontEndPlanningPersonnelScreenState
  }
 
  Future<void> _deleteRow(StaffingRow row) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Delete Role'),

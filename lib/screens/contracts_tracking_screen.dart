@@ -2,6 +2,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -1424,7 +1425,7 @@ if (!mounted) return;
         SpellCheckTextEditingController(text: entry?.committedValue ?? '');
     final notesController = SpellCheckTextEditingController(text: entry?.notes ?? '');
 
-    final saved = await showDialog<_RenewalLaneData>(
+    final saved = await showAppDialog<_RenewalLaneData>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -1681,7 +1682,7 @@ if (!mounted) return;
   }
 
   Future<void> _confirmDeleteRenewalEntry(_RenewalLaneData entry) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Remove from pipeline?'),
@@ -1720,7 +1721,7 @@ if (!mounted) return;
         ? signal!.status
         : _riskStatusOptions.first;
 
-    final saved = await showDialog<_RiskSignalData>(
+    final saved = await showAppDialog<_RiskSignalData>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -1847,7 +1848,7 @@ if (!mounted) return;
   }
 
   Future<void> _confirmDeleteRiskSignal(_RiskSignalData signal) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete risk signal?'),
@@ -1927,7 +1928,7 @@ if (!mounted) return;
     final notesController =
         SpellCheckTextEditingController(text: checkpoint?.notes ?? '');
 
-    final saved = await showDialog<_ApprovalCheckpointData>(
+    final saved = await showAppDialog<_ApprovalCheckpointData>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -2125,7 +2126,7 @@ if (!mounted) return;
 
   Future<void> _confirmDeleteApprovalCheckpoint(
       _ApprovalCheckpointData checkpoint) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete approval gate?'),
@@ -2228,7 +2229,7 @@ if (!mounted) return;
     DateTime? endDate = contract?.endDate;
 
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         builder: (context) => StatefulBuilder(
           builder: (context, setDialogState) => AlertDialog(
@@ -2575,7 +2576,7 @@ if (!mounted) return;
       return;
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Contract'),

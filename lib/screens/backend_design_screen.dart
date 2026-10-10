@@ -4,6 +4,7 @@ import 'package:ndu_project/utils/unique_id.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/services/architecture_service.dart';
 import 'package:ndu_project/services/activity_log_service.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
@@ -1974,7 +1975,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  required Widget content,
  required String confirmLabel,
  }) {
- return showDialog<bool>(
+ return showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: Text(title),

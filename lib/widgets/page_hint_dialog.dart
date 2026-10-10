@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/page_hint_model.dart';
 import 'package:ndu_project/services/hint_content_service.dart';
 import 'package:ndu_project/services/hint_service.dart';
@@ -34,7 +35,7 @@ class PageHintDialog {
 
     bool disableViewed = disableViewedInitially;
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withValues(alpha: 0.4),

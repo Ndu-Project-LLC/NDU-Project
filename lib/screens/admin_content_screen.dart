@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/app_content_model.dart';
 import 'package:ndu_project/providers/app_content_provider.dart';
 import 'package:ndu_project/services/app_content_service.dart';
@@ -257,7 +258,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
  Future<void> _showAddContentDialog() async {
  // Capture before await to avoid use_build_context_synchronously.
  final messenger = ScaffoldMessenger.of(context);
- await showDialog(
+ await showAppDialog(
  context: context,
  builder: (context) => _ContentEditorDialog(
  onSave: (key, value, category, description) async {
@@ -288,7 +289,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
  Future<void> _showEditContentDialog(AppContent content) async {
  // Capture before await to avoid use_build_context_synchronously.
  final messenger = ScaffoldMessenger.of(context);
- await showDialog(
+ await showAppDialog(
  context: context,
  builder: (context) => _ContentEditorDialog(
  existingContent: content,
@@ -317,7 +318,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
  }
 
  Future<void> _deleteContent(AppContent content) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Delete Content'),
